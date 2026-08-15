@@ -2,9 +2,7 @@
 //! (constructs the sparse `BmpDiff` directly — apply-and-capture is banned); `inverse()` is
 //! handcrafted per variant, index-aware, reading the pre-state it needs from `base`.
 
-use crate::artifacts::bmp::schema::diff::{
-    diff_set_snapshot, BmpDiff, BmpPaletteAdded, BmpPaletteDiff, BmpPaletteModified,
-};
+use crate::artifacts::bmp::schema::diff::{diff_set_snapshot, BmpDiff, BmpPaletteAdded, BmpPaletteDiff, BmpPaletteModified};
 use crate::artifacts::bmp::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
 use crate::artifacts::bmp::BmpSnapshot;
 use protocol::{Mutation, MutationDiff};
@@ -63,9 +61,7 @@ pub enum BmpMutation {
         entry: BmpPaletteEntry,
     },
     /// ➖️ Removes the palette entry at `index`.
-    RemovePaletteEntry {
-        index: usize,
-    },
+    RemovePaletteEntry { index: usize },
     /// ✏️ Replaces the palette entry at `index` in place (whole-value replace).
     SetPaletteEntry {
         index: usize,
@@ -98,20 +94,7 @@ impl Mutation<BmpSnapshot> for BmpMutation {
         match self {
             BmpMutation::NoMutation => BmpDiff::default(),
             BmpMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-            BmpMutation::SetHeaderFields {
-                header_size,
-                width,
-                height,
-                row_order,
-                planes,
-                bits_per_pixel,
-                compression,
-                image_size,
-                x_pixels_per_meter,
-                y_pixels_per_meter,
-                colors_used,
-                colors_important,
-            } => BmpDiff {
+            BmpMutation::SetHeaderFields { header_size, width, height, row_order, planes, bits_per_pixel, compression, image_size, x_pixels_per_meter, y_pixels_per_meter, colors_used, colors_important } => BmpDiff {
                 header_size: *header_size,
                 width: *width,
                 height: *height,
@@ -126,33 +109,10 @@ impl Mutation<BmpSnapshot> for BmpMutation {
                 colors_important: *colors_important,
                 ..Default::default()
             },
-            BmpMutation::InsertPaletteEntry { index, entry } => BmpDiff {
-                palette: Some(BmpPaletteDiff {
-                    removed: Vec::new(),
-                    modified: Vec::new(),
-                    added: vec![BmpPaletteAdded { index: *index, entry: entry.clone() }],
-                }),
-                ..Default::default()
-            },
-            BmpMutation::RemovePaletteEntry { index } => BmpDiff {
-                palette: Some(BmpPaletteDiff {
-                    removed: vec![*index],
-                    modified: Vec::new(),
-                    added: Vec::new(),
-                }),
-                ..Default::default()
-            },
-            BmpMutation::SetPaletteEntry { index, entry } => BmpDiff {
-                palette: Some(BmpPaletteDiff {
-                    removed: Vec::new(),
-                    modified: vec![BmpPaletteModified { index: *index, entry: entry.clone() }],
-                    added: Vec::new(),
-                }),
-                ..Default::default()
-            },
-            BmpMutation::SetPixelData { pixels } => {
-                BmpDiff { pixels: Some(pixels.clone()), ..Default::default() }
-            }
+            BmpMutation::InsertPaletteEntry { index, entry } => BmpDiff { palette: Some(BmpPaletteDiff { removed: Vec::new(), modified: Vec::new(), added: vec![BmpPaletteAdded { index: *index, entry: entry.clone() }] }), ..Default::default() },
+            BmpMutation::RemovePaletteEntry { index } => BmpDiff { palette: Some(BmpPaletteDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }), ..Default::default() },
+            BmpMutation::SetPaletteEntry { index, entry } => BmpDiff { palette: Some(BmpPaletteDiff { removed: Vec::new(), modified: vec![BmpPaletteModified { index: *index, entry: entry.clone() }], added: Vec::new() }), ..Default::default() },
+            BmpMutation::SetPixelData { pixels } => BmpDiff { pixels: Some(pixels.clone()), ..Default::default() },
         }
     }
 
@@ -162,20 +122,7 @@ impl Mutation<BmpSnapshot> for BmpMutation {
             BmpMutation::SetSnapshot { .. } => {
                 vec![BmpMutation::SetSnapshot { snapshot: base.clone() }]
             }
-            BmpMutation::SetHeaderFields {
-                header_size,
-                width,
-                height,
-                row_order,
-                planes,
-                bits_per_pixel,
-                compression,
-                image_size,
-                x_pixels_per_meter,
-                y_pixels_per_meter,
-                colors_used,
-                colors_important,
-            } => vec![BmpMutation::SetHeaderFields {
+            BmpMutation::SetHeaderFields { header_size, width, height, row_order, planes, bits_per_pixel, compression, image_size, x_pixels_per_meter, y_pixels_per_meter, colors_used, colors_important } => vec![BmpMutation::SetHeaderFields {
                 header_size: header_size.map(|_| base.header_size),
                 width: width.map(|_| base.width),
                 height: height.map(|_| base.height),

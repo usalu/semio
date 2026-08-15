@@ -6,9 +6,9 @@
 //! `SemioDocumentSnapshot` for them to land in; a genuine, spec-mandated type gap, not an
 //! oversight).
 
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::txt::TxtSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+use crate::artifacts::txt::TxtSnapshot;
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️Deserializer
 pub struct SemioDocumentFromTxt;
@@ -20,17 +20,7 @@ impl ArtifactDeserializer for SemioDocumentFromTxt {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("document") };
 
     fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let blocks = from
-            .lines
-            .iter()
-            .map(|line| {
-                if line.is_empty() {
-                    DocBlock::Paragraph { style_id: None, runs: Vec::new() }
-                } else {
-                    DocBlock::Paragraph { style_id: None, runs: vec![DocRun::plain(line.clone())] }
-                }
-            })
-            .collect();
+        let blocks = from.lines.iter().map(|line| if line.is_empty() { DocBlock::Paragraph { style_id: None, runs: Vec::new() } } else { DocBlock::Paragraph { style_id: None, runs: vec![DocRun::plain(line.clone())] } }).collect();
         Ok(SemioDocumentSnapshot { schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(), styles: Vec::new(), images: Vec::new(), blocks })
     }
 }

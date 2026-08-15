@@ -17,12 +17,10 @@
 //!   non-ASCII typed values (e.g. `Rational`) fall back to a `Debug`-formatted string (documented
 //!   as a readable-but-not-machine-parseable representation).
 
+use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use crate::artifacts::tiff::{
+    schema::snapshot::{TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_ROWS_PER_STRIP, TAG_SAMPLES_PER_PIXEL, TAG_STRIP_BYTE_COUNTS, TAG_STRIP_OFFSETS},
     TiffSnapshot,
-    schema::snapshot::{TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_ROWS_PER_STRIP, TAG_SAMPLES_PER_PIXEL, TAG_STRIP_BYTE_COUNTS, TAG_STRIP_OFFSETS, TiffValues},
-};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{
-    SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
@@ -31,10 +29,7 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard
 
 /// 🕳️ Core strip/geometry tags — already surfaced as typed `SemioImageSnapshot` fields, so they
 /// don't ALSO become generic metadata entries (would duplicate the same information twice).
-const CORE_TAGS: [u16; 9] = [
-    TAG_IMAGE_WIDTH, TAG_IMAGE_LENGTH, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_PHOTOMETRIC,
-    TAG_STRIP_OFFSETS, TAG_SAMPLES_PER_PIXEL, TAG_ROWS_PER_STRIP, TAG_STRIP_BYTE_COUNTS,
-];
+const CORE_TAGS: [u16; 9] = [TAG_IMAGE_WIDTH, TAG_IMAGE_LENGTH, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_PHOTOMETRIC, TAG_STRIP_OFFSETS, TAG_SAMPLES_PER_PIXEL, TAG_ROWS_PER_STRIP, TAG_STRIP_BYTE_COUNTS];
 
 fn value_to_metadata_string(v: &TiffValues) -> String {
     match v {
@@ -66,27 +61,8 @@ impl ArtifactDeserializer for SemioImageFromTiff {
             _ => SemioColorspace::Rgb,
         };
         let bit_depth = from.tag(TAG_BITS_PER_SAMPLE).and_then(|t| t.values.first_u32()).unwrap_or(0).min(u8::MAX as u32) as u8;
-        let metadata = from
-            .ifds
-            .first()
-            .map(|ifd| {
-                ifd.entries
-                    .iter()
-                    .filter(|t| !CORE_TAGS.contains(&t.tag))
-                    .map(|t| SemioImageMetadataEntry { key: t.tag.to_string(), value: value_to_metadata_string(&t.values) })
-                    .collect()
-            })
-            .unwrap_or_default();
-        Ok(SemioImageSnapshot {
-            schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
-            width,
-            height,
-            colorspace,
-            bit_depth,
-            frames: vec![SemioImageFrame { delay_ms: 0, rgba8: from.pixels.clone() }],
-            icc: None,
-            metadata,
-        })
+        let metadata = from.ifds.first().map(|ifd| ifd.entries.iter().filter(|t| !CORE_TAGS.contains(&t.tag)).map(|t| SemioImageMetadataEntry { key: t.tag.to_string(), value: value_to_metadata_string(&t.values) }).collect()).unwrap_or_default();
+        Ok(SemioImageSnapshot { schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(), width, height, colorspace, bit_depth, frames: vec![SemioImageFrame { delay_ms: 0, rgba8: from.pixels.clone() }], icc: None, metadata })
     }
 }
 //#endregion 🔖️Deserializer

@@ -1,6 +1,5 @@
 syntax = "proto3";
-package semio.s_stdio_dwg.mutation;
-message DwgMutation {
-  string schema = 1;
-  string bytes_wire = 2;
-}
+package semio.s_stdio_dwg_ac1018.mutation;
+message SetSnapshot { string snapshot_wire = 1; }
+message SetVersionInfo { string version = 1; uint32 maintenance_version = 2; uint32 codepage = 3; }
+message DwgMutation { oneof mutation { bool no_mutation = 1; SetSnapshot set_snapshot = 2; SetVersionInfo set_version_info = 3; } }

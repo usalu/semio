@@ -35,22 +35,12 @@ impl Default for PlyArtifact {
 impl PlyArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> PlySnapshot {
-        PlySnapshot {
-            schema: self.schema.clone(),
-            format: self.format,
-            comments: self.comments.clone(),
-            elements: self.elements.clone(),
-        }
+        PlySnapshot { schema: self.schema.clone(), format: self.format, comments: self.comments.clone(), elements: self.elements.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: PlySnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            format: snapshot.format,
-            comments: snapshot.comments,
-            elements: snapshot.elements,
-        }
+        Self { schema: snapshot.schema, format: snapshot.format, comments: snapshot.comments, elements: snapshot.elements }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -101,8 +91,8 @@ pub fn ply_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::ply::{PlyDiff, PlyMutation, PlySnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.ply` snapshot.
@@ -137,7 +127,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -147,8 +141,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::ply::PlySnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.ply` parts.
@@ -176,14 +170,22 @@ pub mod derived_analysis {
             let starts_with_magic = |bytes: &[u8]| bytes.starts_with(MAGIC_LF) || bytes.starts_with(MAGIC_CRLF);
             match source {
                 AnalyzeSource::Binary(bytes) => {
-                    if starts_with_magic(bytes) { IoConfidence::High } else { IoConfidence::Low }
+                    if starts_with_magic(bytes) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
                     let body = match store::semio_format::split_text_preamble(text) {
                         Ok((_, rest)) => rest,
                         Err(_) => text,
                     };
-                    if starts_with_magic(body.as_bytes()) { IoConfidence::High } else { IoConfidence::Low }
+                    if starts_with_magic(body.as_bytes()) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }
@@ -198,22 +200,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <PlySnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -253,15 +247,8 @@ pub fn demo_ply_snapshot() -> PlySnapshot {
             PlyElement {
                 name: "vertex".into(),
                 count: 2,
-                properties: vec![
-                    PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float },
-                    PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float },
-                    PlyProperty::Scalar { name: "z".into(), kind: PlyScalarType::Float },
-                ],
-                rows: vec![
-                    PlyRow { values: vec![PlyValue::Float(0.0), PlyValue::Float(0.0), PlyValue::Float(0.0)] },
-                    PlyRow { values: vec![PlyValue::Float(1.0), PlyValue::Float(0.5), PlyValue::Float(-1.5)] },
-                ],
+                properties: vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "z".into(), kind: PlyScalarType::Float }],
+                rows: vec![PlyRow { values: vec![PlyValue::Float(0.0), PlyValue::Float(0.0), PlyValue::Float(0.0)] }, PlyRow { values: vec![PlyValue::Float(1.0), PlyValue::Float(0.5), PlyValue::Float(-1.5)] }],
             },
             PlyElement {
                 name: "face".into(),

@@ -2,17 +2,12 @@
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, path/key-aware. Structural
 //! pattern borrowed from `🎨️svg`'s `SvgMutation` (own types throughout).
 
-use crate::artifacts::html::standards::v5::subsets::any::schema::diff::{
-    diff_at_path, diff_set_snapshot, HtmlAttrAdded, HtmlAttrModified, HtmlAttributesDiff, HtmlChildAdded, HtmlChildrenDiff,
-    HtmlDiff, HtmlElementDiff, HtmlNodeDiff,
-};
-use crate::artifacts::html::standards::v5::subsets::any::schema::diff::{
-    decode_option, dec_html_node, dec_str, encode_option, enc_html_node, enc_str, split_top_level, strip_brackets,
-};
+use crate::artifacts::html::standards::v5::subsets::any::schema::diff::{dec_html_node, dec_str, decode_option, enc_html_node, enc_str, encode_option, split_top_level, strip_brackets};
+use crate::artifacts::html::standards::v5::subsets::any::schema::diff::{diff_at_path, diff_set_snapshot, HtmlAttrAdded, HtmlAttrModified, HtmlAttributesDiff, HtmlChildAdded, HtmlChildrenDiff, HtmlDiff, HtmlElementDiff, HtmlNodeDiff};
 use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::{element_attr, node_at, HtmlNode, HtmlSnapshot, NodePath};
-use protocol::{Mutation, OpText};
 #[cfg(test)]
 use protocol::OpBinary;
+use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -128,23 +123,12 @@ impl Mutation<HtmlSnapshot> for HtmlMutation {
             HtmlMutation::SetDoctype { doctype } => HtmlDiff { doctype: Some(doctype.clone()), root: None },
             HtmlMutation::InsertNode { parent, index, node } => diff_at_path(
                 parent,
-                HtmlNodeDiff::Element(HtmlElementDiff {
-                    name: None,
-                    attributes: None,
-                    children: Some(HtmlChildrenDiff { removed: Vec::new(), modified: Vec::new(), added: vec![HtmlChildAdded { index: *index, item: node.clone() }] }),
-                }),
+                HtmlNodeDiff::Element(HtmlElementDiff { name: None, attributes: None, children: Some(HtmlChildrenDiff { removed: Vec::new(), modified: Vec::new(), added: vec![HtmlChildAdded { index: *index, item: node.clone() }] }) }),
             ),
-            HtmlMutation::RemoveNode { parent, index } => diff_at_path(
-                parent,
-                HtmlNodeDiff::Element(HtmlElementDiff {
-                    name: None,
-                    attributes: None,
-                    children: Some(HtmlChildrenDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }),
-                }),
-            ),
-            HtmlMutation::SetElementName { path, name } => {
-                diff_at_path(path, HtmlNodeDiff::Element(HtmlElementDiff { name: Some(name.clone()), attributes: None, children: None }))
+            HtmlMutation::RemoveNode { parent, index } => {
+                diff_at_path(parent, HtmlNodeDiff::Element(HtmlElementDiff { name: None, attributes: None, children: Some(HtmlChildrenDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }) }))
             }
+            HtmlMutation::SetElementName { path, name } => diff_at_path(path, HtmlNodeDiff::Element(HtmlElementDiff { name: Some(name.clone()), attributes: None, children: None })),
             HtmlMutation::SetAttribute { path, name, value } => attribute_diff_at_path(base, path, name, value.clone()),
             HtmlMutation::SetText { path, text } => diff_at_path(path, HtmlNodeDiff::Text { text: Some(text.clone()) }),
             HtmlMutation::SetComment { path, text } => diff_at_path(path, HtmlNodeDiff::Comment { text: Some(text.clone()) }),
@@ -247,13 +231,7 @@ fn parse_html_mutation(line: &str) -> Result<HtmlMutation, String> {
         return Ok(HtmlMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("html mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("html mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("html mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
@@ -305,10 +283,7 @@ mod tests {
     }
 
     fn fixture() -> HtmlSnapshot {
-        <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(
-            "<!DOCTYPE html>\n<html><body><p id=\"x\" width=\"5\">hi</p></body></html>\n",
-        )
-        .unwrap()
+        <HtmlSnapshot as store::ArtifactDsl>::parse_dsl("<!DOCTYPE html>\n<html><body><p id=\"x\" width=\"5\">hi</p></body></html>\n").unwrap()
     }
 
     #[test]
@@ -421,11 +396,7 @@ mod tests {
             root: el(
                 "html",
                 vec![HtmlAttr::new("keep", "k"), HtmlAttr::new("toRemove", "r"), HtmlAttr::new("toModify", "old")],
-                vec![
-                    el("g", vec![HtmlAttr::new("x", "1")], vec![el("rect", vec![], vec![])]),
-                    HtmlNode::Text { text: "stay".into() },
-                    el("toDrop", vec![], vec![]),
-                ],
+                vec![el("g", vec![HtmlAttr::new("x", "1")], vec![el("rect", vec![], vec![])]), HtmlNode::Text { text: "stay".into() }, el("toDrop", vec![], vec![])],
             ),
         }
     }
@@ -437,10 +408,7 @@ mod tests {
             root: el(
                 "htmlRenamed",
                 vec![HtmlAttr::new("keep", "k"), HtmlAttr::new("toModify", "new"), HtmlAttr::boolean("added")],
-                vec![
-                    el("gModified", vec![HtmlAttr::new("x", "2"), HtmlAttr::new("y", "3")], vec![el("rect", vec![], vec![]), el("circle", vec![], vec![])]),
-                    HtmlNode::Text { text: "stay".into() },
-                ],
+                vec![el("gModified", vec![HtmlAttr::new("x", "2"), HtmlAttr::new("y", "3")], vec![el("rect", vec![], vec![]), el("circle", vec![], vec![])]), HtmlNode::Text { text: "stay".into() }],
             ),
         }
     }
@@ -502,11 +470,7 @@ mod tests {
 
     //#region 🔖️AbsorbLaw
     fn two_child_root(a_name: &str, b_name: &str) -> HtmlSnapshot {
-        HtmlSnapshot {
-            schema: STDIO_HTML_DOCUMENT_SCHEMA.into(),
-            doctype: None,
-            root: el("html", vec![], vec![el(a_name, vec![], vec![]), el(b_name, vec![], vec![])]),
-        }
+        HtmlSnapshot { schema: STDIO_HTML_DOCUMENT_SCHEMA.into(), doctype: None, root: el("html", vec![], vec![el(a_name, vec![], vec![]), el(b_name, vec![], vec![])]) }
     }
 
     fn assert_absorb_matches_sequential(base: &HtmlSnapshot, d1: &HtmlDiff, d2: &HtmlDiff) -> HtmlDiff {
@@ -547,7 +511,14 @@ mod tests {
             let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
             let triple = root_children_diff(&absorbed);
             assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
-            let names: Vec<&str> = triple.added.iter().map(|a| match &a.item { HtmlNode::Element { name, .. } => name.as_str(), _ => "" }).collect();
+            let names: Vec<&str> = triple
+                .added
+                .iter()
+                .map(|a| match &a.item {
+                    HtmlNode::Element { name, .. } => name.as_str(),
+                    _ => "",
+                })
+                .collect();
             assert!(names.contains(&"f"));
             assert!(names.contains(&"g"));
         }
@@ -608,10 +579,7 @@ mod tests {
         let sample = fixture();
         assert_eq!(MutationDiff::apply(&<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&sample, &sample), &sample), sample);
 
-        let real = <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(
-            "<!DOCTYPE html>\n<html><body><div id=\"layer1\"><p>a</p><span>b</span></div></body></html>\n",
-        )
-        .unwrap();
+        let real = <HtmlSnapshot as store::ArtifactDsl>::parse_dsl("<!DOCTYPE html>\n<html><body><div id=\"layer1\"><p>a</p><span>b</span></div></body></html>\n").unwrap();
         let mut mutated = real.clone();
         apply_html_mutation(&mut mutated, &HtmlMutation::SetAttribute { path: vec![0, 0], name: "id".into(), value: Some(Some("root".into())) });
         assert_ne!(real, mutated);

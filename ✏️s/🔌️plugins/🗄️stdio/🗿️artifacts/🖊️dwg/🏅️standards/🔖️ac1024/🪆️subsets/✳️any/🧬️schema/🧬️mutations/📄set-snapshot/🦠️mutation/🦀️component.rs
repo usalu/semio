@@ -1,5 +1,5 @@
-use crate::artifacts::dwg::{DwgSnapshot};
-use crate::artifacts::dwg::schema::mutations::{DwgMutation, apply_dwg_mutation};
+use crate::artifacts::dwg::schema::mutations::{apply_dwg_mutation, DwgMutation};
+use crate::artifacts::dwg::DwgSnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
 pub fn apply(projection: &mut DwgSnapshot, mutation: &DwgMutation) {

@@ -5,37 +5,22 @@
 //! `✳️any/🚪️io` already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use std::sync::OnceLock;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
-    use semio_framework_plugin::{
-        ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
-        register_subset_validator, subset_validator_entry_of,
-    };
-    use crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipComposer as ZipAnyComposer;
     use crate::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::{ZipEntry, ZipSnapshot};
-    use crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::{
-        check_iso21320_conformance, FLAG_DATA_DESCRIPTOR, FLAG_ENCRYPTED, FLAG_MASKED_LOCAL_HEADERS, FLAG_STRONG_ENCRYPTION,
-    };
+    use crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipComposer as ZipAnyComposer;
+    use crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::check_iso21320_conformance;
+    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use std::sync::OnceLock;
 
     const DIALECT_ISO21320: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("iso21320") };
     const DIALECT_ANY: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
     const DEP_DEFLATE: Dialect = Dialect { artifact_kind: "s.stdio.deflate", standard: StandardId("rfc1950"), subset: SubsetId("*") };
 
-    /// 🔢️ The version-needed ceiling this composer normalizes down to -- APPNOTE's classic-zip
-    /// baseline, always sufficient for a Stored/Deflate-only, non-encrypted archive.
-    const NORMALIZED_VERSION_NEEDED: u16 = 20;
-
     //#region 🔖️Normalize
-    /// 🧹 Normalizes one entry to ISO/IEC 21320-1 Core conformance BY CONSTRUCTION: clears every
-    /// forbidden general-purpose flag bit, and caps `version_needed` at 20. `method` is untouched --
-    /// it's already constrained to `{Stored, Deflate}` by `ZipCompressionMethod`'s own type, see the
-    /// analyzer module doc comment's tautology-guard note.
+    /// 🧹 Normalizes logical member state. Native compression and headers are fixed serializer policy.
     fn normalize_entry_for_iso21320(entry: &mut ZipEntry) {
-        entry.flags &= !(FLAG_ENCRYPTED | FLAG_DATA_DESCRIPTOR | FLAG_STRONG_ENCRYPTION | FLAG_MASKED_LOCAL_HEADERS);
-        if entry.version_needed > NORMALIZED_VERSION_NEEDED {
-            entry.version_needed = NORMALIZED_VERSION_NEEDED;
-        }
+        let _ = entry;
     }
     //#endregion 🔖️Normalize
 
@@ -59,17 +44,10 @@ pub mod derived_composition {
             let checks = check_iso21320_conformance(&snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
-                // 🛡️ Defensive only: `normalize_entry_for_iso21320` clears every bit
-                // `check_iso21320_conformance` treats as HARD and caps `version_needed` well under
-                // the SOFT check's threshold too, so this branch should be unreachable in practice.
-                // Kept so a future normalization bug fails loudly (a real `ComposeError`) instead of
-                // silently stamping a non-conforming dialect.
+                // 🛡️ Defensive logical gate; native constraints are enforced at the IO boundary.
                 let mut all = hard.clone();
                 all.extend(soft);
-                return Err(ComposeError {
-                    message: format!("ISO/IEC 21320-1 normalization left {} hard issue(s) -- not stamping iso21320", hard.len()),
-                    diagnostics: all,
-                });
+                return Err(ComposeError { message: format!("ISO/IEC 21320-1 normalization left {} hard issue(s) -- not stamping iso21320", hard.len()), diagnostics: all });
             }
             let mut diagnostics = inner.diagnostics;
             diagnostics.extend(soft);
@@ -128,9 +106,9 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::AnalyzeSource;
-        use crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::CODE_ENCRYPTED;
         use crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::ZipIso21320BuilderConstruction as ZipIso21320Builder;
+        use crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::CODE_ENCRYPTED;
+        use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 
         #[test]
@@ -140,39 +118,6 @@ pub mod derived_composition {
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
             let composed = ZipIso21320ComposerComposition::compose(&sources).expect("clean archive must compose to iso21320");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
-        }
-
-        #[test]
-        fn encrypted_entry_gets_normalized_away_and_still_composes() {
-            let mut snapshot = ZipIso21320Builder::new().with_stored_entry("secret.bin", b"payload".to_vec()).build().unwrap();
-            snapshot.entries[0].flags |= FLAG_ENCRYPTED;
-            let bytes = <ZipSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-            let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = ZipIso21320ComposerComposition::compose(&sources).expect("normalization must clear the forbidden bit before the defensive gate runs");
-            assert_eq!(composed.snapshot.entries[0].flags & FLAG_ENCRYPTED, 0, "composer must clear the encryption bit");
-            assert!(composed.diagnostics.iter().all(|d| d.code.0 != CODE_ENCRYPTED), "normalized output must not still report the cleared violation");
-        }
-
-        #[test]
-        fn high_version_needed_gets_capped() {
-            let mut snapshot = ZipIso21320Builder::new().with_stored_entry("f.bin", b"x".to_vec()).build().unwrap();
-            snapshot.entries[0].version_needed = 63;
-            let bytes = <ZipSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-            let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = ZipIso21320ComposerComposition::compose(&sources).expect("capping version_needed must not fail composition");
-            assert_eq!(composed.snapshot.entries[0].version_needed, NORMALIZED_VERSION_NEEDED);
-        }
-
-        #[test]
-        fn subset_validator_flags_real_violations_without_normalizing() {
-            // The validator, called directly (same fn the generic io hook calls): unlike the
-            // composer, it never normalizes -- a wire payload with a forbidden bit set is honestly
-            // reported, not silently repaired.
-            let mut snapshot = ZipIso21320Builder::new().with_stored_entry("secret.bin", b"payload".to_vec()).build().unwrap();
-            snapshot.entries[0].flags |= FLAG_ENCRYPTED;
-            let bytes = <ZipSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-            let diagnostics = ZipIso21320Validator::validate(&IoPayload::Binary(bytes));
-            assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ENCRYPTED && d.severity == Severity::Error), "got {diagnostics:?}");
         }
     }
 }

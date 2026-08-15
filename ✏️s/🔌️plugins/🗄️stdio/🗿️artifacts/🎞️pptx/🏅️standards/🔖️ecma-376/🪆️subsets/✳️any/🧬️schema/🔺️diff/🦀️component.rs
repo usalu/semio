@@ -16,7 +16,7 @@
 //! flagged in `glue_followup` for hoisting to `zip::opc` once xlsx/bcf need the identical shape
 //! too (docx already flagged the same hoist).
 
-use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxPhysicalState, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform, PptxXmlPart};
+use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform, PptxXmlPart};
 use crate::artifacts::pptx::PptxSnapshot;
 use crate::artifacts::xml::schema::snapshot::{XmlDocument, XmlNode};
 use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
@@ -237,9 +237,6 @@ pub struct PptxDiff {
     #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub xml_parts: Option<Vec<PptxXmlPart>>,
-    #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub physical: Option<Option<PptxPhysicalState>>,
 }
 //#endregion 🔖️Diff
 
@@ -1111,7 +1108,7 @@ impl MutationDiff<PptxSnapshot> for PptxDiff {
         if let Some(xml_parts) = &self.xml_parts {
             next.xml_parts = xml_parts.clone();
         }
-        if let Some(physical) = &self.physical { next.physical = physical.clone(); }
+        next.normalize_logical_keys();
         next
     }
 
@@ -1129,7 +1126,6 @@ impl MutationDiff<PptxSnapshot> for PptxDiff {
         if other.xml_parts.is_some() {
             self.xml_parts = other.xml_parts;
         }
-        if other.physical.is_some() { self.physical = other.physical; }
     }
 }
 //#endregion 🔖️Apply
@@ -1141,16 +1137,15 @@ impl DiffAlgebra<PptxSnapshot> for PptxDiff {
             opc: self.opc.as_ref().map(|d| inverse_opc_diff(&base.opc, d)),
             presentation: self.presentation.as_ref().map(|d| inverse_presentation_diff(&base.presentation, d)),
             xml_parts: self.xml_parts.as_ref().map(|_| base.xml_parts.clone()),
-            physical: self.physical.as_ref().map(|_| base.physical.clone()),
         }
     }
 
     fn between(base: &PptxSnapshot, other: &PptxSnapshot) -> Self {
-        PptxDiff { opc: diff_opc(&base.opc, &other.opc), presentation: diff_presentation(&base.presentation, &other.presentation), xml_parts: (base.xml_parts != other.xml_parts).then(|| other.xml_parts.clone()), physical: (base.physical != other.physical).then(|| other.physical.clone()) }
+        PptxDiff { opc: diff_opc(&base.opc, &other.opc), presentation: diff_presentation(&base.presentation, &other.presentation), xml_parts: (base.xml_parts != other.xml_parts).then(|| other.xml_parts.clone()) }
     }
 
     fn is_empty(&self) -> bool {
-        self.opc.is_none() && self.presentation.is_none() && self.xml_parts.is_none() && self.physical.is_none()
+        self.opc.is_none() && self.presentation.is_none() && self.xml_parts.is_none()
     }
 }
 //#endregion 🔖️DiffAlgebra
@@ -1165,13 +1160,13 @@ pub fn diff_set_snapshot(base: &PptxSnapshot, next: &PptxSnapshot) -> PptxDiff {
 /// 🧩 Builds the diff for inserting `slide` at `index` (FINAL state).
 pub fn diff_insert_slide(index: usize, slide: PptxSlide) -> PptxDiff {
     let slides = PptxSlidesDiff { added: vec![IndexAdded { index, item: slide }], ..Default::default() };
-    PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None, physical: None }
+    PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None }
 }
 
 /// 🧩 Builds the diff for removing the slide at `index` (BASE-state index).
 pub fn diff_remove_slide(index: usize) -> PptxDiff {
     let slides = PptxSlidesDiff { removed: vec![index], ..Default::default() };
-    PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None, physical: None }
+    PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None }
 }
 
 /// 🧩 Builds the diff for moving the slide at BASE-state index `from` to FINAL-state index `to`
@@ -1184,12 +1179,12 @@ pub fn diff_move_slide(presentation: &PptxPresentation, from: usize, to: usize) 
         return PptxDiff::default();
     }
     let slides = PptxSlidesDiff { removed: vec![from], added: vec![IndexAdded { index: to, item: slide.clone() }], modified: vec![] };
-    PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None, physical: None }
+    PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None }
 }
 
 fn wrap_slide_diff(slide_index: usize, slide_diff: PptxSlideDiff) -> PptxDiff {
     let slides = PptxSlidesDiff { modified: vec![IndexModified { index: slide_index, diff: slide_diff }], ..Default::default() };
-    PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None, physical: None }
+    PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None }
 }
 
 /// 🧩 Builds the diff for inserting `shape` at `shape_index` (FINAL state) on the slide at
@@ -1274,10 +1269,12 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 pub(crate) fn enc_xml_parts(parts: &[PptxXmlPart]) -> String {
-    hex_encode(&serde_json::to_vec(parts).expect("serializable logical pptx xml parts"))
+    let value = dsl::to_dsl_value(&parts).expect("serializable logical pptx xml parts");
+    hex_encode(&store::pack_rt::encode_wire_value(&value))
 }
 pub(crate) fn dec_xml_parts(s: &str) -> Result<Vec<PptxXmlPart>, String> {
-    serde_json::from_slice(&hex_decode(s)?).map_err(|error| error.to_string())
+    let value = store::pack_rt::decode_wire_value(&hex_decode(s)?).map_err(|error| error.to_string())?;
+    dsl::from_dsl_value(value)
 }
 pub(crate) fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
@@ -1442,7 +1439,10 @@ pub(crate) fn enc_shape(s: &PptxShape) -> String {
         PptxShape::TextBox { text_frame, position } => format!("B[{},{}]", enc_list(text_frame, enc_paragraph), enc_transform(position)),
         PptxShape::Picture { blip_rel_id, position } => format!("P[{},{}]", enc_str(blip_rel_id), enc_transform(position)),
         PptxShape::Placeholder { kind, text_frame, position } => format!("H[{},{},{}]", enc_str(kind), enc_list(text_frame, enc_paragraph), enc_transform(position)),
-        PptxShape::Other { node } => format!("O[{}]", hex_encode(&serde_json::to_vec(node).expect("serializable logical xml node"))),
+        PptxShape::Other { node } => {
+            let value = dsl::to_dsl_value(node).expect("serializable logical xml node");
+            format!("O[{}]", hex_encode(&store::pack_rt::encode_wire_value(&value)))
+        }
     }
 }
 pub(crate) fn dec_shape(s: &str) -> Result<PptxShape, String> {
@@ -1464,7 +1464,10 @@ pub(crate) fn dec_shape(s: &str) -> Result<PptxShape, String> {
             let [kind, text_frame, position] = parts.as_slice() else { return Err(format!("shape placeholder: expected 3 fields, got {}", parts.len())) };
             Ok(PptxShape::Placeholder { kind: dec_str(kind)?, text_frame: dec_list(text_frame, dec_paragraph)?, position: dec_transform(position)? })
         }
-        "O" => Ok(PptxShape::Other { node: serde_json::from_slice::<XmlNode>(&hex_decode(inner)?).map_err(|error| error.to_string())? }),
+        "O" => {
+            let value = store::pack_rt::decode_wire_value(&hex_decode(inner)?).map_err(|error| error.to_string())?;
+            Ok(PptxShape::Other { node: dsl::from_dsl_value(value)? })
+        }
         other => Err(format!("shape: unknown tag {other:?}")),
     }
 }
@@ -1713,10 +1716,12 @@ pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 pub(crate) fn enc_xml_parts_bin(parts: &[PptxXmlPart], out: &mut Vec<u8>) {
-    write_bytes_lp(out, &serde_json::to_vec(parts).expect("serializable logical pptx xml parts"));
+    let value = dsl::to_dsl_value(&parts).expect("serializable logical pptx xml parts");
+    write_bytes_lp(out, &store::pack_rt::encode_wire_value(&value));
 }
 pub(crate) fn dec_xml_parts_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<PptxXmlPart>, String> {
-    serde_json::from_slice(&read_bytes_lp(reader)?).map_err(|error| error.to_string())
+    let value = store::pack_rt::decode_wire_value(&read_bytes_lp(reader)?).map_err(|error| error.to_string())?;
+    dsl::from_dsl_value(value)
 }
 pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
@@ -1822,7 +1827,8 @@ pub(crate) fn enc_shape_bin(s: &PptxShape, out: &mut Vec<u8>) {
         }
         PptxShape::Other { node } => {
             out.push(3);
-            write_bytes_lp(out, &serde_json::to_vec(node).expect("serializable logical xml node"));
+            let value = dsl::to_dsl_value(node).expect("serializable logical xml node");
+            write_bytes_lp(out, &store::pack_rt::encode_wire_value(&value));
         }
     }
 }
@@ -1832,7 +1838,10 @@ pub(crate) fn dec_shape_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxSh
         0 => Ok(PptxShape::TextBox { text_frame: dec_paragraph_list_bin(reader)?, position: dec_transform_bin(reader)? }),
         1 => Ok(PptxShape::Picture { blip_rel_id: read_str_lp(reader)?, position: dec_transform_bin(reader)? }),
         2 => Ok(PptxShape::Placeholder { kind: read_str_lp(reader)?, text_frame: dec_paragraph_list_bin(reader)?, position: dec_transform_bin(reader)? }),
-        3 => Ok(PptxShape::Other { node: serde_json::from_slice(&read_bytes_lp(reader)?).map_err(|error| error.to_string())? }),
+        3 => {
+            let value = store::pack_rt::decode_wire_value(&read_bytes_lp(reader)?).map_err(|error| error.to_string())?;
+            Ok(PptxShape::Other { node: dsl::from_dsl_value(value)? })
+        }
         other => Err(format!("shape binary: unknown tag {other}")),
     }
 }
@@ -2274,9 +2283,6 @@ fn print_pptx_diff(d: &PptxDiff) -> String {
     if let Some(v) = &d.xml_parts {
         tokens.push(format!("xmlParts={}", enc_xml_parts(v)));
     }
-    if let Some(v) = &d.physical {
-        tokens.push(format!("physical={}", hex_encode(&serde_json::to_vec(v).expect("serializable pptx physical diff"))));
-    }
     tokens.join(" ")
 }
 fn parse_pptx_diff(line: &str) -> Result<PptxDiff, String> {
@@ -2291,8 +2297,6 @@ fn parse_pptx_diff(line: &str) -> Result<PptxDiff, String> {
             d.presentation = Some(dec_presentation_diff(rest)?);
         } else if let Some(rest) = token.strip_prefix("xmlParts=") {
             d.xml_parts = Some(dec_xml_parts(rest)?);
-        } else if let Some(rest) = token.strip_prefix("physical=") {
-            d.physical = Some(serde_json::from_slice(&hex_decode(rest)?).map_err(|error| error.to_string())?);
         } else {
             return Err(format!("pptx diff: unknown token {token:?}"));
         }
@@ -2300,64 +2304,28 @@ fn parse_pptx_diff(line: &str) -> Result<PptxDiff, String> {
     Ok(d)
 }
 
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct PptxDiffRecord {
+    value: dsl::DslValue,
+}
+
 impl protocol::DiffCodec for PptxDiff {
     fn print_diff(&self) -> String {
-        print_pptx_diff(self)
+        let record = PptxDiffRecord { value: dsl::to_dsl_value(self).expect("serializable logical pptx diff") };
+        dsl::print(&record.__dsl_to_record(), &PptxDiffRecord::__dsl_spec(), dsl::JoinMode::Inline)
     }
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_pptx_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        let record = dsl::parse(line, &PptxDiffRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline })?;
+        let model = PptxDiffRecord::__dsl_from_record(&record)?;
+        dsl::from_dsl_value(model.value).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
     }
-    /// 🧪️ FG-wave: REAL binary frame (`format u8 | flags u8 | [opc][presentation]`), matching
-    /// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape
-    /// — upgraded from F1's `print_diff().into_bytes()` text-as-binary shortcut (per this ticket's
-    /// own `📖️grammar-recipe.md` §4/§6 census, 100% of stdio's `DiffCodec` impls were still on
-    /// that shortcut before this pilot ladder). `flags` bits 0/1 mark `opc`/`presentation`
-    /// presence; each present field's own recursive binary payload follows in that fixed order
-    /// (see `🔖️BinaryCodecs` above).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut flags: u8 = 0;
-        if self.opc.is_some() {
-            flags |= 0b01;
-        }
-        if self.presentation.is_some() {
-            flags |= 0b10;
-        }
-        if self.xml_parts.is_some() {
-            flags |= 0b100;
-        }
-        if self.physical.is_some() { flags |= 0b1000; }
-        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
-        if let Some(opc) = &self.opc {
-            enc_opc_diff_bin(opc, &mut out);
-        }
-        if let Some(presentation) = &self.presentation {
-            enc_presentation_diff_bin(presentation, &mut out);
-        }
-        if let Some(xml_parts) = &self.xml_parts {
-            enc_xml_parts_bin(xml_parts, &mut out);
-        }
-        if let Some(physical) = &self.physical {
-            write_bytes_lp(&mut out, &serde_json::to_vec(physical).expect("serializable pptx physical diff"));
-        }
-        Ok(out)
+        let value = dsl::to_dsl_value(self).map_err(|detail| protocol::ProtocolError::Malformed { what: "pptx diff", offset: 0, detail })?;
+        Ok(store::pack_rt::encode_wire_value(&value))
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
-        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let opc = if flags & 0b01 != 0 { Some(dec_opc_diff_bin(&mut reader).map_err(|e| malformed("diff opc", reader.position(), e))?) } else { None };
-        let presentation = if flags & 0b10 != 0 { Some(dec_presentation_diff_bin(&mut reader).map_err(|e| malformed("diff presentation", reader.position(), e))?) } else { None };
-        let xml_parts = if flags & 0b100 != 0 {
-            let offset = reader.position();
-            Some(dec_xml_parts_bin(&mut reader).map_err(|e| malformed("diff xml parts", offset, e))?)
-        } else {
-            None
-        };
-        let physical = if flags & 0b1000 != 0 {
-            Some(serde_json::from_slice(&read_bytes_lp(&mut reader).map_err(|e| malformed("diff physical", reader.position(), e))?).map_err(|e| malformed("diff physical", reader.position(), e.to_string()))?)
-        } else { None };
-        Ok(PptxDiff { opc, presentation, xml_parts, physical })
+        let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx diff", offset: 0, detail: error.to_string() })?;
+        dsl::from_dsl_value(value).map_err(|detail| protocol::ProtocolError::Malformed { what: "pptx diff", offset: 0, detail })
     }
 }
 //#endregion 🔖️TopLevel

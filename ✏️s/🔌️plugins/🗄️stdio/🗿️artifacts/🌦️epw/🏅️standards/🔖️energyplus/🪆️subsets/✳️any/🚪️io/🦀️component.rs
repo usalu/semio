@@ -3,18 +3,13 @@
 //! weather-file-epw-data-dictionary.html — see `…/schema/snapshot` module doc for the full
 //! rationale) plus composition/registration. 🦑 Codec + registration dissolved out of the former
 //! `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{
-    EpwDataPeriod, EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot, EPW_RECORD_FIELD_COUNT,
-    STDIO_EPW_DOCUMENT_SCHEMA,
-};
+use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriod, EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot, EPW_RECORD_FIELD_COUNT, STDIO_EPW_DOCUMENT_SCHEMA};
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{
-        ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId,
-    };
     use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
     use crate::artifacts::epw::standards::energyplus::subsets::any::schema::EpwAnalyzer;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.epw", standard: StandardId("energyplus"), subset: SubsetId("*") };
 
@@ -25,7 +20,9 @@ pub mod derived_composition {
         type Snapshot = EpwSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] { &[DIALECT] }
+        fn reads() -> &'static [Dialect] {
+            &[DIALECT]
+        }
 
         fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
@@ -40,10 +37,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "EpwComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = EpwAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "EpwComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "EpwComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -55,7 +49,9 @@ pub mod derived_composition {
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::epw::standards::energyplus::subsets::any::schema::epw_artifact_schema_descriptor());
         register_artifact_inferences();
-        store::register_document_codec(store::ArtifactCodec::of::<EpwSnapshot, crate::artifacts::epw::standards::energyplus::subsets::any::schema::mutations::EpwMutation>(crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::STDIO_EPW_DOCUMENT_SCHEMA));
+        store::register_document_codec(store::ArtifactCodec::of::<EpwSnapshot, crate::artifacts::epw::standards::energyplus::subsets::any::schema::mutations::EpwMutation>(
+            crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::STDIO_EPW_DOCUMENT_SCHEMA,
+        ));
     }
 
     /// 💡️ Registers `s.stdio.epw.inference`'s facet leaves into the OS-wide inference catalog —
@@ -121,10 +117,7 @@ pub fn parse_location_line(line: &str) -> Result<EpwLocation, String> {
 }
 
 fn encode_location_line(l: &EpwLocation) -> String {
-    format!(
-        "LOCATION,{},{},{},{},{},{},{},{},{}",
-        l.city, l.state_province, l.country, l.source, l.wmo, l.latitude, l.longitude, l.time_zone, l.elevation
-    )
+    format!("LOCATION,{},{},{},{},{},{},{},{},{}", l.city, l.state_province, l.country, l.source, l.wmo, l.latitude, l.longitude, l.time_zone, l.elevation)
 }
 //#endregion 🔖️Location
 
@@ -142,15 +135,7 @@ fn parse_data_periods_line(line: &str) -> Result<EpwDataPeriods, String> {
     if rest.len() != n_periods * 4 {
         return Err(format!("epw: DATA PERIODS expected {} period fields for {n_periods} period(s), got {}", n_periods * 4, rest.len()));
     }
-    let periods = rest
-        .chunks(4)
-        .map(|c| EpwDataPeriod {
-            name: c[0].to_string(),
-            start_day_of_week: c[1].to_string(),
-            start_date: c[2].to_string(),
-            end_date: c[3].to_string(),
-        })
-        .collect();
+    let periods = rest.chunks(4).map(|c| EpwDataPeriod { name: c[0].to_string(), start_day_of_week: c[1].to_string(), start_date: c[2].to_string(), end_date: c[3].to_string() }).collect();
     Ok(EpwDataPeriods { records_per_hour, periods })
 }
 
@@ -206,18 +191,7 @@ pub fn decode_epw(text: &str) -> Result<EpwSnapshot, String> {
         return Err("epw: no data records".into());
     }
 
-    Ok(EpwSnapshot {
-        schema: STDIO_EPW_DOCUMENT_SCHEMA.into(),
-        location,
-        design_conditions,
-        typical_extreme_periods,
-        ground_temperatures,
-        holidays_dst,
-        comments_1,
-        comments_2,
-        data_periods,
-        records,
-    })
+    Ok(EpwSnapshot { schema: STDIO_EPW_DOCUMENT_SCHEMA.into(), location, design_conditions, typical_extreme_periods, ground_temperatures, holidays_dst, comments_1, comments_2, data_periods, records })
 }
 
 /// 📤️ Encodes a full EPW text document. Always emits CRLF line endings (the real EnergyPlus
@@ -306,9 +280,9 @@ mod tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::epw::standards::energyplus::subsets::any::schema::EpwComposer as EpwRawAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 

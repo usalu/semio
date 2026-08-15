@@ -28,8 +28,12 @@ fn expand(min: &mut SemioPoint3, max: &mut SemioPoint3, p: &SemioPoint3, seen_an
         *seen_any = true;
         return;
     }
-    min.x = min.x.min(p.x); min.y = min.y.min(p.y); min.z = min.z.min(p.z);
-    max.x = max.x.max(p.x); max.y = max.y.max(p.y); max.z = max.z.max(p.z);
+    min.x = min.x.min(p.x);
+    min.y = min.y.min(p.y);
+    min.z = min.z.min(p.z);
+    max.x = max.x.max(p.x);
+    max.y = max.y.max(p.y);
+    max.z = max.z.max(p.z);
 }
 
 /// 📦️ Computes [`SemioModelBounds`] — pure, total, O(spatial + elements). An entity-less snapshot
@@ -71,14 +75,7 @@ mod tests {
                 SpatialNode { id: "site-1".into(), kind: SpatialKind::Site, name: "Site".into(), parent_id: None, placement: placed(-5.0, 0.0, 0.0) },
                 SpatialNode { id: "storey-1".into(), kind: SpatialKind::Storey, name: "Ground".into(), parent_id: Some("site-1".into()), placement: placed(0.0, 0.0, 3.0) },
             ],
-            elements: vec![SemioModelElement {
-                id: "wall-1".into(),
-                class: ElementClass::Wall,
-                placement: placed(10.0, -2.0, 1.0),
-                geometry: GeometryRef::None,
-                spatial_id: Some("storey-1".into()),
-                psets: Vec::new(),
-            }],
+            elements: vec![SemioModelElement { id: "wall-1".into(), class: ElementClass::Wall, placement: placed(10.0, -2.0, 1.0), geometry: GeometryRef::None, spatial_id: Some("storey-1".into()), psets: Vec::new() }],
             relations: Vec::new(),
         }
     }

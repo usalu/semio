@@ -7,8 +7,8 @@ start record
 # P2-FG3: REAL binary diff frame, replacing F6's `print_diff().into_bytes()` text-as-binary
 # shortcut (`../../🦀️component.rs`'s old `DiffCodec::encode_diff` -- per the P2-W0 census, 100% of
 # stdio's `DiffCodec` impls were still on this shortcut). `format u8` + `flags u8` (bit0 =
-# `declaration` present, bit1 = `doctype` present, bit2 = `root` present, bit3 = persisted
-# `source` provenance present) as two REAL fixed fields, individually protocol-walked.
+# `declaration` present, bit1 = `doctype` present, bit2 = `root` present, bit3 = `prolog`
+# present) as two REAL fixed fields, individually protocol-walked.
 #
 # Past that header, `declaration`/`doctype`/`root` (whichever `flags` marks present, in that FIXED
 # order) are bundled into ONE opaque trailing `bytes` chain rather than three separately-declared

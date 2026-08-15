@@ -20,11 +20,11 @@
 //! - No color/PBR/texture-byte concept beyond flat per-vertex RGBA -> `materials`/`textures` stay
 //!   empty, `material_id` stays `None`.
 
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::ply::PlySnapshot;
 use crate::artifacts::ply::schema::snapshot::{PlyProperty, PlyScalarType, PlyValue};
+use crate::artifacts::ply::PlySnapshot;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ply", standard: StandardId("1.0"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
@@ -86,12 +86,10 @@ impl ArtifactDeserializer for SemioMeshFromPly {
         let normal_idx = ["nx", "ny", "nz"].iter().map(|n| property_index(&vertex_el.properties, n)).collect::<Option<Vec<_>>>();
         let color_idx: Option<Vec<usize>> = ["red", "green", "blue"].iter().map(|n| property_index(&vertex_el.properties, n)).collect();
         let alpha_idx = property_index(&vertex_el.properties, "alpha");
-        let uv_idx = ["u", "v"].iter().map(|n| property_index(&vertex_el.properties, n)).collect::<Option<Vec<_>>>()
-            .or_else(|| ["s", "t"].iter().map(|n| property_index(&vertex_el.properties, n)).collect::<Option<Vec<_>>>());
+        let uv_idx = ["u", "v"].iter().map(|n| property_index(&vertex_el.properties, n)).collect::<Option<Vec<_>>>().or_else(|| ["s", "t"].iter().map(|n| property_index(&vertex_el.properties, n)).collect::<Option<Vec<_>>>());
 
-        let read = |row_idx: usize, prop_idx: usize| -> Result<f64, store::PackError> {
-            value_as_f64(&vertex_el.rows[row_idx].values[prop_idx]).map_err(|e| store::PackError::Schema(format!("SemioMeshFromPly: row {row_idx} property {prop_idx}: {e}")))
-        };
+        let read =
+            |row_idx: usize, prop_idx: usize| -> Result<f64, store::PackError> { value_as_f64(&vertex_el.rows[row_idx].values[prop_idx]).map_err(|e| store::PackError::Schema(format!("SemioMeshFromPly: row {row_idx} property {prop_idx}: {e}"))) };
 
         let mut positions = Vec::with_capacity(vertex_el.rows.len());
         let mut normals = Vec::new();
@@ -108,12 +106,7 @@ impl ArtifactDeserializer for SemioMeshFromPly {
                     Some(ai) => normalize_color_channel(read(i, ai)?, scalar_kind_of(&vertex_el.properties, ai).unwrap_or(PlyScalarType::Float)) as f32,
                     None => 1.0,
                 };
-                colors.push(SemioRgba {
-                    r: normalize_color_channel(read(i, cs[0])?, kind) as f32,
-                    g: normalize_color_channel(read(i, cs[1])?, kind) as f32,
-                    b: normalize_color_channel(read(i, cs[2])?, kind) as f32,
-                    a,
-                });
+                colors.push(SemioRgba { r: normalize_color_channel(read(i, cs[0])?, kind) as f32, g: normalize_color_channel(read(i, cs[1])?, kind) as f32, b: normalize_color_channel(read(i, cs[2])?, kind) as f32, a });
             }
             if let Some(us) = &uv_idx {
                 uvs.push(SemioUv { u: read(i, us[0])?, v: read(i, us[1])? });
@@ -124,7 +117,8 @@ impl ArtifactDeserializer for SemioMeshFromPly {
         let (topology, indices) = match face_el {
             None => (SemioTopology::Points, Vec::new()),
             Some(face_el) => {
-                let list_idx = property_index(&face_el.properties, "vertex_indices").or_else(|| property_index(&face_el.properties, "vertex_index"))
+                let list_idx = property_index(&face_el.properties, "vertex_indices")
+                    .or_else(|| property_index(&face_el.properties, "vertex_index"))
                     .ok_or_else(|| store::PackError::Schema("SemioMeshFromPly: 'face' element has no 'vertex_indices'/'vertex_index' list property".to_string()))?;
                 let mut indices = Vec::new();
                 for (ri, row) in face_el.rows.iter().enumerate() {
@@ -135,8 +129,7 @@ impl ArtifactDeserializer for SemioMeshFromPly {
                     if list.len() < 3 {
                         return Err(store::PackError::Schema(format!("SemioMeshFromPly: face row {ri} has {} indices, need at least 3", list.len())));
                     }
-                    let face_indices: Vec<u32> = list.iter().map(|v| value_as_f64(v).map(|f| f as u32)).collect::<Result<_, _>>()
-                        .map_err(|e| store::PackError::Schema(format!("SemioMeshFromPly: face row {ri}: {e}")))?;
+                    let face_indices: Vec<u32> = list.iter().map(|v| value_as_f64(v).map(|f| f as u32)).collect::<Result<_, _>>().map_err(|e| store::PackError::Schema(format!("SemioMeshFromPly: face row {ri}: {e}")))?;
                     for i in 1..face_indices.len() - 1 {
                         indices.push(face_indices[0]);
                         indices.push(face_indices[i]);
@@ -148,12 +141,7 @@ impl ArtifactDeserializer for SemioMeshFromPly {
         };
 
         let primitive = SemioPrimitive { id: "mesh-0-prim-0".to_string(), topology, positions, normals, uvs, colors, indices, material_id: None };
-        Ok(SemioMeshSnapshot {
-            schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(),
-            meshes: vec![SemioMesh { id: "mesh-0".to_string(), primitives: vec![primitive] }],
-            materials: Vec::new(),
-            textures: Vec::new(),
-        })
+        Ok(SemioMeshSnapshot { schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(), meshes: vec![SemioMesh { id: "mesh-0".to_string(), primitives: vec![primitive] }], materials: Vec::new(), textures: Vec::new() })
     }
 }
 

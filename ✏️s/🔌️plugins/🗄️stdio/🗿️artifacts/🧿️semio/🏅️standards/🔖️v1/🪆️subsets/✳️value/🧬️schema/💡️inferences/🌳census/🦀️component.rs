@@ -42,12 +42,30 @@ impl Default for SemioValueCensus {
 /// depth reached at or below it (`depth` is this node's own 1-based depth).
 fn walk(value: &SemioValue, census: &mut SemioValueCensus, depth: u32) -> u32 {
     match value {
-        SemioValue::Null => { census.null_count += 1; depth }
-        SemioValue::Bool { .. } => { census.bool_count += 1; depth }
-        SemioValue::Int { .. } => { census.int_count += 1; depth }
-        SemioValue::Float { .. } => { census.float_count += 1; depth }
-        SemioValue::Str { .. } => { census.str_count += 1; depth }
-        SemioValue::Bytes { .. } => { census.bytes_count += 1; depth }
+        SemioValue::Null => {
+            census.null_count += 1;
+            depth
+        }
+        SemioValue::Bool { .. } => {
+            census.bool_count += 1;
+            depth
+        }
+        SemioValue::Int { .. } => {
+            census.int_count += 1;
+            depth
+        }
+        SemioValue::Float { .. } => {
+            census.float_count += 1;
+            depth
+        }
+        SemioValue::Str { .. } => {
+            census.str_count += 1;
+            depth
+        }
+        SemioValue::Bytes { .. } => {
+            census.bytes_count += 1;
+            depth
+        }
         SemioValue::List { items } => {
             census.list_count += 1;
             items.iter().fold(depth, |acc, item| acc.max(walk(item, census, depth + 1)))
@@ -56,7 +74,10 @@ fn walk(value: &SemioValue, census: &mut SemioValueCensus, depth: u32) -> u32 {
             census.map_count += 1;
             entries.iter().fold(depth, |acc, entry| acc.max(walk(&entry.value, census, depth + 1)))
         }
-        SemioValue::Ref { .. } => { census.ref_count += 1; depth }
+        SemioValue::Ref { .. } => {
+            census.ref_count += 1;
+            depth
+        }
     }
 }
 

@@ -11,8 +11,8 @@ use protocol::MutationDiff;
 // 🧭️ `DiffAlgebra` lives at `command::DiffAlgebra` (not re-exported bare at the `protocol` crate
 // root the way `MutationDiff` is) -- see `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs`.
 use protocol::command::DiffAlgebra;
-use serde::{Deserialize, Serialize};
 use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.deflate`. No `snapshot: Option<DeflateSnapshot>` full-replace slot --
@@ -43,20 +43,40 @@ pub struct DeflateDiff {
 impl MutationDiff<DeflateSnapshot> for DeflateDiff {
     fn apply(&self, base: &DeflateSnapshot) -> DeflateSnapshot {
         let mut next = base.clone();
-        if let Some(v) = self.compression_method { next.compression_method = v; }
-        if let Some(v) = self.window_bits { next.window_bits = v; }
-        if let Some(v) = self.compression_level_hint { next.compression_level_hint = v; }
-        if let Some(v) = self.dict_id { next.dict_id = v; }
-        if let Some(v) = &self.payload { next.payload = v.clone(); }
+        if let Some(v) = self.compression_method {
+            next.compression_method = v;
+        }
+        if let Some(v) = self.window_bits {
+            next.window_bits = v;
+        }
+        if let Some(v) = self.compression_level_hint {
+            next.compression_level_hint = v;
+        }
+        if let Some(v) = self.dict_id {
+            next.dict_id = v;
+        }
+        if let Some(v) = &self.payload {
+            next.payload = v.clone();
+        }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.compression_method.is_some() { self.compression_method = other.compression_method; }
-        if other.window_bits.is_some() { self.window_bits = other.window_bits; }
-        if other.compression_level_hint.is_some() { self.compression_level_hint = other.compression_level_hint; }
-        if other.dict_id.is_some() { self.dict_id = other.dict_id; }
-        if other.payload.is_some() { self.payload = other.payload; }
+        if other.compression_method.is_some() {
+            self.compression_method = other.compression_method;
+        }
+        if other.window_bits.is_some() {
+            self.window_bits = other.window_bits;
+        }
+        if other.compression_level_hint.is_some() {
+            self.compression_level_hint = other.compression_level_hint;
+        }
+        if other.dict_id.is_some() {
+            self.dict_id = other.dict_id;
+        }
+        if other.payload.is_some() {
+            self.payload = other.payload;
+        }
     }
 }
 
@@ -73,22 +93,16 @@ impl DiffAlgebra<DeflateSnapshot> for DeflateDiff {
 
     fn between(base: &DeflateSnapshot, other: &DeflateSnapshot) -> Self {
         DeflateDiff {
-            compression_method: (base.compression_method != other.compression_method)
-                .then_some(other.compression_method),
+            compression_method: (base.compression_method != other.compression_method).then_some(other.compression_method),
             window_bits: (base.window_bits != other.window_bits).then_some(other.window_bits),
-            compression_level_hint: (base.compression_level_hint != other.compression_level_hint)
-                .then_some(other.compression_level_hint),
+            compression_level_hint: (base.compression_level_hint != other.compression_level_hint).then_some(other.compression_level_hint),
             dict_id: (base.dict_id != other.dict_id).then_some(other.dict_id),
             payload: (base.payload != other.payload).then_some(other.payload.clone()),
         }
     }
 
     fn is_empty(&self) -> bool {
-        self.compression_method.is_none()
-            && self.window_bits.is_none()
-            && self.compression_level_hint.is_none()
-            && self.dict_id.is_none()
-            && self.payload.is_none()
+        self.compression_method.is_none() && self.window_bits.is_none() && self.compression_level_hint.is_none() && self.dict_id.is_none() && self.payload.is_none()
     }
 }
 
@@ -98,12 +112,7 @@ pub fn diff_set_snapshot(base: &DeflateSnapshot, snapshot: &DeflateSnapshot) -> 
 }
 /// 🧩 Builds a set-compression-params diff.
 pub fn diff_set_compression_params(method: u8, window_bits: u8, level_hint: DeflateLevelHint) -> DeflateDiff {
-    DeflateDiff {
-        compression_method: Some(method),
-        window_bits: Some(window_bits),
-        compression_level_hint: Some(level_hint),
-        ..Default::default()
-    }
+    DeflateDiff { compression_method: Some(method), window_bits: Some(window_bits), compression_level_hint: Some(level_hint), ..Default::default() }
 }
 /// 🧩 Builds a set-preset-dictionary diff.
 pub fn diff_set_preset_dictionary(dict_id: Option<u32>) -> DeflateDiff {
@@ -125,14 +134,7 @@ pub fn diff_set_payload(payload: Vec<u8>) -> DeflateDiff {
 pub(crate) fn demo_diff_cases() -> Vec<DeflateDiff> {
     use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
 
-    let a = DeflateSnapshot {
-        schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
-        compression_method: 8,
-        window_bits: 7,
-        compression_level_hint: DeflateLevelHint::Fastest,
-        dict_id: None,
-        payload: b"demo-cases-a-payload".to_vec(),
-    };
+    let a = DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Fastest, dict_id: None, payload: b"demo-cases-a-payload".to_vec() };
     let b = DeflateSnapshot {
         schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
         compression_method: 9,
@@ -141,13 +143,7 @@ pub(crate) fn demo_diff_cases() -> Vec<DeflateDiff> {
         dict_id: Some(0xDEAD_BEEF),
         payload: b"demo-cases-b-different-longer-payload".to_vec(),
     };
-    vec![
-        DeflateDiff::default(),
-        DeflateDiff::between(&a, &b),
-        DeflateDiff::between(&b, &a),
-        diff_set_preset_dictionary(None),
-        diff_set_payload(Vec::new()),
-    ]
+    vec![DeflateDiff::default(), DeflateDiff::between(&a, &b), DeflateDiff::between(&b, &a), diff_set_preset_dictionary(None), diff_set_payload(Vec::new())]
 }
 //#endregion 🔖️DemoCases
 
@@ -193,8 +189,12 @@ fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn parse_u8(s: &str) -> Result<u8, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
-fn parse_u32(s: &str) -> Result<u32, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+fn parse_u8(s: &str) -> Result<u8, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+fn parse_u32(s: &str) -> Result<u32, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
 
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only) — needed even for this small a grammar
 /// because `decode_option`'s own `[0]`/`[1,<v>]` payload can itself contain a `,` (none here
@@ -263,11 +263,21 @@ fn dec_level_hint(s: &str) -> Result<DeflateLevelHint, String> {
 //#region 🔖️TopLevel
 fn print_deflate_diff(d: &DeflateDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = d.compression_method { tokens.push(format!("compression-method={v}")); }
-    if let Some(v) = d.window_bits { tokens.push(format!("window-bits={v}")); }
-    if let Some(v) = d.compression_level_hint { tokens.push(format!("level={}", enc_level_hint(v))); }
-    if let Some(v) = &d.dict_id { tokens.push(format!("dict-id={}", encode_option(v, |x| x.to_string()))); }
-    if let Some(v) = &d.payload { tokens.push(format!("payload={}", hex_encode(v))); }
+    if let Some(v) = d.compression_method {
+        tokens.push(format!("compression-method={v}"));
+    }
+    if let Some(v) = d.window_bits {
+        tokens.push(format!("window-bits={v}"));
+    }
+    if let Some(v) = d.compression_level_hint {
+        tokens.push(format!("level={}", enc_level_hint(v)));
+    }
+    if let Some(v) = &d.dict_id {
+        tokens.push(format!("dict-id={}", encode_option(v, |x| x.to_string())));
+    }
+    if let Some(v) = &d.payload {
+        tokens.push(format!("payload={}", hex_encode(v)));
+    }
     tokens.join(" ")
 }
 fn parse_deflate_diff(line: &str) -> Result<DeflateDiff, String> {
@@ -276,12 +286,19 @@ fn parse_deflate_diff(line: &str) -> Result<DeflateDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("compression-method=") { d.compression_method = Some(parse_u8(rest)?); }
-        else if let Some(rest) = token.strip_prefix("window-bits=") { d.window_bits = Some(parse_u8(rest)?); }
-        else if let Some(rest) = token.strip_prefix("level=") { d.compression_level_hint = Some(dec_level_hint(rest)?); }
-        else if let Some(rest) = token.strip_prefix("dict-id=") { d.dict_id = Some(decode_option(rest, parse_u32)?); }
-        else if let Some(rest) = token.strip_prefix("payload=") { d.payload = Some(hex_decode(rest)?); }
-        else { return Err(format!("deflate diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("compression-method=") {
+            d.compression_method = Some(parse_u8(rest)?);
+        } else if let Some(rest) = token.strip_prefix("window-bits=") {
+            d.window_bits = Some(parse_u8(rest)?);
+        } else if let Some(rest) = token.strip_prefix("level=") {
+            d.compression_level_hint = Some(dec_level_hint(rest)?);
+        } else if let Some(rest) = token.strip_prefix("dict-id=") {
+            d.dict_id = Some(decode_option(rest, parse_u32)?);
+        } else if let Some(rest) = token.strip_prefix("payload=") {
+            d.payload = Some(hex_decode(rest)?);
+        } else {
+            return Err(format!("deflate diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -304,15 +321,31 @@ impl protocol::DiffCodec for DeflateDiff {
     /// no length prefix (it is the only opaque, unbounded field in the frame).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u8 = 0;
-        if self.compression_method.is_some() { flags |= 0b0_0001; }
-        if self.window_bits.is_some() { flags |= 0b0_0010; }
-        if self.compression_level_hint.is_some() { flags |= 0b0_0100; }
-        if self.dict_id.is_some() { flags |= 0b0_1000; }
-        if self.payload.is_some() { flags |= 0b1_0000; }
+        if self.compression_method.is_some() {
+            flags |= 0b0_0001;
+        }
+        if self.window_bits.is_some() {
+            flags |= 0b0_0010;
+        }
+        if self.compression_level_hint.is_some() {
+            flags |= 0b0_0100;
+        }
+        if self.dict_id.is_some() {
+            flags |= 0b0_1000;
+        }
+        if self.payload.is_some() {
+            flags |= 0b1_0000;
+        }
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
-        if let Some(v) = self.compression_method { out.push(v); }
-        if let Some(v) = self.window_bits { out.push(v); }
-        if let Some(v) = self.compression_level_hint { out.push(v.to_bits()); }
+        if let Some(v) = self.compression_method {
+            out.push(v);
+        }
+        if let Some(v) = self.window_bits {
+            out.push(v);
+        }
+        if let Some(v) = self.compression_level_hint {
+            out.push(v.to_bits());
+        }
         if let Some(dict_id) = &self.dict_id {
             out.push(if dict_id.is_some() { 1 } else { 0 });
             if let Some(id) = dict_id {
@@ -329,16 +362,8 @@ impl protocol::DiffCodec for DeflateDiff {
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let compression_method = if flags & 0b0_0001 != 0 {
-            Some(reader.read_u8().map_err(|e| malformed("diff compression_method", reader.position(), e.to_string()))?)
-        } else {
-            None
-        };
-        let window_bits = if flags & 0b0_0010 != 0 {
-            Some(reader.read_u8().map_err(|e| malformed("diff window_bits", reader.position(), e.to_string()))?)
-        } else {
-            None
-        };
+        let compression_method = if flags & 0b0_0001 != 0 { Some(reader.read_u8().map_err(|e| malformed("diff compression_method", reader.position(), e.to_string()))?) } else { None };
+        let window_bits = if flags & 0b0_0010 != 0 { Some(reader.read_u8().map_err(|e| malformed("diff window_bits", reader.position(), e.to_string()))?) } else { None };
         let compression_level_hint = if flags & 0b0_0100 != 0 {
             let bits = reader.read_u8().map_err(|e| malformed("diff compression_level_hint", reader.position(), e.to_string()))?;
             Some(DeflateLevelHint::from_bits(bits))
@@ -383,30 +408,15 @@ mod tests {
     /// own `📚️examples/🎬️demo/🖼️assets/🗜️example.zz` fixture, duplicated here as a literal so
     /// the test doesn't reach across an emoji-path `include_bytes!` boundary.
     const REAL_FIXTURE_ZLIB: &[u8] = &[
-        0x78, 0x9c, 0x2b, 0x2e, 0x49, 0xc9, 0xcc, 0xd7, 0x4b, 0x49, 0x4d, 0xcb, 0x49, 0x2c, 0x49,
-        0x55, 0x48, 0xce, 0xcf, 0x4b, 0xcb, 0x2f, 0xca, 0x4d, 0xcc, 0x4b, 0x4e, 0x55, 0x48, 0xcb,
-        0xac, 0x28, 0x29, 0x2d, 0x4a, 0x05, 0x00, 0xda, 0xb1, 0x0c, 0xf9,
+        0x78, 0x9c, 0x2b, 0x2e, 0x49, 0xc9, 0xcc, 0xd7, 0x4b, 0x49, 0x4d, 0xcb, 0x49, 0x2c, 0x49, 0x55, 0x48, 0xce, 0xcf, 0x4b, 0xcb, 0x2f, 0xca, 0x4d, 0xcc, 0x4b, 0x4e, 0x55, 0x48, 0xcb, 0xac, 0x28, 0x29, 0x2d, 0x4a, 0x05, 0x00, 0xda, 0xb1, 0x0c,
+        0xf9,
     ];
 
     fn sweep_a() -> DeflateSnapshot {
-        DeflateSnapshot {
-            schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
-            compression_method: 8,
-            window_bits: 7,
-            compression_level_hint: DeflateLevelHint::Fastest,
-            dict_id: None,
-            payload: b"sweep-a-payload".to_vec(),
-        }
+        DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Fastest, dict_id: None, payload: b"sweep-a-payload".to_vec() }
     }
     fn sweep_b() -> DeflateSnapshot {
-        DeflateSnapshot {
-            schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
-            compression_method: 9,
-            window_bits: 6,
-            compression_level_hint: DeflateLevelHint::Maximum,
-            dict_id: Some(0xDEAD_BEEF),
-            payload: b"sweep-b-different-longer-payload".to_vec(),
-        }
+        DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 9, window_bits: 6, compression_level_hint: DeflateLevelHint::Maximum, dict_id: Some(0xDEAD_BEEF), payload: b"sweep-b-different-longer-payload".to_vec() }
     }
     //#endregion Fixtures
 
@@ -598,13 +608,7 @@ mod tests {
         let b = sweep_b();
         // 🪆️ `a.dict_id` is `None`, `b.dict_id` is `Some(_)` -- `between(a,b)` exercises the
         // Some(Some(_)) arm, `between(b,a)` exercises the Some(None) arm.
-        let cases = vec![
-            DeflateDiff::default(),
-            DeflateDiff::between(&a, &b),
-            DeflateDiff::between(&b, &a),
-            diff_set_preset_dictionary(None),
-            diff_set_payload(Vec::new()),
-        ];
+        let cases = vec![DeflateDiff::default(), DeflateDiff::between(&a, &b), DeflateDiff::between(&b, &a), diff_set_preset_dictionary(None), diff_set_payload(Vec::new())];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

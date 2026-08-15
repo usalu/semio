@@ -11,12 +11,12 @@
 use std::collections::HashSet;
 use std::f64::consts::FRAC_PI_2;
 
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{edge_length, solid_volume};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, FaceId, SolidId, VertexId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{edge_length, solid_volume};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
@@ -24,50 +24,24 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vec
 
 /// 🎨️ Constant-radius fillet on `edges` of `solid` (MVP arc-strip triangle soup). `rec` is threaded
 /// through to [`solid_from_blend_samples`] so the sample solid's provenance escapes this call.
-pub fn fillet_edges(
-    body: &mut Body,
-    solid: SolidId,
-    edges: &[EdgeId],
-    radius: f64,
-    rec: &mut OpRecorder,
-) -> Result<SolidId, KernelError> {
+pub fn fillet_edges(body: &mut Body, solid: SolidId, edges: &[EdgeId], radius: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     validate_blend_request(body, solid, edges, radius)?;
     let (points, tris) = sample_blunt_geometry(body, solid, edges, BlendKind::Fillet { radius })?;
     solid_from_blend_samples(body, &points, &tris, rec)
 }
 
 /// 🎨️ Linearly varying fillet radius `r0→r1` along a single `edge` (MVP arc-strip triangle soup).
-pub fn fillet_variable(
-    body: &mut Body,
-    solid: SolidId,
-    edge: EdgeId,
-    r0: f64,
-    r1: f64,
-    rec: &mut OpRecorder,
-) -> Result<SolidId, KernelError> {
+pub fn fillet_variable(body: &mut Body, solid: SolidId, edge: EdgeId, r0: f64, r1: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if r0 <= 0.0 || r1 <= 0.0 {
-        return Err(KernelError::InvalidInput(
-            "variable fillet radii must be positive".into(),
-        ));
+        return Err(KernelError::InvalidInput("variable fillet radii must be positive".into()));
     }
     validate_blend_request(body, solid, &[edge], r0.max(r1))?;
-    let (points, tris) = sample_blunt_geometry(
-        body,
-        solid,
-        &[edge],
-        BlendKind::Variable { r0, r1 },
-    )?;
+    let (points, tris) = sample_blunt_geometry(body, solid, &[edge], BlendKind::Variable { r0, r1 })?;
     solid_from_blend_samples(body, &points, &tris, rec)
 }
 
 /// 🎨️ Constant-distance chamfer on `edges` of `solid` (MVP inset-strip triangle soup).
-pub fn chamfer_edges(
-    body: &mut Body,
-    solid: SolidId,
-    edges: &[EdgeId],
-    distance: f64,
-    rec: &mut OpRecorder,
-) -> Result<SolidId, KernelError> {
+pub fn chamfer_edges(body: &mut Body, solid: SolidId, edges: &[EdgeId], distance: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     validate_blend_request(body, solid, edges, distance)?;
     let (points, tris) = sample_blunt_geometry(body, solid, edges, BlendKind::Chamfer { distance })?;
     solid_from_blend_samples(body, &points, &tris, rec)
@@ -87,35 +61,22 @@ enum BlendKind {
 const EDGE_STATIONS: usize = 5;
 const ARC_SAMPLES: usize = 5;
 
-fn validate_blend_request(
-    body: &Body,
-    solid: SolidId,
-    edges: &[EdgeId],
-    amount: f64,
-) -> Result<(), KernelError> {
+fn validate_blend_request(body: &Body, solid: SolidId, edges: &[EdgeId], amount: f64) -> Result<(), KernelError> {
     require_solid(body, solid)?;
     if edges.is_empty() {
-        return Err(KernelError::InvalidInput(
-            "blend requires at least one edge".into(),
-        ));
+        return Err(KernelError::InvalidInput("blend requires at least one edge".into()));
     }
     if !(amount.is_finite() && amount > 0.0) {
-        return Err(KernelError::InvalidInput(
-            "blend radius/distance must be positive".into(),
-        ));
+        return Err(KernelError::InvalidInput("blend radius/distance must be positive".into()));
     }
     let solid_edges = solid_edge_set(body, solid);
     for &edge in edges {
         if !solid_edges.contains(&edge) {
-            return Err(KernelError::MissingEntity(format!(
-                "edge {edge:?} is not on solid"
-            )));
+            return Err(KernelError::MissingEntity(format!("edge {edge:?} is not on solid")));
         }
         let min_adj = min_adjacent_edge_length(body, edge)?;
         if amount >= min_adj {
-            return Err(KernelError::InvalidInput(format!(
-                "blend amount {amount} must be smaller than min adjacent edge length {min_adj}"
-            )));
+            return Err(KernelError::InvalidInput(format!("blend amount {amount} must be smaller than min adjacent edge length {min_adj}")));
         }
     }
     Ok(())
@@ -152,10 +113,7 @@ fn solid_vertex_ids(body: &Body, solid: SolidId) -> HashSet<VertexId> {
 }
 
 fn min_adjacent_edge_length(body: &Body, edge: EdgeId) -> Result<f64, KernelError> {
-    let ent = body
-        .edges
-        .get(edge)
-        .ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
+    let ent = body.edges.get(edge).ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
     let mut min_len = f64::INFINITY;
     for vid in [ent.v0, ent.v1] {
         for adj in body.vertex_edges(vid) {
@@ -169,18 +127,12 @@ fn min_adjacent_edge_length(body: &Body, edge: EdgeId) -> Result<f64, KernelErro
         }
     }
     if !min_len.is_finite() {
-        return Err(KernelError::InvalidInput(
-            "edge has no measurable adjacent edges".into(),
-        ));
+        return Err(KernelError::InvalidInput("edge has no measurable adjacent edges".into()));
     }
     Ok(min_len)
 }
 
-fn edge_adjacent_faces(
-    body: &Body,
-    solid: SolidId,
-    edge: EdgeId,
-) -> Result<(FaceId, FaceId), KernelError> {
+fn edge_adjacent_faces(body: &Body, solid: SolidId, edge: EdgeId) -> Result<(FaceId, FaceId), KernelError> {
     let solid_faces: HashSet<FaceId> = body.solid_faces(solid).into_iter().collect();
     let mut faces = Vec::new();
     for coedge in body.edge_coedges(edge) {
@@ -195,39 +147,23 @@ fn edge_adjacent_faces(
         }
     }
     if faces.len() < 2 {
-        return Err(KernelError::Operation(
-            "blend edge must be shared by two solid faces".into(),
-        ));
+        return Err(KernelError::Operation("blend edge must be shared by two solid faces".into()));
     }
     Ok((faces[0], faces[1]))
 }
 
 fn face_outward_normal(body: &Body, face: FaceId) -> Result<Vec3, KernelError> {
-    let face_ent = body
-        .faces
-        .get(face)
-        .ok_or_else(|| KernelError::MissingEntity("face".into()))?;
-    let surface = body
-        .surfaces
-        .get(face_ent.surface)
-        .ok_or_else(|| KernelError::MissingEntity("surface".into()))?;
+    let face_ent = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity("face".into()))?;
+    let surface = body.surfaces.get(face_ent.surface).ok_or_else(|| KernelError::MissingEntity("surface".into()))?;
     let n = match surface {
         Surface::Plane { frame } => frame.z,
-        other => other.normal(0.0, 0.0).ok_or_else(|| {
-            KernelError::Operation("could not evaluate face normal for blend".into())
-        })?,
+        other => other.normal(0.0, 0.0).ok_or_else(|| KernelError::Operation("could not evaluate face normal for blend".into()))?,
     };
     let n = if face_ent.flipped { -n } else { n };
-    n.normalized()
-        .ok_or_else(|| KernelError::Operation("degenerate face normal".into()))
+    n.normalized().ok_or_else(|| KernelError::Operation("degenerate face normal".into()))
 }
 
-fn solid_from_blend_samples(
-    body: &mut Body,
-    points: &[Pnt3],
-    tris: &[[Pnt3; 3]],
-    rec: &mut OpRecorder,
-) -> Result<SolidId, KernelError> {
+fn solid_from_blend_samples(body: &mut Body, points: &[Pnt3], tris: &[[Pnt3; 3]], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if !tris.is_empty() {
         if let Ok(id) = solid_from_triangle_soup(body, tris, rec) {
             return Ok(id);
@@ -236,19 +172,11 @@ fn solid_from_blend_samples(
     make_convex_hull(body, points, rec)
 }
 
-fn sample_blunt_geometry(
-    body: &Body,
-    solid: SolidId,
-    edges: &[EdgeId],
-    kind: BlendKind,
-) -> Result<(Vec<Pnt3>, Vec<[Pnt3; 3]>), KernelError> {
+fn sample_blunt_geometry(body: &Body, solid: SolidId, edges: &[EdgeId], kind: BlendKind) -> Result<(Vec<Pnt3>, Vec<[Pnt3; 3]>), KernelError> {
     let selected: HashSet<EdgeId> = edges.iter().copied().collect();
     let mut endpoint_verts: HashSet<VertexId> = HashSet::new();
     for &edge in edges {
-        let ent = body
-            .edges
-            .get(edge)
-            .ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
+        let ent = body.edges.get(edge).ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
         endpoint_verts.insert(ent.v0);
         endpoint_verts.insert(ent.v1);
     }
@@ -265,31 +193,16 @@ fn sample_blunt_geometry(
 
     let mut tris: Vec<[Pnt3; 3]> = Vec::new();
     for &edge in &selected {
-        let ent = body
-            .edges
-            .get(edge)
-            .ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
-        let a = body
-            .vertices
-            .get(ent.v0)
-            .ok_or_else(|| KernelError::MissingEntity("vertex".into()))?
-            .position;
-        let b = body
-            .vertices
-            .get(ent.v1)
-            .ok_or_else(|| KernelError::MissingEntity("vertex".into()))?
-            .position;
+        let ent = body.edges.get(edge).ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
+        let a = body.vertices.get(ent.v0).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position;
+        let b = body.vertices.get(ent.v1).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position;
         let (f0, f1) = edge_adjacent_faces(body, solid, edge)?;
         let n0 = face_outward_normal(body, f0)?;
         let n1 = face_outward_normal(body, f1)?;
 
         let mut stations: Vec<Vec<Pnt3>> = Vec::with_capacity(EDGE_STATIONS);
         for si in 0..EDGE_STATIONS {
-            let t = if EDGE_STATIONS == 1 {
-                0.5
-            } else {
-                si as f64 / (EDGE_STATIONS - 1) as f64
-            };
+            let t = if EDGE_STATIONS == 1 { 0.5 } else { si as f64 / (EDGE_STATIONS - 1) as f64 };
             let p = a.lerp(b, t);
             let amount = match kind {
                 BlendKind::Fillet { radius } => radius,
@@ -309,11 +222,7 @@ fn sample_blunt_geometry(
                 BlendKind::Fillet { .. } | BlendKind::Variable { .. } => {
                     let center = p - n0 * amount - n1 * amount;
                     for ai in 0..ARC_SAMPLES {
-                        let theta = if ARC_SAMPLES == 1 {
-                            0.0
-                        } else {
-                            (ai as f64) * FRAC_PI_2 / (ARC_SAMPLES - 1) as f64
-                        };
+                        let theta = if ARC_SAMPLES == 1 { 0.0 } else { (ai as f64) * FRAC_PI_2 / (ARC_SAMPLES - 1) as f64 };
                         let pt = center + n0 * (amount * theta.cos()) + n1 * (amount * theta.sin());
                         ring.push(pt);
                         points.push(pt);
@@ -339,9 +248,7 @@ fn sample_blunt_geometry(
     }
 
     if points.len() < 4 {
-        return Err(KernelError::Operation(
-            "blend produced too few sample points for a solid".into(),
-        ));
+        return Err(KernelError::Operation("blend produced too few sample points for a solid".into()));
     }
     Ok((points, tris))
 }
@@ -369,10 +276,7 @@ mod tests {
         assert_eq!(edges.len(), 12);
         let out = chamfer_edges(&mut body, solid, &edges, 0.1, &mut rec).unwrap();
         let vol1 = solid_volume(&body, out, 1e-6).unwrap();
-        assert!(
-            vol1 < vol0 - 1e-6,
-            "chamfered volume {vol1} should be < original {vol0}"
-        );
+        assert!(vol1 < vol0 - 1e-6, "chamfered volume {vol1} should be < original {vol0}");
     }
 
     #[test]

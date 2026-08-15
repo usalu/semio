@@ -11,7 +11,7 @@
 
 use super::super::super::{attr_val, element_children, find_child, resolve_office_document_relationship, PptxError};
 use crate::artifacts::pptx::{
-    schema::snapshot::{PptxParagraph, PptxPhysicalState, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxXmlPart},
+    schema::snapshot::{pptx_part_is_xml, PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxXmlPart},
     PptxSnapshot,
 };
 use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlDocument, XmlNode};
@@ -165,9 +165,27 @@ fn presentation_slide_rids_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec
 }
 //#endregion 🔖️PresentationXml
 
+//#region 🔖️Projection
+/// 🧭️ Derives the typed presentation view from the authoritative logical XML parts.
+pub(crate) fn project_presentation(opc: &opc::OpcPackage, xml_parts: &[PptxXmlPart]) -> Result<PptxPresentation, PptxError> {
+    let presentation_path = resolve_office_document_relationship(opc).ok_or(PptxError::MissingPresentationRelationship)?;
+    let presentation = xml_parts.iter().find(|part| part.path == presentation_path).ok_or_else(|| PptxError::MissingPart(presentation_path.clone()))?;
+    let slide_rids = presentation_slide_rids_from_xml(&presentation.document, &presentation_path)?;
+    let pres_rels = opc.relationships_for(&presentation_path);
+    let mut slides = Vec::with_capacity(slide_rids.len());
+    for rid in slide_rids {
+        let rel = pres_rels.iter().find(|relationship| relationship.id == rid).ok_or_else(|| PptxError::Malformed(format!("presentation references unknown relationship id {rid}")))?;
+        let path = opc::resolve_relationship_target(&presentation_path, &rel.target);
+        let slide = xml_parts.iter().find(|part| part.path == path).ok_or_else(|| PptxError::MissingPart(path.clone()))?;
+        let shapes = slide.document.root.as_ref().map(collect_shapes).unwrap_or_default();
+        slides.push(PptxSlide { shapes });
+    }
+    Ok(PptxPresentation { slides })
+}
+//#endregion 🔖️Projection
+
 //#region 🔖️Codec
 pub fn decode_pptx(data: &[u8]) -> Result<PptxSnapshot, PptxError> {
-    let archive = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data)?;
     let mut opc = opc::decode_opc(data)?;
     let presentation_path = resolve_office_document_relationship(&opc).ok_or(PptxError::MissingPresentationRelationship)?;
     let bytes = opc.part_bytes(&presentation_path).ok_or_else(|| PptxError::MissingPart(presentation_path.clone()))?;
@@ -177,11 +195,9 @@ pub fn decode_pptx(data: &[u8]) -> Result<PptxSnapshot, PptxError> {
 
     let pres_rels = opc.relationships_for(&presentation_path);
     let mut slides = Vec::with_capacity(slide_rids.len());
-    let mut slide_paths = Vec::with_capacity(slide_rids.len());
     for rid in &slide_rids {
         let rel = pres_rels.iter().find(|r| &r.id == rid).ok_or_else(|| PptxError::Malformed(format!("presentation references unknown relationship id {rid}")))?;
         let path = opc::resolve_relationship_target(&presentation_path, &rel.target);
-        slide_paths.push(path.clone());
         let bytes = opc.part_bytes(&path).ok_or_else(|| PptxError::MissingPart(path.clone()))?;
         let text = String::from_utf8(bytes.to_vec()).map_err(|_| PptxError::Xml { part: path.clone(), detail: "not valid utf-8".into() })?;
         let slide_xml = xml_document_from_text(&text).map_err(|e| PptxError::Xml { part: path.clone(), detail: e })?;
@@ -192,11 +208,7 @@ pub fn decode_pptx(data: &[u8]) -> Result<PptxSnapshot, PptxError> {
     let mut xml_parts = Vec::new();
     let mut binary_parts = Vec::new();
     for part in std::mem::take(&mut opc.parts) {
-        if part.path == presentation_path || slide_paths.contains(&part.path) {
-            continue;
-        }
-        let is_xml = part.path.ends_with(".xml") || part.content_type.ends_with("+xml") || part.content_type.ends_with("/xml");
-        if is_xml {
+        if pptx_part_is_xml(&part.path, &part.content_type) {
             let text = String::from_utf8(part.bytes).map_err(|_| PptxError::Xml { part: part.path.clone(), detail: "not valid utf-8".into() })?;
             let document = xml_document_from_text(&text).map_err(|detail| PptxError::Xml { part: part.path.clone(), detail })?;
             xml_parts.push(PptxXmlPart { path: part.path, content_type: part.content_type, document });
@@ -204,10 +216,12 @@ pub fn decode_pptx(data: &[u8]) -> Result<PptxSnapshot, PptxError> {
             binary_parts.push(part);
         }
     }
+    xml_parts.sort_by(|left, right| left.path.cmp(&right.path));
+    binary_parts.sort_by(|left, right| left.path.cmp(&right.path));
     opc.parts = binary_parts;
-    let mut snapshot = PptxSnapshot::from_parts(opc, xml_parts, PptxPresentation { slides });
-    snapshot.physical = Some(PptxPhysicalState { archive, semantic_blake3: snapshot.semantic_blake3() });
-    Ok(snapshot)
+    let presentation = PptxPresentation { slides };
+    debug_assert!(matches!(project_presentation(&opc, &xml_parts), Ok(projected) if projected == presentation));
+    Ok(PptxSnapshot::from_parts(opc, xml_parts, presentation))
 }
 //#endregion 🔖️Codec
 

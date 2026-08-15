@@ -142,11 +142,7 @@ mod tests {
 
     /// 🔀️ Two disjoint components: `a-b` (2 nodes, 1 edge each) and `c` (isolated).
     fn two_component_snapshot() -> SemioGraphSnapshot {
-        SemioGraphSnapshot {
-            schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(),
-            nodes: vec![node("a"), node("b"), node("c")],
-            edges: vec![edge("e1", "a", "b")],
-        }
+        SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: vec![node("a"), node("b"), node("c")], edges: vec![edge("e1", "a", "b")] }
     }
 
     //#region 🧪️Honesty

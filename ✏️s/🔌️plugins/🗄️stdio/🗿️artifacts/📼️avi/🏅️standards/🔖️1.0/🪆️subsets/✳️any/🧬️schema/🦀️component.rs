@@ -74,20 +74,26 @@ pub fn avi_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::avi::standards::v1_0::subsets::any::schema::diff::AviDiff;
-    use crate::artifacts::avi::standards::v1_0::subsets::any::schema::mutations::{AviMutation, apply_avi_mutation};
+    use crate::artifacts::avi::standards::v1_0::subsets::any::schema::mutations::{apply_avi_mutation, AviMutation};
     use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct AviBuilderConstruction { snapshot: AviSnapshot }
+    pub struct AviBuilderConstruction {
+        snapshot: AviSnapshot,
+    }
 
     impl ArtifactBuilder for AviBuilderConstruction {
         type Snapshot = AviSnapshot;
         type Mutation = AviMutation;
         type Diff = AviDiff;
-        fn empty() -> Self { Self { snapshot: AviSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: AviSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<AviSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -102,7 +108,9 @@ pub mod derived_construction {
             self.snapshot = <AviDiff as protocol::MutationDiff<AviSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 }
 pub use derived_construction::*;
@@ -110,12 +118,14 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::avi::standards::v1_0::subsets::any::io;
     use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviSnapshot, STDIO_AVI_DOCUMENT_SCHEMA};
-    use crate::artifacts::avi::standards::v1_0::subsets::any::io as io;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct AviParts { pub snapshot: Option<AviSnapshot> }
+    pub struct AviParts {
+        pub snapshot: Option<AviSnapshot>,
+    }
 
     pub struct AviAnalyzerAnalysis;
 
@@ -130,7 +140,11 @@ pub mod derived_analysis {
                         return IoConfidence::High;
                     }
                     let marker = STDIO_AVI_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
                     if io::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_AVI_DOCUMENT_SCHEMA) {

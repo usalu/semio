@@ -190,38 +190,84 @@ impl EpwRecord {
     /// 📤️ The 35 fields in wire order (spec column order).
     pub fn fields(&self) -> [&str; EPW_RECORD_FIELD_COUNT] {
         [
-            &self.year, &self.month, &self.day, &self.hour, &self.minute, &self.data_source_uncertainty,
-            &self.dry_bulb_temp, &self.dew_point_temp, &self.relative_humidity, &self.atmospheric_pressure,
-            &self.extraterrestrial_horizontal_radiation, &self.extraterrestrial_direct_normal_radiation,
-            &self.horizontal_infrared_radiation, &self.global_horizontal_radiation, &self.direct_normal_radiation,
-            &self.diffuse_horizontal_radiation, &self.global_horizontal_illuminance, &self.direct_normal_illuminance,
-            &self.diffuse_horizontal_illuminance, &self.zenith_luminance, &self.wind_direction, &self.wind_speed,
-            &self.total_sky_cover, &self.opaque_sky_cover, &self.visibility, &self.ceiling_height,
-            &self.present_weather_observation, &self.present_weather_codes, &self.precipitable_water,
-            &self.aerosol_optical_depth, &self.snow_depth, &self.days_since_last_snowfall, &self.albedo,
-            &self.liquid_precip_depth, &self.liquid_precip_quantity,
+            &self.year,
+            &self.month,
+            &self.day,
+            &self.hour,
+            &self.minute,
+            &self.data_source_uncertainty,
+            &self.dry_bulb_temp,
+            &self.dew_point_temp,
+            &self.relative_humidity,
+            &self.atmospheric_pressure,
+            &self.extraterrestrial_horizontal_radiation,
+            &self.extraterrestrial_direct_normal_radiation,
+            &self.horizontal_infrared_radiation,
+            &self.global_horizontal_radiation,
+            &self.direct_normal_radiation,
+            &self.diffuse_horizontal_radiation,
+            &self.global_horizontal_illuminance,
+            &self.direct_normal_illuminance,
+            &self.diffuse_horizontal_illuminance,
+            &self.zenith_luminance,
+            &self.wind_direction,
+            &self.wind_speed,
+            &self.total_sky_cover,
+            &self.opaque_sky_cover,
+            &self.visibility,
+            &self.ceiling_height,
+            &self.present_weather_observation,
+            &self.present_weather_codes,
+            &self.precipitable_water,
+            &self.aerosol_optical_depth,
+            &self.snow_depth,
+            &self.days_since_last_snowfall,
+            &self.albedo,
+            &self.liquid_precip_depth,
+            &self.liquid_precip_quantity,
         ]
     }
 
     /// 📥️ Builds a record from exactly 35 wire-order fields.
     pub fn from_fields(f: [String; EPW_RECORD_FIELD_COUNT]) -> Self {
-        let [year, month, day, hour, minute, data_source_uncertainty, dry_bulb_temp, dew_point_temp,
-            relative_humidity, atmospheric_pressure, extraterrestrial_horizontal_radiation,
-            extraterrestrial_direct_normal_radiation, horizontal_infrared_radiation, global_horizontal_radiation,
-            direct_normal_radiation, diffuse_horizontal_radiation, global_horizontal_illuminance,
-            direct_normal_illuminance, diffuse_horizontal_illuminance, zenith_luminance, wind_direction,
-            wind_speed, total_sky_cover, opaque_sky_cover, visibility, ceiling_height,
-            present_weather_observation, present_weather_codes, precipitable_water, aerosol_optical_depth,
-            snow_depth, days_since_last_snowfall, albedo, liquid_precip_depth, liquid_precip_quantity] = f;
+        let [year, month, day, hour, minute, data_source_uncertainty, dry_bulb_temp, dew_point_temp, relative_humidity, atmospheric_pressure, extraterrestrial_horizontal_radiation, extraterrestrial_direct_normal_radiation, horizontal_infrared_radiation, global_horizontal_radiation, direct_normal_radiation, diffuse_horizontal_radiation, global_horizontal_illuminance, direct_normal_illuminance, diffuse_horizontal_illuminance, zenith_luminance, wind_direction, wind_speed, total_sky_cover, opaque_sky_cover, visibility, ceiling_height, present_weather_observation, present_weather_codes, precipitable_water, aerosol_optical_depth, snow_depth, days_since_last_snowfall, albedo, liquid_precip_depth, liquid_precip_quantity] =
+            f;
         Self {
-            year, month, day, hour, minute, data_source_uncertainty, dry_bulb_temp, dew_point_temp,
-            relative_humidity, atmospheric_pressure, extraterrestrial_horizontal_radiation,
-            extraterrestrial_direct_normal_radiation, horizontal_infrared_radiation, global_horizontal_radiation,
-            direct_normal_radiation, diffuse_horizontal_radiation, global_horizontal_illuminance,
-            direct_normal_illuminance, diffuse_horizontal_illuminance, zenith_luminance, wind_direction,
-            wind_speed, total_sky_cover, opaque_sky_cover, visibility, ceiling_height,
-            present_weather_observation, present_weather_codes, precipitable_water, aerosol_optical_depth,
-            snow_depth, days_since_last_snowfall, albedo, liquid_precip_depth, liquid_precip_quantity,
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            data_source_uncertainty,
+            dry_bulb_temp,
+            dew_point_temp,
+            relative_humidity,
+            atmospheric_pressure,
+            extraterrestrial_horizontal_radiation,
+            extraterrestrial_direct_normal_radiation,
+            horizontal_infrared_radiation,
+            global_horizontal_radiation,
+            direct_normal_radiation,
+            diffuse_horizontal_radiation,
+            global_horizontal_illuminance,
+            direct_normal_illuminance,
+            diffuse_horizontal_illuminance,
+            zenith_luminance,
+            wind_direction,
+            wind_speed,
+            total_sky_cover,
+            opaque_sky_cover,
+            visibility,
+            ceiling_height,
+            present_weather_observation,
+            present_weather_codes,
+            precipitable_water,
+            aerosol_optical_depth,
+            snow_depth,
+            days_since_last_snowfall,
+            albedo,
+            liquid_precip_depth,
+            liquid_precip_quantity,
         }
     }
 }
@@ -301,23 +347,20 @@ impl Default for EpwSnapshot {
 // (https://bigladdersoftware.com/epx/docs/9-6/auxiliary-programs/energyplus-weather-file-epw-data-dictionary.html).
 impl store::ArtifactDsl for EpwSnapshot {
     const EXTENSION: &'static str = "epw";
-    fn envelope_id() -> &'static str { STDIO_EPW_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_EPW_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        crate::artifacts::epw::standards::energyplus::subsets::any::io::decode_epw(body)
-            .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        crate::artifacts::epw::standards::energyplus::subsets::any::io::decode_epw(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
         let body = crate::artifacts::epw::standards::energyplus::subsets::any::io::encode_epw(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -326,22 +369,13 @@ impl store::ArtifactPack for EpwSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::epw::standards::energyplus::subsets::any::io::encode_epw(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;

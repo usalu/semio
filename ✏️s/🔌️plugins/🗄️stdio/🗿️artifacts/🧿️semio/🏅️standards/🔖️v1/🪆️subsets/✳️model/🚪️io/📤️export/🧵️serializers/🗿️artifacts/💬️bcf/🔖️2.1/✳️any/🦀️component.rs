@@ -14,8 +14,8 @@
 //! and is dropped. `version` is always emitted as the fixed literal `"2.1"` (never captured on
 //! decode, so there is nothing to round-trip it from); `parts` is always empty.
 
-use crate::artifacts::bcf::BcfSnapshot;
 use crate::artifacts::bcf::schema::snapshot::{BcfComment, BcfComponents, BcfTopic, BcfViewpoint, BcfVisibility};
+use crate::artifacts::bcf::BcfSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, PsetValue, RelationKind, SemioModelSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
@@ -70,12 +70,7 @@ fn topic_from_element(element: &crate::artifacts::semio::standards::v1::subsets:
     let viewpoints = if referenced_guids.is_empty() {
         Vec::new()
     } else {
-        vec![BcfViewpoint {
-            guid: format!("vp-{}", element.id),
-            camera: None,
-            components: Some(BcfComponents { selection: referenced_guids.to_vec(), visibility: BcfVisibility::default(), coloring: vec![] }),
-            snapshot: None,
-        }]
+        vec![BcfViewpoint { guid: format!("vp-{}", element.id), camera: None, components: Some(BcfComponents { selection: referenced_guids.to_vec(), visibility: BcfVisibility::default(), coloring: vec![] }), snapshot: None }]
     };
 
     BcfTopic {
@@ -100,12 +95,7 @@ pub fn bcf_from_model(from: &SemioModelSnapshot) -> BcfSnapshot {
         .iter()
         .filter(|e| e.class == ElementClass::Other { name: "BcfTopic".into() })
         .map(|element| {
-            let referenced: Vec<String> = from
-                .relations
-                .iter()
-                .filter(|r| r.from == element.id && r.kind == RelationKind::Other { label: "BcfReferences".into() })
-                .map(|r| r.to.clone())
-                .collect();
+            let referenced: Vec<String> = from.relations.iter().filter(|r| r.from == element.id && r.kind == RelationKind::Other { label: "BcfReferences".into() }).map(|r| r.to.clone()).collect();
             topic_from_element(element, &referenced)
         })
         .collect();
@@ -118,8 +108,8 @@ pub fn bcf_from_model(from: &SemioModelSnapshot) -> BcfSnapshot {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::bcf::schema::snapshot::{BcfComment as BcfCommentT, BcfComponents as BcfComponentsT, BcfTopic as BcfTopicT, BcfViewpoint as BcfViewpointT, BcfVisibility as BcfVisibilityT};
     use crate::artifacts::semio::standards::v1::subsets::model::io::import::deserializers::artifacts::bcf::v2_1::any::model_from_bcf;
-    use crate::artifacts::bcf::schema::snapshot::{BcfComponents as BcfComponentsT, BcfTopic as BcfTopicT, BcfViewpoint as BcfViewpointT, BcfVisibility as BcfVisibilityT, BcfComment as BcfCommentT};
 
     fn fixture() -> BcfSnapshot {
         BcfSnapshot {

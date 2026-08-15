@@ -1,8 +1,8 @@
 // 🌳 `SvgSnapshot.doc` wraps an `XmlDocument`, and `SvgDiff`/`SvgNodeDiff` diff that same node
 // tree directly, per the plan's spec-mandated-reuse rule -- svg embeds xml's NODE model (real
 // import, the canonical shape), but declares its own DIFF types below.
-import type { XmlDeclaration, XmlNode } from '../../../../../../../📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️component.ts';
-export type { XmlDeclaration, XmlNode };
+import type { XmlDeclaration, XmlDoctype, XmlNode } from '../../../../../../../📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️component.ts';
+export type { XmlDeclaration, XmlDoctype, XmlNode };
 
 /** 🔺️ Diff for `stdio.svg`. `declaration`/`doctype` are tri-state (`null` = cleared, absent =
  * unchanged, present = set). No `snapshot`-shaped full-replace field anywhere -- even a
@@ -10,7 +10,7 @@ export type { XmlDeclaration, XmlNode };
 export interface SvgDiff {
   prolog?: XmlNode[];
   declaration?: XmlDeclaration | null;
-  doctype?: string | null;
+  doctype?: XmlDoctype | null;
   root?: SvgNodeDiff;
 }
 

@@ -1,5 +1,5 @@
-use crate::artifacts::gltf::{GltfSnapshot};
 use crate::artifacts::gltf::schema::mutations::GltfMutation;
+use crate::artifacts::gltf::GltfSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

@@ -193,12 +193,7 @@ pub struct SemioDocumentSnapshot {
 
 impl Default for SemioDocumentSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
-            styles: Default::default(),
-            images: Default::default(),
-            blocks: Default::default(),
-        }
+        Self { schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(), styles: Default::default(), images: Default::default(), blocks: Default::default() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -317,15 +312,7 @@ fn write_run_style(out: &mut Vec<u8>, s: &RunStyle) {
     write_opt_str(out, &s.link);
 }
 fn read_run_style(reader: &mut store::ByteReader<'_>) -> Result<RunStyle, String> {
-    Ok(RunStyle {
-        bold: read_bool(reader)?,
-        italic: read_bool(reader)?,
-        underline: read_bool(reader)?,
-        size: read_opt_f64(reader)?,
-        font: read_opt_str(reader)?,
-        color: read_opt_str(reader)?,
-        link: read_opt_str(reader)?,
-    })
+    Ok(RunStyle { bold: read_bool(reader)?, italic: read_bool(reader)?, underline: read_bool(reader)?, size: read_opt_f64(reader)?, font: read_opt_str(reader)?, color: read_opt_str(reader)?, link: read_opt_str(reader)? })
 }
 fn write_run(out: &mut Vec<u8>, r: &DocRun) {
     write_str_lp(out, &r.text);
@@ -557,7 +544,9 @@ fn decode_document_snapshot_binary(bytes: &[u8]) -> Result<SemioDocumentSnapshot
 /// compounds the gap. Hand-rolled instead, matching `🔺️diff`'s already-hand-rolled convention.
 impl store::ArtifactDsl for SemioDocumentSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str { STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -569,11 +558,7 @@ impl store::ArtifactDsl for SemioDocumentSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_document_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -582,22 +567,14 @@ impl store::ArtifactPack for SemioDocumentSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_document_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_document_snapshot_binary(&inner).map_err(store::PackError::Schema)

@@ -7,8 +7,7 @@ message Mp4Ftyp {
   repeated string compatible_brands = 3;
 }
 message Mp4CodecAvc { repeated bytes sps = 1; repeated bytes pps = 2; uint32 nal_length_size = 3; }
-message Mp4CodecOther { string fourcc = 1; bytes raw = 2; }
-message Mp4Codec { oneof codec { Mp4CodecAvc avc = 1; Mp4CodecOther other = 2; } }
+message Mp4Codec { oneof codec { Mp4CodecAvc avc = 1; } }
 message Mp4Sample { bytes data = 1; uint32 duration = 2; int32 cts_offset = 3; bool sync = 4; }
 message Mp4Track {
   uint32 track_id = 1;
@@ -19,10 +18,8 @@ message Mp4Track {
   repeated uint32 chunk_sample_counts = 6;
   repeated Mp4Sample samples = 7;
 }
-message Mp4Box { string fourcc = 1; bytes data = 2; }
 message Mp4Snapshot {
   string schema = 1;
   Mp4Ftyp ftyp = 2;
   repeated Mp4Track tracks = 3;
-  repeated Mp4Box unknown_boxes = 4;
 }

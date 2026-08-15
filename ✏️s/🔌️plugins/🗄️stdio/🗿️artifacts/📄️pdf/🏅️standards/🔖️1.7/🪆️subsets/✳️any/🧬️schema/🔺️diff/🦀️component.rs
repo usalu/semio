@@ -6,7 +6,7 @@
 //! `objects` is an `ObjRef`-keyed (the `(id,gen)` pair) triple of recursive `PdfValueDiff`
 //! patches mirroring `PdfObject`'s own shape (mirrors json's `JsonValueDiff` pattern: `Replace`
 //! on node-KIND change, direct field/collection diff when the kind is stable — `Array` gets an
-//! index-keyed triple, `Dict`/`Stream.dict` get a name-keyed triple, `Stream.data`/`raw_filter`
+//! index-keyed triple, `Dict`/`Stream.dict` get a name-keyed triple, stream data/filter concepts
 //! are whole-value tri-state), and `trailer` reuses that SAME name-keyed `PdfDictDiff` triple
 //! shape verbatim (the recipe's own guidance: "trailer is itself a Dict-shaped structure").
 //!
@@ -17,7 +17,7 @@
 //! the diff mirrors
 //! `PdfObject`'s real shape field-for-field instead of inventing a parallel vocabulary.
 
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfInfo, PdfObject, PdfPage, PdfPredictor, PdfSnapshot, PdfStreamFilter};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 use schema::ArtifactSchema;
@@ -625,16 +625,14 @@ pub enum PdfValueDiff {
     Dict {
         diff: PdfDictDiff,
     },
-    /// 🌊️ `dict`/`data`/`raw_filter` are each independently sparse -- `data`/`raw_filter` are
-    /// whole-value tri-state (`raw_filter`) / whole-value replace (`data`) per the recipe's
-    /// "Stream's raw/decoded are whole-value Option<Vec<u8>>" guidance.
+    /// 🌊️ `dict` and decoded logical `data` are independently sparse.
     Stream {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         dict: Option<PdfDictDiff>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         data: Option<Vec<u8>>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        raw_filter: Option<Option<String>>,
+        filters: Option<Vec<PdfStreamFilter>>,
     },
 }
 
@@ -662,10 +660,10 @@ pub fn apply_value_diff(diff: &PdfValueDiff, base: &PdfObject) -> PdfObject {
             };
             PdfObject::Dict(apply_dict_diff(diff, entries))
         }
-        PdfValueDiff::Stream { dict, data, raw_filter } => {
-            let (base_dict, base_data, base_filter): (&[PdfDictEntry], &[u8], &Option<String>) = match base {
-                PdfObject::Stream { dict, data, raw_filter } => (dict.as_slice(), data.as_slice(), raw_filter),
-                _ => (&[], &[], &None),
+        PdfValueDiff::Stream { dict, data, filters } => {
+            let (base_dict, base_data, base_filters): (&[PdfDictEntry], &[u8], &[PdfStreamFilter]) = match base {
+                PdfObject::Stream { dict, data, filters } => (dict.as_slice(), data.as_slice(), filters.as_slice()),
+                _ => (&[], &[], &[]),
             };
             PdfObject::Stream {
                 dict: match dict {
@@ -673,7 +671,7 @@ pub fn apply_value_diff(diff: &PdfValueDiff, base: &PdfObject) -> PdfObject {
                     None => base_dict.to_vec(),
                 },
                 data: data.clone().unwrap_or_else(|| base_data.to_vec()),
-                raw_filter: raw_filter.clone().unwrap_or_else(|| base_filter.clone()),
+                filters: filters.clone().unwrap_or_else(|| base_filters.to_vec()),
             }
         }
     }
@@ -709,7 +707,7 @@ pub fn value_diff_between(a: &PdfObject, b: &PdfObject) -> Option<PdfValueDiff> 
                 Some(PdfValueDiff::Dict { diff: d })
             }
         }
-        (PdfObject::Stream { dict: ad, data: adata, raw_filter: af }, PdfObject::Stream { dict: bd, data: bdata, raw_filter: bf }) => {
+        (PdfObject::Stream { dict: ad, data: adata, filters: af }, PdfObject::Stream { dict: bd, data: bdata, filters: bf }) => {
             let dict_d = {
                 let d = dict_diff_between(ad, bd);
                 if d.is_empty() {
@@ -719,11 +717,11 @@ pub fn value_diff_between(a: &PdfObject, b: &PdfObject) -> Option<PdfValueDiff> 
                 }
             };
             let data_d = (adata != bdata).then(|| bdata.clone());
-            let filter_d = (af != bf).then(|| bf.clone());
-            if dict_d.is_none() && data_d.is_none() && filter_d.is_none() {
+            let filters_d = (af != bf).then(|| bf.clone());
+            if dict_d.is_none() && data_d.is_none() && filters_d.is_none() {
                 None
             } else {
-                Some(PdfValueDiff::Stream { dict: dict_d, data: data_d, raw_filter: filter_d })
+                Some(PdfValueDiff::Stream { dict: dict_d, data: data_d, filters: filters_d })
             }
         }
         _ => Some(PdfValueDiff::Replace { value: b.clone() }),
@@ -737,7 +735,7 @@ fn is_value_diff_effectively_empty(d: &PdfValueDiff) -> bool {
     match d {
         PdfValueDiff::Array { diff } => diff.is_empty(),
         PdfValueDiff::Dict { diff } => diff.is_empty(),
-        PdfValueDiff::Stream { dict, data, raw_filter } => dict.is_none() && data.is_none() && raw_filter.is_none(),
+        PdfValueDiff::Stream { dict, data, filters } => dict.is_none() && data.is_none() && filters.is_none(),
         _ => false,
     }
 }
@@ -762,14 +760,14 @@ fn absorb_value_diff(d1: PdfValueDiff, d2: PdfValueDiff) -> PdfValueDiff {
         (PdfValueDiff::Ref { .. }, PdfValueDiff::Ref { value }) => PdfValueDiff::Ref { value },
         (PdfValueDiff::Array { diff: a1 }, PdfValueDiff::Array { diff: a2 }) => PdfValueDiff::Array { diff: absorb_array_diff(a1, a2) },
         (PdfValueDiff::Dict { diff: d1 }, PdfValueDiff::Dict { diff: d2 }) => PdfValueDiff::Dict { diff: absorb_dict_diff(d1, d2) },
-        (PdfValueDiff::Stream { dict: d1, data: da1, raw_filter: f1 }, PdfValueDiff::Stream { dict: d2, data: da2, raw_filter: f2 }) => PdfValueDiff::Stream {
+        (PdfValueDiff::Stream { dict: d1, data: da1, filters: f1 }, PdfValueDiff::Stream { dict: d2, data: da2, filters: f2 }) => PdfValueDiff::Stream {
             dict: match (d1, d2) {
                 (None, x) => x,
                 (x, None) => x,
                 (Some(a), Some(b)) => Some(absorb_dict_diff(a, b)),
             },
             data: da2.or(da1),
-            raw_filter: f2.or(f1),
+            filters: f2.or(f1),
         },
         (_, other) => other, // defensive LWW fallback; real sequential diffs never hit this arm.
     }
@@ -942,7 +940,7 @@ fn dict_entries_of(value: &PdfObject) -> Option<&[PdfDictEntry]> {
 /// OUTERMOST step (`path == []`, i.e. the object's own top-level value) can be a `Stream` --
 /// every step beyond that is guaranteed `Dict`/`Array` per `PdfPathSegment`'s own doc comment.
 pub fn diff_at_object_path(id: ObjRef, path: &[PdfPathSegment], is_root_stream: bool, leaf: PdfDictDiff) -> PdfDiff {
-    let mut node = if is_root_stream { PdfValueDiff::Stream { dict: Some(leaf), data: None, raw_filter: None } } else { PdfValueDiff::Dict { diff: leaf } };
+    let mut node = if is_root_stream { PdfValueDiff::Stream { dict: Some(leaf), data: None, filters: None } } else { PdfValueDiff::Dict { diff: leaf } };
     for seg in path.iter().rev() {
         node = match seg {
             PdfPathSegment::ArrayIndex { index } => PdfValueDiff::Array { diff: PdfArrayDiff { modified: vec![PdfArrayModified { index: *index, diff: node }], ..Default::default() } },
@@ -1201,7 +1199,7 @@ pub fn diff_remove_trailer_entry(base: &PdfSnapshot, key: &str) -> PdfDiff {
 /// v1_7::...::PdfObject: DslField is not satisfied` (blocker 3a: `PdfObject` is a genuine
 /// data-carrying enum reachable via `PdfValueDiff::Replace`/`Array`/`Dict` items and
 /// `PdfDictAdded`/`PdfObjectAdded::value`/`item`) — matching `f6-recon-report.md` §3a/§8's row 25
-/// prediction (2 enums: `PdfObject`, `PdfValueDiff`). `raw_filter: Option<Option<String>>` on
+/// prediction (2 enums: `PdfObject`, `PdfValueDiff`). Typed stream filters on
 /// `PdfValueDiff::Stream` is ALSO an independent blocker (3b). `DiffCodec` is hand-rolled below,
 /// following svg's real template (`SvgDiff`'s own `HandcraftedDiffCodec` region) — same primitive
 /// set (bracket-depth-aware `split_top_level`, hex for strings/bytes, `[0]`/`[1,x]` for
@@ -1275,6 +1273,47 @@ pub(crate) fn dec_box(s: &str) -> Result<[f64; 4], String> {
     let f = |s: &str| s.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string());
     Ok([f(a)?, f(b)?, f(c)?, f(d)?])
 }
+pub(crate) fn enc_stream_filters(filters: &[PdfStreamFilter]) -> String {
+    let values = filters
+        .iter()
+        .map(|filter| match filter {
+            PdfStreamFilter::Flate { predictor: None } => "F[0]".to_string(),
+            PdfStreamFilter::Flate { predictor: Some(predictor) } => format!("F[1,{},{},{},{}]", predictor.predictor, predictor.colors, predictor.bits_per_component, predictor.columns,),
+            PdfStreamFilter::AsciiHex => "H".to_string(),
+            PdfStreamFilter::Ascii85 => "A".to_string(),
+            PdfStreamFilter::RunLength => "L".to_string(),
+        })
+        .collect::<Vec<_>>()
+        .join(",");
+    format!("[{values}]")
+}
+pub(crate) fn dec_stream_filters(s: &str) -> Result<Vec<PdfStreamFilter>, String> {
+    split_top_level(strip_brackets(s)?, ',')
+        .into_iter()
+        .filter(|value| !value.is_empty())
+        .map(|value| match value {
+            "H" => Ok(PdfStreamFilter::AsciiHex),
+            "A" => Ok(PdfStreamFilter::Ascii85),
+            "L" => Ok(PdfStreamFilter::RunLength),
+            _ if value.starts_with("F[") => {
+                let fields = split_top_level(strip_brackets(&value[1..])?, ',');
+                match fields.as_slice() {
+                    ["0"] => Ok(PdfStreamFilter::Flate { predictor: None }),
+                    ["1", predictor, colors, bits_per_component, columns] => Ok(PdfStreamFilter::Flate {
+                        predictor: Some(PdfPredictor {
+                            predictor: predictor.parse().map_err(|error: std::num::ParseIntError| error.to_string())?,
+                            colors: colors.parse().map_err(|error: std::num::ParseIntError| error.to_string())?,
+                            bits_per_component: bits_per_component.parse().map_err(|error: std::num::ParseIntError| error.to_string())?,
+                            columns: columns.parse().map_err(|error: std::num::ParseIntError| error.to_string())?,
+                        }),
+                    }),
+                    _ => Err(format!("flate filter: invalid payload {value:?}")),
+                }
+            }
+            _ => Err(format!("stream filter: unknown tag {value:?}")),
+        })
+        .collect()
+}
 //#endregion 🔖️Primitives
 
 //#region 🔖️ObjectValueCodecs
@@ -1296,7 +1335,7 @@ pub(crate) fn dec_dict_entry(s: &str) -> Result<PdfDictEntry, String> {
 }
 /// 🌳 Recursive: `Z`=Null (bare, no payload) / `B[0|1]`=Bool / `I[n]`=Int / `R[n]`=Real /
 /// `S[hex]`=Str / `N[hex]`=Name / `A[items]`=Array / `D[entries]`=Dict / `F[num,gen]`=Ref /
-/// `T[[entries],hexdata,filter?]`=Stream — single-uppercase-letter tag prefix, never ambiguous
+/// `T[[entries],hexdata]`=Stream — single-uppercase-letter tag prefix, never ambiguous
 /// with the hex payload (hex never starts with an uppercase letter) or with `Z`'s bare form
 /// (every other tag is immediately followed by `[`).
 pub(crate) fn enc_pdf_object(v: &PdfObject) -> String {
@@ -1310,7 +1349,7 @@ pub(crate) fn enc_pdf_object(v: &PdfObject) -> String {
         PdfObject::Array(items) => format!("A[{}]", items.iter().map(enc_pdf_object).collect::<Vec<_>>().join(",")),
         PdfObject::Dict(entries) => format!("D[{}]", entries.iter().map(enc_dict_entry).collect::<Vec<_>>().join(",")),
         PdfObject::Ref(r) => format!("F[{}]", enc_objref(r)),
-        PdfObject::Stream { dict, data, raw_filter } => format!("T[[{}],{},{}]", dict.iter().map(enc_dict_entry).collect::<Vec<_>>().join(","), hex_encode(data), encode_option(raw_filter, |v| enc_str(v)),),
+        PdfObject::Stream { dict, data, filters } => format!("T[[{}],{},{}]", dict.iter().map(enc_dict_entry).collect::<Vec<_>>().join(","), hex_encode(data), enc_stream_filters(filters),),
     }
 }
 pub(crate) fn dec_pdf_object(s: &str) -> Result<PdfObject, String> {
@@ -1330,9 +1369,10 @@ pub(crate) fn dec_pdf_object(s: &str) -> Result<PdfObject, String> {
         "F" => Ok(PdfObject::Ref(dec_objref(inner)?)),
         "T" => {
             let parts = split_top_level(inner, ',');
-            let [dict_s, data_s, filter_s] = parts.as_slice() else { return Err(format!("stream: expected 3 fields, got {}", parts.len())) };
+            let [dict_s, data_s, filters_s] = parts.as_slice() else { return Err(format!("stream: expected 3 fields, got {}", parts.len())) };
             let dict = split_top_level(strip_brackets(dict_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_dict_entry).collect::<Result<Vec<_>, String>>()?;
-            Ok(PdfObject::Stream { dict, data: hex_decode(data_s)?, raw_filter: decode_option(filter_s, dec_str)? })
+            let filters = dec_stream_filters(filters_s)?;
+            Ok(PdfObject::Stream { dict, data: hex_decode(data_s)?, filters })
         }
         other => Err(format!("pdf object: unknown tag {other:?}")),
     }
@@ -1418,6 +1458,54 @@ pub(crate) fn read_pdf_decimal_bin(reader: &mut store::ByteReader<'_>) -> Result
 pub(crate) fn write_varint_i64_bin(out: &mut Vec<u8>, value: i64) {
     let zigzag = ((value << 1) ^ (value >> 63)) as u64;
     store::pack_rt::write_varint_u64(out, zigzag);
+}
+pub(crate) fn enc_stream_filters_bin(filters: &[PdfStreamFilter], out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, filters.len() as u64);
+    for filter in filters {
+        match filter {
+            PdfStreamFilter::Flate { predictor } => {
+                out.push(0);
+                match predictor {
+                    None => out.push(0),
+                    Some(predictor) => {
+                        out.push(1);
+                        for value in [predictor.predictor, predictor.colors, predictor.bits_per_component, predictor.columns] {
+                            store::pack_rt::write_varint_u64(out, value as u64);
+                        }
+                    }
+                }
+            }
+            PdfStreamFilter::AsciiHex => out.push(1),
+            PdfStreamFilter::Ascii85 => out.push(2),
+            PdfStreamFilter::RunLength => out.push(3),
+        }
+    }
+}
+pub(crate) fn dec_stream_filters_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<PdfStreamFilter>, String> {
+    let count = reader.read_varint_u64().map_err(|error| error.to_string())?;
+    let mut filters = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        filters.push(match reader.read_u8().map_err(|error| error.to_string())? {
+            0 => {
+                let predictor = match reader.read_u8().map_err(|error| error.to_string())? {
+                    0 => None,
+                    1 => Some(PdfPredictor {
+                        predictor: reader.read_varint_u64().map_err(|error| error.to_string())? as u32,
+                        colors: reader.read_varint_u64().map_err(|error| error.to_string())? as u32,
+                        bits_per_component: reader.read_varint_u64().map_err(|error| error.to_string())? as u32,
+                        columns: reader.read_varint_u64().map_err(|error| error.to_string())? as u32,
+                    }),
+                    tag => return Err(format!("flate predictor presence: unknown tag {tag}")),
+                };
+                PdfStreamFilter::Flate { predictor }
+            }
+            1 => PdfStreamFilter::AsciiHex,
+            2 => PdfStreamFilter::Ascii85,
+            3 => PdfStreamFilter::RunLength,
+            tag => return Err(format!("stream filter binary: unknown tag {tag}")),
+        });
+    }
+    Ok(filters)
 }
 //#endregion 🔖️BinaryPrimitives
 
@@ -1534,17 +1622,14 @@ pub(crate) fn enc_pdf_object_bin(v: &PdfObject, out: &mut Vec<u8>) {
             out.push(8);
             enc_objref_bin(r, out);
         }
-        PdfObject::Stream { dict, data, raw_filter } => {
+        PdfObject::Stream { dict, data, filters } => {
             out.push(9);
             store::pack_rt::write_varint_u64(out, dict.len() as u64);
             for entry in dict {
                 enc_dict_entry_bin(entry, out);
             }
             write_bytes_lp(out, data);
-            out.push(if raw_filter.is_some() { 1 } else { 0 });
-            if let Some(filter) = raw_filter {
-                write_str_lp(out, filter);
-            }
+            enc_stream_filters_bin(filters, out);
         }
     }
 }
@@ -1581,9 +1666,8 @@ pub(crate) fn dec_pdf_object_bin(reader: &mut store::ByteReader<'_>) -> Result<P
                 dict.push(dec_dict_entry_bin(reader)?);
             }
             let data = read_bytes_lp(reader)?;
-            let has_filter = reader.read_u8().map_err(|e| e.to_string())? != 0;
-            let raw_filter = if has_filter { Some(read_str_lp(reader)?) } else { None };
-            Ok(PdfObject::Stream { dict, data, raw_filter })
+            let filters = dec_stream_filters_bin(reader)?;
+            Ok(PdfObject::Stream { dict, data, filters })
         }
         other => Err(format!("pdf object binary: unknown tag {other}")),
     }
@@ -1791,9 +1875,7 @@ fn dec_array_diff(body: &str) -> Result<PdfArrayDiff, String> {
 }
 /// 🌳 Recursive, mirrors `enc_pdf_object`'s tag vocabulary: `L`=Replace (whole-node), `B`/`I`/`R`/
 /// `S`/`N`/`F`=scalar diffs (new value only, kind is stable), `A[..]`=Array diff, `D[..]`=Dict
-/// diff, `T[..]`=Stream diff (its OWN sparse `D:`/`A:`/`F:` tag:value pairs for `dict`/`data`/
-/// `raw_filter` — `raw_filter` is tri-state, ONE level of `encode_option` over the inner
-/// `Option<String>`, same convention `enc_page_diff`'s `C` tag uses).
+/// diff, `T[..]`=Stream diff (its own sparse `D:`/`A:` pairs for `dict`/decoded `data`).
 fn enc_value_diff(d: &PdfValueDiff) -> String {
     match d {
         PdfValueDiff::Replace { value } => format!("L[{}]", enc_pdf_object(value)),
@@ -1805,7 +1887,7 @@ fn enc_value_diff(d: &PdfValueDiff) -> String {
         PdfValueDiff::Ref { value } => format!("F[{}]", enc_objref(value)),
         PdfValueDiff::Array { diff } => format!("A[{}]", enc_array_diff(diff)),
         PdfValueDiff::Dict { diff } => format!("D[{}]", enc_dict_diff(diff)),
-        PdfValueDiff::Stream { dict, data, raw_filter } => {
+        PdfValueDiff::Stream { dict, data, filters } => {
             let mut parts = Vec::new();
             if let Some(v) = dict {
                 parts.push(format!("D:{}", enc_dict_diff(v)));
@@ -1813,8 +1895,8 @@ fn enc_value_diff(d: &PdfValueDiff) -> String {
             if let Some(v) = data {
                 parts.push(format!("A:{}", hex_encode(v)));
             }
-            if let Some(v) = raw_filter {
-                parts.push(format!("F:{}", encode_option(v, |v| enc_str(v))));
+            if let Some(v) = filters {
+                parts.push(format!("F:{}", enc_stream_filters(v)));
             }
             format!("T[{}]", parts.join(","))
         }
@@ -1836,7 +1918,7 @@ fn dec_value_diff(s: &str) -> Result<PdfValueDiff, String> {
         "T" => {
             let mut dict = None;
             let mut data = None;
-            let mut raw_filter = None;
+            let mut filters = None;
             for entry in split_top_level(inner, ',') {
                 if entry.is_empty() {
                     continue;
@@ -1845,11 +1927,11 @@ fn dec_value_diff(s: &str) -> Result<PdfValueDiff, String> {
                 match etag {
                     "D" => dict = Some(dec_dict_diff(val)?),
                     "A" => data = Some(hex_decode(val)?),
-                    "F" => raw_filter = Some(decode_option(val, dec_str)?),
+                    "F" => filters = Some(dec_stream_filters(val)?),
                     other => return Err(format!("stream diff: unknown tag {other:?}")),
                 }
             }
-            Ok(PdfValueDiff::Stream { dict, data, raw_filter })
+            Ok(PdfValueDiff::Stream { dict, data, filters })
         }
         other => Err(format!("value diff: unknown tag {other:?}")),
     }
@@ -2089,7 +2171,7 @@ fn enc_value_diff_bin(d: &PdfValueDiff, out: &mut Vec<u8>) {
             out.push(8);
             enc_dict_diff_bin(diff, out);
         }
-        PdfValueDiff::Stream { dict, data, raw_filter } => {
+        PdfValueDiff::Stream { dict, data, filters } => {
             out.push(9);
             out.push(if dict.is_some() { 1 } else { 0 });
             if let Some(v) = dict {
@@ -2099,12 +2181,9 @@ fn enc_value_diff_bin(d: &PdfValueDiff, out: &mut Vec<u8>) {
             if let Some(v) = data {
                 write_bytes_lp(out, v);
             }
-            out.push(if raw_filter.is_some() { 1 } else { 0 });
-            if let Some(v) = raw_filter {
-                out.push(if v.is_some() { 1 } else { 0 });
-                if let Some(f) = v {
-                    write_str_lp(out, f);
-                }
+            out.push(if filters.is_some() { 1 } else { 0 });
+            if let Some(v) = filters {
+                enc_stream_filters_bin(v, out);
             }
         }
     }
@@ -2124,8 +2203,8 @@ fn dec_value_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfValueDiff
         9 => {
             let dict = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_dict_diff_bin(reader)?) } else { None };
             let data = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
-            let raw_filter = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None }) } else { None };
-            Ok(PdfValueDiff::Stream { dict, data, raw_filter })
+            let filters = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_stream_filters_bin(reader)?) } else { None };
+            Ok(PdfValueDiff::Stream { dict, data, filters })
         }
         other => Err(format!("value diff binary: unknown tag {other}")),
     }
@@ -2180,7 +2259,7 @@ fn dec_objects_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfObjects
 /// value encoding, no `encode_option` wrapper (the token's own presence already IS the "touched"
 /// bit, same convention `SvgDiff`'s `declaration=`/`doctype=` tri-states use one level down from
 /// theirs since `PdfDiff` has no tri-state fields of its own — only nested `PdfPageDiff.crop_box`/
-/// `PdfValueDiff::Stream.raw_filter` are tri-state, handled inside their own sub-codecs above).
+/// `PdfValueDiff::Stream.filters` are handled inside their own sub-codecs above).
 fn print_pdf_diff(d: &PdfDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.declared_version {
@@ -2280,8 +2359,8 @@ impl protocol::DiffCodec for PdfDiff {
             return Err(malformed("diff format", 0, format!("expected {}, got {format}", store::pack_rt::OP_BINARY_FORMAT)));
         }
         let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        if flags & !0b0011_1111 != 0 {
-            return Err(malformed("diff flags", 1, format!("unknown flag bits {:#010b}", flags & !0b0011_1111)));
+        if flags & !0b0001_1111 != 0 {
+            return Err(malformed("diff flags", 1, format!("unknown flag bits {:#010b}", flags & !0b0001_1111)));
         }
         let declared_version = if flags & 0b00001 != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("diff declared_version", reader.position(), e))?) } else { None };
         let info = if flags & 0b00010 != 0 { Some(dec_pdf_info_bin(&mut reader).map_err(|e| malformed("diff info", reader.position(), e))?) } else { None };
@@ -2324,7 +2403,7 @@ mod handcrafted_diff_codec_tests {
             info: PdfInfo { title: Some("Base".into()), ..Default::default() },
             objects: vec![
                 PdfIndirectObject { id: oref(1, 0), value: dict(vec![("Type", PdfObject::Name("Catalog".into())), ("Count", PdfObject::Int(3))]) },
-                PdfIndirectObject { id: oref(2, 0), value: PdfObject::Stream { dict: vec![entry("Length", PdfObject::Int(3))], data: vec![1, 2, 3], raw_filter: Some("FlateDecode".into()) } },
+                PdfIndirectObject { id: oref(2, 0), value: PdfObject::Stream { dict: vec![entry("Length", PdfObject::Int(3))], data: vec![1, 2, 3], filters: vec![PdfStreamFilter::Flate { predictor: None }] } },
                 PdfIndirectObject { id: oref(3, 0), value: PdfObject::Array(vec![PdfObject::Int(1), PdfObject::Real(2.5.into()), PdfObject::Ref(oref(1, 0))]) },
             ],
             trailer: vec![entry("Root", PdfObject::Ref(oref(1, 0))), entry("Size", PdfObject::Int(3))],
@@ -2339,7 +2418,7 @@ mod handcrafted_diff_codec_tests {
             info: PdfInfo { title: Some("Changed".into()), author: Some("Ueli".into()), ..Default::default() },
             objects: vec![
                 PdfIndirectObject { id: oref(1, 0), value: dict(vec![("Type", PdfObject::Name("Catalog".into())), ("Count", PdfObject::Int(4)), ("New", PdfObject::Bool(false))]) },
-                PdfIndirectObject { id: oref(2, 0), value: PdfObject::Stream { dict: vec![entry("Length", PdfObject::Int(3))], data: vec![9, 9], raw_filter: None } },
+                PdfIndirectObject { id: oref(2, 0), value: PdfObject::Stream { dict: vec![entry("Length", PdfObject::Int(3))], data: vec![9, 9], filters: vec![] } },
                 PdfIndirectObject { id: oref(4, 0), value: PdfObject::Null },
             ],
             trailer: vec![entry("Root", PdfObject::Ref(oref(1, 0))), entry("Size", PdfObject::Int(4)), entry("Prev", PdfObject::Int(100))],
@@ -2348,7 +2427,7 @@ mod handcrafted_diff_codec_tests {
 
     /// 🧪️ F6: `DiffCodec` round-trip laws over the hand-rolled `PdfDiff` grammar — exercises the
     /// recursive `PdfValueDiff` tree (`Replace`/`Array`/`Dict`/`Stream` variants, incl. `Stream`'s
-    /// own tri-state `raw_filter`), the index-keyed `pages` triple (incl. `PdfPageDiff`'s tri-state
+    /// own typed filter pipeline), the index-keyed `pages` triple (incl. `PdfPageDiff`'s tri-state
     /// `crop_box`), the id-keyed `objects` triple, and the name-keyed `trailer` triple.
     #[test]
     fn diff_codec_text_binary_roundtrip_law() {

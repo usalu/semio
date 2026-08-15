@@ -94,10 +94,7 @@ pub struct SemioVideoSnapshot {
 
 impl Default for SemioVideoSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
-            streams: Default::default(),
-        }
+        Self { schema: STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(), streams: Default::default() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -124,7 +121,11 @@ fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 fn enc_bool(b: &bool) -> String {
-    if *b { "1".to_string() } else { "0".to_string() }
+    if *b {
+        "1".to_string()
+    } else {
+        "0".to_string()
+    }
 }
 fn dec_bool(s: &str) -> Result<bool, String> {
     match s {
@@ -134,7 +135,12 @@ fn dec_bool(s: &str) -> Result<bool, String> {
     }
 }
 fn enc_kind(k: &SemioVideoStreamKind) -> String {
-    match k { SemioVideoStreamKind::Video => "V", SemioVideoStreamKind::Audio => "A", SemioVideoStreamKind::Subtitle => "S" }.to_string()
+    match k {
+        SemioVideoStreamKind::Video => "V",
+        SemioVideoStreamKind::Audio => "A",
+        SemioVideoStreamKind::Subtitle => "S",
+    }
+    .to_string()
 }
 fn dec_kind(s: &str) -> Result<SemioVideoStreamKind, String> {
     match s {
@@ -151,10 +157,7 @@ fn dec_rational(s: &str) -> Result<SemioRational, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [num, den] = parts.as_slice() else { return Err(format!("rational: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioRational {
-        num: num.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-        den: den.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-    })
+    Ok(SemioRational { num: num.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, den: den.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })
 }
 fn enc_sample(s: &SemioVideoSample) -> String {
     format!("[{},{},{}]", s.pts, enc_bool(&s.key), hex_encode(&s.data))
@@ -231,7 +234,11 @@ fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 fn kind_tag(k: SemioVideoStreamKind) -> u8 {
-    match k { SemioVideoStreamKind::Video => 0, SemioVideoStreamKind::Audio => 1, SemioVideoStreamKind::Subtitle => 2 }
+    match k {
+        SemioVideoStreamKind::Video => 0,
+        SemioVideoStreamKind::Audio => 1,
+        SemioVideoStreamKind::Subtitle => 2,
+    }
 }
 fn kind_from_tag(t: u8) -> Result<SemioVideoStreamKind, String> {
     match t {
@@ -305,7 +312,9 @@ fn decode_video_snapshot_binary(bytes: &[u8]) -> Result<SemioVideoSnapshot, Stri
 /// `store::semio_format` envelope, unchanged.
 impl store::ArtifactDsl for SemioVideoSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str { STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -317,11 +326,7 @@ impl store::ArtifactDsl for SemioVideoSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_video_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -330,22 +335,14 @@ impl store::ArtifactPack for SemioVideoSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_video_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_video_snapshot_binary(&inner).map_err(store::PackError::Schema)
@@ -369,19 +366,9 @@ pub(crate) fn demo_video_snapshot() -> SemioVideoSnapshot {
                 width: 1920,
                 height: 1080,
                 rate: SemioRational { num: 30, den: 1 },
-                samples: vec![
-                    SemioVideoSample { pts: 0, key: true, data: vec![0x00, 0x01, 0x02, 0x03] },
-                    SemioVideoSample { pts: 33, key: false, data: vec![0x04, 0x05] },
-                ],
+                samples: vec![SemioVideoSample { pts: 0, key: true, data: vec![0x00, 0x01, 0x02, 0x03] }, SemioVideoSample { pts: 33, key: false, data: vec![0x04, 0x05] }],
             },
-            SemioVideoStream {
-                kind: SemioVideoStreamKind::Audio,
-                codec: "aac".into(),
-                width: 0,
-                height: 0,
-                rate: SemioRational { num: 48_000, den: 1_000 },
-                samples: Vec::new(),
-            },
+            SemioVideoStream { kind: SemioVideoStreamKind::Audio, codec: "aac".into(), width: 0, height: 0, rate: SemioRational { num: 48_000, den: 1_000 }, samples: Vec::new() },
         ],
     }
 }
@@ -396,22 +383,8 @@ mod tests {
         SemioVideoSnapshot {
             schema: STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![
-                SemioVideoStream {
-                    kind: SemioVideoStreamKind::Video,
-                    codec: "h264".into(),
-                    width: 1920,
-                    height: 1080,
-                    rate: SemioRational { num: 30, den: 1 },
-                    samples: vec![SemioVideoSample { pts: 0, key: true, data: vec![1, 2, 3] }],
-                },
-                SemioVideoStream {
-                    kind: SemioVideoStreamKind::Audio,
-                    codec: "aac".into(),
-                    width: 0,
-                    height: 0,
-                    rate: SemioRational { num: 48_000, den: 1_000 },
-                    samples: Vec::new(),
-                },
+                SemioVideoStream { kind: SemioVideoStreamKind::Video, codec: "h264".into(), width: 1920, height: 1080, rate: SemioRational { num: 30, den: 1 }, samples: vec![SemioVideoSample { pts: 0, key: true, data: vec![1, 2, 3] }] },
+                SemioVideoStream { kind: SemioVideoStreamKind::Audio, codec: "aac".into(), width: 0, height: 0, rate: SemioRational { num: 48_000, den: 1_000 }, samples: Vec::new() },
             ],
         }
     }

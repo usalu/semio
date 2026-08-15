@@ -2,14 +2,13 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::bmp::BmpSnapshot;
     use crate::artifacts::bmp::standards::v_v3::subsets::any::schema::BmpAnalyzer;
+    use crate::artifacts::bmp::BmpSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
-
 
     pub struct BmpComposerComposition;
 
@@ -38,10 +37,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "BmpComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = BmpAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "BmpComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "BmpComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -95,7 +91,9 @@ pub(crate) fn row_bytes(width: u32, bpp: u16) -> usize {
 //#region Bitfields
 /// 🧮 `(shift, bit-width)` of a contiguous bitfield mask, used to extract+normalize a channel.
 fn mask_shift_width(mask: u32) -> (u32, u32) {
-    if mask == 0 { return (0, 0); }
+    if mask == 0 {
+        return (0, 0);
+    }
     let shift = mask.trailing_zeros();
     let width = (mask >> shift).trailing_ones();
     (shift, width)
@@ -103,7 +101,9 @@ fn mask_shift_width(mask: u32) -> (u32, u32) {
 
 fn extract_channel(raw: u32, mask: u32) -> u8 {
     let (shift, width) = mask_shift_width(mask);
-    if width == 0 { return 0; }
+    if width == 0 {
+        return 0;
+    }
     let v = (raw & mask) >> shift;
     if width >= 8 {
         (v >> (width - 8)) as u8
@@ -120,7 +120,11 @@ fn unpack_index(row: &[u8], x: usize, bpp: u16) -> usize {
         8 => row[x] as usize,
         4 => {
             let byte = row[x / 2];
-            if x % 2 == 0 { (byte >> 4) as usize } else { (byte & 0x0F) as usize }
+            if x % 2 == 0 {
+                (byte >> 4) as usize
+            } else {
+                (byte & 0x0F) as usize
+            }
         }
         1 => {
             let byte = row[x / 8];
@@ -486,7 +490,7 @@ pub fn register_artifact_inferences() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::bmp::schema::{empty_bmp_snapshot, demo_bmp_snapshot};
+    use crate::artifacts::bmp::schema::{demo_bmp_snapshot, empty_bmp_snapshot};
 
     fn gradient_checkerboard_rgba(w: u32, h: u32) -> Vec<u8> {
         let mut out = Vec::with_capacity((w * h * 4) as usize);
@@ -586,12 +590,18 @@ mod tests {
                     8 => row_buf[x] = idx as u8,
                     4 => {
                         let byte = &mut row_buf[x / 2];
-                        if x % 2 == 0 { *byte = (*byte & 0x0F) | ((idx as u8) << 4); } else { *byte = (*byte & 0xF0) | (idx as u8); }
+                        if x % 2 == 0 {
+                            *byte = (*byte & 0x0F) | ((idx as u8) << 4);
+                        } else {
+                            *byte = (*byte & 0xF0) | (idx as u8);
+                        }
                     }
                     1 => {
                         let byte = &mut row_buf[x / 8];
                         let bit = 7 - (x % 8);
-                        if idx != 0 { *byte |= 1 << bit; }
+                        if idx != 0 {
+                            *byte |= 1 << bit;
+                        }
                     }
                     _ => unreachable!(),
                 }
@@ -606,10 +616,10 @@ mod tests {
         // 5x3 image (row_bytes(5,4) = 4, NOT equal to raw 5*4bits/8=2.5->3 bytes — exercises padding),
         // palette of 4 colors, non-trivial (non-solid) index pattern.
         let palette = [
-            [255u8, 0, 0, 0],   // B,G,R,pad -> red
-            [0u8, 255, 0, 0],   // green
-            [0u8, 0, 255, 0],   // blue
-            [10u8, 20, 30, 0],  // arbitrary
+            [255u8, 0, 0, 0],  // B,G,R,pad -> red
+            [0u8, 255, 0, 0],  // green
+            [0u8, 0, 255, 0],  // blue
+            [10u8, 20, 30, 0], // arbitrary
         ];
         assert_eq!(row_bytes(5, 4), 4);
         // file rows are bottom-up; row 0 here = bottom of the image
@@ -624,10 +634,13 @@ mod tests {
         assert_eq!(decoded.height, 3);
         // top displayed row (out_y=0) must equal file_rows[2] (last file row, bottom-up)
         let expect_row = |row_indices: &[usize]| -> Vec<u8> {
-            row_indices.iter().flat_map(|&i| {
-                let e = palette[i];
-                [e[2], e[1], e[0], 255]
-            }).collect()
+            row_indices
+                .iter()
+                .flat_map(|&i| {
+                    let e = palette[i];
+                    [e[2], e[1], e[0], 255]
+                })
+                .collect()
         };
         let top = &decoded.pixels[0..5 * 4];
         let mid = &decoded.pixels[5 * 4..10 * 4];
@@ -650,10 +663,7 @@ mod tests {
         let b_mask = 0x001Fu32;
         let pack = |r5: u16, g5: u16, b5: u16| -> u16 { (r5 << 10) | (g5 << 5) | b5 };
         // 4 distinct pixels per row, 2 rows — deliberately not a solid color.
-        let raw_pixels: [[u16; 4]; 2] = [
-            [pack(31, 0, 0), pack(0, 31, 0), pack(0, 0, 31), pack(31, 31, 31)],
-            [pack(16, 8, 4), pack(4, 16, 8), pack(8, 4, 16), pack(0, 0, 0)],
-        ];
+        let raw_pixels: [[u16; 4]; 2] = [[pack(31, 0, 0), pack(0, 31, 0), pack(0, 0, 31), pack(31, 31, 31)], [pack(16, 8, 4), pack(4, 16, 8), pack(8, 4, 16), pack(0, 0, 0)]];
         let rb = row_bytes(w, 16);
         assert_eq!(rb, 8); // 4px * 2bytes = 8, already 4-byte aligned
         let header_size = 40u32;
@@ -692,8 +702,8 @@ mod tests {
         // second row: verify scaled mid-intensity channel values (16/31*255 rounded = 132, 8/31*255=66, 4/31*255=33)
         let row2 = &decoded.pixels[4 * 4..8 * 4];
         assert_eq!(row2[0], 132); // r of pack(16,8,4)
-        assert_eq!(row2[1], 66);  // g of pack(16,8,4)
-        assert_eq!(row2[2], 33);  // b of pack(16,8,4)
+        assert_eq!(row2[1], 66); // g of pack(16,8,4)
+        assert_eq!(row2[2], 33); // b of pack(16,8,4)
         assert_eq!(row2[3], 255);
     }
     //#endregion BitfieldsFixture
@@ -703,7 +713,6 @@ mod tests {
         let err = decode_bmp(b"not a bmp at all").unwrap_err();
         assert!(err.contains("signature"));
     }
-
 
     //#region 🔖️CodecRetentionLaw
     /// 🔬 `codec_retention_law`: decode(encode(snap)) is byte-preserving for every field encode
@@ -716,17 +725,7 @@ mod tests {
         let (w, h) = (6u32, 4u32);
         let pixels = gradient_checkerboard_rgba(w, h);
 
-        let bottom_up = BmpSnapshot {
-            width: w,
-            height: h,
-            row_order: BmpRowOrder::BottomUp,
-            x_pixels_per_meter: 2835,
-            y_pixels_per_meter: 2835,
-            colors_used: 0,
-            colors_important: 0,
-            pixels: pixels.clone(),
-            ..BmpSnapshot::default()
-        };
+        let bottom_up = BmpSnapshot { width: w, height: h, row_order: BmpRowOrder::BottomUp, x_pixels_per_meter: 2835, y_pixels_per_meter: 2835, colors_used: 0, colors_important: 0, pixels: pixels.clone(), ..BmpSnapshot::default() };
         let encoded = encode_bmp(&bottom_up).expect("encode bottom-up");
         let decoded = decode_bmp(&encoded).expect("decode bottom-up");
         assert_eq!(decoded.width, bottom_up.width);
@@ -776,19 +775,11 @@ mod tests {
         /// clearer message).
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }
@@ -903,9 +894,9 @@ mod tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::bmp::standards::v_v3::subsets::any::schema::BmpComposer as BmpRawAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 

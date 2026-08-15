@@ -1,9 +1,9 @@
 //! 📤️ Serialize `stdio.gltf` to stdio.json. Embeds any BIN-chunk-sourced (no-`uri`) buffer as a
 //! base64 data uri first (via the shared `.gltf` JSON codec), since plain `stdio.json` has nowhere
 //! else to carry those bytes -- same reasoning as `serialize_gltf_document`.
-use crate::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
-use crate::artifacts::json::schema::snapshot::parse_json_text;
 use crate::artifacts::gltf::GltfSnapshot;
+use crate::artifacts::json::schema::snapshot::parse_json_text;
+use crate::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 pub fn register() {}
 pub fn serialize(from: &GltfSnapshot) -> Result<JsonSnapshot, store::PackError> {
     let embedded = crate::artifacts::gltf::engine::serialize_gltf_document(from);

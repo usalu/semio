@@ -14,17 +14,13 @@ pub mod wav_deserializer;
 pub mod wav_serializer;
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use dsl::{Diagnostic, FaultScope, Severity, TextSpan};
-    use semio_framework_plugin::{
-        ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId,
-        SubsetValidator, SubsetValidatorEntry, register_subset_validator, subset_validator_entry_of,
-        deserializer_entry_of, serializer_entry_of, register_composer_entries, ComposerEntry,
-    };
+    use crate::artifacts::semio::standards::v1::subsets::audio::io::{mp3_deserializer::SemioAudioFromMp3, mp3_serializer::SemioAudioToMp3, wav_deserializer::SemioAudioFromWav, wav_serializer::SemioAudioToWav};
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::SemioAudioAnalyzer;
-    use crate::artifacts::semio::standards::v1::subsets::audio::io::{
-        mp3_deserializer::SemioAudioFromMp3, mp3_serializer::SemioAudioToMp3,
-        wav_deserializer::SemioAudioFromWav, wav_serializer::SemioAudioToWav,
+    use dsl::{Diagnostic, FaultScope, Severity, TextSpan};
+    use semio_framework_plugin::{
+        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition,
+        Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
     };
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") };
@@ -36,7 +32,9 @@ pub mod derived_composition {
         type Snapshot = SemioAudioSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] { &[DIALECT] }
+        fn reads() -> &'static [Dialect] {
+            &[DIALECT]
+        }
 
         fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
@@ -51,10 +49,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "SemioAudioComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = SemioAudioAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "SemioAudioComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "SemioAudioComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             let mut diagnostics = analysis.diagnostics;
             diagnostics.extend(check_semio_audio_invariants(&snapshot));
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics })
@@ -77,10 +72,7 @@ pub mod derived_composition {
             let expected = first.samples.len();
             for (i, channel) in snapshot.channels.iter().enumerate().skip(1) {
                 if channel.samples.len() != expected {
-                    diagnostics.push(warning(
-                        "stdio.semio_audio.channel-length-mismatch",
-                        format!("channel {i} has {} samples, channel 0 has {expected} -- channels are expected to be the same length", channel.samples.len()),
-                    ));
+                    diagnostics.push(warning("stdio.semio_audio.channel-length-mismatch", format!("channel {i} has {} samples, channel 0 has {expected} -- channels are expected to be the same length", channel.samples.len())));
                 }
             }
         }
@@ -125,7 +117,9 @@ pub mod derived_composition {
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    fn validator_entry() -> &'static SubsetValidatorEntry { VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioAudioValidator>) }
+    fn validator_entry() -> &'static SubsetValidatorEntry {
+        VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioAudioValidator>)
+    }
     //#endregion 🔖️SubsetValidator
 
     //#region 🔖️Register
@@ -135,7 +129,9 @@ pub mod derived_composition {
     /// artifact's standard-level `engine::register()`.
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::audio::schema::semio_audio_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioAudioSnapshot, crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::SemioAudioMutation>(crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA));
+        store::register_document_codec(store::ArtifactCodec::of::<SemioAudioSnapshot, crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::SemioAudioMutation>(
+            crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA,
+        ));
         register_subset_validator(validator_entry());
         register_composer_entries(bridge_entries());
         register_artifact_inferences();
@@ -152,16 +148,7 @@ pub mod derived_composition {
     /// IoKeys per pair per the master plan's io architecture note.
     fn bridge_entries() -> &'static [ComposerEntry] {
         static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
-        ENTRIES
-            .get_or_init(|| {
-                vec![
-                    deserializer_entry_of::<SemioAudioFromMp3>(),
-                    serializer_entry_of::<SemioAudioToMp3>(),
-                    deserializer_entry_of::<SemioAudioFromWav>(),
-                    serializer_entry_of::<SemioAudioToWav>(),
-                ]
-            })
-            .as_slice()
+        ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioAudioFromMp3>(), serializer_entry_of::<SemioAudioToMp3>(), deserializer_entry_of::<SemioAudioFromWav>(), serializer_entry_of::<SemioAudioToWav>()]).as_slice()
     }
     //#endregion 🔖️Register
 
@@ -195,22 +182,14 @@ pub mod derived_composition {
 
         #[test]
         fn mismatched_channel_lengths_surface_a_real_warning() {
-            let snapshot = SemioAudioSnapshot {
-                sample_rate: 44_100,
-                channels: vec![SemioAudioChannel { samples: vec![0.0, 1.0, 2.0] }, SemioAudioChannel { samples: vec![0.0] }],
-                ..SemioAudioSnapshot::default()
-            };
+            let snapshot = SemioAudioSnapshot { sample_rate: 44_100, channels: vec![SemioAudioChannel { samples: vec![0.0, 1.0, 2.0] }, SemioAudioChannel { samples: vec![0.0] }], ..SemioAudioSnapshot::default() };
             let diagnostics = check_semio_audio_invariants(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_audio.channel-length-mismatch"), "got {diagnostics:?}");
         }
 
         #[test]
         fn empty_tag_key_surfaces_a_real_warning() {
-            let snapshot = SemioAudioSnapshot {
-                sample_rate: 44_100,
-                tags: vec![SemioAudioTag { key: String::new(), value: "orphaned".into() }],
-                ..SemioAudioSnapshot::default()
-            };
+            let snapshot = SemioAudioSnapshot { sample_rate: 44_100, tags: vec![SemioAudioTag { key: String::new(), value: "orphaned".into() }], ..SemioAudioSnapshot::default() };
             let diagnostics = check_semio_audio_invariants(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_audio.empty-tag-key"), "got {diagnostics:?}");
         }
@@ -238,19 +217,11 @@ pub mod derived_composition {
             /// `walk_protocol` laws below.
             #[test]
             fn committed_facet_files_parse() {
-                for (label, text) in [
-                    ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-                ] {
+                for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                     assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
                 }
-                for (label, text) in [
-                    ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-                ] {
+                for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                     dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
                 }
             }

@@ -1,3 +1,5 @@
-(* stdio.mp4 op text form — one compact single-line JSON object per op *)
-document = json_line ;
-json_line = { any_char_except_newline } ;
+(* stdio.mp4 structured named-record operation form *)
+document = keyword, [ " ", fields ] ;
+keyword = "no-mutation" | "set-snapshot" | "set-ftyp" | "insert-track" | "remove-track" | "set-track-dimensions" | "set-track-codec" | "insert-sample" | "remove-sample" | "set-sample-sync" ;
+fields = field, { " ", field } ;
+field = key, "=", value ;

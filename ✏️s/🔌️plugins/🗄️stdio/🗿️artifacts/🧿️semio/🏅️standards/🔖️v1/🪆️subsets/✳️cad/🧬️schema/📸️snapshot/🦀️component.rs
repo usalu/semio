@@ -108,12 +108,7 @@ pub struct SemioCadSnapshot {
 
 impl Default for SemioCadSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
-            layers: Vec::new(),
-            blocks: Vec::new(),
-            entities: Vec::new(),
-        }
+        Self { schema: STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(), layers: Vec::new(), blocks: Vec::new(), entities: Vec::new() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -155,10 +150,18 @@ fn parse_i32(s: &str) -> Result<i32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 fn enc_bool(b: bool) -> &'static str {
-    if b { "1" } else { "0" }
+    if b {
+        "1"
+    } else {
+        "0"
+    }
 }
 fn parse_bool(s: &str) -> Result<bool, String> {
-    match s { "1" => Ok(true), "0" => Ok(false), other => Err(format!("bad bool {other:?}")) }
+    match s {
+        "1" => Ok(true),
+        "0" => Ok(false),
+        other => Err(format!("bad bool {other:?}")),
+    }
 }
 fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
@@ -423,12 +426,7 @@ fn read_entity(reader: &mut store::ByteReader<'_>) -> Result<CadEntity, String> 
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(CadEntity::Line { a: read_point2(reader)?, b: read_point2(reader)? }),
-        1 => Ok(CadEntity::Arc {
-            center: read_point2(reader)?,
-            radius: reader.read_f64_le().map_err(|e| e.to_string())?,
-            start_angle: reader.read_f64_le().map_err(|e| e.to_string())?,
-            end_angle: reader.read_f64_le().map_err(|e| e.to_string())?,
-        }),
+        1 => Ok(CadEntity::Arc { center: read_point2(reader)?, radius: reader.read_f64_le().map_err(|e| e.to_string())?, start_angle: reader.read_f64_le().map_err(|e| e.to_string())?, end_angle: reader.read_f64_le().map_err(|e| e.to_string())? }),
         2 => Ok(CadEntity::Circle { center: read_point2(reader)?, radius: reader.read_f64_le().map_err(|e| e.to_string())? }),
         3 => Ok(CadEntity::Ellipse {
             center: read_point2(reader)?,
@@ -438,25 +436,10 @@ fn read_entity(reader: &mut store::ByteReader<'_>) -> Result<CadEntity, String> 
             end_param: reader.read_f64_le().map_err(|e| e.to_string())?,
         }),
         4 => Ok(CadEntity::Polyline { vertices: read_point2_vec(reader)?, closed: read_bool(reader)? }),
-        5 => Ok(CadEntity::Text {
-            position: read_point2(reader)?,
-            height: reader.read_f64_le().map_err(|e| e.to_string())?,
-            rotation: reader.read_f64_le().map_err(|e| e.to_string())?,
-            content: read_str_lp(reader)?,
-        }),
-        6 => Ok(CadEntity::Insert {
-            block_name: read_str_lp(reader)?,
-            insertion_point: read_point2(reader)?,
-            scale: read_point2(reader)?,
-            rotation: reader.read_f64_le().map_err(|e| e.to_string())?,
-        }),
+        5 => Ok(CadEntity::Text { position: read_point2(reader)?, height: reader.read_f64_le().map_err(|e| e.to_string())?, rotation: reader.read_f64_le().map_err(|e| e.to_string())?, content: read_str_lp(reader)? }),
+        6 => Ok(CadEntity::Insert { block_name: read_str_lp(reader)?, insertion_point: read_point2(reader)?, scale: read_point2(reader)?, rotation: reader.read_f64_le().map_err(|e| e.to_string())? }),
         7 => Ok(CadEntity::Solid { p1: read_point2(reader)?, p2: read_point2(reader)?, p3: read_point2(reader)?, p4: read_point2(reader)? }),
-        8 => Ok(CadEntity::Dimension {
-            def_point: read_point2(reader)?,
-            text_position: read_point2(reader)?,
-            measurement: reader.read_f64_le().map_err(|e| e.to_string())?,
-            text: read_str_lp(reader)?,
-        }),
+        8 => Ok(CadEntity::Dimension { def_point: read_point2(reader)?, text_position: read_point2(reader)?, measurement: reader.read_f64_le().map_err(|e| e.to_string())?, text: read_str_lp(reader)? }),
         other => Err(format!("entity: unknown binary tag {other}")),
     }
 }
@@ -555,7 +538,9 @@ fn decode_cad_snapshot_binary(bytes: &[u8]) -> Result<SemioCadSnapshot, String> 
 /// `store::semio_format` envelope, unchanged.
 impl store::ArtifactDsl for SemioCadSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str { STDIO_SEMIOCAD_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_SEMIOCAD_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -567,11 +552,7 @@ impl store::ArtifactDsl for SemioCadSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_cad_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -580,22 +561,14 @@ impl store::ArtifactPack for SemioCadSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_cad_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_cad_snapshot_binary(&inner).map_err(store::PackError::Schema)
@@ -613,10 +586,7 @@ impl store::ArtifactPack for SemioCadSnapshot {
 pub(crate) fn demo_cad_snapshot() -> SemioCadSnapshot {
     SemioCadSnapshot {
         schema: STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
-        layers: vec![
-            CadLayer { name: "0".into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true },
-            CadLayer { name: "dim".into(), color_index: 1, line_type: "DASHED".into(), visible: true },
-        ],
+        layers: vec![CadLayer { name: "0".into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true }, CadLayer { name: "dim".into(), color_index: 1, line_type: "DASHED".into(), visible: true }],
         blocks: vec![CadBlock {
             name: "door".into(),
             base_point: SemioPoint2 { x: 0.0, y: 0.0 },

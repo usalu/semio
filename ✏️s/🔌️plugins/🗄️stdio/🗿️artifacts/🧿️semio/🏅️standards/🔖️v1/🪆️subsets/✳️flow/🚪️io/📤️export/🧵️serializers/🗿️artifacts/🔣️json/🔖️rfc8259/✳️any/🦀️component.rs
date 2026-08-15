@@ -2,11 +2,11 @@
 //! mirror of this pair's deserializer. Lossless: every `FlowNode`/`FlowEdge` field has a
 //! direct JSON member, so `serialize`+`deserialize` round-trips exactly.
 
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::json::JsonSnapshot;
 use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
+use crate::artifacts::json::JsonSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{PortRef, SemioFlowSnapshot, FlowEdge, FlowNode, FlowParam};
+use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot};
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
 fn str_val(s: &str) -> JsonValue {
@@ -59,10 +59,7 @@ impl ArtifactSerializer for SemioFlowToJson {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
 
     fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let value = obj(vec![
-            member("nodes", JsonValue::Array { items: from.nodes.iter().map(node_to_json).collect() }),
-            member("edges", JsonValue::Array { items: from.edges.iter().map(edge_to_json).collect() }),
-        ]);
+        let value = obj(vec![member("nodes", JsonValue::Array { items: from.nodes.iter().map(node_to_json).collect() }), member("edges", JsonValue::Array { items: from.edges.iter().map(edge_to_json).collect() })]);
         Ok(JsonSnapshot { schema: crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
     }
 }

@@ -15,12 +15,10 @@
 //!   `SemioImageMetadataEntry` and are dropped on import.
 
 use crate::artifacts::png::{
-    PngSnapshot,
     schema::snapshot::{PngChunkMarker, PngColorType, PngTextChunk, PngTextKind},
+    PngSnapshot,
 };
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{
-    SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA,
-};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
@@ -51,11 +49,7 @@ impl ArtifactDeserializer for SemioImageFromPng {
         if from.pixels.len() != (from.width as usize) * (from.height as usize) * 4 {
             return Err(store::PackError::Schema("png→semio/image: pixels length does not match width*height*4".into()));
         }
-        let metadata = from
-            .text_chunks
-            .iter()
-            .map(|t: &PngTextChunk| SemioImageMetadataEntry { key: t.keyword.clone(), value: t.value.clone() })
-            .collect();
+        let metadata = from.text_chunks.iter().map(|t: &PngTextChunk| SemioImageMetadataEntry { key: t.keyword.clone(), value: t.value.clone() }).collect();
         Ok(SemioImageSnapshot {
             schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
             width: from.width,

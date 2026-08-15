@@ -43,10 +43,7 @@ impl ArtifactDeserializer for SemioDrawingFromPdf {
                     id: format!("page{i}"),
                     name: format!("page{i}"),
                     visible: true,
-                    root: DrawNode::Group {
-                        transform: SemioTransform::identity(),
-                        children: vec![DrawNode::Text { value: page.text.clone(), at: SemioPoint2 { x: 0.0, y: height }, style: None }],
-                    },
+                    root: DrawNode::Group { transform: SemioTransform::identity(), children: vec![DrawNode::Text { value: page.text.clone(), at: SemioPoint2 { x: 0.0, y: height }, style: None }] },
                 }
             })
             .collect();

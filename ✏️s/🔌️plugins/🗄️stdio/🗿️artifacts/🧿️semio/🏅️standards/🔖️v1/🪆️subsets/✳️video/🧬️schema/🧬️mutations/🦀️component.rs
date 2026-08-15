@@ -3,14 +3,13 @@
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::video::schema::diff::{
-    dec_bool, dec_kind, dec_list, dec_rational, dec_sample, dec_str, dec_stream, diff_insert_sample, diff_insert_stream, diff_remove_sample,
-    diff_remove_stream, diff_set_sample_data, diff_set_sample_flags, diff_set_snapshot, diff_set_stream_meta, enc_bool, enc_kind, enc_list,
-    enc_rational, enc_sample, enc_stream, enc_str, hex_decode, hex_encode, parse_usize, SemioVideoDiff,
+    dec_bool, dec_kind, dec_list, dec_rational, dec_sample, dec_str, dec_stream, diff_insert_sample, diff_insert_stream, diff_remove_sample, diff_remove_stream, diff_set_sample_data, diff_set_sample_flags, diff_set_snapshot, diff_set_stream_meta,
+    enc_bool, enc_kind, enc_list, enc_rational, enc_sample, enc_str, enc_stream, hex_decode, hex_encode, parse_usize, SemioVideoDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
-use protocol::{Mutation, OpText};
 #[cfg(test)]
 use protocol::OpBinary;
+use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -132,14 +131,7 @@ impl Mutation<SemioVideoSnapshot> for SemioVideoMutation {
                 None => vec![SemioVideoMutation::NoMutation],
             },
             SemioVideoMutation::SetStreamMeta { index, .. } => match stream_at(base, *index) {
-                Some(stream) => vec![SemioVideoMutation::SetStreamMeta {
-                    index: *index,
-                    kind: stream.kind,
-                    codec: stream.codec.clone(),
-                    width: stream.width,
-                    height: stream.height,
-                    rate: stream.rate,
-                }],
+                Some(stream) => vec![SemioVideoMutation::SetStreamMeta { index: *index, kind: stream.kind, codec: stream.codec.clone(), width: stream.width, height: stream.height, rate: stream.rate }],
                 None => vec![SemioVideoMutation::NoMutation],
             },
             SemioVideoMutation::InsertSample { stream_index, index, .. } => vec![SemioVideoMutation::RemoveSample { stream_index: *stream_index, index: *index }],
@@ -181,10 +173,7 @@ fn print_semio_video_mutation(m: &SemioVideoMutation) -> String {
         SemioVideoMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_semio_video_snapshot(snapshot)),
         SemioVideoMutation::InsertStream { index, stream } => format!("insert-stream index={} stream={}", index, enc_stream(stream)),
         SemioVideoMutation::RemoveStream { index } => format!("remove-stream index={index}"),
-        SemioVideoMutation::SetStreamMeta { index, kind, codec, width, height, rate } => format!(
-            "set-stream-meta index={} kind={} codec={} width={} height={} rate={}",
-            index, enc_kind(kind), enc_str(codec), width, height, enc_rational(rate)
-        ),
+        SemioVideoMutation::SetStreamMeta { index, kind, codec, width, height, rate } => format!("set-stream-meta index={} kind={} codec={} width={} height={} rate={}", index, enc_kind(kind), enc_str(codec), width, height, enc_rational(rate)),
         SemioVideoMutation::InsertSample { stream_index, index, sample } => format!("insert-sample stream-index={} index={} sample={}", stream_index, index, enc_sample(sample)),
         SemioVideoMutation::RemoveSample { stream_index, index } => format!("remove-sample stream-index={stream_index} index={index}"),
         SemioVideoMutation::SetSampleData { stream_index, index, data } => format!("set-sample-data stream-index={} index={} data={}", stream_index, index, hex_encode(data)),
@@ -196,13 +185,8 @@ fn parse_semio_video_mutation(line: &str) -> Result<SemioVideoMutation, String> 
         return Ok(SemioVideoMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("semio video mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> =
+        rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("semio video mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("semio video mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { parse_usize(arg(k)?) };
     match keyword {
@@ -220,12 +204,7 @@ fn parse_semio_video_mutation(line: &str) -> Result<SemioVideoMutation, String> 
         "insert-sample" => Ok(SemioVideoMutation::InsertSample { stream_index: usize_arg("stream-index")?, index: usize_arg("index")?, sample: dec_sample(arg("sample")?)? }),
         "remove-sample" => Ok(SemioVideoMutation::RemoveSample { stream_index: usize_arg("stream-index")?, index: usize_arg("index")? }),
         "set-sample-data" => Ok(SemioVideoMutation::SetSampleData { stream_index: usize_arg("stream-index")?, index: usize_arg("index")?, data: hex_decode(arg("data")?)? }),
-        "set-sample-flags" => Ok(SemioVideoMutation::SetSampleFlags {
-            stream_index: usize_arg("stream-index")?,
-            index: usize_arg("index")?,
-            pts: arg("pts")?.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-            key: dec_bool(arg("key")?)?,
-        }),
+        "set-sample-flags" => Ok(SemioVideoMutation::SetSampleFlags { stream_index: usize_arg("stream-index")?, index: usize_arg("index")?, pts: arg("pts")?.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, key: dec_bool(arg("key")?)? }),
         other => Err(format!("semio video mutation: unknown keyword {other:?}")),
     }
 }
@@ -241,17 +220,7 @@ impl protocol::OpText for SemioVideoMutation {
 
 /// 🏷️ Ordinal table, same declaration order as `SemioVideoMutation`'s own enum variants and
 /// `parse_semio_video_mutation`'s keyword match — the real binary `tag` field's source of truth.
-const OP_KEYWORDS: [&str; 9] = [
-    "no-mutation",
-    "set-snapshot",
-    "insert-stream",
-    "remove-stream",
-    "set-stream-meta",
-    "insert-sample",
-    "remove-sample",
-    "set-sample-data",
-    "set-sample-flags",
-];
+const OP_KEYWORDS: [&str; 9] = ["no-mutation", "set-snapshot", "insert-stream", "remove-stream", "set-stream-meta", "insert-sample", "remove-sample", "set-sample-data", "set-sample-flags"];
 fn variant_ordinal(m: &SemioVideoMutation) -> u8 {
     match m {
         SemioVideoMutation::NoMutation => 0,
@@ -333,10 +302,7 @@ mod tests {
                     width: 1920,
                     height: 1080,
                     rate: SemioRational { num: 30, den: 1 },
-                    samples: vec![
-                        SemioVideoSample { pts: 0, key: true, data: vec![1, 2, 3] },
-                        SemioVideoSample { pts: 33, key: false, data: vec![4, 5, 6] },
-                    ],
+                    samples: vec![SemioVideoSample { pts: 0, key: true, data: vec![1, 2, 3] }, SemioVideoSample { pts: 33, key: false, data: vec![4, 5, 6] }],
                 },
                 SemioVideoStream { kind: SemioVideoStreamKind::Audio, codec: "aac".into(), width: 0, height: 0, rate: SemioRational { num: 48_000, den: 1_000 }, samples: Vec::new() },
             ],
@@ -360,11 +326,7 @@ mod tests {
                     width: 640,
                     height: 480,
                     rate: SemioRational { num: 24, den: 1 },
-                    samples: vec![
-                        SemioVideoSample { pts: 1, key: true, data: vec![9] },
-                        SemioVideoSample { pts: 2, key: false, data: vec![8] },
-                        SemioVideoSample { pts: 3, key: true, data: vec![7] },
-                    ],
+                    samples: vec![SemioVideoSample { pts: 1, key: true, data: vec![9] }, SemioVideoSample { pts: 2, key: false, data: vec![8] }, SemioVideoSample { pts: 3, key: true, data: vec![7] }],
                 },
                 SemioVideoStream { kind: SemioVideoStreamKind::Audio, codec: "aac".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() },
                 SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "srt".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() },
@@ -382,10 +344,7 @@ mod tests {
                     width: 1280,
                     height: 720,
                     rate: SemioRational { num: 30, den: 1 },
-                    samples: vec![
-                        SemioVideoSample { pts: 1, key: true, data: vec![9] },
-                        SemioVideoSample { pts: 22, key: true, data: vec![80] },
-                    ],
+                    samples: vec![SemioVideoSample { pts: 1, key: true, data: vec![9] }, SemioVideoSample { pts: 22, key: true, data: vec![80] }],
                 },
                 SemioVideoStream { kind: SemioVideoStreamKind::Audio, codec: "aac".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() },
             ],
@@ -398,10 +357,7 @@ mod tests {
         vec![
             SemioVideoMutation::NoMutation,
             SemioVideoMutation::SetSnapshot { snapshot: sweep_b() },
-            SemioVideoMutation::InsertStream {
-                index: 1,
-                stream: SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "srt".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() },
-            },
+            SemioVideoMutation::InsertStream { index: 1, stream: SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "srt".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() } },
             SemioVideoMutation::RemoveStream { index: 0 },
             SemioVideoMutation::SetStreamMeta { index: 0, kind: SemioVideoStreamKind::Audio, codec: "vp9".into(), width: 1280, height: 720, rate: SemioRational { num: 60, den: 1 } },
             SemioVideoMutation::InsertSample { stream_index: 0, index: 1, sample: SemioVideoSample { pts: 99, key: true, data: vec![9, 9] } },
@@ -629,14 +585,7 @@ mod tests {
     /// enum tag.
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let stream = SemioVideoStream {
-            kind: SemioVideoStreamKind::Subtitle,
-            codec: "srt".into(),
-            width: 0,
-            height: 0,
-            rate: SemioRational { num: 1, den: 1 },
-            samples: vec![SemioVideoSample { pts: 5, key: true, data: vec![1, 2] }],
-        };
+        let stream = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "srt".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: vec![SemioVideoSample { pts: 5, key: true, data: vec![1, 2] }] };
         let mutations = vec![
             SemioVideoMutation::NoMutation,
             SemioVideoMutation::SetSnapshot { snapshot: sweep_b() },

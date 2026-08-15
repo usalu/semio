@@ -13,10 +13,8 @@
 //!   carries) become `xPixelsPerMeter`/`yPixelsPerMeter` entries; the palette itself has no
 //!   textual home and is dropped (pixels are already palette-resolved).
 
-use crate::artifacts::bmp::{BmpSnapshot, schema::snapshot::BmpRowOrder};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{
-    SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA,
-};
+use crate::artifacts::bmp::{schema::snapshot::BmpRowOrder, BmpSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId::ANY };
@@ -71,16 +69,7 @@ mod tests {
     use super::*;
 
     fn sample_bmp() -> BmpSnapshot {
-        BmpSnapshot {
-            width: 2,
-            height: 1,
-            bits_per_pixel: 24,
-            row_order: BmpRowOrder::BottomUp,
-            x_pixels_per_meter: 2835,
-            y_pixels_per_meter: 2835,
-            pixels: vec![255, 0, 0, 255, 0, 255, 0, 255],
-            ..BmpSnapshot::default()
-        }
+        BmpSnapshot { width: 2, height: 1, bits_per_pixel: 24, row_order: BmpRowOrder::BottomUp, x_pixels_per_meter: 2835, y_pixels_per_meter: 2835, pixels: vec![255, 0, 0, 255, 0, 255, 0, 255], ..BmpSnapshot::default() }
     }
 
     #[test]

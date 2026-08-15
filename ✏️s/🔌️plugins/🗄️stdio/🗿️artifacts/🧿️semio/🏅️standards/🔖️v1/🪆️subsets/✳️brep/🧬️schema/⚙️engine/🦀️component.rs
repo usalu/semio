@@ -37,42 +37,33 @@ mod step;
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::blend::{chamfer_edges, fillet_edges, fillet_variable};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::boolean::{boolean_solid, compound_cut, section_solid_by_plane, split_solid_by_plane, BooleanOp};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::offset::{draft_angle, offset_face, offset_solid, shell_solid_with_open_faces, thicken_face};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::sew::{convert_to_nurbs, defeature, heal_solid, sew_faces};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::sweep::{extrude_face, helical_sweep, loft_profiles, pipe, revolve_face, sweep_along_path};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::classification::point_in_solid;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation::{tessellate_face, tessellate_solid, tessellate_wire};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-use semio_framework_3d::engine::{MeshTransfer, ParamDomain, PointClassification, Vec3, Vec3 as EVec3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_vertex;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect::intersect_curve_curve;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect::intersect_curve_surface;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect::intersect_surface_surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{
-    closest_point_on_solid, distance_solid_solid, edge_length, face_area, solid_bounding_box,
-    solid_center_of_mass, solid_surface_area, solid_volume,
-};
-use mesh_io::{
-    export_solid_dwg, export_solid_glb, export_solid_obj, export_solid_stl, import_dwg_to_body,
-    import_glb_to_body, import_obj_to_body, import_stl_to_body, mesh_to_mesh_data,
-    triangle_mesh_from_transfer, StlFormat,
-};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::offset::{draft_angle, offset_face, offset_solid, shell_solid_with_open_faces, thicken_face};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{
-    make_box, make_cone, make_convex_hull, make_cylinder, make_planar_face_from_points,
-    make_planar_face_from_wire, make_polyline_wire, make_rectangle_wire, make_regular_polygon_wire,
-    make_sphere, make_torus, Wire,
+    make_box, make_cone, make_convex_hull, make_cylinder, make_planar_face_from_points, make_planar_face_from_wire, make_polyline_wire, make_rectangle_wire, make_regular_polygon_wire, make_sphere, make_torus, Wire,
 };
-use step::{read_step, write_step};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::sew::{convert_to_nurbs, defeature, heal_solid, sew_faces};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::sweep::{extrude_face, helical_sweep, loft_profiles, pipe, revolve_face, sweep_along_path};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::classification::point_in_solid;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{closest_point_on_solid, distance_solid_solid, edge_length, face_area, solid_bounding_box, solid_center_of_mass, solid_surface_area, solid_volume};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation::{tessellate_face, tessellate_solid, tessellate_wire};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3 as NativeVec3};
+use mesh_io::{export_solid_dwg, export_solid_glb, export_solid_obj, export_solid_stl, import_dwg_to_body, import_glb_to_body, import_obj_to_body, import_stl_to_body, mesh_to_mesh_data, triangle_mesh_from_transfer, StlFormat};
+use semio_framework_3d::engine::{MeshTransfer, ParamDomain, PointClassification, Vec3, Vec3 as EVec3};
+use step::{read_step, write_step};
 
 // #region 🔖️ContractTypes
 
@@ -315,11 +306,7 @@ impl Default for Brep {
 impl Brep {
     /// 🏗️ Empty native kernel session.
     pub fn new() -> Self {
-        Self {
-            body: Body::new(),
-            live: HashMap::new(),
-            counter: 0,
-        }
+        Self { body: Body::new(), live: HashMap::new(), counter: 0 }
     }
 }
 
@@ -367,11 +354,7 @@ impl Brep {
             let mut pts = [Pnt3::new(0.0, 0.0, 0.0); 3];
             for (k, &idx) in tri.iter().enumerate() {
                 let i = idx as usize * 3;
-                let p = Pnt3::new(
-                    transfer.position[i] as f64,
-                    transfer.position[i + 1] as f64,
-                    transfer.position[i + 2] as f64,
-                );
+                let p = Pnt3::new(transfer.position[i] as f64, transfer.position[i + 1] as f64, transfer.position[i + 2] as f64);
                 pts[k] = map(p);
             }
             triangles.push(pts);
@@ -398,9 +381,7 @@ impl Brep {
         self.counter = self.counter.wrapping_add(1);
         let payload = format!("{kind:?}:{}:{}", self.counter, entity_tag(&entity));
         let hash = blake3::hash(payload.as_bytes());
-        let handle = GeometryHandle(
-            hash.as_bytes().iter().map(|b| format!("{b:02x}")).collect::<String>(),
-        );
+        let handle = GeometryHandle(hash.as_bytes().iter().map(|b| format!("{b:02x}")).collect::<String>());
         self.live.insert(handle.as_str().to_string(), entity);
         let _ = kind;
         handle
@@ -423,9 +404,7 @@ impl Brep {
     }
 
     fn entity(&self, handle: &GeometryHandle) -> Result<&Entity, BrepError> {
-        self.live
-            .get(handle.as_str())
-            .ok_or_else(|| BrepError::MissingHandle(handle.as_str().to_string()))
+        self.live.get(handle.as_str()).ok_or_else(|| BrepError::MissingHandle(handle.as_str().to_string()))
     }
 
     fn solid_id(&self, handle: &GeometryHandle) -> Result<SolidId, BrepError> {
@@ -534,11 +513,7 @@ impl Brep {
         let frame = Frame3::from_normal(pnt(center), vec3(normal)).ok_or_else(|| BrepError::InvalidInput("bad arc frame".into()))?;
         let circle = Curve3::Circle { frame, radius };
         let nurbs = circle.to_nurbs((start_angle, end_angle));
-        Ok(self.register_curve(Curve3::Nurbs {
-            knots: nurbs.knots,
-            controls: nurbs.controls,
-            weights: nurbs.weights,
-        }))
+        Ok(self.register_curve(Curve3::Nurbs { knots: nurbs.knots, controls: nurbs.controls, weights: nurbs.weights }))
     }
     pub fn ellipse_curve_sync(&mut self, center: EVec3, normal: EVec3, semi_major: f64, semi_minor: f64) -> Result<GeometryHandle, BrepError> {
         let frame = Frame3::from_normal(pnt(center), vec3(normal)).ok_or_else(|| BrepError::InvalidInput("bad ellipse frame".into()))?;
@@ -611,7 +586,7 @@ impl Brep {
     }
     pub fn planar_face_from_wire_sync(&mut self, wire: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let w = self.wire_ref(wire)?.clone();
-        let origin = self.body.vertices.get(w.vertices[0]).map(|v| v.position).unwrap_or(Pnt3::new(0.0,0.0,0.0));
+        let origin = self.body.vertices.get(w.vertices[0]).map(|v| v.position).unwrap_or(Pnt3::new(0.0, 0.0, 0.0));
         let mut rec = OpRecorder::new();
         let face = make_planar_face_from_wire(&mut self.body, &w, origin, NativeVec3::Z, &mut rec).map_err(map_err)?;
         Ok(self.register_face(face))
@@ -629,17 +604,9 @@ impl Brep {
         let dv = degree_v.clamp(1, nv.saturating_sub(1).max(1));
         let u_knots = KnotVector::clamped_uniform(nu, du);
         let v_knots = KnotVector::clamped_uniform(nv, dv);
-        let controls: Vec<Vec<Pnt3>> = points
-            .iter()
-            .map(|row| row.iter().copied().map(pnt).collect())
-            .collect();
+        let controls: Vec<Vec<Pnt3>> = points.iter().map(|row| row.iter().copied().map(pnt).collect()).collect();
         let weights = vec![vec![1.0; nv]; nu];
-        Ok(self.register_surface(Surface::Nurbs {
-            u_knots,
-            v_knots,
-            controls,
-            weights,
-        }))
+        Ok(self.register_surface(Surface::Nurbs { u_knots, v_knots, controls, weights }))
     }
     pub fn coons_patch_sync(&mut self, curves: &[Vec<EVec3>]) -> Result<GeometryHandle, BrepError> {
         if curves.len() != 4 {
@@ -675,10 +642,7 @@ impl Brep {
                 let p11 = sample_curve(c2, 1.0);
                 let lc = sample_curve(c0, u).lerp(sample_curve(c2, u), v);
                 let ld = sample_curve(c3, v).lerp(sample_curve(c1, v), u);
-                let bil = p00.to_vec() * ((1.0 - u) * (1.0 - v))
-                    + p10.to_vec() * (u * (1.0 - v))
-                    + p01.to_vec() * ((1.0 - u) * v)
-                    + p11.to_vec() * (u * v);
+                let bil = p00.to_vec() * ((1.0 - u) * (1.0 - v)) + p10.to_vec() * (u * (1.0 - v)) + p01.to_vec() * ((1.0 - u) * v) + p11.to_vec() * (u * v);
                 let p = Pnt3::new(lc.x + ld.x - bil.x, lc.y + ld.y - bil.y, lc.z + ld.z - bil.z);
                 row.push(evec(p));
             }
@@ -700,8 +664,8 @@ impl Brep {
     }
     pub fn extrude_wire_sync(&mut self, wire: &GeometryHandle, vector: EVec3) -> Result<GeometryHandle, BrepError> {
         let face = self.planar_face_from_wire_sync(wire)?;
-        let dist = (vector[0]*vector[0]+vector[1]*vector[1]+vector[2]*vector[2]).sqrt();
-        let dir = if dist > 1e-15 { [vector[0]/dist, vector[1]/dist, vector[2]/dist] } else { [0.0,0.0,1.0] };
+        let dist = (vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]).sqrt();
+        let dir = if dist > 1e-15 { [vector[0] / dist, vector[1] / dist, vector[2] / dist] } else { [0.0, 0.0, 1.0] };
         self.extrude_sync(&face, dir, dist)
     }
     pub fn extrude_sync(&mut self, face: &GeometryHandle, direction: EVec3, distance: f64) -> Result<GeometryHandle, BrepError> {
@@ -773,7 +737,9 @@ impl Brep {
     pub fn compound_cut_sync(&mut self, target: &GeometryHandle, tools: &[GeometryHandle]) -> Result<GeometryHandle, BrepError> {
         let t = self.solid_id(target)?;
         let mut ids = Vec::new();
-        for tool in tools { ids.push(self.solid_id(tool)?); }
+        for tool in tools {
+            ids.push(self.solid_id(tool)?);
+        }
         let mut rec = OpRecorder::new();
         let solid = compound_cut(&mut self.body, t, &ids, 1e-6, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
@@ -811,7 +777,7 @@ impl Brep {
     pub fn linear_pattern_sync(&mut self, shape: &GeometryHandle, direction: EVec3, spacing: f64, count: usize) -> Result<GeometryHandle, BrepError> {
         let mut current = shape.clone();
         for i in 1..count.max(1) {
-            let off = [direction[0]*spacing*i as f64, direction[1]*spacing*i as f64, direction[2]*spacing*i as f64];
+            let off = [direction[0] * spacing * i as f64, direction[1] * spacing * i as f64, direction[2] * spacing * i as f64];
             let next = self.translate_sync(shape, off)?;
             current = self.fuse_sync(&current, &next)?;
         }
@@ -831,12 +797,10 @@ impl Brep {
         let mut current = shape.clone();
         for i in 0..count_x.max(1) {
             for j in 0..count_y.max(1) {
-                if i == 0 && j == 0 { continue; }
-                let off = [
-                    dir_x[0]*spacing_x*i as f64 + dir_y[0]*spacing_y*j as f64,
-                    dir_x[1]*spacing_x*i as f64 + dir_y[1]*spacing_y*j as f64,
-                    dir_x[2]*spacing_x*i as f64 + dir_y[2]*spacing_y*j as f64,
-                ];
+                if i == 0 && j == 0 {
+                    continue;
+                }
+                let off = [dir_x[0] * spacing_x * i as f64 + dir_y[0] * spacing_y * j as f64, dir_x[1] * spacing_x * i as f64 + dir_y[1] * spacing_y * j as f64, dir_x[2] * spacing_x * i as f64 + dir_y[2] * spacing_y * j as f64];
                 let next = self.translate_sync(shape, off)?;
                 current = self.fuse_sync(&current, &next)?;
             }
@@ -861,8 +825,12 @@ impl Brep {
     pub fn fillet_edges_sync(&mut self, shape: &GeometryHandle, edges: &[GeometryHandle], radius: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let mut eids = Vec::new();
-        for e in edges { eids.push(self.edge_id(e)?); }
-        if eids.is_empty() { eids = all_edges(&self.body, solid); }
+        for e in edges {
+            eids.push(self.edge_id(e)?);
+        }
+        if eids.is_empty() {
+            eids = all_edges(&self.body, solid);
+        }
         let mut rec = OpRecorder::new();
         let out = fillet_edges(&mut self.body, solid, &eids, radius, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(out))
@@ -880,8 +848,12 @@ impl Brep {
     pub fn chamfer_edges_sync(&mut self, shape: &GeometryHandle, edges: &[GeometryHandle], distance: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let mut eids = Vec::new();
-        for e in edges { eids.push(self.edge_id(e)?); }
-        if eids.is_empty() { eids = all_edges(&self.body, solid); }
+        for e in edges {
+            eids.push(self.edge_id(e)?);
+        }
+        if eids.is_empty() {
+            eids = all_edges(&self.body, solid);
+        }
         let mut rec = OpRecorder::new();
         let out = chamfer_edges(&mut self.body, solid, &eids, distance, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(out))
@@ -895,9 +867,7 @@ impl Brep {
     }
     pub fn draft_sync(&mut self, shape: &GeometryHandle, faces: &[GeometryHandle], pull_direction: EVec3, _neutral_point: EVec3, angle: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
-        let face = if let Some(f) = faces.first() { self.face_id(f)? } else {
-            *self.body.solid_faces(solid).first().ok_or_else(|| BrepError::InvalidInput("no face".into()))?
-        };
+        let face = if let Some(f) = faces.first() { self.face_id(f)? } else { *self.body.solid_faces(solid).first().ok_or_else(|| BrepError::InvalidInput("no face".into()))? };
         let mut rec = OpRecorder::new();
         let out = draft_angle(&mut self.body, solid, face, angle, vec3(pull_direction), &mut rec).map_err(map_err)?;
         Ok(self.register_solid(out))
@@ -911,7 +881,9 @@ impl Brep {
     pub fn defeature_sync(&mut self, shape: &GeometryHandle, faces: &[GeometryHandle]) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let mut fids = Vec::new();
-        for f in faces { fids.push(self.face_id(f)?); }
+        for f in faces {
+            fids.push(self.face_id(f)?);
+        }
         let mut rec = OpRecorder::new();
         let out = defeature(&mut self.body, solid, &fids, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(out))
@@ -996,10 +968,14 @@ impl Brep {
         let solid = self.solid_id(shape)?;
         let bb = solid_bounding_box(&self.body, solid).map_err(map_err)?;
         let corners = [
-            evec(bb.min), evec(Pnt3::new(bb.max.x, bb.min.y, bb.min.z)),
-            evec(Pnt3::new(bb.max.x, bb.max.y, bb.min.z)), evec(Pnt3::new(bb.min.x, bb.max.y, bb.min.z)),
-            evec(Pnt3::new(bb.min.x, bb.min.y, bb.max.z)), evec(Pnt3::new(bb.max.x, bb.min.y, bb.max.z)),
-            evec(bb.max), evec(Pnt3::new(bb.min.x, bb.max.y, bb.max.z)),
+            evec(bb.min),
+            evec(Pnt3::new(bb.max.x, bb.min.y, bb.min.z)),
+            evec(Pnt3::new(bb.max.x, bb.max.y, bb.min.z)),
+            evec(Pnt3::new(bb.min.x, bb.max.y, bb.min.z)),
+            evec(Pnt3::new(bb.min.x, bb.min.y, bb.max.z)),
+            evec(Pnt3::new(bb.max.x, bb.min.y, bb.max.z)),
+            evec(bb.max),
+            evec(Pnt3::new(bb.min.x, bb.max.y, bb.max.z)),
         ];
         self.convex_hull_sync(&corners)
     }
@@ -1041,7 +1017,9 @@ impl Brep {
     }
     pub fn sew_faces_sync(&mut self, faces: &[GeometryHandle], tolerance: f64) -> Result<GeometryHandle, BrepError> {
         let mut fids = Vec::new();
-        for f in faces { fids.push(self.face_id(f)?); }
+        for f in faces {
+            fids.push(self.face_id(f)?);
+        }
         let mut rec = OpRecorder::new();
         let solid = sew_faces(&mut self.body, &fids, tolerance, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
@@ -1083,7 +1061,9 @@ impl Brep {
     }
     pub fn export_step_sync(&self, shapes: &[GeometryHandle]) -> Result<String, BrepError> {
         let mut solids = Vec::new();
-        for s in shapes { solids.push(self.solid_id(s)?); }
+        for s in shapes {
+            solids.push(self.solid_id(s)?);
+        }
         write_step(&self.body, &solids).map_err(map_step)
     }
     pub fn export_stl_sync(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
@@ -1139,10 +1119,7 @@ impl Brep {
         })
     }
     /// 🧠 Face outer/hole loops as position indices into the returned vertex buffer.
-    pub fn solid_face_loops_sync(
-        &self,
-        shape: &GeometryHandle,
-    ) -> Result<(Vec<[f32; 3]>, Vec<(Vec<u32>, Vec<Vec<u32>>)>), BrepError> {
+    pub fn solid_face_loops_sync(&self, shape: &GeometryHandle) -> Result<(Vec<[f32; 3]>, Vec<(Vec<u32>, Vec<Vec<u32>>)>), BrepError> {
         let solid = self.solid_id(shape)?;
         let mut vertex_to_index: HashMap<u32, u32> = HashMap::new();
         let mut positions: Vec<[f32; 3]> = Vec::new();
@@ -1165,11 +1142,7 @@ impl Brep {
                             return Err(BrepError::MissingHandle(format!("vertex {start}")));
                         };
                         let next = positions.len() as u32;
-                        positions.push([
-                            vertex.position.x as f32,
-                            vertex.position.y as f32,
-                            vertex.position.z as f32,
-                        ]);
+                        positions.push([vertex.position.x as f32, vertex.position.y as f32, vertex.position.z as f32]);
                         vertex_to_index.insert(key, next);
                         next
                     };
@@ -1604,10 +1577,7 @@ mod tests {
     fn native_fuse_disjoint() {
         let mut k = Brep::new();
         let a = block_on(k.box_prim(1.0, 1.0, 1.0)).unwrap();
-        let b = block_on(k.convex_hull(&[
-            [2.0,0.0,0.0],[3.0,0.0,0.0],[3.0,1.0,0.0],[2.0,1.0,0.0],
-            [2.0,0.0,1.0],[3.0,0.0,1.0],[3.0,1.0,1.0],[2.0,1.0,1.0],
-        ])).unwrap();
+        let b = block_on(k.convex_hull(&[[2.0, 0.0, 0.0], [3.0, 0.0, 0.0], [3.0, 1.0, 0.0], [2.0, 1.0, 0.0], [2.0, 0.0, 1.0], [3.0, 0.0, 1.0], [3.0, 1.0, 1.0], [2.0, 1.0, 1.0]])).unwrap();
         let u = block_on(k.fuse(&a, &b)).unwrap();
         let v = block_on(k.volume(&u)).unwrap();
         assert!((v - 2.0).abs() < 1e-2, "volume {v}");
@@ -1645,12 +1615,7 @@ mod tests {
         assert!(tmesh.position.len() >= 9 && tmesh.index.len() >= 3, "torus mesh empty");
         let cut = block_on(k2.cut(&sphere, &torus)).expect("cut");
         let mesh = k2.tessellate_sync(&cut, 0.15).expect("tessellate cut");
-        assert!(
-            mesh.position.len() >= 9 && mesh.index.len() >= 3,
-            "cut mesh empty: pos={} idx={}",
-            mesh.position.len(),
-            mesh.index.len()
-        );
+        assert!(mesh.position.len() >= 9 && mesh.index.len() >= 3, "cut mesh empty: pos={} idx={}", mesh.position.len(), mesh.index.len());
     }
 
     #[test]
@@ -1659,9 +1624,7 @@ mod tests {
         let start = 0.0;
         let end = std::f64::consts::FRAC_PI_2;
         let radius = 2.0;
-        let arc = k
-            .arc_curve_sync([0.0, 0.0, 0.0], [0.0, 0.0, 1.0], radius, start, end)
-            .expect("arc");
+        let arc = k.arc_curve_sync([0.0, 0.0, 0.0], [0.0, 0.0, 1.0], radius, start, end).expect("arc");
         let domain = k.curve_domain_sync(&arc).expect("domain");
         assert!((domain.min - start).abs() < 1e-9 && (domain.max - end).abs() < 1e-9);
         let p0 = k.curve_point_sync(&arc, start).expect("p0");

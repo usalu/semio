@@ -1,7 +1,7 @@
 //! 🧬️ DwgArtifact schema — full artifact state.
 
+use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::{DwgApplicationHistory, DwgApplicationInfo, DwgAuxiliaryHeader, DwgClass, DwgDependency, DwgHeaderVariables, DwgIndexedPreview, DwgLogicalDrawing, DwgRevisionHistory, DwgSummaryInfo, DwgTemplate};
 use crate::artifacts::dwg::DwgSnapshot;
-use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::{DwgDecodeStatus, DwgLogicalDrawing, DwgPhysicalLayout, DwgSection};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -25,16 +25,34 @@ pub struct DwgArtifact {
     pub drawing: DwgLogicalDrawing,
     #[state(artifact)]
     #[serde(default)]
-    pub section_names: Vec<String>,
+    pub header: DwgHeaderVariables,
     #[state(artifact)]
     #[serde(default)]
-    pub sections: Vec<DwgSection>,
+    pub classes: Vec<DwgClass>,
     #[state(artifact)]
     #[serde(default)]
-    pub decode_status: DwgDecodeStatus,
+    pub dependencies: Vec<DwgDependency>,
     #[state(artifact)]
     #[serde(default)]
-    pub physical: DwgPhysicalLayout,
+    pub summary: DwgSummaryInfo,
+    #[state(artifact)]
+    #[serde(default)]
+    pub application: DwgApplicationInfo,
+    #[state(artifact)]
+    #[serde(default)]
+    pub template: DwgTemplate,
+    #[state(artifact)]
+    #[serde(default)]
+    pub auxiliary_header: DwgAuxiliaryHeader,
+    #[state(artifact)]
+    #[serde(default)]
+    pub revision_history: DwgRevisionHistory,
+    #[state(artifact)]
+    #[serde(default)]
+    pub preview: DwgIndexedPreview,
+    #[state(artifact)]
+    #[serde(default)]
+    pub application_history: DwgApplicationHistory,
 }
 //#endregion 🔖️Artifact
 
@@ -53,10 +71,16 @@ impl DwgArtifact {
             maintenance_version: self.maintenance_version,
             codepage: self.codepage,
             drawing: self.drawing.clone(),
-            section_names: self.section_names.clone(),
-            sections: self.sections.clone(),
-            decode_status: self.decode_status,
-            physical: self.physical.clone(),
+            header: self.header.clone(),
+            classes: self.classes.clone(),
+            dependencies: self.dependencies.clone(),
+            summary: self.summary.clone(),
+            application: self.application.clone(),
+            template: self.template.clone(),
+            auxiliary_header: self.auxiliary_header.clone(),
+            revision_history: self.revision_history.clone(),
+            preview: self.preview.clone(),
+            application_history: self.application_history.clone(),
         }
     }
 
@@ -67,10 +91,16 @@ impl DwgArtifact {
             maintenance_version: snapshot.maintenance_version,
             codepage: snapshot.codepage,
             drawing: snapshot.drawing,
-            section_names: snapshot.section_names,
-            sections: snapshot.sections,
-            decode_status: snapshot.decode_status,
-            physical: snapshot.physical,
+            header: snapshot.header,
+            classes: snapshot.classes,
+            dependencies: snapshot.dependencies,
+            summary: snapshot.summary,
+            application: snapshot.application,
+            template: snapshot.template,
+            auxiliary_header: snapshot.auxiliary_header,
+            revision_history: snapshot.revision_history,
+            preview: snapshot.preview,
+            application_history: snapshot.application_history,
         }
     }
 
@@ -80,10 +110,16 @@ impl DwgArtifact {
         self.maintenance_version = snapshot.maintenance_version;
         self.codepage = snapshot.codepage;
         self.drawing = snapshot.drawing;
-        self.section_names = snapshot.section_names;
-        self.sections = snapshot.sections;
-        self.decode_status = snapshot.decode_status;
-        self.physical = snapshot.physical;
+        self.header = snapshot.header;
+        self.classes = snapshot.classes;
+        self.dependencies = snapshot.dependencies;
+        self.summary = snapshot.summary;
+        self.application = snapshot.application;
+        self.template = snapshot.template;
+        self.auxiliary_header = snapshot.auxiliary_header;
+        self.revision_history = snapshot.revision_history;
+        self.preview = snapshot.preview;
+        self.application_history = snapshot.application_history;
     }
 }
 //#endregion 🔖️Conversions
@@ -125,8 +161,8 @@ pub fn dwg_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::dwg::{DwgDiff, DwgMutation, DwgSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.dwg` snapshot.
@@ -161,7 +197,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -171,8 +211,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::dwg::DwgSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.dwg` parts.
@@ -204,22 +244,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <DwgSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -255,15 +287,9 @@ pub fn empty_dwg_snapshot() -> DwgSnapshot {
     DwgSnapshot::default()
 }
 
-/// 📄️ The demo `stdio.dwg` (ac1024, the CANONICAL standard per S-6/Decision #5) document —
-/// decodes the real, committed 22-byte AC1024 stub (`📚️examples/🎬️demo/🖼️assets/🖊️example.dwg`)
-/// via this standard's own real `decode_dwg`. The single source of truth for
-/// `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are literally
-/// this snapshot's `print_dsl`/`encode_pack` output, asserted equal by
-/// `conformance_laws::fixture_honesty_law`, now in `../🚪️io/🦀️component.rs`).
+/// 📄️ The minimal logical `stdio.dwg` AC1024 demonstration document.
 pub fn demo_dwg_snapshot() -> DwgSnapshot {
-    let stub = b"AC1024\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
-    crate::artifacts::dwg::schema::snapshot::decode_dwg(stub).expect("decode ac1024 demo stub")
+    DwgSnapshot { version: "AC1024".into(), maintenance_version: 2, codepage: 30, ..Default::default() }
 }
 //#endregion 🔖️DocumentHelpers
 

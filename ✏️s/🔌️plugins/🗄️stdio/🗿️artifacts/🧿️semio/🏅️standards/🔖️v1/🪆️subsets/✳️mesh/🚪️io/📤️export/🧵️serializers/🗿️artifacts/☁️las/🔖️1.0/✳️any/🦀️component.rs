@@ -22,9 +22,9 @@
 //!   `f64` positions realistically carry, but SOME quantization is an inherent, real LAS property,
 //!   not an artifact of this codec — never claimed to be bit-exact.
 
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::las::LasSnapshot;
 use crate::artifacts::las::schema::snapshot::{LasHeader, LasPoint};
+use crate::artifacts::las::LasSnapshot;
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.las", standard: StandardId("1.0"), subset: SubsetId::ANY };
@@ -47,20 +47,25 @@ impl ArtifactSerializer for SemioMeshToLas {
                 for (i, p) in prim.positions.iter().enumerate() {
                     let rgb = if has_colors {
                         let c = prim.colors[i];
-                        Some((
-                            (c.r as f64 * 65535.0).round().clamp(0.0, 65535.0) as u16,
-                            (c.g as f64 * 65535.0).round().clamp(0.0, 65535.0) as u16,
-                            (c.b as f64 * 65535.0).round().clamp(0.0, 65535.0) as u16,
-                        ))
+                        Some(((c.r as f64 * 65535.0).round().clamp(0.0, 65535.0) as u16, (c.g as f64 * 65535.0).round().clamp(0.0, 65535.0) as u16, (c.b as f64 * 65535.0).round().clamp(0.0, 65535.0) as u16))
                     } else {
                         None
                     };
                     points.push(LasPoint {
-                        x: p.x, y: p.y, z: p.z,
-                        intensity: 0, return_number: 1, number_of_returns: 1,
-                        scan_direction_flag: false, edge_of_flight_line: false,
-                        classification: 0, scan_angle_rank: 0, user_data: 0, point_source_id: 0,
-                        gps_time: None, rgb,
+                        x: p.x,
+                        y: p.y,
+                        z: p.z,
+                        intensity: 0,
+                        return_number: 1,
+                        number_of_returns: 1,
+                        scan_direction_flag: false,
+                        edge_of_flight_line: false,
+                        classification: 0,
+                        scan_angle_rank: 0,
+                        user_data: 0,
+                        point_source_id: 0,
+                        gps_time: None,
+                        rgb,
                     });
                 }
             }
@@ -76,8 +81,8 @@ impl ArtifactSerializer for SemioMeshToLas {
 mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba};
-    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive, SemioTopology};
     use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::las::v1_0::any::SemioMeshFromLas;
+    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive, SemioTopology};
     use semio_framework_plugin::ArtifactDeserializer;
 
     fn sample_semio_mesh() -> SemioMeshSnapshot {

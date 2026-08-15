@@ -9,8 +9,8 @@
 //! `FILE_SCHEMA(('AUTOMOTIVE_DESIGN'))`). Reuses `step::engine::part21`'s tokenizer/writer
 //! functions directly — PARSING-CODE reuse; what's NOT reused is `Part21Document`'s type IDENTITY
 //! as this standard's snapshot type.
-use crate::artifacts::step::engine::part21::{parse_part21, write_part21_with, Part21Preamble, Part21WriteOptions};
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot, STDIO_IFC2X3_DOCUMENT_SCHEMA};
+use crate::artifacts::step::engine::part21::{parse_part21, write_part21_with, Part21Preamble, Part21WriteOptions};
 use std::fmt::Write as _;
 
 //#region 🔖️Codec
@@ -23,11 +23,7 @@ pub const IFC2X3_SCHEMA_NAME: &str = "IFC2X3";
 pub fn decode_ifc2x3(bytes: &[u8]) -> Result<Ifc2x3Snapshot, String> {
     let text = std::str::from_utf8(bytes).map_err(|e| format!("ifc2x3: not valid utf-8: {e}"))?;
     let document = parse_part21(text).map_err(|e| format!("ifc2x3 parse: {e}"))?;
-    let declares_ifc2x3 = document.header.file_schema.iter().any(|v| {
-        v.as_list()
-            .map(|items| items.iter().any(|item| item.as_str() == Some(IFC2X3_SCHEMA_NAME)))
-            .unwrap_or(false)
-    });
+    let declares_ifc2x3 = document.header.file_schema.iter().any(|v| v.as_list().map(|items| items.iter().any(|item| item.as_str() == Some(IFC2X3_SCHEMA_NAME))).unwrap_or(false));
     if !declares_ifc2x3 {
         return Err(format!("ifc2x3: FILE_SCHEMA does not declare {IFC2X3_SCHEMA_NAME}"));
     }
@@ -37,16 +33,8 @@ pub fn decode_ifc2x3(bytes: &[u8]) -> Result<Ifc2x3Snapshot, String> {
 /// 📤️ Regenerates valid IFC2X3 SPF bytes from a snapshot. Losslessness is `write_part21`'s job
 /// (shared with `step`/`4`); this function's only own contribution is the byte encoding.
 pub fn encode_ifc2x3(snapshot: &Ifc2x3Snapshot) -> Result<Vec<u8>, String> {
-    if snapshot.schema != STDIO_IFC2X3_DOCUMENT_SCHEMA {
-        return Err(format!("ifc2x3: unsupported snapshot schema {:?}", snapshot.schema));
-    }
-    let options = Part21WriteOptions {
-        line_ending: "\r\n",
-        blank_after_header: snapshot.edm_preamble.is_some(),
-        blank_before_data: true,
-        blank_before_terminator: true,
-        space_after_instance_equals: true,
-    };
+    crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::validate_ifc2x3_snapshot(snapshot)?;
+    let options = Part21WriteOptions { line_ending: "\r\n", blank_after_header: snapshot.edm_preamble.is_some(), blank_before_data: true, blank_before_terminator: true, space_after_instance_equals: true };
     Ok(write_part21_with(&snapshot.document, options, snapshot.edm_preamble.as_ref().map(|preamble| preamble as &dyn Part21Preamble)).into_bytes())
 }
 //#endregion 🔖️Codec
@@ -112,10 +100,10 @@ impl Part21Preamble for Ifc2x3EdmPreamble {
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::Ifc2x3Analyzer;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
@@ -143,10 +131,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "Ifc2x3ComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = Ifc2x3Analyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "Ifc2x3ComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "Ifc2x3ComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -166,21 +151,13 @@ mod tests {
 
     fn exact_fixture_bytes() -> &'static [u8] {
         static BYTES: OnceLock<Vec<u8>> = OnceLock::new();
-        BYTES.get_or_init(|| {
-            std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/wellness-center-sama.ifc"))
-                .expect("read temp/wellness-center-sama.ifc")
-        })
+        BYTES.get_or_init(|| std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/wellness-center-sama.ifc")).expect("read temp/wellness-center-sama.ifc"))
     }
 
     fn assert_exact(label: &str, actual: &[u8]) {
         let expected = exact_fixture_bytes();
         let first_difference = actual.iter().zip(expected).position(|(left, right)| left != right);
-        assert!(
-            actual == expected,
-            "{label}: expected {} bytes, got {}; first differing byte: {first_difference:?}",
-            expected.len(),
-            actual.len(),
-        );
+        assert!(actual == expected, "{label}: expected {} bytes, got {}; first differing byte: {first_difference:?}", expected.len(), actual.len(),);
     }
 
     #[test]
@@ -225,14 +202,8 @@ mod tests {
     #[test]
     fn exact_native_engine_raw_serializers_analyzer_and_composer_roundtrip() {
         use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
-        use crate::artifacts::ifc::standards::v2x3::subsets::any::io::export::serializers::artifacts::{
-            binary::v_raw::any as binary_export,
-            txt::v_utf_8::any as text_export,
-        };
-        use crate::artifacts::ifc::standards::v2x3::subsets::any::io::import::deserializers::artifacts::{
-            binary::v_raw::any as binary_import,
-            txt::v_utf_8::any as text_import,
-        };
+        use crate::artifacts::ifc::standards::v2x3::subsets::any::io::export::serializers::artifacts::{binary::v_raw::any as binary_export, txt::v_utf_8::any as text_export};
+        use crate::artifacts::ifc::standards::v2x3::subsets::any::io::import::deserializers::artifacts::{binary::v_raw::any as binary_import, txt::v_utf_8::any as text_import};
         use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::Ifc2x3Analyzer;
         use crate::artifacts::txt::TxtSnapshot;
 
@@ -270,6 +241,26 @@ mod tests {
         let pack_composition = Ifc2x3ComposerComposition::compose(&pack_sources).expect("compose IFC2X3 pack");
         assert_exact("pack composer export", &encode_ifc2x3(&pack_composition.snapshot).expect("pack composer export"));
     }
+
+    #[test]
+    fn snapshot_and_facets_forbid_native_shadow_state() {
+        let value = serde_json::to_value(demo_ifc2x3_snapshot()).expect("serialize logical snapshot");
+        let object = value.as_object().expect("snapshot object");
+        assert_eq!(object.keys().map(String::as_str).collect::<Vec<_>>(), vec!["document", "edmPreamble", "schema"]);
+        for (relative, text) in [
+            ("snapshot.proto", include_str!("../🧬️schema/📸️snapshot/🛰️component.proto")),
+            ("snapshot.graphql", include_str!("../🧬️schema/📸️snapshot/🔗️component.graphql")),
+            ("snapshot.ts", include_str!("../🧬️schema/📸️snapshot/🟦️component.ts")),
+            ("artifact.proto", include_str!("../🧬️schema/🛰️component.proto")),
+            ("artifact.graphql", include_str!("../🧬️schema/🔗️component.graphql")),
+            ("artifact.ts", include_str!("../🧬️schema/🟦️component.ts")),
+        ] {
+            for forbidden in ["ArtifactSource", "physical", "lexical", "document_wire", "document: Bytes", "sourceBytes"] {
+                assert!(!text.contains(forbidden), "{relative} contains forbidden shadow marker {forbidden}");
+            }
+            assert!(text.contains("Part21Document"), "{relative} must expose the typed Part21 document");
+        }
+    }
     //#endregion 🔖️LosslessNativeRouting
 
     //#region 🔖️ConformanceLaws
@@ -288,19 +279,11 @@ mod tests {
         /// parse under the real dialect.
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }
@@ -400,26 +383,17 @@ mod tests {
 //#region 🚪️DerivedIoRegistry
 /// 🚪️ Dissolved out of `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::Ifc2x3Composer as Ifc2x3RawAnyComposer;
+    use crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::Ifc2x3CobieComposer;
     use crate::artifacts::ifc::standards::v2x3::subsets::cv20::schema::Ifc2x3Cv20Composer;
     use crate::artifacts::ifc::standards::v2x3::subsets::sav::schema::Ifc2x3SavComposer;
-    use crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::Ifc2x3CobieComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES
-            .get_or_init(|| {
-                vec![
-                    composer_entry_of::<Ifc2x3RawAnyComposer>(),
-                    composer_entry_of::<Ifc2x3Cv20Composer>(),
-                    composer_entry_of::<Ifc2x3SavComposer>(),
-                    composer_entry_of::<Ifc2x3CobieComposer>(),
-                ]
-            })
-            .as_slice()
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<Ifc2x3RawAnyComposer>(), composer_entry_of::<Ifc2x3Cv20Composer>(), composer_entry_of::<Ifc2x3SavComposer>(), composer_entry_of::<Ifc2x3CobieComposer>()]).as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry

@@ -9,10 +9,10 @@
 //! has exactly one global header per file, `video` has per-stream dimensions, a genuine cardinality
 //! mismatch when there is more than one stream).
 
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::avi::AviSnapshot;
 use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviStream, AviStreamFormat, AviStreamHeader};
+use crate::artifacts::avi::AviSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioVideoSnapshot, SemioVideoStreamKind};
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.avi", standard: StandardId("1.0"), subset: SubsetId("*") };
@@ -69,11 +69,7 @@ impl ArtifactSerializer for SemioVideoToAvi {
                 } else {
                     AviStreamFormat::Raw { data: Vec::new() }
                 };
-                let chunks = s
-                    .samples
-                    .iter()
-                    .map(|sample| AviChunk { fourcc: if fcc_type == "vids" { "00dc".into() } else { "01wb".into() }, data: sample.data.clone(), keyframe: sample.key })
-                    .collect();
+                let chunks = s.samples.iter().map(|sample| AviChunk { fourcc: if fcc_type == "vids" { "00dc".into() } else { "01wb".into() }, data: sample.data.clone(), keyframe: sample.key }).collect();
                 AviStream { strh, strf, chunks }
             })
             .collect();
@@ -99,8 +95,8 @@ impl ArtifactSerializer for SemioVideoToAvi {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStream, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
     use crate::artifacts::semio::standards::v1::subsets::video::io::avi_deserializer::SemioVideoFromAvi;
+    use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStream, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
     use semio_framework_plugin::ArtifactDeserializer;
 
     fn real_world_video() -> SemioVideoSnapshot {
@@ -112,10 +108,7 @@ mod tests {
                 width: 16,
                 height: 16,
                 rate: SemioRational { num: 10, den: 1 },
-                samples: vec![
-                    SemioVideoSample { pts: 0, key: true, data: vec![1, 2, 3, 4] },
-                    SemioVideoSample { pts: 1, key: false, data: vec![5, 6, 7, 8] },
-                ],
+                samples: vec![SemioVideoSample { pts: 0, key: true, data: vec![1, 2, 3, 4] }, SemioVideoSample { pts: 1, key: false, data: vec![5, 6, 7, 8] }],
             }],
         }
     }

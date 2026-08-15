@@ -11,8 +11,8 @@ use crate::artifacts::bmp::BmpSnapshot;
 // `f1-csv-report.md` `## Deviations`).
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
-use serde::{Deserialize, Serialize};
 use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️PaletteDiff
@@ -99,19 +99,8 @@ fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec
 
 /// 📏 Tight virtual-array bound: one past the highest base index this diff's own
 /// removed/modified/added keys reference (0 if it references none).
-fn base_len_hint(
-    removed: &[usize],
-    modified_indices: impl Iterator<Item = usize>,
-    added_indices: impl Iterator<Item = usize>,
-) -> usize {
-    removed
-        .iter()
-        .copied()
-        .chain(modified_indices)
-        .chain(added_indices)
-        .max()
-        .map(|m| m + 1)
-        .unwrap_or(0)
+fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
+    removed.iter().copied().chain(modified_indices).chain(added_indices).max().map(|m| m + 1).unwrap_or(0)
 }
 
 /// ➕️ Structural, total, base-free absorb of two `palette` triples
@@ -125,23 +114,14 @@ fn absorb_palette(d1: BmpPaletteDiff, d2: BmpPaletteDiff) -> BmpPaletteDiff {
         r.dedup();
         r.len()
     };
-    let needed_mid_len = d2
-        .removed
-        .iter()
-        .copied()
-        .chain(d2.modified.iter().map(|m| m.index))
-        .max()
-        .map(|m| m + 1)
-        .unwrap_or(0);
-    let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied())
-        .max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
+    let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0);
+    let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied()).max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
     let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices);
     //#endregion 🔖️PhiBaseToMid
 
     //#region 🔖️Seed
     let mut final_removed: Vec<usize> = d1.removed.clone();
-    let mut modified_map: BTreeMap<usize, BmpPaletteEntry> =
-        d1.modified.into_iter().map(|m| (m.index, m.entry)).collect();
+    let mut modified_map: BTreeMap<usize, BmpPaletteEntry> = d1.modified.into_iter().map(|m| (m.index, m.entry)).collect();
     let mut added_alive: Vec<Option<BmpPaletteAdded>> = d1.added.into_iter().map(Some).collect();
     //#endregion 🔖️Seed
 
@@ -181,10 +161,7 @@ fn absorb_palette(d1: BmpPaletteDiff, d2: BmpPaletteDiff) -> BmpPaletteDiff {
     for r in &final_removed {
         modified_map.remove(r);
     }
-    let mut final_modified: Vec<BmpPaletteModified> = modified_map
-        .into_iter()
-        .map(|(index, entry)| BmpPaletteModified { index, entry })
-        .collect();
+    let mut final_modified: Vec<BmpPaletteModified> = modified_map.into_iter().map(|(index, entry)| BmpPaletteModified { index, entry }).collect();
     final_modified.sort_by_key(|m| m.index);
     //#endregion 🔖️FinalizeRemovedModified
 
@@ -198,16 +175,7 @@ fn absorb_palette(d1: BmpPaletteDiff, d2: BmpPaletteDiff) -> BmpPaletteDiff {
         })
         .collect();
     let d2_added_indices: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
-    let mid_len = d2
-        .removed
-        .iter()
-        .copied()
-        .chain(d2.modified.iter().map(|m| m.index))
-        .chain(alive_mid_positions.iter().copied())
-        .chain(d2_added_indices.iter().copied())
-        .max()
-        .map(|m| m + 1)
-        .unwrap_or(0);
+    let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map(|m| m + 1).unwrap_or(0);
     let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices);
     let mut mid_to_after: HashMap<usize, usize> = HashMap::new();
     for (pos, slot) in after_slots.iter().enumerate() {
@@ -221,10 +189,7 @@ fn absorb_palette(d1: BmpPaletteDiff, d2: BmpPaletteDiff) -> BmpPaletteDiff {
     let mut final_added: Vec<BmpPaletteAdded> = Vec::new();
     for (ai, alive) in added_alive.into_iter().enumerate() {
         if let Some(added) = alive {
-            let mid_pos = mid_slots
-                .iter()
-                .position(|s| matches!(s, Slot::Added(idx) if *idx == ai))
-                .expect("added_alive index always has a corresponding mid slot");
+            let mid_pos = mid_slots.iter().position(|s| matches!(s, Slot::Added(idx) if *idx == ai)).expect("added_alive index always has a corresponding mid slot");
             if let Some(after_pos) = mid_to_after.get(&mid_pos) {
                 final_added.push(BmpPaletteAdded { index: *after_pos, entry: added.entry });
             }
@@ -460,11 +425,7 @@ impl DiffAlgebra<BmpSnapshot> for BmpDiff {
         for i in min_len..other.palette.len() {
             added.push(BmpPaletteAdded { index: i, entry: other.palette[i].clone() });
         }
-        d.palette = if removed.is_empty() && modified.is_empty() && added.is_empty() {
-            None
-        } else {
-            Some(BmpPaletteDiff { removed, modified, added })
-        };
+        d.palette = if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(BmpPaletteDiff { removed, modified, added }) };
 
         d
     }

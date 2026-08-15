@@ -1,2 +1,14 @@
 grammar Stdio_dwg_ac1024_inference;
-DOCUMENT: 'schema' [ ]+ 's.stdio.dwg.inference' ;
+document: SCHEMA structure EOF;
+structure: 'structure' '=' '{' layerCount entityCount geometryValueCount geometryIndexCount textCharacterCount codepage version '}';
+layerCount: 'layer-count' '=' UINT;
+entityCount: 'entity-count' '=' UINT;
+geometryValueCount: 'geometry-value-count' '=' UINT;
+geometryIndexCount: 'geometry-index-count' '=' UINT;
+textCharacterCount: 'text-character-count' '=' UINT;
+codepage: 'codepage' '=' UINT;
+version: 'version' '=' STRING;
+SCHEMA: 's.stdio.dwg.inference';
+UINT: [0-9]+;
+STRING: '"' (~["\\] | '\\' .)* '"';
+WS: [ \t\r\n]+ -> skip;

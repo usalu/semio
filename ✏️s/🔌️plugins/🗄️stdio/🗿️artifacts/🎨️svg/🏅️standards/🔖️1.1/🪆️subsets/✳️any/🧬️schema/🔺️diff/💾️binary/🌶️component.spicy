@@ -1,5 +1,7 @@
 module Stdio_svg_diff;
-# UTF-8 JSON encoding of SvgDiff -- see the sibling ../🔣️component.json shape.
+# 🧬️ Binary SvgDiff: format byte, presence flags, recursively structured payload.
 type Document = unit {
-    json_payload: bytes &eod;
+    format: uint8;
+    flags: uint8;
+    payload: bytes &eod;
 };

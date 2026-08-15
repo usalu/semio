@@ -3,8 +3,8 @@
 //! itself); `maxDepth` is the deepest element nesting level (`root` alone is depth 1);
 //! `textLength` sums every `Text`/`RawText` node's character count anywhere in the tree.
 
-use crate::artifacts::html::HtmlSnapshot;
 use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlNode;
+use crate::artifacts::html::HtmlSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
@@ -54,11 +54,7 @@ mod tests {
 
     #[test]
     fn counts_elements_depth_and_text_over_nested_structure() {
-        let root = HtmlNode::Element {
-            name: "html".into(),
-            attributes: vec![],
-            children: vec![HtmlNode::Element { name: "body".into(), attributes: vec![], children: vec![HtmlNode::Text { text: "hello".into() }] }],
-        };
+        let root = HtmlNode::Element { name: "html".into(), attributes: vec![], children: vec![HtmlNode::Element { name: "body".into(), attributes: vec![], children: vec![HtmlNode::Text { text: "hello".into() }] }] };
         let snapshot = HtmlSnapshot { schema: "stdio.html".into(), doctype: None, root };
         let outline = HtmlOutline::compute(&snapshot);
         assert_eq!(outline.element_count, 2);

@@ -16,21 +16,17 @@ pub struct SemioArtifact {
 }
 
 impl Default for SemioArtifact {
-    fn default() -> Self { Self::from_snapshot(SemioSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(SemioSnapshot::default())
+    }
 }
 
 impl SemioArtifact {
     pub fn to_snapshot(&self) -> SemioSnapshot {
-        SemioSnapshot {
-            schema: self.schema.clone(),
-            subset: self.subset.clone(),
-        }
+        SemioSnapshot { schema: self.schema.clone(), subset: self.subset.clone() }
     }
     pub fn from_snapshot(snapshot: SemioSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            subset: snapshot.subset,
-        }
+        Self { schema: snapshot.schema, subset: snapshot.subset }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioSnapshot) {
         self.schema = snapshot.schema;
@@ -73,20 +69,26 @@ pub fn semio_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::any::schema::diff::SemioDiff;
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::mutations::{SemioMutation, apply_semio_mutation};
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::mutations::{apply_semio_mutation, SemioMutation};
     use crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::SemioSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioBuilderConstruction { snapshot: SemioSnapshot }
+    pub struct SemioBuilderConstruction {
+        snapshot: SemioSnapshot,
+    }
 
     impl ArtifactBuilder for SemioBuilderConstruction {
         type Snapshot = SemioSnapshot;
         type Mutation = SemioMutation;
         type Diff = SemioDiff;
-        fn empty() -> Self { Self { snapshot: SemioSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: SemioSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -101,7 +103,9 @@ pub mod derived_construction {
             self.snapshot = <SemioDiff as protocol::MutationDiff<SemioSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 }
 pub use derived_construction::*;
@@ -109,11 +113,13 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::{SemioSnapshot, STDIO_SEMIO_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioParts { pub snapshot: Option<SemioSnapshot> }
+    pub struct SemioParts {
+        pub snapshot: Option<SemioSnapshot>,
+    }
 
     pub struct SemioAnalyzerAnalysis;
 
@@ -125,10 +131,18 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIO_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
-                    if text.contains(STDIO_SEMIO_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                    if text.contains(STDIO_SEMIO_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }

@@ -46,11 +46,7 @@ pub fn compute_ifc_bounds(snapshot: &IfcSnapshot) -> IfcBounds {
             continue;
         }
         let Some(coords) = entity.args.first().and_then(IfcValue::as_aggregate) else { continue };
-        let p = [
-            coords.first().and_then(IfcValue::as_real).unwrap_or(0.0),
-            coords.get(1).and_then(IfcValue::as_real).unwrap_or(0.0),
-            coords.get(2).and_then(IfcValue::as_real).unwrap_or(0.0),
-        ];
+        let p = [coords.first().and_then(IfcValue::as_real).unwrap_or(0.0), coords.get(1).and_then(IfcValue::as_real).unwrap_or(0.0), coords.get(2).and_then(IfcValue::as_real).unwrap_or(0.0)];
         point_count += 1;
         if !seen {
             min = p;
@@ -76,12 +72,7 @@ mod tests {
     use crate::artifacts::ifc::STDIO_IFC_DOCUMENT_SCHEMA;
 
     fn point_entity(id: u64, x: f64, y: f64, z: f64) -> IfcEntity {
-        IfcEntity {
-            id,
-            name: "IFCCARTESIANPOINT".into(),
-            args: vec![IfcValue::Aggregate(vec![IfcValue::Real(x), IfcValue::Real(y), IfcValue::Real(z)])],
-            complex: Vec::new(),
-        }
+        IfcEntity { id, name: "IFCCARTESIANPOINT".into(), args: vec![IfcValue::Aggregate(vec![IfcValue::Real(x), IfcValue::Real(y), IfcValue::Real(z)])], complex: Vec::new() }
     }
 
     #[test]
@@ -89,12 +80,7 @@ mod tests {
         let snapshot = IfcSnapshot {
             schema: STDIO_IFC_DOCUMENT_SCHEMA.into(),
             header: Default::default(),
-            entities: vec![
-                point_entity(1, 0.0, 0.0, 0.0),
-                point_entity(2, -3.0, 6.0, 12.0),
-                point_entity(3, 9.0, -1.0, 4.0),
-                IfcEntity { id: 4, name: "IFCOWNERHISTORY".into(), args: vec![IfcValue::Unset], complex: Vec::new() },
-            ],
+            entities: vec![point_entity(1, 0.0, 0.0, 0.0), point_entity(2, -3.0, 6.0, 12.0), point_entity(3, 9.0, -1.0, 4.0), IfcEntity { id: 4, name: "IFCOWNERHISTORY".into(), args: vec![IfcValue::Unset], complex: Vec::new() }],
         };
         let bounds = compute_ifc_bounds(&snapshot);
         assert_eq!(bounds.min, [-3.0, -1.0, 0.0]);
@@ -104,11 +90,7 @@ mod tests {
 
     #[test]
     fn inference_determinism_law() {
-        let snapshot = IfcSnapshot {
-            schema: STDIO_IFC_DOCUMENT_SCHEMA.into(),
-            header: Default::default(),
-            entities: vec![point_entity(1, 1.0, 1.0, 1.0)],
-        };
+        let snapshot = IfcSnapshot { schema: STDIO_IFC_DOCUMENT_SCHEMA.into(), header: Default::default(), entities: vec![point_entity(1, 1.0, 1.0, 1.0)] };
         assert_eq!(compute_ifc_bounds(&snapshot), compute_ifc_bounds(&snapshot));
     }
 

@@ -6,7 +6,7 @@ comment none
 
 # P2-FG3: real one-line `OpText::print_op`/`parse_op` shape ALREADY emitted by
 # `../../🦀️component.rs` (`print_svg_mutation`/`parse_svg_mutation`), replacing the F6-era
-# placeholder that described a serde-JSON `SvgMutation` wire struct the Rust codec never emits.
+# placeholder that described an unrelated wire struct the Rust codec never emits.
 # Every keyword/field-name token below is copied verbatim from the real `format!(...)` call sites.
 # `SvgMutation` has 11 variants (3 more than `📰xml`'s own 8-variant `XmlMutation`): the extra
 # `SetElementName`/`SetViewBox`/`SetTransform` are svg's own flagship mutation-vocabulary additions
@@ -22,7 +22,7 @@ document = no-mutation | set-snapshot | set-declaration | set-doctype | insert-e
 no-mutation = "no-mutation"
 set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
 set-declaration = "set-declaration" "declaration" "=" opt-declaration
-set-doctype = "set-doctype" "doctype" "=" opt-hex
+set-doctype = "set-doctype" "doctype" "=" opt-doctype
 insert-element = "insert-element" "parent" "=" path "index" "=" INT "node" "=" xml-node
 remove-element = "remove-element" "parent" "=" path "index" "=" INT
 set-element-name = "set-element-name" "path" "=" path "name" "=" hex
@@ -35,16 +35,21 @@ set-transform = "set-transform" "path" "=" path "transform" "=" opt-transform-li
 path = "[" path-item* "]"
 path-item = INT ","?
 
-# `enc_svg_snapshot`/`dec_svg_snapshot` -- semantic document plus persisted native provenance.
-snapshot-lit = "[" hex "," opt-xml-node "," opt-hex "," opt-declaration "," opt-source "]"
-opt-source = "[" "0" "]" | "[" "1" "," source-lit "]"
-source-lit = "[" hex "," hex "]"
+# `enc_svg_snapshot`/`dec_svg_snapshot` -- semantic document state only.
+snapshot-lit = "[" hex "," opt-xml-node "," opt-doctype "," opt-declaration "," node-list "]"
 
 # `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4).
 opt-hex = "[" "0" "]" | "[" "1" "," hex "]"
 opt-bool = "[" "0" "]" | "[" "1" "," bool-lit "]"
 bool-lit = "0" | "1"
 opt-xml-node = "[" "0" "]" | "[" "1" "," xml-node "]"
+opt-doctype = "[" "0" "]" | "[" "1" "," doctype-lit "]"
+doctype-lit = "[" hex "," opt-external-id "," "[" dtd-declaration-list? "]" "]"
+opt-external-id = "[" "0" "]" | "[" "1" "," external-id "]"
+external-id = "S" "[" hex "]" | "P" "[" hex "," hex "]"
+dtd-declaration-list = dtd-declaration dtd-declaration-tail*
+dtd-declaration-tail = "," dtd-declaration
+dtd-declaration = "E" "[" bool-lit "," hex "," hex "]"
 
 # `enc_declaration`/`dec_declaration` -- `[hex(version),opt-hex(encoding),opt-bool(standalone)]`.
 opt-declaration = "[" "0" "]" | "[" "1" "," declaration-lit "]"

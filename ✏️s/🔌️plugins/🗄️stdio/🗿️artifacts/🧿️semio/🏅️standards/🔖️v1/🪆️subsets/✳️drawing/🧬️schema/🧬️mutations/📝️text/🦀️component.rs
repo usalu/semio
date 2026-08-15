@@ -9,14 +9,13 @@ pub use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutati
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::NodePath;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::{
-    change_stroke_color::mutation::ChangeStrokeColor, change_stroke_width::mutation::ChangeStrokeWidth, create_layer::mutation::CreateLayer, create_node::mutation::CreateNode,
-    delete_layer::mutation::DeleteLayer, delete_node::mutation::DeleteNode, drag_nodes::mutation::DragNodes, flatten::mutation::FlattenNode, group::mutation::GroupNodes,
-    move_node::mutation::MoveNode, replace_fill::mutation::ReplaceFill, replace_path::mutation::ReplacePath, reorder_nodes::mutation::ReorderNodes, rotate::mutation::Rotate,
-    scale::mutation::Scale, ungroup::mutation::UngroupNode, unflatten::mutation::UnflattenNode,
+    change_stroke_color::mutation::ChangeStrokeColor, change_stroke_width::mutation::ChangeStrokeWidth, create_layer::mutation::CreateLayer, create_node::mutation::CreateNode, delete_layer::mutation::DeleteLayer, delete_node::mutation::DeleteNode,
+    drag_nodes::mutation::DragNodes, flatten::mutation::FlattenNode, group::mutation::GroupNodes, move_node::mutation::MoveNode, reorder_nodes::mutation::ReorderNodes, replace_fill::mutation::ReplaceFill, replace_path::mutation::ReplacePath,
+    rotate::mutation::Rotate, scale::mutation::Scale, unflatten::mutation::UnflattenNode, ungroup::mutation::UngroupNode,
 };
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{
-    dec_layer, dec_list, dec_node, dec_path_segment, dec_point2, dec_point3, dec_quaternion, dec_rgba, dec_str, dec_transform, decode_option, enc_layer, enc_list, enc_node,
-    enc_path_segment, enc_point2, enc_point3, enc_quaternion, enc_rgba, enc_str, enc_transform, encode_option,
+    dec_layer, dec_list, dec_node, dec_path_segment, dec_point2, dec_point3, dec_quaternion, dec_rgba, dec_str, dec_transform, decode_option, enc_layer, enc_list, enc_node, enc_path_segment, enc_point2, enc_point3, enc_quaternion, enc_rgba, enc_str,
+    enc_transform, encode_option,
 };
 
 //#region 📖️SemioGrammar

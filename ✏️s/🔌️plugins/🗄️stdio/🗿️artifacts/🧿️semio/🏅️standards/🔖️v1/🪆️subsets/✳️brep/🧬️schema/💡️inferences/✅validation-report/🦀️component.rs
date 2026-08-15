@@ -86,15 +86,7 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
             shells: &'a [crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepShell],
             solids: &'a [crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepSolid],
         }
-        serde_json::to_vec(&DepInput {
-            vertices: &snapshot.vertices,
-            edges: &snapshot.edges,
-            loops: &snapshot.loops,
-            faces: &snapshot.faces,
-            shells: &snapshot.shells,
-            solids: &snapshot.solids,
-        })
-        .unwrap_or_default()
+        serde_json::to_vec(&DepInput { vertices: &snapshot.vertices, edges: &snapshot.edges, loops: &snapshot.loops, faces: &snapshot.faces, shells: &snapshot.shells, solids: &snapshot.solids }).unwrap_or_default()
     }
 
     fn compute(snapshot: &SemioBrepSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
@@ -167,7 +159,9 @@ fn check_tolerance_containment(body: &Body, issues: &mut Vec<ValidationIssue>) {
         for coedge_id in body.face_coedges(face_id) {
             let Some(coedge) = body.coedges.get(coedge_id) else { continue };
             let Some(edge) = body.edges.get(coedge.edge) else { continue };
-            if let Some((finer, coarser)) = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::check_containment(&format!("edge-{}", coedge.edge.raw_index()), edge.tol, &format!("face-{}", face_id.raw_index()), face.tol) {
+            if let Some((finer, coarser)) =
+                crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::check_containment(&format!("edge-{}", coedge.edge.raw_index()), edge.tol, &format!("face-{}", face_id.raw_index()), face.tol)
+            {
                 issues.push(ValidationIssue { entity: finer.clone(), code: "tolerance-containment-violated", message: format!("{finer}'s tolerance exceeds its containing {coarser}'s") });
             }
         }
@@ -231,9 +225,7 @@ pub fn validate_body(body: &Body) -> Vec<ValidationIssue> {
 mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
-        BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex,
-    };
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
     use store::{InferenceCache, InferenceCacheConfig, InferredField};
 
     fn valid_snapshot() -> SemioBrepSnapshot {
@@ -302,12 +294,12 @@ mod tests {
     }
     //#endregion 🧪️IncrementalityLaw
 
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
     fn build_tetrahedron(body: &mut Body, rec: &mut OpRecorder) -> crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId {
@@ -391,7 +383,15 @@ mod tests {
         let curve = body.curves3.insert(Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::X });
         let edge = make_edge(&mut body, curve, (0.0, 1.0), v0, v1, Tol::DEFAULT, &mut rec);
         for _ in 0..3 {
-            body.coedges.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Coedge { edge, forward: true, pcurve: None, prange: (0.0, 1.0), loop_id: ArenaId::from_raw(0, 0), next: ArenaId::from_raw(0, 0), prev: ArenaId::from_raw(0, 0) });
+            body.coedges.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Coedge {
+                edge,
+                forward: true,
+                pcurve: None,
+                prange: (0.0, 1.0),
+                loop_id: ArenaId::from_raw(0, 0),
+                next: ArenaId::from_raw(0, 0),
+                prev: ArenaId::from_raw(0, 0),
+            });
         }
         let issues = validate_body(&body);
         assert!(issues.iter().any(|i| i.code == "non-manifold-edge"), "expected a non-manifold-edge issue, got {issues:?}");
@@ -407,7 +407,10 @@ mod tests {
         let coedge_id = body.loop_coedges(outer)[0];
         // Attach a pcurve that does NOT correspond to the face's surface at all — a constant,
         // clearly-wrong 2D point far from where the 3D edge actually projects.
-        let bad_pcurve = body.curves2.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Line { origin: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Pnt2::new(500.0, 500.0), dir: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec2::new(0.0, 0.0) });
+        let bad_pcurve = body.curves2.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Line {
+            origin: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Pnt2::new(500.0, 500.0),
+            dir: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec2::new(0.0, 0.0),
+        });
         let coedge = body.coedges.get_mut(coedge_id).unwrap();
         coedge.pcurve = Some(bad_pcurve);
         coedge.prange = (0.0, 1.0);

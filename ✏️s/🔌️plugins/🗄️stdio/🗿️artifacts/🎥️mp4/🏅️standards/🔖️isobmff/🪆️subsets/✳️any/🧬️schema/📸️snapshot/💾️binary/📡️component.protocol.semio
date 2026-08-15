@@ -1,10 +1,7 @@
 dialect protocol stdio.mp4.snapshot
-; shared `.semio` binary envelope (store::semio_format::wrap_binary) wrapping the REAL
-; ISO-BMFF file bytes this artifact's engine (⚙️engine::{decode_mp4,encode_mp4}) decodes/encodes.
+; Shared `.semio` envelope around the logical typed RecordSpec payload. Native container syntax
+; is created only by the ISO-BMFF serializer and never enters snapshot persistence.
 envelope-magic = %x89.53.45.4D.0D.0A.1A.0A
 token-len = U32LE
 token = UTF8(18)                            ; "stdio.mp4.pack v1"
-iso-bmff-box-stream = iso-bmff-box*
-iso-bmff-box = size32:U32BE fourcc:ASCII(4) body:BYTES(size32 - 8)
-; §4.3 ftyp — see ../🥋️component.ksy for the fully typed per-box bodies (tkhd/avcC/stbl tables).
-ftyp-body = major-brand:ASCII(4) minor-version:U32BE compatible-brand:ASCII(4)*
+record-payload = BYTES(*)                   ; store::pack_rt::encode_document

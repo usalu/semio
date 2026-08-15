@@ -13,10 +13,10 @@
 //! structure to re-emit); `material_id`/`colors` are dropped (OBJ's `usemtl` is a bare name with
 //! no PBR value/color model to round-trip against `SemioMaterial`).
 
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::obj::ObjSnapshot;
 use crate::artifacts::obj::schema::snapshot::{ObjFace, ObjFaceVertex, ObjNormal, ObjObject, ObjTexCoord, ObjVertex};
+use crate::artifacts::obj::ObjSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId::ANY };
@@ -86,19 +86,7 @@ impl ArtifactSerializer for SemioMeshToObj {
             objects.push(ObjObject { name: mesh.id.clone(), faces: (face_range_start..face_range_end).collect() });
         }
 
-        Ok(ObjSnapshot {
-            schema: "stdio.obj".into(),
-            vertices,
-            texcoords,
-            normals,
-            faces,
-            groups: Vec::new(),
-            objects,
-            mtllib: None,
-            usemtl: Vec::new(),
-            smoothing_groups: Vec::new(),
-            unknown_statements: Vec::new(),
-        })
+        Ok(ObjSnapshot { schema: "stdio.obj".into(), vertices, texcoords, normals, faces, groups: Vec::new(), objects, mtllib: None, usemtl: Vec::new(), smoothing_groups: Vec::new(), unknown_statements: Vec::new() })
     }
 }
 
@@ -107,8 +95,8 @@ impl ArtifactSerializer for SemioMeshToObj {
 mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioUv};
-    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
     use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::obj::v3_0::any::SemioMeshFromObj;
+    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
     use semio_framework_plugin::ArtifactDeserializer;
 
     fn sample_semio_mesh() -> SemioMeshSnapshot {

@@ -1,6 +1,5 @@
 module Stdio_mp4_diff;
-# Op-binary payload: one JSON-serialized Mp4Mutation per record (see 🧬️mutations/🦀️component.rs's
-# hand-rolled OpBinary impl — this is a documentation leaf, not a distinct wire codec).
-public type Op = unit {
-    json_utf8: bytes &eod;
+# Shared structured record payload emitted by the Mp4Diff RecordSpec.
+public type Diff = unit {
+    structured_record: bytes &eod;
 };

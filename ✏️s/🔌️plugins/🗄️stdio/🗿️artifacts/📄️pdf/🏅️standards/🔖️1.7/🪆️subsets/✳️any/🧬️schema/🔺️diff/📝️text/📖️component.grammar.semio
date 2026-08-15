@@ -9,7 +9,7 @@ comment none
 # `format!(...)` call sites (`enc_pages_diff`/`enc_page_diff`/`enc_dict_diff`/`enc_array_diff`/
 # `enc_value_diff`/`enc_objects_diff`), never guessed. `#[derive(dsl::DslDiff)]` was tried for real
 # and confirmed rejected (blocker: `PdfObject`/`PdfValueDiff` are genuine data-carrying enums
-# reachable via `Replace`/`Array`/`Dict` items, plus `raw_filter: Option<Option<String>>` is an
+# reachable via `Replace`/`Array`/`Dict` items, plus the typed filter pipeline is an
 # independent tri-state blocker -- see that file's own doc comment).
 diff = declared-version-field? info-field? pages-field? objects-field? trailer-field?
 declared-version-field = "declared-version" "=" hex
@@ -69,7 +69,7 @@ array-added-item = INT ":" pdf-object ","?
 # `enc_value_diff`/`dec_value_diff` -- recursive, mirrors `pdf-object`'s own tag vocabulary:
 # `L`=Replace (whole-node), `B`/`I`/`R`/`S`/`N`/`F`=scalar diffs (new value only, node KIND is
 # stable), `A[..]`=Array diff, `D[..]`=Dict diff, `T[..]`=Stream diff (its OWN sparse `D:`/`A:`/
-# `F:` tag:value pairs for `dict`/`data`/`raw_filter` -- `raw_filter` is tri-state, one level of
+# `F:` tag:value pairs for `dict`/decoded `data`/typed `filters` -- `filters` is sparse,
 # `encode_option` over the inner `Option<String>`).
 value-diff = "L" "[" pdf-object "]" | "B" "[" bit "]" | "I" "[" INT "]" | "R" "[" number "]" | "S" "[" hex "]" | "N" "[" hex "]" | "F" "[" objref-lit "]" | "A" "[" array-diff-body "]" | "D" "[" dict-diff-body "]" | "T" "[" stream-diff-item* "]"
 stream-diff-item = stream-diff-entry ","?

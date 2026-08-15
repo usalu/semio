@@ -1,4 +1,4 @@
-use crate::artifacts::semio::standards::v1::subsets::video::schema::diff::{SemioVideoDiff, diff_set_snapshot};
+use crate::artifacts::semio::standards::v1::subsets::video::schema::diff::{diff_set_snapshot, SemioVideoDiff};
 use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot.

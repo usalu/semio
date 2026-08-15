@@ -1,24 +1,15 @@
 //! 🧬️ SvgMutation — document mutation dispatch. Every variant's `diff()` is handcrafted (never
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, key/index-aware.
 
-use crate::artifacts::svg::schema::diff::{
-    diff_at_path, diff_set_snapshot, SvgAttrAdded, SvgAttrModified, SvgAttributesDiff, SvgChildAdded, SvgChildrenDiff,
-    SvgDiff, SvgElementDiff, SvgNodeDiff,
-};
-use crate::artifacts::svg::schema::diff::{
-    decode_option, dec_declaration, dec_prolog, dec_str, dec_xml_node, encode_option, enc_declaration, enc_prolog, enc_str, enc_xml_node,
-    split_top_level, strip_brackets,
-};
-use crate::artifacts::svg::schema::diff::{dec_declaration_bin, dec_prolog_bin, dec_xml_node_bin, enc_declaration_bin, enc_prolog_bin, enc_xml_node_bin, read_str_lp, write_str_lp};
-use crate::artifacts::svg::schema::snapshot::{
-    element_attr, node_at, parse_transform_list, parse_view_box, transform_list_to_string, view_box_to_string,
-    NodePath, TransformOp, ViewBox,
-};
+use crate::artifacts::svg::schema::diff::{dec_declaration, dec_doctype, dec_prolog, dec_str, dec_xml_node, decode_option, enc_declaration, enc_doctype, enc_prolog, enc_str, enc_xml_node, encode_option, split_top_level, strip_brackets};
+use crate::artifacts::svg::schema::diff::{dec_declaration_bin, dec_doctype_bin, dec_prolog_bin, dec_xml_node_bin, enc_declaration_bin, enc_doctype_bin, enc_prolog_bin, enc_xml_node_bin, read_str_lp, write_str_lp};
+use crate::artifacts::svg::schema::diff::{diff_at_path, diff_set_snapshot, SvgAttrAdded, SvgAttrModified, SvgAttributesDiff, SvgChildAdded, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
+use crate::artifacts::svg::schema::snapshot::{element_attr, node_at, parse_transform_list, parse_view_box, transform_list_to_string, view_box_to_string, NodePath, TransformOp, ViewBox};
 use crate::artifacts::svg::SvgSnapshot;
-use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlNode};
-use protocol::{Mutation, OpText};
+use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlDoctype, XmlNode};
 #[cfg(test)]
 use protocol::OpBinary;
+use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -49,9 +40,9 @@ pub enum SvgMutation {
     SetDeclaration {
         declaration: Option<XmlDeclaration>,
     },
-    /// 📜️ Sets (or, if `None`, clears) the document's raw `<!DOCTYPE ...>` text.
+    /// 📜️ Sets (or, if `None`, clears) the document's typed doctype declaration.
     SetDoctype {
-        doctype: Option<String>,
+        doctype: Option<XmlDoctype>,
     },
     /// ➕️ Inserts `node` as child `index` of the element at `parent`.
     InsertElement {
@@ -117,9 +108,7 @@ fn attribute_diff_at_path(base: &SvgSnapshot, path: &[usize], name: &str, value:
         _ => None,
     });
     let attrs_diff = match (existing, value) {
-        (Some(_), Some(v)) => {
-            SvgAttributesDiff { removed: Vec::new(), modified: vec![SvgAttrModified { name: name.to_string(), value: v }], added: Vec::new() }
-        }
+        (Some(_), Some(v)) => SvgAttributesDiff { removed: Vec::new(), modified: vec![SvgAttrModified { name: name.to_string(), value: v }], added: Vec::new() },
         (Some(_), None) => SvgAttributesDiff { removed: vec![name.to_string()], modified: Vec::new(), added: Vec::new() },
         (None, Some(v)) => {
             let next_index = match target {
@@ -151,35 +140,16 @@ impl Mutation<SvgSnapshot> for SvgMutation {
             SvgMutation::SetDoctype { doctype } => SvgDiff { prolog: None, declaration: None, doctype: Some(doctype.clone()), root: None },
             SvgMutation::InsertElement { parent, index, node } => diff_at_path(
                 parent,
-                SvgNodeDiff::Element(SvgElementDiff {
-                    name: None,
-                    attributes: None,
-                    children: Some(SvgChildrenDiff {
-                        removed: Vec::new(),
-                        modified: Vec::new(),
-                        added: vec![SvgChildAdded { index: *index, item: node.clone() }],
-                    }),
-                }),
+                SvgNodeDiff::Element(SvgElementDiff { name: None, attributes: None, children: Some(SvgChildrenDiff { removed: Vec::new(), modified: Vec::new(), added: vec![SvgChildAdded { index: *index, item: node.clone() }] }) }),
             ),
-            SvgMutation::RemoveElement { parent, index } => diff_at_path(
-                parent,
-                SvgNodeDiff::Element(SvgElementDiff {
-                    name: None,
-                    attributes: None,
-                    children: Some(SvgChildrenDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }),
-                }),
-            ),
-            SvgMutation::SetElementName { path, name } => {
-                diff_at_path(path, SvgNodeDiff::Element(SvgElementDiff { name: Some(name.clone()), attributes: None, children: None }))
+            SvgMutation::RemoveElement { parent, index } => {
+                diff_at_path(parent, SvgNodeDiff::Element(SvgElementDiff { name: None, attributes: None, children: Some(SvgChildrenDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }) }))
             }
+            SvgMutation::SetElementName { path, name } => diff_at_path(path, SvgNodeDiff::Element(SvgElementDiff { name: Some(name.clone()), attributes: None, children: None })),
             SvgMutation::SetAttribute { path, name, value } => attribute_diff_at_path(base, path, name, value.clone()),
             SvgMutation::SetText { path, text } => diff_at_path(path, SvgNodeDiff::Text { text: Some(text.clone()) }),
-            SvgMutation::SetViewBox { path, view_box } => {
-                attribute_diff_at_path(base, path, "viewBox", view_box.as_ref().map(view_box_to_string))
-            }
-            SvgMutation::SetTransform { path, transform } => {
-                attribute_diff_at_path(base, path, "transform", transform.as_ref().map(|ops| transform_list_to_string(ops)))
-            }
+            SvgMutation::SetViewBox { path, view_box } => attribute_diff_at_path(base, path, "viewBox", view_box.as_ref().map(view_box_to_string)),
+            SvgMutation::SetTransform { path, transform } => attribute_diff_at_path(base, path, "transform", transform.as_ref().map(|ops| transform_list_to_string(ops))),
         }
     }
 
@@ -305,26 +275,14 @@ fn dec_transform_list(s: &str) -> Result<Vec<TransformOp>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_transform_op).collect()
 }
 pub(crate) fn enc_svg_snapshot(s: &SvgSnapshot) -> String {
-    format!(
-        "[{},{},{},{},{}]",
-        enc_str(&s.schema),
-        encode_option(&s.doc.root, enc_xml_node),
-        encode_option(&s.doc.doctype, |v| enc_str(v)),
-        encode_option(&s.doc.declaration, enc_declaration),
-        enc_prolog(&s.doc.prolog),
-    )
+    format!("[{},{},{},{},{}]", enc_str(&s.schema), encode_option(&s.doc.root, enc_xml_node), encode_option(&s.doc.doctype, enc_doctype), encode_option(&s.doc.declaration, enc_declaration), enc_prolog(&s.doc.prolog),)
 }
 pub(crate) fn dec_svg_snapshot(s: &str) -> Result<SvgSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, root, doctype, declaration, prolog] = parts.as_slice() else { return Err(format!("svg snapshot: expected 5 fields, got {}", parts.len())) };
     Ok(SvgSnapshot {
         schema: dec_str(schema)?,
-        doc: crate::artifacts::xml::schema::snapshot::XmlDocument {
-            root: decode_option(root, dec_xml_node)?,
-            doctype: decode_option(doctype, dec_str)?,
-            declaration: decode_option(declaration, dec_declaration)?,
-            prolog: dec_prolog(prolog)?,
-        },
+        doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root: decode_option(root, dec_xml_node)?, doctype: decode_option(doctype, dec_doctype)?, declaration: decode_option(declaration, dec_declaration)?, prolog: dec_prolog(prolog)? },
     })
 }
 
@@ -333,7 +291,7 @@ fn print_svg_mutation(m: &SvgMutation) -> String {
         SvgMutation::NoMutation => "no-mutation".to_string(),
         SvgMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_svg_snapshot(snapshot)),
         SvgMutation::SetDeclaration { declaration } => format!("set-declaration declaration={}", encode_option(declaration, enc_declaration)),
-        SvgMutation::SetDoctype { doctype } => format!("set-doctype doctype={}", encode_option(doctype, |v| enc_str(v))),
+        SvgMutation::SetDoctype { doctype } => format!("set-doctype doctype={}", encode_option(doctype, enc_doctype)),
         SvgMutation::InsertElement { parent, index, node } => format!("insert-element parent={} index={index} node={}", enc_node_path(parent), enc_xml_node(node)),
         SvgMutation::RemoveElement { parent, index } => format!("remove-element parent={} index={index}", enc_node_path(parent)),
         SvgMutation::SetElementName { path, name } => format!("set-element-name path={} name={}", enc_node_path(path), enc_str(name)),
@@ -348,19 +306,13 @@ fn parse_svg_mutation(line: &str) -> Result<SvgMutation, String> {
         return Ok(SvgMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("svg mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("svg mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("svg mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
         "set-snapshot" => Ok(SvgMutation::SetSnapshot { snapshot: dec_svg_snapshot(arg("snapshot")?)? }),
         "set-declaration" => Ok(SvgMutation::SetDeclaration { declaration: decode_option(arg("declaration")?, dec_declaration)? }),
-        "set-doctype" => Ok(SvgMutation::SetDoctype { doctype: decode_option(arg("doctype")?, dec_str)? }),
+        "set-doctype" => Ok(SvgMutation::SetDoctype { doctype: decode_option(arg("doctype")?, dec_doctype)? }),
         "insert-element" => Ok(SvgMutation::InsertElement { parent: dec_node_path(arg("parent")?)?, index: usize_arg("index")?, node: dec_xml_node(arg("node")?)? }),
         "remove-element" => Ok(SvgMutation::RemoveElement { parent: dec_node_path(arg("parent")?)?, index: usize_arg("index")? }),
         "set-element-name" => Ok(SvgMutation::SetElementName { path: dec_node_path(arg("path")?)?, name: dec_str(arg("name")?)? }),
@@ -410,12 +362,7 @@ fn enc_view_box_bin(v: &ViewBox, out: &mut Vec<u8>) {
     out.extend_from_slice(&v.height.to_le_bytes());
 }
 fn dec_view_box_bin(reader: &mut store::ByteReader<'_>) -> Result<ViewBox, String> {
-    Ok(ViewBox {
-        min_x: reader.read_f64_le().map_err(|e| e.to_string())?,
-        min_y: reader.read_f64_le().map_err(|e| e.to_string())?,
-        width: reader.read_f64_le().map_err(|e| e.to_string())?,
-        height: reader.read_f64_le().map_err(|e| e.to_string())?,
-    })
+    Ok(ViewBox { min_x: reader.read_f64_le().map_err(|e| e.to_string())?, min_y: reader.read_f64_le().map_err(|e| e.to_string())?, width: reader.read_f64_le().map_err(|e| e.to_string())?, height: reader.read_f64_le().map_err(|e| e.to_string())? })
 }
 /// 🔄️ `TransformOp` -- 1-byte kind tag (`0`=Matrix/`1`=Translate/`2`=Scale/`3`=Rotate/`4`=SkewX/
 /// `5`=SkewY, distinct numbering from the text codec's letter tags) followed by its fixed-width LE
@@ -464,9 +411,7 @@ fn enc_transform_op_bin(t: &TransformOp, out: &mut Vec<u8>) {
     }
 }
 fn dec_transform_op_bin(reader: &mut store::ByteReader<'_>) -> Result<TransformOp, String> {
-    let opt_f64 = |reader: &mut store::ByteReader<'_>| -> Result<Option<f64>, String> {
-        Ok(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_f64_le().map_err(|e| e.to_string())?) } else { None })
-    };
+    let opt_f64 = |reader: &mut store::ByteReader<'_>| -> Result<Option<f64>, String> { Ok(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_f64_le().map_err(|e| e.to_string())?) } else { None }) };
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
@@ -524,7 +469,7 @@ pub(crate) fn enc_svg_snapshot_bin(s: &SvgSnapshot, out: &mut Vec<u8>) {
     }
     out.push(if s.doc.doctype.is_some() { 1 } else { 0 });
     if let Some(doctype) = &s.doc.doctype {
-        write_str_lp(out, doctype);
+        enc_doctype_bin(doctype, out);
     }
     out.push(if s.doc.declaration.is_some() { 1 } else { 0 });
     if let Some(declaration) = &s.doc.declaration {
@@ -535,7 +480,7 @@ pub(crate) fn enc_svg_snapshot_bin(s: &SvgSnapshot, out: &mut Vec<u8>) {
 pub(crate) fn dec_svg_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<SvgSnapshot, String> {
     let schema = read_str_lp(reader)?;
     let root = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
-    let doctype = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let doctype = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_doctype_bin(reader)?) } else { None };
     let declaration = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_declaration_bin(reader)?) } else { None };
     let prolog = dec_prolog_bin(reader)?;
     Ok(SvgSnapshot { schema, doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root, doctype, declaration, prolog } })
@@ -575,7 +520,7 @@ impl protocol::OpBinary for SvgMutation {
             SvgMutation::SetDoctype { doctype } => {
                 out.push(if doctype.is_some() { 1 } else { 0 });
                 if let Some(doctype) = doctype {
-                    write_str_lp(&mut out, doctype);
+                    enc_doctype_bin(doctype, &mut out);
                 }
             }
             SvgMutation::InsertElement { parent, index, node } => {
@@ -639,7 +584,7 @@ impl protocol::OpBinary for SvgMutation {
             }
             3 => {
                 let has = reader.read_u8().map_err(|e| malformed("op doctype presence", reader.position(), e.to_string()))?;
-                let doctype = if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("op doctype", reader.position(), e))?) } else { None };
+                let doctype = if has != 0 { Some(dec_doctype_bin(&mut reader).map_err(|e| malformed("op doctype", reader.position(), e))?) } else { None };
                 Ok(SvgMutation::SetDoctype { doctype })
             }
             4 => {
@@ -698,10 +643,7 @@ impl protocol::OpBinary for SvgMutation {
 pub(crate) fn demo_mutation_cases() -> Vec<SvgMutation> {
     use crate::artifacts::xml::schema::snapshot::XmlAttr;
 
-    let base = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect x="0" y="0" width="5" height="5"/></svg>"#,
-    )
-    .unwrap();
+    let base = SvgSnapshot::import_utf8(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect x="0" y="0" width="5" height="5"/></svg>"#.as_bytes()).unwrap();
     vec![
         SvgMutation::NoMutation,
         SvgMutation::SetSnapshot { snapshot: base.clone() },
@@ -709,11 +651,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SvgMutation> {
         SvgMutation::SetDeclaration { declaration: None },
         SvgMutation::SetDoctype { doctype: Some("<!DOCTYPE svg>".into()) },
         SvgMutation::SetDoctype { doctype: None },
-        SvgMutation::InsertElement {
-            parent: vec![],
-            index: 1,
-            node: XmlNode::Element { name: "circle".into(), attrs: vec![XmlAttr { name: "r".into(), value: "1".into() }], children: vec![] },
-        },
+        SvgMutation::InsertElement { parent: vec![], index: 1, node: XmlNode::Element { name: "circle".into(), attrs: vec![XmlAttr { name: "r".into(), value: "1".into() }], children: vec![] } },
         SvgMutation::RemoveElement { parent: vec![0], index: 2 },
         SvgMutation::SetElementName { path: vec![0], name: "g".into() },
         SvgMutation::SetAttribute { path: vec![0], name: "width".into(), value: Some("99".into()) },
@@ -750,10 +688,7 @@ mod tests {
     use protocol::{DiffCodec, MutationDiff};
 
     fn fixture() -> SvgSnapshot {
-        <SvgSnapshot as store::ArtifactDsl>::parse_dsl(
-            r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect x="0" y="0" width="5" height="5"/></svg>"#,
-        )
-        .unwrap()
+        SvgSnapshot::import_utf8(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect x="0" y="0" width="5" height="5"/></svg>"#.as_bytes()).unwrap()
     }
 
     fn exact_fixture_bytes() -> Vec<u8> {
@@ -767,11 +702,7 @@ mod tests {
     #[test]
     fn insert_then_remove_element_apply_and_inverse() {
         let base = fixture();
-        let insert = SvgMutation::InsertElement {
-            parent: vec![],
-            index: 1,
-            node: XmlNode::Element { name: "circle".into(), attrs: vec![XmlAttr { name: "r".into(), value: "1".into() }], children: vec![] },
-        };
+        let insert = SvgMutation::InsertElement { parent: vec![], index: 1, node: XmlNode::Element { name: "circle".into(), attrs: vec![XmlAttr { name: "r".into(), value: "1".into() }], children: vec![] } };
         let mut after = base.clone();
         apply_svg_mutation(&mut after, &insert);
         match &after.doc.root {
@@ -874,17 +805,9 @@ mod tests {
                 prolog: Vec::new(),
                 root: Some(XmlNode::Element {
                     name: "svg".into(),
-                    attrs: vec![
-                        XmlAttr { name: "keep".into(), value: "k".into() },
-                        XmlAttr { name: "toRemove".into(), value: "r".into() },
-                        XmlAttr { name: "toModify".into(), value: "old".into() },
-                    ],
+                    attrs: vec![XmlAttr { name: "keep".into(), value: "k".into() }, XmlAttr { name: "toRemove".into(), value: "r".into() }, XmlAttr { name: "toModify".into(), value: "old".into() }],
                     children: vec![
-                        XmlNode::Element {
-                            name: "g".into(),
-                            attrs: vec![XmlAttr { name: "x".into(), value: "1".into() }],
-                            children: vec![XmlNode::Element { name: "rect".into(), attrs: Vec::new(), children: Vec::new() }],
-                        },
+                        XmlNode::Element { name: "g".into(), attrs: vec![XmlAttr { name: "x".into(), value: "1".into() }], children: vec![XmlNode::Element { name: "rect".into(), attrs: Vec::new(), children: Vec::new() }] },
                         XmlNode::Text { text: "stay".into() },
                         XmlNode::Element { name: "toDrop".into(), attrs: Vec::new(), children: Vec::new() },
                     ],
@@ -902,19 +825,12 @@ mod tests {
                 prolog: Vec::new(),
                 root: Some(XmlNode::Element {
                     name: "svgRenamed".into(),
-                    attrs: vec![
-                        XmlAttr { name: "keep".into(), value: "k".into() },
-                        XmlAttr { name: "toModify".into(), value: "new".into() },
-                        XmlAttr { name: "added".into(), value: "a".into() },
-                    ],
+                    attrs: vec![XmlAttr { name: "keep".into(), value: "k".into() }, XmlAttr { name: "toModify".into(), value: "new".into() }, XmlAttr { name: "added".into(), value: "a".into() }],
                     children: vec![
                         XmlNode::Element {
                             name: "gModified".into(),
                             attrs: vec![XmlAttr { name: "x".into(), value: "2".into() }, XmlAttr { name: "y".into(), value: "3".into() }],
-                            children: vec![
-                                XmlNode::Element { name: "rect".into(), attrs: Vec::new(), children: Vec::new() },
-                                XmlNode::Element { name: "circle".into(), attrs: Vec::new(), children: Vec::new() },
-                            ],
+                            children: vec![XmlNode::Element { name: "rect".into(), attrs: Vec::new(), children: Vec::new() }, XmlNode::Element { name: "circle".into(), attrs: Vec::new(), children: Vec::new() }],
                         },
                         XmlNode::Text { text: "stay".into() },
                     ],
@@ -1020,10 +936,7 @@ mod tests {
                 root: Some(XmlNode::Element {
                     name: "svg".into(),
                     attrs: Vec::new(),
-                    children: vec![
-                        XmlNode::Element { name: a_name.into(), attrs: Vec::new(), children: Vec::new() },
-                        XmlNode::Element { name: b_name.into(), attrs: Vec::new(), children: Vec::new() },
-                    ],
+                    children: vec![XmlNode::Element { name: a_name.into(), attrs: Vec::new(), children: Vec::new() }, XmlNode::Element { name: b_name.into(), attrs: Vec::new(), children: Vec::new() }],
                 }),
             },
         }
@@ -1070,7 +983,14 @@ mod tests {
             let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
             let triple = root_children_diff(&absorbed);
             assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
-            let names: Vec<&str> = triple.added.iter().map(|a| match &a.item { XmlNode::Element { name, .. } => name.as_str(), _ => "" }).collect();
+            let names: Vec<&str> = triple
+                .added
+                .iter()
+                .map(|a| match &a.item {
+                    XmlNode::Element { name, .. } => name.as_str(),
+                    _ => "",
+                })
+                .collect();
             assert!(names.contains(&"f"));
             assert!(names.contains(&"g"));
         }
@@ -1078,10 +998,7 @@ mod tests {
         // Canonical: Insert(1,f)+SetField(1,v) -> patch into the added payload.
         {
             let base = two_child_root("a", "b");
-            let d1 = Mutation::diff(
-                &SvgMutation::InsertElement { parent: vec![], index: 1, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } },
-                &base,
-            );
+            let d1 = Mutation::diff(&SvgMutation::InsertElement { parent: vec![], index: 1, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }, &base);
             let mid = MutationDiff::apply(&d1, &base);
             let d2 = Mutation::diff(&SvgMutation::SetAttribute { path: vec![1], name: "k".into(), value: Some("v".into()) }, &mid);
             let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
@@ -1141,10 +1058,7 @@ mod tests {
         assert_eq!(MutationDiff::apply(&<SvgDiff as DiffAlgebra<SvgSnapshot>>::between(&sample, &sample), &sample), sample);
 
         // "Real" fixture leg: a realistic multi-element SVG doc diffed against a mutated variant.
-        let real = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(
-            r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g id="layer1"><rect x="0" y="0" width="10" height="10"/><circle cx="50" cy="50" r="5"/></g></svg>"#,
-        )
-        .unwrap();
+        let real = SvgSnapshot::import_utf8(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g id="layer1"><rect x="0" y="0" width="10" height="10"/><circle cx="50" cy="50" r="5"/></g></svg>"#.as_bytes()).unwrap();
         let mut mutated = real.clone();
         apply_svg_mutation(&mut mutated, &SvgMutation::SetAttribute { path: vec![], name: "id".into(), value: Some("root".into()) });
         assert_ne!(real, mutated);
@@ -1232,7 +1146,7 @@ mod tests {
         }
     }
 
-    //#region 🔖️LosslessNativeSource
+    //#region 🔖️LosslessLogicalState
     #[test]
     fn exact_native_direct_pack_and_dsl_roundtrips() {
         let original = exact_fixture_bytes();
@@ -1302,9 +1216,9 @@ mod tests {
         let binary_diff = SvgDiff::decode_diff(&diff.encode_diff().expect("diff binary encode")).expect("diff binary decode");
         assert_eq!(text_diff, diff);
         assert_eq!(binary_diff, diff);
-        let restored_source = MutationDiff::apply(&binary_diff, &projection);
-        assert_eq!(restored_source, imported);
-        assert_eq!(restored_source.export_utf8().expect("diff export"), original);
+        let restored_projection = MutationDiff::apply(&binary_diff, &projection);
+        assert_eq!(restored_projection, imported);
+        assert_eq!(restored_projection.export_utf8().expect("diff export"), original);
 
         let mutation = SvgMutation::SetSnapshot { snapshot: imported.clone() };
         let text_op = SvgMutation::parse_op(&mutation.print_op()).expect("op text decode");
@@ -1315,6 +1229,6 @@ mod tests {
         assert_eq!(applied, imported);
         assert_eq!(applied.export_utf8().expect("set snapshot export"), original);
     }
-    //#endregion 🔖️LosslessNativeSource
+    //#endregion 🔖️LosslessLogicalState
 }
 //#endregion 🧪️Tests

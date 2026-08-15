@@ -9,12 +9,11 @@ pub use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutation
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::{
-    add_node_port::mutation::AddNodePort, add_node_property::mutation::AddNodeProperty, change_node_kind::mutation::ChangeNodeKind,
-    change_node_label::mutation::ChangeNodeLabel, create_edge::mutation::CreateEdge, create_node::mutation::CreateNode, delete_edge::mutation::DeleteEdge,
-    delete_node::mutation::DeleteNode, move_node::mutation::MoveNode, remove_node_port::mutation::RemoveNodePort, remove_node_property::mutation::RemoveNodeProperty,
+    add_node_port::mutation::AddNodePort, add_node_property::mutation::AddNodeProperty, change_node_kind::mutation::ChangeNodeKind, change_node_label::mutation::ChangeNodeLabel, create_edge::mutation::CreateEdge, create_node::mutation::CreateNode,
+    delete_edge::mutation::DeleteEdge, delete_node::mutation::DeleteNode, move_node::mutation::MoveNode, remove_node_port::mutation::RemoveNodePort, remove_node_property::mutation::RemoveNodeProperty,
 };
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphPort, SemioGraphPortKind};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{enc_semio_value_entry, dec_semio_value_entry};
+use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value_entry, enc_semio_value_entry};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
 
 //#region 📖️SemioGrammar
@@ -24,22 +23,44 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Primitives
-fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|b| format!("{b:02x}")).collect() }
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 { return Err(format!("odd hex length: {s:?}")); }
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
-fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
-fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+fn parse_usize(s: &str) -> Result<usize, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
 
-fn enc_node_id(id: &GraphNodeId) -> String { enc_str(&id.value) }
-fn dec_node_id(s: &str) -> Result<GraphNodeId, String> { Ok(GraphNodeId::new(dec_str(s)?)) }
-fn enc_edge_id(id: &GraphEdgeId) -> String { enc_str(&id.value) }
-fn dec_edge_id(s: &str) -> Result<GraphEdgeId, String> { Ok(GraphEdgeId::new(dec_str(s)?)) }
+fn enc_node_id(id: &GraphNodeId) -> String {
+    enc_str(&id.value)
+}
+fn dec_node_id(s: &str) -> Result<GraphNodeId, String> {
+    Ok(GraphNodeId::new(dec_str(s)?))
+}
+fn enc_edge_id(id: &GraphEdgeId) -> String {
+    enc_str(&id.value)
+}
+fn dec_edge_id(s: &str) -> Result<GraphEdgeId, String> {
+    Ok(GraphEdgeId::new(dec_str(s)?))
+}
 
-fn enc_point2_fields(p: &SemioPoint2) -> String { format!("{},{}", enc_str(&p.x.to_string()), enc_str(&p.y.to_string())) }
-fn dec_f64_hex(s: &str) -> Result<f64, String> { dec_str(s)?.parse::<f64>().map_err(|e| e.to_string()) }
+fn enc_point2_fields(p: &SemioPoint2) -> String {
+    format!("{},{}", enc_str(&p.x.to_string()), enc_str(&p.y.to_string()))
+}
+fn dec_f64_hex(s: &str) -> Result<f64, String> {
+    dec_str(s)?.parse::<f64>().map_err(|e| e.to_string())
+}
 
 fn enc_port_kind(k: SemioGraphPortKind) -> char {
     crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::enc_port_kind(k)
@@ -47,20 +68,30 @@ fn enc_port_kind(k: SemioGraphPortKind) -> char {
 fn dec_port_kind(s: &str) -> Result<SemioGraphPortKind, String> {
     crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::dec_port_kind(s)
 }
-fn enc_port(p: &SemioGraphPort) -> String { format!("[{},{}]", enc_str(&p.name), enc_port_kind(p.kind)) }
+fn enc_port(p: &SemioGraphPort) -> String {
+    format!("[{},{}]", enc_str(&p.name), enc_port_kind(p.kind))
+}
 fn dec_port(s: &str) -> Result<SemioGraphPort, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, kind] = parts.as_slice() else { return Err(format!("port: expected 2 fields, got {}", parts.len())) };
     Ok(SemioGraphPort { name: dec_str(name)?, kind: dec_port_kind(kind)? })
 }
-fn enc_property(p: &SemioValueEntry) -> String { enc_semio_value_entry(p) }
-fn dec_property(s: &str) -> Result<SemioValueEntry, String> { dec_semio_value_entry(s) }
+fn enc_property(p: &SemioValueEntry) -> String {
+    enc_semio_value_entry(p)
+}
+fn dec_property(s: &str) -> Result<SemioValueEntry, String> {
+    dec_semio_value_entry(s)
+}
 
-fn enc_ports(ports: &[SemioGraphPort]) -> String { format!("[{}]", ports.iter().map(enc_port).collect::<Vec<_>>().join(",")) }
+fn enc_ports(ports: &[SemioGraphPort]) -> String {
+    format!("[{}]", ports.iter().map(enc_port).collect::<Vec<_>>().join(","))
+}
 fn dec_ports(s: &str) -> Result<Vec<SemioGraphPort>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_port).collect()
 }
-fn enc_properties(properties: &[SemioValueEntry]) -> String { format!("[{}]", properties.iter().map(enc_property).collect::<Vec<_>>().join(",")) }
+fn enc_properties(properties: &[SemioValueEntry]) -> String {
+    format!("[{}]", properties.iter().map(enc_property).collect::<Vec<_>>().join(","))
+}
 fn dec_properties(s: &str) -> Result<Vec<SemioValueEntry>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_property).collect()
 }
@@ -71,8 +102,12 @@ fn print_graph_mutation(m: &SemioGraphMutation) -> String {
     match m {
         SemioGraphMutation::CreateNode(p) => format!(
             "createNode:{},{},{},{},[{}],[{}]",
-            enc_node_id(&p.id), enc_str(&p.kind), enc_str(&p.label), enc_point2_fields(&p.position),
-            p.ports.iter().map(enc_port).collect::<Vec<_>>().join(","), p.properties.iter().map(enc_property).collect::<Vec<_>>().join(","),
+            enc_node_id(&p.id),
+            enc_str(&p.kind),
+            enc_str(&p.label),
+            enc_point2_fields(&p.position),
+            p.ports.iter().map(enc_port).collect::<Vec<_>>().join(","),
+            p.properties.iter().map(enc_property).collect::<Vec<_>>().join(","),
         ),
         SemioGraphMutation::DeleteNode(p) => format!("deleteNode:{}", enc_node_id(&p.id)),
         SemioGraphMutation::ChangeNodeKind(p) => format!("changeNodeKind:{},{}", enc_node_id(&p.id), enc_str(&p.new_kind)),
@@ -96,9 +131,12 @@ fn parse_graph_mutation(line: &str) -> Result<SemioGraphMutation, String> {
                 return Err(format!("createNode: expected 7 fields, got {}", parts.len()));
             };
             Ok(SemioGraphMutation::CreateNode(CreateNode {
-                id: dec_node_id(id)?, kind: dec_str(kind)?, label: dec_str(label)?,
+                id: dec_node_id(id)?,
+                kind: dec_str(kind)?,
+                label: dec_str(label)?,
                 position: SemioPoint2 { x: dec_f64_hex(x)?, y: dec_f64_hex(y)? },
-                ports: dec_ports(ports)?, properties: dec_properties(properties)?,
+                ports: dec_ports(ports)?,
+                properties: dec_properties(properties)?,
             }))
         }
         "deleteNode" => Ok(SemioGraphMutation::DeleteNode(DeleteNode { id: dec_node_id(rest)? })),
@@ -144,7 +182,9 @@ fn parse_graph_mutation(line: &str) -> Result<SemioGraphMutation, String> {
 }
 
 impl protocol::OpText for SemioGraphMutation {
-    fn print_op(&self) -> String { print_graph_mutation(self) }
+    fn print_op(&self) -> String {
+        print_graph_mutation(self)
+    }
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_graph_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
@@ -157,14 +197,25 @@ impl protocol::OpText for SemioGraphMutation {
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<SemioGraphMutation> {
     vec![
-        SemioGraphMutation::CreateNode(CreateNode { id: GraphNodeId::new("n1"), kind: "source".into(), label: "Source".into(), position: SemioPoint2 { x: 0.0, y: 0.0 }, ports: vec![SemioGraphPort { name: "out".into(), kind: SemioGraphPortKind::Out }], properties: vec![] }),
+        SemioGraphMutation::CreateNode(CreateNode {
+            id: GraphNodeId::new("n1"),
+            kind: "source".into(),
+            label: "Source".into(),
+            position: SemioPoint2 { x: 0.0, y: 0.0 },
+            ports: vec![SemioGraphPort { name: "out".into(), kind: SemioGraphPortKind::Out }],
+            properties: vec![],
+        }),
         SemioGraphMutation::DeleteNode(DeleteNode { id: GraphNodeId::new("n1") }),
         SemioGraphMutation::ChangeNodeKind(ChangeNodeKind { id: GraphNodeId::new("n1"), new_kind: "relay".into() }),
         SemioGraphMutation::ChangeNodeLabel(ChangeNodeLabel { id: GraphNodeId::new("n1"), new_label: "Renamed".into() }),
         SemioGraphMutation::MoveNode(MoveNode { id: GraphNodeId::new("n1"), new_position: SemioPoint2 { x: 99.0, y: -1.0 } }),
         SemioGraphMutation::AddNodePort(AddNodePort { node_id: GraphNodeId::new("n1"), index: 0, port: SemioGraphPort { name: "in".into(), kind: SemioGraphPortKind::In } }),
         SemioGraphMutation::RemoveNodePort(RemoveNodePort { node_id: GraphNodeId::new("n1"), index: 0 }),
-        SemioGraphMutation::AddNodeProperty(AddNodeProperty { node_id: GraphNodeId::new("n1"), index: 0, property: SemioValueEntry { key: "weight".into(), value: crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue::Int { lexeme: "7".into() } } }),
+        SemioGraphMutation::AddNodeProperty(AddNodeProperty {
+            node_id: GraphNodeId::new("n1"),
+            index: 0,
+            property: SemioValueEntry { key: "weight".into(), value: crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue::Int { lexeme: "7".into() } },
+        }),
         SemioGraphMutation::RemoveNodeProperty(RemoveNodeProperty { node_id: GraphNodeId::new("n1"), index: 0 }),
         SemioGraphMutation::CreateEdge(CreateEdge { id: GraphEdgeId::new("e1"), source: GraphNodeId::new("n1"), target: GraphNodeId::new("n2"), kind: "flow".into(), label: "Main".into() }),
         SemioGraphMutation::DeleteEdge(DeleteEdge { id: GraphEdgeId::new("e1") }),

@@ -4,35 +4,29 @@
 //! the `{ NoMutation, SetSnapshot }` stub. Every variant's `diff()` is handcrafted directly
 //! (constructs the sparse [`GltfDiff`] by hand) — apply-and-capture is banned.
 
-use crate::artifacts::gltf::schema::diff::{
-    diff_set_snapshot, GltfAccessorDiff, GltfAccessorsDiff, GltfAdded, GltfAssetDiff, GltfBufferBytesDiff,
-    GltfBufferDiff, GltfBuffersDiff, GltfDiff, GltfMaterialDiff, GltfMaterialsDiff, GltfMeshDiff, GltfMeshesDiff,
-    GltfModified, GltfNodeDiff, GltfNodesDiff, GltfSceneDiff, GltfScenesDiff, ItemDiff as _,
-};
 use crate::artifacts::gltf::schema::diff::GltfAnimationsDiff;
 /// 🧪️ F6: hand-rolled `OpText`/`OpBinary` grammar primitives + value codecs, reused verbatim from
 /// `🔺️diff/component.rs`'s `HandcraftedDiffCodec` region (`enc_gltf_snapshot`/`dec_gltf_snapshot`
 /// needs every one of these; SvgMutation reuses SvgDiff's the same way) — see that region's doc
 /// comment for the full derive-rejection citation shared by both sides of this artifact.
 use crate::artifacts::gltf::schema::diff::{
-    dec_accessor, dec_animation, dec_asset, dec_buffer, dec_bytes, dec_gltf_snapshot, dec_material, dec_mesh,
-    dec_node, dec_scene, enc_accessor, enc_animation, enc_asset, enc_buffer, enc_bytes, enc_gltf_snapshot,
-    enc_material, enc_mesh, enc_node, enc_scene,
+    dec_accessor, dec_animation, dec_asset, dec_buffer, dec_bytes, dec_gltf_snapshot, dec_material, dec_mesh, dec_node, dec_scene, enc_accessor, enc_animation, enc_asset, enc_buffer, enc_bytes, enc_gltf_snapshot, enc_material, enc_mesh, enc_node,
+    enc_scene,
+};
+use crate::artifacts::gltf::schema::diff::{
+    diff_set_snapshot, GltfAccessorDiff, GltfAccessorsDiff, GltfAdded, GltfAssetDiff, GltfBufferBytesDiff, GltfBufferDiff, GltfBuffersDiff, GltfDiff, GltfMaterialDiff, GltfMaterialsDiff, GltfMeshDiff, GltfMeshesDiff, GltfModified, GltfNodeDiff,
+    GltfNodesDiff, GltfSceneDiff, GltfScenesDiff, ItemDiff as _,
 };
 /// 🧪️ P2-FG3: real binary value codecs for `GltfMutation`'s `OpBinary` — reused verbatim from
 /// `🔺️diff/component.rs`'s `RealBinary*` regions (same intra-artifact reuse the TEXT `enc_*`/
 /// `dec_*` imports above already establish).
 use crate::artifacts::gltf::schema::diff::{
-    gltf_bin_err, read_bin_accessor, read_bin_animation, read_bin_asset, read_bin_blob, read_bin_buffer,
-    read_bin_gltf_snapshot, read_bin_material, read_bin_mesh, read_bin_node, read_bin_scene, write_bin_accessor,
-    write_bin_animation, write_bin_asset, write_bin_blob, write_bin_buffer, write_bin_gltf_snapshot,
-    write_bin_material, write_bin_mesh, write_bin_node, write_bin_scene,
+    gltf_bin_err, read_bin_accessor, read_bin_animation, read_bin_asset, read_bin_blob, read_bin_buffer, read_bin_gltf_snapshot, read_bin_material, read_bin_mesh, read_bin_node, read_bin_scene, write_bin_accessor, write_bin_animation,
+    write_bin_asset, write_bin_blob, write_bin_buffer, write_bin_gltf_snapshot, write_bin_material, write_bin_mesh, write_bin_node, write_bin_scene,
 };
-use crate::artifacts::gltf::schema::snapshot::{
-    GltfAccessor, GltfAnimation, GltfAsset, GltfBuffer, GltfMaterial, GltfMesh, GltfNode, GltfScene,
-};
+use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfAnimation, GltfAsset, GltfBuffer, GltfMaterial, GltfMesh, GltfNode, GltfScene};
 use crate::artifacts::gltf::GltfSnapshot;
-use protocol::{Mutation, OpText, OpBinary};
+use protocol::{Mutation, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -45,40 +39,102 @@ use serde::{Deserialize, Serialize};
 pub enum GltfMutation {
     #[default]
     NoMutation,
-    SetSnapshot { snapshot: GltfSnapshot },
-    SetAsset { asset: GltfAsset },
+    SetSnapshot {
+        snapshot: GltfSnapshot,
+    },
+    SetAsset {
+        asset: GltfAsset,
+    },
 
-    InsertScene { index: usize, scene: GltfScene },
-    RemoveScene { index: usize },
-    SetScene { index: usize, scene: GltfScene },
+    InsertScene {
+        index: usize,
+        scene: GltfScene,
+    },
+    RemoveScene {
+        index: usize,
+    },
+    SetScene {
+        index: usize,
+        scene: GltfScene,
+    },
 
-    InsertNode { index: usize, node: GltfNode },
-    RemoveNode { index: usize },
-    SetNode { index: usize, node: GltfNode },
+    InsertNode {
+        index: usize,
+        node: GltfNode,
+    },
+    RemoveNode {
+        index: usize,
+    },
+    SetNode {
+        index: usize,
+        node: GltfNode,
+    },
 
-    InsertMesh { index: usize, mesh: GltfMesh },
-    RemoveMesh { index: usize },
-    SetMesh { index: usize, mesh: GltfMesh },
+    InsertMesh {
+        index: usize,
+        mesh: GltfMesh,
+    },
+    RemoveMesh {
+        index: usize,
+    },
+    SetMesh {
+        index: usize,
+        mesh: GltfMesh,
+    },
 
-    InsertAccessor { index: usize, accessor: GltfAccessor },
-    RemoveAccessor { index: usize },
-    SetAccessor { index: usize, accessor: GltfAccessor },
+    InsertAccessor {
+        index: usize,
+        accessor: GltfAccessor,
+    },
+    RemoveAccessor {
+        index: usize,
+    },
+    SetAccessor {
+        index: usize,
+        accessor: GltfAccessor,
+    },
 
-    InsertMaterial { index: usize, material: GltfMaterial },
-    RemoveMaterial { index: usize },
-    SetMaterial { index: usize, material: GltfMaterial },
+    InsertMaterial {
+        index: usize,
+        material: GltfMaterial,
+    },
+    RemoveMaterial {
+        index: usize,
+    },
+    SetMaterial {
+        index: usize,
+        material: GltfMaterial,
+    },
 
     /// 📦️ Touches BOTH `document.buffers[index]` (metadata) and `GltfSnapshot::buffers[index]`
     /// (raw payload bytes) together -- they are two index-aligned collections (per the recipe's
     /// explicit "buffers: Vec<Vec<u8>> stays as-is" instruction), kept in sync by this one
     /// mutation the same way the builder's `add_buffer` already couples them.
-    InsertBuffer { index: usize, buffer: GltfBuffer, bytes: Vec<u8> },
-    RemoveBuffer { index: usize },
-    SetBuffer { index: usize, buffer: GltfBuffer, bytes: Vec<u8> },
+    InsertBuffer {
+        index: usize,
+        buffer: GltfBuffer,
+        bytes: Vec<u8>,
+    },
+    RemoveBuffer {
+        index: usize,
+    },
+    SetBuffer {
+        index: usize,
+        buffer: GltfBuffer,
+        bytes: Vec<u8>,
+    },
 
-    InsertAnimation { index: usize, animation: GltfAnimation },
-    RemoveAnimation { index: usize },
-    SetAnimation { index: usize, animation: GltfAnimation },
+    InsertAnimation {
+        index: usize,
+        animation: GltfAnimation,
+    },
+    RemoveAnimation {
+        index: usize,
+    },
+    SetAnimation {
+        index: usize,
+        animation: GltfAnimation,
+    },
 }
 //#endregion 🔖️Mutations
 
@@ -109,9 +165,7 @@ impl Mutation<GltfSnapshot> for GltfMutation {
                 let at = (*index).min(doc.scenes.len());
                 GltfDiff { scenes: Some(GltfScenesDiff { added: vec![GltfAdded { index: at, item: scene.clone() }], ..Default::default() }), ..Default::default() }
             }
-            GltfMutation::RemoveScene { index } => {
-                GltfDiff { scenes: Some(GltfScenesDiff { removed: vec![*index], ..Default::default() }), ..Default::default() }
-            }
+            GltfMutation::RemoveScene { index } => GltfDiff { scenes: Some(GltfScenesDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
             GltfMutation::SetScene { index, scene } => {
                 let modified = doc.scenes.get(*index).map(|cur| vec![GltfModified { index: *index, diff: GltfSceneDiff::between(cur, scene) }]).unwrap_or_default();
                 GltfDiff { scenes: Some(GltfScenesDiff { modified, ..Default::default() }), ..Default::default() }
@@ -121,9 +175,7 @@ impl Mutation<GltfSnapshot> for GltfMutation {
                 let at = (*index).min(doc.nodes.len());
                 GltfDiff { nodes: Some(GltfNodesDiff { added: vec![GltfAdded { index: at, item: node.clone() }], ..Default::default() }), ..Default::default() }
             }
-            GltfMutation::RemoveNode { index } => {
-                GltfDiff { nodes: Some(GltfNodesDiff { removed: vec![*index], ..Default::default() }), ..Default::default() }
-            }
+            GltfMutation::RemoveNode { index } => GltfDiff { nodes: Some(GltfNodesDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
             GltfMutation::SetNode { index, node } => {
                 let modified = doc.nodes.get(*index).map(|cur| vec![GltfModified { index: *index, diff: GltfNodeDiff::between(cur, node) }]).unwrap_or_default();
                 GltfDiff { nodes: Some(GltfNodesDiff { modified, ..Default::default() }), ..Default::default() }
@@ -133,9 +185,7 @@ impl Mutation<GltfSnapshot> for GltfMutation {
                 let at = (*index).min(doc.meshes.len());
                 GltfDiff { meshes: Some(GltfMeshesDiff { added: vec![GltfAdded { index: at, item: mesh.clone() }], ..Default::default() }), ..Default::default() }
             }
-            GltfMutation::RemoveMesh { index } => {
-                GltfDiff { meshes: Some(GltfMeshesDiff { removed: vec![*index], ..Default::default() }), ..Default::default() }
-            }
+            GltfMutation::RemoveMesh { index } => GltfDiff { meshes: Some(GltfMeshesDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
             GltfMutation::SetMesh { index, mesh } => {
                 let modified = doc.meshes.get(*index).map(|cur| vec![GltfModified { index: *index, diff: GltfMeshDiff::between(cur, mesh) }]).unwrap_or_default();
                 GltfDiff { meshes: Some(GltfMeshesDiff { modified, ..Default::default() }), ..Default::default() }
@@ -145,9 +195,7 @@ impl Mutation<GltfSnapshot> for GltfMutation {
                 let at = (*index).min(doc.accessors.len());
                 GltfDiff { accessors: Some(GltfAccessorsDiff { added: vec![GltfAdded { index: at, item: accessor.clone() }], ..Default::default() }), ..Default::default() }
             }
-            GltfMutation::RemoveAccessor { index } => {
-                GltfDiff { accessors: Some(GltfAccessorsDiff { removed: vec![*index], ..Default::default() }), ..Default::default() }
-            }
+            GltfMutation::RemoveAccessor { index } => GltfDiff { accessors: Some(GltfAccessorsDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
             GltfMutation::SetAccessor { index, accessor } => {
                 let modified = doc.accessors.get(*index).map(|cur| vec![GltfModified { index: *index, diff: GltfAccessorDiff::between(cur, accessor) }]).unwrap_or_default();
                 GltfDiff { accessors: Some(GltfAccessorsDiff { modified, ..Default::default() }), ..Default::default() }
@@ -157,9 +205,7 @@ impl Mutation<GltfSnapshot> for GltfMutation {
                 let at = (*index).min(doc.materials.len());
                 GltfDiff { materials: Some(GltfMaterialsDiff { added: vec![GltfAdded { index: at, item: material.clone() }], ..Default::default() }), ..Default::default() }
             }
-            GltfMutation::RemoveMaterial { index } => {
-                GltfDiff { materials: Some(GltfMaterialsDiff { removed: vec![*index], ..Default::default() }), ..Default::default() }
-            }
+            GltfMutation::RemoveMaterial { index } => GltfDiff { materials: Some(GltfMaterialsDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
             GltfMutation::SetMaterial { index, material } => {
                 let modified = doc.materials.get(*index).map(|cur| vec![GltfModified { index: *index, diff: GltfMaterialDiff::between(cur, material) }]).unwrap_or_default();
                 GltfDiff { materials: Some(GltfMaterialsDiff { modified, ..Default::default() }), ..Default::default() }
@@ -174,29 +220,19 @@ impl Mutation<GltfSnapshot> for GltfMutation {
                 }
             }
             GltfMutation::RemoveBuffer { index } => {
-                GltfDiff {
-                    buffers: Some(GltfBuffersDiff { removed: vec![*index], ..Default::default() }),
-                    buffer_bytes: Some(GltfBufferBytesDiff { removed: vec![*index], ..Default::default() }),
-                    ..Default::default()
-                }
+                GltfDiff { buffers: Some(GltfBuffersDiff { removed: vec![*index], ..Default::default() }), buffer_bytes: Some(GltfBufferBytesDiff { removed: vec![*index], ..Default::default() }), ..Default::default() }
             }
             GltfMutation::SetBuffer { index, buffer, bytes } => {
                 let modified = doc.buffers.get(*index).map(|cur| vec![GltfModified { index: *index, diff: GltfBufferDiff::between(cur, buffer) }]).unwrap_or_default();
                 let bytes_modified = base.buffers.get(*index).map(|_| vec![GltfModified { index: *index, diff: bytes.clone() }]).unwrap_or_default();
-                GltfDiff {
-                    buffers: Some(GltfBuffersDiff { modified, ..Default::default() }),
-                    buffer_bytes: Some(GltfBufferBytesDiff { modified: bytes_modified, ..Default::default() }),
-                    ..Default::default()
-                }
+                GltfDiff { buffers: Some(GltfBuffersDiff { modified, ..Default::default() }), buffer_bytes: Some(GltfBufferBytesDiff { modified: bytes_modified, ..Default::default() }), ..Default::default() }
             }
 
             GltfMutation::InsertAnimation { index, animation } => {
                 let at = (*index).min(doc.animations.len());
                 GltfDiff { animations: Some(GltfAnimationsDiff { added: vec![GltfAdded { index: at, item: animation.clone() }], ..Default::default() }), ..Default::default() }
             }
-            GltfMutation::RemoveAnimation { index } => {
-                GltfDiff { animations: Some(GltfAnimationsDiff { removed: vec![*index], ..Default::default() }), ..Default::default() }
-            }
+            GltfMutation::RemoveAnimation { index } => GltfDiff { animations: Some(GltfAnimationsDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
             GltfMutation::SetAnimation { index, animation } => {
                 let modified = doc.animations.get(*index).map(|_| vec![GltfModified { index: *index, diff: animation.clone() }]).unwrap_or_default();
                 GltfDiff { animations: Some(GltfAnimationsDiff { modified, ..Default::default() }), ..Default::default() }
@@ -342,13 +378,7 @@ fn parse_gltf_mutation(line: &str) -> Result<GltfMutation, String> {
         return Ok(GltfMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("gltf mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("gltf mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("gltf mutation: missing arg '{k}' for '{keyword}'"));
     let idx = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
@@ -396,37 +426,56 @@ pub(crate) fn demo_mutation_cases() -> Vec<GltfMutation> {
         GltfMutation::NoMutation,
         GltfMutation::SetSnapshot { snapshot: crate::artifacts::gltf::engine::demo_gltf_snapshot() },
         GltfMutation::SetAsset { asset: GltfAsset { version: "2.1".into(), generator: None, copyright: Some("(c)".into()), min_version: None, extensions: None, extras: None } },
-
         GltfMutation::InsertScene { index: 1, scene: crate::artifacts::gltf::schema::snapshot::GltfScene { nodes: vec![1], name: Some("s".into()), ..Default::default() } },
         GltfMutation::RemoveScene { index: 0 },
         GltfMutation::SetScene { index: 0, scene: crate::artifacts::gltf::schema::snapshot::GltfScene { nodes: vec![9], name: None, ..Default::default() } },
-
         GltfMutation::InsertNode { index: 1, node: GltfNode { mesh: Some(1), matrix: Some([0.0; 16]), ..GltfNode::default() } },
         GltfMutation::RemoveNode { index: 0 },
         GltfMutation::SetNode { index: 0, node: GltfNode { mesh: None, camera: Some(2), name: Some("n".into()), ..GltfNode::default() } },
-
         GltfMutation::InsertMesh { index: 0, mesh: GltfMesh { name: Some("m".into()), ..GltfMesh::default() } },
         GltfMutation::RemoveMesh { index: 0 },
         GltfMutation::SetMesh { index: 0, mesh: GltfMesh { name: Some("renamed-mesh".into()), ..GltfMesh::default() } },
-
         GltfMutation::InsertAccessor {
             index: 0,
-            accessor: GltfAccessor { buffer_view: None, byte_offset: 0, component_type: crate::artifacts::gltf::engine::GltfComponentType::UnsignedByte, normalized: false, count: 1, kind: crate::artifacts::gltf::engine::GltfAccessorType::Scalar, max: None, min: None, sparse: None, name: None, extensions: None, extras: None },
+            accessor: GltfAccessor {
+                buffer_view: None,
+                byte_offset: 0,
+                component_type: crate::artifacts::gltf::engine::GltfComponentType::UnsignedByte,
+                normalized: false,
+                count: 1,
+                kind: crate::artifacts::gltf::engine::GltfAccessorType::Scalar,
+                max: None,
+                min: None,
+                sparse: None,
+                name: None,
+                extensions: None,
+                extras: None,
+            },
         },
         GltfMutation::RemoveAccessor { index: 0 },
         GltfMutation::SetAccessor {
             index: 0,
-            accessor: GltfAccessor { buffer_view: Some(0), byte_offset: 4, component_type: crate::artifacts::gltf::engine::GltfComponentType::Float, normalized: true, count: 9, kind: crate::artifacts::gltf::engine::GltfAccessorType::Vec3, max: Some(vec![1.0]), min: Some(vec![-1.0]), sparse: None, name: None, extensions: None, extras: None },
+            accessor: GltfAccessor {
+                buffer_view: Some(0),
+                byte_offset: 4,
+                component_type: crate::artifacts::gltf::engine::GltfComponentType::Float,
+                normalized: true,
+                count: 9,
+                kind: crate::artifacts::gltf::engine::GltfAccessorType::Vec3,
+                max: Some(vec![1.0]),
+                min: Some(vec![-1.0]),
+                sparse: None,
+                name: None,
+                extensions: None,
+                extras: None,
+            },
         },
-
         GltfMutation::InsertMaterial { index: 0, material: GltfMaterial { name: Some("mat".into()), double_sided: true, ..GltfMaterial::default() } },
         GltfMutation::RemoveMaterial { index: 0 },
         GltfMutation::SetMaterial { index: 0, material: GltfMaterial { double_sided: true, ..GltfMaterial::default() } },
-
         GltfMutation::InsertBuffer { index: 0, buffer: GltfBuffer { byte_length: 2, uri: Some("data:...".into()), name: None, extensions: None, extras: None }, bytes: vec![7, 8] },
         GltfMutation::RemoveBuffer { index: 0 },
         GltfMutation::SetBuffer { index: 0, buffer: GltfBuffer { byte_length: 8, uri: None, name: None, extensions: None, extras: None }, bytes: vec![1, 2, 3, 4, 5, 6, 7, 8] },
-
         GltfMutation::InsertAnimation { index: 0, animation: GltfAnimation { name: Some("a".into()), ..GltfAnimation::default() } },
         GltfMutation::RemoveAnimation { index: 0 },
         GltfMutation::SetAnimation { index: 0, animation: GltfAnimation { name: Some("renamed-anim".into()), ..GltfAnimation::default() } },
@@ -486,27 +535,71 @@ impl protocol::OpBinary for GltfMutation {
             GltfMutation::NoMutation => {}
             GltfMutation::SetSnapshot { snapshot } => write_bin_gltf_snapshot(&mut w, snapshot),
             GltfMutation::SetAsset { asset } => write_bin_asset(&mut w, asset),
-            GltfMutation::InsertScene { index, scene } => { w.write_varint_u64(*index as u64); write_bin_scene(&mut w, scene); }
+            GltfMutation::InsertScene { index, scene } => {
+                w.write_varint_u64(*index as u64);
+                write_bin_scene(&mut w, scene);
+            }
             GltfMutation::RemoveScene { index } => w.write_varint_u64(*index as u64),
-            GltfMutation::SetScene { index, scene } => { w.write_varint_u64(*index as u64); write_bin_scene(&mut w, scene); }
-            GltfMutation::InsertNode { index, node } => { w.write_varint_u64(*index as u64); write_bin_node(&mut w, node); }
+            GltfMutation::SetScene { index, scene } => {
+                w.write_varint_u64(*index as u64);
+                write_bin_scene(&mut w, scene);
+            }
+            GltfMutation::InsertNode { index, node } => {
+                w.write_varint_u64(*index as u64);
+                write_bin_node(&mut w, node);
+            }
             GltfMutation::RemoveNode { index } => w.write_varint_u64(*index as u64),
-            GltfMutation::SetNode { index, node } => { w.write_varint_u64(*index as u64); write_bin_node(&mut w, node); }
-            GltfMutation::InsertMesh { index, mesh } => { w.write_varint_u64(*index as u64); write_bin_mesh(&mut w, mesh); }
+            GltfMutation::SetNode { index, node } => {
+                w.write_varint_u64(*index as u64);
+                write_bin_node(&mut w, node);
+            }
+            GltfMutation::InsertMesh { index, mesh } => {
+                w.write_varint_u64(*index as u64);
+                write_bin_mesh(&mut w, mesh);
+            }
             GltfMutation::RemoveMesh { index } => w.write_varint_u64(*index as u64),
-            GltfMutation::SetMesh { index, mesh } => { w.write_varint_u64(*index as u64); write_bin_mesh(&mut w, mesh); }
-            GltfMutation::InsertAccessor { index, accessor } => { w.write_varint_u64(*index as u64); write_bin_accessor(&mut w, accessor); }
+            GltfMutation::SetMesh { index, mesh } => {
+                w.write_varint_u64(*index as u64);
+                write_bin_mesh(&mut w, mesh);
+            }
+            GltfMutation::InsertAccessor { index, accessor } => {
+                w.write_varint_u64(*index as u64);
+                write_bin_accessor(&mut w, accessor);
+            }
             GltfMutation::RemoveAccessor { index } => w.write_varint_u64(*index as u64),
-            GltfMutation::SetAccessor { index, accessor } => { w.write_varint_u64(*index as u64); write_bin_accessor(&mut w, accessor); }
-            GltfMutation::InsertMaterial { index, material } => { w.write_varint_u64(*index as u64); write_bin_material(&mut w, material); }
+            GltfMutation::SetAccessor { index, accessor } => {
+                w.write_varint_u64(*index as u64);
+                write_bin_accessor(&mut w, accessor);
+            }
+            GltfMutation::InsertMaterial { index, material } => {
+                w.write_varint_u64(*index as u64);
+                write_bin_material(&mut w, material);
+            }
             GltfMutation::RemoveMaterial { index } => w.write_varint_u64(*index as u64),
-            GltfMutation::SetMaterial { index, material } => { w.write_varint_u64(*index as u64); write_bin_material(&mut w, material); }
-            GltfMutation::InsertBuffer { index, buffer, bytes } => { w.write_varint_u64(*index as u64); write_bin_buffer(&mut w, buffer); write_bin_blob(&mut w, bytes); }
+            GltfMutation::SetMaterial { index, material } => {
+                w.write_varint_u64(*index as u64);
+                write_bin_material(&mut w, material);
+            }
+            GltfMutation::InsertBuffer { index, buffer, bytes } => {
+                w.write_varint_u64(*index as u64);
+                write_bin_buffer(&mut w, buffer);
+                write_bin_blob(&mut w, bytes);
+            }
             GltfMutation::RemoveBuffer { index } => w.write_varint_u64(*index as u64),
-            GltfMutation::SetBuffer { index, buffer, bytes } => { w.write_varint_u64(*index as u64); write_bin_buffer(&mut w, buffer); write_bin_blob(&mut w, bytes); }
-            GltfMutation::InsertAnimation { index, animation } => { w.write_varint_u64(*index as u64); write_bin_animation(&mut w, animation); }
+            GltfMutation::SetBuffer { index, buffer, bytes } => {
+                w.write_varint_u64(*index as u64);
+                write_bin_buffer(&mut w, buffer);
+                write_bin_blob(&mut w, bytes);
+            }
+            GltfMutation::InsertAnimation { index, animation } => {
+                w.write_varint_u64(*index as u64);
+                write_bin_animation(&mut w, animation);
+            }
             GltfMutation::RemoveAnimation { index } => w.write_varint_u64(*index as u64),
-            GltfMutation::SetAnimation { index, animation } => { w.write_varint_u64(*index as u64); write_bin_animation(&mut w, animation); }
+            GltfMutation::SetAnimation { index, animation } => {
+                w.write_varint_u64(*index as u64);
+                write_bin_animation(&mut w, animation);
+            }
         }
         Ok(w.into_bytes())
     }
@@ -522,27 +615,73 @@ impl protocol::OpBinary for GltfMutation {
             0 => GltfMutation::NoMutation,
             1 => GltfMutation::SetSnapshot { snapshot: read_bin_gltf_snapshot(&mut r).map_err(gltf_bin_err)? },
             2 => GltfMutation::SetAsset { asset: read_bin_asset(&mut r).map_err(gltf_bin_err)? },
-            3 => { let index = idx(&mut r)?; GltfMutation::InsertScene { index, scene: read_bin_scene(&mut r).map_err(gltf_bin_err)? } }
+            3 => {
+                let index = idx(&mut r)?;
+                GltfMutation::InsertScene { index, scene: read_bin_scene(&mut r).map_err(gltf_bin_err)? }
+            }
             4 => GltfMutation::RemoveScene { index: idx(&mut r)? },
-            5 => { let index = idx(&mut r)?; GltfMutation::SetScene { index, scene: read_bin_scene(&mut r).map_err(gltf_bin_err)? } }
-            6 => { let index = idx(&mut r)?; GltfMutation::InsertNode { index, node: read_bin_node(&mut r).map_err(gltf_bin_err)? } }
+            5 => {
+                let index = idx(&mut r)?;
+                GltfMutation::SetScene { index, scene: read_bin_scene(&mut r).map_err(gltf_bin_err)? }
+            }
+            6 => {
+                let index = idx(&mut r)?;
+                GltfMutation::InsertNode { index, node: read_bin_node(&mut r).map_err(gltf_bin_err)? }
+            }
             7 => GltfMutation::RemoveNode { index: idx(&mut r)? },
-            8 => { let index = idx(&mut r)?; GltfMutation::SetNode { index, node: read_bin_node(&mut r).map_err(gltf_bin_err)? } }
-            9 => { let index = idx(&mut r)?; GltfMutation::InsertMesh { index, mesh: read_bin_mesh(&mut r).map_err(gltf_bin_err)? } }
+            8 => {
+                let index = idx(&mut r)?;
+                GltfMutation::SetNode { index, node: read_bin_node(&mut r).map_err(gltf_bin_err)? }
+            }
+            9 => {
+                let index = idx(&mut r)?;
+                GltfMutation::InsertMesh { index, mesh: read_bin_mesh(&mut r).map_err(gltf_bin_err)? }
+            }
             10 => GltfMutation::RemoveMesh { index: idx(&mut r)? },
-            11 => { let index = idx(&mut r)?; GltfMutation::SetMesh { index, mesh: read_bin_mesh(&mut r).map_err(gltf_bin_err)? } }
-            12 => { let index = idx(&mut r)?; GltfMutation::InsertAccessor { index, accessor: read_bin_accessor(&mut r).map_err(gltf_bin_err)? } }
+            11 => {
+                let index = idx(&mut r)?;
+                GltfMutation::SetMesh { index, mesh: read_bin_mesh(&mut r).map_err(gltf_bin_err)? }
+            }
+            12 => {
+                let index = idx(&mut r)?;
+                GltfMutation::InsertAccessor { index, accessor: read_bin_accessor(&mut r).map_err(gltf_bin_err)? }
+            }
             13 => GltfMutation::RemoveAccessor { index: idx(&mut r)? },
-            14 => { let index = idx(&mut r)?; GltfMutation::SetAccessor { index, accessor: read_bin_accessor(&mut r).map_err(gltf_bin_err)? } }
-            15 => { let index = idx(&mut r)?; GltfMutation::InsertMaterial { index, material: read_bin_material(&mut r).map_err(gltf_bin_err)? } }
+            14 => {
+                let index = idx(&mut r)?;
+                GltfMutation::SetAccessor { index, accessor: read_bin_accessor(&mut r).map_err(gltf_bin_err)? }
+            }
+            15 => {
+                let index = idx(&mut r)?;
+                GltfMutation::InsertMaterial { index, material: read_bin_material(&mut r).map_err(gltf_bin_err)? }
+            }
             16 => GltfMutation::RemoveMaterial { index: idx(&mut r)? },
-            17 => { let index = idx(&mut r)?; GltfMutation::SetMaterial { index, material: read_bin_material(&mut r).map_err(gltf_bin_err)? } }
-            18 => { let index = idx(&mut r)?; let buffer = read_bin_buffer(&mut r).map_err(gltf_bin_err)?; let bytes = read_bin_blob(&mut r).map_err(gltf_bin_err)?; GltfMutation::InsertBuffer { index, buffer, bytes } }
+            17 => {
+                let index = idx(&mut r)?;
+                GltfMutation::SetMaterial { index, material: read_bin_material(&mut r).map_err(gltf_bin_err)? }
+            }
+            18 => {
+                let index = idx(&mut r)?;
+                let buffer = read_bin_buffer(&mut r).map_err(gltf_bin_err)?;
+                let bytes = read_bin_blob(&mut r).map_err(gltf_bin_err)?;
+                GltfMutation::InsertBuffer { index, buffer, bytes }
+            }
             19 => GltfMutation::RemoveBuffer { index: idx(&mut r)? },
-            20 => { let index = idx(&mut r)?; let buffer = read_bin_buffer(&mut r).map_err(gltf_bin_err)?; let bytes = read_bin_blob(&mut r).map_err(gltf_bin_err)?; GltfMutation::SetBuffer { index, buffer, bytes } }
-            21 => { let index = idx(&mut r)?; GltfMutation::InsertAnimation { index, animation: read_bin_animation(&mut r).map_err(gltf_bin_err)? } }
+            20 => {
+                let index = idx(&mut r)?;
+                let buffer = read_bin_buffer(&mut r).map_err(gltf_bin_err)?;
+                let bytes = read_bin_blob(&mut r).map_err(gltf_bin_err)?;
+                GltfMutation::SetBuffer { index, buffer, bytes }
+            }
+            21 => {
+                let index = idx(&mut r)?;
+                GltfMutation::InsertAnimation { index, animation: read_bin_animation(&mut r).map_err(gltf_bin_err)? }
+            }
             22 => GltfMutation::RemoveAnimation { index: idx(&mut r)? },
-            23 => { let index = idx(&mut r)?; GltfMutation::SetAnimation { index, animation: read_bin_animation(&mut r).map_err(gltf_bin_err)? } }
+            23 => {
+                let index = idx(&mut r)?;
+                GltfMutation::SetAnimation { index, animation: read_bin_animation(&mut r).map_err(gltf_bin_err)? }
+            }
             other => return Err(protocol::ProtocolError::Malformed { what: "gltf op tag", offset: 0, detail: format!("unknown tag {other}") }),
         })
     }
@@ -566,9 +705,18 @@ mod tests {
                 nodes: vec![GltfNode { mesh: Some(0), ..GltfNode::default() }, GltfNode { mesh: Some(1), ..GltfNode::default() }],
                 meshes: vec![GltfMesh::default(), GltfMesh::default()],
                 accessors: vec![GltfAccessor {
-                    buffer_view: None, byte_offset: 0, component_type: crate::artifacts::gltf::engine::GltfComponentType::Float,
-                    normalized: false, count: 3, kind: crate::artifacts::gltf::engine::GltfAccessorType::Vec3,
-                    max: None, min: None, sparse: None, name: None, extensions: None, extras: None,
+                    buffer_view: None,
+                    byte_offset: 0,
+                    component_type: crate::artifacts::gltf::engine::GltfComponentType::Float,
+                    normalized: false,
+                    count: 3,
+                    kind: crate::artifacts::gltf::engine::GltfAccessorType::Vec3,
+                    max: None,
+                    min: None,
+                    sparse: None,
+                    name: None,
+                    extensions: None,
+                    extras: None,
                 }],
                 materials: vec![GltfMaterial::default()],
                 buffers: vec![GltfBuffer { byte_length: 4, uri: None, name: None, extensions: None, extras: None }],
@@ -597,9 +745,41 @@ mod tests {
             GltfMutation::InsertMesh { index: 0, mesh: GltfMesh { name: Some("m".into()), ..GltfMesh::default() } },
             GltfMutation::RemoveMesh { index: 0 },
             GltfMutation::SetMesh { index: 0, mesh: GltfMesh { name: Some("renamed-mesh".into()), ..GltfMesh::default() } },
-            GltfMutation::InsertAccessor { index: 0, accessor: GltfAccessor { buffer_view: None, byte_offset: 0, component_type: crate::artifacts::gltf::engine::GltfComponentType::UnsignedByte, normalized: false, count: 1, kind: crate::artifacts::gltf::engine::GltfAccessorType::Scalar, max: None, min: None, sparse: None, name: None, extensions: None, extras: None } },
+            GltfMutation::InsertAccessor {
+                index: 0,
+                accessor: GltfAccessor {
+                    buffer_view: None,
+                    byte_offset: 0,
+                    component_type: crate::artifacts::gltf::engine::GltfComponentType::UnsignedByte,
+                    normalized: false,
+                    count: 1,
+                    kind: crate::artifacts::gltf::engine::GltfAccessorType::Scalar,
+                    max: None,
+                    min: None,
+                    sparse: None,
+                    name: None,
+                    extensions: None,
+                    extras: None,
+                },
+            },
             GltfMutation::RemoveAccessor { index: 0 },
-            GltfMutation::SetAccessor { index: 0, accessor: GltfAccessor { buffer_view: None, byte_offset: 0, component_type: crate::artifacts::gltf::engine::GltfComponentType::Float, normalized: true, count: 9, kind: crate::artifacts::gltf::engine::GltfAccessorType::Vec3, max: None, min: None, sparse: None, name: None, extensions: None, extras: None } },
+            GltfMutation::SetAccessor {
+                index: 0,
+                accessor: GltfAccessor {
+                    buffer_view: None,
+                    byte_offset: 0,
+                    component_type: crate::artifacts::gltf::engine::GltfComponentType::Float,
+                    normalized: true,
+                    count: 9,
+                    kind: crate::artifacts::gltf::engine::GltfAccessorType::Vec3,
+                    max: None,
+                    min: None,
+                    sparse: None,
+                    name: None,
+                    extensions: None,
+                    extras: None,
+                },
+            },
             GltfMutation::InsertMaterial { index: 0, material: GltfMaterial { name: Some("mat".into()), ..GltfMaterial::default() } },
             GltfMutation::RemoveMaterial { index: 0 },
             GltfMutation::SetMaterial { index: 0, material: GltfMaterial { double_sided: true, ..GltfMaterial::default() } },
@@ -666,25 +846,18 @@ mod tests {
     /// variant `field_sweep`'s `sweep_b` (🔺️diff/component.rs) does not use).
     fn full_snapshot() -> GltfSnapshot {
         let mut s = base_snapshot();
-        s.document.buffer_views = vec![crate::artifacts::gltf::schema::snapshot::GltfBufferView {
-            buffer: 0, byte_offset: 0, byte_length: 4, byte_stride: None, target: Some(34962), name: None, extensions: None, extras: None,
-        }];
+        s.document.buffer_views = vec![crate::artifacts::gltf::schema::snapshot::GltfBufferView { buffer: 0, byte_offset: 0, byte_length: 4, byte_stride: None, target: Some(34962), name: None, extensions: None, extras: None }];
         s.document.textures = vec![crate::artifacts::gltf::schema::snapshot::GltfTexture { sampler: Some(0), source: Some(0), name: None, extensions: None, extras: None }];
         s.document.images = vec![crate::artifacts::gltf::schema::snapshot::GltfImage { uri: Some("tex.png".into()), ..Default::default() }];
         s.document.samplers = vec![crate::artifacts::gltf::schema::snapshot::GltfSampler::default()];
         s.document.skins = vec![crate::artifacts::gltf::schema::snapshot::GltfSkin { joints: vec![0, 1], ..Default::default() }];
         s.document.cameras = vec![crate::artifacts::gltf::schema::snapshot::GltfCamera {
-            projection: crate::artifacts::gltf::schema::snapshot::GltfCameraProjection::Orthographic(
-                crate::artifacts::gltf::schema::snapshot::GltfOrthographic { xmag: 1.0, ymag: 1.0, zfar: 10.0, znear: 0.1, extensions: None, extras: None },
-            ),
+            projection: crate::artifacts::gltf::schema::snapshot::GltfCameraProjection::Orthographic(crate::artifacts::gltf::schema::snapshot::GltfOrthographic { xmag: 1.0, ymag: 1.0, zfar: 10.0, znear: 0.1, extensions: None, extras: None }),
             name: Some("cam0".into()),
             extensions: None,
             extras: Some(crate::artifacts::gltf::schema::snapshot::GltfJson::Object(vec![("k".into(), crate::artifacts::gltf::schema::snapshot::GltfJson::Number(1.0))])),
         }];
-        s.document.extensions = Some(crate::artifacts::gltf::schema::snapshot::GltfJson::Array(vec![
-            crate::artifacts::gltf::schema::snapshot::GltfJson::Null,
-            crate::artifacts::gltf::schema::snapshot::GltfJson::Bool(false),
-        ]));
+        s.document.extensions = Some(crate::artifacts::gltf::schema::snapshot::GltfJson::Array(vec![crate::artifacts::gltf::schema::snapshot::GltfJson::Null, crate::artifacts::gltf::schema::snapshot::GltfJson::Bool(false)]));
         s
     }
 
@@ -701,37 +874,56 @@ mod tests {
             GltfMutation::NoMutation,
             GltfMutation::SetSnapshot { snapshot: full_snapshot() },
             GltfMutation::SetAsset { asset: GltfAsset { version: "2.1".into(), generator: None, copyright: Some("(c)".into()), min_version: None, extensions: None, extras: None } },
-
             GltfMutation::InsertScene { index: 1, scene: GltfScene { nodes: vec![1], name: Some("s".into()), ..GltfScene::default() } },
             GltfMutation::RemoveScene { index: 0 },
             GltfMutation::SetScene { index: 0, scene: GltfScene { nodes: vec![9], name: None, ..GltfScene::default() } },
-
             GltfMutation::InsertNode { index: 1, node: GltfNode { mesh: Some(1), matrix: Some([0.0; 16]), ..GltfNode::default() } },
             GltfMutation::RemoveNode { index: 0 },
             GltfMutation::SetNode { index: 0, node: GltfNode { mesh: None, camera: Some(2), name: Some("n".into()), ..GltfNode::default() } },
-
             GltfMutation::InsertMesh { index: 0, mesh: GltfMesh { name: Some("m".into()), ..GltfMesh::default() } },
             GltfMutation::RemoveMesh { index: 0 },
             GltfMutation::SetMesh { index: 0, mesh: GltfMesh { name: Some("renamed-mesh".into()), ..GltfMesh::default() } },
-
             GltfMutation::InsertAccessor {
                 index: 0,
-                accessor: GltfAccessor { buffer_view: None, byte_offset: 0, component_type: crate::artifacts::gltf::engine::GltfComponentType::UnsignedByte, normalized: false, count: 1, kind: crate::artifacts::gltf::engine::GltfAccessorType::Scalar, max: None, min: None, sparse: None, name: None, extensions: None, extras: None },
+                accessor: GltfAccessor {
+                    buffer_view: None,
+                    byte_offset: 0,
+                    component_type: crate::artifacts::gltf::engine::GltfComponentType::UnsignedByte,
+                    normalized: false,
+                    count: 1,
+                    kind: crate::artifacts::gltf::engine::GltfAccessorType::Scalar,
+                    max: None,
+                    min: None,
+                    sparse: None,
+                    name: None,
+                    extensions: None,
+                    extras: None,
+                },
             },
             GltfMutation::RemoveAccessor { index: 0 },
             GltfMutation::SetAccessor {
                 index: 0,
-                accessor: GltfAccessor { buffer_view: Some(0), byte_offset: 4, component_type: crate::artifacts::gltf::engine::GltfComponentType::Float, normalized: true, count: 9, kind: crate::artifacts::gltf::engine::GltfAccessorType::Vec3, max: Some(vec![1.0]), min: Some(vec![-1.0]), sparse: None, name: None, extensions: None, extras: None },
+                accessor: GltfAccessor {
+                    buffer_view: Some(0),
+                    byte_offset: 4,
+                    component_type: crate::artifacts::gltf::engine::GltfComponentType::Float,
+                    normalized: true,
+                    count: 9,
+                    kind: crate::artifacts::gltf::engine::GltfAccessorType::Vec3,
+                    max: Some(vec![1.0]),
+                    min: Some(vec![-1.0]),
+                    sparse: None,
+                    name: None,
+                    extensions: None,
+                    extras: None,
+                },
             },
-
             GltfMutation::InsertMaterial { index: 0, material: GltfMaterial { name: Some("mat".into()), double_sided: true, ..GltfMaterial::default() } },
             GltfMutation::RemoveMaterial { index: 0 },
             GltfMutation::SetMaterial { index: 0, material: GltfMaterial { double_sided: true, ..GltfMaterial::default() } },
-
             GltfMutation::InsertBuffer { index: 0, buffer: GltfBuffer { byte_length: 2, uri: Some("data:...".into()), name: None, extensions: None, extras: None }, bytes: vec![7, 8] },
             GltfMutation::RemoveBuffer { index: 0 },
             GltfMutation::SetBuffer { index: 0, buffer: GltfBuffer { byte_length: 8, uri: None, name: None, extensions: None, extras: None }, bytes: vec![1, 2, 3, 4, 5, 6, 7, 8] },
-
             GltfMutation::InsertAnimation { index: 0, animation: GltfAnimation { name: Some("a".into()), ..GltfAnimation::default() } },
             GltfMutation::RemoveAnimation { index: 0 },
             GltfMutation::SetAnimation { index: 0, animation: GltfAnimation { name: Some("renamed-anim".into()), ..GltfAnimation::default() } },

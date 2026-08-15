@@ -1,9 +1,7 @@
 //! 🧬️ SvgSnapshot schema — persistent fields + real codecs.
 
 use crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA;
-use crate::artifacts::xml::schema::snapshot::{
-    xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode,
-};
+use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -21,19 +19,7 @@ pub struct SvgSnapshot {
 
 impl Default for SvgSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_SVG_DOCUMENT_SCHEMA.into(),
-            doc: XmlDocument {
-                root: Some(XmlNode::Element {
-                    name: "svg".into(),
-                    attrs: Vec::new(),
-                    children: Vec::new(),
-                }),
-                doctype: None,
-                declaration: None,
-                prolog: Vec::new(),
-            },
-        }
+        Self { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(XmlNode::Element { name: "svg".into(), attrs: Vec::new(), children: Vec::new() }), doctype: None, declaration: None, prolog: Vec::new() } }
     }
 }
 //#endregion 🔖️Snapshot
@@ -64,10 +50,7 @@ impl SvgSnapshot {
     /// 📥️ Parses SVG UTF-8 into its lossless logical XML model.
     pub fn import_utf8(bytes: &[u8]) -> Result<Self, String> {
         let text = std::str::from_utf8(bytes).map_err(|error| format!("svg source is not UTF-8: {error}"))?;
-        Ok(Self {
-            schema: STDIO_SVG_DOCUMENT_SCHEMA.into(),
-            doc: parse_svg_xml(text)?,
-        })
+        Ok(Self { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: parse_svg_xml(text)? })
     }
 
     /// 📤️ Deterministically materializes SVG from the logical XML model.
@@ -152,8 +135,14 @@ impl<'a> NumCursor<'a> {
     fn parse_flag(&mut self) -> Result<bool, String> {
         self.skip_wsp_comma();
         match self.peek() {
-            Some(b'0') => { self.pos += 1; Ok(false) }
-            Some(b'1') => { self.pos += 1; Ok(true) }
+            Some(b'0') => {
+                self.pos += 1;
+                Ok(false)
+            }
+            Some(b'1') => {
+                self.pos += 1;
+                Ok(true)
+            }
             other => Err(format!("expected arc flag (0/1), got {other:?} at byte {}", self.pos)),
         }
     }
@@ -251,12 +240,35 @@ impl Matrix2D {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "camelCase")]
 pub enum TransformOp {
-    Matrix { a: f64, b: f64, c: f64, d: f64, e: f64, f: f64 },
-    Translate { x: f64, #[serde(default, skip_serializing_if = "Option::is_none")] y: Option<f64> },
-    Scale { x: f64, #[serde(default, skip_serializing_if = "Option::is_none")] y: Option<f64> },
-    Rotate { angle: f64, #[serde(default, skip_serializing_if = "Option::is_none")] center: Option<(f64, f64)> },
-    SkewX { angle: f64 },
-    SkewY { angle: f64 },
+    Matrix {
+        a: f64,
+        b: f64,
+        c: f64,
+        d: f64,
+        e: f64,
+        f: f64,
+    },
+    Translate {
+        x: f64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        y: Option<f64>,
+    },
+    Scale {
+        x: f64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        y: Option<f64>,
+    },
+    Rotate {
+        angle: f64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        center: Option<(f64, f64)>,
+    },
+    SkewX {
+        angle: f64,
+    },
+    SkewY {
+        angle: f64,
+    },
 }
 
 impl TransformOp {
@@ -488,7 +500,11 @@ pub fn parse_path_data(d: &str) -> Result<Vec<PathCommand>, String> {
 
 pub fn path_data_to_string(cmds: &[PathCommand]) -> String {
     fn letter(base: char, relative: bool) -> char {
-        if relative { base.to_ascii_lowercase() } else { base }
+        if relative {
+            base.to_ascii_lowercase()
+        } else {
+            base
+        }
     }
     let mut parts = Vec::with_capacity(cmds.len());
     for cmd in cmds {
@@ -503,10 +519,9 @@ pub fn path_data_to_string(cmds: &[PathCommand]) -> String {
             PathCommand::SmoothCurveTo { x2, y2, x, y, relative } => format!("{} {} {} {} {}", letter('S', *relative), fmt_num(*x2), fmt_num(*y2), fmt_num(*x), fmt_num(*y)),
             PathCommand::QuadraticCurveTo { x1, y1, x, y, relative } => format!("{} {} {} {} {}", letter('Q', *relative), fmt_num(*x1), fmt_num(*y1), fmt_num(*x), fmt_num(*y)),
             PathCommand::SmoothQuadraticCurveTo { x, y, relative } => format!("{} {} {}", letter('T', *relative), fmt_num(*x), fmt_num(*y)),
-            PathCommand::Arc { rx, ry, x_axis_rotation, large_arc, sweep, x, y, relative } => format!(
-                "{} {} {} {} {} {} {} {}",
-                letter('A', *relative), fmt_num(*rx), fmt_num(*ry), fmt_num(*x_axis_rotation), *large_arc as u8, *sweep as u8, fmt_num(*x), fmt_num(*y)
-            ),
+            PathCommand::Arc { rx, ry, x_axis_rotation, large_arc, sweep, x, y, relative } => {
+                format!("{} {} {} {} {} {} {} {}", letter('A', *relative), fmt_num(*rx), fmt_num(*ry), fmt_num(*x_axis_rotation), *large_arc as u8, *sweep as u8, fmt_num(*x), fmt_num(*y))
+            }
             PathCommand::ClosePath => "Z".to_string(),
         });
     }
@@ -523,15 +538,24 @@ pub fn path_data_to_string(cmds: &[PathCommand]) -> String {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PresentationAttrs {
-    #[serde(default, skip_serializing_if = "Option::is_none")] pub fill: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")] pub stroke: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")] pub stroke_width: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")] pub opacity: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")] pub fill_opacity: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")] pub stroke_opacity: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")] pub font_family: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")] pub font_size: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")] pub extra_style: Vec<(String, String)>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fill: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stroke: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stroke_width: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub opacity: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fill_opacity: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stroke_opacity: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub font_family: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub font_size: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub extra_style: Vec<(String, String)>,
 }
 
 /// 🧩 Real `key: value; key2: value2` parsing (declaration-list split on `;`, each split on the
@@ -599,11 +623,16 @@ fn push_presentation_attrs(attrs: &mut Vec<XmlAttr>, p: &PresentationAttrs) {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CommonAttrs {
-    #[serde(default, skip_serializing_if = "Option::is_none")] pub id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")] pub class: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")] pub transform: Option<Vec<TransformOp>>,
-    #[serde(default)] pub presentation: PresentationAttrs,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")] pub extra_attrs: Vec<XmlAttr>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub transform: Option<Vec<TransformOp>>,
+    #[serde(default)]
+    pub presentation: PresentationAttrs,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub extra_attrs: Vec<XmlAttr>,
 }
 
 impl CommonAttrs {
@@ -725,11 +754,16 @@ fn local_name(name: &str) -> &str {
 pub enum SvgElement {
     Svg {
         common: CommonAttrs,
-        #[serde(default, skip_serializing_if = "Option::is_none")] view_box: Option<ViewBox>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] width: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] height: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] xmlns: Option<String>,
-        #[serde(default)] children: Vec<SvgElement>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        view_box: Option<ViewBox>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        width: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        height: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        xmlns: Option<String>,
+        #[serde(default)]
+        children: Vec<SvgElement>,
     },
     Rect {
         common: CommonAttrs,
@@ -737,68 +771,138 @@ pub enum SvgElement {
         y: f64,
         width: f64,
         height: f64,
-        #[serde(default, skip_serializing_if = "Option::is_none")] rx: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] ry: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        rx: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        ry: Option<f64>,
     },
-    Circle { common: CommonAttrs, cx: f64, cy: f64, r: f64 },
-    Ellipse { common: CommonAttrs, cx: f64, cy: f64, rx: f64, ry: f64 },
-    Line { common: CommonAttrs, x1: f64, y1: f64, x2: f64, y2: f64 },
-    Polyline { common: CommonAttrs, points: Vec<(f64, f64)> },
-    Polygon { common: CommonAttrs, points: Vec<(f64, f64)> },
-    Path { common: CommonAttrs, d: Vec<PathCommand> },
-    Group { common: CommonAttrs, #[serde(default)] children: Vec<SvgElement> },
+    Circle {
+        common: CommonAttrs,
+        cx: f64,
+        cy: f64,
+        r: f64,
+    },
+    Ellipse {
+        common: CommonAttrs,
+        cx: f64,
+        cy: f64,
+        rx: f64,
+        ry: f64,
+    },
+    Line {
+        common: CommonAttrs,
+        x1: f64,
+        y1: f64,
+        x2: f64,
+        y2: f64,
+    },
+    Polyline {
+        common: CommonAttrs,
+        points: Vec<(f64, f64)>,
+    },
+    Polygon {
+        common: CommonAttrs,
+        points: Vec<(f64, f64)>,
+    },
+    Path {
+        common: CommonAttrs,
+        d: Vec<PathCommand>,
+    },
+    Group {
+        common: CommonAttrs,
+        #[serde(default)]
+        children: Vec<SvgElement>,
+    },
     Text {
         common: CommonAttrs,
-        #[serde(default, skip_serializing_if = "Option::is_none")] x: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] y: Option<f64>,
-        #[serde(default)] children: Vec<SvgElement>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        x: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        y: Option<f64>,
+        #[serde(default)]
+        children: Vec<SvgElement>,
     },
     Tspan {
         common: CommonAttrs,
-        #[serde(default, skip_serializing_if = "Option::is_none")] x: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] y: Option<f64>,
-        #[serde(default)] children: Vec<SvgElement>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        x: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        y: Option<f64>,
+        #[serde(default)]
+        children: Vec<SvgElement>,
     },
-    Defs { common: CommonAttrs, #[serde(default)] children: Vec<SvgElement> },
+    Defs {
+        common: CommonAttrs,
+        #[serde(default)]
+        children: Vec<SvgElement>,
+    },
     LinearGradient {
         common: CommonAttrs,
-        #[serde(default, skip_serializing_if = "Option::is_none")] id: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] x1: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] y1: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] x2: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] y2: Option<String>,
-        #[serde(default)] children: Vec<SvgElement>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        x1: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        y1: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        x2: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        y2: Option<String>,
+        #[serde(default)]
+        children: Vec<SvgElement>,
     },
     RadialGradient {
         common: CommonAttrs,
-        #[serde(default, skip_serializing_if = "Option::is_none")] id: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] cx: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] cy: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] r: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] fx: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] fy: Option<String>,
-        #[serde(default)] children: Vec<SvgElement>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        cx: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        cy: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        r: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        fx: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        fy: Option<String>,
+        #[serde(default)]
+        children: Vec<SvgElement>,
     },
     Stop {
         common: CommonAttrs,
         offset: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")] stop_color: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] stop_opacity: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        stop_color: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        stop_opacity: Option<String>,
     },
     Use {
         common: CommonAttrs,
         href: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")] x: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] y: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] width: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")] height: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        x: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        y: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        width: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        height: Option<f64>,
     },
     /// 🚪 Escape hatch: any element name outside the typed set above, kept byte-for-byte.
-    Unknown { name: String, #[serde(default)] attrs: Vec<XmlAttr>, #[serde(default)] children: Vec<SvgElement> },
+    Unknown {
+        name: String,
+        #[serde(default)]
+        attrs: Vec<XmlAttr>,
+        #[serde(default)]
+        children: Vec<SvgElement>,
+    },
     TextNode(String),
     CData(String),
     Comment(String),
-    ProcessingInstruction { target: String, data: String },
+    ProcessingInstruction {
+        target: String,
+        data: String,
+    },
 }
 
 fn convert_children(children: &[XmlNode]) -> Result<Vec<SvgElement>, String> {
@@ -821,14 +925,7 @@ pub fn svg_element_from_xml_node(node: &XmlNode) -> Result<SvgElement, String> {
                     Some(v) => Some(parse_view_box(v)?),
                     None => None,
                 };
-                Ok(SvgElement::Svg {
-                    common,
-                    view_box,
-                    width: attr_string_opt(attrs, "width"),
-                    height: attr_string_opt(attrs, "height"),
-                    xmlns: attr_string_opt(attrs, "xmlns"),
-                    children: convert_children(children)?,
-                })
+                Ok(SvgElement::Svg { common, view_box, width: attr_string_opt(attrs, "width"), height: attr_string_opt(attrs, "height"), xmlns: attr_string_opt(attrs, "xmlns"), children: convert_children(children)? })
             }
             "rect" => {
                 let common = parse_common_attrs(attrs, &["x", "y", "width", "height", "rx", "ry"]);
@@ -848,37 +945,34 @@ pub fn svg_element_from_xml_node(node: &XmlNode) -> Result<SvgElement, String> {
             }
             "ellipse" => {
                 let common = parse_common_attrs(attrs, &["cx", "cy", "rx", "ry"]);
-                Ok(SvgElement::Ellipse {
-                    common,
-                    cx: attr_f64(attrs, "cx", 0.0)?,
-                    cy: attr_f64(attrs, "cy", 0.0)?,
-                    rx: attr_f64(attrs, "rx", 0.0)?,
-                    ry: attr_f64(attrs, "ry", 0.0)?,
-                })
+                Ok(SvgElement::Ellipse { common, cx: attr_f64(attrs, "cx", 0.0)?, cy: attr_f64(attrs, "cy", 0.0)?, rx: attr_f64(attrs, "rx", 0.0)?, ry: attr_f64(attrs, "ry", 0.0)? })
             }
             "line" => {
                 let common = parse_common_attrs(attrs, &["x1", "y1", "x2", "y2"]);
-                Ok(SvgElement::Line {
-                    common,
-                    x1: attr_f64(attrs, "x1", 0.0)?,
-                    y1: attr_f64(attrs, "y1", 0.0)?,
-                    x2: attr_f64(attrs, "x2", 0.0)?,
-                    y2: attr_f64(attrs, "y2", 0.0)?,
-                })
+                Ok(SvgElement::Line { common, x1: attr_f64(attrs, "x1", 0.0)?, y1: attr_f64(attrs, "y1", 0.0)?, x2: attr_f64(attrs, "x2", 0.0)?, y2: attr_f64(attrs, "y2", 0.0)? })
             }
             "polyline" => {
                 let common = parse_common_attrs(attrs, &["points"]);
-                let points = match attr_val(attrs, "points") { Some(v) => parse_points(v)?, None => Vec::new() };
+                let points = match attr_val(attrs, "points") {
+                    Some(v) => parse_points(v)?,
+                    None => Vec::new(),
+                };
                 Ok(SvgElement::Polyline { common, points })
             }
             "polygon" => {
                 let common = parse_common_attrs(attrs, &["points"]);
-                let points = match attr_val(attrs, "points") { Some(v) => parse_points(v)?, None => Vec::new() };
+                let points = match attr_val(attrs, "points") {
+                    Some(v) => parse_points(v)?,
+                    None => Vec::new(),
+                };
                 Ok(SvgElement::Polygon { common, points })
             }
             "path" => {
                 let common = parse_common_attrs(attrs, &["d"]);
-                let d = match attr_val(attrs, "d") { Some(v) => parse_path_data(v)?, None => Vec::new() };
+                let d = match attr_val(attrs, "d") {
+                    Some(v) => parse_path_data(v)?,
+                    None => Vec::new(),
+                };
                 Ok(SvgElement::Path { common, d })
             }
             "g" => Ok(SvgElement::Group { common: parse_common_attrs(attrs, &[]), children: convert_children(children)? }),
@@ -918,24 +1012,12 @@ pub fn svg_element_from_xml_node(node: &XmlNode) -> Result<SvgElement, String> {
             }
             "stop" => {
                 let common = parse_common_attrs(attrs, &["offset", "stop-color", "stop-opacity"]);
-                Ok(SvgElement::Stop {
-                    common,
-                    offset: attr_string_opt(attrs, "offset").unwrap_or_default(),
-                    stop_color: attr_string_opt(attrs, "stop-color"),
-                    stop_opacity: attr_string_opt(attrs, "stop-opacity"),
-                })
+                Ok(SvgElement::Stop { common, offset: attr_string_opt(attrs, "offset").unwrap_or_default(), stop_color: attr_string_opt(attrs, "stop-color"), stop_opacity: attr_string_opt(attrs, "stop-opacity") })
             }
             "use" => {
                 let common = parse_common_attrs(attrs, &["href", "xlink:href", "x", "y", "width", "height"]);
                 let href = attr_string_opt(attrs, "href").or_else(|| attr_string_opt(attrs, "xlink:href")).unwrap_or_default();
-                Ok(SvgElement::Use {
-                    common,
-                    href,
-                    x: attr_f64_opt(attrs, "x")?,
-                    y: attr_f64_opt(attrs, "y")?,
-                    width: attr_f64_opt(attrs, "width")?,
-                    height: attr_f64_opt(attrs, "height")?,
-                })
+                Ok(SvgElement::Use { common, href, x: attr_f64_opt(attrs, "x")?, y: attr_f64_opt(attrs, "y")?, width: attr_f64_opt(attrs, "width")?, height: attr_f64_opt(attrs, "height")? })
             }
             _ => Ok(SvgElement::Unknown { name: name.clone(), attrs: attrs.clone(), children: convert_children(children)? }),
         },
@@ -968,12 +1050,8 @@ pub fn svg_element_to_xml_node(el: &SvgElement) -> XmlNode {
             XmlNode::Element { name: "svg".into(), attrs, children: children.iter().map(svg_element_to_xml_node).collect() }
         }
         SvgElement::Rect { common, x, y, width, height, rx, ry } => {
-            let mut attrs = vec![
-                XmlAttr { name: "x".into(), value: fmt_num(*x) },
-                XmlAttr { name: "y".into(), value: fmt_num(*y) },
-                XmlAttr { name: "width".into(), value: fmt_num(*width) },
-                XmlAttr { name: "height".into(), value: fmt_num(*height) },
-            ];
+            let mut attrs =
+                vec![XmlAttr { name: "x".into(), value: fmt_num(*x) }, XmlAttr { name: "y".into(), value: fmt_num(*y) }, XmlAttr { name: "width".into(), value: fmt_num(*width) }, XmlAttr { name: "height".into(), value: fmt_num(*height) }];
             if let Some(rx) = rx {
                 attrs.push(XmlAttr { name: "rx".into(), value: fmt_num(*rx) });
             }
@@ -984,31 +1062,17 @@ pub fn svg_element_to_xml_node(el: &SvgElement) -> XmlNode {
             XmlNode::Element { name: "rect".into(), attrs, children: vec![] }
         }
         SvgElement::Circle { common, cx, cy, r } => {
-            let mut attrs = vec![
-                XmlAttr { name: "cx".into(), value: fmt_num(*cx) },
-                XmlAttr { name: "cy".into(), value: fmt_num(*cy) },
-                XmlAttr { name: "r".into(), value: fmt_num(*r) },
-            ];
+            let mut attrs = vec![XmlAttr { name: "cx".into(), value: fmt_num(*cx) }, XmlAttr { name: "cy".into(), value: fmt_num(*cy) }, XmlAttr { name: "r".into(), value: fmt_num(*r) }];
             push_common_attrs(&mut attrs, common);
             XmlNode::Element { name: "circle".into(), attrs, children: vec![] }
         }
         SvgElement::Ellipse { common, cx, cy, rx, ry } => {
-            let mut attrs = vec![
-                XmlAttr { name: "cx".into(), value: fmt_num(*cx) },
-                XmlAttr { name: "cy".into(), value: fmt_num(*cy) },
-                XmlAttr { name: "rx".into(), value: fmt_num(*rx) },
-                XmlAttr { name: "ry".into(), value: fmt_num(*ry) },
-            ];
+            let mut attrs = vec![XmlAttr { name: "cx".into(), value: fmt_num(*cx) }, XmlAttr { name: "cy".into(), value: fmt_num(*cy) }, XmlAttr { name: "rx".into(), value: fmt_num(*rx) }, XmlAttr { name: "ry".into(), value: fmt_num(*ry) }];
             push_common_attrs(&mut attrs, common);
             XmlNode::Element { name: "ellipse".into(), attrs, children: vec![] }
         }
         SvgElement::Line { common, x1, y1, x2, y2 } => {
-            let mut attrs = vec![
-                XmlAttr { name: "x1".into(), value: fmt_num(*x1) },
-                XmlAttr { name: "y1".into(), value: fmt_num(*y1) },
-                XmlAttr { name: "x2".into(), value: fmt_num(*x2) },
-                XmlAttr { name: "y2".into(), value: fmt_num(*y2) },
-            ];
+            let mut attrs = vec![XmlAttr { name: "x1".into(), value: fmt_num(*x1) }, XmlAttr { name: "y1".into(), value: fmt_num(*y1) }, XmlAttr { name: "x2".into(), value: fmt_num(*x2) }, XmlAttr { name: "y2".into(), value: fmt_num(*y2) }];
             push_common_attrs(&mut attrs, common);
             XmlNode::Element { name: "line".into(), attrs, children: vec![] }
         }
@@ -1130,9 +1194,7 @@ pub fn svg_element_to_xml_node(el: &SvgElement) -> XmlNode {
             push_common_attrs(&mut attrs, common);
             XmlNode::Element { name: "use".into(), attrs, children: vec![] }
         }
-        SvgElement::Unknown { name, attrs, children } => {
-            XmlNode::Element { name: name.clone(), attrs: attrs.clone(), children: children.iter().map(svg_element_to_xml_node).collect() }
-        }
+        SvgElement::Unknown { name, attrs, children } => XmlNode::Element { name: name.clone(), attrs: attrs.clone(), children: children.iter().map(svg_element_to_xml_node).collect() },
     }
 }
 
@@ -1143,7 +1205,7 @@ pub fn svg_document_to_typed(doc: &XmlDocument) -> Result<SvgElement, String> {
     }
 }
 
-pub fn typed_to_svg_document(root: &SvgElement, doctype: Option<String>) -> XmlDocument {
+pub fn typed_to_svg_document(root: &SvgElement, doctype: Option<crate::artifacts::xml::schema::snapshot::XmlDoctype>) -> XmlDocument {
     XmlDocument { root: Some(svg_element_to_xml_node(root)), doctype, declaration: None, prolog: Vec::new() }
 }
 //#endregion 🔖️TypedElementModel
@@ -1207,22 +1269,17 @@ pub fn set_element_attr(node: &mut XmlNode, name: &str, value: Option<String>) {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for SvgSnapshot {
     const EXTENSION: &'static str = "svg";
-    fn envelope_id() -> &'static str { "stdio.svg" }
+    fn envelope_id() -> &'static str {
+        "stdio.svg"
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        match store::semio_format::split_text_preamble(text) {
-            Ok((_, body)) => crate::artifacts::svg::schema::mutations::dec_svg_snapshot(body.trim())
-                .map_err(|e| store::TextError::new(format!("svg state parse: {e}"), dsl::TextSpan::at(1, 1))),
-            Err(_) => Self::import_utf8(text.as_bytes()).map_err(|e| store::TextError::new(format!("svg parse: {e}"), dsl::TextSpan::at(1, 1))),
-        }
+        let (_, body) = store::semio_format::split_text_preamble(text).map_err(|error| store::TextError::new(format!("svg state envelope: {error}"), dsl::TextSpan::at(1, 1)))?;
+        crate::artifacts::svg::schema::mutations::dec_svg_snapshot(body.trim()).map_err(|e| store::TextError::new(format!("svg state parse: {e}"), dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
         let body = crate::artifacts::svg::schema::mutations::enc_svg_snapshot(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -1232,35 +1289,27 @@ impl store::ArtifactDsl for SvgSnapshot {
 /// (`write_svg_xml`/`parse_svg_xml`, themselves `xml_document_to_text`/`xml_document_from_text`)
 /// verbatim, same treatment `📰xml`'s own `ArtifactPack` gives its restated XML text
 /// (`📰xml/…/📸️snapshot/🦀️component.rs`'s own P2-FG1 fix). Replaces the previous
-/// `serde_json::to_vec`/`from_slice` placeholder, which satisfied the trait but was a
-/// literal-JSON-payload-disguised-as-binary violation of `POLICY_STDIO_JSON_TRANSFER_BAN` (flagged
-/// by name in the P2-W0 recon report, `svg` row, "Yes — in scope").
+/// generic object-serialization placeholder, which satisfied the trait but did not describe the
+/// structured SVG state frame.
 impl store::ArtifactPack for SvgSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let mut raw = vec![1];
         crate::artifacts::svg::schema::mutations::enc_svg_snapshot_bin(self, &mut raw);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         let mut reader = store::ByteReader::new(&inner);
         let version = reader.read_u8().map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if version != 1 { return Err(store::PackError::Schema(format!("unsupported svg snapshot state version {version}"))); }
+        if version != 1 {
+            return Err(store::PackError::Schema(format!("unsupported svg snapshot state version {version}")));
+        }
         crate::artifacts::svg::schema::mutations::dec_svg_snapshot_bin(&mut reader).map_err(store::PackError::Schema)
     }
 }
@@ -1271,18 +1320,62 @@ impl store::ArtifactPack for SvgSnapshot {
 mod tests {
     use super::*;
 
+    #[test]
+    fn schema_facets_reject_source_and_raw_doctype_shadow_state() {
+        let facets = [
+            include_str!("🦀️component.rs"),
+            include_str!("🟦️component.ts"),
+            include_str!("🔣️component.json"),
+            include_str!("📝️text/🔗️component.graphql"),
+            include_str!("📝️text/🛰️component.proto"),
+            include_str!("../🔺️diff/📝️text/📖️component.grammar.semio"),
+            include_str!("../🔺️diff/💾️binary/📡️component.protocol.semio"),
+            include_str!("../🧬️mutations/📝️text/📖️component.grammar.semio"),
+            include_str!("../🧬️mutations/💾️binary/📡️component.protocol.semio"),
+        ];
+        for facet in facets {
+            for forbidden in [concat!("pub doctype: Option<", "String>"), concat!("raw ", "doctype"), concat!("source-", "field"), concat!("source-", "tok"), concat!("artifact-", "source"), concat!("semantic-", "blake3")] {
+                assert!(!facet.to_ascii_lowercase().contains(&forbidden.to_ascii_lowercase()), "forbidden SVG shadow-state facet: {forbidden}");
+            }
+        }
+
+        let persistence_facets = [
+            include_str!("../🔺️diff/📝️text/🔤️component.ebnf"),
+            include_str!("../🔺️diff/📝️text/🅰️component.g4"),
+            include_str!("../🔺️diff/📝️text/🔗️component.graphql"),
+            include_str!("../🔺️diff/📝️text/🔣️component.json"),
+            include_str!("../🔺️diff/📝️text/🛰️component.proto"),
+            include_str!("../🔺️diff/📝️text/🟦️component.ts"),
+            include_str!("../🔺️diff/💾️binary/🌶️component.spicy"),
+            include_str!("../🔺️diff/💾️binary/🥋️component.ksy"),
+            include_str!("../🔺️diff/💾️binary/🔠️component.abnf"),
+            include_str!("../🔺️diff/💾️binary/🟦️component.ts"),
+            include_str!("../🧬️mutations/📝️text/🔤️component.ebnf"),
+            include_str!("../🧬️mutations/📝️text/🅰️component.g4"),
+            include_str!("../🧬️mutations/📝️text/🔗️component.graphql"),
+            include_str!("../🧬️mutations/📝️text/🔣️component.json"),
+            include_str!("../🧬️mutations/📝️text/🛰️component.proto"),
+            include_str!("../🧬️mutations/📝️text/🟦️component.ts"),
+            include_str!("../🧬️mutations/💾️binary/🌶️component.spicy"),
+            include_str!("../🧬️mutations/💾️binary/🥋️component.ksy"),
+            include_str!("../🧬️mutations/💾️binary/🔠️component.abnf"),
+            include_str!("../🧬️mutations/💾️binary/🟦️component.ts"),
+        ];
+        for facet in persistence_facets {
+            assert!(!facet.to_ascii_lowercase().contains("json"), "SVG diff/mutation persistence facet must describe the structured codec");
+        }
+    }
+
+    #[test]
+    fn artifact_dsl_rejects_native_svg_without_a_semio_envelope() {
+        assert!(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(r#"<svg xmlns="http://www.w3.org/2000/svg"/>"#).is_err());
+    }
+
     //#region PathGrammar
     #[test]
     fn path_implicit_lineto_repetition_after_moveto() {
         let cmds = parse_path_data("M 0 0 10 10 20 20").unwrap();
-        assert_eq!(
-            cmds,
-            vec![
-                PathCommand::MoveTo { x: 0.0, y: 0.0, relative: false },
-                PathCommand::LineTo { x: 10.0, y: 10.0, relative: false },
-                PathCommand::LineTo { x: 20.0, y: 20.0, relative: false },
-            ]
-        );
+        assert_eq!(cmds, vec![PathCommand::MoveTo { x: 0.0, y: 0.0, relative: false }, PathCommand::LineTo { x: 10.0, y: 10.0, relative: false }, PathCommand::LineTo { x: 20.0, y: 20.0, relative: false },]);
     }
 
     #[test]
@@ -1302,15 +1395,7 @@ mod tests {
     #[test]
     fn path_relative_and_close() {
         let cmds = parse_path_data("m0,0 10,0 0,10z").unwrap();
-        assert_eq!(
-            cmds,
-            vec![
-                PathCommand::MoveTo { x: 0.0, y: 0.0, relative: true },
-                PathCommand::LineTo { x: 10.0, y: 0.0, relative: true },
-                PathCommand::LineTo { x: 0.0, y: 10.0, relative: true },
-                PathCommand::ClosePath,
-            ]
-        );
+        assert_eq!(cmds, vec![PathCommand::MoveTo { x: 0.0, y: 0.0, relative: true }, PathCommand::LineTo { x: 10.0, y: 0.0, relative: true }, PathCommand::LineTo { x: 0.0, y: 10.0, relative: true }, PathCommand::ClosePath,]);
     }
 
     #[test]

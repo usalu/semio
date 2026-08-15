@@ -89,8 +89,12 @@ impl protocol::OpText for PdfMutation {
 }
 
 impl protocol::OpBinary for PdfMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { dsl::variants_binary::encode_op(self) }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> { dsl::variants_binary::decode_op(bytes) }
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
 }
 //#endregion OpCodecs
 
@@ -110,10 +114,7 @@ mod tests {
     #[test]
     fn mutation_diff_law_matches_apply_pdf_mutation() {
         let base = snap(612.0, 792.0, "base");
-        let cases = vec![
-            PdfMutation::NoMutation,
-            PdfMutation::SetSnapshot { snapshot: snap(300.0, 400.0, "next") },
-        ];
+        let cases = vec![PdfMutation::NoMutation, PdfMutation::SetSnapshot { snapshot: snap(300.0, 400.0, "next") }];
         for m in cases {
             let mut s = base.clone();
             let returned_diff = apply_pdf_mutation(&mut s, &m);
@@ -148,10 +149,7 @@ mod tests {
     #[test]
     fn op_text_binary_roundtrip_law() {
         use protocol::{OpBinary, OpText};
-        let cases = vec![
-            PdfMutation::NoMutation,
-            PdfMutation::SetSnapshot { snapshot: snap(300.5, 400.25, "hello world") },
-        ];
+        let cases = vec![PdfMutation::NoMutation, PdfMutation::SetSnapshot { snapshot: snap(300.5, 400.25, "hello world") }];
         for m in cases {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must not contain a newline: {printed:?}");

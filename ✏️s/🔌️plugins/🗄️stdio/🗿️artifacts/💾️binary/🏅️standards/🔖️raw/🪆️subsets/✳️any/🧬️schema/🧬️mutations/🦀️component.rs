@@ -1,7 +1,7 @@
 //! 🧬️ BinaryMutation — document mutation dispatch. Every variant's `diff()`/`inverse()` is
 //! handcrafted directly against `BinaryDiff`/`ByteSplice` -- no apply-and-capture.
 
-use crate::artifacts::binary::schema::diff::{diff_set_snapshot, ByteSplice, BinaryDiff};
+use crate::artifacts::binary::schema::diff::{diff_set_snapshot, BinaryDiff, ByteSplice};
 use crate::artifacts::binary::BinarySnapshot;
 use protocol::Mutation;
 #[cfg(test)]
@@ -58,12 +58,8 @@ impl Mutation<BinarySnapshot> for BinaryMutation {
         match self {
             BinaryMutation::NoMutation => BinaryDiff::default(),
             BinaryMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-            BinaryMutation::Splice { offset, remove_len, insert } => {
-                BinaryDiff { splices: vec![ByteSplice { offset: *offset, remove_len: *remove_len, insert: insert.clone() }] }
-            }
-            BinaryMutation::AppendBytes { data } => {
-                BinaryDiff { splices: vec![ByteSplice { offset: base.bytes.len(), remove_len: 0, insert: data.clone() }] }
-            }
+            BinaryMutation::Splice { offset, remove_len, insert } => BinaryDiff { splices: vec![ByteSplice { offset: *offset, remove_len: *remove_len, insert: insert.clone() }] },
+            BinaryMutation::AppendBytes { data } => BinaryDiff { splices: vec![ByteSplice { offset: base.bytes.len(), remove_len: 0, insert: data.clone() }] },
             BinaryMutation::TruncateAt { offset } => {
                 if *offset >= base.bytes.len() {
                     BinaryDiff::default()
@@ -157,8 +153,8 @@ pub(crate) fn demo_mutation_cases() -> Vec<BinaryMutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::MutationDiff;
     use protocol::os_spr::command::DiffAlgebra;
+    use protocol::MutationDiff;
 
     pub(crate) fn base() -> BinarySnapshot {
         BinarySnapshot { bytes: vec![1, 2, 3, 4, 5], ..Default::default() }

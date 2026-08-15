@@ -4,8 +4,8 @@
 //! `rootKind` names the root value's own kind (`"object"`/`"array"`/`"string"`/`"number"`/
 //! `"bool"`/`"null"`).
 
-use crate::artifacts::json::JsonSnapshot;
 use crate::artifacts::json::schema::snapshot::JsonValue;
+use crate::artifacts::json::JsonSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
@@ -75,12 +75,7 @@ mod tests {
     fn counts_nodes_and_depth_over_nested_structure() {
         let snapshot = JsonSnapshot {
             schema: "stdio.json".into(),
-            value: JsonValue::Object {
-                members: vec![JsonMember {
-                    key: "a".into(),
-                    value: JsonValue::Array { items: vec![JsonValue::Number { lexeme: "1".into() }, JsonValue::Number { lexeme: "2".into() }] },
-                }],
-            },
+            value: JsonValue::Object { members: vec![JsonMember { key: "a".into(), value: JsonValue::Array { items: vec![JsonValue::Number { lexeme: "1".into() }, JsonValue::Number { lexeme: "2".into() }] } }] },
         };
         let outline = JsonOutline::compute(&snapshot);
         // root object(1) + array(1) + two numbers(2) = 4 nodes; depth: object(1) -> array(2) -> number(3)

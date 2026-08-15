@@ -1,14 +1,2 @@
-/** 💡️ Dwg (ac1018) inference schema — structural byte/section statistics over the undecoded raw
- * payload (no geometric entities are decoded at this standard). */
-
-export interface DwgStructure {
-  byteCount: number;
-  sectionCount: number;
-  codepage: number;
-  version: string;
-}
-
-export interface DwgInference {
-  /** @derived */
-  structure: DwgStructure;
-}
+export interface DwgStructure { layerCount: number; entityCount: number; geometryValueCount: number; geometryIndexCount: number; textCharacterCount: number; codepage: number; version: string; }
+export interface DwgInference { structure: DwgStructure; }

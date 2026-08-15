@@ -2,14 +2,13 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::tiff::TiffSnapshot;
     use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::TiffAnalyzer;
+    use crate::artifacts::tiff::TiffSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
-
 
     pub struct TiffComposerComposition;
 
@@ -38,10 +37,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "TiffComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = TiffAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "TiffComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "TiffComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -73,9 +69,8 @@ pub use derived_composition::*;
 // zero real callers) were deleted outright. `empty_tiff_snapshot`/`demo_tiff_snapshot` moved to
 // `../🧬️schema`.
 use crate::artifacts::tiff::schema::snapshot::{
-    TiffByteOrder, TiffFieldType, TiffIfd, TiffSnapshot, TiffTag, TiffValues, TAG_BITS_PER_SAMPLE,
-    TAG_COMPRESSION, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_ROWS_PER_STRIP,
-    TAG_SAMPLES_PER_PIXEL, TAG_STRIP_BYTE_COUNTS, TAG_STRIP_OFFSETS,
+    TiffByteOrder, TiffFieldType, TiffIfd, TiffSnapshot, TiffTag, TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_ROWS_PER_STRIP, TAG_SAMPLES_PER_PIXEL, TAG_STRIP_BYTE_COUNTS,
+    TAG_STRIP_OFFSETS,
 };
 use crate::artifacts::tiff::STDIO_TIFF_DOCUMENT_SCHEMA;
 
@@ -215,16 +210,12 @@ fn read_tag_values(data: &[u8], entry: &RawEntry, e: Endian, kind: TiffFieldType
         }
         TiffFieldType::Short => TiffValues::Short((0..count).map(|i| e.u16(&src[i * 2..i * 2 + 2])).collect()),
         TiffFieldType::Long => TiffValues::Long((0..count).map(|i| e.u32(&src[i * 4..i * 4 + 4])).collect()),
-        TiffFieldType::Rational => TiffValues::Rational(
-            (0..count).map(|i| (e.u32(&src[i * 8..i * 8 + 4]), e.u32(&src[i * 8 + 4..i * 8 + 8]))).collect(),
-        ),
+        TiffFieldType::Rational => TiffValues::Rational((0..count).map(|i| (e.u32(&src[i * 8..i * 8 + 4]), e.u32(&src[i * 8 + 4..i * 8 + 8]))).collect()),
         TiffFieldType::SByte => TiffValues::SByte(src.iter().map(|&b| b as i8).collect()),
         TiffFieldType::Undefined => TiffValues::Undefined(src.to_vec()),
         TiffFieldType::SShort => TiffValues::SShort((0..count).map(|i| e.u16(&src[i * 2..i * 2 + 2]) as i16).collect()),
         TiffFieldType::SLong => TiffValues::SLong((0..count).map(|i| e.u32(&src[i * 4..i * 4 + 4]) as i32).collect()),
-        TiffFieldType::SRational => TiffValues::SRational(
-            (0..count).map(|i| (e.u32(&src[i * 8..i * 8 + 4]) as i32, e.u32(&src[i * 8 + 4..i * 8 + 8]) as i32)).collect(),
-        ),
+        TiffFieldType::SRational => TiffValues::SRational((0..count).map(|i| (e.u32(&src[i * 8..i * 8 + 4]) as i32, e.u32(&src[i * 8 + 4..i * 8 + 8]) as i32)).collect()),
         TiffFieldType::Float => TiffValues::Float((0..count).map(|i| f32::from_bits(e.u32(&src[i * 4..i * 4 + 4]))).collect()),
         TiffFieldType::Double => TiffValues::Double((0..count).map(|i| f64::from_bits(e.u64(&src[i * 8..i * 8 + 8]))).collect()),
     })
@@ -469,17 +460,7 @@ fn value_bytes(values: &TiffValues, bo: TiffByteOrder) -> Vec<u8> {
     out
 }
 
-const CORE_STRIP_TAGS: [u16; 9] = [
-    TAG_IMAGE_WIDTH,
-    TAG_IMAGE_LENGTH,
-    TAG_BITS_PER_SAMPLE,
-    TAG_COMPRESSION,
-    TAG_PHOTOMETRIC,
-    TAG_STRIP_OFFSETS,
-    TAG_SAMPLES_PER_PIXEL,
-    TAG_ROWS_PER_STRIP,
-    TAG_STRIP_BYTE_COUNTS,
-];
+const CORE_STRIP_TAGS: [u16; 9] = [TAG_IMAGE_WIDTH, TAG_IMAGE_LENGTH, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_PHOTOMETRIC, TAG_STRIP_OFFSETS, TAG_SAMPLES_PER_PIXEL, TAG_ROWS_PER_STRIP, TAG_STRIP_BYTE_COUNTS];
 
 fn dir_size(n: usize) -> usize {
     2 + 12 * n + 4
@@ -489,7 +470,11 @@ fn out_of_line_size(entries: &[TiffTag], bo: TiffByteOrder) -> usize {
         .iter()
         .map(|t| {
             let len = value_bytes(&t.values, bo).len();
-            if len <= 4 { 0 } else { len + (len % 2) }
+            if len <= 4 {
+                0
+            } else {
+                len + (len % 2)
+            }
         })
         .sum()
 }
@@ -508,11 +493,7 @@ fn encode_tiff_with(snap: &TiffSnapshot, packbits: bool) -> Result<Vec<u8>, Stri
     let strip_bytes = if packbits { packbits_encode(&rgb) } else { rgb };
     let compression: u32 = if packbits { 32773 } else { 1 };
 
-    let carried: Vec<TiffTag> = snap
-        .ifds
-        .first()
-        .map(|ifd| ifd.entries.iter().filter(|t| !CORE_STRIP_TAGS.contains(&t.tag)).cloned().collect())
-        .unwrap_or_default();
+    let carried: Vec<TiffTag> = snap.ifds.first().map(|ifd| ifd.entries.iter().filter(|t| !CORE_STRIP_TAGS.contains(&t.tag)).cloned().collect()).unwrap_or_default();
     let mut entries = carried;
     entries.push(TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![width]) });
     entries.push(TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![height]) });
@@ -602,12 +583,7 @@ mod tests {
     }
 
     fn ifd0_snapshot(width: u32, height: u32) -> TiffIfd {
-        TiffIfd {
-            entries: vec![
-                TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![width]) },
-                TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![height]) },
-            ],
-        }
+        TiffIfd { entries: vec![TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![width]) }, TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![height]) }] }
     }
 
     /// 🔬 Load-bearing regression: non-solid 9x5 checkerboard/gradient round-tripped through the
@@ -768,19 +744,11 @@ mod tests {
         /// clearer message).
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }
@@ -897,10 +865,10 @@ mod tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::TiffComposer as TiffRawAnyComposer;
     use crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::TiffBaselineComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 

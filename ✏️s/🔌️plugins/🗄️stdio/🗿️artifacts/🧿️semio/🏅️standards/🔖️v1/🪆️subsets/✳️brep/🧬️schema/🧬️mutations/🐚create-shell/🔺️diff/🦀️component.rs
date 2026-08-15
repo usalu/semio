@@ -11,9 +11,6 @@ pub fn diff(payload: &CreateShell, base: &SemioBrepSnapshot) -> SemioBrepDiff {
     if base.shells.iter().any(|x| x.id == payload.id) {
         return SemioBrepDiff::default();
     }
-    SemioBrepDiff {
-        shells: Some(NamedTripleDiff { removed: vec![], modified: vec![], added: vec![BrepShell { id: payload.id.clone(), faces: payload.faces.clone() }] }),
-        ..Default::default()
-    }
+    SemioBrepDiff { shells: Some(NamedTripleDiff { removed: vec![], modified: vec![], added: vec![BrepShell { id: payload.id.clone(), faces: payload.faces.clone() }] }), ..Default::default() }
 }
 //#endregion 🔖️Diff

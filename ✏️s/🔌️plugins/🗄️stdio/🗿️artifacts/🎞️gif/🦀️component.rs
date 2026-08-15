@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::gif::schema::snapshot::GifSnapshot;
-pub use crate::artifacts::gif::schema::GifArtifact;
 pub use crate::artifacts::gif::schema::diff::GifDiff;
 pub use crate::artifacts::gif::schema::mutations::GifMutation;
+pub use crate::artifacts::gif::schema::snapshot::GifSnapshot;
+pub use crate::artifacts::gif::schema::GifArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_GIF_DOCUMENT_SCHEMA: &str = "stdio.gif";
@@ -27,17 +27,17 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: STDIO_GIF_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::gif::standards::v87a::engine::io_registry as v87a;
     use crate::artifacts::gif::standards::v89a::engine::io_registry as v89a;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -51,10 +51,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("GifComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("GifComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

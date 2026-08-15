@@ -23,11 +23,9 @@ export type PptxShape =
   | { shapeKind: 'other'; node: XmlNode };
 export interface PptxSlide { shapes: PptxShape[] }
 export interface PptxPresentation { slides: PptxSlide[] }
-export interface PptxPhysicalState { archive: unknown; semanticBlake3: number[] }
 export interface PptxSnapshot {
   /** @state artifact */ schema: string;
   /** @state artifact */ opc: OpcPackage;
   /** @state artifact */ xmlParts: PptxXmlPart[];
   /** @state artifact */ presentation: PptxPresentation;
-  /** @state artifact */ physical?: PptxPhysicalState;
 }

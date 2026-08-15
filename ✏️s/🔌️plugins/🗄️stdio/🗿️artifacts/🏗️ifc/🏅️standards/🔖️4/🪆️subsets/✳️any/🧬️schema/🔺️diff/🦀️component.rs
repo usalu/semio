@@ -97,10 +97,7 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
             if merged_removed_base.binary_search(&base_index).is_ok() {
                 continue;
             }
-            modified_map
-                .entry(base_index)
-                .and_modify(|d| absorb_diff(d, dd2.clone()))
-                .or_insert(dd2);
+            modified_map.entry(base_index).and_modify(|d| absorb_diff(d, dd2.clone())).or_insert(dd2);
         }
     }
     let merged_modified: Vec<(usize, D)> = modified_map.into_iter().collect();
@@ -124,13 +121,7 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
 }
 
 /// ↩️ Diff-level inverse for an index-keyed collection triple, given the ORIGINAL base items.
-fn inverse_indexed_collection<T: Clone, D: Clone>(
-    removed: &[usize],
-    modified: &[(usize, D)],
-    added: &[(usize, T)],
-    base_items: &[T],
-    diff_inverse: impl Fn(&D, &T) -> D,
-) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
+fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
     let mut removed_sorted = removed.to_vec();
     removed_sorted.sort_unstable();
     let mut added_index_sorted: Vec<usize> = added.iter().map(|(i, _)| *i).collect();
@@ -192,10 +183,7 @@ impl IfcArgsDiff {
 
     pub fn between(base: &[IfcValue], other: &[IfcValue]) -> Self {
         let min = base.len().min(other.len());
-        let modified = (0..min)
-            .filter(|&i| base[i] != other[i])
-            .map(|i| IfcArgModified { index: i, value: other[i].clone() })
-            .collect();
+        let modified = (0..min).filter(|&i| base[i] != other[i]).map(|i| IfcArgModified { index: i, value: other[i].clone() }).collect();
         let removed: Vec<usize> = (min..base.len()).collect();
         let added: Vec<IfcArgAdded> = (min..other.len()).map(|i| IfcArgAdded { index: i, value: other[i].clone() }).collect();
         Self { removed, modified, added }
@@ -212,7 +200,9 @@ impl IfcArgsDiff {
         removed_sorted.sort_unstable();
         removed_sorted.reverse();
         for &r in &removed_sorted {
-            if r < next.len() { next.remove(r); }
+            if r < next.len() {
+                next.remove(r);
+            }
         }
         let mut out: Vec<IfcValue> = next.into_iter().flatten().collect();
         let mut added_sorted = self.added.clone();
@@ -241,18 +231,9 @@ impl IfcArgsDiff {
     }
 
     fn inverse(&self, base_args: &[IfcValue]) -> Self {
-        let (removed, modified, added) = inverse_indexed_collection(
-            &self.removed,
-            &self.modified.iter().map(|m| (m.index, m.value.clone())).collect::<Vec<_>>(),
-            &self.added.iter().map(|a| (a.index, a.value.clone())).collect::<Vec<_>>(),
-            base_args,
-            |_d, item| item.clone(),
-        );
-        Self {
-            removed,
-            modified: modified.into_iter().map(|(index, value)| IfcArgModified { index, value }).collect(),
-            added: added.into_iter().map(|(index, value)| IfcArgAdded { index, value }).collect(),
-        }
+        let (removed, modified, added) =
+            inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.value.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.value.clone())).collect::<Vec<_>>(), base_args, |_d, item| item.clone());
+        Self { removed, modified: modified.into_iter().map(|(index, value)| IfcArgModified { index, value }).collect(), added: added.into_iter().map(|(index, value)| IfcArgAdded { index, value }).collect() }
     }
 }
 //#endregion 🔖️ArgsDiff
@@ -279,37 +260,39 @@ impl IfcEntityDiff {
 
     pub fn between(base: &IfcEntity, other: &IfcEntity) -> Self {
         let args_diff = IfcArgsDiff::between(&base.args, &other.args);
-        Self {
-            name: (base.name != other.name).then(|| other.name.clone()),
-            args: (!args_diff.is_empty()).then_some(args_diff),
-            complex: (base.complex != other.complex).then(|| other.complex.clone()),
-        }
+        Self { name: (base.name != other.name).then(|| other.name.clone()), args: (!args_diff.is_empty()).then_some(args_diff), complex: (base.complex != other.complex).then(|| other.complex.clone()) }
     }
 
     pub fn apply(&self, base: &IfcEntity) -> IfcEntity {
         let mut next = base.clone();
-        if let Some(v) = &self.name { next.name = v.clone(); }
-        if let Some(d) = &self.args { next.args = d.apply(&next.args); }
-        if let Some(v) = &self.complex { next.complex = v.clone(); }
+        if let Some(v) = &self.name {
+            next.name = v.clone();
+        }
+        if let Some(d) = &self.args {
+            next.args = d.apply(&next.args);
+        }
+        if let Some(v) = &self.complex {
+            next.complex = v.clone();
+        }
         next
     }
 
     pub fn inverse(&self, base: &IfcEntity) -> Self {
-        Self {
-            name: self.name.as_ref().map(|_| base.name.clone()),
-            args: self.args.as_ref().map(|d| d.inverse(&base.args)),
-            complex: self.complex.as_ref().map(|_| base.complex.clone()),
-        }
+        Self { name: self.name.as_ref().map(|_| base.name.clone()), args: self.args.as_ref().map(|d| d.inverse(&base.args)), complex: self.complex.as_ref().map(|_| base.complex.clone()) }
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.name.is_some() { self.name = other.name; }
+        if other.name.is_some() {
+            self.name = other.name;
+        }
         match (&mut self.args, other.args) {
             (Some(mine), Some(theirs)) => mine.absorb(theirs),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
-        if other.complex.is_some() { self.complex = other.complex; }
+        if other.complex.is_some() {
+            self.complex = other.complex;
+        }
     }
 }
 //#endregion 🔖️EntityDiff
@@ -394,15 +377,14 @@ fn entities_between(base: &[IfcEntity], other: &[IfcEntity]) -> Option<IfcEntiti
         }
     }
 
-    let added: Vec<IfcEntityAdded> = other
-        .iter()
-        .enumerate()
-        .filter(|(_, e)| !base_ids.contains(&e.id))
-        .map(|(index, e)| IfcEntityAdded { index, entity: e.clone() })
-        .collect();
+    let added: Vec<IfcEntityAdded> = other.iter().enumerate().filter(|(_, e)| !base_ids.contains(&e.id)).map(|(index, e)| IfcEntityAdded { index, entity: e.clone() }).collect();
 
     let d = IfcEntitiesDiff { removed, modified, added };
-    if d.is_empty() { None } else { Some(d) }
+    if d.is_empty() {
+        None
+    } else {
+        Some(d)
+    }
 }
 
 /// ➕️ Structural, total, base-free sequential-coalesce absorb of the `entities` triple (`##
@@ -441,7 +423,10 @@ fn absorb_entities(d1: Option<IfcEntitiesDiff>, d2: Option<IfcEntitiesDiff>) -> 
         .added
         .into_iter()
         .filter(|a| !annihilated.contains(&a.entity.id))
-        .map(|mut a| { a.index = a.index.saturating_sub(removed_shift_count); a })
+        .map(|mut a| {
+            a.index = a.index.saturating_sub(removed_shift_count);
+            a
+        })
         .collect();
 
     for dm in d2.modified {
@@ -467,7 +452,11 @@ fn absorb_entities(d1: Option<IfcEntitiesDiff>, d2: Option<IfcEntitiesDiff>) -> 
     merged_added.extend(d2.added);
 
     let merged = IfcEntitiesDiff { removed: merged_removed, modified: merged_modified, added: merged_added };
-    if merged.is_empty() { None } else { Some(merged) }
+    if merged.is_empty() {
+        None
+    } else {
+        Some(merged)
+    }
 }
 //#endregion 🔖️EntitiesDiff
 
@@ -514,19 +503,33 @@ pub struct IfcDiff {
 impl MutationDiff<IfcSnapshot> for IfcDiff {
     fn apply(&self, base: &IfcSnapshot) -> IfcSnapshot {
         let mut next = base.clone();
-        if let Some(v) = &self.file_description { next.header.file_description = v.clone(); }
-        if let Some(v) = &self.file_name { next.header.file_name = v.clone(); }
-        if let Some(v) = &self.file_schema { next.header.file_schema = v.clone(); }
-        if let Some(d) = &self.entities { next.entities = d.apply(&next.entities); }
+        if let Some(v) = &self.file_description {
+            next.header.file_description = v.clone();
+        }
+        if let Some(v) = &self.file_name {
+            next.header.file_name = v.clone();
+        }
+        if let Some(v) = &self.file_schema {
+            next.header.file_schema = v.clone();
+        }
+        if let Some(d) = &self.entities {
+            next.entities = d.apply(&next.entities);
+        }
         next
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalars: LWW.
     /// `entities`: see [`absorb_entities`].
     fn absorb(&mut self, other: Self) {
-        if other.file_description.is_some() { self.file_description = other.file_description; }
-        if other.file_name.is_some() { self.file_name = other.file_name; }
-        if other.file_schema.is_some() { self.file_schema = other.file_schema; }
+        if other.file_description.is_some() {
+            self.file_description = other.file_description;
+        }
+        if other.file_name.is_some() {
+            self.file_name = other.file_name;
+        }
+        if other.file_schema.is_some() {
+            self.file_schema = other.file_schema;
+        }
         self.entities = absorb_entities(self.entities.take(), other.entities);
     }
 }
@@ -550,10 +553,7 @@ impl DiffAlgebra<IfcSnapshot> for IfcDiff {
     }
 
     fn is_empty(&self) -> bool {
-        self.file_description.is_none()
-            && self.file_name.is_none()
-            && self.file_schema.is_none()
-            && self.entities.as_ref().map_or(true, IfcEntitiesDiff::is_empty)
+        self.file_description.is_none() && self.file_name.is_none() && self.file_schema.is_none() && self.entities.as_ref().map_or(true, IfcEntitiesDiff::is_empty)
     }
 }
 
@@ -692,10 +692,7 @@ pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl 
         }
     }
 }
-pub(crate) fn read_option_bin<T>(
-    reader: &mut store::ByteReader<'_>,
-    dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>,
-) -> Result<Option<T>, String> {
+pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(dec(reader)?)),
@@ -934,14 +931,22 @@ fn dec_args_diff(body: &str) -> Result<IfcArgsDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("args diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("arg modified: bad entry {entry:?}"))?;
-        Ok(IfcArgModified { index: parse_usize(idx)?, value: dec_ifc_value(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("arg added: bad entry {entry:?}"))?;
-        Ok(IfcArgAdded { index: parse_usize(idx)?, value: dec_ifc_value(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("arg modified: bad entry {entry:?}"))?;
+            Ok(IfcArgModified { index: parse_usize(idx)?, value: dec_ifc_value(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("arg added: bad entry {entry:?}"))?;
+            Ok(IfcArgAdded { index: parse_usize(idx)?, value: dec_ifc_value(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok(IfcArgsDiff { removed, modified, added })
 }
 
@@ -950,8 +955,14 @@ fn enc_entity_diff(d: &IfcEntityDiff) -> String {
     format!(
         "[{},{},{}]",
         encode_option(&d.name, |v| enc_str(v)),
-        match &d.args { Some(a) => format!("[1,{}]", enc_args_diff(a)), None => "[0]".to_string() },
-        match &d.complex { Some(c) => format!("[1,{}]", enc_complex_list(c)), None => "[0]".to_string() },
+        match &d.args {
+            Some(a) => format!("[1,{}]", enc_args_diff(a)),
+            None => "[0]".to_string(),
+        },
+        match &d.complex {
+            Some(c) => format!("[1,{}]", enc_complex_list(c)),
+            None => "[0]".to_string(),
+        },
     )
 }
 fn dec_entity_diff(s: &str) -> Result<IfcEntityDiff, String> {
@@ -980,14 +991,22 @@ fn dec_entities_diff(body: &str) -> Result<IfcEntitiesDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("entities diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u64).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (id, rest) = entry.split_once(':').ok_or_else(|| format!("entity modified: bad entry {entry:?}"))?;
-        Ok(IfcEntityModified { id: parse_u64(id)?, diff: dec_entity_diff(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("entity added: bad entry {entry:?}"))?;
-        Ok(IfcEntityAdded { index: parse_usize(idx)?, entity: dec_entity(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (id, rest) = entry.split_once(':').ok_or_else(|| format!("entity modified: bad entry {entry:?}"))?;
+            Ok(IfcEntityModified { id: parse_u64(id)?, diff: dec_entity_diff(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("entity added: bad entry {entry:?}"))?;
+            Ok(IfcEntityAdded { index: parse_usize(idx)?, entity: dec_entity(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok(IfcEntitiesDiff { removed, modified, added })
 }
 //#endregion 🔖️DiffValueCodecs
@@ -1093,10 +1112,18 @@ fn dec_entities_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcEntiti
 //#region 🔖️TopLevel
 fn print_ifc_diff(d: &IfcDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.file_description { tokens.push(format!("file-description={}", enc_ifc_value_list(v))); }
-    if let Some(v) = &d.file_name { tokens.push(format!("file-name={}", enc_ifc_value_list(v))); }
-    if let Some(v) = &d.file_schema { tokens.push(format!("file-schema={}", enc_ifc_value_list(v))); }
-    if let Some(v) = &d.entities { tokens.push(format!("entities={}", enc_entities_diff(v))); }
+    if let Some(v) = &d.file_description {
+        tokens.push(format!("file-description={}", enc_ifc_value_list(v)));
+    }
+    if let Some(v) = &d.file_name {
+        tokens.push(format!("file-name={}", enc_ifc_value_list(v)));
+    }
+    if let Some(v) = &d.file_schema {
+        tokens.push(format!("file-schema={}", enc_ifc_value_list(v)));
+    }
+    if let Some(v) = &d.entities {
+        tokens.push(format!("entities={}", enc_entities_diff(v)));
+    }
     tokens.join(" ")
 }
 fn parse_ifc_diff(line: &str) -> Result<IfcDiff, String> {
@@ -1105,11 +1132,17 @@ fn parse_ifc_diff(line: &str) -> Result<IfcDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("file-description=") { d.file_description = Some(dec_ifc_value_list(rest)?); }
-        else if let Some(rest) = token.strip_prefix("file-name=") { d.file_name = Some(dec_ifc_value_list(rest)?); }
-        else if let Some(rest) = token.strip_prefix("file-schema=") { d.file_schema = Some(dec_ifc_value_list(rest)?); }
-        else if let Some(rest) = token.strip_prefix("entities=") { d.entities = Some(dec_entities_diff(rest)?); }
-        else { return Err(format!("ifc diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("file-description=") {
+            d.file_description = Some(dec_ifc_value_list(rest)?);
+        } else if let Some(rest) = token.strip_prefix("file-name=") {
+            d.file_name = Some(dec_ifc_value_list(rest)?);
+        } else if let Some(rest) = token.strip_prefix("file-schema=") {
+            d.file_schema = Some(dec_ifc_value_list(rest)?);
+        } else if let Some(rest) = token.strip_prefix("entities=") {
+            d.entities = Some(dec_entities_diff(rest)?);
+        } else {
+            return Err(format!("ifc diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -1133,15 +1166,20 @@ impl protocol::DiffCodec for IfcDiff {
     /// bottoms out via `enc_ifc_value_bin`'s own recursive call (not an opaque tail: `IfcValue` is
     /// fully spec-expressible per variant, see that fn's own doc comment).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let flags: u8 = (self.file_description.is_some() as u8)
-            | ((self.file_name.is_some() as u8) << 1)
-            | ((self.file_schema.is_some() as u8) << 2)
-            | ((self.entities.is_some() as u8) << 3);
+        let flags: u8 = (self.file_description.is_some() as u8) | ((self.file_name.is_some() as u8) << 1) | ((self.file_schema.is_some() as u8) << 2) | ((self.entities.is_some() as u8) << 3);
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
-        if let Some(v) = &self.file_description { enc_ifc_value_list_bin(v, &mut out); }
-        if let Some(v) = &self.file_name { enc_ifc_value_list_bin(v, &mut out); }
-        if let Some(v) = &self.file_schema { enc_ifc_value_list_bin(v, &mut out); }
-        if let Some(v) = &self.entities { enc_entities_diff_bin(v, &mut out); }
+        if let Some(v) = &self.file_description {
+            enc_ifc_value_list_bin(v, &mut out);
+        }
+        if let Some(v) = &self.file_name {
+            enc_ifc_value_list_bin(v, &mut out);
+        }
+        if let Some(v) = &self.file_schema {
+            enc_ifc_value_list_bin(v, &mut out);
+        }
+        if let Some(v) = &self.entities {
+            enc_entities_diff_bin(v, &mut out);
+        }
         Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -1149,26 +1187,10 @@ impl protocol::DiffCodec for IfcDiff {
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let file_description = if flags & 1 != 0 {
-            Some(dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("diff file_description", reader.position(), e))?)
-        } else {
-            None
-        };
-        let file_name = if flags & 2 != 0 {
-            Some(dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("diff file_name", reader.position(), e))?)
-        } else {
-            None
-        };
-        let file_schema = if flags & 4 != 0 {
-            Some(dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("diff file_schema", reader.position(), e))?)
-        } else {
-            None
-        };
-        let entities = if flags & 8 != 0 {
-            Some(dec_entities_diff_bin(&mut reader).map_err(|e| malformed("diff entities", reader.position(), e))?)
-        } else {
-            None
-        };
+        let file_description = if flags & 1 != 0 { Some(dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("diff file_description", reader.position(), e))?) } else { None };
+        let file_name = if flags & 2 != 0 { Some(dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("diff file_name", reader.position(), e))?) } else { None };
+        let file_schema = if flags & 4 != 0 { Some(dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("diff file_schema", reader.position(), e))?) } else { None };
+        let entities = if flags & 8 != 0 { Some(dec_entities_diff_bin(&mut reader).map_err(|e| malformed("diff entities", reader.position(), e))?) } else { None };
         Ok(IfcDiff { file_description, file_name, file_schema, entities })
     }
 }
@@ -1238,12 +1260,7 @@ mod handcrafted_diff_codec_tests {
         b.entities[0].complex = vec![];
         b.entities.push(entity(300, "IFCBUILDINGSTOREY", vec![IfcValue::Aggregate(vec![IfcValue::Integer(1), IfcValue::Integer(2)])]));
 
-        let cases = vec![
-            IfcDiff::default(),
-            IfcDiff::between(&a, &b),
-            IfcDiff::between(&b, &a),
-            IfcDiff::between(&a, &a),
-        ];
+        let cases = vec![IfcDiff::default(), IfcDiff::between(&a, &b), IfcDiff::between(&b, &a), IfcDiff::between(&a, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

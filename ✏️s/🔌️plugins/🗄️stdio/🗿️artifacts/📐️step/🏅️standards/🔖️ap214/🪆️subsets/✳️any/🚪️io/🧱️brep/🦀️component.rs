@@ -93,12 +93,7 @@ impl<'a> BrepBuilder<'a> {
         if let Some(geom_ref) = edge_args.get(3).and_then(Part21Value::as_ref_id) {
             if let Some((geom_type, _)) = self.doc.instance(geom_ref).and_then(|i| i.primary()) {
                 if !geom_type.eq_ignore_ascii_case("LINE") {
-                    self.issues.push(BrepIssue {
-                        entity_id: edge_ref,
-                        reason: format!(
-                            "edge geometry {geom_type} is not a straight LINE; endpoints used as a control-polygon degrade, not a true curve tessellation"
-                        ),
-                    });
+                    self.issues.push(BrepIssue { entity_id: edge_ref, reason: format!("edge geometry {geom_type} is not a straight LINE; endpoints used as a control-polygon degrade, not a true curve tessellation") });
                 }
             }
         }
@@ -140,10 +135,7 @@ impl<'a> BrepBuilder<'a> {
         if let Some(geom_ref) = args.get(2).and_then(Part21Value::as_ref_id) {
             if let Some((geom_type, _)) = self.doc.instance(geom_ref).and_then(|i| i.primary()) {
                 if !geom_type.eq_ignore_ascii_case("PLANE") {
-                    self.issues.push(BrepIssue {
-                        entity_id: face_id,
-                        reason: format!("face geometry {geom_type} is not a PLANE; curved-surface tessellation is out of scope, face skipped"),
-                    });
+                    self.issues.push(BrepIssue { entity_id: face_id, reason: format!("face geometry {geom_type} is not a PLANE; curved-surface tessellation is out of scope, face skipped") });
                     return None;
                 }
             }
@@ -242,10 +234,7 @@ pub fn brep_mesh_to_part21(mesh: &BrepMesh) -> Part21Document {
             let vec_id = b.alloc("VECTOR", vec![s(""), Part21Value::Ref(dir_id), Part21Value::Real(len.into())]);
             let line_id = b.alloc("LINE", vec![s(""), Part21Value::Ref(point_ids[a]), Part21Value::Ref(vec_id)]);
             let edge_id = b.alloc("EDGE_CURVE", vec![s(""), Part21Value::Ref(va), Part21Value::Ref(vb), Part21Value::Ref(line_id), Part21Value::Enum("T".into())]);
-            let oe_id = b.alloc(
-                "ORIENTED_EDGE",
-                vec![s(""), Part21Value::Derived, Part21Value::Derived, Part21Value::Ref(edge_id), Part21Value::Enum("T".into())],
-            );
+            let oe_id = b.alloc("ORIENTED_EDGE", vec![s(""), Part21Value::Derived, Part21Value::Derived, Part21Value::Ref(edge_id), Part21Value::Enum("T".into())]);
             oriented_edges.push(Part21Value::Ref(oe_id));
         }
         let loop_id = b.alloc("EDGE_LOOP", vec![s(""), Part21Value::List(oriented_edges)]);
@@ -256,10 +245,7 @@ pub fn brep_mesh_to_part21(mesh: &BrepMesh) -> Part21Document {
         let origin_id = b.alloc("CARTESIAN_POINT", vec![s(""), xyz([origin.x, origin.y, origin.z])]);
         let axis_id = b.alloc("AXIS2_PLACEMENT_3D", vec![s(""), Part21Value::Ref(origin_id), Part21Value::Ref(normal_id), Part21Value::Unset]);
         let plane_id = b.alloc("PLANE", vec![s(""), Part21Value::Ref(axis_id)]);
-        let face_id = b.alloc(
-            "ADVANCED_FACE",
-            vec![s(""), Part21Value::List(vec![Part21Value::Ref(bound_id)]), Part21Value::Ref(plane_id), Part21Value::Enum("T".into())],
-        );
+        let face_id = b.alloc("ADVANCED_FACE", vec![s(""), Part21Value::List(vec![Part21Value::Ref(bound_id)]), Part21Value::Ref(plane_id), Part21Value::Enum("T".into())]);
         face_ids.push(Part21Value::Ref(face_id));
     }
     let shell_id = b.alloc("CLOSED_SHELL", vec![s(""), Part21Value::List(face_ids)]);
@@ -276,8 +262,8 @@ pub fn brep_mesh_to_part21(mesh: &BrepMesh) -> Part21Document {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::part21::parse_part21;
+    use super::*;
 
     const FIXTURE: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('semio.step','2026-08-10T00:00:00',('Ueli'),('semio'),'semio','','');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\nENDSEC;\nDATA;\n#1=CARTESIAN_POINT('',(0.,0.,0.));\n#2=CARTESIAN_POINT('',(10.,0.,0.));\n#3=CARTESIAN_POINT('',(10.,10.,0.));\n#4=DIRECTION('',(0.,0.,1.));\n#5=VERTEX_POINT('',#1);\n#6=VERTEX_POINT('',#2);\n#7=VERTEX_POINT('',#3);\n#8=EDGE_CURVE('',#5,#6,#20,.T.);\n#9=EDGE_CURVE('',#6,#7,#21,.T.);\n#10=EDGE_CURVE('',#7,#5,#22,.T.);\n#20=LINE('',#1,#30);\n#21=LINE('',#2,#31);\n#22=LINE('',#3,#32);\n#30=VECTOR('',#4,1.);\n#31=VECTOR('',#4,1.);\n#32=VECTOR('',#4,1.);\n#11=ORIENTED_EDGE('',*,*,#8,.T.);\n#12=ORIENTED_EDGE('',*,*,#9,.T.);\n#13=ORIENTED_EDGE('',*,*,#10,.T.);\n#14=EDGE_LOOP('',(#11,#12,#13));\n#15=FACE_OUTER_BOUND('',#14,.T.);\n#16=PLANE('',#40);\n#40=AXIS2_PLACEMENT_3D('',#1,#4,$);\n#17=ADVANCED_FACE('',(#15),#16,.T.);\n#18=CLOSED_SHELL('',(#17));\n#19=MANIFOLD_SOLID_BREP('',#18);\nENDSEC;\nEND-ISO-10303-21;\n";
 
@@ -308,15 +294,8 @@ mod tests {
 
     #[test]
     fn writer_round_trips_through_analyzer() {
-        let mesh = BrepMesh {
-            vertices: vec![
-                BrepVertex { x: 0.0, y: 0.0, z: 0.0 },
-                BrepVertex { x: 4.0, y: 0.0, z: 0.0 },
-                BrepVertex { x: 4.0, y: 3.0, z: 0.0 },
-                BrepVertex { x: 0.0, y: 3.0, z: 0.0 },
-            ],
-            faces: vec![BrepFace { indices: vec![0, 1, 2, 3] }],
-        };
+        let mesh =
+            BrepMesh { vertices: vec![BrepVertex { x: 0.0, y: 0.0, z: 0.0 }, BrepVertex { x: 4.0, y: 0.0, z: 0.0 }, BrepVertex { x: 4.0, y: 3.0, z: 0.0 }, BrepVertex { x: 0.0, y: 3.0, z: 0.0 }], faces: vec![BrepFace { indices: vec![0, 1, 2, 3] }] };
         let doc = brep_mesh_to_part21(&mesh);
         let text = super::super::part21::write_part21(&doc);
         let reparsed = parse_part21(&text).expect("reparse generated step text");

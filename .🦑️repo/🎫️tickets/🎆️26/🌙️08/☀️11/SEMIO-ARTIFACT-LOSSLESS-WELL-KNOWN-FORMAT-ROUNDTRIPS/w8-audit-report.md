@@ -146,3 +146,166 @@ full check output for each name.
 None in the working tree — this was a read/verify/audit pass. No allowlist edits were needed (all
 verified still-genuine). Ticket-folder evidence written: `w8-audit-policy-current.txt`,
 `w8-audit-stdio-test.txt`, `w8-audit-osrun-test.txt`, `w8-audit-workspace-check.txt`, this report.
+
+---
+
+# Strict Logical-Materialization Contract Audit — 2026-08-14
+
+This is a read-only static audit of the live implementations for PDF 1.7, DWG AC1024, SVG 1.1,
+ISO-BMFF MP4, ECMA-376 PPTX, IFC2X3, ZIP 2.0, and the shared OPC package model. It checks the
+tightened contract: persisted state must be named logical standard concepts; native/container
+materialization may occur only at import/export boundaries; DSL, pack, diff, and operation codecs
+must not carry native or JSON envelopes; and the supplied fixture itself must remain the acceptance
+baseline through the complete lifecycle.
+
+No runtime tests were run for this audit. Owners were actively editing the format lanes; evidence
+below is the exact static state observed during the audit.
+
+## Clean runtime-model findings
+
+- A public-field sweep found no `source*`, `physical*`, `lexical*`, `raw*`, `native*`, `wire*`,
+  `archive*`, or `container*` persisted fields in the eight live models.
+- No active Rust snapshot/diff/mutation persistence codec in the audited versions calls
+  `serde_json::{to_string,to_vec,from_str,from_slice}`. The two hits are historical comments.
+- PDF retains decoded stream data plus a typed filter pipeline; MP4 retains codec parameter sets
+  and logical samples; ZIP/OPC/PPTX retain decompressed member payloads. Those are semantic payload
+  values, not whole-file/native-container replay fields.
+- PDF 1.7 and IFC2X3 exact lifecycle tests directly use the original fixtures as their baseline.
+  SVG, MP4, and PPTX also directly read their supplied fixtures and assert native export equality.
+- IFC2X3 has the strongest anti-shadow facet guard in this set: its public snapshot is restricted
+  to `schema`, typed `Part21Document`, and typed `edmPreamble`, and its exact native analyzer and
+  composer routes are asserted in `ifc/.../any/🚪️io/🦀️component.rs:224-268`.
+
+## Actionable blockers
+
+### P0 — committed facets still specify forbidden JSON/native persistence
+
+The Rust codecs are structural, but committed schema/protocol facets still describe obsolete wire
+formats. This is contract-visible schema drift, not harmless commentary.
+
+1. **PDF diff binary facets still claim UTF-8 JSON.** Rust emits a tagged structural binary in
+   `pdf/.../diff/🦀️component.rs:2311-2388`, but the ABNF says RFC8259 JSON at
+   `diff/💾️binary/🔠️component.abnf:1-4`, Spicy says plain UTF-8 JSON at
+   `diff/💾️binary/🌶️component.spicy:4-6`, and Kaitai says `utf8_json_text` at
+   `diff/💾️binary/🥋️component.ksy:6-10`. The PDF anti-shadow test only includes
+   the primary snapshot/diff Proto, GraphQL, TypeScript, EBNF, and G4 facets
+   (`pdf/.../🚪️io/🦀️component.rs:2676-2702`), so all three contradictions escape it.
+
+2. **SVG diff and mutation facets still define JSON text/binary envelopes.** Examples:
+   `diff/📝️text/🅰️component.g4:2-5`, `diff/📝️text/🛰️component.proto:4-7`,
+   `diff/💾️binary/🥋️component.ksy:5-7`, `diff/💾️binary/🌶️component.spicy:2-4`,
+   `mutations/📝️text/🅰️component.g4:2-5`, and
+   `mutations/💾️binary/🌶️component.spicy:2-4`. Live Rust instead uses the handcrafted
+   structural SVG encoders (`diff/🦀️component.rs:1263-1369` and
+   `mutations/🦀️component.rs:496-620`). Replace every JSON-declaring SVG diff/op text and
+   binary facet, not only the Spicy files.
+
+3. **MP4 snapshot and operation facets describe native/JSON envelopes.** The snapshot ABNF says the
+   Semio pack wraps the real ISO-BMFF box stream at
+   `snapshot/💾️binary/🔠️component.abnf:1-18`, contradicting the structural
+   `pack_rt` record codec in `snapshot/🦀️component.rs:316-345`. MP4 mutation EBNF/G4 claim
+   one compact JSON object (`mutations/📝️text/🔤️component.ebnf:1-3` and
+   `mutations/📝️text/🅰️component.g4:2`), while Spicy carries `json_utf8`
+   (`mutations/💾️binary/🌶️component.spicy:1-4`). Rust uses `DslVariants` and
+   tagged-record binary (`mutations/🦀️component.rs:121-140`).
+
+4. **Opaque payload-only facets remain widespread.** A conservative scan for facets that expose
+   only `payload: bytes &eod`, `message Artifact { schema, payload }`, or
+   `Document { schema, payload }` found 11 PDF, 12 DWG, 8 SVG, 3 MP4, 12 PPTX, 15 IFC2X3, and
+   12 ZIP facet files. Some are representation-envelope facets rather than runtime persistence,
+   so this is not evidence of a runtime native replay by itself. It is nevertheless schema-first
+   coverage debt: these facets cannot describe or validate the structural tags/records the Rust
+   codecs actually emit. Replace opaque leaves with the real logical protocol, or explicitly model
+   the shared envelope plus a referenced structural payload protocol.
+
+### P0 — SVG DSL parser bypasses the native-deserialization boundary
+
+`SvgSnapshot::parse_dsl` falls back to `SvgSnapshot::import_utf8(text.as_bytes())` whenever the
+Semio preamble is absent (`svg/.../snapshot/🦀️component.rs:1272-1280`). That lets native SVG
+syntax enter through the persistence DSL API and makes malformed/missing-envelope DSL ambiguous
+with native input. Remove the fallback: native XML/SVG belongs only in the native import analyzer;
+the DSL parser must accept the Semio structural DSL and reject everything else atomically.
+
+### P1 — exact lifecycle acceptance gaps
+
+1. **DWG:** `well_known_fixture_lossless_system_roundtrip`
+   (`dwg/.../any/🚪️io/🦀️component.rs:3253-3344`) covers direct raw IO, DSL, pack,
+   self/no-op, set-snapshot text/binary, diff text/binary, absorb, mutation, and inverse, all against
+   the original bytes. It does not traverse `DwgAnalyzer` or `DwgComposerComposition`, although
+   those routes exist at `schema/🦀️component.rs:197-242` and `io/🦀️component.rs:740-781`.
+   Add original-byte assertions for native, DSL, and pack analyzer/composer inputs.
+
+2. **PPTX:** `fixture_survives_logical_io_persistence_diff_and_mutation_pipelines`
+   (`pptx/.../any/schema/🦀️component.rs:686-788`) covers direct export, PPTX binary bridge,
+   DSL, pack, self/no-op, semantic mutation/inverse/absorb, diff text/binary, and operation
+   text/binary. It never routes the exact fixture through the PPTX analyzer or composer. The only
+   analyzer/builder roundtrip at line 526 is synthetic/authored coverage, not the supplied fixture.
+
+3. **ZIP/OPC:** no acceptance test sends the supplied PPTX archive through `ZipSnapshot` DSL,
+   pack, diff text/binary, operation text/binary, inverse/absorb, analyzer, and composer while still
+   requiring equality to the original PPTX bytes. Existing ZIP lifecycle tests are synthetic
+   (`zip/.../mutations/🦀️component.rs:164` and `zip/.../io/🦀️component.rs:813-975`).
+   OPC has no independent snapshot persistence lifecycle, and `encode_opc` explicitly documents
+   that it is not necessarily byte-identical (`zip/📦️opc/🦀️component.rs:489-497`).
+   Because PPTX exactness depends on ZIP/OPC, add an exact fixture pipeline that proves the shared
+   layers structurally preserve every decompressed part, typed content type, typed relationship,
+   comment, and deterministic order without archive replay.
+
+### P1 — anti-shadow guards do not cover the persistence facets that are drifting
+
+- PDF omits its binary diff facets from the guard.
+- MP4 checks only the primary TS/GraphQL/JSON/Proto snapshot facets
+  (`mp4/.../snapshot/🦀️component.rs:395-405`), not snapshot binary or mutation/diff facets.
+- PPTX and ZIP guards include primary model facets but not the text/binary grammar/protocol facets
+  where opaque `payload` records remain.
+- SVG has no repo-wide assertion rejecting `json_payload`, `json_text`, `JSON_VALUE`, or native
+  syntax fallback across all snapshot/diff/mutation facets.
+
+Extend each existing anti-shadow test to enumerate every persisted Rust source and every committed
+snapshot/diff/mutation text/binary facet. Ban at least `ArtifactSource`, `physical`, `lexical`,
+`document_wire`, source/native/archive byte aliases, `serde_json`, `json_payload`, `json_text`,
+`JSON_VALUE`, and claims that Semio pack wraps the native file. Also assert that PDF stream filters
+remain a typed pipeline over decoded data and that OPC XML parts cannot coexist as opaque bytes.
+
+## Format disposition
+
+| Format | Runtime model/codecs | Original fixture baseline | Remaining blocker |
+|---|---|---|---|
+| PDF 1.7 | logical/structured | complete | stale JSON binary-diff facets; guard omission |
+| DWG AC1024 | logical/structured | complete except framework routes | analyzer/composer exact fixture coverage |
+| SVG 1.1 | logical/structured | complete | native fallback in DSL; stale JSON diff/op facets |
+| MP4 | logical/structured | complete | native snapshot + JSON op facet contradictions |
+| PPTX | logical XML + semantic binary parts | complete except framework routes | analyzer/composer exact fixture coverage; opaque facets |
+| IFC2X3 | logical `Part21Document` + typed preamble | complete | opaque representation facets need structural specificity |
+| ZIP/OPC | decompressed entries + typed OPC tables | exercised indirectly by PPTX export | no direct exact shared-layer lifecycle; opaque facets |
+
+## Required close order
+
+1. Correct the hard-contradictory PDF/SVG/MP4 facets and expand anti-shadow enumeration.
+2. Remove SVG native fallback from `ArtifactDsl::parse_dsl`.
+3. Add exact DWG and PPTX analyzer/composer assertions.
+4. Add the exact PPTX-container ZIP/OPC structural lifecycle.
+5. Replace or structurally reference every remaining opaque payload-only facet.
+6. Run the named original-byte lifecycle tests and anti-shadow/facet gates only after the owning
+   lanes finish their implementation edits.
+
+## PDF binary-diff facet remediation — 2026-08-14
+
+The PDF 1.7 binary-diff ABNF, Spicy, and Kaitai facets now describe the live structured
+`DiffCodec` frame: format byte `1`, validated flags bits 0-4, fixed-order optional logical fields,
+unsigned LEB128 counts/lengths, zigzag signed integers, recursive COS/value-diff tags, decoded
+stream values, and typed filter/predictor records. All stale RFC 8259 and UTF-8 JSON envelope
+claims were removed.
+
+The existing PDF anti-shadow test now scans all three binary facets and rejects JSON-envelope and
+native/shadow-state markers. It also requires each binary facet to expose the structural `format`
+and `flags` framing concepts. The exact original-byte lifecycle now asserts that its title-only
+diff binary begins with the structural format byte, sets only the typed `info` flag, and differs
+from the text representation before decode/apply/inverse/absorb proceeds.
+
+Ticket-local isolated-target Nx evidence:
+
+- `[DEBUG] pdf_snapshot_and_facets_forbid_native_shadow_state=pass` (1/1, 0.013s; 3,377 skipped).
+- `[DEBUG] bachelor_thesis_logical_lifecycle_preserves_original_native_bytes=pass` (1/1,
+  18.484s; 3,377 skipped), still comparing every native export route directly with the
+  6,346,331-byte imported fixture.

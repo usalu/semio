@@ -5,15 +5,12 @@
 //! `✳️any/🚪️io` already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use std::sync::OnceLock;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
-    use semio_framework_plugin::{
-        ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
-        register_subset_validator, subset_validator_entry_of,
-    };
     use crate::artifacts::pdf::standards::v1_7::subsets::a::schema::check_pdf_a_conformance;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfComposer as PdfAnyComposer;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfComposer as PdfAnyComposer;
+    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use std::sync::OnceLock;
 
     const DIALECT_A: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("a") };
     const DIALECT_ANY: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
@@ -38,10 +35,7 @@ pub mod derived_composition {
             if !hard.is_empty() {
                 let mut all = hard.clone();
                 all.extend(soft);
-                return Err(ComposeError {
-                    message: format!("PDF/A conformance violated: {} hard issue(s) -- not stamping the a dialect", hard.len()),
-                    diagnostics: all,
-                });
+                return Err(ComposeError { message: format!("PDF/A conformance violated: {} hard issue(s) -- not stamping the a dialect", hard.len()), diagnostics: all });
             }
             let mut diagnostics = inner.diagnostics;
             diagnostics.extend(soft);
@@ -99,9 +93,9 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::AnalyzeSource;
-        use crate::artifacts::pdf::standards::v1_7::subsets::a::schema::{CODE_JAVASCRIPT, CODE_LAUNCH};
         use crate::artifacts::pdf::standards::v1_7::subsets::a::schema::PdfABuilderConstruction as PdfABuilder;
+        use crate::artifacts::pdf::standards::v1_7::subsets::a::schema::{CODE_JAVASCRIPT, CODE_LAUNCH};
+        use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 
         fn minimal_pdf_with_extra_object(extra_obj_body: &[u8]) -> Vec<u8> {
@@ -186,10 +180,7 @@ pub mod derived_composition {
             let hex = hex_encode(&body);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
             let err = PdfAComposerComposition::compose(&sources).expect_err("an /Encrypt trailer must never compose, at a or any other dialect");
-            assert!(
-                err.diagnostics.iter().any(|d| d.message.contains("Encrypt")),
-                "must be the real engine-level /Encrypt rejection, not a spurious decode error: {err:?}"
-            );
+            assert!(err.diagnostics.iter().any(|d| d.message.contains("Encrypt")), "must be the real engine-level /Encrypt rejection, not a spurious decode error: {err:?}");
         }
 
         #[test]

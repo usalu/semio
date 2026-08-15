@@ -40,7 +40,9 @@ pub enum WavData {
 }
 
 impl Default for WavData {
-    fn default() -> Self { WavData::Raw(Vec::new()) }
+    fn default() -> Self {
+        WavData::Raw(Vec::new())
+    }
 }
 
 /// 📦️ Owned by `wav`: any RIFF chunk other than `fmt `/`data`, retained byte-for-byte
@@ -78,12 +80,7 @@ pub struct WavSnapshot {
 
 impl Default for WavSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_WAV_DOCUMENT_SCHEMA.into(),
-            fmt: WavFmt::default(),
-            data: WavData::default(),
-            other_chunks: Default::default(),
-        }
+        Self { schema: STDIO_WAV_DOCUMENT_SCHEMA.into(), fmt: WavFmt::default(), data: WavData::default(), other_chunks: Default::default() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -95,7 +92,9 @@ impl Default for WavSnapshot {
 /// `store::semio_format` envelope, not a JSON re-serialization of the Rust type).
 impl store::ArtifactDsl for WavSnapshot {
     const EXTENSION: &'static str = "wav";
-    fn envelope_id() -> &'static str { STDIO_WAV_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_WAV_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -109,23 +108,17 @@ impl store::ArtifactDsl for WavSnapshot {
         let mut bytes = Vec::with_capacity(hex.len() / 2);
         let mut i = 0usize;
         while i < hex.len() {
-            let byte = u8::from_str_radix(&hex[i..i + 2], 16)
-                .map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
+            let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
             bytes.push(byte);
             i += 2;
         }
-        crate::artifacts::wav::standards::riff_pcm::subsets::any::io::decode_wav(&bytes)
-            .map_err(|e| store::TextError::new(format!("wav decode: {e}"), dsl::TextSpan::at(1, 1)))
+        crate::artifacts::wav::standards::riff_pcm::subsets::any::io::decode_wav(&bytes).map_err(|e| store::TextError::new(format!("wav decode: {e}"), dsl::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
         let bytes = crate::artifacts::wav::standards::riff_pcm::subsets::any::io::encode_wav(self);
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -134,22 +127,14 @@ impl store::ArtifactPack for WavSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::wav::standards::riff_pcm::subsets::any::io::encode_wav(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         crate::artifacts::wav::standards::riff_pcm::subsets::any::io::decode_wav(&inner).map_err(store::PackError::Schema)

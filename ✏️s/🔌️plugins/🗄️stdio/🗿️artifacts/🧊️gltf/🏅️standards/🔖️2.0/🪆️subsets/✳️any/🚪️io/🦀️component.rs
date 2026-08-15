@@ -7,10 +7,7 @@
 //! (steps 1-2's transition compat shim) has been folded and deleted (steps 3-5) -- every former
 //! glb caller now targets this codec's own `.glb` binary dialect directly, so there is no longer
 //! a second container implementation to keep in sync.
-use crate::artifacts::gltf::schema::snapshot::{
-    GltfAccessor, GltfBuffer, GltfBufferView, GltfDocument, GltfJson, GltfMesh, GltfPrimitive,
-    GltfSourceForm, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues,
-};
+use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfDocument, GltfJson, GltfMesh, GltfPrimitive, GltfSourceForm, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues};
 use crate::artifacts::gltf::{GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 
@@ -465,15 +462,14 @@ pub fn decode_glb(bytes: &[u8]) -> Result<GltfSnapshot, String> {
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::gltf::GltfSnapshot;
     use crate::artifacts::gltf::standards::v2_0::subsets::any::schema::GltfAnalyzer;
+    use crate::artifacts::gltf::GltfSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
-
 
     pub struct GltfComposerComposition;
 
@@ -505,10 +501,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "GltfComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = GltfAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "GltfComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "GltfComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -562,10 +555,7 @@ mod tests {
 
     //#region 🔖️GlbPaddingTests
     fn doc_with_buffer(byte_length: usize) -> GltfDocument {
-        GltfDocument {
-            buffers: if byte_length > 0 { vec![GltfBuffer { byte_length, uri: None, name: None, extensions: None, extras: None }] } else { Vec::new() },
-            ..GltfDocument::default()
-        }
+        GltfDocument { buffers: if byte_length > 0 { vec![GltfBuffer { byte_length, uri: None, name: None, extensions: None, extras: None }] } else { Vec::new() }, ..GltfDocument::default() }
     }
 
     /// 🧪️ Ticket ARTIFACT-SYSTEM-OVERHAUL: the prior `encode_glb` omitted the BIN chunk's own
@@ -628,16 +618,17 @@ mod tests {
         let verts: [[f32; 3]; 2] = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
         let norms: [[f32; 3]; 2] = [[0.0, 0.0, 1.0], [0.0, 1.0, 0.0]];
         for i in 0..2 {
-            for c in 0..3 { buf.extend_from_slice(&verts[i][c].to_le_bytes()); }
-            for c in 0..3 { buf.extend_from_slice(&norms[i][c].to_le_bytes()); }
+            for c in 0..3 {
+                buf.extend_from_slice(&verts[i][c].to_le_bytes());
+            }
+            for c in 0..3 {
+                buf.extend_from_slice(&norms[i][c].to_le_bytes());
+            }
         }
         let document = GltfDocument {
             buffers: vec![GltfBuffer { byte_length: buf.len(), uri: None, name: None, extensions: None, extras: None }],
             buffer_views: vec![buffer_view(0, 0, Some(24)), buffer_view(0, 12, Some(24))],
-            accessors: vec![
-                accessor(0, GltfComponentType::Float, GltfAccessorType::Vec3, 2),
-                accessor(1, GltfComponentType::Float, GltfAccessorType::Vec3, 2),
-            ],
+            accessors: vec![accessor(0, GltfComponentType::Float, GltfAccessorType::Vec3, 2), accessor(1, GltfComponentType::Float, GltfAccessorType::Vec3, 2)],
             ..GltfDocument::default()
         };
         let buffers = vec![buf];
@@ -666,14 +657,18 @@ mod tests {
             buffers: vec![GltfBuffer { byte_length: 100, uri: None, name: None, extensions: None, extras: None }],
             buffer_views: vec![buffer_view(0, 0, None), buffer_view(0, 8, None)],
             accessors: vec![GltfAccessor {
-                buffer_view: None, byte_offset: 0, component_type: GltfComponentType::Float, normalized: false,
-                count: 5, kind: GltfAccessorType::Scalar, max: None, min: None,
-                sparse: Some(GltfSparseAccessor {
-                    count: 2,
-                    indices: GltfSparseIndices { buffer_view: 0, byte_offset: 0, component_type: GltfComponentType::UnsignedByte },
-                    values: GltfSparseValues { buffer_view: 1, byte_offset: 0 },
-                }),
-                name: None, extensions: None, extras: None,
+                buffer_view: None,
+                byte_offset: 0,
+                component_type: GltfComponentType::Float,
+                normalized: false,
+                count: 5,
+                kind: GltfAccessorType::Scalar,
+                max: None,
+                min: None,
+                sparse: Some(GltfSparseAccessor { count: 2, indices: GltfSparseIndices { buffer_view: 0, byte_offset: 0, component_type: GltfComponentType::UnsignedByte }, values: GltfSparseValues { buffer_view: 1, byte_offset: 0 } }),
+                name: None,
+                extensions: None,
+                extras: None,
             }],
             ..GltfDocument::default()
         };
@@ -728,10 +723,7 @@ mod tests {
     //#region 🔖️DualCodecTests
     #[test]
     fn glb_round_trip_preserves_json_and_bin_semantically() {
-        let position_bytes: Vec<u8> = [[0.0f32, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]
-            .iter()
-            .flat_map(|v| v.iter().flat_map(|c| c.to_le_bytes()))
-            .collect();
+        let position_bytes: Vec<u8> = [[0.0f32, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]].iter().flat_map(|v| v.iter().flat_map(|c| c.to_le_bytes())).collect();
         let document = GltfDocument {
             buffers: vec![GltfBuffer { byte_length: position_bytes.len(), uri: None, name: None, extensions: None, extras: None }],
             buffer_views: vec![GltfBufferView { buffer: 0, byte_offset: 0, byte_length: position_bytes.len(), byte_stride: None, target: None, name: None, extensions: None, extras: None }],
@@ -813,19 +805,11 @@ mod tests {
         /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }
@@ -931,9 +915,9 @@ mod tests {
 //#region 🚪️DerivedIoRegistry
 /// 🚪️ Dissolved out of `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::gltf::standards::v2_0::subsets::any::schema::GltfComposer as GltfRawAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 

@@ -12,11 +12,9 @@
 //! concept at all (by design, per the master plan's subset recipe), so none of it is fabricated
 //! into a fake transform channel here.
 
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 use crate::artifacts::gif::GifSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{
-    AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA,
-};
+use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("89a"), subset: SubsetId("*") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") };
@@ -49,14 +47,7 @@ impl ArtifactDeserializer for SemioAnimationFromGif {
         let timelines = if keyframes.is_empty() {
             Vec::new()
         } else {
-            vec![AnimTimeline {
-                name: None,
-                channels: vec![AnimChannel {
-                    target: AnimTarget { node: GIF_FRAME_NODE.into(), property: AnimTargetProperty::Custom { name: "frameIndex".into() } },
-                    interpolation: AnimInterpolation::Step,
-                    keyframes,
-                }],
-            }]
+            vec![AnimTimeline { name: None, channels: vec![AnimChannel { target: AnimTarget { node: GIF_FRAME_NODE.into(), property: AnimTargetProperty::Custom { name: "frameIndex".into() } }, interpolation: AnimInterpolation::Step, keyframes }] }]
         };
         Ok(SemioAnimationSnapshot { schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(), timelines })
     }

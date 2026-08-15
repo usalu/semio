@@ -71,11 +71,7 @@ pub fn compute_step_bounds(snapshot: &StepSnapshot) -> StepBounds {
             continue;
         }
         let Some(coords) = coordinate_aggregate(&entity.args) else { continue };
-        let p = [
-            coords.first().copied().unwrap_or(0.0),
-            coords.get(1).copied().unwrap_or(0.0),
-            coords.get(2).copied().unwrap_or(0.0),
-        ];
+        let p = [coords.first().copied().unwrap_or(0.0), coords.get(1).copied().unwrap_or(0.0), coords.get(2).copied().unwrap_or(0.0)];
         point_count += 1;
         if !seen {
             min = p;
@@ -101,12 +97,7 @@ mod tests {
     use crate::artifacts::step::STDIO_STEP_DOCUMENT_SCHEMA;
 
     fn point_entity(id: u64, x: f64, y: f64, z: f64) -> StepEntity {
-        StepEntity {
-            id,
-            name: "CARTESIAN_POINT".into(),
-            args: vec![StepValue::String(String::new()), StepValue::Aggregate(vec![StepValue::Real(x), StepValue::Real(y), StepValue::Real(z)])],
-            complex: Vec::new(),
-        }
+        StepEntity { id, name: "CARTESIAN_POINT".into(), args: vec![StepValue::String(String::new()), StepValue::Aggregate(vec![StepValue::Real(x), StepValue::Real(y), StepValue::Real(z)])], complex: Vec::new() }
     }
 
     #[test]
@@ -114,12 +105,7 @@ mod tests {
         let snapshot = StepSnapshot {
             schema: STDIO_STEP_DOCUMENT_SCHEMA.into(),
             header: Default::default(),
-            entities: vec![
-                point_entity(1, 0.0, 0.0, 0.0),
-                point_entity(2, -5.0, 2.0, 7.0),
-                point_entity(3, 10.0, 3.0, -1.0),
-                StepEntity { id: 4, name: "DIRECTION".into(), args: vec![StepValue::String(String::new())], complex: Vec::new() },
-            ],
+            entities: vec![point_entity(1, 0.0, 0.0, 0.0), point_entity(2, -5.0, 2.0, 7.0), point_entity(3, 10.0, 3.0, -1.0), StepEntity { id: 4, name: "DIRECTION".into(), args: vec![StepValue::String(String::new())], complex: Vec::new() }],
         };
         let bounds = compute_step_bounds(&snapshot);
         assert_eq!(bounds.min, [-5.0, 0.0, -1.0]);
@@ -129,11 +115,7 @@ mod tests {
 
     #[test]
     fn inference_determinism_law() {
-        let snapshot = StepSnapshot {
-            schema: STDIO_STEP_DOCUMENT_SCHEMA.into(),
-            header: Default::default(),
-            entities: vec![point_entity(1, 1.0, 1.0, 1.0)],
-        };
+        let snapshot = StepSnapshot { schema: STDIO_STEP_DOCUMENT_SCHEMA.into(), header: Default::default(), entities: vec![point_entity(1, 1.0, 1.0, 1.0)] };
         assert_eq!(compute_step_bounds(&snapshot), compute_step_bounds(&snapshot));
     }
 

@@ -11,9 +11,9 @@
 //!   by this direction (the `nodes` backing store always decodes empty) — see the serializer's
 //!   own doc comment for what happens going the other way.
 
-use crate::artifacts::json::JsonSnapshot;
 use crate::artifacts::json::schema::snapshot::JsonValue;
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValueEntry, SemioValueSnapshot, SemioValue, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+use crate::artifacts::json::JsonSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️Deserializer
@@ -75,10 +75,7 @@ mod tests {
     #[test]
     fn nested_structure_maps_directly() {
         let json = JsonValue::Object {
-            members: vec![
-                JsonMember { key: "name".into(), value: JsonValue::String { value: "semio".into() } },
-                JsonMember { key: "tags".into(), value: JsonValue::Array { items: vec![JsonValue::Bool { value: true }, JsonValue::Null] } },
-            ],
+            members: vec![JsonMember { key: "name".into(), value: JsonValue::String { value: "semio".into() } }, JsonMember { key: "tags".into(), value: JsonValue::Array { items: vec![JsonValue::Bool { value: true }, JsonValue::Null] } }],
         };
         let value = semio_value_from_json(&json);
         match value {

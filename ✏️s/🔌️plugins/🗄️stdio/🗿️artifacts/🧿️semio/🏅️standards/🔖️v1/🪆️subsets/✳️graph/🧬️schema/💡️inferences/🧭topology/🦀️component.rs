@@ -101,11 +101,7 @@ mod tests {
 
     fn chain_snapshot() -> SemioGraphSnapshot {
         // root -e1- mid -e2- leaf: a 3-node chain.
-        SemioGraphSnapshot {
-            schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(),
-            nodes: vec![node("root"), node("mid"), node("leaf")],
-            edges: vec![edge("e1", "root", "mid"), edge("e2", "mid", "leaf")],
-        }
+        SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: vec![node("root"), node("mid"), node("leaf")], edges: vec![edge("e1", "root", "mid"), edge("e2", "mid", "leaf")] }
     }
 
     #[test]

@@ -16,11 +16,11 @@
 //!   would be indistinguishable from (and so falsely suggest equivalence with) a genuinely empty
 //!   paragraph on the way back through this pair's deserializer.
 
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::txt::TxtSnapshot;
-use crate::artifacts::txt::schema::snapshot::LineEnding;
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun};
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun};
+use crate::artifacts::txt::schema::snapshot::LineEnding;
+use crate::artifacts::txt::TxtSnapshot;
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
 fn join_runs(runs: &[DocRun]) -> String {
@@ -33,10 +33,7 @@ pub(crate) fn block_to_lines(block: &DocBlock) -> Vec<String> {
         DocBlock::Paragraph { runs, .. } => vec![join_runs(runs)],
         DocBlock::Heading { runs, .. } => vec![join_runs(runs)],
         DocBlock::List { items, .. } => items.iter().flat_map(|item| item.blocks.iter().flat_map(block_to_lines)).collect(),
-        DocBlock::Table { rows } => rows
-            .iter()
-            .map(|row| row.cells.iter().map(|cell| cell.blocks.iter().flat_map(block_to_lines).collect::<Vec<_>>().join(" ")).collect::<Vec<_>>().join("\t"))
-            .collect(),
+        DocBlock::Table { rows } => rows.iter().map(|row| row.cells.iter().map(|cell| cell.blocks.iter().flat_map(block_to_lines).collect::<Vec<_>>().join(" ")).collect::<Vec<_>>().join("\t")).collect(),
         DocBlock::Code { text, .. } => text.lines().map(str::to_string).collect(),
         DocBlock::Quote { blocks } => blocks.iter().flat_map(block_to_lines).collect(),
         DocBlock::Image { alt, .. } => vec![alt.clone()],

@@ -6,20 +6,23 @@
 //! 🔀️ S-6 twin: `crate::artifacts::pdf::schema` shims to 1.7 (canonical) -- 1.4's own codec
 //! uses its own standard-local schema path directly rather than the shared root re-export.
 
+use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::{
+    diff::PdfDiff,
+    mutations::PdfMutation,
+    snapshot::{PageDoc, PdfSnapshot},
+};
 use crate::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA;
-use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::{diff::PdfDiff, mutations::PdfMutation, snapshot::{PageDoc, PdfSnapshot}};
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
     use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot;
     use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::PdfAnalyzer;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
     const DEP_DEFLATE: Dialect = Dialect { artifact_kind: "s.stdio.deflate", standard: StandardId("rfc1950"), subset: SubsetId("*") };
-
 
     pub struct PdfComposerComposition;
 
@@ -48,10 +51,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "PdfComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = PdfAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "PdfComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "PdfComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -103,7 +103,9 @@ fn find_subslice(data: &[u8], needle: &[u8]) -> Option<usize> {
 }
 
 pub fn decode_pdf(data: &[u8]) -> Result<PdfSnapshot, String> {
-    if !data.starts_with(b"%PDF") { return Err("not pdf".into()); }
+    if !data.starts_with(b"%PDF") {
+        return Err("not pdf".into());
+    }
     let w = 612.0f64;
     let h = 792.0f64;
     let mut content = String::new();
@@ -123,10 +125,7 @@ pub fn decode_pdf(data: &[u8]) -> Result<PdfSnapshot, String> {
         }
     }
     let label = content.split('(').nth(1).and_then(|s| s.split(')').next()).unwrap_or("").to_string();
-    Ok(PdfSnapshot {
-        schema: STDIO_PDF_DOCUMENT_SCHEMA.into(),
-        page: PageDoc { width: w, height: h, text: label },
-    })
+    Ok(PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), page: PageDoc { width: w, height: h, text: label } })
 }
 //#endregion 🔖️Codec
 
@@ -183,8 +182,8 @@ mod tests {
     /// here (the engine's own test region), not any framework file.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::{diff, mutations, snapshot};
         use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::PdfMutation;
+        use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         fn demo_mutation_cases() -> Vec<PdfMutation> {
@@ -205,19 +204,11 @@ mod tests {
         /// parse under the real dialect.
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }
@@ -303,11 +294,11 @@ mod tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
-    use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::PdfComposer as PdfRawAnyComposer;
     use crate::artifacts::pdf::standards::v1_4::subsets::a::schema::PdfAComposer;
+    use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::PdfComposer as PdfRawAnyComposer;
     use crate::artifacts::pdf::standards::v1_4::subsets::x::schema::PdfXComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 

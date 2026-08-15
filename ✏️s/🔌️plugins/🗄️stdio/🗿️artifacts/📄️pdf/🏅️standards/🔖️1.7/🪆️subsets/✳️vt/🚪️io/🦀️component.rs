@@ -5,15 +5,12 @@
 //! established by `✳️a/🚪️io` and `✳️any/🚪️io` for this artifact. ISO 16612-2:2010 (PDF/VT-1/-2).
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use std::sync::OnceLock;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
-    use semio_framework_plugin::{
-        ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
-        register_subset_validator, subset_validator_entry_of,
-    };
-    use crate::artifacts::pdf::standards::v1_7::subsets::vt::schema::check_vt_conformance;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfComposer as PdfAnyComposer;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfComposer as PdfAnyComposer;
+    use crate::artifacts::pdf::standards::v1_7::subsets::vt::schema::check_vt_conformance;
+    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use std::sync::OnceLock;
 
     const DIALECT_VT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("vt") };
     const DIALECT_ANY: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
@@ -41,10 +38,7 @@ pub mod derived_composition {
             if !hard.is_empty() {
                 let mut all = hard.clone();
                 all.extend(soft);
-                return Err(ComposeError {
-                    message: format!("PDF/VT-1/-2 conformance violated: {} hard issue(s) -- not stamping the vt dialect", hard.len()),
-                    diagnostics: all,
-                });
+                return Err(ComposeError { message: format!("PDF/VT-1/-2 conformance violated: {} hard issue(s) -- not stamping the vt dialect", hard.len()), diagnostics: all });
             }
             let mut diagnostics = inner.diagnostics;
             diagnostics.extend(soft);

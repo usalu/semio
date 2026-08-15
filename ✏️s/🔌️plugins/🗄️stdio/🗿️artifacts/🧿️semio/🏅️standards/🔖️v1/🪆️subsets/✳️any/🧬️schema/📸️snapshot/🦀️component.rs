@@ -6,24 +6,24 @@
 //! structural change from the W1b scaffold to pick that up, since only the referenced types'
 //! internals grew, not their names/paths.
 
+use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
 
 /// 🌐️ The envelope union of all 18 semio subset snapshot types (master plan: "SemioSnapshot =
 /// tagged union of the 18" — `text` (UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W2a) is the 14th arm,
@@ -55,7 +55,9 @@ pub enum SemioSubsetSnapshot {
 }
 
 impl Default for SemioSubsetSnapshot {
-    fn default() -> Self { SemioSubsetSnapshot::Brep(SemioBrepSnapshot::default()) }
+    fn default() -> Self {
+        SemioSubsetSnapshot::Brep(SemioBrepSnapshot::default())
+    }
 }
 
 use schema::ArtifactSchema;
@@ -78,10 +80,7 @@ pub struct SemioSnapshot {
 
 impl Default for SemioSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_SEMIO_DOCUMENT_SCHEMA.into(),
-            subset: Default::default(),
-        }
+        Self { schema: STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset: Default::default() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -314,7 +313,9 @@ fn decode_semio_snapshot_binary(bytes: &[u8]) -> Result<SemioSnapshot, String> {
 /// `subset`/`schema` header and the outer `store::semio_format` wrapping every stdio artifact uses.
 impl store::ArtifactDsl for SemioSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str { STDIO_SEMIO_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_SEMIO_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -326,11 +327,7 @@ impl store::ArtifactDsl for SemioSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = enc_semio_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -339,22 +336,14 @@ impl store::ArtifactPack for SemioSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_semio_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_semio_snapshot_binary(&inner).map_err(store::PackError::Schema)
@@ -371,10 +360,7 @@ impl store::ArtifactPack for SemioSnapshot {
 #[cfg(test)]
 pub(crate) fn demo_semio_snapshot() -> SemioSnapshot {
     use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::demo_flow_snapshot;
-    SemioSnapshot {
-        schema: STDIO_SEMIO_DOCUMENT_SCHEMA.into(),
-        subset: SemioSubsetSnapshot::Flow(demo_flow_snapshot()),
-    }
+    SemioSnapshot { schema: STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset: SemioSubsetSnapshot::Flow(demo_flow_snapshot()) }
 }
 //#endregion 🔖️Demo
 

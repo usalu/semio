@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::svg::schema::snapshot::SvgSnapshot;
-pub use crate::artifacts::svg::schema::SvgArtifact;
 pub use crate::artifacts::svg::schema::diff::SvgDiff;
 pub use crate::artifacts::svg::schema::mutations::SvgMutation;
+pub use crate::artifacts::svg::schema::snapshot::SvgSnapshot;
+pub use crate::artifacts::svg::schema::SvgArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_SVG_DOCUMENT_SCHEMA: &str = "stdio.svg";
@@ -27,7 +27,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: STDIO_SVG_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
@@ -68,12 +68,8 @@ fn declared_subset_validators() -> &'static [semio_framework_plugin::SubsetValid
     ENTRIES
         .get_or_init(|| {
             vec![
-                semio_framework_plugin::subset_validator_entry_of::<
-                    crate::artifacts::svg::standards::v1_1::subsets::tiny::io::SvgTinyValidator,
-                >(),
-                semio_framework_plugin::subset_validator_entry_of::<
-                    crate::artifacts::svg::standards::v1_1::subsets::basic::io::SvgBasicValidator,
-                >(),
+                semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::svg::standards::v1_1::subsets::tiny::io::SvgTinyValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::svg::standards::v1_1::subsets::basic::io::SvgBasicValidator>(),
             ]
         })
         .as_slice()
@@ -146,9 +142,9 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::svg::standards::v1_1::engine::io_registry as v1_1;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -157,10 +153,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("SvgComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("SvgComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

@@ -83,21 +83,7 @@ impl ArtifactSerializer for SemioImageToGif {
             }
         }
         let (gct, indexed_frames, transparent_index) = quantize(&refs)?;
-        let frames = from
-            .frames
-            .iter()
-            .zip(indexed_frames)
-            .map(|(f, indices)| GifFrame {
-                left: 0,
-                top: 0,
-                width: from.width,
-                height: from.height,
-                indices,
-                delay_cs: (f.delay_ms / 10) as u16,
-                transparent_index,
-                ..GifFrame::default()
-            })
-            .collect();
+        let frames = from.frames.iter().zip(indexed_frames).map(|(f, indices)| GifFrame { left: 0, top: 0, width: from.width, height: from.height, indices, delay_cs: (f.delay_ms / 10) as u16, transparent_index, ..GifFrame::default() }).collect();
         let comments = from.metadata.iter().filter(|m| m.key == "comment").map(|m| m.value.clone()).collect();
         let loop_count = from.metadata.iter().find(|m| m.key == "loopCount").and_then(|m| m.value.parse::<u16>().ok());
         Ok(GifSnapshot {
@@ -158,12 +144,7 @@ mod tests {
         for i in 0..257u32 {
             rgba.extend_from_slice(&[(i % 256) as u8, ((i / 2) % 256) as u8, ((i / 3) % 256) as u8, 255]);
         }
-        let semio = SemioImageSnapshot {
-            width: 257,
-            height: 1,
-            frames: vec![SemioImageFrame { delay_ms: 0, rgba8: rgba }],
-            ..SemioImageSnapshot::default()
-        };
+        let semio = SemioImageSnapshot { width: 257, height: 1, frames: vec![SemioImageFrame { delay_ms: 0, rgba8: rgba }], ..SemioImageSnapshot::default() };
         assert!(SemioImageToGif::serialize(&semio).is_err());
     }
 }

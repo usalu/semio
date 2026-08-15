@@ -1,5 +1,5 @@
-/** 🧬️ PdfSnapshot (1.7) schema — real object-graph model mirroring the Rust `PdfSnapshot` shape
- *  1:1. `objects` is the FULL raw indirect-object graph (lossless retention); `pages` is the
+/** 🧬️ PdfSnapshot (1.7) schema — logical object-graph model mirroring Rust 1:1.
+ *  `objects` is the full semantic indirect-object graph; `pages` is the
  *  resolved, editable view; `trailer` is the trailer dictionary (same shape as a `Dict`). */
 
 /** 🔗️ An indirect-object reference `N G R` -- also the `objects` collection's diff key. */
@@ -20,10 +20,20 @@ export interface PdfDecimal {
   scale: number;
 }
 
-/** 🎯 A parsed PDF object -- the full COS object grammar (ISO 32000-1 §7.3), including streams.
- *  `str` is a byte string (not necessarily UTF-8), hence `number[]`. `stream.rawFilter` present
- *  means `data` is still filter-encoded verbatim (an unsupported filter we deliberately don't
- *  decode); absent means `data` has already been fully filter-decoded. */
+export interface PdfPredictor {
+  predictor: number;
+  colors: number;
+  bitsPerComponent: number;
+  columns: number;
+}
+
+export type PdfStreamFilter =
+  | { kind: 'flate'; predictor?: PdfPredictor }
+  | { kind: 'asciiHex' }
+  | { kind: 'ascii85' }
+  | { kind: 'runLength' };
+
+/** 🎯 Parsed PDF COS objects. Stream data is decoded; filters are typed logical concepts. */
 export type PdfObject =
   | { kind: 'null' }
   | { kind: 'bool'; value: boolean }
@@ -34,7 +44,7 @@ export type PdfObject =
   | { kind: 'array'; value: PdfObject[] }
   | { kind: 'dict'; value: PdfDictEntry[] }
   | { kind: 'ref'; value: ObjRef }
-  | { kind: 'stream'; dict: PdfDictEntry[]; data: number[]; rawFilter?: string };
+  | { kind: 'stream'; dict: PdfDictEntry[]; data: number[]; filters: PdfStreamFilter[] };
 
 /** 🗄️ One `N G obj ... endobj` indirect object, keyed by `id`. */
 export interface PdfIndirectObject {

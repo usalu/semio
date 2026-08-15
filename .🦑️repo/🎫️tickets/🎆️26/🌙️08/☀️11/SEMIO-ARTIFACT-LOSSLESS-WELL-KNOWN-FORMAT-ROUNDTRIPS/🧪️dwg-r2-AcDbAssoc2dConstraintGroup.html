@@ -1,0 +1,107 @@
+<html>
+<head>
+<title>AcDbAssoc2dConstraintGroup Class</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="generator" content="Doc-O-Matic">
+    <meta name="save" content="history">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+<meta name="topicid" content="OREF-AcDbAssoc2dConstraintGroup">
+<meta name="canonical" content="http://help.autodesk.com/cloudhelp/2018/ENU/OARX-RefGuide/files/OREF-AcDbAssoc2dConstraintGroup.html#!">
+<meta name="helpsystempath" content="/view/OARX/2018/ENU">
+<meta name="product" content="OARX">
+<meta name="release" content="2018">
+<meta name="language" content="ENU">
+<meta name="book" content="Developer">
+<meta name="component" content="OARX-RefGuide">
+<meta name="created" content="04/10/2017">
+<meta name="modified" content="04/10/2017">
+<meta name="experiencelevel" content="expert">
+<meta name="audience" content="programmer">
+<meta name="user-comments" content="enable">
+<link rel="stylesheet" type="text/css" href="/view/clientframework/client.css">
+<script type="text/javascript" src="/view/clientframework/client.js"><!--filler--></script>
+
+    
+
+
+
+
+
+
+</head>
+<body class="Element700"><link rel="stylesheet" type="text/css" href="../css/default.css">
+
+<div id="persistenceDiv" style="display:none; behavior:url(#default#userData);"></div>
+
+<!-- Begin Popups -->
+
+<!-- End Popups -->
+
+<!-- Begin Page Header -->
+<div class="head"><div class="head-text"><h1>AcDbAssoc2dConstraintGroup Class   </h1></div></div>
+
+<!-- End Page Header -->
+
+<!-- Begin Client Area -->
+<div class="Element720" id="areascroll">
+<div class="Element721">
+
+<!-- Begin Page Content -->
+<div class="Element58">
+<!--Element14 following sibling has _14_-->
+<div id="div436C61737320486965726172636879">
+<div class="Element151"><div class="Element150"><pre class="Element150"><a href="OREF-AcRxObject.html">AcRxObject</a>
+    <a href="OREF-AcGiDrawable.html">AcGiDrawable</a>
+    <a href="OREF-AcHeapOperators.html">AcHeapOperators</a>
+        <a href="OREF-AcDbObject.html">AcDbObject</a>
+            <a href="OREF-AcDbAssocAction.html">AcDbAssocAction</a>
+                <strong>AcDbAssoc2dConstraintGroup</strong></pre></div></div>
+</div>
+<div class="Element99">
+<a onclick="toggleVisibilityStored('432B2B');" class="a_Element99"><img src="../images/btn_collapse_large.gif" border="0" alt="" title="" id="img432B2B">C++</a></div>
+<div id="div432B2B">
+<div class="Element101"><div class="Element100"><pre class="Element100"><strong><span style="color: #871F78">class</span></strong> <strong><span style="color: #660000">AcDbAssoc2dConstraintGroup</span></strong> : <strong><span style="color: #871F78">public</span></strong> AcDbAssocAction;</pre></div></div>
+</div>
+<!--Element14 following has no -_14_--><div class="Element14">
+<!--a_Element14-->File</div>
+<div id="div46696C65">
+<div class="Element11">
+<!--Element10--><div class="Element10"><!--Element10 no _14_ in a --><div class="Element10">
+<p class="Element10">
+AcDbAssoc2dConstraintGroup.h</p></div></div>
+</div>
+</div>
+<!--Element14 following has no -_14_--><div class="Element14">
+<!--a_Element14-->Description</div>
+<div id="div4465736372697074696F6E">
+<div class="Element11">
+<!--Element10--><div class="Element10"><!--Element10 no _14_ in a --><div class="Element10">
+<p class="Element10">
+The AcDbAssoc2dConstraintGroup class represents a set of geometric constraint relations between subentities of geometric entities. All the geometries must lie in a single plane. </p>
+<p class="Element10">
+The AcDbAssoc2dConstraintGroup object owns the constraints that are derived from the AcGeomConstraint class, and "proxies" of the constrained geometries, derived from the AcConstrainedGeometry class. AcConstrainedGeometries often refer to subentities of AutoCAD entities and the AcDbAssoc2dConstraintGroup owns AcDbAssocGeomDepedencies on these entities. It also owns AcDbAssocValueDependencies on the AcDbAssocVariables that are the values of dimensional constraints (represented by classes derived from AcExplicitConstraint). </p>
+<p class="Element10">
+If the dimensional constraint has a graphical representation, such as in the form of an AcDbDimension entity, the AcExplicitConstraint also owns AcdbAssocDependency owning an object derived from AcDbAssocDimDependencyBody that facilitates the interaction between the AcExplicitConstraint, the AcDbAssocVariable keeping the value of the dimensional constraint, and the AcDbDimension (or other object/entity) that serves as a graphical representation of the dimensional constraint. </p>
+<p class="Element10">
+The evaluate() method of this action takes the current properties of the referenced geometries and the current values of the variables referenced by AcExplicitConstraints. Then it invokes a constraint solver that finds new positions and shapes of the constrained geometries so that they satisfy the constraints. Finally the referenced geometries are updated to their new positions and shapes. The evaluate() method call may fail if a solution satisfying all the constraints can not be found..</p></div></div>
+</div>
+</div>
+<!--Element14 following has no -_14_--><div class="Element14">
+<!--a_Element14-->Links</div>
+<div id="div4C696E6B73">
+<div class="Element11">
+<!--Element10--><div class="Element10"><!--Element10 no _14_ in a --><div class="Element10">
+<a href="OREF-__MEMBERTYPE_Enumerations_AcDbAssoc2dConstraintGroup.html">AcDbAssoc2dConstraintGroup Enumerations</a>, <a href="OREF-__MEMBERTYPE_Methods_AcDbAssoc2dConstraintGroup.html">AcDbAssoc2dConstraintGroup Methods</a></div></div>
+</div>
+</div>
+</div>
+<!-- End Page Content -->
+
+<!-- Begin Page Footer -->
+
+<!-- End Page Footer -->
+</div>
+</div>
+
+<!-- End Client Area -->
+</body></html>

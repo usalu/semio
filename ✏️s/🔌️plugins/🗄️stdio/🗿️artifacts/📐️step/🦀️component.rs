@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::step::schema::snapshot::StepSnapshot;
-pub use crate::artifacts::step::schema::StepArtifact;
 pub use crate::artifacts::step::schema::diff::StepDiff;
 pub use crate::artifacts::step::schema::mutations::StepMutation;
+pub use crate::artifacts::step::schema::snapshot::StepSnapshot;
+pub use crate::artifacts::step::schema::StepArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_STEP_DOCUMENT_SCHEMA: &str = "stdio.step";
@@ -148,16 +148,16 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: STDIO_STEP_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::step::standards::v_ap214::engine::io_registry as v_ap214;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -166,10 +166,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("StepComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("StepComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

@@ -19,12 +19,8 @@
 //! derive").
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{
-    dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff,
-};
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{
-    PortRef, SemioFlowSnapshot, FlowEdge, FlowNode, FlowParam,
-};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 use schema::ArtifactSchema;
@@ -113,7 +109,11 @@ where
             added.push(o.clone());
         }
     }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(NamedTripleDiff { removed, modified, added }) }
+    if removed.is_empty() && modified.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(NamedTripleDiff { removed, modified, added })
+    }
 }
 
 fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
@@ -157,13 +157,7 @@ where
 /// needed since identity IS the key): a `d2`-removal of a `d1`-added key annihilates the add; a
 /// `d2`-modify of a `d1`-added key patches into the carried payload; everything else composes
 /// directly on the shared key space.
-fn absorb_named<K, T, D>(
-    d1: NamedTripleDiff<K, D, T>,
-    d2: NamedTripleDiff<K, D, T>,
-    key_of: impl Fn(&T) -> K,
-    absorb_item: impl Fn(D, D) -> D,
-    apply_item: impl Fn(&mut T, &D),
-) -> NamedTripleDiff<K, D, T>
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -240,7 +234,11 @@ fn diff_node(old: &FlowNode, new: &FlowNode) -> Option<FlowNodeDiff> {
     let label = (old.label != new.label).then(|| new.label.clone());
     let params = diff_params(&old.params, &new.params);
     let position = (old.position != new.position).then_some(new.position);
-    if kind.is_none() && label.is_none() && params.is_none() && position.is_none() { None } else { Some(FlowNodeDiff { kind, label, params, position }) }
+    if kind.is_none() && label.is_none() && params.is_none() && position.is_none() {
+        None
+    } else {
+        Some(FlowNodeDiff { kind, label, params, position })
+    }
 }
 
 fn apply_node(node: &mut FlowNode, diff: &FlowNodeDiff) {
@@ -298,7 +296,11 @@ fn diff_edge(old: &FlowEdge, new: &FlowEdge) -> Option<FlowEdgeDiff> {
     let from = (old.from != new.from).then(|| new.from.clone());
     let to = (old.to != new.to).then(|| new.to.clone());
     let kind = (old.kind != new.kind).then(|| new.kind.clone());
-    if from.is_none() && to.is_none() && kind.is_none() { None } else { Some(FlowEdgeDiff { from, to, kind }) }
+    if from.is_none() && to.is_none() && kind.is_none() {
+        None
+    } else {
+        Some(FlowEdgeDiff { from, to, kind })
+    }
 }
 
 fn apply_edge(edge: &mut FlowEdge, diff: &FlowEdgeDiff) {
@@ -314,11 +316,7 @@ fn apply_edge(edge: &mut FlowEdge, diff: &FlowEdgeDiff) {
 }
 
 fn inverse_edge(base: &FlowEdge, diff: &FlowEdgeDiff) -> FlowEdgeDiff {
-    FlowEdgeDiff {
-        from: diff.from.as_ref().map(|_| base.from.clone()),
-        to: diff.to.as_ref().map(|_| base.to.clone()),
-        kind: diff.kind.as_ref().map(|_| base.kind.clone()),
-    }
+    FlowEdgeDiff { from: diff.from.as_ref().map(|_| base.from.clone()), to: diff.to.as_ref().map(|_| base.to.clone()), kind: diff.kind.as_ref().map(|_| base.kind.clone()) }
 }
 
 fn absorb_edge_diff(mut a: FlowEdgeDiff, b: FlowEdgeDiff) -> FlowEdgeDiff {
@@ -370,10 +368,7 @@ impl MutationDiff<SemioFlowSnapshot> for SemioFlowDiff {
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioFlowSnapshot> for SemioFlowDiff {
     fn inverse(&self, base: &SemioFlowSnapshot) -> Self {
-        SemioFlowDiff {
-            nodes: self.nodes.as_ref().map(|d| inverse_named(&base.nodes, d, |n| n.id.clone(), inverse_node)),
-            edges: self.edges.as_ref().map(|d| inverse_named(&base.edges, d, |e| e.id.clone(), inverse_edge)),
-        }
+        SemioFlowDiff { nodes: self.nodes.as_ref().map(|d| inverse_named(&base.nodes, d, |n| n.id.clone(), inverse_node)), edges: self.edges.as_ref().map(|d| inverse_named(&base.edges, d, |e| e.id.clone(), inverse_edge)) }
     }
 
     fn between(base: &SemioFlowSnapshot, other: &SemioFlowSnapshot) -> Self {
@@ -537,14 +532,7 @@ pub(crate) fn dec_param(s: &str) -> Result<FlowParam, String> {
     Ok(FlowParam { key: dec_str(key)?, value: dec_str(value)? })
 }
 pub(crate) fn enc_node(n: &FlowNode) -> String {
-    format!(
-        "[{},{},{},{},{}]",
-        enc_str(&n.id),
-        enc_str(&n.kind),
-        enc_str(&n.label),
-        format!("[{}]", n.params.iter().map(enc_param).collect::<Vec<_>>().join(",")),
-        enc_point2(&n.position)
-    )
+    format!("[{},{},{},{},{}]", enc_str(&n.id), enc_str(&n.kind), enc_str(&n.label), format!("[{}]", n.params.iter().map(enc_param).collect::<Vec<_>>().join(",")), enc_point2(&n.position))
 }
 pub(crate) fn dec_node(s: &str) -> Result<FlowNode, String> {
     let inner = strip_brackets(s)?;
@@ -572,17 +560,15 @@ fn dec_param_diff(s: &str) -> Result<FlowParamDiff, String> {
     let inner = strip_brackets(s)?;
     Ok(FlowParamDiff { value: decode_option(inner, dec_str)? })
 }
-fn enc_params_diff(d: &FlowParamsDiff) -> String { enc_named_triple(d, |k| enc_str(k), enc_param_diff, enc_param) }
-fn dec_params_diff(s: &str) -> Result<FlowParamsDiff, String> { dec_named_triple(s, dec_str, dec_param_diff, dec_param) }
+fn enc_params_diff(d: &FlowParamsDiff) -> String {
+    enc_named_triple(d, |k| enc_str(k), enc_param_diff, enc_param)
+}
+fn dec_params_diff(s: &str) -> Result<FlowParamsDiff, String> {
+    dec_named_triple(s, dec_str, dec_param_diff, dec_param)
+}
 
 fn enc_node_diff(d: &FlowNodeDiff) -> String {
-    format!(
-        "[{},{},{},{}]",
-        encode_option(&d.kind, |v| enc_str(v)),
-        encode_option(&d.label, |v| enc_str(v)),
-        encode_option(&d.params, enc_params_diff),
-        encode_option(&d.position, |v| enc_point2(v))
-    )
+    format!("[{},{},{},{}]", encode_option(&d.kind, |v| enc_str(v)), encode_option(&d.label, |v| enc_str(v)), encode_option(&d.params, enc_params_diff), encode_option(&d.position, |v| enc_point2(v)))
 }
 fn dec_node_diff(s: &str) -> Result<FlowNodeDiff, String> {
     let inner = strip_brackets(s)?;
@@ -590,8 +576,12 @@ fn dec_node_diff(s: &str) -> Result<FlowNodeDiff, String> {
     let [kind, label, params, position] = parts.as_slice() else { return Err(format!("node diff: expected 4 fields, got {}", parts.len())) };
     Ok(FlowNodeDiff { kind: decode_option(kind, dec_str)?, label: decode_option(label, dec_str)?, params: decode_option(params, dec_params_diff)?, position: decode_option(position, dec_point2)? })
 }
-fn enc_nodes_diff(d: &FlowNodesDiff) -> String { enc_named_triple(d, |k| enc_str(k), enc_node_diff, enc_node) }
-fn dec_nodes_diff(s: &str) -> Result<FlowNodesDiff, String> { dec_named_triple(s, dec_str, dec_node_diff, dec_node) }
+fn enc_nodes_diff(d: &FlowNodesDiff) -> String {
+    enc_named_triple(d, |k| enc_str(k), enc_node_diff, enc_node)
+}
+fn dec_nodes_diff(s: &str) -> Result<FlowNodesDiff, String> {
+    dec_named_triple(s, dec_str, dec_node_diff, dec_node)
+}
 
 fn enc_edge_diff(d: &FlowEdgeDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.from, |v| enc_port_ref(v)), encode_option(&d.to, |v| enc_port_ref(v)), encode_option(&d.kind, |v| enc_str(v)))
@@ -602,15 +592,23 @@ fn dec_edge_diff(s: &str) -> Result<FlowEdgeDiff, String> {
     let [from, to, kind] = parts.as_slice() else { return Err(format!("edge diff: expected 3 fields, got {}", parts.len())) };
     Ok(FlowEdgeDiff { from: decode_option(from, dec_port_ref)?, to: decode_option(to, dec_port_ref)?, kind: decode_option(kind, dec_str)? })
 }
-fn enc_edges_diff(d: &FlowEdgesDiff) -> String { enc_named_triple(d, |k| enc_str(k), enc_edge_diff, enc_edge) }
-fn dec_edges_diff(s: &str) -> Result<FlowEdgesDiff, String> { dec_named_triple(s, dec_str, dec_edge_diff, dec_edge) }
+fn enc_edges_diff(d: &FlowEdgesDiff) -> String {
+    enc_named_triple(d, |k| enc_str(k), enc_edge_diff, enc_edge)
+}
+fn dec_edges_diff(s: &str) -> Result<FlowEdgesDiff, String> {
+    dec_named_triple(s, dec_str, dec_edge_diff, dec_edge)
+}
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
 fn print_flow_diff(d: &SemioFlowDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.nodes { tokens.push(format!("nodes={}", enc_nodes_diff(v))); }
-    if let Some(v) = &d.edges { tokens.push(format!("edges={}", enc_edges_diff(v))); }
+    if let Some(v) = &d.nodes {
+        tokens.push(format!("nodes={}", enc_nodes_diff(v)));
+    }
+    if let Some(v) = &d.edges {
+        tokens.push(format!("edges={}", enc_edges_diff(v)));
+    }
     tokens.join(" ")
 }
 fn parse_flow_diff(line: &str) -> Result<SemioFlowDiff, String> {
@@ -619,9 +617,13 @@ fn parse_flow_diff(line: &str) -> Result<SemioFlowDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("nodes=") { d.nodes = Some(dec_nodes_diff(rest)?); }
-        else if let Some(rest) = token.strip_prefix("edges=") { d.edges = Some(dec_edges_diff(rest)?); }
-        else { return Err(format!("flow diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("nodes=") {
+            d.nodes = Some(dec_nodes_diff(rest)?);
+        } else if let Some(rest) = token.strip_prefix("edges=") {
+            d.edges = Some(dec_edges_diff(rest)?);
+        } else {
+            return Err(format!("flow diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -693,28 +695,14 @@ impl protocol::DiffCodec for SemioFlowDiff {
 #[cfg(test)]
 pub(crate) fn demo_diff_cases() -> Vec<SemioFlowDiff> {
     fn node(id: &str, kind: &str, label: &str, params: Vec<(&str, &str)>, x: f64, y: f64) -> FlowNode {
-        FlowNode {
-            id: id.into(),
-            kind: kind.into(),
-            label: label.into(),
-            params: params.into_iter().map(|(k, v)| FlowParam { key: k.into(), value: v.into() }).collect(),
-            position: SemioPoint2 { x, y },
-        }
+        FlowNode { id: id.into(), kind: kind.into(), label: label.into(), params: params.into_iter().map(|(k, v)| FlowParam { key: k.into(), value: v.into() }).collect(), position: SemioPoint2 { x, y } }
     }
     fn edge(id: &str, from_node: &str, from_port: &str, to_node: &str, to_port: &str, kind: &str) -> FlowEdge {
         FlowEdge { id: id.into(), from: PortRef { node: from_node.into(), port: from_port.into() }, to: PortRef { node: to_node.into(), port: to_port.into() }, kind: kind.into() }
     }
     let schema = crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA;
-    let a = SemioFlowSnapshot {
-        schema: schema.into(),
-        nodes: vec![node("keep", "old", "Old", vec![("p", "1")], 0.0, 0.0), node("gone", "x", "Gone", vec![], 1.0, 1.0)],
-        edges: vec![edge("e1", "keep", "out", "gone", "in", "old")],
-    };
-    let b = SemioFlowSnapshot {
-        schema: schema.into(),
-        nodes: vec![node("keep", "new", "New", vec![("p", "2")], 5.0, 5.0), node("added", "y", "Added", vec![], 2.0, 2.0)],
-        edges: vec![edge("e1", "keep", "out2", "added", "in", "new")],
-    };
+    let a = SemioFlowSnapshot { schema: schema.into(), nodes: vec![node("keep", "old", "Old", vec![("p", "1")], 0.0, 0.0), node("gone", "x", "Gone", vec![], 1.0, 1.0)], edges: vec![edge("e1", "keep", "out", "gone", "in", "old")] };
+    let b = SemioFlowSnapshot { schema: schema.into(), nodes: vec![node("keep", "new", "New", vec![("p", "2")], 5.0, 5.0), node("added", "y", "Added", vec![], 2.0, 2.0)], edges: vec![edge("e1", "keep", "out2", "added", "in", "new")] };
     vec![
         SemioFlowDiff::default(),
         <SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&a, &b),
@@ -732,13 +720,7 @@ mod tests {
     use protocol::DiffCodec;
 
     fn node(id: &str, kind: &str, label: &str, params: Vec<(&str, &str)>, x: f64, y: f64) -> FlowNode {
-        FlowNode {
-            id: id.into(),
-            kind: kind.into(),
-            label: label.into(),
-            params: params.into_iter().map(|(k, v)| FlowParam { key: k.into(), value: v.into() }).collect(),
-            position: SemioPoint2 { x, y },
-        }
+        FlowNode { id: id.into(), kind: kind.into(), label: label.into(), params: params.into_iter().map(|(k, v)| FlowParam { key: k.into(), value: v.into() }).collect(), position: SemioPoint2 { x, y } }
     }
     fn edge(id: &str, from_node: &str, from_port: &str, to_node: &str, to_port: &str, kind: &str) -> FlowEdge {
         FlowEdge { id: id.into(), from: PortRef { node: from_node.into(), port: from_port.into() }, to: PortRef { node: to_node.into(), port: to_port.into() }, kind: kind.into() }
@@ -768,27 +750,15 @@ mod tests {
     fn sweep_a() -> SemioFlowSnapshot {
         SemioFlowSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
-            nodes: vec![
-                node("keep", "old-kind", "Old Label", vec![("toModify", "old"), ("stay", "same"), ("toRemove", "gone")], 0.0, 0.0),
-                node("toRemoveNode", "sink", "Gone", vec![], 5.0, 5.0),
-            ],
-            edges: vec![
-                edge("keepEdge", "keep", "out", "toRemoveNode", "in", "old-kind"),
-                edge("toRemoveEdge", "toRemoveNode", "out", "keep", "in", "data"),
-            ],
+            nodes: vec![node("keep", "old-kind", "Old Label", vec![("toModify", "old"), ("stay", "same"), ("toRemove", "gone")], 0.0, 0.0), node("toRemoveNode", "sink", "Gone", vec![], 5.0, 5.0)],
+            edges: vec![edge("keepEdge", "keep", "out", "toRemoveNode", "in", "old-kind"), edge("toRemoveEdge", "toRemoveNode", "out", "keep", "in", "data")],
         }
     }
     fn sweep_b() -> SemioFlowSnapshot {
         SemioFlowSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
-            nodes: vec![
-                node("keep", "new-kind", "New Label", vec![("toModify", "new"), ("stay", "same"), ("added", "fresh")], 42.0, 7.0),
-                node("addedNode", "source", "Added", vec![], 9.0, 9.0),
-            ],
-            edges: vec![
-                edge("keepEdge", "keep", "renamed-out", "addedNode", "in", "new-kind"),
-                edge("addedEdge", "addedNode", "out", "keep", "in", "data"),
-            ],
+            nodes: vec![node("keep", "new-kind", "New Label", vec![("toModify", "new"), ("stay", "same"), ("added", "fresh")], 42.0, 7.0), node("addedNode", "source", "Added", vec![], 9.0, 9.0)],
+            edges: vec![edge("keepEdge", "keep", "renamed-out", "addedNode", "in", "new-kind"), edge("addedEdge", "addedNode", "out", "keep", "in", "data")],
         }
     }
 

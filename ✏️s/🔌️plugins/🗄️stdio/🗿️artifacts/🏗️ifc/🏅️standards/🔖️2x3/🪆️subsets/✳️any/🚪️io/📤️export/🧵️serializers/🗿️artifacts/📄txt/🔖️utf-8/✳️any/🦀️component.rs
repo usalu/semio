@@ -1,7 +1,7 @@
 //! 📤️ Serialize `stdio.ifc.2x3` to stdio.txt.
 
-use crate::artifacts::txt::TxtSnapshot;
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
+use crate::artifacts::txt::TxtSnapshot;
 
 pub fn register() {}
 

@@ -24,17 +24,17 @@ use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::Se
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
-use super::create_node;
-use super::delete_node;
+use super::add_node_port;
+use super::add_node_property;
 use super::change_node_kind;
 use super::change_node_label;
-use super::move_node;
-use super::add_node_port;
-use super::remove_node_port;
-use super::add_node_property;
-use super::remove_node_property;
 use super::create_edge;
+use super::create_node;
 use super::delete_edge;
+use super::delete_node;
+use super::move_node;
+use super::remove_node_port;
+use super::remove_node_property;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -73,7 +73,14 @@ mod tests {
     fn fixture() -> SemioGraphSnapshot {
         SemioGraphSnapshot {
             nodes: vec![
-                SemioGraphNode { id: GraphNodeId::new("n1"), kind: "source".into(), label: "Source".into(), position: SemioPoint2 { x: 0.0, y: 0.0 }, ports: vec![SemioGraphPort { name: "out".into(), kind: SemioGraphPortKind::Out }], properties: vec![] },
+                SemioGraphNode {
+                    id: GraphNodeId::new("n1"),
+                    kind: "source".into(),
+                    label: "Source".into(),
+                    position: SemioPoint2 { x: 0.0, y: 0.0 },
+                    ports: vec![SemioGraphPort { name: "out".into(), kind: SemioGraphPortKind::Out }],
+                    properties: vec![],
+                },
                 SemioGraphNode { id: GraphNodeId::new("n2"), kind: "sink".into(), label: "Sink".into(), position: SemioPoint2 { x: 10.0, y: 10.0 }, ports: vec![], properties: vec![] },
             ],
             edges: vec![SemioGraphEdge { id: GraphEdgeId::new("e1"), source: GraphNodeId::new("n1"), target: GraphNodeId::new("n2"), kind: "flow".into(), label: "Main".into() }],
@@ -114,7 +121,12 @@ mod tests {
         let new_node = SemioGraphNode { id: GraphNodeId::new("n3"), kind: "extra".into(), label: "Extra".into(), position: SemioPoint2 { x: 5.0, y: 5.0 }, ports: vec![], properties: vec![] };
 
         let create = SemioGraphMutation::CreateNode(create_node::mutation::CreateNode {
-            id: new_node.id.clone(), kind: new_node.kind.clone(), label: new_node.label.clone(), position: new_node.position.clone(), ports: new_node.ports.clone(), properties: new_node.properties.clone(),
+            id: new_node.id.clone(),
+            kind: new_node.kind.clone(),
+            label: new_node.label.clone(),
+            position: new_node.position.clone(),
+            ports: new_node.ports.clone(),
+            properties: new_node.properties.clone(),
         });
         let after_create = round_trip(&base, &create);
         assert_eq!(after_create.nodes.len(), base.nodes.len() + 1);
@@ -143,7 +155,17 @@ mod tests {
         let delete = SemioGraphMutation::DeleteNode(delete_node::mutation::DeleteNode { id: GraphNodeId::new("n1") });
         let undo = delete.inverse(&base);
         assert_eq!(undo.len(), 2, "inverse must restore the node AND every severed edge");
-        assert_eq!(undo[0], SemioGraphMutation::CreateNode(create_node::mutation::CreateNode { id: GraphNodeId::new("n1"), kind: "source".into(), label: "Source".into(), position: SemioPoint2 { x: 0.0, y: 0.0 }, ports: vec![SemioGraphPort { name: "out".into(), kind: SemioGraphPortKind::Out }], properties: vec![] }));
+        assert_eq!(
+            undo[0],
+            SemioGraphMutation::CreateNode(create_node::mutation::CreateNode {
+                id: GraphNodeId::new("n1"),
+                kind: "source".into(),
+                label: "Source".into(),
+                position: SemioPoint2 { x: 0.0, y: 0.0 },
+                ports: vec![SemioGraphPort { name: "out".into(), kind: SemioGraphPortKind::Out }],
+                properties: vec![]
+            })
+        );
         assert_eq!(undo[1], SemioGraphMutation::CreateEdge(create_edge::mutation::CreateEdge { id: GraphEdgeId::new("e1"), source: GraphNodeId::new("n1"), target: GraphNodeId::new("n2"), kind: "flow".into(), label: "Main".into() }));
     }
 

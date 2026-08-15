@@ -1,12 +1,2 @@
-# 💡️ Dwg (ac1018) inference schema — structural byte/section statistics over the undecoded raw payload.
-
-type DwgInference {
-  structure: DwgStructure! @derived
-}
-
-type DwgStructure {
-  byteCount: Int!
-  sectionCount: Int!
-  codepage: Int!
-  version: String!
-}
+type DwgInference { structure: DwgStructure! @derived }
+type DwgStructure { layerCount: Int!, entityCount: Int!, geometryValueCount: Int!, geometryIndexCount: Int!, textCharacterCount: Int!, codepage: Int!, version: String! }

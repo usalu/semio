@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
-pub use crate::artifacts::html::standards::v5::subsets::any::schema::HtmlArtifact;
 pub use crate::artifacts::html::standards::v5::subsets::any::schema::diff::HtmlDiff;
 pub use crate::artifacts::html::standards::v5::subsets::any::schema::mutations::HtmlMutation;
+pub use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
+pub use crate::artifacts::html::standards::v5::subsets::any::schema::HtmlArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_HTML_DOCUMENT_SCHEMA: &str = "stdio.html";
@@ -34,9 +34,9 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::html::standards::v5::subsets::any::io::io_registry as std_composer;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -45,10 +45,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("HtmlComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("HtmlComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

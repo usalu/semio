@@ -7,12 +7,12 @@
 //! split.
 
 use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifRgb, GifSnapshot};
-use protocol::MutationDiff;
 use protocol::os_spr::command::DiffAlgebra;
 #[cfg(test)]
 use protocol::DiffCodec;
-use serde::{Deserialize, Serialize};
+use protocol::MutationDiff;
 use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️IndexTransport
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs (`between`/`absorb`/
@@ -110,10 +110,7 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
             if merged_removed_base.binary_search(&base_index).is_ok() {
                 continue;
             }
-            modified_map
-                .entry(base_index)
-                .and_modify(|d| absorb_diff(d, dd2.clone()))
-                .or_insert(dd2);
+            modified_map.entry(base_index).and_modify(|d| absorb_diff(d, dd2.clone())).or_insert(dd2);
         }
     }
     let merged_modified: Vec<(usize, D)> = modified_map.into_iter().collect();
@@ -142,13 +139,7 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
 /// ↩️ Diff-level inverse for an index-keyed collection triple, given the ORIGINAL base items (to
 /// recover values for re-inserting removed entries and to compute per-item inverses for modified
 /// entries). `diff_inverse` inverts one item's per-field diff against that item's base value.
-fn inverse_indexed_collection<T: Clone, D: Clone>(
-    removed: &[usize],
-    modified: &[(usize, D)],
-    added: &[(usize, T)],
-    base_items: &[T],
-    diff_inverse: impl Fn(&D, &T) -> D,
-) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
+fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
     let mut removed_sorted = removed.to_vec();
     removed_sorted.sort_unstable();
     let mut added_index_sorted: Vec<usize> = added.iter().map(|(i, _)| *i).collect();
@@ -207,8 +198,7 @@ pub struct GifImageDiff {
 
 impl GifImageDiff {
     pub fn is_empty(&self) -> bool {
-        self.left.is_none() && self.top.is_none() && self.width.is_none() && self.height.is_none()
-            && self.interlace.is_none() && self.lct.is_none() && self.indices.is_none()
+        self.left.is_none() && self.top.is_none() && self.width.is_none() && self.height.is_none() && self.interlace.is_none() && self.lct.is_none() && self.indices.is_none()
     }
 
     pub fn between(base: &GifImage, other: &GifImage) -> Self {
@@ -225,13 +215,27 @@ impl GifImageDiff {
 
     pub fn apply(&self, base: &GifImage) -> GifImage {
         let mut next = base.clone();
-        if let Some(v) = self.left { next.left = v; }
-        if let Some(v) = self.top { next.top = v; }
-        if let Some(v) = self.width { next.width = v; }
-        if let Some(v) = self.height { next.height = v; }
-        if let Some(v) = self.interlace { next.interlace = v; }
-        if let Some(v) = &self.lct { next.lct = v.clone(); }
-        if let Some(v) = &self.indices { next.indices = v.clone(); }
+        if let Some(v) = self.left {
+            next.left = v;
+        }
+        if let Some(v) = self.top {
+            next.top = v;
+        }
+        if let Some(v) = self.width {
+            next.width = v;
+        }
+        if let Some(v) = self.height {
+            next.height = v;
+        }
+        if let Some(v) = self.interlace {
+            next.interlace = v;
+        }
+        if let Some(v) = &self.lct {
+            next.lct = v.clone();
+        }
+        if let Some(v) = &self.indices {
+            next.indices = v.clone();
+        }
         next
     }
 
@@ -248,13 +252,27 @@ impl GifImageDiff {
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.left.is_some() { self.left = other.left; }
-        if other.top.is_some() { self.top = other.top; }
-        if other.width.is_some() { self.width = other.width; }
-        if other.height.is_some() { self.height = other.height; }
-        if other.interlace.is_some() { self.interlace = other.interlace; }
-        if other.lct.is_some() { self.lct = other.lct; }
-        if other.indices.is_some() { self.indices = other.indices; }
+        if other.left.is_some() {
+            self.left = other.left;
+        }
+        if other.top.is_some() {
+            self.top = other.top;
+        }
+        if other.width.is_some() {
+            self.width = other.width;
+        }
+        if other.height.is_some() {
+            self.height = other.height;
+        }
+        if other.interlace.is_some() {
+            self.interlace = other.interlace;
+        }
+        if other.lct.is_some() {
+            self.lct = other.lct;
+        }
+        if other.indices.is_some() {
+            self.indices = other.indices;
+        }
     }
 }
 //#endregion 🔖️ImageDiff
@@ -301,9 +319,7 @@ impl GifImagesDiff {
             }
         }
         let removed: Vec<usize> = (min..base.len()).collect();
-        let added: Vec<GifImageAdded> = (min..other.len())
-            .map(|i| GifImageAdded { index: i, image: other[i].clone() })
-            .collect();
+        let added: Vec<GifImageAdded> = (min..other.len()).map(|i| GifImageAdded { index: i, image: other[i].clone() }).collect();
         Self { removed, modified, added }
     }
 
@@ -314,11 +330,15 @@ impl GifImagesDiff {
         removed_sorted.reverse();
         for m in &self.modified {
             if let Some(Some(item)) = next.get(m.index).map(|o| o.as_ref().map(|i| m.diff.apply(i))) {
-                if let Some(slot) = next.get_mut(m.index) { *slot = Some(item); }
+                if let Some(slot) = next.get_mut(m.index) {
+                    *slot = Some(item);
+                }
             }
         }
         for &r in &removed_sorted {
-            if r < next.len() { next.remove(r); }
+            if r < next.len() {
+                next.remove(r);
+            }
         }
         let mut out: Vec<GifImage> = next.into_iter().flatten().collect();
         let mut added_sorted = self.added.clone();
@@ -347,18 +367,9 @@ impl GifImagesDiff {
     }
 
     fn inverse(&self, base_images: &[GifImage]) -> Self {
-        let (removed, modified, added) = inverse_indexed_collection(
-            &self.removed,
-            &self.modified.iter().map(|m| (m.index, m.diff.clone())).collect::<Vec<_>>(),
-            &self.added.iter().map(|a| (a.index, a.image.clone())).collect::<Vec<_>>(),
-            base_images,
-            |d, item| d.inverse(item),
-        );
-        Self {
-            removed,
-            modified: modified.into_iter().map(|(index, diff)| GifImageModified { index, diff }).collect(),
-            added: added.into_iter().map(|(index, image)| GifImageAdded { index, image }).collect(),
-        }
+        let (removed, modified, added) =
+            inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.diff.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.image.clone())).collect::<Vec<_>>(), base_images, |d, item| d.inverse(item));
+        Self { removed, modified: modified.into_iter().map(|(index, diff)| GifImageModified { index, diff }).collect(), added: added.into_iter().map(|(index, image)| GifImageAdded { index, image }).collect() }
     }
 }
 //#endregion 🔖️ImagesDiff
@@ -392,20 +403,28 @@ pub struct GifDiff {
 
 impl GifDiff {
     pub fn is_empty_diff(&self) -> bool {
-        self.width.is_none() && self.height.is_none() && self.gct.is_none()
-            && self.background_color_index.is_none() && self.pixel_aspect_ratio.is_none()
-            && self.images.as_ref().map(GifImagesDiff::is_empty).unwrap_or(true)
+        self.width.is_none() && self.height.is_none() && self.gct.is_none() && self.background_color_index.is_none() && self.pixel_aspect_ratio.is_none() && self.images.as_ref().map(GifImagesDiff::is_empty).unwrap_or(true)
     }
 }
 
 impl MutationDiff<GifSnapshot> for GifDiff {
     fn apply(&self, base: &GifSnapshot) -> GifSnapshot {
         let mut next = base.clone();
-        if let Some(v) = self.width { next.width = v; }
-        if let Some(v) = self.height { next.height = v; }
-        if let Some(v) = &self.gct { next.gct = v.clone(); }
-        if let Some(v) = self.background_color_index { next.background_color_index = v; }
-        if let Some(v) = self.pixel_aspect_ratio { next.pixel_aspect_ratio = v; }
+        if let Some(v) = self.width {
+            next.width = v;
+        }
+        if let Some(v) = self.height {
+            next.height = v;
+        }
+        if let Some(v) = &self.gct {
+            next.gct = v.clone();
+        }
+        if let Some(v) = self.background_color_index {
+            next.background_color_index = v;
+        }
+        if let Some(v) = self.pixel_aspect_ratio {
+            next.pixel_aspect_ratio = v;
+        }
         if let Some(images_diff) = &self.images {
             next.images = images_diff.apply(&next.images);
         }
@@ -413,11 +432,21 @@ impl MutationDiff<GifSnapshot> for GifDiff {
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.width.is_some() { self.width = other.width; }
-        if other.height.is_some() { self.height = other.height; }
-        if other.gct.is_some() { self.gct = other.gct; }
-        if other.background_color_index.is_some() { self.background_color_index = other.background_color_index; }
-        if other.pixel_aspect_ratio.is_some() { self.pixel_aspect_ratio = other.pixel_aspect_ratio; }
+        if other.width.is_some() {
+            self.width = other.width;
+        }
+        if other.height.is_some() {
+            self.height = other.height;
+        }
+        if other.gct.is_some() {
+            self.gct = other.gct;
+        }
+        if other.background_color_index.is_some() {
+            self.background_color_index = other.background_color_index;
+        }
+        if other.pixel_aspect_ratio.is_some() {
+            self.pixel_aspect_ratio = other.pixel_aspect_ratio;
+        }
         match (&mut self.images, other.images) {
             (Some(mine), Some(theirs)) => mine.absorb(theirs),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
@@ -466,34 +495,13 @@ pub fn diff_set_snapshot(base: &GifSnapshot, snapshot: &GifSnapshot) -> GifDiff 
 /// tri-state (both `Some(Some(_))` and `Some(None)`), and the `images` collection triple's
 /// `removed`/`modified`/`added` all at once (mirrors png's own `demo_diff_cases()`).
 pub(crate) fn demo_diff_cases() -> Vec<GifDiff> {
-    let img = |seed: u8, w: u32, h: u32| GifImage {
-        left: 0, top: 0, width: w, height: h,
-        interlace: false,
-        lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: seed, g: seed, b: seed }; 2] }),
-        indices: vec![0u8; (w * h) as usize],
-    };
-    let a = GifSnapshot {
-        width: 4, height: 4,
-        gct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: 1, g: 2, b: 3 }; 2] }),
-        images: vec![img(1, 2, 2), img(2, 2, 2)],
-        ..GifSnapshot::default()
-    };
+    let img = |seed: u8, w: u32, h: u32| GifImage { left: 0, top: 0, width: w, height: h, interlace: false, lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: seed, g: seed, b: seed }; 2] }), indices: vec![0u8; (w * h) as usize] };
+    let a = GifSnapshot { width: 4, height: 4, gct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: 1, g: 2, b: 3 }; 2] }), images: vec![img(1, 2, 2), img(2, 2, 2)], ..GifSnapshot::default() };
     let mut ib0 = img(1, 2, 2);
     ib0.interlace = true;
     ib0.lct = None;
-    let b = GifSnapshot {
-        width: 8, height: 8,
-        gct: None,
-        background_color_index: 3,
-        pixel_aspect_ratio: 5,
-        images: vec![ib0, img(6, 3, 3), img(7, 3, 3)],
-        ..GifSnapshot::default()
-    };
-    vec![
-        GifDiff::default(),
-        diff_set_snapshot(&a, &b),
-        diff_set_snapshot(&b, &a),
-    ]
+    let b = GifSnapshot { width: 8, height: 8, gct: None, background_color_index: 3, pixel_aspect_ratio: 5, images: vec![ib0, img(6, 3, 3), img(7, 3, 3)], ..GifSnapshot::default() };
+    vec![GifDiff::default(), diff_set_snapshot(&a, &b), diff_set_snapshot(&b, &a)]
 }
 //#endregion 🔖️Diff
 
@@ -529,9 +537,15 @@ fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn parse_u8(s: &str) -> Result<u8, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
-fn parse_u32(s: &str) -> Result<u32, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
-fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+fn parse_u8(s: &str) -> Result<u8, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+fn parse_u32(s: &str) -> Result<u32, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+fn parse_usize(s: &str) -> Result<usize, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
 
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only): a top-level `sep` inside nested brackets is
 /// never mistaken for a field separator — the whole hand-rolled grammar's parsing primitive.
@@ -595,43 +609,50 @@ fn dec_color_table(s: &str) -> Result<GifColorTable, String> {
     Ok(GifColorTable { sorted: *sorted == "1", colors })
 }
 fn enc_image(f: &GifImage) -> String {
-    format!(
-        "[{},{},{},{},{},{},{}]",
-        f.left, f.top, f.width, f.height, if f.interlace { 1 } else { 0 },
-        encode_option(&f.lct, enc_color_table), hex_encode(&f.indices),
-    )
+    format!("[{},{},{},{},{},{},{}]", f.left, f.top, f.width, f.height, if f.interlace { 1 } else { 0 }, encode_option(&f.lct, enc_color_table), hex_encode(&f.indices),)
 }
 fn dec_image(s: &str) -> Result<GifImage, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [left, top, width, height, interlace, lct, indices] = parts.as_slice() else {
         return Err(format!("image: expected 7 fields, got {}", parts.len()));
     };
-    Ok(GifImage {
-        left: parse_u32(left)?, top: parse_u32(top)?, width: parse_u32(width)?, height: parse_u32(height)?,
-        interlace: *interlace == "1",
-        lct: decode_option(lct, dec_color_table)?,
-        indices: hex_decode(indices)?,
-    })
+    Ok(GifImage { left: parse_u32(left)?, top: parse_u32(top)?, width: parse_u32(width)?, height: parse_u32(height)?, interlace: *interlace == "1", lct: decode_option(lct, dec_color_table)?, indices: hex_decode(indices)? })
 }
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
 fn enc_image_diff(d: &GifImageDiff) -> String {
     let mut parts = Vec::new();
-    if let Some(v) = d.left { parts.push(format!("L:{v}")); }
-    if let Some(v) = d.top { parts.push(format!("T:{v}")); }
-    if let Some(v) = d.width { parts.push(format!("W:{v}")); }
-    if let Some(v) = d.height { parts.push(format!("H:{v}")); }
-    if let Some(v) = d.interlace { parts.push(format!("I:{}", if v { 1 } else { 0 })); }
-    if let Some(v) = &d.lct { parts.push(format!("C:{}", encode_option(v, enc_color_table))); }
-    if let Some(v) = &d.indices { parts.push(format!("X:{}", hex_encode(v))); }
+    if let Some(v) = d.left {
+        parts.push(format!("L:{v}"));
+    }
+    if let Some(v) = d.top {
+        parts.push(format!("T:{v}"));
+    }
+    if let Some(v) = d.width {
+        parts.push(format!("W:{v}"));
+    }
+    if let Some(v) = d.height {
+        parts.push(format!("H:{v}"));
+    }
+    if let Some(v) = d.interlace {
+        parts.push(format!("I:{}", if v { 1 } else { 0 }));
+    }
+    if let Some(v) = &d.lct {
+        parts.push(format!("C:{}", encode_option(v, enc_color_table)));
+    }
+    if let Some(v) = &d.indices {
+        parts.push(format!("X:{}", hex_encode(v)));
+    }
     format!("[{}]", parts.join(","))
 }
 fn dec_image_diff(s: &str) -> Result<GifImageDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = GifImageDiff::default();
     for entry in split_top_level(inner, ',') {
-        if entry.is_empty() { continue; }
+        if entry.is_empty() {
+            continue;
+        }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("image diff: bad entry {entry:?}"))?;
         match tag {
             "L" => d.left = Some(parse_u32(val)?),
@@ -660,21 +681,20 @@ fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
     let parse_entries = |s: &str| -> Result<Vec<(usize, String)>, String> {
-        split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("collection entry: bad entry {entry:?}"))?;
-            Ok((parse_usize(idx)?, rest.to_string()))
-        }).collect()
+        split_top_level(strip_brackets(s)?, ',')
+            .into_iter()
+            .filter(|s| !s.is_empty())
+            .map(|entry| {
+                let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("collection entry: bad entry {entry:?}"))?;
+                Ok((parse_usize(idx)?, rest.to_string()))
+            })
+            .collect()
     };
     Ok((removed, parse_entries(modified_s)?, parse_entries(added_s)?))
 }
 
 fn enc_images_diff(d: &GifImagesDiff) -> String {
-    enc_collection_triple(
-        "images",
-        &d.removed,
-        &d.modified.iter().map(|m| (m.index, enc_image_diff(&m.diff))).collect::<Vec<_>>(),
-        &d.added.iter().map(|a| (a.index, enc_image(&a.image))).collect::<Vec<_>>(),
-    )
+    enc_collection_triple("images", &d.removed, &d.modified.iter().map(|m| (m.index, enc_image_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_image(&a.image))).collect::<Vec<_>>())
 }
 fn dec_images_diff(body: &str) -> Result<GifImagesDiff, String> {
     let (removed, modified, added) = dec_collection_triple(body)?;
@@ -728,18 +748,16 @@ fn write_bin_image(w: &mut dsl::ByteWriter, f: &GifImage) {
     write_bin_blob(w, &f.indices);
 }
 fn read_bin_image(r: &mut dsl::ByteReader) -> Result<GifImage, dsl::PackError> {
-    Ok(GifImage {
-        left: r.read_u32_le()?, top: r.read_u32_le()?, width: r.read_u32_le()?, height: r.read_u32_le()?,
-        interlace: r.read_u8()? != 0,
-        lct: read_bin_option(r, read_bin_color_table)?,
-        indices: read_bin_blob(r)?,
-    })
+    Ok(GifImage { left: r.read_u32_le()?, top: r.read_u32_le()?, width: r.read_u32_le()?, height: r.read_u32_le()?, interlace: r.read_u8()? != 0, lct: read_bin_option(r, read_bin_color_table)?, indices: read_bin_blob(r)? })
 }
 /// 🧩 2-way presence flag (`0`=None, `1`=Some) — shared by every plain `Option<T>` field.
 fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
     match v {
         None => w.write_u8(0),
-        Some(val) => { w.write_u8(1); write_value(w, val); }
+        Some(val) => {
+            w.write_u8(1);
+            write_value(w, val);
+        }
     }
 }
 fn read_bin_option<T>(r: &mut dsl::ByteReader, read_value: impl FnOnce(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
@@ -772,7 +790,10 @@ fn write_bin_tri_flag<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_v
     match v {
         None => w.write_u8(0),
         Some(None) => w.write_u8(1),
-        Some(Some(val)) => { w.write_u8(2); write_value(w, val); }
+        Some(Some(val)) => {
+            w.write_u8(2);
+            write_value(w, val);
+        }
     }
 }
 fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader, read_value: impl FnOnce(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
@@ -818,15 +839,29 @@ fn read_bin_image_diff(r: &mut dsl::ByteReader) -> Result<GifImageDiff, dsl::Pac
 fn enc_images_diff_bin(d: &GifImagesDiff) -> Vec<u8> {
     let mut w = dsl::ByteWriter::new();
     write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
-    write_bin_vec(&mut w, &d.modified, |w, m: &GifImageModified| { w.write_varint_u64(m.index as u64); write_bin_image_diff(w, &m.diff); });
-    write_bin_vec(&mut w, &d.added, |w, a: &GifImageAdded| { w.write_varint_u64(a.index as u64); write_bin_image(w, &a.image); });
+    write_bin_vec(&mut w, &d.modified, |w, m: &GifImageModified| {
+        w.write_varint_u64(m.index as u64);
+        write_bin_image_diff(w, &m.diff);
+    });
+    write_bin_vec(&mut w, &d.added, |w, a: &GifImageAdded| {
+        w.write_varint_u64(a.index as u64);
+        write_bin_image(w, &a.image);
+    });
     w.into_bytes()
 }
 fn dec_images_diff_bin(bytes: &[u8]) -> Result<GifImagesDiff, dsl::PackError> {
     let mut r = dsl::ByteReader::new(bytes);
     let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
-    let modified = read_bin_vec(&mut r, |r| { let index = r.read_varint_u64()? as usize; let diff = read_bin_image_diff(r)?; Ok(GifImageModified { index, diff }) })?;
-    let added = read_bin_vec(&mut r, |r| { let index = r.read_varint_u64()? as usize; let image = read_bin_image(r)?; Ok(GifImageAdded { index, image }) })?;
+    let modified = read_bin_vec(&mut r, |r| {
+        let index = r.read_varint_u64()? as usize;
+        let diff = read_bin_image_diff(r)?;
+        Ok(GifImageModified { index, diff })
+    })?;
+    let added = read_bin_vec(&mut r, |r| {
+        let index = r.read_varint_u64()? as usize;
+        let image = read_bin_image(r)?;
+        Ok(GifImageAdded { index, image })
+    })?;
     Ok(GifImagesDiff { removed, modified, added })
 }
 //#endregion 🔖️RealBinaryDiffFrame
@@ -834,12 +869,24 @@ fn dec_images_diff_bin(bytes: &[u8]) -> Result<GifImagesDiff, dsl::PackError> {
 //#region 🔖️TopLevel
 fn print_gif_diff(d: &GifDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = d.width { tokens.push(format!("width={v}")); }
-    if let Some(v) = d.height { tokens.push(format!("height={v}")); }
-    if let Some(v) = &d.gct { tokens.push(format!("gct={}", encode_option(v, enc_color_table))); }
-    if let Some(v) = d.background_color_index { tokens.push(format!("bg={v}")); }
-    if let Some(v) = d.pixel_aspect_ratio { tokens.push(format!("par={v}")); }
-    if let Some(v) = &d.images { tokens.push(enc_images_diff(v)); }
+    if let Some(v) = d.width {
+        tokens.push(format!("width={v}"));
+    }
+    if let Some(v) = d.height {
+        tokens.push(format!("height={v}"));
+    }
+    if let Some(v) = &d.gct {
+        tokens.push(format!("gct={}", encode_option(v, enc_color_table)));
+    }
+    if let Some(v) = d.background_color_index {
+        tokens.push(format!("bg={v}"));
+    }
+    if let Some(v) = d.pixel_aspect_ratio {
+        tokens.push(format!("par={v}"));
+    }
+    if let Some(v) = &d.images {
+        tokens.push(enc_images_diff(v));
+    }
     tokens.join(" ")
 }
 fn parse_gif_diff(line: &str) -> Result<GifDiff, String> {
@@ -848,13 +895,21 @@ fn parse_gif_diff(line: &str) -> Result<GifDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("width=") { d.width = Some(parse_u32(rest)?); }
-        else if let Some(rest) = token.strip_prefix("height=") { d.height = Some(parse_u32(rest)?); }
-        else if let Some(rest) = token.strip_prefix("gct=") { d.gct = Some(decode_option(rest, dec_color_table)?); }
-        else if let Some(rest) = token.strip_prefix("bg=") { d.background_color_index = Some(parse_u8(rest)?); }
-        else if let Some(rest) = token.strip_prefix("par=") { d.pixel_aspect_ratio = Some(parse_u8(rest)?); }
-        else if let Some(rest) = token.strip_prefix("images{") { d.images = Some(dec_images_diff(rest.strip_suffix('}').ok_or_else(|| "images: missing closing brace".to_string())?)?); }
-        else { return Err(format!("gif diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("width=") {
+            d.width = Some(parse_u32(rest)?);
+        } else if let Some(rest) = token.strip_prefix("height=") {
+            d.height = Some(parse_u32(rest)?);
+        } else if let Some(rest) = token.strip_prefix("gct=") {
+            d.gct = Some(decode_option(rest, dec_color_table)?);
+        } else if let Some(rest) = token.strip_prefix("bg=") {
+            d.background_color_index = Some(parse_u8(rest)?);
+        } else if let Some(rest) = token.strip_prefix("par=") {
+            d.pixel_aspect_ratio = Some(parse_u8(rest)?);
+        } else if let Some(rest) = token.strip_prefix("images{") {
+            d.images = Some(dec_images_diff(rest.strip_suffix('}').ok_or_else(|| "images: missing closing brace".to_string())?)?);
+        } else {
+            return Err(format!("gif diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -894,7 +949,8 @@ impl protocol::DiffCodec for GifDiff {
             let blob = read_bin_blob(r)?;
             let mut inner = dsl::ByteReader::new(&blob);
             read_bin_color_table(&mut inner)
-        }).map_err(diff_pack_err)?;
+        })
+        .map_err(diff_pack_err)?;
         let background_color_index = read_bin_option(&mut r, |r| r.read_u8()).map_err(diff_pack_err)?;
         let pixel_aspect_ratio = read_bin_option(&mut r, |r| r.read_u8()).map_err(diff_pack_err)?;
         let images = read_bin_option(&mut r, |r| dec_images_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
@@ -908,16 +964,11 @@ impl protocol::DiffCodec for GifDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gif::STDIO_GIF_DOCUMENT_SCHEMA;
     use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifRgb;
+    use crate::artifacts::gif::STDIO_GIF_DOCUMENT_SCHEMA;
 
     fn img(seed: u8, w: u32, h: u32) -> GifImage {
-        GifImage {
-            left: 0, top: 0, width: w, height: h,
-            interlace: false,
-            lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: seed, g: seed, b: seed }; 2] }),
-            indices: vec![0u8; (w * h) as usize],
-        }
+        GifImage { left: 0, top: 0, width: w, height: h, interlace: false, lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: seed, g: seed, b: seed }; 2] }), indices: vec![0u8; (w * h) as usize] }
     }
 
     /// 🧪️ Canonical absorb case 1: `Insert(2,f)` then `Remove(0)` → `{removed:[0], added:[(1,f)]}`.
@@ -941,10 +992,7 @@ mod tests {
         let mut d1 = GifImagesDiff { added: vec![GifImageAdded { index: 2, image: f.clone() }], ..Default::default() };
         let d2 = GifImagesDiff { added: vec![GifImageAdded { index: 2, image: g.clone() }], ..Default::default() };
         d1.absorb(d2);
-        assert_eq!(d1.added, vec![
-            GifImageAdded { index: 2, image: g },
-            GifImageAdded { index: 3, image: f },
-        ]);
+        assert_eq!(d1.added, vec![GifImageAdded { index: 2, image: g }, GifImageAdded { index: 3, image: f },]);
     }
 
     /// 🧪️ Canonical absorb case 3: `Insert(1,f)` then `SetField(1,v)` patches INTO the added
@@ -953,10 +1001,7 @@ mod tests {
     fn absorb_insert_then_set_field_patches_into_added() {
         let f = img(1, 2, 2);
         let mut d1 = GifImagesDiff { added: vec![GifImageAdded { index: 1, image: f.clone() }], ..Default::default() };
-        let d2 = GifImagesDiff {
-            modified: vec![GifImageModified { index: 1, diff: GifImageDiff { interlace: Some(true), ..Default::default() } }],
-            ..Default::default()
-        };
+        let d2 = GifImagesDiff { modified: vec![GifImageModified { index: 1, diff: GifImageDiff { interlace: Some(true), ..Default::default() } }], ..Default::default() };
         d1.absorb(d2);
         assert!(d1.modified.is_empty());
         assert_eq!(d1.added.len(), 1);
@@ -966,10 +1011,7 @@ mod tests {
 
     #[test]
     fn absorb_law_holds_over_curated_ops() {
-        let base = GifSnapshot {
-            images: vec![img(1, 2, 2), img(2, 2, 2), img(3, 2, 2)],
-            ..GifSnapshot::default()
-        };
+        let base = GifSnapshot { images: vec![img(1, 2, 2), img(2, 2, 2), img(3, 2, 2)], ..GifSnapshot::default() };
         let mid = {
             let mut s = base.clone();
             s.images.insert(1, img(9, 2, 2));
@@ -1080,26 +1122,12 @@ mod tests {
     /// `between()` result — mirrors gif89a's `diff_codec_text_binary_roundtrip_law`.
     #[test]
     fn diff_codec_text_binary_roundtrip_law() {
-        let a = GifSnapshot {
-            width: 10, height: 8,
-            gct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: 1, g: 2, b: 3 }; 2] }),
-            images: vec![img(1, 2, 2), img(2, 2, 2)],
-            ..GifSnapshot::default()
-        };
+        let a = GifSnapshot { width: 10, height: 8, gct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: 1, g: 2, b: 3 }; 2] }), images: vec![img(1, 2, 2), img(2, 2, 2)], ..GifSnapshot::default() };
         let mut ib0 = img(1, 2, 2);
         ib0.interlace = true;
         ib0.lct = None;
-        let b = GifSnapshot {
-            width: 20, height: 16,
-            gct: None,
-            images: vec![ib0, img(6, 3, 3), img(7, 3, 3)],
-            ..GifSnapshot::default()
-        };
-        let cases = vec![
-            GifDiff::default(),
-            <GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &b),
-            <GifDiff as DiffAlgebra<GifSnapshot>>::between(&b, &a),
-        ];
+        let b = GifSnapshot { width: 20, height: 16, gct: None, images: vec![ib0, img(6, 3, 3), img(7, 3, 3)], ..GifSnapshot::default() };
+        let cases = vec![GifDiff::default(), <GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &b), <GifDiff as DiffAlgebra<GifSnapshot>>::between(&b, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

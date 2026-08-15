@@ -67,8 +67,11 @@ dict-entry-lit = "[" hex "," pdf-object "]"
 # `enc_pdf_object`/`dec_pdf_object` -- the full recursive COS object grammar (ISO 32000-1 §7.3):
 # `Z`=Null (bare, no payload) / `B[bit]`=Bool / `I[int]`=Int / `R[number]`=Real / `S[hex]`=Str /
 # `N[hex]`=Name / `A[items]`=Array / `D[entries]`=Dict / `F[objref]`=Ref (indirect reference) /
-# `T[[entries],hex(data),opt-hex(rawFilter)]`=Stream -- single-uppercase-letter tag prefix, never
+# `T[[entries],hex(decoded-data),stream-filters]`=Stream -- single-uppercase-letter tag prefix, never
 # ambiguous with a hex payload (hex never starts with an uppercase letter) or with `Z`'s bare form
 # (every other tag is immediately followed by `[`).
-pdf-object = "Z" | "B" "[" bit "]" | "I" "[" INT "]" | "R" "[" number "]" | "S" "[" hex "]" | "N" "[" hex "]" | "A" "[" pdf-object-item* "]" | "D" "[" dict-entry-item* "]" | "F" "[" objref-lit "]" | "T" "[" "[" dict-entry-item* "]" "," hex "," opt-hex "]"
+pdf-object = "Z" | "B" "[" bit "]" | "I" "[" INT "]" | "R" "[" number "]" | "S" "[" hex "]" | "N" "[" hex "]" | "A" "[" pdf-object-item* "]" | "D" "[" dict-entry-item* "]" | "F" "[" objref-lit "]" | "T" "[" "[" dict-entry-item* "]" "," hex "," stream-filters "]"
 pdf-object-item = pdf-object ","?
+stream-filters = "[" stream-filter-item* "]"
+stream-filter-item = stream-filter ","?
+stream-filter = "H" | "A" | "L" | "F" "[" "0" "]" | "F" "[" "1" "," INT "," INT "," INT "," INT "]"

@@ -1,3 +1,15 @@
-# s.stdio.dwg.inference (ac1024) text grammar schema
-scalar Bytes
-type Document { schema: String! payload: String! }
+# s.stdio.dwg.inference (ac1024) structured text schema
+type DwgInferenceText {
+  schema: String!
+  structure: DwgStructureText!
+}
+
+type DwgStructureText {
+  layerCount: Int!
+  entityCount: Int!
+  geometryValueCount: Int!
+  geometryIndexCount: Int!
+  textCharacterCount: Int!
+  codepage: Int!
+  version: String!
+}

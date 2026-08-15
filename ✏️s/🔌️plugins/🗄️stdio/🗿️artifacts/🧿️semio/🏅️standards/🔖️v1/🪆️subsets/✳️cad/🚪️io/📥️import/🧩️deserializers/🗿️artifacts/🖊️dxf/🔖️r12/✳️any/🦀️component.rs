@@ -19,7 +19,10 @@
 //!   `unknown_group_codes` when present) — `CadEntityRecord.handle` is synthesized sequentially
 //!   (`"E{n}"` top-level, `"B{block}#{n}"` inside a block), a documented synthetic identity.
 
-use crate::artifacts::dxf::{DxfSnapshot, schema::snapshot::{DxfBlock, DxfEntity, DxfLayer, DxfValue, DxfVertex}};
+use crate::artifacts::dxf::{
+    schema::snapshot::{DxfBlock, DxfEntity, DxfLayer, DxfValue, DxfVertex},
+    DxfSnapshot,
+};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
@@ -29,17 +32,25 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard
 
 //#region 🔖️OtherGroupCodes
 fn code_f64(codes: &[(i32, DxfValue)], code: i32) -> f64 {
-    codes.iter().find(|(c, _)| *c == code).map(|(_, v)| match v {
-        DxfValue::Double { value } => *value,
-        DxfValue::Int { value } => *value as f64,
-        _ => 0.0,
-    }).unwrap_or(0.0)
+    codes
+        .iter()
+        .find(|(c, _)| *c == code)
+        .map(|(_, v)| match v {
+            DxfValue::Double { value } => *value,
+            DxfValue::Int { value } => *value as f64,
+            _ => 0.0,
+        })
+        .unwrap_or(0.0)
 }
 fn code_str(codes: &[(i32, DxfValue)], code: i32) -> String {
-    codes.iter().find(|(c, _)| *c == code).map(|(_, v)| match v {
-        DxfValue::Str { value } => value.clone(),
-        other => format!("{other:?}"),
-    }).unwrap_or_default()
+    codes
+        .iter()
+        .find(|(c, _)| *c == code)
+        .map(|(_, v)| match v {
+            DxfValue::Str { value } => value.clone(),
+            other => format!("{other:?}"),
+        })
+        .unwrap_or_default()
 }
 
 /// 🌙️ This bridge's own convention for a raw-retained `ELLIPSE` (R12 has no typed variant — see
@@ -69,12 +80,8 @@ fn cad_entity_from_dxf(e: &DxfEntity) -> Option<CadEntity> {
     match e {
         DxfEntity::Line { start, end, .. } => Some(CadEntity::Line { a: SemioPoint2 { x: start[0], y: start[1] }, b: SemioPoint2 { x: end[0], y: end[1] } }),
         DxfEntity::Circle { center, radius, .. } => Some(CadEntity::Circle { center: SemioPoint2 { x: center[0], y: center[1] }, radius: *radius }),
-        DxfEntity::Arc { center, radius, start_angle, end_angle, .. } => {
-            Some(CadEntity::Arc { center: SemioPoint2 { x: center[0], y: center[1] }, radius: *radius, start_angle: *start_angle, end_angle: *end_angle })
-        }
-        DxfEntity::Polyline { vertices, closed, .. } => {
-            Some(CadEntity::Polyline { vertices: vertices.iter().map(|v: &DxfVertex| SemioPoint2 { x: v.x, y: v.y }).collect(), closed: *closed })
-        }
+        DxfEntity::Arc { center, radius, start_angle, end_angle, .. } => Some(CadEntity::Arc { center: SemioPoint2 { x: center[0], y: center[1] }, radius: *radius, start_angle: *start_angle, end_angle: *end_angle }),
+        DxfEntity::Polyline { vertices, closed, .. } => Some(CadEntity::Polyline { vertices: vertices.iter().map(|v: &DxfVertex| SemioPoint2 { x: v.x, y: v.y }).collect(), closed: *closed }),
         DxfEntity::Text { position, height, value, .. } => Some(CadEntity::Text { position: SemioPoint2 { x: position[0], y: position[1] }, height: *height, rotation: 0.0, content: value.clone() }),
         DxfEntity::Solid { points, .. } => Some(CadEntity::Solid {
             p1: SemioPoint2 { x: points[0][0], y: points[0][1] },
@@ -93,23 +100,15 @@ fn cad_entity_from_dxf(e: &DxfEntity) -> Option<CadEntity> {
 
 fn dxf_entity_layer(e: &DxfEntity) -> String {
     match e {
-        DxfEntity::Line { layer, .. }
-        | DxfEntity::Circle { layer, .. }
-        | DxfEntity::Arc { layer, .. }
-        | DxfEntity::Polyline { layer, .. }
-        | DxfEntity::Text { layer, .. }
-        | DxfEntity::Solid { layer, .. }
-        | DxfEntity::Insert { layer, .. } => layer.clone(),
+        DxfEntity::Line { layer, .. } | DxfEntity::Circle { layer, .. } | DxfEntity::Arc { layer, .. } | DxfEntity::Polyline { layer, .. } | DxfEntity::Text { layer, .. } | DxfEntity::Solid { layer, .. } | DxfEntity::Insert { layer, .. } => {
+            layer.clone()
+        }
         DxfEntity::Other { .. } => String::new(),
     }
 }
 
 fn records_from_entities(entities: &[DxfEntity], handle_prefix: &str) -> Vec<CadEntityRecord> {
-    entities
-        .iter()
-        .enumerate()
-        .filter_map(|(i, e)| cad_entity_from_dxf(e).map(|entity| CadEntityRecord { handle: format!("{handle_prefix}{i}"), layer: dxf_entity_layer(e), entity }))
-        .collect()
+    entities.iter().enumerate().filter_map(|(i, e)| cad_entity_from_dxf(e).map(|entity| CadEntityRecord { handle: format!("{handle_prefix}{i}"), layer: dxf_entity_layer(e), entity })).collect()
 }
 //#endregion 🔖️EntityMap
 
@@ -152,20 +151,23 @@ mod tests {
 
     fn sample_dxf() -> DxfSnapshot {
         DxfSnapshot {
-            tables: crate::artifacts::dxf::schema::snapshot::DxfTables {
-                layers: vec![DxfLayer { name: "0".into(), color: 7, linetype: "CONTINUOUS".into(), flags: 0, ..Default::default() }],
-                ..Default::default()
-            },
-            blocks: vec![DxfBlock {
-                name: "door".into(),
-                base_point: [0.0, 0.0, 0.0],
-                entities: vec![DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 0.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }],
-                unknown_group_codes: vec![],
-            }],
+            tables: crate::artifacts::dxf::schema::snapshot::DxfTables { layers: vec![DxfLayer { name: "0".into(), color: 7, linetype: "CONTINUOUS".into(), flags: 0, ..Default::default() }], ..Default::default() },
+            blocks: vec![DxfBlock { name: "door".into(), base_point: [0.0, 0.0, 0.0], entities: vec![DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 0.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }], unknown_group_codes: vec![] }],
             entities: vec![
                 DxfEntity::Circle { center: [2.0, 2.0, 0.0], radius: 1.5, layer: "0".into(), unknown_group_codes: vec![] },
                 DxfEntity::Insert { block_name: "door".into(), position: [5.0, 5.0, 0.0], scale: [1.0, 1.0, 1.0], rotation: 90.0, layer: "0".into(), unknown_group_codes: vec![] },
-                DxfEntity::Other { kind: "ELLIPSE".into(), group_codes: vec![(10, DxfValue::Double { value: 1.0 }), (20, DxfValue::Double { value: 1.0 }), (11, DxfValue::Double { value: 3.0 }), (21, DxfValue::Double { value: 0.0 }), (40, DxfValue::Double { value: 0.5 }), (41, DxfValue::Double { value: 0.0 }), (42, DxfValue::Double { value: 6.28 })] },
+                DxfEntity::Other {
+                    kind: "ELLIPSE".into(),
+                    group_codes: vec![
+                        (10, DxfValue::Double { value: 1.0 }),
+                        (20, DxfValue::Double { value: 1.0 }),
+                        (11, DxfValue::Double { value: 3.0 }),
+                        (21, DxfValue::Double { value: 0.0 }),
+                        (40, DxfValue::Double { value: 0.5 }),
+                        (41, DxfValue::Double { value: 0.0 }),
+                        (42, DxfValue::Double { value: 6.28 }),
+                    ],
+                },
                 DxfEntity::Other { kind: "3DFACE".into(), group_codes: vec![] },
             ],
             ..DxfSnapshot::default()

@@ -57,18 +57,12 @@ mod tests {
     fn populated() -> SemioKitSnapshot {
         SemioKitSnapshot {
             schema: STDIO_SEMIOKIT_DOCUMENT_SCHEMA.into(),
-            types: vec![
-                SemioKitType { id: "chair".into(), name: "Chair".into(), category: "furniture".into() },
-                SemioKitType { id: "table".into(), name: "Table".into(), category: "furniture".into() },
-            ],
+            types: vec![SemioKitType { id: "chair".into(), name: "Chair".into(), category: "furniture".into() }, SemioKitType { id: "table".into(), name: "Table".into(), category: "furniture".into() }],
             designs: vec![
                 SemioKitDesign {
                     id: "living-room".into(),
                     name: "Living Room".into(),
-                    pieces: vec![
-                        SemioKitPiece { id: "p1".into(), type_id: "chair".into(), transform: SemioTransform::identity() },
-                        SemioKitPiece { id: "p2".into(), type_id: "chair".into(), transform: SemioTransform::identity() },
-                    ],
+                    pieces: vec![SemioKitPiece { id: "p1".into(), type_id: "chair".into(), transform: SemioTransform::identity() }, SemioKitPiece { id: "p2".into(), type_id: "chair".into(), transform: SemioTransform::identity() }],
                     connections: vec![SemioKitConnection { id: "c1".into(), connecting_piece_id: "p1".into(), connecting_port: "left".into(), connected_piece_id: "p2".into(), connected_port: "right".into() }],
                 },
                 SemioKitDesign { id: "empty-room".into(), name: "Empty Room".into(), pieces: Vec::new(), connections: Vec::new() },

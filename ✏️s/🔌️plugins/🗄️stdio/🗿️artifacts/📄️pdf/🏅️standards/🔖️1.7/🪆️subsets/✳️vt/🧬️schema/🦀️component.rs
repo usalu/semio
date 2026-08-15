@@ -8,12 +8,12 @@
 pub use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use dsl::{Diagnostic, Severity};
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::pdf::standards::v1_7::subsets::vt::schema::check_vt_conformance;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, PdfMutation};
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfInfo, PdfIndirectObject, PdfObject, PdfPage, PdfSnapshot};
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
+    use crate::artifacts::pdf::standards::v1_7::subsets::vt::schema::check_vt_conformance;
+    use dsl::{Diagnostic, Severity};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Seed
     /// 🌱️ Seeds a fresh snapshot with a real `/GTS_PDFX` OutputIntent (same shape `✳️x` seeds) plus
@@ -39,18 +39,9 @@ pub mod derived_construction {
             },
             PdfIndirectObject {
                 id: ObjRef { num: 10, gen: 0 },
-                value: PdfObject::Dict(vec![
-                    PdfDictEntry { key: "Type".into(), value: PdfObject::Name("DPartRoot".into()) },
-                    PdfDictEntry { key: "DParts".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 11, gen: 0 })]) },
-                ]),
+                value: PdfObject::Dict(vec![PdfDictEntry { key: "Type".into(), value: PdfObject::Name("DPartRoot".into()) }, PdfDictEntry { key: "DParts".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 11, gen: 0 })]) }]),
             },
-            PdfIndirectObject {
-                id: ObjRef { num: 11, gen: 0 },
-                value: PdfObject::Dict(vec![
-                    PdfDictEntry { key: "Type".into(), value: PdfObject::Name("DPart".into()) },
-                    PdfDictEntry { key: "DPM".into(), value: PdfObject::Dict(vec![]) },
-                ]),
-            },
+            PdfIndirectObject { id: ObjRef { num: 11, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "Type".into(), value: PdfObject::Name("DPart".into()) }, PdfDictEntry { key: "DPM".into(), value: PdfObject::Dict(vec![]) }]) },
         ];
         PdfSnapshot { objects, ..PdfSnapshot::default() }
     }
@@ -151,12 +142,12 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
-    use semio_framework_plugin::{AnalyzeSource, Analysis, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot};
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfAnalyzer as PdfAnyAnalyzer;
     pub use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfParts;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot};
     use crate::artifacts::pdf::standards::v1_7::subsets::x::schema::check_x_conformance;
+    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("vt") };
@@ -296,18 +287,9 @@ pub mod derived_analysis {
                 },
                 PdfIndirectObject {
                     id: ObjRef { num: 10, gen: 0 },
-                    value: PdfObject::Dict(vec![
-                        PdfDictEntry { key: "Type".into(), value: PdfObject::Name("DPartRoot".into()) },
-                        PdfDictEntry { key: "DParts".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 11, gen: 0 })]) },
-                    ]),
+                    value: PdfObject::Dict(vec![PdfDictEntry { key: "Type".into(), value: PdfObject::Name("DPartRoot".into()) }, PdfDictEntry { key: "DParts".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 11, gen: 0 })]) }]),
                 },
-                PdfIndirectObject {
-                    id: ObjRef { num: 11, gen: 0 },
-                    value: PdfObject::Dict(vec![
-                        PdfDictEntry { key: "Type".into(), value: PdfObject::Name("DPart".into()) },
-                        PdfDictEntry { key: "DPM".into(), value: PdfObject::Dict(vec![]) },
-                    ]),
-                },
+                PdfIndirectObject { id: ObjRef { num: 11, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "Type".into(), value: PdfObject::Name("DPart".into()) }, PdfDictEntry { key: "DPM".into(), value: PdfObject::Dict(vec![]) }]) },
             ]
         }
 

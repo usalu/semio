@@ -6,9 +6,7 @@
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::audio::schema::diff::{
-    self, SemioAudioChannelDiff, SemioAudioDiff, dec_channel, dec_f32_list, dec_format, dec_snapshot, dec_tag,
-    enc_channel, enc_f32_list, enc_format, enc_snapshot, enc_tag, hex_decode_string, hex_encode,
-    parse_u32, parse_usize,
+    self, dec_channel, dec_f32_list, dec_format, dec_snapshot, dec_tag, enc_channel, enc_f32_list, enc_format, enc_snapshot, enc_tag, hex_decode_string, hex_encode, parse_u32, parse_usize, SemioAudioChannelDiff, SemioAudioDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioAudioMutation` below's `encode_op`/
@@ -23,15 +21,37 @@ use serde::{Deserialize, Serialize};
 pub enum SemioAudioMutation {
     #[default]
     NoMutation,
-    SetSnapshot { snapshot: SemioAudioSnapshot },
-    SetSampleRate { sample_rate: u32 },
-    SetFormat { format: SemioAudioFormat },
-    InsertChannel { index: usize, channel: SemioAudioChannel },
-    RemoveChannel { index: usize },
-    SetChannelSamples { index: usize, samples: Vec<f32> },
-    InsertTag { index: usize, tag: SemioAudioTag },
-    RemoveTag { index: usize },
-    SetTagValue { index: usize, value: String },
+    SetSnapshot {
+        snapshot: SemioAudioSnapshot,
+    },
+    SetSampleRate {
+        sample_rate: u32,
+    },
+    SetFormat {
+        format: SemioAudioFormat,
+    },
+    InsertChannel {
+        index: usize,
+        channel: SemioAudioChannel,
+    },
+    RemoveChannel {
+        index: usize,
+    },
+    SetChannelSamples {
+        index: usize,
+        samples: Vec<f32>,
+    },
+    InsertTag {
+        index: usize,
+        tag: SemioAudioTag,
+    },
+    RemoveTag {
+        index: usize,
+    },
+    SetTagValue {
+        index: usize,
+        value: String,
+    },
 }
 //#endregion 🔖️Mutations
 
@@ -53,39 +73,20 @@ impl Mutation<SemioAudioSnapshot> for SemioAudioMutation {
         match self {
             SemioAudioMutation::NoMutation => SemioAudioDiff::default(),
             SemioAudioMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
-            SemioAudioMutation::SetSampleRate { sample_rate } => SemioAudioDiff {
-                sample_rate: (*sample_rate != base.sample_rate).then_some(*sample_rate),
-                ..Default::default()
-            },
-            SemioAudioMutation::SetFormat { format } => SemioAudioDiff {
-                format: (*format != base.format).then_some(*format),
-                ..Default::default()
-            },
-            SemioAudioMutation::InsertChannel { index, channel } => SemioAudioDiff {
-                channels: Some(IndexedTripleDiff { added: vec![IndexAdded { index: (*index).min(base.channels.len()), item: channel.clone() }], ..Default::default() }),
-                ..Default::default()
-            },
-            SemioAudioMutation::RemoveChannel { index } => SemioAudioDiff {
-                channels: Some(IndexedTripleDiff { removed: vec![*index], ..Default::default() }),
-                ..Default::default()
-            },
+            SemioAudioMutation::SetSampleRate { sample_rate } => SemioAudioDiff { sample_rate: (*sample_rate != base.sample_rate).then_some(*sample_rate), ..Default::default() },
+            SemioAudioMutation::SetFormat { format } => SemioAudioDiff { format: (*format != base.format).then_some(*format), ..Default::default() },
+            SemioAudioMutation::InsertChannel { index, channel } => {
+                SemioAudioDiff { channels: Some(IndexedTripleDiff { added: vec![IndexAdded { index: (*index).min(base.channels.len()), item: channel.clone() }], ..Default::default() }), ..Default::default() }
+            }
+            SemioAudioMutation::RemoveChannel { index } => SemioAudioDiff { channels: Some(IndexedTripleDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
             SemioAudioMutation::SetChannelSamples { index, samples } => {
                 let d = SemioAudioChannelDiff { samples: Some(samples.clone()) };
                 SemioAudioDiff { channels: Some(IndexedTripleDiff { modified: vec![IndexModified { index: *index, diff: d }], ..Default::default() }), ..Default::default() }
             }
-            SemioAudioMutation::InsertTag { index, tag } => SemioAudioDiff {
-                tags: Some(IndexedTripleDiff { added: vec![IndexAdded { index: (*index).min(base.tags.len()), item: tag.clone() }], ..Default::default() }),
-                ..Default::default()
-            },
-            SemioAudioMutation::RemoveTag { index } => SemioAudioDiff {
-                tags: Some(IndexedTripleDiff { removed: vec![*index], ..Default::default() }),
-                ..Default::default()
-            },
+            SemioAudioMutation::InsertTag { index, tag } => SemioAudioDiff { tags: Some(IndexedTripleDiff { added: vec![IndexAdded { index: (*index).min(base.tags.len()), item: tag.clone() }], ..Default::default() }), ..Default::default() },
+            SemioAudioMutation::RemoveTag { index } => SemioAudioDiff { tags: Some(IndexedTripleDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
             SemioAudioMutation::SetTagValue { index, value } => match base.tags.get(*index) {
-                Some(t) => SemioAudioDiff {
-                    tags: Some(IndexedTripleDiff { modified: vec![IndexModified { index: *index, diff: SemioAudioTag { key: t.key.clone(), value: value.clone() } }], ..Default::default() }),
-                    ..Default::default()
-                },
+                Some(t) => SemioAudioDiff { tags: Some(IndexedTripleDiff { modified: vec![IndexModified { index: *index, diff: SemioAudioTag { key: t.key.clone(), value: value.clone() } }], ..Default::default() }), ..Default::default() },
                 None => SemioAudioDiff::default(),
             },
         }
@@ -145,7 +146,9 @@ fn print_audio_mutation(m: &SemioAudioMutation) -> String {
 }
 
 fn parse_audio_mutation(line: &str) -> Result<SemioAudioMutation, String> {
-    if line == "no-mutation" { return Ok(SemioAudioMutation::NoMutation); }
+    if line == "no-mutation" {
+        return Ok(SemioAudioMutation::NoMutation);
+    }
     let (keyword, rest) = line.split_once(' ').ok_or_else(|| format!("audio mutation: missing payload in {line:?}"))?;
     match keyword {
         "set-snapshot" => Ok(SemioAudioMutation::SetSnapshot { snapshot: dec_snapshot(rest)? }),
@@ -177,25 +180,16 @@ impl protocol::OpText for SemioAudioMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_audio_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    fn print_op(&self) -> String { print_audio_mutation(self) }
+    fn print_op(&self) -> String {
+        print_audio_mutation(self)
+    }
 }
 
 /// 🧾️ Keyword table + variant ordinal, 0-indexed in enum declaration order — the binary frame's
 /// `tag` byte, `📖️grammar/component.grammar.semio`'s `op` alternatives, and this array must all
 /// agree (see `committed_facet_files_parse`/`ops_grammar_conformance_law` in
 /// `🎹️composer/🦀️component.rs`).
-const OP_KEYWORDS: [&str; 10] = [
-    "no-mutation",
-    "set-snapshot",
-    "set-sample-rate",
-    "set-format",
-    "insert-channel",
-    "remove-channel",
-    "set-channel-samples",
-    "insert-tag",
-    "remove-tag",
-    "set-tag-value",
-];
+const OP_KEYWORDS: [&str; 10] = ["no-mutation", "set-snapshot", "set-sample-rate", "set-format", "insert-channel", "remove-channel", "set-channel-samples", "insert-tag", "remove-tag", "set-tag-value"];
 fn variant_ordinal(m: &SemioAudioMutation) -> u8 {
     match m {
         SemioAudioMutation::NoMutation => 0,
@@ -259,13 +253,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioAudioMutation> {
         SemioAudioChannel { samples: vec![seed, seed + 1.0, seed + 2.0] }
     }
     fn fixture() -> SemioAudioSnapshot {
-        SemioAudioSnapshot {
-            sample_rate: 44_100,
-            format: SemioAudioFormat::Pcm16,
-            channels: vec![channel(1.0), channel(2.0), channel(3.0)],
-            tags: vec![SemioAudioTag { key: "title".into(), value: "t0".into() }],
-            ..SemioAudioSnapshot::default()
-        }
+        SemioAudioSnapshot { sample_rate: 44_100, format: SemioAudioFormat::Pcm16, channels: vec![channel(1.0), channel(2.0), channel(3.0)], tags: vec![SemioAudioTag { key: "title".into(), value: "t0".into() }], ..SemioAudioSnapshot::default() }
     }
     vec![
         SemioAudioMutation::NoMutation,

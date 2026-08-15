@@ -65,10 +65,7 @@ mod tests {
         let snapshot = StlSnapshot {
             schema: STDIO_STL_DOCUMENT_SCHEMA.into(),
             solid_name: "cube_corner".into(),
-            triangles: vec![
-                triangle([0.0, 0.0, 1.0], [[-1.0, -1.0, 0.0], [1.0, -1.0, 0.0], [0.0, 1.0, 0.0]]),
-                triangle([1.0, 0.0, 0.0], [[0.0, 0.0, 5.0], [0.0, 2.0, -3.0], [0.0, -4.0, 1.0]]),
-            ],
+            triangles: vec![triangle([0.0, 0.0, 1.0], [[-1.0, -1.0, 0.0], [1.0, -1.0, 0.0], [0.0, 1.0, 0.0]]), triangle([1.0, 0.0, 0.0], [[0.0, 0.0, 5.0], [0.0, 2.0, -3.0], [0.0, -4.0, 1.0]])],
         };
         let bounds = compute_stl_bounds(&snapshot);
         assert_eq!(bounds.min, [-1.0, -4.0, -3.0]);
@@ -78,11 +75,7 @@ mod tests {
 
     #[test]
     fn inference_determinism_law() {
-        let snapshot = StlSnapshot {
-            schema: STDIO_STL_DOCUMENT_SCHEMA.into(),
-            solid_name: "solid".into(),
-            triangles: vec![triangle([0.0, 0.0, 1.0], [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])],
-        };
+        let snapshot = StlSnapshot { schema: STDIO_STL_DOCUMENT_SCHEMA.into(), solid_name: "solid".into(), triangles: vec![triangle([0.0, 0.0, 1.0], [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])] };
         assert_eq!(compute_stl_bounds(&snapshot), compute_stl_bounds(&snapshot));
     }
 

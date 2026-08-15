@@ -21,13 +21,7 @@ pub fn inverse(payload: &DeleteNode, base: &SemioGraphSnapshot) -> Vec<SemioGrap
         properties: node.properties.clone(),
     })];
     for edge in base.edges.iter().filter(|e| e.source == payload.id || e.target == payload.id) {
-        out.push(SemioGraphMutation::CreateEdge(create_edge::mutation::CreateEdge {
-            id: edge.id.clone(),
-            source: edge.source.clone(),
-            target: edge.target.clone(),
-            kind: edge.kind.clone(),
-            label: edge.label.clone(),
-        }));
+        out.push(SemioGraphMutation::CreateEdge(create_edge::mutation::CreateEdge { id: edge.id.clone(), source: edge.source.clone(), target: edge.target.clone(), kind: edge.kind.clone(), label: edge.label.clone() }));
     }
     out
 }

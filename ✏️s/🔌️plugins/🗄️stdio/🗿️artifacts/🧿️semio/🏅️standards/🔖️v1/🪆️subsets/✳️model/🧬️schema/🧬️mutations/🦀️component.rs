@@ -6,14 +6,10 @@
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::model::schema::diff::{
-    dec_element, dec_relation, dec_spatial_node, dec_str, decode_option, diff_set_snapshot, enc_element, enc_element_class, enc_geometry_ref,
-    enc_list, enc_property_set, enc_relation, enc_relation_kind, enc_spatial_kind, enc_spatial_node, enc_str, enc_transform, encode_option,
-    dec_element_class, dec_geometry_ref, dec_list, dec_property_set, dec_relation_kind, dec_spatial_kind, dec_transform,
-    ModelRelationDiff, SemioModelDiff, SemioModelElementDiff, SpatialNodeDiff,
+    dec_element, dec_element_class, dec_geometry_ref, dec_list, dec_property_set, dec_relation, dec_relation_kind, dec_spatial_kind, dec_spatial_node, dec_str, dec_transform, decode_option, diff_set_snapshot, enc_element, enc_element_class,
+    enc_geometry_ref, enc_list, enc_property_set, enc_relation, enc_relation_kind, enc_spatial_kind, enc_spatial_node, enc_str, enc_transform, encode_option, ModelRelationDiff, SemioModelDiff, SemioModelElementDiff, SpatialNodeDiff,
 };
-use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{
-    ElementClass, GeometryRef, ModelRelation, PropertySet, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode,
-};
+use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, PropertySet, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode};
 use protocol::Mutation;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioModelMutation` block below
 /// calls `Self::parse_op(...)` via trait method syntax, which needs `OpText` in scope in
@@ -46,13 +42,21 @@ pub enum SemioModelMutation {
     NoMutation,
     /// 🧩 Sparse full-state replace -- `diff()` is `SemioModelDiff::between`, never a
     /// `snapshot: Option<Snapshot>` full-replace slot (schema-design.md).
-    SetSnapshot { snapshot: SemioModelSnapshot },
-    InsertSpatialNode { node: SpatialNode },
-    RemoveSpatialNode { id: String },
+    SetSnapshot {
+        snapshot: SemioModelSnapshot,
+    },
+    InsertSpatialNode {
+        node: SpatialNode,
+    },
+    RemoveSpatialNode {
+        id: String,
+    },
     SetSpatialNode {
         id: String,
-        #[serde(default)] kind: Option<SpatialKind>,
-        #[serde(default)] name: Option<String>,
+        #[serde(default)]
+        kind: Option<SpatialKind>,
+        #[serde(default)]
+        name: Option<String>,
         /// 🕳️ Tri-state (`None` = untouched, `Some(None)` = cleared, `Some(Some(_))` = set) — the
         /// classic double-`Option` serde footgun: without `skip_serializing_if`/`deserialize_with`,
         /// `Some(None)` and the untouched `None` both serialize to JSON `null` and collapse back to
@@ -60,29 +64,45 @@ pub enum SemioModelMutation {
         /// `spatial_id` below).
         #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
         parent_id: Option<Option<String>>,
-        #[serde(default)] placement: Option<SemioTransform>,
+        #[serde(default)]
+        placement: Option<SemioTransform>,
     },
-    InsertElement { element: SemioModelElement },
-    RemoveElement { id: String },
+    InsertElement {
+        element: SemioModelElement,
+    },
+    RemoveElement {
+        id: String,
+    },
     SetElement {
         id: String,
-        #[serde(default)] class: Option<ElementClass>,
-        #[serde(default)] placement: Option<SemioTransform>,
-        #[serde(default)] geometry: Option<GeometryRef>,
+        #[serde(default)]
+        class: Option<ElementClass>,
+        #[serde(default)]
+        placement: Option<SemioTransform>,
+        #[serde(default)]
+        geometry: Option<GeometryRef>,
         /// 🕳️ Tri-state, same double-`Option` footgun/fix as `SetSpatialNode.parent_id` above —
         /// confirmed live by the verifier: `Some(None)` round-tripped to the outer `None` through
         /// `print_op`/`parse_op` before this fix.
         #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
         spatial_id: Option<Option<String>>,
-        #[serde(default)] psets: Option<Vec<PropertySet>>,
+        #[serde(default)]
+        psets: Option<Vec<PropertySet>>,
     },
-    InsertRelation { relation: ModelRelation },
-    RemoveRelation { id: String },
+    InsertRelation {
+        relation: ModelRelation,
+    },
+    RemoveRelation {
+        id: String,
+    },
     SetRelation {
         id: String,
-        #[serde(default)] kind: Option<RelationKind>,
-        #[serde(default)] from: Option<String>,
-        #[serde(default)] to: Option<String>,
+        #[serde(default)]
+        kind: Option<RelationKind>,
+        #[serde(default)]
+        from: Option<String>,
+        #[serde(default)]
+        to: Option<String>,
     },
 }
 
@@ -93,29 +113,14 @@ impl Mutation<SemioModelSnapshot> for SemioModelMutation {
         match self {
             SemioModelMutation::NoMutation => SemioModelDiff::default(),
             SemioModelMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-            SemioModelMutation::InsertSpatialNode { node } => SemioModelDiff {
-                spatial: Some(NamedTripleDiff { added: vec![node.clone()], ..Default::default() }),
-                ..Default::default()
-            },
-            SemioModelMutation::RemoveSpatialNode { id } => SemioModelDiff {
-                spatial: Some(NamedTripleDiff { removed: vec![id.clone()], ..Default::default() }),
-                ..Default::default()
-            },
+            SemioModelMutation::InsertSpatialNode { node } => SemioModelDiff { spatial: Some(NamedTripleDiff { added: vec![node.clone()], ..Default::default() }), ..Default::default() },
+            SemioModelMutation::RemoveSpatialNode { id } => SemioModelDiff { spatial: Some(NamedTripleDiff { removed: vec![id.clone()], ..Default::default() }), ..Default::default() },
             SemioModelMutation::SetSpatialNode { id, kind, name, parent_id, placement } => SemioModelDiff {
-                spatial: Some(NamedTripleDiff {
-                    modified: vec![NamedModified { key: id.clone(), diff: SpatialNodeDiff { kind: *kind, name: name.clone(), parent_id: parent_id.clone(), placement: *placement } }],
-                    ..Default::default()
-                }),
+                spatial: Some(NamedTripleDiff { modified: vec![NamedModified { key: id.clone(), diff: SpatialNodeDiff { kind: *kind, name: name.clone(), parent_id: parent_id.clone(), placement: *placement } }], ..Default::default() }),
                 ..Default::default()
             },
-            SemioModelMutation::InsertElement { element } => SemioModelDiff {
-                elements: Some(NamedTripleDiff { added: vec![element.clone()], ..Default::default() }),
-                ..Default::default()
-            },
-            SemioModelMutation::RemoveElement { id } => SemioModelDiff {
-                elements: Some(NamedTripleDiff { removed: vec![id.clone()], ..Default::default() }),
-                ..Default::default()
-            },
+            SemioModelMutation::InsertElement { element } => SemioModelDiff { elements: Some(NamedTripleDiff { added: vec![element.clone()], ..Default::default() }), ..Default::default() },
+            SemioModelMutation::RemoveElement { id } => SemioModelDiff { elements: Some(NamedTripleDiff { removed: vec![id.clone()], ..Default::default() }), ..Default::default() },
             SemioModelMutation::SetElement { id, class, placement, geometry, spatial_id, psets } => SemioModelDiff {
                 elements: Some(NamedTripleDiff {
                     modified: vec![NamedModified { key: id.clone(), diff: SemioModelElementDiff { class: class.clone(), placement: *placement, geometry: geometry.clone(), spatial_id: spatial_id.clone(), psets: psets.clone() } }],
@@ -123,21 +128,11 @@ impl Mutation<SemioModelSnapshot> for SemioModelMutation {
                 }),
                 ..Default::default()
             },
-            SemioModelMutation::InsertRelation { relation } => SemioModelDiff {
-                relations: Some(NamedTripleDiff { added: vec![relation.clone()], ..Default::default() }),
-                ..Default::default()
-            },
-            SemioModelMutation::RemoveRelation { id } => SemioModelDiff {
-                relations: Some(NamedTripleDiff { removed: vec![id.clone()], ..Default::default() }),
-                ..Default::default()
-            },
-            SemioModelMutation::SetRelation { id, kind, from, to } => SemioModelDiff {
-                relations: Some(NamedTripleDiff {
-                    modified: vec![NamedModified { key: id.clone(), diff: ModelRelationDiff { kind: kind.clone(), from: from.clone(), to: to.clone() } }],
-                    ..Default::default()
-                }),
-                ..Default::default()
-            },
+            SemioModelMutation::InsertRelation { relation } => SemioModelDiff { relations: Some(NamedTripleDiff { added: vec![relation.clone()], ..Default::default() }), ..Default::default() },
+            SemioModelMutation::RemoveRelation { id } => SemioModelDiff { relations: Some(NamedTripleDiff { removed: vec![id.clone()], ..Default::default() }), ..Default::default() },
+            SemioModelMutation::SetRelation { id, kind, from, to } => {
+                SemioModelDiff { relations: Some(NamedTripleDiff { modified: vec![NamedModified { key: id.clone(), diff: ModelRelationDiff { kind: kind.clone(), from: from.clone(), to: to.clone() } }], ..Default::default() }), ..Default::default() }
+            }
         }
     }
 
@@ -185,12 +180,7 @@ impl Mutation<SemioModelSnapshot> for SemioModelMutation {
                 None => vec![SemioModelMutation::NoMutation],
             },
             SemioModelMutation::SetRelation { id, kind, from, to } => match base.relations.iter().find(|r| &r.id == id) {
-                Some(original) => vec![SemioModelMutation::SetRelation {
-                    id: id.clone(),
-                    kind: kind.as_ref().map(|_| original.kind.clone()),
-                    from: from.as_ref().map(|_| original.from.clone()),
-                    to: to.as_ref().map(|_| original.to.clone()),
-                }],
+                Some(original) => vec![SemioModelMutation::SetRelation { id: id.clone(), kind: kind.as_ref().map(|_| original.kind.clone()), from: from.as_ref().map(|_| original.from.clone()), to: to.as_ref().map(|_| original.to.clone()) }],
                 None => vec![SemioModelMutation::NoMutation],
             },
         }
@@ -260,13 +250,9 @@ fn print_semio_model_mutation(m: &SemioModelMutation) -> String {
         ),
         SemioModelMutation::InsertRelation { relation } => format!("insert-relation relation={}", enc_relation(relation)),
         SemioModelMutation::RemoveRelation { id } => format!("remove-relation id={}", enc_str(id)),
-        SemioModelMutation::SetRelation { id, kind, from, to } => format!(
-            "set-relation id={} kind={} from={} to={}",
-            enc_str(id),
-            encode_option(kind, enc_relation_kind),
-            encode_option(from, |v: &String| enc_str(v)),
-            encode_option(to, |v: &String| enc_str(v)),
-        ),
+        SemioModelMutation::SetRelation { id, kind, from, to } => {
+            format!("set-relation id={} kind={} from={} to={}", enc_str(id), encode_option(kind, enc_relation_kind), encode_option(from, |v: &String| enc_str(v)), encode_option(to, |v: &String| enc_str(v)),)
+        }
     }
 }
 fn parse_semio_model_mutation(line: &str) -> Result<SemioModelMutation, String> {
@@ -274,13 +260,8 @@ fn parse_semio_model_mutation(line: &str) -> Result<SemioModelMutation, String> 
         return Ok(SemioModelMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("model mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> =
+        rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("model mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("model mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
         "set-snapshot" => Ok(SemioModelMutation::SetSnapshot { snapshot: dec_semio_model_snapshot(arg("snapshot")?)? }),
@@ -305,12 +286,7 @@ fn parse_semio_model_mutation(line: &str) -> Result<SemioModelMutation, String> 
         }),
         "insert-relation" => Ok(SemioModelMutation::InsertRelation { relation: dec_relation(arg("relation")?)? }),
         "remove-relation" => Ok(SemioModelMutation::RemoveRelation { id: dec_str(arg("id")?)? }),
-        "set-relation" => Ok(SemioModelMutation::SetRelation {
-            id: dec_str(arg("id")?)?,
-            kind: decode_option(arg("kind")?, dec_relation_kind)?,
-            from: decode_option(arg("from")?, dec_str)?,
-            to: decode_option(arg("to")?, dec_str)?,
-        }),
+        "set-relation" => Ok(SemioModelMutation::SetRelation { id: dec_str(arg("id")?)?, kind: decode_option(arg("kind")?, dec_relation_kind)?, from: decode_option(arg("from")?, dec_str)?, to: decode_option(arg("to")?, dec_str)? }),
         other => Err(format!("model mutation: unknown keyword {other:?}")),
     }
 }
@@ -326,19 +302,7 @@ impl OpText for SemioModelMutation {
 
 /// 🏷️ Ordinal table, same declaration order as `SemioModelMutation`'s own enum variants and
 /// `parse_semio_model_mutation`'s keyword match — the real binary `tag` field's source of truth.
-const OP_KEYWORDS: [&str; 11] = [
-    "no-mutation",
-    "set-snapshot",
-    "insert-spatial-node",
-    "remove-spatial-node",
-    "set-spatial-node",
-    "insert-element",
-    "remove-element",
-    "set-element",
-    "insert-relation",
-    "remove-relation",
-    "set-relation",
-];
+const OP_KEYWORDS: [&str; 11] = ["no-mutation", "set-snapshot", "insert-spatial-node", "remove-spatial-node", "set-spatial-node", "insert-element", "remove-element", "set-element", "insert-relation", "remove-relation", "set-relation"];
 fn variant_ordinal(m: &SemioModelMutation) -> u8 {
     match m {
         SemioModelMutation::NoMutation => 0,
@@ -470,9 +434,24 @@ mod tests {
         assert_round_trips(&base, SemioModelMutation::RemoveSpatialNode { id: "s1".into() });
         assert_round_trips(&base, SemioModelMutation::SetSpatialNode { id: "s1".into(), kind: Some(SpatialKind::Storey), name: Some("Renamed".into()), parent_id: Some(None), placement: Some(sample_transform()) });
 
-        assert_round_trips(&base, SemioModelMutation::InsertElement { element: SemioModelElement { id: "e2".into(), class: ElementClass::Door, placement: sample_transform(), geometry: GeometryRef::Mesh { mesh_id: "m1".into() }, spatial_id: Some("s1".into()), psets: vec![] } });
+        assert_round_trips(
+            &base,
+            SemioModelMutation::InsertElement {
+                element: SemioModelElement { id: "e2".into(), class: ElementClass::Door, placement: sample_transform(), geometry: GeometryRef::Mesh { mesh_id: "m1".into() }, spatial_id: Some("s1".into()), psets: vec![] },
+            },
+        );
         assert_round_trips(&base, SemioModelMutation::RemoveElement { id: "e1".into() });
-        assert_round_trips(&base, SemioModelMutation::SetElement { id: "e1".into(), class: Some(ElementClass::Column), placement: Some(sample_transform()), geometry: Some(GeometryRef::Brep { brep_id: "b1".into() }), spatial_id: Some(Some("s1".into())), psets: Some(vec![]) });
+        assert_round_trips(
+            &base,
+            SemioModelMutation::SetElement {
+                id: "e1".into(),
+                class: Some(ElementClass::Column),
+                placement: Some(sample_transform()),
+                geometry: Some(GeometryRef::Brep { brep_id: "b1".into() }),
+                spatial_id: Some(Some("s1".into())),
+                psets: Some(vec![]),
+            },
+        );
 
         assert_round_trips(&base, SemioModelMutation::InsertRelation { relation: ModelRelation { id: "r2".into(), kind: RelationKind::VoidsElement, from: "e1".into(), to: "s1".into() } });
         assert_round_trips(&base, SemioModelMutation::RemoveRelation { id: "r1".into() });

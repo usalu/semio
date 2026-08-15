@@ -11,8 +11,12 @@
 pub struct FourCc(pub [u8; 4]);
 
 impl FourCc {
-    pub const fn new(bytes: &[u8; 4]) -> Self { Self(*bytes) }
-    pub fn as_str(&self) -> std::borrow::Cow<'_, str> { String::from_utf8_lossy(&self.0) }
+    pub const fn new(bytes: &[u8; 4]) -> Self {
+        Self(*bytes)
+    }
+    pub fn as_str(&self) -> std::borrow::Cow<'_, str> {
+        String::from_utf8_lossy(&self.0)
+    }
 }
 
 impl std::fmt::Debug for FourCc {
@@ -45,22 +49,42 @@ pub struct ByteReader<'a> {
 }
 
 impl<'a> ByteReader<'a> {
-    pub fn new(data: &'a [u8]) -> Self { Self { data, pos: 0 } }
-    pub fn pos(&self) -> usize { self.pos }
-    pub fn remaining(&self) -> usize { self.data.len() - self.pos }
+    pub fn new(data: &'a [u8]) -> Self {
+        Self { data, pos: 0 }
+    }
+    pub fn pos(&self) -> usize {
+        self.pos
+    }
+    pub fn remaining(&self) -> usize {
+        self.data.len() - self.pos
+    }
     pub fn take(&mut self, n: usize) -> Result<&'a [u8], BoxError> {
         let end = self.pos.checked_add(n).ok_or(BoxError::Truncated)?;
         let slice = self.data.get(self.pos..end).ok_or(BoxError::Truncated)?;
         self.pos = end;
         Ok(slice)
     }
-    pub fn skip(&mut self, n: usize) -> Result<(), BoxError> { self.take(n).map(|_| ()) }
-    pub fn u8(&mut self) -> Result<u8, BoxError> { Ok(self.take(1)?[0]) }
-    pub fn u16_be(&mut self) -> Result<u16, BoxError> { Ok(u16::from_be_bytes(self.take(2)?.try_into().unwrap())) }
-    pub fn u32_be(&mut self) -> Result<u32, BoxError> { Ok(u32::from_be_bytes(self.take(4)?.try_into().unwrap())) }
-    pub fn u64_be(&mut self) -> Result<u64, BoxError> { Ok(u64::from_be_bytes(self.take(8)?.try_into().unwrap())) }
-    pub fn i32_be(&mut self) -> Result<i32, BoxError> { Ok(i32::from_be_bytes(self.take(4)?.try_into().unwrap())) }
-    pub fn fourcc(&mut self) -> Result<FourCc, BoxError> { Ok(FourCc(self.take(4)?.try_into().unwrap())) }
+    pub fn skip(&mut self, n: usize) -> Result<(), BoxError> {
+        self.take(n).map(|_| ())
+    }
+    pub fn u8(&mut self) -> Result<u8, BoxError> {
+        Ok(self.take(1)?[0])
+    }
+    pub fn u16_be(&mut self) -> Result<u16, BoxError> {
+        Ok(u16::from_be_bytes(self.take(2)?.try_into().unwrap()))
+    }
+    pub fn u32_be(&mut self) -> Result<u32, BoxError> {
+        Ok(u32::from_be_bytes(self.take(4)?.try_into().unwrap()))
+    }
+    pub fn u64_be(&mut self) -> Result<u64, BoxError> {
+        Ok(u64::from_be_bytes(self.take(8)?.try_into().unwrap()))
+    }
+    pub fn i32_be(&mut self) -> Result<i32, BoxError> {
+        Ok(i32::from_be_bytes(self.take(4)?.try_into().unwrap()))
+    }
+    pub fn fourcc(&mut self) -> Result<FourCc, BoxError> {
+        Ok(FourCc(self.take(4)?.try_into().unwrap()))
+    }
 }
 //#endregion 🔖️Bytes
 
@@ -79,17 +103,30 @@ pub struct Mp4BoxIter<'a> {
     pos: usize,
 }
 
-pub fn iter_boxes(data: &[u8]) -> Mp4BoxIter<'_> { Mp4BoxIter { data, pos: 0 } }
+pub fn iter_boxes(data: &[u8]) -> Mp4BoxIter<'_> {
+    Mp4BoxIter { data, pos: 0 }
+}
 
 impl<'a> Iterator for Mp4BoxIter<'a> {
     type Item = Result<Mp4BoxRef<'a>, BoxError>;
     fn next(&mut self) -> Option<Self::Item> {
-        if self.pos >= self.data.len() { return None; }
+        if self.pos >= self.data.len() {
+            return None;
+        }
         let mut r = ByteReader::new(&self.data[self.pos..]);
-        let size32 = match r.u32_be() { Ok(v) => v, Err(e) => return Some(Err(e)) };
-        let kind = match r.fourcc() { Ok(v) => v, Err(e) => return Some(Err(e)) };
+        let size32 = match r.u32_be() {
+            Ok(v) => v,
+            Err(e) => return Some(Err(e)),
+        };
+        let kind = match r.fourcc() {
+            Ok(v) => v,
+            Err(e) => return Some(Err(e)),
+        };
         let (box_len, header_len) = if size32 == 1 {
-            match r.u64_be() { Ok(v) => (v as usize, 16usize), Err(e) => return Some(Err(e)) }
+            match r.u64_be() {
+                Ok(v) => (v as usize, 16usize),
+                Err(e) => return Some(Err(e)),
+            }
         } else if size32 == 0 {
             (self.data.len() - self.pos, 8usize)
         } else {
@@ -112,7 +149,9 @@ impl<'a> Iterator for Mp4BoxIter<'a> {
 pub fn find_box<'a>(data: &'a [u8], want: &[u8; 4]) -> Result<Option<&'a [u8]>, BoxError> {
     for item in iter_boxes(data) {
         let b = item?;
-        if b.kind.0 == *want { return Ok(Some(b.payload)); }
+        if b.kind.0 == *want {
+            return Ok(Some(b.payload));
+        }
     }
     Ok(None)
 }
@@ -122,7 +161,9 @@ pub fn find_boxes<'a>(data: &'a [u8], want: &[u8; 4]) -> Result<Vec<&'a [u8]>, B
     let mut out = Vec::new();
     for item in iter_boxes(data) {
         let b = item?;
-        if b.kind.0 == *want { out.push(b.payload); }
+        if b.kind.0 == *want {
+            out.push(b.payload);
+        }
     }
     Ok(out)
 }

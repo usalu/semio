@@ -100,11 +100,7 @@ mod tests {
 
     fn chain_snapshot() -> SemioFlowSnapshot {
         // root -e1- mid -e2- leaf: a 3-node chain.
-        SemioFlowSnapshot {
-            schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
-            nodes: vec![node("root"), node("mid"), node("leaf")],
-            edges: vec![edge("e1", "root", "mid"), edge("e2", "mid", "leaf")],
-        }
+        SemioFlowSnapshot { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes: vec![node("root"), node("mid"), node("leaf")], edges: vec![edge("e1", "root", "mid"), edge("e2", "mid", "leaf")] }
     }
 
     #[test]

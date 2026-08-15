@@ -81,8 +81,8 @@ message PdfValueDiff {
   PdfDictDiff dict_diff = 10;
   PdfDictDiff stream_dict = 11;
   bytes stream_data = 12;
-  bool stream_has_raw_filter = 13;
-  optional string stream_raw_filter = 14;
+  bool stream_has_filters = 13;
+  repeated semio.s_stdio_pdf_1_7.snapshot.PdfStreamFilter stream_filters = 14;
 }
 
 message PdfObjectModified {

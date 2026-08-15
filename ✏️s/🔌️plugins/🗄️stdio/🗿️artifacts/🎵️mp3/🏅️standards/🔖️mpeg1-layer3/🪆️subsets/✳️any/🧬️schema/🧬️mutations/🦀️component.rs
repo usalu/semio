@@ -1,9 +1,7 @@
 //! 🧬️ Mp3Mutation — the real per-field mutation vocabulary over `Mp3Snapshot`'s three
 //! top-level fields (`id3v2`/`frames`/`id3v1`), plus `SetSnapshot` for full replace.
 
-use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::diff::{
-    diff_set_frames, diff_set_id3v1, diff_set_id3v2, diff_set_snapshot, Mp3Diff,
-};
+use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::diff::{diff_set_frames, diff_set_id3v1, diff_set_id3v2, diff_set_snapshot, Mp3Diff};
 use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3Snapshot};
 use protocol::Mutation;
 #[cfg(test)]
@@ -89,16 +87,13 @@ impl protocol::OpBinary for Mp3Mutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::MutationDiff;
-    use protocol::command::DiffAlgebra;
     use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Mp3FrameHeader};
+    use protocol::command::DiffAlgebra;
+    use protocol::MutationDiff;
 
     fn frame() -> Mp3Frame {
         Mp3Frame {
-            header: Mp3FrameHeader {
-                mpeg_version_id: 3, layer: 1, protection_bit: true, bitrate_index: 9, sample_rate_index: 0,
-                padding: false, private_bit: false, channel_mode: 3, mode_extension: 0, copyright: false, original: true, emphasis: 0,
-            },
+            header: Mp3FrameHeader { mpeg_version_id: 3, layer: 1, protection_bit: true, bitrate_index: 9, sample_rate_index: 0, padding: false, private_bit: false, channel_mode: 3, mode_extension: 0, copyright: false, original: true, emphasis: 0 },
             payload: vec![0u8; 4],
         }
     }

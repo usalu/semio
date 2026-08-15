@@ -4,11 +4,9 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{
-        ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId,
-    };
     use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
     use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::WavAnalyzer;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.wav", standard: StandardId("riff-pcm"), subset: SubsetId("*") };
 
@@ -19,7 +17,9 @@ pub mod derived_composition {
         type Snapshot = WavSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] { &[DIALECT] }
+        fn reads() -> &'static [Dialect] {
+            &[DIALECT]
+        }
 
         fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
@@ -34,10 +34,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "WavComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = WavAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "WavComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "WavComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -49,7 +46,9 @@ pub mod derived_composition {
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor());
         register_artifact_inferences();
-        store::register_document_codec(store::ArtifactCodec::of::<WavSnapshot, crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations::WavMutation>(crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::STDIO_WAV_DOCUMENT_SCHEMA));
+        store::register_document_codec(store::ArtifactCodec::of::<WavSnapshot, crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations::WavMutation>(
+            crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::STDIO_WAV_DOCUMENT_SCHEMA,
+        ));
     }
 
     /// 💡️ Registers `s.stdio.wav.inference`'s facet leaves into the OS-wide inference
@@ -138,9 +137,7 @@ fn decode_data_chunk(fmt: &WavFmt, body: &[u8]) -> WavData {
     match (fmt.audio_format, fmt.bits_per_sample) {
         (1, 16) if body.len() % 2 == 0 => WavData::Pcm16(body.chunks_exact(2).map(|c| i16::from_le_bytes([c[0], c[1]])).collect()),
         (1, 8) => WavData::Pcm8(body.to_vec()),
-        (3, 32) if body.len() % 4 == 0 => {
-            WavData::Float32(body.chunks_exact(4).map(|c| f32::from_le_bytes([c[0], c[1], c[2], c[3]])).collect())
-        }
+        (3, 32) if body.len() % 4 == 0 => WavData::Float32(body.chunks_exact(4).map(|c| f32::from_le_bytes([c[0], c[1], c[2], c[3]])).collect()),
         _ => WavData::Raw(body.to_vec()),
     }
 }
@@ -247,11 +244,7 @@ mod codec_tests {
 
     #[test]
     fn sniffs_and_decodes_a_synthetic_fmt_chunk() {
-        let snap = WavSnapshot {
-            fmt: WavFmt { audio_format: 1, channels: 1, sample_rate: 8000, byte_rate: 16000, block_align: 2, bits_per_sample: 16, ext: None },
-            data: WavData::Pcm16(vec![0, 100, -100]),
-            ..WavSnapshot::default()
-        };
+        let snap = WavSnapshot { fmt: WavFmt { audio_format: 1, channels: 1, sample_rate: 8000, byte_rate: 16000, block_align: 2, bits_per_sample: 16, ext: None }, data: WavData::Pcm16(vec![0, 100, -100]), ..WavSnapshot::default() };
         let bytes = encode_wav(&snap);
         assert!(sniff_real_bytes(&bytes));
         let decoded = decode_wav(&bytes).expect("decode");
@@ -338,7 +331,15 @@ mod codec_tests {
     #[test]
     fn extensible_fmt_chunk_round_trips_ext_bytes() {
         let snap = WavSnapshot {
-            fmt: WavFmt { audio_format: 0xFFFE, channels: 2, sample_rate: 48000, byte_rate: 192000, block_align: 4, bits_per_sample: 16, ext: Some(vec![0x16, 0x00, 0x03, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71]) },
+            fmt: WavFmt {
+                audio_format: 0xFFFE,
+                channels: 2,
+                sample_rate: 48000,
+                byte_rate: 192000,
+                block_align: 4,
+                bits_per_sample: 16,
+                ext: Some(vec![0x16, 0x00, 0x03, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71]),
+            },
             data: WavData::Raw(vec![0xAA, 0xBB]),
             ..WavSnapshot::default()
         };
@@ -351,9 +352,9 @@ mod codec_tests {
 }
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::WavComposer as WavRawAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 

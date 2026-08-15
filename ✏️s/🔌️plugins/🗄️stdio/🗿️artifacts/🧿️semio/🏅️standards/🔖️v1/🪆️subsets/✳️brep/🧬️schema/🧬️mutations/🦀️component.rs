@@ -27,8 +27,7 @@
 //! (`📌️important.md`): whole-document replace goes through `ArtifactStore::reset`, outside history.
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::{
-    dec_curve, dec_list, dec_point3, dec_shell_face, dec_solid_shell, dec_str, dec_surface, enc_bool, enc_curve, enc_list, enc_point3, enc_shell_face,
-    enc_solid_shell, enc_str, enc_surface, SemioBrepDiff,
+    dec_curve, dec_list, dec_point3, dec_shell_face, dec_solid_shell, dec_str, dec_surface, enc_bool, enc_curve, enc_list, enc_point3, enc_shell_face, enc_solid_shell, enc_str, enc_surface, SemioBrepDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary` block below calls
@@ -89,15 +88,11 @@ fn print_brep_mutation(m: &SemioBrepMutation) -> String {
     match m {
         SemioBrepMutation::CreateVertex(p) => format!("create-vertex id={} point={}", enc_str(&p.id), enc_point3(&p.point)),
         SemioBrepMutation::DeleteVertex(p) => format!("delete-vertex id={}", enc_str(&p.id)),
-        SemioBrepMutation::CreateEdge(p) => format!(
-            "create-edge id={} start={} end={} curve={}",
-            enc_str(&p.id), enc_str(&p.start_vertex), enc_str(&p.end_vertex), enc_curve(&p.curve)
-        ),
+        SemioBrepMutation::CreateEdge(p) => format!("create-edge id={} start={} end={} curve={}", enc_str(&p.id), enc_str(&p.start_vertex), enc_str(&p.end_vertex), enc_curve(&p.curve)),
         SemioBrepMutation::DeleteEdge(p) => format!("delete-edge id={}", enc_str(&p.id)),
-        SemioBrepMutation::CreateFace(p) => format!(
-            "create-face id={} outer={} inner={} surface={} orientation={}",
-            enc_str(&p.id), enc_str(&p.outer_loop), enc_list(&p.inner_loops, |s: &String| enc_str(s)), enc_surface(&p.surface), enc_bool(p.orientation)
-        ),
+        SemioBrepMutation::CreateFace(p) => {
+            format!("create-face id={} outer={} inner={} surface={} orientation={}", enc_str(&p.id), enc_str(&p.outer_loop), enc_list(&p.inner_loops, |s: &String| enc_str(s)), enc_surface(&p.surface), enc_bool(p.orientation))
+        }
         SemioBrepMutation::DeleteFace(p) => format!("delete-face id={}", enc_str(&p.id)),
         SemioBrepMutation::CreateShell(p) => format!("create-shell id={} faces={}", enc_str(&p.id), enc_list(&p.faces, enc_shell_face)),
         SemioBrepMutation::DeleteShell(p) => format!("delete-shell id={}", enc_str(&p.id)),
@@ -110,23 +105,12 @@ fn print_brep_mutation(m: &SemioBrepMutation) -> String {
 }
 fn parse_brep_mutation(line: &str) -> Result<SemioBrepMutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("brep mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("brep mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("brep mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
         "create-vertex" => Ok(SemioBrepMutation::CreateVertex(create_vertex::mutation::CreateVertex { id: dec_str(arg("id")?)?, point: dec_point3(arg("point")?)? })),
         "delete-vertex" => Ok(SemioBrepMutation::DeleteVertex(delete_vertex::mutation::DeleteVertex { id: dec_str(arg("id")?)? })),
-        "create-edge" => Ok(SemioBrepMutation::CreateEdge(create_edge::mutation::CreateEdge {
-            id: dec_str(arg("id")?)?,
-            start_vertex: dec_str(arg("start")?)?,
-            end_vertex: dec_str(arg("end")?)?,
-            curve: dec_curve(arg("curve")?)?,
-        })),
+        "create-edge" => Ok(SemioBrepMutation::CreateEdge(create_edge::mutation::CreateEdge { id: dec_str(arg("id")?)?, start_vertex: dec_str(arg("start")?)?, end_vertex: dec_str(arg("end")?)?, curve: dec_curve(arg("curve")?)? })),
         "delete-edge" => Ok(SemioBrepMutation::DeleteEdge(delete_edge::mutation::DeleteEdge { id: dec_str(arg("id")?)? })),
         "create-face" => Ok(SemioBrepMutation::CreateFace(create_face::mutation::CreateFace {
             id: dec_str(arg("id")?)?,
@@ -160,15 +144,7 @@ impl OpText for SemioBrepMutation {
 //#region 🔖️OpBinary
 /// 🏷️ Ordinal table, same declaration order as `SemioBrepMutation`'s own enum variants and
 /// `parse_brep_mutation`'s keyword match — the real binary `tag` field's source of truth.
-const OP_KEYWORDS: [&str; 13] = [
-    "create-vertex", "delete-vertex",
-    "create-edge", "delete-edge",
-    "create-face", "delete-face",
-    "create-shell", "delete-shell",
-    "create-solid", "delete-solid",
-    "replace-curve", "replace-surface",
-    "move-vertex",
-];
+const OP_KEYWORDS: [&str; 13] = ["create-vertex", "delete-vertex", "create-edge", "delete-edge", "create-face", "delete-face", "create-shell", "delete-shell", "create-solid", "delete-solid", "replace-curve", "replace-surface", "move-vertex"];
 fn variant_ordinal(m: &SemioBrepMutation) -> u8 {
     match m {
         SemioBrepMutation::CreateVertex(_) => 0,
@@ -231,9 +207,7 @@ impl OpBinary for SemioBrepMutation {
 #[cfg(test)]
 pub(crate) fn fixture() -> SemioBrepSnapshot {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
-        BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex,
-    };
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
     let mut s = SemioBrepSnapshot::default();
     s.vertices = vec![BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } }, BrepVertex { id: "v2".into(), point: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } }];
     s.edges = vec![BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v2".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } }];
@@ -258,13 +232,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioBrepMutation> {
             curve: BrepCurve::Circle { center: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 1.0 },
         }),
         SemioBrepMutation::DeleteEdge(delete_edge::mutation::DeleteEdge { id: "e1".into() }),
-        SemioBrepMutation::CreateFace(create_face::mutation::CreateFace {
-            id: "f-new".into(),
-            outer_loop: "l1".into(),
-            inner_loops: vec![],
-            surface: BrepSurface::Sphere { center: SemioPoint3::default(), radius: 2.0 },
-            orientation: true,
-        }),
+        SemioBrepMutation::CreateFace(create_face::mutation::CreateFace { id: "f-new".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Sphere { center: SemioPoint3::default(), radius: 2.0 }, orientation: true }),
         SemioBrepMutation::DeleteFace(delete_face::mutation::DeleteFace { id: "f1".into() }),
         SemioBrepMutation::CreateShell(create_shell::mutation::CreateShell { id: "s-new".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: true }] }),
         SemioBrepMutation::DeleteShell(delete_shell::mutation::DeleteShell { id: "s1".into() }),
@@ -274,7 +242,10 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioBrepMutation> {
             edge_id: "e1".into(),
             new_curve: BrepCurve::Nurbs { control_points: vec![SemioPoint3::default(), SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 }], weights: vec![1.0, 1.0], degree: 1, knots: vec![0.0, 0.0, 1.0, 1.0] },
         }),
-        SemioBrepMutation::ReplaceSurface(replace_surface::mutation::ReplaceSurface { face_id: "f1".into(), new_surface: BrepSurface::Torus { center: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, major_radius: 3.0, minor_radius: 1.0 } }),
+        SemioBrepMutation::ReplaceSurface(replace_surface::mutation::ReplaceSurface {
+            face_id: "f1".into(),
+            new_surface: BrepSurface::Torus { center: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, major_radius: 3.0, minor_radius: 1.0 },
+        }),
         SemioBrepMutation::MoveVertex(move_vertex::mutation::MoveVertex { vertex_id: "v1".into(), new_point: SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 } }),
     ]
 }

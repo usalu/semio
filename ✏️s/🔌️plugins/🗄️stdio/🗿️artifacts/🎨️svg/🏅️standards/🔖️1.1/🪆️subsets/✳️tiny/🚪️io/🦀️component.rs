@@ -5,15 +5,12 @@
 //! established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use std::sync::OnceLock;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
-    use semio_framework_plugin::{
-        ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
-        register_subset_validator, subset_validator_entry_of,
-    };
-    use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::check_svg_tiny_conformance;
-    use crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgComposer as SvgAnyComposer;
     use crate::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::{set_element_attr, SvgSnapshot};
+    use crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgComposer as SvgAnyComposer;
+    use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::check_svg_tiny_conformance;
+    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use std::sync::OnceLock;
 
     const DIALECT_TINY: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("tiny") };
     const DIALECT_ANY: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
@@ -42,10 +39,7 @@ pub mod derived_composition {
             if !hard.is_empty() {
                 let mut all = hard.clone();
                 all.extend(soft);
-                return Err(ComposeError {
-                    message: format!("SVG Tiny 1.1 conformance violated: {} hard issue(s) -- not stamping the tiny dialect", hard.len()),
-                    diagnostics: all,
-                });
+                return Err(ComposeError { message: format!("SVG Tiny 1.1 conformance violated: {} hard issue(s) -- not stamping the tiny dialect", hard.len()), diagnostics: all });
             }
             let mut diagnostics = inner.diagnostics;
             diagnostics.extend(soft);
@@ -100,9 +94,9 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::AnalyzeSource;
-        use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::{CODE_ATTRIBUTE, CODE_ELEMENT};
         use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::SvgTinyBuilder;
+        use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::{CODE_ATTRIBUTE, CODE_ELEMENT};
+        use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 
         #[test]

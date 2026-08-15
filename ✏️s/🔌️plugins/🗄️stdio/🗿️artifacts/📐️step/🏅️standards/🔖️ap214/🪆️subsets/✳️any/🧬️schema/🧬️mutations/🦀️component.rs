@@ -3,17 +3,15 @@
 //! `inverse()` is handcrafted per variant, key/index-aware.
 
 use crate::artifacts::step::schema::diff::{
-    dec_entity, dec_entity_bin, dec_file_description, dec_file_description_bin, dec_file_name, dec_file_name_bin, dec_file_schema, dec_file_schema_bin,
-    dec_step_snapshot, dec_step_snapshot_bin, dec_str, dec_value, dec_value_bin, diff_set_snapshot, enc_entity, enc_entity_bin, enc_file_description,
-    enc_file_description_bin, enc_file_name, enc_file_name_bin, enc_file_schema, enc_file_schema_bin, enc_step_snapshot, enc_step_snapshot_bin, enc_str,
-    enc_value, enc_value_bin, parse_u64, parse_usize, read_str_bin, write_str_bin, StepArgAdded, StepArgModified, StepArgsDiff, StepDiff, StepEntitiesDiff,
-    StepEntityAdded, StepEntityDiff, StepEntityModified,
+    dec_entity, dec_entity_bin, dec_file_description, dec_file_description_bin, dec_file_name, dec_file_name_bin, dec_file_schema, dec_file_schema_bin, dec_step_snapshot, dec_step_snapshot_bin, dec_str, dec_value, dec_value_bin, diff_set_snapshot,
+    enc_entity, enc_entity_bin, enc_file_description, enc_file_description_bin, enc_file_name, enc_file_name_bin, enc_file_schema, enc_file_schema_bin, enc_step_snapshot, enc_step_snapshot_bin, enc_str, enc_value, enc_value_bin, parse_u64,
+    parse_usize, read_str_bin, write_str_bin, StepArgAdded, StepArgModified, StepArgsDiff, StepDiff, StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified,
 };
 use crate::artifacts::step::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepValue};
 use crate::artifacts::step::StepSnapshot;
-use protocol::{Mutation, MutationDiff, OpText};
 #[cfg(test)]
 use protocol::OpBinary;
+use protocol::{Mutation, MutationDiff, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -23,16 +21,43 @@ use serde::{Deserialize, Serialize};
 pub enum StepMutation {
     #[default]
     NoMutation,
-    SetSnapshot { snapshot: StepSnapshot },
-    SetFileDescription { file_description: StepFileDescription },
-    SetFileName { file_name: StepFileName },
-    SetFileSchema { file_schema: StepFileSchema },
-    InsertEntity { index: usize, entity: StepEntity },
-    RemoveEntity { id: u64 },
-    SetEntityName { id: u64, name: String },
-    SetEntityArg { id: u64, arg_index: usize, value: StepValue },
-    InsertEntityArg { id: u64, arg_index: usize, value: StepValue },
-    RemoveEntityArg { id: u64, arg_index: usize },
+    SetSnapshot {
+        snapshot: StepSnapshot,
+    },
+    SetFileDescription {
+        file_description: StepFileDescription,
+    },
+    SetFileName {
+        file_name: StepFileName,
+    },
+    SetFileSchema {
+        file_schema: StepFileSchema,
+    },
+    InsertEntity {
+        index: usize,
+        entity: StepEntity,
+    },
+    RemoveEntity {
+        id: u64,
+    },
+    SetEntityName {
+        id: u64,
+        name: String,
+    },
+    SetEntityArg {
+        id: u64,
+        arg_index: usize,
+        value: StepValue,
+    },
+    InsertEntityArg {
+        id: u64,
+        arg_index: usize,
+        value: StepValue,
+    },
+    RemoveEntityArg {
+        id: u64,
+        arg_index: usize,
+    },
 }
 //#endregion 🔖️Mutations
 
@@ -56,23 +81,11 @@ impl Mutation<StepSnapshot> for StepMutation {
 
             StepMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
 
-            StepMutation::SetFileDescription { file_description } => StepDiff {
-                file_description: (base.header.file_description != *file_description).then(|| file_description.clone()),
-                ..Default::default()
-            },
-            StepMutation::SetFileName { file_name } => StepDiff {
-                file_name: (base.header.file_name != *file_name).then(|| file_name.clone()),
-                ..Default::default()
-            },
-            StepMutation::SetFileSchema { file_schema } => StepDiff {
-                file_schema: (base.header.file_schema != *file_schema).then(|| file_schema.clone()),
-                ..Default::default()
-            },
+            StepMutation::SetFileDescription { file_description } => StepDiff { file_description: (base.header.file_description != *file_description).then(|| file_description.clone()), ..Default::default() },
+            StepMutation::SetFileName { file_name } => StepDiff { file_name: (base.header.file_name != *file_name).then(|| file_name.clone()), ..Default::default() },
+            StepMutation::SetFileSchema { file_schema } => StepDiff { file_schema: (base.header.file_schema != *file_schema).then(|| file_schema.clone()), ..Default::default() },
 
-            StepMutation::InsertEntity { index, entity } => StepDiff {
-                entities: Some(StepEntitiesDiff { added: vec![StepEntityAdded { index: *index, entity: entity.clone() }], ..Default::default() }),
-                ..Default::default()
-            },
+            StepMutation::InsertEntity { index, entity } => StepDiff { entities: Some(StepEntitiesDiff { added: vec![StepEntityAdded { index: *index, entity: entity.clone() }], ..Default::default() }), ..Default::default() },
 
             StepMutation::RemoveEntity { id } => {
                 if base.entities.iter().any(|e| e.id == *id) {
@@ -83,26 +96,16 @@ impl Mutation<StepSnapshot> for StepMutation {
             }
 
             StepMutation::SetEntityName { id, name } => match base.entities.iter().find(|e| e.id == *id) {
-                Some(e) if e.name != *name => StepDiff {
-                    entities: Some(StepEntitiesDiff {
-                        modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { name: Some(name.clone()), ..Default::default() } }],
-                        ..Default::default()
-                    }),
-                    ..Default::default()
-                },
+                Some(e) if e.name != *name => {
+                    StepDiff { entities: Some(StepEntitiesDiff { modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { name: Some(name.clone()), ..Default::default() } }], ..Default::default() }), ..Default::default() }
+                }
                 _ => StepDiff::default(),
             },
 
             StepMutation::SetEntityArg { id, arg_index, value } => match base.entities.iter().find(|e| e.id == *id) {
                 Some(e) if e.args.get(*arg_index).map(|v| v != value).unwrap_or(false) => StepDiff {
                     entities: Some(StepEntitiesDiff {
-                        modified: vec![StepEntityModified {
-                            id: *id,
-                            diff: StepEntityDiff {
-                                args: Some(StepArgsDiff { modified: vec![StepArgModified { index: *arg_index, value: value.clone() }], ..Default::default() }),
-                                ..Default::default()
-                            },
-                        }],
+                        modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { args: Some(StepArgsDiff { modified: vec![StepArgModified { index: *arg_index, value: value.clone() }], ..Default::default() }), ..Default::default() } }],
                         ..Default::default()
                     }),
                     ..Default::default()
@@ -114,13 +117,7 @@ impl Mutation<StepSnapshot> for StepMutation {
                 if base.entities.iter().any(|e| e.id == *id) {
                     StepDiff {
                         entities: Some(StepEntitiesDiff {
-                            modified: vec![StepEntityModified {
-                                id: *id,
-                                diff: StepEntityDiff {
-                                    args: Some(StepArgsDiff { added: vec![StepArgAdded { index: *arg_index, value: value.clone() }], ..Default::default() }),
-                                    ..Default::default()
-                                },
-                            }],
+                            modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { args: Some(StepArgsDiff { added: vec![StepArgAdded { index: *arg_index, value: value.clone() }], ..Default::default() }), ..Default::default() } }],
                             ..Default::default()
                         }),
                         ..Default::default()
@@ -133,10 +130,7 @@ impl Mutation<StepSnapshot> for StepMutation {
             StepMutation::RemoveEntityArg { id, arg_index } => match base.entities.iter().find(|e| e.id == *id) {
                 Some(e) if *arg_index < e.args.len() => StepDiff {
                     entities: Some(StepEntitiesDiff {
-                        modified: vec![StepEntityModified {
-                            id: *id,
-                            diff: StepEntityDiff { args: Some(StepArgsDiff { removed: vec![*arg_index], ..Default::default() }), ..Default::default() },
-                        }],
+                        modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { args: Some(StepArgsDiff { removed: vec![*arg_index], ..Default::default() }), ..Default::default() } }],
                         ..Default::default()
                     }),
                     ..Default::default()
@@ -170,21 +164,17 @@ impl Mutation<StepSnapshot> for StepMutation {
                 None => vec![StepMutation::NoMutation],
             },
 
-            StepMutation::SetEntityArg { id, arg_index, .. } => {
-                match base.entities.iter().find(|e| e.id == *id).and_then(|e| e.args.get(*arg_index)) {
-                    Some(v) => vec![StepMutation::SetEntityArg { id: *id, arg_index: *arg_index, value: v.clone() }],
-                    None => vec![StepMutation::NoMutation],
-                }
-            }
+            StepMutation::SetEntityArg { id, arg_index, .. } => match base.entities.iter().find(|e| e.id == *id).and_then(|e| e.args.get(*arg_index)) {
+                Some(v) => vec![StepMutation::SetEntityArg { id: *id, arg_index: *arg_index, value: v.clone() }],
+                None => vec![StepMutation::NoMutation],
+            },
 
             StepMutation::InsertEntityArg { id, arg_index, .. } => vec![StepMutation::RemoveEntityArg { id: *id, arg_index: *arg_index }],
 
-            StepMutation::RemoveEntityArg { id, arg_index } => {
-                match base.entities.iter().find(|e| e.id == *id).and_then(|e| e.args.get(*arg_index)) {
-                    Some(v) => vec![StepMutation::InsertEntityArg { id: *id, arg_index: *arg_index, value: v.clone() }],
-                    None => vec![StepMutation::NoMutation],
-                }
-            }
+            StepMutation::RemoveEntityArg { id, arg_index } => match base.entities.iter().find(|e| e.id == *id).and_then(|e| e.args.get(*arg_index)) {
+                Some(v) => vec![StepMutation::InsertEntityArg { id: *id, arg_index: *arg_index, value: v.clone() }],
+                None => vec![StepMutation::NoMutation],
+            },
         }
     }
 }
@@ -221,13 +211,7 @@ fn parse_step_mutation(line: &str) -> Result<StepMutation, String> {
         return Ok(StepMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("step mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("step mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("step mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { parse_usize(arg(k)?) };
     let u64_arg = |k: &str| -> Result<u64, String> { parse_u64(arg(k)?) };
@@ -383,15 +367,35 @@ pub(crate) fn demo_mutation_cases() -> Vec<StepMutation> {
         StepMutation::NoMutation,
         StepMutation::SetSnapshot { snapshot: crate::artifacts::step::engine::demo_step_snapshot() },
         StepMutation::SetFileDescription { file_description: StepFileDescription { description: vec!["demo".into()], implementation_level: "2;1".into() } },
-        StepMutation::SetFileName { file_name: StepFileName { name: "demo.step".into(), timestamp: "2026-08-11T00:00:00".into(), author: vec!["Ueli".into()], organization: vec!["semio".into()], preprocessor_version: "semio".into(), originating_system: "".into(), authorization: "".into() } },
+        StepMutation::SetFileName {
+            file_name: StepFileName {
+                name: "demo.step".into(),
+                timestamp: "2026-08-11T00:00:00".into(),
+                author: vec!["Ueli".into()],
+                organization: vec!["semio".into()],
+                preprocessor_version: "semio".into(),
+                originating_system: "".into(),
+                authorization: "".into(),
+            },
+        },
         StepMutation::SetFileSchema { file_schema: StepFileSchema { schemas: vec!["AUTOMOTIVE_DESIGN".into()] } },
         StepMutation::InsertEntity {
             index: 1,
-            entity: demo_entity(50, "NEW", vec![
-                SV::Unset, SV::Derived, SV::Integer(-42), SV::Real(3.5), SV::String("s".into()), SV::Enum("T".into()),
-                SV::Reference(9), SV::Aggregate(vec![SV::Integer(1), SV::Real(2.0)]),
-                SV::TypedValue { type_name: "IFCLENGTHMEASURE".into(), value: Box::new(SV::Real(3000.0)) },
-            ]),
+            entity: demo_entity(
+                50,
+                "NEW",
+                vec![
+                    SV::Unset,
+                    SV::Derived,
+                    SV::Integer(-42),
+                    SV::Real(3.5),
+                    SV::String("s".into()),
+                    SV::Enum("T".into()),
+                    SV::Reference(9),
+                    SV::Aggregate(vec![SV::Integer(1), SV::Real(2.0)]),
+                    SV::TypedValue { type_name: "IFCLENGTHMEASURE".into(), value: Box::new(SV::Real(3000.0)) },
+                ],
+            ),
         },
         StepMutation::RemoveEntity { id: 2 },
         StepMutation::SetEntityName { id: 1, name: "RENAMED".into() },
@@ -489,9 +493,36 @@ mod tests {
             StepMutation::NoMutation,
             StepMutation::SetSnapshot { snapshot: base.clone() },
             StepMutation::SetFileDescription { file_description: crate::artifacts::step::schema::snapshot::StepFileDescription { description: vec!["d1".into(), "d2".into()], implementation_level: "2;1".into() } },
-            StepMutation::SetFileName { file_name: crate::artifacts::step::schema::snapshot::StepFileName { name: "n.step".into(), timestamp: "2026-08-10T00:00:00".into(), author: vec!["A".into()], organization: vec!["O".into()], preprocessor_version: "pv".into(), originating_system: "sys".into(), authorization: "auth".into() } },
+            StepMutation::SetFileName {
+                file_name: crate::artifacts::step::schema::snapshot::StepFileName {
+                    name: "n.step".into(),
+                    timestamp: "2026-08-10T00:00:00".into(),
+                    author: vec!["A".into()],
+                    organization: vec!["O".into()],
+                    preprocessor_version: "pv".into(),
+                    originating_system: "sys".into(),
+                    authorization: "auth".into(),
+                },
+            },
             StepMutation::SetFileSchema { file_schema: crate::artifacts::step::schema::snapshot::StepFileSchema { schemas: vec!["AUTOMOTIVE_DESIGN".into(), "CONFIG_CONTROL_DESIGN".into()] } },
-            StepMutation::InsertEntity { index: 1, entity: entity(50, "NEW", vec![SV::Unset, SV::Derived, SV::Integer(-42), SV::Real(3.5), SV::String("s".into()), SV::Enum("T".into()), SV::Reference(9), SV::Aggregate(vec![SV::Integer(1), SV::Real(2.0)]), SV::TypedValue { type_name: "IFCLENGTHMEASURE".into(), value: Box::new(SV::Real(3000.0)) }]) },
+            StepMutation::InsertEntity {
+                index: 1,
+                entity: entity(
+                    50,
+                    "NEW",
+                    vec![
+                        SV::Unset,
+                        SV::Derived,
+                        SV::Integer(-42),
+                        SV::Real(3.5),
+                        SV::String("s".into()),
+                        SV::Enum("T".into()),
+                        SV::Reference(9),
+                        SV::Aggregate(vec![SV::Integer(1), SV::Real(2.0)]),
+                        SV::TypedValue { type_name: "IFCLENGTHMEASURE".into(), value: Box::new(SV::Real(3000.0)) },
+                    ],
+                ),
+            },
             StepMutation::RemoveEntity { id: 2 },
             StepMutation::SetEntityName { id: 1, name: "RENAMED".into() },
             StepMutation::SetEntityArg { id: 1, arg_index: 1, value: SV::Aggregate(vec![SV::Real(1.0), SV::Real(2.0), SV::Real(3.0)]) },

@@ -1,2 +1,5 @@
-# schema facet
- type Placeholder { width: Int! }
+enum DwgMutationKind { NO_MUTATION SET_SNAPSHOT SET_VERSION_INFO }
+type DwgNoMutation { kind: DwgMutationKind! }
+type DwgSetSnapshotMutation { kind: DwgMutationKind!, snapshot: DwgSnapshot! }
+type DwgSetVersionInfoMutation { kind: DwgMutationKind!, version: String!, maintenanceVersion: Int!, codepage: Int! }
+union DwgMutation = DwgNoMutation | DwgSetSnapshotMutation | DwgSetVersionInfoMutation

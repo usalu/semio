@@ -7,8 +7,8 @@
 //! 89a's `GifDiff` absorb (`🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs`).
 
 use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk};
-use protocol::MutationDiff;
 use protocol::command::DiffAlgebra;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️IndexedTriple
@@ -24,16 +24,24 @@ pub struct IndexedDiff<T, D> {
 }
 
 impl<T, D> IndexedDiff<T, D> {
-    pub fn is_empty(&self) -> bool { self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty() }
+    pub fn is_empty(&self) -> bool {
+        self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct IndexedModified<D> { pub index: usize, pub diff: D }
+pub struct IndexedModified<D> {
+    pub index: usize,
+    pub diff: D,
+}
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct IndexedAdded<T> { pub index: usize, pub item: T }
+pub struct IndexedAdded<T> {
+    pub index: usize,
+    pub item: T,
+}
 
 pub fn apply_indexed<T: Clone, D>(base: &[T], diff: &IndexedDiff<T, D>, apply_item: impl Fn(&T, &D) -> T) -> Vec<T> {
     let mut kept: Vec<(usize, T)> = base.iter().enumerate().filter(|(i, _)| !diff.removed.contains(i)).map(|(i, t)| (i, t.clone())).collect();
@@ -58,25 +66,29 @@ pub fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], between
     for i in 0..min_len {
         if base[i] != other[i] {
             let d = between_item(&base[i], &other[i]);
-            if !item_is_empty(&d) { modified.push(IndexedModified { index: i, diff: d }); }
+            if !item_is_empty(&d) {
+                modified.push(IndexedModified { index: i, diff: d });
+            }
         }
     }
     let removed: Vec<usize> = if other.len() < base.len() { (other.len()..base.len()).collect() } else { Vec::new() };
-    let added: Vec<IndexedAdded<T>> = if other.len() > base.len() {
-        (base.len()..other.len()).map(|i| IndexedAdded { index: i, item: other[i].clone() }).collect()
-    } else {
-        Vec::new()
-    };
+    let added: Vec<IndexedAdded<T>> = if other.len() > base.len() { (base.len()..other.len()).map(|i| IndexedAdded { index: i, item: other[i].clone() }).collect() } else { Vec::new() };
     IndexedDiff { removed, modified, added }
 }
 
-fn count_le(sorted: &[usize], x: usize) -> usize { sorted.partition_point(|&v| v <= x) }
-fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize { pos - count_le(excluded_sorted, pos) }
+fn count_le(sorted: &[usize], x: usize) -> usize {
+    sorted.partition_point(|&v| v <= x)
+}
+fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
+    pos - count_le(excluded_sorted, pos)
+}
 fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
     let mut candidate = rank;
     loop {
         let next = rank + count_le(excluded_sorted, candidate);
-        if next == candidate { return candidate; }
+        if next == candidate {
+            return candidate;
+        }
         candidate = next;
     }
 }
@@ -111,9 +123,13 @@ pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: Indexe
     merged_removed_base.dedup();
 
     let mut modified_map: std::collections::BTreeMap<usize, D> = std::mem::take(&mut d1.modified).into_iter().map(|m| (m.index, m.diff)).collect();
-    for base_index in &merged_removed_base { modified_map.remove(base_index); }
+    for base_index in &merged_removed_base {
+        modified_map.remove(base_index);
+    }
     for m2 in d2.modified {
-        if annihilated.contains(&m2.index) { continue; }
+        if annihilated.contains(&m2.index) {
+            continue;
+        }
         if added1_index_sorted.binary_search(&m2.index).is_ok() {
             if let Some(entry) = merged_added.iter_mut().find(|a| a.index == m2.index) {
                 apply_item_diff(&mut entry.item, &m2.diff);
@@ -121,10 +137,14 @@ pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: Indexe
         } else {
             let post_remove_rank = rank_excluding(m2.index, &added1_index_sorted);
             let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
-            if merged_removed_base.binary_search(&base_index).is_ok() { continue; }
+            if merged_removed_base.binary_search(&base_index).is_ok() {
+                continue;
+            }
             match modified_map.get_mut(&base_index) {
                 Some(existing) => absorb_item(existing, m2.diff),
-                None => { modified_map.insert(base_index, m2.diff); }
+                None => {
+                    modified_map.insert(base_index, m2.diff);
+                }
             }
         }
     }
@@ -163,14 +183,22 @@ pub struct AviChunkDiff {
 fn apply_chunk_diff(base: &AviChunk, d: &AviChunkDiff) -> AviChunk {
     AviChunk { fourcc: base.fourcc.clone(), data: d.data.clone().unwrap_or_else(|| base.data.clone()), keyframe: d.keyframe.unwrap_or(base.keyframe) }
 }
-fn apply_chunk_diff_mut(item: &mut AviChunk, d: &AviChunkDiff) { *item = apply_chunk_diff(item, d); }
+fn apply_chunk_diff_mut(item: &mut AviChunk, d: &AviChunkDiff) {
+    *item = apply_chunk_diff(item, d);
+}
 fn between_chunk(a: &AviChunk, b: &AviChunk) -> AviChunkDiff {
     AviChunkDiff { data: (a.data != b.data).then(|| b.data.clone()), keyframe: (a.keyframe != b.keyframe).then_some(b.keyframe) }
 }
-fn chunk_diff_is_empty(d: &AviChunkDiff) -> bool { d.data.is_none() && d.keyframe.is_none() }
+fn chunk_diff_is_empty(d: &AviChunkDiff) -> bool {
+    d.data.is_none() && d.keyframe.is_none()
+}
 fn absorb_chunk_diff(a: &mut AviChunkDiff, b: AviChunkDiff) {
-    if b.data.is_some() { a.data = b.data; }
-    if b.keyframe.is_some() { a.keyframe = b.keyframe; }
+    if b.data.is_some() {
+        a.data = b.data;
+    }
+    if b.keyframe.is_some() {
+        a.keyframe = b.keyframe;
+    }
 }
 //#endregion 🔖️Chunk
 
@@ -195,20 +223,24 @@ fn apply_stream_diff(base: &AviStream, d: &AviStreamDiff) -> AviStream {
         chunks: d.chunks.as_ref().map_or_else(|| base.chunks.clone(), |cd| apply_indexed(&base.chunks, cd, apply_chunk_diff)),
     }
 }
-fn apply_stream_diff_mut(item: &mut AviStream, d: &AviStreamDiff) { *item = apply_stream_diff(item, d); }
+fn apply_stream_diff_mut(item: &mut AviStream, d: &AviStreamDiff) {
+    *item = apply_stream_diff(item, d);
+}
 
 fn between_stream(a: &AviStream, b: &AviStream) -> AviStreamDiff {
     let chunks_diff = between_indexed(&a.chunks, &b.chunks, between_chunk, chunk_diff_is_empty);
-    AviStreamDiff {
-        strh: (a.strh != b.strh).then(|| b.strh.clone()),
-        strf: (a.strf != b.strf).then(|| b.strf.clone()),
-        chunks: (!chunks_diff.is_empty()).then_some(chunks_diff),
-    }
+    AviStreamDiff { strh: (a.strh != b.strh).then(|| b.strh.clone()), strf: (a.strf != b.strf).then(|| b.strf.clone()), chunks: (!chunks_diff.is_empty()).then_some(chunks_diff) }
 }
-fn stream_diff_is_empty(d: &AviStreamDiff) -> bool { d.strh.is_none() && d.strf.is_none() && d.chunks.is_none() }
+fn stream_diff_is_empty(d: &AviStreamDiff) -> bool {
+    d.strh.is_none() && d.strf.is_none() && d.chunks.is_none()
+}
 fn absorb_stream_diff(a: &mut AviStreamDiff, b: AviStreamDiff) {
-    if b.strh.is_some() { a.strh = b.strh; }
-    if b.strf.is_some() { a.strf = b.strf; }
+    if b.strh.is_some() {
+        a.strh = b.strh;
+    }
+    if b.strf.is_some() {
+        a.strf = b.strf;
+    }
     match (&mut a.chunks, b.chunks) {
         (Some(existing), Some(other)) => absorb_indexed(existing, other, absorb_chunk_diff, apply_chunk_diff_mut),
         (a_slot @ None, Some(other)) => *a_slot = Some(other),
@@ -234,10 +266,20 @@ pub struct AviDiff {
     pub unknown_chunks: Option<AviUnknownChunksDiff>,
 }
 
-fn apply_riff_diff(base: &RiffChunk, d: &RiffChunk) -> RiffChunk { let _ = base; d.clone() }
-fn apply_riff_diff_mut(item: &mut RiffChunk, d: &RiffChunk) { *item = d.clone(); }
-fn between_riff(a: &RiffChunk, b: &RiffChunk) -> RiffChunk { let _ = a; b.clone() }
-fn riff_diff_is_empty(_d: &RiffChunk) -> bool { false }
+fn apply_riff_diff(base: &RiffChunk, d: &RiffChunk) -> RiffChunk {
+    let _ = base;
+    d.clone()
+}
+fn apply_riff_diff_mut(item: &mut RiffChunk, d: &RiffChunk) {
+    *item = d.clone();
+}
+fn between_riff(a: &RiffChunk, b: &RiffChunk) -> RiffChunk {
+    let _ = a;
+    b.clone()
+}
+fn riff_diff_is_empty(_d: &RiffChunk) -> bool {
+    false
+}
 
 impl MutationDiff<AviSnapshot> for AviDiff {
     fn apply(&self, base: &AviSnapshot) -> AviSnapshot {
@@ -251,8 +293,12 @@ impl MutationDiff<AviSnapshot> for AviDiff {
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.main_header.is_some() { self.main_header = other.main_header; }
-        if other.idx1_present.is_some() { self.idx1_present = other.idx1_present; }
+        if other.main_header.is_some() {
+            self.main_header = other.main_header;
+        }
+        if other.idx1_present.is_some() {
+            self.idx1_present = other.idx1_present;
+        }
         match (&mut self.streams, other.streams) {
             (Some(existing), Some(other_streams)) => absorb_indexed(existing, other_streams, absorb_stream_diff, apply_stream_diff_mut),
             (slot @ None, Some(other_streams)) => *slot = Some(other_streams),
@@ -282,7 +328,9 @@ impl DiffAlgebra<AviSnapshot> for AviDiff {
         let after = self.apply(base);
         Self::between(&after, base)
     }
-    fn is_empty(&self) -> bool { self.main_header.is_none() && self.streams.is_none() && self.idx1_present.is_none() && self.unknown_chunks.is_none() }
+    fn is_empty(&self) -> bool {
+        self.main_header.is_none() && self.streams.is_none() && self.idx1_present.is_none() && self.unknown_chunks.is_none()
+    }
 }
 
 /// 🧩 Set-snapshot diff helper — used by the `📸️set-snapshot/🔺️diff` leaf.
@@ -297,18 +345,56 @@ mod tests {
     use super::*;
     use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA;
 
-    fn chunk(n: u8) -> AviChunk { AviChunk { fourcc: "00dc".into(), data: vec![n], keyframe: n % 2 == 0 } }
+    fn chunk(n: u8) -> AviChunk {
+        AviChunk { fourcc: "00dc".into(), data: vec![n], keyframe: n % 2 == 0 }
+    }
 
     fn stream(chunks: Vec<AviChunk>) -> AviStream {
         AviStream {
-            strh: AviStreamHeader { fcc_type: "vids".into(), fcc_handler: "MJPG".into(), flags: 0, priority: 0, language: 0, initial_frames: 0, scale: 1, rate: 10, start: 0, length: chunks.len() as u32, suggested_buffer_size: 0, quality: -1, sample_size: 0, rc_frame_left: 0, rc_frame_top: 0, rc_frame_right: 16, rc_frame_bottom: 16 },
+            strh: AviStreamHeader {
+                fcc_type: "vids".into(),
+                fcc_handler: "MJPG".into(),
+                flags: 0,
+                priority: 0,
+                language: 0,
+                initial_frames: 0,
+                scale: 1,
+                rate: 10,
+                start: 0,
+                length: chunks.len() as u32,
+                suggested_buffer_size: 0,
+                quality: -1,
+                sample_size: 0,
+                rc_frame_left: 0,
+                rc_frame_top: 0,
+                rc_frame_right: 16,
+                rc_frame_bottom: 16,
+            },
             strf: AviStreamFormat::BitmapInfo { size: 40, width: 16, height: 16, planes: 1, bit_count: 24, compression: "MJPG".into(), size_image: 0, x_pels_per_meter: 0, y_pels_per_meter: 0, colors_used: 0, colors_important: 0 },
             chunks,
         }
     }
 
     fn snap(streams: Vec<AviStream>) -> AviSnapshot {
-        AviSnapshot { schema: STDIO_AVI_DOCUMENT_SCHEMA.into(), main_header: AviMainHeader { micro_sec_per_frame: 100_000, max_bytes_per_sec: 0, padding_granularity: 0, flags: 0x10, total_frames: 0, initial_frames: 0, streams: streams.len() as u32, suggested_buffer_size: 0, width: 16, height: 16, reserved: vec![0, 0, 0, 0] }, streams, idx1_present: true, unknown_chunks: vec![] }
+        AviSnapshot {
+            schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
+            main_header: AviMainHeader {
+                micro_sec_per_frame: 100_000,
+                max_bytes_per_sec: 0,
+                padding_granularity: 0,
+                flags: 0x10,
+                total_frames: 0,
+                initial_frames: 0,
+                streams: streams.len() as u32,
+                suggested_buffer_size: 0,
+                width: 16,
+                height: 16,
+                reserved: vec![0, 0, 0, 0],
+            },
+            streams,
+            idx1_present: true,
+            unknown_chunks: vec![],
+        }
     }
 
     #[test]

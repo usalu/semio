@@ -5,26 +5,22 @@
 //! file's own directory — the same mechanism `📦️glue.rs` itself uses one level up. Registration
 //! flows through `🎹️composer::register` (see that module), matching the repo-wide convention.
 
-#[path = "📥️import/🧩️deserializers/🗿️artifacts/🎥️mp4/🔖️isobmff/✳️any/🦀️component.rs"]
-pub mod mp4_deserializer;
-#[path = "📤️export/🧵️serializers/🗿️artifacts/🎥️mp4/🔖️isobmff/✳️any/🦀️component.rs"]
-pub mod mp4_serializer;
 #[path = "📥️import/🧩️deserializers/🗿️artifacts/📼️avi/🔖️1.0/✳️any/🦀️component.rs"]
 pub mod avi_deserializer;
 #[path = "📤️export/🧵️serializers/🗿️artifacts/📼️avi/🔖️1.0/✳️any/🦀️component.rs"]
 pub mod avi_serializer;
+#[path = "📥️import/🧩️deserializers/🗿️artifacts/🎥️mp4/🔖️isobmff/✳️any/🦀️component.rs"]
+pub mod mp4_deserializer;
+#[path = "📤️export/🧵️serializers/🗿️artifacts/🎥️mp4/🔖️isobmff/✳️any/🦀️component.rs"]
+pub mod mp4_serializer;
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{
-        ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId,
-        SubsetValidator, SubsetValidatorEntry, register_subset_validator, subset_validator_entry_of,
-        deserializer_entry_of, serializer_entry_of, register_composer_entries,
-    };
+    use crate::artifacts::semio::standards::v1::subsets::video::io::{avi_deserializer::SemioVideoFromAvi, avi_serializer::SemioVideoToAvi, mp4_deserializer::SemioVideoFromMp4, mp4_serializer::SemioVideoToMp4};
     use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioVideoSnapshot, SemioVideoStreamKind};
     use crate::artifacts::semio::standards::v1::subsets::video::schema::SemioVideoAnalyzer;
-    use crate::artifacts::semio::standards::v1::subsets::video::io::{
-        mp4_deserializer::SemioVideoFromMp4, mp4_serializer::SemioVideoToMp4,
-        avi_deserializer::SemioVideoFromAvi, avi_serializer::SemioVideoToAvi,
+    use semio_framework_plugin::{
+        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect,
+        IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
     };
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") };
@@ -36,7 +32,9 @@ pub mod derived_composition {
         type Snapshot = SemioVideoSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] { &[DIALECT] }
+        fn reads() -> &'static [Dialect] {
+            &[DIALECT]
+        }
 
         fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
@@ -51,10 +49,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "SemioVideoComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = SemioVideoAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "SemioVideoComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "SemioVideoComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -78,18 +73,10 @@ pub mod derived_composition {
         let mut out = Vec::new();
         for (stream_index, stream) in snapshot.streams.iter().enumerate() {
             if stream.rate.den == 0 {
-                out.push(dsl::Diagnostic::error(
-                    "stdio.semio_video.rate-zero-denominator",
-                    dsl::TextSpan::at(1, 1),
-                    format!("stream {stream_index}: rate denominator is 0 (rate.num={})", stream.rate.num),
-                ));
+                out.push(dsl::Diagnostic::error("stdio.semio_video.rate-zero-denominator", dsl::TextSpan::at(1, 1), format!("stream {stream_index}: rate denominator is 0 (rate.num={})", stream.rate.num)));
             }
             if stream.kind == SemioVideoStreamKind::Video && (stream.width == 0 || stream.height == 0) {
-                out.push(dsl::Diagnostic::error(
-                    "stdio.semio_video.video-stream-zero-dimension",
-                    dsl::TextSpan::at(1, 1),
-                    format!("stream {stream_index}: kind=Video but width={} height={}", stream.width, stream.height),
-                ));
+                out.push(dsl::Diagnostic::error("stdio.semio_video.video-stream-zero-dimension", dsl::TextSpan::at(1, 1), format!("stream {stream_index}: kind=Video but width={} height={}", stream.width, stream.height)));
             }
             let mut prev_pts: Option<u64> = None;
             for (sample_index, sample) in stream.samples.iter().enumerate() {
@@ -120,17 +107,15 @@ pub mod derived_composition {
             };
             match decoded {
                 Some(snapshot) => check_semio_video_invariants(&snapshot),
-                None => vec![dsl::Diagnostic::error(
-                    "stdio.semio_video.validate-decode-failed",
-                    dsl::TextSpan::at(1, 1),
-                    "SemioVideoValidator: payload did not decode as a SemioVideoSnapshot".to_string(),
-                )],
+                None => vec![dsl::Diagnostic::error("stdio.semio_video.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioVideoValidator: payload did not decode as a SemioVideoSnapshot".to_string())],
             }
         }
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    fn validator_entry() -> &'static SubsetValidatorEntry { VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioVideoValidator>) }
+    fn validator_entry() -> &'static SubsetValidatorEntry {
+        VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioVideoValidator>)
+    }
     //#endregion 🔖️SubsetValidator
 
     //#region 🔖️Register
@@ -139,7 +124,9 @@ pub mod derived_composition {
     /// Called from this artifact's standard-level `engine::register()`.
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::video::schema::semio_video_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioVideoSnapshot, crate::artifacts::semio::standards::v1::subsets::video::schema::mutations::SemioVideoMutation>(crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA));
+        store::register_document_codec(store::ArtifactCodec::of::<SemioVideoSnapshot, crate::artifacts::semio::standards::v1::subsets::video::schema::mutations::SemioVideoMutation>(
+            crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA,
+        ));
         register_subset_validator(validator_entry());
         register_composer_entries(bridge_entries());
         register_artifact_inferences();
@@ -159,16 +146,7 @@ pub mod derived_composition {
     /// composer).
     fn bridge_entries() -> &'static [semio_framework_plugin::ComposerEntry] {
         static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::ComposerEntry>> = std::sync::OnceLock::new();
-        ENTRIES
-            .get_or_init(|| {
-                vec![
-                    deserializer_entry_of::<SemioVideoFromMp4>(),
-                    serializer_entry_of::<SemioVideoToMp4>(),
-                    deserializer_entry_of::<SemioVideoFromAvi>(),
-                    serializer_entry_of::<SemioVideoToAvi>(),
-                ]
-            })
-            .as_slice()
+        ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioVideoFromMp4>(), serializer_entry_of::<SemioVideoToMp4>(), deserializer_entry_of::<SemioVideoFromAvi>(), serializer_entry_of::<SemioVideoToAvi>()]).as_slice()
     }
     //#endregion 🔖️Register
 
@@ -187,10 +165,7 @@ pub mod derived_composition {
                     width: 1920,
                     height: 1080,
                     rate: SemioRational { num: 30, den: 1 },
-                    samples: vec![
-                        SemioVideoSample { pts: 0, key: true, data: vec![1] },
-                        SemioVideoSample { pts: 33, key: false, data: vec![2] },
-                    ],
+                    samples: vec![SemioVideoSample { pts: 0, key: true, data: vec![1] }, SemioVideoSample { pts: 33, key: false, data: vec![2] }],
                 }],
             }
         }
@@ -265,19 +240,11 @@ pub mod derived_composition {
             /// `walk_protocol` laws below.
             #[test]
             fn committed_facet_files_parse() {
-                for (label, text) in [
-                    ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-                ] {
+                for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                     assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
                 }
-                for (label, text) in [
-                    ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-                ] {
+                for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                     dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
                 }
             }

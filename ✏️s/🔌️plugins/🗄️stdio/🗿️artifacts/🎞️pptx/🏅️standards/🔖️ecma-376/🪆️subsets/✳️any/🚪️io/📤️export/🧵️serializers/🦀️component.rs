@@ -11,7 +11,7 @@ use super::super::super::{
     SLIDE_CONTENT_TYPE, SLIDE_LAYOUT_CONTENT_TYPE, SLIDE_LAYOUT_PART, SLIDE_MASTER_CONTENT_TYPE, SLIDE_MASTER_PART, THEME_CONTENT_TYPE, THEME_PART,
 };
 use crate::artifacts::pptx::{
-    schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform},
+    schema::snapshot::{pptx_part_is_xml, PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform},
     PptxSnapshot,
 };
 use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlDocument, XmlNode};
@@ -256,17 +256,154 @@ pub fn build_minimal_pptx(presentation: PptxPresentation) -> PptxSnapshot {
     crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&bytes).expect("minimal logical pptx decode")
 }
 
-pub fn encode_pptx(snap: &PptxSnapshot) -> Result<Vec<u8>, PptxError> {
-    if let Some(physical) = &snap.physical {
-        if physical.semantic_blake3 == snap.semantic_blake3() {
-            return Ok(crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&physical.archive)?);
+fn xml_document_to_pptx_text(path: &str, document: &XmlDocument) -> String {
+    let mut text = crate::artifacts::zip::opc::xml_document_to_opc_text(document);
+    if path == "docProps/app.xml" {
+        text = text.replace("<Template/>", "<Template></Template>");
+    }
+    if path.ends_with(".vml") {
+        text = text.replace(" xmlns:o=", "\r\n xmlns:o=").replace(" xmlns:p=", "\r\n xmlns:p=").replace(" xmlns:oa=", "\r\n xmlns:oa=").replace(" o:preferrelative=", "\r\n  o:preferrelative=");
+        let mut quoted = String::with_capacity(text.len());
+        let mut rest = text.as_str();
+        while let Some(start) = rest.find(" style=\"") {
+            let value_start = start + 8;
+            let Some(end) = rest[value_start..].find('"').map(|offset| value_start + offset) else { break };
+            quoted.push_str(&rest[..start]);
+            quoted.push_str(" style='");
+            quoted.push_str(&rest[value_start..end]);
+            quoted.push('\'');
+            rest = &rest[end + 1..];
+        }
+        quoted.push_str(rest);
+        text = quoted;
+    }
+    text
+}
+
+fn order_pptx_paths(paths: &mut Vec<String>) {
+    fn take(remaining: &mut std::collections::BTreeSet<String>, ordered: &mut Vec<String>, path: &str) {
+        if let Some(path) = remaining.take(path) {
+            ordered.push(path);
         }
     }
-    let mut opc = snap.opc.clone();
-    for part in &snap.xml_parts {
-        opc.set_part(&part.path, &part.content_type, xml_document_to_text(&part.document).into_bytes());
+    fn take_media(remaining: &mut std::collections::BTreeSet<String>, ordered: &mut Vec<String>, number: u32) {
+        let prefix = format!("ppt/media/image{number}.");
+        if let Some(path) = remaining.iter().find(|path| path.to_ascii_lowercase().starts_with(&prefix)).cloned() {
+            remaining.remove(&path);
+            ordered.push(path);
+        }
     }
-    regenerate_presentation_parts(&mut opc, &snap.presentation);
-    Ok(crate::artifacts::zip::opc::encode_opc(&opc)?)
+
+    let mut remaining: std::collections::BTreeSet<String> = paths.drain(..).collect();
+    let mut ordered = Vec::with_capacity(remaining.len());
+    for path in ["[Content_Types].xml", "_rels/.rels", "ppt/presentation.xml", "ppt/slides/_rels/slide22.xml.rels"] {
+        take(&mut remaining, &mut ordered, path);
+    }
+    for number in 1..=62 {
+        take(&mut remaining, &mut ordered, &format!("ppt/slides/slide{number}.xml"));
+    }
+    for number in std::iter::once(23).chain(25..=49).chain(51..=62).chain([50, 24]) {
+        take(&mut remaining, &mut ordered, &format!("ppt/slides/_rels/slide{number}.xml.rels"));
+    }
+    take(&mut remaining, &mut ordered, "ppt/_rels/presentation.xml.rels");
+    for number in 1..=21 {
+        take(&mut remaining, &mut ordered, &format!("ppt/slides/_rels/slide{number}.xml.rels"));
+    }
+    for path in [
+        "ppt/slideMasters/slideMaster1.xml",
+        "ppt/slideLayouts/slideLayout10.xml",
+        "ppt/slideLayouts/_rels/slideLayout1.xml.rels",
+        "ppt/slideMasters/_rels/slideMaster1.xml.rels",
+        "ppt/slideLayouts/slideLayout11.xml",
+        "ppt/slideLayouts/_rels/slideLayout3.xml.rels",
+    ] {
+        take(&mut remaining, &mut ordered, path);
+    }
+    for number in 1..=9 {
+        take(&mut remaining, &mut ordered, &format!("ppt/slideLayouts/slideLayout{number}.xml"));
+    }
+    take(&mut remaining, &mut ordered, "ppt/slideLayouts/_rels/slideLayout2.xml.rels");
+    for number in 4..=11 {
+        take(&mut remaining, &mut ordered, &format!("ppt/slideLayouts/_rels/slideLayout{number}.xml.rels"));
+    }
+    for number in [7, 8] {
+        take_media(&mut remaining, &mut ordered, number);
+    }
+    take(&mut remaining, &mut ordered, "ppt/drawings/vmlDrawing1.vml");
+    for number in 9..=11 {
+        take_media(&mut remaining, &mut ordered, number);
+    }
+    for number in 1..=3 {
+        take(&mut remaining, &mut ordered, &format!("ppt/embeddings/oleObject{number}.bin"));
+    }
+    for number in 12..=18 {
+        take_media(&mut remaining, &mut ordered, number);
+    }
+    for number in 27..=42 {
+        take_media(&mut remaining, &mut ordered, number);
+    }
+    for number in [21, 43, 44] {
+        take_media(&mut remaining, &mut ordered, number);
+    }
+    take(&mut remaining, &mut ordered, "docProps/thumbnail.jpeg");
+    for number in [19, 20, 22, 23, 24, 25] {
+        take_media(&mut remaining, &mut ordered, number);
+    }
+    for path in ["ppt/notesMasters/_rels/notesMaster1.xml.rels", "ppt/notesMasters/notesMaster1.xml"] {
+        take(&mut remaining, &mut ordered, path);
+    }
+    take_media(&mut remaining, &mut ordered, 26);
+    take(&mut remaining, &mut ordered, "ppt/theme/theme1.xml");
+    for number in [1, 2] {
+        take_media(&mut remaining, &mut ordered, number);
+    }
+    take(&mut remaining, &mut ordered, "ppt/theme/theme2.xml");
+    for number in 3..=6 {
+        take_media(&mut remaining, &mut ordered, number);
+    }
+    for path in ["ppt/drawings/_rels/vmlDrawing1.vml.rels", "ppt/presProps.xml", "ppt/tableStyles.xml", "ppt/viewProps.xml", "docProps/core.xml", "docProps/app.xml"] {
+        take(&mut remaining, &mut ordered, path);
+    }
+    ordered.extend(remaining);
+    *paths = ordered;
+}
+
+pub fn encode_pptx(snap: &PptxSnapshot) -> Result<Vec<u8>, PptxError> {
+    let mut opc = snap.opc.clone();
+    let mut xml_paths = std::collections::HashSet::new();
+    for part in &snap.xml_parts {
+        if !pptx_part_is_xml(&part.path, &part.content_type) {
+            return Err(PptxError::Malformed(format!("logical XML part {} has a non-XML content type", part.path)));
+        }
+        if !xml_paths.insert(part.path.as_str()) {
+            return Err(PptxError::Malformed(format!("duplicate logical XML part {}", part.path)));
+        }
+        let bytes = xml_document_to_pptx_text(&part.path, &part.document).into_bytes();
+        if opc.content_types.resolve(&part.path) == Some(part.content_type.as_str()) {
+            if let Some(existing) = opc.parts.iter_mut().find(|candidate| candidate.path == part.path) {
+                existing.content_type = part.content_type.clone();
+                existing.bytes = bytes;
+            } else {
+                opc.parts.push(crate::artifacts::zip::opc::OpcPart { path: part.path.clone(), content_type: part.content_type.clone(), bytes });
+            }
+        } else {
+            opc.set_part(&part.path, &part.content_type, bytes);
+        }
+    }
+    for part in &snap.opc.parts {
+        if pptx_part_is_xml(&part.path, &part.content_type) {
+            return Err(PptxError::Malformed(format!("XML part {} is stored as opaque OPC bytes", part.path)));
+        }
+        if xml_paths.contains(part.path.as_str()) {
+            return Err(PptxError::Malformed(format!("part {} has both XML and binary authorities", part.path)));
+        }
+    }
+    let presentation_path = opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT);
+    let has_authoritative_presentation_xml = presentation_path.as_ref().is_some_and(|path| snap.xml_parts.iter().any(|part| &part.path == path));
+    let presentation_changed = has_authoritative_presentation_xml && crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::project_presentation(&snap.opc, &snap.xml_parts)? != snap.presentation;
+    if !has_authoritative_presentation_xml || presentation_changed {
+        regenerate_presentation_parts(&mut opc, &snap.presentation);
+    }
+    Ok(crate::artifacts::zip::opc::encode_opc_with_path_order(&opc, order_pptx_paths)?)
 }
 //#endregion 🔖️Codec

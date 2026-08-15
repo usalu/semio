@@ -88,9 +88,9 @@ pub fn docx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable};
     use crate::artifacts::docx::{DocxDiff, DocxMutation, DocxSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.docx` snapshot.
@@ -125,7 +125,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -179,8 +183,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::docx::DocxSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.docx` parts.
@@ -218,22 +222,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <DocxSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -247,7 +243,9 @@ pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🔖️DocumentHelpers
-pub fn empty_docx_snapshot() -> DocxSnapshot { DocxSnapshot::default() }
+pub fn empty_docx_snapshot() -> DocxSnapshot {
+    DocxSnapshot::default()
+}
 
 /// 📄️ FG-wave: the demo `stdio.docx` document — a genuinely non-trivial `DocxSnapshot` exercising
 /// a styled heading paragraph, a mixed-formatting run (bold/italic/plain), a 2x2 table (recursing
@@ -263,45 +261,22 @@ pub fn demo_docx_snapshot() -> DocxSnapshot {
         body: vec![
             DocxBlock::Paragraph(DocxParagraph { style: Some("Heading1".into()), ..DocxParagraph::text("Semio Demo") }),
             DocxBlock::Paragraph(DocxParagraph {
-                runs: vec![
-                    DocxRun { text: "Bold and ".into(), bold: true, ..Default::default() },
-                    DocxRun { text: "italic".into(), italic: true, ..Default::default() },
-                    DocxRun { text: " text".into(), ..Default::default() },
-                ],
+                runs: vec![DocxRun { text: "Bold and ".into(), bold: true, ..Default::default() }, DocxRun { text: "italic".into(), italic: true, ..Default::default() }, DocxRun { text: " text".into(), ..Default::default() }],
                 style: None,
                 extra_paragraph_properties: Vec::new(),
             }),
             DocxBlock::Table(DocxTable {
                 rows: vec![
-                    DocxTableRow {
-                        cells: vec![
-                            DocxTableCell { blocks: vec![DocxBlock::paragraph("R1C1")], ..Default::default() },
-                            DocxTableCell { blocks: vec![DocxBlock::paragraph("R1C2")], ..Default::default() },
-                        ],
-                        ..Default::default()
-                    },
-                    DocxTableRow {
-                        cells: vec![
-                            DocxTableCell { blocks: vec![DocxBlock::paragraph("R2C1")], ..Default::default() },
-                            DocxTableCell { blocks: vec![DocxBlock::paragraph("R2C2")], ..Default::default() },
-                        ],
-                        ..Default::default()
-                    },
+                    DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("R1C1")], ..Default::default() }, DocxTableCell { blocks: vec![DocxBlock::paragraph("R1C2")], ..Default::default() }], ..Default::default() },
+                    DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("R2C1")], ..Default::default() }, DocxTableCell { blocks: vec![DocxBlock::paragraph("R2C2")], ..Default::default() }], ..Default::default() },
                 ],
                 ..Default::default()
             }),
         ],
-        styles: vec![
-            DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None },
-            DocxStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) },
-        ],
+        styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }, DocxStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) }],
     };
     let mut snap = crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_docx(document);
-    snap.opc.set_part(
-        "word/numbering.xml",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml",
-        b"<w:numbering/>".to_vec(),
-    );
+    snap.opc.set_part("word/numbering.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml", b"<w:numbering/>".to_vec());
     snap
 }
 //#endregion 🔖️DocumentHelpers
@@ -334,10 +309,7 @@ mod tests {
         DocxDocument {
             body: vec![
                 DocxBlock::Paragraph(DocxParagraph {
-                    runs: vec![
-                        DocxRun { text: "Hello, ".into(), bold: true, ..Default::default() },
-                        DocxRun { text: "world!".into(), italic: true, ..Default::default() },
-                    ],
+                    runs: vec![DocxRun { text: "Hello, ".into(), bold: true, ..Default::default() }, DocxRun { text: "world!".into(), italic: true, ..Default::default() }],
                     style: None,
                     extra_paragraph_properties: Vec::new(),
                 }),
@@ -353,19 +325,13 @@ mod tests {
                 DocxBlock::Paragraph(DocxParagraph { style: Some("Heading1".into()), ..DocxParagraph::text("Title") }),
                 DocxBlock::Table(DocxTable {
                     rows: vec![DocxTableRow {
-                        cells: vec![
-                            DocxTableCell { blocks: vec![DocxBlock::paragraph("R1C1")], ..Default::default() },
-                            DocxTableCell { blocks: vec![DocxBlock::paragraph("R1C2")], ..Default::default() },
-                        ],
+                        cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("R1C1")], ..Default::default() }, DocxTableCell { blocks: vec![DocxBlock::paragraph("R1C2")], ..Default::default() }],
                         ..Default::default()
                     }],
                     ..Default::default()
                 }),
             ],
-            styles: vec![
-                DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None },
-                DocxStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) },
-            ],
+            styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }, DocxStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) }],
         }
     }
 
@@ -494,19 +460,11 @@ mod tests {
         /// message).
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }

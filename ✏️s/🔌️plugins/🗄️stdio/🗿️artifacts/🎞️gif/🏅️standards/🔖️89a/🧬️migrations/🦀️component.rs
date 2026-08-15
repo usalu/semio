@@ -19,10 +19,7 @@ use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{Gif
 /// copy-pasted shared types" rule) — this migration is the one legitimate cross-standard bridge
 /// point, converting field-for-field (identical shape: `sorted: bool`, `colors: Vec<GifRgb>`).
 fn migrate_color_table(table: &Gif87aColorTable) -> Gif89aColorTable {
-    Gif89aColorTable {
-        sorted: table.sorted,
-        colors: table.colors.iter().map(|c| Gif89aRgb { r: c.r, g: c.g, b: c.b }).collect(),
-    }
+    Gif89aColorTable { sorted: table.sorted, colors: table.colors.iter().map(|c| Gif89aRgb { r: c.r, g: c.g, b: c.b }).collect() }
 }
 //#endregion ColorTableConv
 
@@ -106,16 +103,12 @@ mod tests {
         let (palette, indices, _) = crate::artifacts::gif::standards::v87a::engine::quantize_rgba(&sample_rgba_2x2()).expect("quantize");
         let source = Gif87aSnapshot {
             schema: crate::artifacts::gif::STDIO_GIF_DOCUMENT_SCHEMA.into(),
-            width: 2, height: 2,
+            width: 2,
+            height: 2,
             gct: None,
             background_color_index: 0,
             pixel_aspect_ratio: 0,
-            images: vec![GifImage {
-                left: 0, top: 0, width: 2, height: 2,
-                interlace: false,
-                lct: Some(crate::artifacts::gif::standards::v87a::engine::color_table_from_bytes(palette, false)),
-                indices,
-            }],
+            images: vec![GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: Some(crate::artifacts::gif::standards::v87a::engine::color_table_from_bytes(palette, false)), indices }],
         };
         let encoded = crate::artifacts::gif::standards::v87a::engine::encode_gif(&source).expect("real 87a encode of a small opaque image must succeed");
         assert_eq!(&encoded[0..6], b"GIF87a", "sanity: this really is a GIF87a byte stream");

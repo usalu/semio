@@ -64,12 +64,7 @@ pub struct TsvSnapshot {
 
 impl Default for TsvSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_TSV_DOCUMENT_SCHEMA.into(),
-            records: Vec::new(),
-            trailing_newline: false,
-            line_ending: LineEnding::default(),
-        }
+        Self { schema: STDIO_TSV_DOCUMENT_SCHEMA.into(), records: Vec::new(), trailing_newline: false, line_ending: LineEnding::default() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -93,11 +88,7 @@ pub fn decode_tsv(text: &str) -> TsvSnapshot {
     let sep = line_ending.as_str();
     let trailing_newline = text.ends_with(sep);
     let body = if trailing_newline { &text[..text.len() - sep.len()] } else { text };
-    let records: Vec<Vec<String>> = if body.is_empty() {
-        Vec::new()
-    } else {
-        body.split(sep).map(|line| line.split('\t').map(|s| s.to_string()).collect()).collect()
-    };
+    let records: Vec<Vec<String>> = if body.is_empty() { Vec::new() } else { body.split(sep).map(|line| line.split('\t').map(|s| s.to_string()).collect()).collect() };
     TsvSnapshot { schema: STDIO_TSV_DOCUMENT_SCHEMA.into(), records, trailing_newline, line_ending }
 }
 
@@ -116,7 +107,9 @@ pub fn encode_tsv(snap: &TsvSnapshot) -> String {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for TsvSnapshot {
     const EXTENSION: &'static str = "tsv";
-    fn envelope_id() -> &'static str { STDIO_TSV_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_TSV_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -127,11 +120,7 @@ impl store::ArtifactDsl for TsvSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = encode_tsv(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -140,22 +129,13 @@ impl store::ArtifactPack for TsvSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_tsv(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;

@@ -45,9 +45,18 @@ message XmlDeclaration {
   optional bool standalone = 3;
 }
 
+message XmlExternalId {
+  enum Kind { SYSTEM = 0; PUBLIC = 1; }
+  Kind kind = 1;
+  optional string public_id = 2;
+  string system_id = 3;
+}
+message XmlDtdEntity { bool parameter = 1; string name = 2; string value = 3; }
+message XmlDoctype { string name = 1; optional XmlExternalId external_id = 2; repeated XmlDtdEntity declarations = 3; }
+
 message XmlDocument {
   optional XmlNode root = 1;
-  optional string doctype = 2;
+  optional XmlDoctype doctype = 2;
   optional XmlDeclaration declaration = 3;
   repeated XmlNode prolog = 4;
 }

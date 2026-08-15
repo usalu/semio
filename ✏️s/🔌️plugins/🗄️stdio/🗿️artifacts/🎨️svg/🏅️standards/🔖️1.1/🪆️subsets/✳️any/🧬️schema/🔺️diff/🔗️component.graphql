@@ -6,12 +6,12 @@
 
 """ 🔺️ Diff for `stdio.svg`. `declaration`/`doctype` are tri-state scalars: the field is absent
 from the payload when unchanged; represented here as plain nullable fields since GraphQL has no
-native tri-state -- the wire encoding (JSON, via the sibling `.json`/`.ts` facets) is authoritative
+three-state representation -- the structured text/binary codecs are authoritative
 for the absent/null/set distinction. """
 type SvgDiff {
   prolog: [XmlNode!]
   declaration: XmlDeclaration
-  doctype: String
+  doctype: XmlDoctype
   root: SvgNodeDiff
 }
 

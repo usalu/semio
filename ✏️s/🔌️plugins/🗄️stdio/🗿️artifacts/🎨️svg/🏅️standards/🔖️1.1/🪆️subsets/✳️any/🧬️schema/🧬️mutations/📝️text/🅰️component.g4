@@ -1,5 +1,4 @@
 grammar Stdio_svg_mutations;
-// SvgMutation's text form is standard JSON (see the sibling JSON Schema facet for the shape) --
-// intentionally not re-deriving a JSON grammar here.
-document: JSON_VALUE EOF;
-JSON_VALUE: .*? ;
+// 🧬️ Structured tagged/hex mutation text; component.grammar.semio is canonical.
+document: MUTATION EOF;
+MUTATION: ('no-mutation' | 'set-snapshot' | 'set-declaration' | 'set-doctype' | 'insert-element' | 'remove-element' | 'set-element-name' | 'set-attribute' | 'set-text' | 'set-view-box' | 'set-transform') .* ;

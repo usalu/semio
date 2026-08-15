@@ -1,5 +1,5 @@
-use crate::artifacts::dxf::{DxfSnapshot};
 use crate::artifacts::dxf::schema::mutations::DxfMutation;
+use crate::artifacts::dxf::DxfSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

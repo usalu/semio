@@ -60,11 +60,7 @@ mod tests {
 
     #[test]
     fn prefers_width_height_attrs_over_view_box() {
-        let snapshot = svg_snapshot(vec![
-            XmlAttr { name: "width".into(), value: "42px".into() },
-            XmlAttr { name: "height".into(), value: "24".into() },
-            XmlAttr { name: "viewBox".into(), value: "0 0 100 100".into() },
-        ]);
+        let snapshot = svg_snapshot(vec![XmlAttr { name: "width".into(), value: "42px".into() }, XmlAttr { name: "height".into(), value: "24".into() }, XmlAttr { name: "viewBox".into(), value: "0 0 100 100".into() }]);
         assert_eq!(compute_svg_dimensions(&snapshot), SvgDimensions { width: 42.0, height: 24.0 });
     }
 

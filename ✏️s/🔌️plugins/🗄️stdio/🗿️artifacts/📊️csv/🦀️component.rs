@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord, CsvSnapshot};
-pub use crate::artifacts::csv::schema::CsvArtifact;
 pub use crate::artifacts::csv::schema::diff::CsvDiff;
 pub use crate::artifacts::csv::schema::mutations::CsvMutation;
+pub use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord, CsvSnapshot};
+pub use crate::artifacts::csv::schema::CsvArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_CSV_DOCUMENT_SCHEMA: &str = "stdio.csv";
@@ -27,7 +27,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
@@ -123,9 +123,9 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::csv::standards::v_rfc4180::subsets::any::io::io_registry as v_rfc4180;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -134,10 +134,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("CsvComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("CsvComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

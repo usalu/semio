@@ -58,9 +58,8 @@
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::{
-    dec_list, dec_material, dec_mesh, dec_point3, dec_primitive, dec_rgba, dec_str, dec_texture, dec_topology, dec_uv, decode_option, enc_list,
-    enc_material, enc_mesh, enc_point3, enc_primitive, enc_rgba, enc_str, enc_texture, enc_topology, enc_uv, encode_option, hex_decode, hex_encode,
-    SemioMeshDiff,
+    dec_list, dec_material, dec_mesh, dec_point3, dec_primitive, dec_rgba, dec_str, dec_texture, dec_topology, dec_uv, decode_option, enc_list, enc_material, enc_mesh, enc_point3, enc_primitive, enc_rgba, enc_str, enc_texture, enc_topology, enc_uv,
+    encode_option, hex_decode, hex_encode, SemioMeshDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology};
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioMeshMutation` block below
@@ -154,24 +153,17 @@ fn print_semio_mesh_mutation(m: &SemioMeshMutation) -> String {
 }
 fn parse_semio_mesh_mutation(line: &str) -> Result<SemioMeshMutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("semio mesh mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> =
+        rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("semio mesh mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("semio mesh mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
         "create-mesh" => Ok(SemioMeshMutation::CreateMesh(create_mesh::mutation::CreateMesh { mesh: dec_mesh(arg("mesh")?)? })),
         "delete-mesh" => Ok(SemioMeshMutation::DeleteMesh(delete_mesh::mutation::DeleteMesh { id: dec_str(arg("id")?)? })),
         "create-primitive" => Ok(SemioMeshMutation::CreatePrimitive(create_primitive::mutation::CreatePrimitive { mesh_id: dec_str(arg("mesh-id")?)?, primitive: dec_primitive(arg("primitive")?)? })),
         "delete-primitive" => Ok(SemioMeshMutation::DeletePrimitive(delete_primitive::mutation::DeletePrimitive { mesh_id: dec_str(arg("mesh-id")?)?, primitive_id: dec_str(arg("primitive-id")?)? })),
-        "set-primitive-topology" => Ok(SemioMeshMutation::SetPrimitiveTopology(set_primitive_topology::mutation::SetPrimitiveTopology {
-            mesh_id: dec_str(arg("mesh-id")?)?,
-            primitive_id: dec_str(arg("primitive-id")?)?,
-            topology: dec_topology(arg("topology")?)?,
-        })),
+        "set-primitive-topology" => {
+            Ok(SemioMeshMutation::SetPrimitiveTopology(set_primitive_topology::mutation::SetPrimitiveTopology { mesh_id: dec_str(arg("mesh-id")?)?, primitive_id: dec_str(arg("primitive-id")?)?, topology: dec_topology(arg("topology")?)? }))
+        }
         "replace-primitive-geometry" => Ok(SemioMeshMutation::ReplacePrimitiveGeometry(replace_primitive_geometry::mutation::ReplacePrimitiveGeometry {
             mesh_id: dec_str(arg("mesh-id")?)?,
             primitive_id: dec_str(arg("primitive-id")?)?,
@@ -189,14 +181,12 @@ fn parse_semio_mesh_mutation(line: &str) -> Result<SemioMeshMutation, String> {
         "create-material" => Ok(SemioMeshMutation::CreateMaterial(create_material::mutation::CreateMaterial { material: dec_material(arg("material")?)? })),
         "delete-material" => Ok(SemioMeshMutation::DeleteMaterial(delete_material::mutation::DeleteMaterial { id: dec_str(arg("id")?)? })),
         "change-material-base-color" => Ok(SemioMeshMutation::ChangeMaterialBaseColor(change_material_base_color::mutation::ChangeMaterialBaseColor { id: dec_str(arg("id")?)?, new_base_color: dec_rgba(arg("new-base-color")?)? })),
-        "change-material-metallic" => Ok(SemioMeshMutation::ChangeMaterialMetallic(change_material_metallic::mutation::ChangeMaterialMetallic {
-            id: dec_str(arg("id")?)?,
-            new_metallic: arg("new-metallic")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())?,
-        })),
-        "change-material-roughness" => Ok(SemioMeshMutation::ChangeMaterialRoughness(change_material_roughness::mutation::ChangeMaterialRoughness {
-            id: dec_str(arg("id")?)?,
-            new_roughness: arg("new-roughness")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())?,
-        })),
+        "change-material-metallic" => {
+            Ok(SemioMeshMutation::ChangeMaterialMetallic(change_material_metallic::mutation::ChangeMaterialMetallic { id: dec_str(arg("id")?)?, new_metallic: arg("new-metallic")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? }))
+        }
+        "change-material-roughness" => {
+            Ok(SemioMeshMutation::ChangeMaterialRoughness(change_material_roughness::mutation::ChangeMaterialRoughness { id: dec_str(arg("id")?)?, new_roughness: arg("new-roughness")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? }))
+        }
         "create-texture" => Ok(SemioMeshMutation::CreateTexture(create_texture::mutation::CreateTexture { texture: dec_texture(arg("texture")?)? })),
         "delete-texture" => Ok(SemioMeshMutation::DeleteTexture(delete_texture::mutation::DeleteTexture { id: dec_str(arg("id")?)? })),
         "change-texture-mime" => Ok(SemioMeshMutation::ChangeTextureMime(change_texture_mime::mutation::ChangeTextureMime { id: dec_str(arg("id")?)?, new_mime: dec_str(arg("new-mime")?)? })),

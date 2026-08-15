@@ -1,8 +1,8 @@
 //! 📡️ s.stdio.dwg.inference (ac1024) — the normative handcrafted binary protocol for this facet.
 //! Same declaration-only shape as the sibling `📝️text` leaf: inference values are only ever
-//! computed and (optionally) cached, never decoded from an authored binary document, so there is
-//! no `encode`/`decode` pair here — just the protocol spec text every other representation leaf
-//! declares for its own facet.
+//! computed and optionally cached, never decoded from an authored binary document. The protocol
+//! nevertheless declares the structured record and all seven logical metrics rather than an
+//! opaque terminal byte sequence.
 
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).

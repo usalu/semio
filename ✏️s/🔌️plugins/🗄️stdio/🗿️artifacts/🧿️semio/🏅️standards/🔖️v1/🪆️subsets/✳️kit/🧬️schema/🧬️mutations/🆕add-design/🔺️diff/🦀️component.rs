@@ -1,7 +1,7 @@
 //! 🔺️ `add-design` — sparse diff construction, built directly from `(payload, base)`.
 
 use super::mutation::AddDesign;
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::diff::{SemioKitDiff, SemioKitDesignList};
+use crate::artifacts::semio::standards::v1::subsets::kit::schema::diff::{SemioKitDesignList, SemioKitDiff};
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitDesign, SemioKitSnapshot};
 
 //#region 🔖️Diff

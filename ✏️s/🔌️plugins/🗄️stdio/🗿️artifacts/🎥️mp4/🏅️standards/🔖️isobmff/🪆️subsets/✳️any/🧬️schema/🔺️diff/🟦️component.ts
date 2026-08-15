@@ -12,5 +12,4 @@ export interface Mp4Diff {
   ftyp?: import("../📸️snapshot/🟦️component").Mp4Ftyp;
   movie?: import("../📸️snapshot/🟦️component").Mp4Movie;
   tracks?: IndexedDiff<import("../📸️snapshot/🟦️component").Mp4Track, Mp4TrackDiff>;
-  unknownBoxes?: IndexedDiff<import("../📸️snapshot/🟦️component").Mp4Box, import("../📸️snapshot/🟦️component").Mp4Box>;
 }

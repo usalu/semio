@@ -1,9 +1,6 @@
 //! 🧬️ DeflateMutation — document mutation dispatch over the typed RFC1950 container fields.
 
-use crate::artifacts::deflate::schema::diff::{
-    diff_set_compression_params, diff_set_payload, diff_set_preset_dictionary, diff_set_snapshot,
-    DeflateDiff,
-};
+use crate::artifacts::deflate::schema::diff::{diff_set_compression_params, diff_set_payload, diff_set_preset_dictionary, diff_set_snapshot, DeflateDiff};
 use crate::artifacts::deflate::schema::snapshot::DeflateLevelHint;
 use crate::artifacts::deflate::DeflateSnapshot;
 use protocol::Mutation;
@@ -31,15 +28,9 @@ pub enum DeflateMutation {
     },
     /// 🧮️ Sets CMF's compression method/window bits and FLG's compression-level hint together
     /// (they're written to the same two-byte header, so one mutation covers all three).
-    SetCompressionParams {
-        method: u8,
-        window_bits: u8,
-        level_hint: DeflateLevelHint,
-    },
+    SetCompressionParams { method: u8, window_bits: u8, level_hint: DeflateLevelHint },
     /// 📖️ Sets or clears (via `None`) the preset-dictionary id (FLG.FDICT + DICTID).
-    SetPresetDictionary {
-        dict_id: Option<u32>,
-    },
+    SetPresetDictionary { dict_id: Option<u32> },
     /// 📦️ Replaces the decompressed payload wholesale.
     SetPayload {
         #[dsl(base64)]
@@ -66,9 +57,7 @@ impl Mutation<DeflateSnapshot> for DeflateMutation {
         match self {
             DeflateMutation::NoMutation => DeflateDiff::default(),
             DeflateMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-            DeflateMutation::SetCompressionParams { method, window_bits, level_hint } => {
-                diff_set_compression_params(*method, *window_bits, *level_hint)
-            }
+            DeflateMutation::SetCompressionParams { method, window_bits, level_hint } => diff_set_compression_params(*method, *window_bits, *level_hint),
             DeflateMutation::SetPresetDictionary { dict_id } => diff_set_preset_dictionary(*dict_id),
             DeflateMutation::SetPayload { payload } => diff_set_payload(payload.clone()),
         }
@@ -78,11 +67,7 @@ impl Mutation<DeflateSnapshot> for DeflateMutation {
         match self {
             DeflateMutation::NoMutation => vec![DeflateMutation::NoMutation],
             DeflateMutation::SetSnapshot { .. } => vec![DeflateMutation::SetSnapshot { snapshot: base.clone() }],
-            DeflateMutation::SetCompressionParams { .. } => vec![DeflateMutation::SetCompressionParams {
-                method: base.compression_method,
-                window_bits: base.window_bits,
-                level_hint: base.compression_level_hint,
-            }],
+            DeflateMutation::SetCompressionParams { .. } => vec![DeflateMutation::SetCompressionParams { method: base.compression_method, window_bits: base.window_bits, level_hint: base.compression_level_hint }],
             DeflateMutation::SetPresetDictionary { .. } => {
                 vec![DeflateMutation::SetPresetDictionary { dict_id: base.dict_id }]
             }
@@ -138,14 +123,8 @@ impl protocol::OpBinary for DeflateMutation {
 pub(crate) fn demo_mutation_cases() -> Vec<DeflateMutation> {
     use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
 
-    let snapshot = DeflateSnapshot {
-        schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
-        compression_method: 8,
-        window_bits: 7,
-        compression_level_hint: DeflateLevelHint::Default,
-        dict_id: Some(0x1234_5678),
-        payload: b"demo-mutation-snapshot-payload".to_vec(),
-    };
+    let snapshot =
+        DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Default, dict_id: Some(0x1234_5678), payload: b"demo-mutation-snapshot-payload".to_vec() };
     vec![
         DeflateMutation::NoMutation,
         DeflateMutation::SetSnapshot { snapshot: snapshot.clone() },
@@ -166,14 +145,7 @@ mod tests {
     use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
 
     fn base_snapshot() -> DeflateSnapshot {
-        DeflateSnapshot {
-            schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
-            compression_method: 8,
-            window_bits: 7,
-            compression_level_hint: DeflateLevelHint::Fastest,
-            dict_id: None,
-            payload: b"op-text-binary-fixture".to_vec(),
-        }
+        DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Fastest, dict_id: None, payload: b"op-text-binary-fixture".to_vec() }
     }
 
     /// 🧪️ `op_text_binary_roundtrip_law`: every variant (incl. both `SetPresetDictionary` arms,
@@ -184,14 +156,8 @@ mod tests {
         let base = base_snapshot();
         for mutation in [
             DeflateMutation::NoMutation,
-            DeflateMutation::SetSnapshot {
-                snapshot: DeflateSnapshot { dict_id: Some(0xDEAD_BEEF), ..base.clone() },
-            },
-            DeflateMutation::SetCompressionParams {
-                method: 8,
-                window_bits: 5,
-                level_hint: DeflateLevelHint::Maximum,
-            },
+            DeflateMutation::SetSnapshot { snapshot: DeflateSnapshot { dict_id: Some(0xDEAD_BEEF), ..base.clone() } },
+            DeflateMutation::SetCompressionParams { method: 8, window_bits: 5, level_hint: DeflateLevelHint::Maximum },
             DeflateMutation::SetPresetDictionary { dict_id: Some(7) },
             DeflateMutation::SetPresetDictionary { dict_id: None },
             DeflateMutation::SetPayload { payload: b"mutation-op-text-binary".to_vec() },

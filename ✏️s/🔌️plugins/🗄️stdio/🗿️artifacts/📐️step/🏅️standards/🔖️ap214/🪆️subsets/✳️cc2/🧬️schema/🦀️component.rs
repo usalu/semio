@@ -8,10 +8,10 @@
 pub use crate::artifacts::step::standards::v_ap214::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
+    use crate::artifacts::step::standards::v_ap214::subsets::cc2::schema::check_cc2_conformance;
+    use crate::artifacts::step::{StepDiff, StepMutation, StepSnapshot};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::step::{StepDiff, StepMutation, StepSnapshot};
-    use crate::artifacts::step::standards::v_ap214::subsets::cc2::schema::check_cc2_conformance;
 
     //#region 🔖️Builder
     #[derive(Clone, Debug, Default)]
@@ -74,14 +74,13 @@ pub mod derived_construction {
 
         fn conforming_snapshot() -> StepSnapshot {
             StepSnapshot::from_part21_document(Part21Document {
-                    header: Part21Header { file_schema: vec![Part21Value::List(vec![Part21Value::Str("AUTOMOTIVE_DESIGN".into())])], ..Part21Header::default() },
-                    instances: vec![
-                        Part21Instance { id: 1, entities: vec![("PRODUCT".into(), vec![])] },
-                        Part21Instance { id: 2, entities: vec![("PRODUCT_DEFINITION_FORMATION".into(), vec![])] },
-                        Part21Instance { id: 3, entities: vec![("PRODUCT_DEFINITION".into(), vec![])] },
-                    ],
-                },
-            )
+                header: Part21Header { file_schema: vec![Part21Value::List(vec![Part21Value::Str("AUTOMOTIVE_DESIGN".into())])], ..Part21Header::default() },
+                instances: vec![
+                    Part21Instance { id: 1, entities: vec![("PRODUCT".into(), vec![])] },
+                    Part21Instance { id: 2, entities: vec![("PRODUCT_DEFINITION_FORMATION".into(), vec![])] },
+                    Part21Instance { id: 3, entities: vec![("PRODUCT_DEFINITION".into(), vec![])] },
+                ],
+            })
         }
 
         #[test]
@@ -94,10 +93,7 @@ pub mod derived_construction {
         fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = conforming_snapshot();
             let mut doc = snapshot.to_part21_document();
-            doc.instances.push(crate::artifacts::step::standards::v_ap214::engine::part21::Part21Instance {
-                id: 99,
-                entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])],
-            });
+            doc.instances.push(crate::artifacts::step::standards::v_ap214::engine::part21::Part21Instance { id: 99, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });
             snapshot = StepSnapshot::from_part21_document(doc);
             let (mutated, _diff) = StepCc2BuilderConstruction::from_snapshot(StepSnapshot::default()).mutate(StepMutation::SetSnapshot { snapshot });
             let err = mutated.build().expect_err("an ADVANCED_BREP_SHAPE_REPRESENTATION instance above rung 2 must fail build()");
@@ -110,12 +106,12 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
-    use semio_framework_plugin::{AnalyzeSource, Analysis, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use crate::artifacts::step::standards::v_ap214::engine::ladder::{file_schema_contains, has_product_definition_chain, ladder_violations};
+    use crate::artifacts::step::standards::v_ap214::subsets::any::schema::snapshot::StepSnapshot;
     use crate::artifacts::step::standards::v_ap214::subsets::any::schema::StepAnalyzer as StepAnyAnalyzer;
     pub use crate::artifacts::step::standards::v_ap214::subsets::any::schema::StepParts;
-    use crate::artifacts::step::standards::v_ap214::subsets::any::schema::snapshot::StepSnapshot;
-    use crate::artifacts::step::standards::v_ap214::engine::ladder::{file_schema_contains, has_product_definition_chain, ladder_violations};
+    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("cc2") };
@@ -148,10 +144,7 @@ pub mod derived_analysis {
             out.push(hard(CODE_FILE_SCHEMA, "FILE_SCHEMA does not declare AUTOMOTIVE_DESIGN -- ISO 10303-214 requires the AP214 EXPRESS schema".into()));
         }
         for (id, type_name, rung) in ladder_violations(&doc, MAX_RUNG) {
-            out.push(hard(
-                CODE_LADDER,
-                format!("instance #{id} is a {type_name} (ladder rung {rung}) -- exceeds cc2's max rung 2"),
-            ));
+            out.push(hard(CODE_LADDER, format!("instance #{id} is a {type_name} (ladder rung {rung}) -- exceeds cc2's max rung 2")));
         }
         if !has_product_definition_chain(&doc) {
             out.push(soft(CODE_PRODUCT_CHAIN, "no PRODUCT + PRODUCT_DEFINITION_FORMATION + PRODUCT_DEFINITION chain found -- real AP214 data normally carries one".into()));

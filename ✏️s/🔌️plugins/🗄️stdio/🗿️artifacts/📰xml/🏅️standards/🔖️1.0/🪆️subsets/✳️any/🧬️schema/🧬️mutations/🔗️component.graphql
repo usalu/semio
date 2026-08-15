@@ -16,7 +16,7 @@ type XmlMutation {
   mutation: XmlMutationKind!
   snapshot: XmlSnapshot
   declaration: XmlDeclaration
-  doctype: String
+  doctype: XmlDoctype
   path: [Int!]
   index: Int
   node: XmlNode

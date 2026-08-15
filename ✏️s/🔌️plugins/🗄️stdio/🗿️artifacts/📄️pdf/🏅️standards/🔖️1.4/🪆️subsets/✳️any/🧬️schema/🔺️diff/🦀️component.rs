@@ -16,10 +16,10 @@
 //! struct's own field types satisfy `DslField`.
 
 use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot;
-use protocol::MutationDiff;
 use protocol::command::DiffAlgebra;
-use serde::{Deserialize, Serialize};
+use protocol::MutationDiff;
 use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.pdf` (1.4). `schema` is an identity field and is never diffed. No
@@ -43,18 +43,30 @@ pub struct PdfDiff {
 impl MutationDiff<PdfSnapshot> for PdfDiff {
     fn apply(&self, base: &PdfSnapshot) -> PdfSnapshot {
         let mut next = base.clone();
-        if let Some(v) = self.width { next.page.width = v; }
-        if let Some(v) = self.height { next.page.height = v; }
-        if let Some(v) = &self.text { next.page.text = v.clone(); }
+        if let Some(v) = self.width {
+            next.page.width = v;
+        }
+        if let Some(v) = self.height {
+            next.page.height = v;
+        }
+        if let Some(v) = &self.text {
+            next.page.text = v.clone();
+        }
         next
     }
 
     /// ➕️ Structural, total, base-free, sequential-coalesce (`## Absorb` contract) -- flat
     /// scalars only (no collections), so absorb is plain per-field LWW.
     fn absorb(&mut self, other: Self) {
-        if other.width.is_some() { self.width = other.width; }
-        if other.height.is_some() { self.height = other.height; }
-        if other.text.is_some() { self.text = other.text; }
+        if other.width.is_some() {
+            self.width = other.width;
+        }
+        if other.height.is_some() {
+            self.height = other.height;
+        }
+        if other.text.is_some() {
+            self.text = other.text;
+        }
     }
 }
 
@@ -66,11 +78,7 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
     }
 
     fn between(base: &PdfSnapshot, other: &PdfSnapshot) -> Self {
-        PdfDiff {
-            width: (base.page.width != other.page.width).then_some(other.page.width),
-            height: (base.page.height != other.page.height).then_some(other.page.height),
-            text: (base.page.text != other.page.text).then(|| other.page.text.clone()),
-        }
+        PdfDiff { width: (base.page.width != other.page.width).then_some(other.page.width), height: (base.page.height != other.page.height).then_some(other.page.height), text: (base.page.text != other.page.text).then(|| other.page.text.clone()) }
     }
 
     fn is_empty(&self) -> bool {
@@ -143,9 +151,13 @@ mod tests {
         let d1 = PdfDiff::between(&s0, &s1);
         let d2 = PdfDiff::between(&s1, &s2);
         let d3 = PdfDiff::between(&s2, &s3);
-        let mut left = d1.clone(); left.absorb(d2.clone()); left.absorb(d3.clone());
-        let mut right_tail = d2.clone(); right_tail.absorb(d3.clone());
-        let mut right = d1.clone(); right.absorb(right_tail);
+        let mut left = d1.clone();
+        left.absorb(d2.clone());
+        left.absorb(d3.clone());
+        let mut right_tail = d2.clone();
+        right_tail.absorb(d3.clone());
+        let mut right = d1.clone();
+        right.absorb(right_tail);
         assert_eq!(left.apply(&s0), s3);
         assert_eq!(right.apply(&s0), s3);
         assert_eq!(left, right);
@@ -153,8 +165,12 @@ mod tests {
     //#endregion absorb_law
 
     //#region field_sweep
-    fn sweep_a() -> PdfSnapshot { snap(612.0, 792.0, "base text") }
-    fn sweep_b() -> PdfSnapshot { snap(300.5, 400.25, "changed text") }
+    fn sweep_a() -> PdfSnapshot {
+        snap(612.0, 792.0, "base text")
+    }
+    fn sweep_b() -> PdfSnapshot {
+        snap(300.5, 400.25, "changed text")
+    }
 
     #[test]
     fn field_sweep_between_roundtrips_both_directions() {

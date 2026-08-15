@@ -2,7 +2,11 @@ meta:
   id: stdio_svg_mutations
   endian: le
 doc: |
-  UTF-8 JSON encoding of SvgMutation (see the sibling ../🔣️component.json shape), not raw octets.
+  Binary SvgMutation with a format byte, variant tag, and recursively structured payload.
 seq:
-  - id: json_payload
+  - id: format
+    type: u1
+  - id: tag
+    type: u1
+  - id: payload
     size-eos: true

@@ -8,12 +8,12 @@
 pub use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use dsl::{Diagnostic, Severity};
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlNode};
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxSnapshot, XlsxWorkbook};
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::{check_transitional_conformance, TRANSITIONAL_R_NS, TRANSITIONAL_SML_NS};
     use crate::artifacts::xlsx::{XlsxDiff, XlsxMutation};
+    use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlNode};
+    use dsl::{Diagnostic, Severity};
+    use semio_framework_plugin::ArtifactBuilder;
 
     const WORKBOOK_PART: &str = "xl/workbook.xml";
     const WORKBOOK_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml";
@@ -118,17 +118,10 @@ pub mod derived_construction {
         #[test]
         fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = XlsxTransitionalBuilderConstruction::new(XlsxWorkbook::default()).build().unwrap();
-            snapshot.opc.set_part(
-                WORKBOOK_PART,
-                WORKBOOK_CONTENT_TYPE,
-                br#"<workbook xmlns="http://purl.oclc.org/ooxml/spreadsheetml/main" xmlns:r="http://purl.oclc.org/ooxml/officeDocument/relationships" conformance="strict"/>"#.to_vec(),
-            );
+            snapshot.opc.set_part(WORKBOOK_PART, WORKBOOK_CONTENT_TYPE, br#"<workbook xmlns="http://purl.oclc.org/ooxml/spreadsheetml/main" xmlns:r="http://purl.oclc.org/ooxml/officeDocument/relationships" conformance="strict"/>"#.to_vec());
             let (mutated, _diff) = XlsxTransitionalBuilderConstruction::from_snapshot(XlsxSnapshot::default()).mutate(XlsxMutation::SetSnapshot { snapshot });
             let err = mutated.build().expect_err("a Strict-declared workbook.xml must fail build()");
-            assert!(
-                err.iter().any(|d| d.code.0 == crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::CODE_CONFORMANCE_ATTRIBUTE),
-                "got {err:?}"
-            );
+            assert!(err.iter().any(|d| d.code.0 == crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::CODE_CONFORMANCE_ATTRIBUTE), "got {err:?}");
         }
     }
 }
@@ -137,12 +130,12 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
-    use semio_framework_plugin::{AnalyzeSource, Analysis, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
-    use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlNode};
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxSnapshot;
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::XlsxAnalyzer as XlsxAnyAnalyzer;
     pub use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::XlsxParts;
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxSnapshot;
+    use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlNode};
+    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("transitional") };
@@ -192,12 +185,7 @@ pub mod derived_analysis {
             .parts
             .iter()
             .filter(|p| p.path.starts_with("xl/worksheets/") && p.path.ends_with(".xml") && p.content_type != WORKSHEET_CONTENT_TYPE)
-            .map(|p| {
-                soft(
-                    CODE_WORKSHEET_CONTENT_TYPE,
-                    format!("worksheet part {} resolves content type {:?}, expected {WORKSHEET_CONTENT_TYPE:?} (ECMA-376 Part 1 §12.3.24)", p.path, p.content_type),
-                )
-            })
+            .map(|p| soft(CODE_WORKSHEET_CONTENT_TYPE, format!("worksheet part {} resolves content type {:?}, expected {WORKSHEET_CONTENT_TYPE:?} (ECMA-376 Part 1 §12.3.24)", p.path, p.content_type)))
             .collect()
     }
 
@@ -212,22 +200,13 @@ pub mod derived_analysis {
             return out;
         };
         if xmlns.as_deref() != Some(TRANSITIONAL_SML_NS) {
-            out.push(hard(
-                CODE_NAMESPACE_MISMATCH,
-                format!("{WORKBOOK_PART} root xmlns is {xmlns:?}, expected the Transitional SpreadsheetML namespace {TRANSITIONAL_SML_NS:?} (ISO/IEC 29500-4)"),
-            ));
+            out.push(hard(CODE_NAMESPACE_MISMATCH, format!("{WORKBOOK_PART} root xmlns is {xmlns:?}, expected the Transitional SpreadsheetML namespace {TRANSITIONAL_SML_NS:?} (ISO/IEC 29500-4)")));
         }
         if xmlns_r.as_deref() != Some(TRANSITIONAL_R_NS) {
-            out.push(hard(
-                CODE_RELATIONSHIPS_NAMESPACE_MISMATCH,
-                format!("{WORKBOOK_PART} root xmlns:r is {xmlns_r:?}, expected the Transitional officeDocument relationships namespace {TRANSITIONAL_R_NS:?}"),
-            ));
+            out.push(hard(CODE_RELATIONSHIPS_NAMESPACE_MISMATCH, format!("{WORKBOOK_PART} root xmlns:r is {xmlns_r:?}, expected the Transitional officeDocument relationships namespace {TRANSITIONAL_R_NS:?}")));
         }
         if conformance.as_deref() == Some("strict") {
-            out.push(hard(
-                CODE_CONFORMANCE_ATTRIBUTE,
-                format!("{WORKBOOK_PART} workbook@conformance is \"strict\" -- a document that declares Strict conformance cannot be honestly stamped Transitional"),
-            ));
+            out.push(hard(CODE_CONFORMANCE_ATTRIBUTE, format!("{WORKBOOK_PART} workbook@conformance is \"strict\" -- a document that declares Strict conformance cannot be honestly stamped Transitional")));
         }
         out.extend(worksheet_content_type_gaps(snapshot));
         out
@@ -279,16 +258,7 @@ pub mod derived_analysis {
             if let Some(c) = conformance {
                 attrs.push(attr("conformance", c));
             }
-            let doc = XmlDocument {
-                root: Some(XmlNode::Element {
-                    name: "workbook".into(),
-                    attrs,
-                    children: vec![XmlNode::Element { name: "sheets".into(), attrs: vec![], children: vec![] }],
-                }),
-                doctype: None,
-                declaration: None,
-                prolog: Vec::new(),
-            };
+            let doc = XmlDocument { root: Some(XmlNode::Element { name: "workbook".into(), attrs, children: vec![XmlNode::Element { name: "sheets".into(), attrs: vec![], children: vec![] }] }), doctype: None, declaration: None, prolog: Vec::new() };
             xml_document_to_text(&doc).into_bytes()
         }
 

@@ -11,14 +11,13 @@
     "DwgStructure": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["byteCount", "sectionCount", "pageCount", "decodedPageCount", "errorPageCount", "declaredTotalSize", "codepage", "version"],
+      "required": ["layerCount", "entityCount", "geometryValueCount", "geometryIndexCount", "textCharacterCount", "codepage", "version"],
       "properties": {
-        "byteCount": { "type": "integer", "minimum": 0 },
-        "sectionCount": { "type": "integer", "minimum": 0 },
-        "pageCount": { "type": "integer", "minimum": 0 },
-        "decodedPageCount": { "type": "integer", "minimum": 0 },
-        "errorPageCount": { "type": "integer", "minimum": 0 },
-        "declaredTotalSize": { "type": "integer", "minimum": 0 },
+        "layerCount": { "type": "integer", "minimum": 0 },
+        "entityCount": { "type": "integer", "minimum": 0 },
+        "geometryValueCount": { "type": "integer", "minimum": 0 },
+        "geometryIndexCount": { "type": "integer", "minimum": 0 },
+        "textCharacterCount": { "type": "integer", "minimum": 0 },
         "codepage": { "type": "integer", "minimum": 0 },
         "version": { "type": "string" }
       }

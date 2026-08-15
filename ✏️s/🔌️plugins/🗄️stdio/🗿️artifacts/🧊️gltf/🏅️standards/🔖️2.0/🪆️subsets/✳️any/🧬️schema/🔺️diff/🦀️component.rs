@@ -14,19 +14,16 @@
 //! frames/comments/appExtensions triples -- one real generic collection algebra, instantiated per
 //! entity, not a shortcut around per-entity semantics.
 
-use crate::artifacts::gltf::schema::snapshot::{
-    GltfAccessor, GltfAlphaMode, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath,
-    GltfAnimationSampler, GltfAsset, GltfBuffer, GltfBufferView, GltfCamera, GltfCameraProjection, GltfDocument,
-    GltfImage, GltfInterpolation, GltfJson, GltfMaterial, GltfMesh, GltfNode, GltfNormalTextureInfo,
-    GltfOcclusionTextureInfo, GltfOrthographic, GltfPbrMetallicRoughness, GltfPerspective, GltfPrimitive,
-    GltfSampler, GltfScene, GltfSkin, GltfSnapshot, GltfSourceForm, GltfSparseAccessor, GltfSparseIndices,
-    GltfSparseValues, GltfTexture, GltfTextureInfo,
-};
 use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
-use protocol::MutationDiff;
+use crate::artifacts::gltf::schema::snapshot::{
+    GltfAccessor, GltfAlphaMode, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAnimationSampler, GltfAsset, GltfBuffer, GltfBufferView, GltfCamera, GltfCameraProjection, GltfDocument, GltfImage,
+    GltfInterpolation, GltfJson, GltfMaterial, GltfMesh, GltfNode, GltfNormalTextureInfo, GltfOcclusionTextureInfo, GltfOrthographic, GltfPbrMetallicRoughness, GltfPerspective, GltfPrimitive, GltfSampler, GltfScene, GltfSkin, GltfSnapshot,
+    GltfSourceForm, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues, GltfTexture, GltfTextureInfo,
+};
 use protocol::os_spr::command::DiffAlgebra;
-use serde::{Deserialize, Serialize};
+use protocol::MutationDiff;
 use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️IndexTransport
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs (`between`/`absorb`/
@@ -115,10 +112,7 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
             if merged_removed_base.binary_search(&base_index).is_ok() {
                 continue;
             }
-            modified_map
-                .entry(base_index)
-                .and_modify(|d| absorb_diff(d, dd2.clone()))
-                .or_insert(dd2);
+            modified_map.entry(base_index).and_modify(|d| absorb_diff(d, dd2.clone())).or_insert(dd2);
         }
     }
     let merged_modified: Vec<(usize, D)> = modified_map.into_iter().collect();
@@ -145,13 +139,7 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
 }
 
 /// ↩️ Diff-level inverse for an index-keyed collection triple, given the ORIGINAL base items.
-fn inverse_indexed_collection<T: Clone, D: Clone>(
-    removed: &[usize],
-    modified: &[(usize, D)],
-    added: &[(usize, T)],
-    base_items: &[T],
-    diff_inverse: impl Fn(&D, &T) -> D,
-) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
+fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
     let mut removed_sorted = removed.to_vec();
     removed_sorted.sort_unstable();
     let mut added_index_sorted: Vec<usize> = added.iter().map(|(i, _)| *i).collect();
@@ -191,10 +179,18 @@ pub(crate) trait ItemDiff<T>: Clone + PartialEq {
 /// 🍃️ WEAK entities: the diff type IS the item type (whole-value replace), per the recipe's
 /// strong/weak split -- no further sub-structure worth diffing.
 impl<T: Clone + PartialEq> ItemDiff<T> for T {
-    fn between(_base: &T, other: &T) -> Self { other.clone() }
-    fn apply(&self, _base: &T) -> T { self.clone() }
-    fn inverse(&self, base: &T) -> Self { base.clone() }
-    fn absorb_into(&mut self, other: Self) { *self = other; }
+    fn between(_base: &T, other: &T) -> Self {
+        other.clone()
+    }
+    fn apply(&self, _base: &T) -> T {
+        self.clone()
+    }
+    fn inverse(&self, base: &T) -> Self {
+        base.clone()
+    }
+    fn absorb_into(&mut self, other: Self) {
+        *self = other;
+    }
 }
 //#endregion 🔖️ItemDiffTrait
 
@@ -223,10 +219,7 @@ pub struct GltfAdded<T> {
 /// `Default` regardless of its element type, so that extra bound is never actually needed).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[serde(bound(
-    serialize = "T: Serialize, D: Serialize",
-    deserialize = "T: Deserialize<'de>, D: Deserialize<'de>"
-))]
+#[serde(bound(serialize = "T: Serialize, D: Serialize", deserialize = "T: Deserialize<'de>, D: Deserialize<'de>"))]
 pub struct GltfCollectionDiff<T, D> {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
@@ -237,7 +230,9 @@ pub struct GltfCollectionDiff<T, D> {
 }
 
 impl<T, D> Default for GltfCollectionDiff<T, D> {
-    fn default() -> Self { Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() } }
+    fn default() -> Self {
+        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
+    }
 }
 
 impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
@@ -271,7 +266,9 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
         removed_sorted.sort_unstable();
         removed_sorted.reverse();
         for &r in &removed_sorted {
-            if r < next.len() { next.remove(r); }
+            if r < next.len() {
+                next.remove(r);
+            }
         }
         let mut out: Vec<T> = next.into_iter().flatten().collect();
         let mut added_sorted = self.added.clone();
@@ -300,18 +297,9 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
     }
 
     pub fn inverse(&self, base_items: &[T]) -> Self {
-        let (removed, modified, added) = inverse_indexed_collection(
-            &self.removed,
-            &self.modified.iter().map(|m| (m.index, m.diff.clone())).collect::<Vec<_>>(),
-            &self.added.iter().map(|a| (a.index, a.item.clone())).collect::<Vec<_>>(),
-            base_items,
-            |d, item| d.inverse(item),
-        );
-        Self {
-            removed,
-            modified: modified.into_iter().map(|(index, diff)| GltfModified { index, diff }).collect(),
-            added: added.into_iter().map(|(index, item)| GltfAdded { index, item }).collect(),
-        }
+        let (removed, modified, added) =
+            inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.diff.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.item.clone())).collect::<Vec<_>>(), base_items, |d, item| d.inverse(item));
+        Self { removed, modified: modified.into_iter().map(|(index, diff)| GltfModified { index, diff }).collect(), added: added.into_iter().map(|(index, item)| GltfAdded { index, item }).collect() }
     }
 }
 
@@ -341,8 +329,7 @@ pub struct GltfAssetDiff {
 
 impl GltfAssetDiff {
     pub fn is_empty(&self) -> bool {
-        self.version.is_none() && self.generator.is_none() && self.copyright.is_none()
-            && self.min_version.is_none() && self.extensions.is_none() && self.extras.is_none()
+        self.version.is_none() && self.generator.is_none() && self.copyright.is_none() && self.min_version.is_none() && self.extensions.is_none() && self.extras.is_none()
     }
     pub fn between(base: &GltfAsset, other: &GltfAsset) -> Self {
         Self {
@@ -356,12 +343,24 @@ impl GltfAssetDiff {
     }
     pub fn apply(&self, base: &GltfAsset) -> GltfAsset {
         let mut next = base.clone();
-        if let Some(v) = &self.version { next.version = v.clone(); }
-        if let Some(v) = &self.generator { next.generator = v.clone(); }
-        if let Some(v) = &self.copyright { next.copyright = v.clone(); }
-        if let Some(v) = &self.min_version { next.min_version = v.clone(); }
-        if let Some(v) = &self.extensions { next.extensions = v.clone(); }
-        if let Some(v) = &self.extras { next.extras = v.clone(); }
+        if let Some(v) = &self.version {
+            next.version = v.clone();
+        }
+        if let Some(v) = &self.generator {
+            next.generator = v.clone();
+        }
+        if let Some(v) = &self.copyright {
+            next.copyright = v.clone();
+        }
+        if let Some(v) = &self.min_version {
+            next.min_version = v.clone();
+        }
+        if let Some(v) = &self.extensions {
+            next.extensions = v.clone();
+        }
+        if let Some(v) = &self.extras {
+            next.extras = v.clone();
+        }
         next
     }
     pub fn inverse(&self, base: &GltfAsset) -> Self {
@@ -375,12 +374,24 @@ impl GltfAssetDiff {
         }
     }
     pub fn absorb(&mut self, other: Self) {
-        if other.version.is_some() { self.version = other.version; }
-        if other.generator.is_some() { self.generator = other.generator; }
-        if other.copyright.is_some() { self.copyright = other.copyright; }
-        if other.min_version.is_some() { self.min_version = other.min_version; }
-        if other.extensions.is_some() { self.extensions = other.extensions; }
-        if other.extras.is_some() { self.extras = other.extras; }
+        if other.version.is_some() {
+            self.version = other.version;
+        }
+        if other.generator.is_some() {
+            self.generator = other.generator;
+        }
+        if other.copyright.is_some() {
+            self.copyright = other.copyright;
+        }
+        if other.min_version.is_some() {
+            self.min_version = other.min_version;
+        }
+        if other.extensions.is_some() {
+            self.extensions = other.extensions;
+        }
+        if other.extras.is_some() {
+            self.extras = other.extras;
+        }
     }
 }
 //#endregion 🔖️AssetDiff
@@ -410,10 +421,18 @@ impl ItemDiff<GltfScene> for GltfSceneDiff {
     }
     fn apply(&self, base: &GltfScene) -> GltfScene {
         let mut next = base.clone();
-        if let Some(v) = &self.nodes { next.nodes = v.clone(); }
-        if let Some(v) = &self.name { next.name = v.clone(); }
-        if let Some(v) = &self.extensions { next.extensions = v.clone(); }
-        if let Some(v) = &self.extras { next.extras = v.clone(); }
+        if let Some(v) = &self.nodes {
+            next.nodes = v.clone();
+        }
+        if let Some(v) = &self.name {
+            next.name = v.clone();
+        }
+        if let Some(v) = &self.extensions {
+            next.extensions = v.clone();
+        }
+        if let Some(v) = &self.extras {
+            next.extras = v.clone();
+        }
         next
     }
     fn inverse(&self, base: &GltfScene) -> Self {
@@ -425,10 +444,18 @@ impl ItemDiff<GltfScene> for GltfSceneDiff {
         }
     }
     fn absorb_into(&mut self, other: Self) {
-        if other.nodes.is_some() { self.nodes = other.nodes; }
-        if other.name.is_some() { self.name = other.name; }
-        if other.extensions.is_some() { self.extensions = other.extensions; }
-        if other.extras.is_some() { self.extras = other.extras; }
+        if other.nodes.is_some() {
+            self.nodes = other.nodes;
+        }
+        if other.name.is_some() {
+            self.name = other.name;
+        }
+        if other.extensions.is_some() {
+            self.extensions = other.extensions;
+        }
+        if other.extras.is_some() {
+            self.extras = other.extras;
+        }
     }
 }
 //#endregion 🔖️SceneDiff
@@ -482,18 +509,42 @@ impl ItemDiff<GltfNode> for GltfNodeDiff {
     }
     fn apply(&self, base: &GltfNode) -> GltfNode {
         let mut next = base.clone();
-        if let Some(v) = &self.children { next.children = v.clone(); }
-        if let Some(v) = self.mesh { next.mesh = v; }
-        if let Some(v) = self.camera { next.camera = v; }
-        if let Some(v) = self.skin { next.skin = v; }
-        if let Some(v) = self.matrix { next.matrix = v; }
-        if let Some(v) = self.translation { next.translation = v; }
-        if let Some(v) = self.rotation { next.rotation = v; }
-        if let Some(v) = self.scale { next.scale = v; }
-        if let Some(v) = &self.weights { next.weights = v.clone(); }
-        if let Some(v) = &self.name { next.name = v.clone(); }
-        if let Some(v) = &self.extensions { next.extensions = v.clone(); }
-        if let Some(v) = &self.extras { next.extras = v.clone(); }
+        if let Some(v) = &self.children {
+            next.children = v.clone();
+        }
+        if let Some(v) = self.mesh {
+            next.mesh = v;
+        }
+        if let Some(v) = self.camera {
+            next.camera = v;
+        }
+        if let Some(v) = self.skin {
+            next.skin = v;
+        }
+        if let Some(v) = self.matrix {
+            next.matrix = v;
+        }
+        if let Some(v) = self.translation {
+            next.translation = v;
+        }
+        if let Some(v) = self.rotation {
+            next.rotation = v;
+        }
+        if let Some(v) = self.scale {
+            next.scale = v;
+        }
+        if let Some(v) = &self.weights {
+            next.weights = v.clone();
+        }
+        if let Some(v) = &self.name {
+            next.name = v.clone();
+        }
+        if let Some(v) = &self.extensions {
+            next.extensions = v.clone();
+        }
+        if let Some(v) = &self.extras {
+            next.extras = v.clone();
+        }
         next
     }
     fn inverse(&self, base: &GltfNode) -> Self {
@@ -513,18 +564,42 @@ impl ItemDiff<GltfNode> for GltfNodeDiff {
         }
     }
     fn absorb_into(&mut self, other: Self) {
-        if other.children.is_some() { self.children = other.children; }
-        if other.mesh.is_some() { self.mesh = other.mesh; }
-        if other.camera.is_some() { self.camera = other.camera; }
-        if other.skin.is_some() { self.skin = other.skin; }
-        if other.matrix.is_some() { self.matrix = other.matrix; }
-        if other.translation.is_some() { self.translation = other.translation; }
-        if other.rotation.is_some() { self.rotation = other.rotation; }
-        if other.scale.is_some() { self.scale = other.scale; }
-        if other.weights.is_some() { self.weights = other.weights; }
-        if other.name.is_some() { self.name = other.name; }
-        if other.extensions.is_some() { self.extensions = other.extensions; }
-        if other.extras.is_some() { self.extras = other.extras; }
+        if other.children.is_some() {
+            self.children = other.children;
+        }
+        if other.mesh.is_some() {
+            self.mesh = other.mesh;
+        }
+        if other.camera.is_some() {
+            self.camera = other.camera;
+        }
+        if other.skin.is_some() {
+            self.skin = other.skin;
+        }
+        if other.matrix.is_some() {
+            self.matrix = other.matrix;
+        }
+        if other.translation.is_some() {
+            self.translation = other.translation;
+        }
+        if other.rotation.is_some() {
+            self.rotation = other.rotation;
+        }
+        if other.scale.is_some() {
+            self.scale = other.scale;
+        }
+        if other.weights.is_some() {
+            self.weights = other.weights;
+        }
+        if other.name.is_some() {
+            self.name = other.name;
+        }
+        if other.extensions.is_some() {
+            self.extensions = other.extensions;
+        }
+        if other.extras.is_some() {
+            self.extras = other.extras;
+        }
     }
 }
 //#endregion 🔖️NodeDiff
@@ -557,11 +632,21 @@ impl ItemDiff<GltfMesh> for GltfMeshDiff {
     }
     fn apply(&self, base: &GltfMesh) -> GltfMesh {
         let mut next = base.clone();
-        if let Some(v) = &self.primitives { next.primitives = v.clone(); }
-        if let Some(v) = &self.weights { next.weights = v.clone(); }
-        if let Some(v) = &self.name { next.name = v.clone(); }
-        if let Some(v) = &self.extensions { next.extensions = v.clone(); }
-        if let Some(v) = &self.extras { next.extras = v.clone(); }
+        if let Some(v) = &self.primitives {
+            next.primitives = v.clone();
+        }
+        if let Some(v) = &self.weights {
+            next.weights = v.clone();
+        }
+        if let Some(v) = &self.name {
+            next.name = v.clone();
+        }
+        if let Some(v) = &self.extensions {
+            next.extensions = v.clone();
+        }
+        if let Some(v) = &self.extras {
+            next.extras = v.clone();
+        }
         next
     }
     fn inverse(&self, base: &GltfMesh) -> Self {
@@ -574,11 +659,21 @@ impl ItemDiff<GltfMesh> for GltfMeshDiff {
         }
     }
     fn absorb_into(&mut self, other: Self) {
-        if other.primitives.is_some() { self.primitives = other.primitives; }
-        if other.weights.is_some() { self.weights = other.weights; }
-        if other.name.is_some() { self.name = other.name; }
-        if other.extensions.is_some() { self.extensions = other.extensions; }
-        if other.extras.is_some() { self.extras = other.extras; }
+        if other.primitives.is_some() {
+            self.primitives = other.primitives;
+        }
+        if other.weights.is_some() {
+            self.weights = other.weights;
+        }
+        if other.name.is_some() {
+            self.name = other.name;
+        }
+        if other.extensions.is_some() {
+            self.extensions = other.extensions;
+        }
+        if other.extras.is_some() {
+            self.extras = other.extras;
+        }
     }
 }
 //#endregion 🔖️MeshDiff
@@ -632,18 +727,42 @@ impl ItemDiff<GltfAccessor> for GltfAccessorDiff {
     }
     fn apply(&self, base: &GltfAccessor) -> GltfAccessor {
         let mut next = base.clone();
-        if let Some(v) = self.buffer_view { next.buffer_view = v; }
-        if let Some(v) = self.byte_offset { next.byte_offset = v; }
-        if let Some(v) = self.component_type { next.component_type = v; }
-        if let Some(v) = self.normalized { next.normalized = v; }
-        if let Some(v) = self.count { next.count = v; }
-        if let Some(v) = self.kind { next.kind = v; }
-        if let Some(v) = &self.max { next.max = v.clone(); }
-        if let Some(v) = &self.min { next.min = v.clone(); }
-        if let Some(v) = &self.sparse { next.sparse = v.clone(); }
-        if let Some(v) = &self.name { next.name = v.clone(); }
-        if let Some(v) = &self.extensions { next.extensions = v.clone(); }
-        if let Some(v) = &self.extras { next.extras = v.clone(); }
+        if let Some(v) = self.buffer_view {
+            next.buffer_view = v;
+        }
+        if let Some(v) = self.byte_offset {
+            next.byte_offset = v;
+        }
+        if let Some(v) = self.component_type {
+            next.component_type = v;
+        }
+        if let Some(v) = self.normalized {
+            next.normalized = v;
+        }
+        if let Some(v) = self.count {
+            next.count = v;
+        }
+        if let Some(v) = self.kind {
+            next.kind = v;
+        }
+        if let Some(v) = &self.max {
+            next.max = v.clone();
+        }
+        if let Some(v) = &self.min {
+            next.min = v.clone();
+        }
+        if let Some(v) = &self.sparse {
+            next.sparse = v.clone();
+        }
+        if let Some(v) = &self.name {
+            next.name = v.clone();
+        }
+        if let Some(v) = &self.extensions {
+            next.extensions = v.clone();
+        }
+        if let Some(v) = &self.extras {
+            next.extras = v.clone();
+        }
         next
     }
     fn inverse(&self, base: &GltfAccessor) -> Self {
@@ -663,18 +782,42 @@ impl ItemDiff<GltfAccessor> for GltfAccessorDiff {
         }
     }
     fn absorb_into(&mut self, other: Self) {
-        if other.buffer_view.is_some() { self.buffer_view = other.buffer_view; }
-        if other.byte_offset.is_some() { self.byte_offset = other.byte_offset; }
-        if other.component_type.is_some() { self.component_type = other.component_type; }
-        if other.normalized.is_some() { self.normalized = other.normalized; }
-        if other.count.is_some() { self.count = other.count; }
-        if other.kind.is_some() { self.kind = other.kind; }
-        if other.max.is_some() { self.max = other.max; }
-        if other.min.is_some() { self.min = other.min; }
-        if other.sparse.is_some() { self.sparse = other.sparse; }
-        if other.name.is_some() { self.name = other.name; }
-        if other.extensions.is_some() { self.extensions = other.extensions; }
-        if other.extras.is_some() { self.extras = other.extras; }
+        if other.buffer_view.is_some() {
+            self.buffer_view = other.buffer_view;
+        }
+        if other.byte_offset.is_some() {
+            self.byte_offset = other.byte_offset;
+        }
+        if other.component_type.is_some() {
+            self.component_type = other.component_type;
+        }
+        if other.normalized.is_some() {
+            self.normalized = other.normalized;
+        }
+        if other.count.is_some() {
+            self.count = other.count;
+        }
+        if other.kind.is_some() {
+            self.kind = other.kind;
+        }
+        if other.max.is_some() {
+            self.max = other.max;
+        }
+        if other.min.is_some() {
+            self.min = other.min;
+        }
+        if other.sparse.is_some() {
+            self.sparse = other.sparse;
+        }
+        if other.name.is_some() {
+            self.name = other.name;
+        }
+        if other.extensions.is_some() {
+            self.extensions = other.extensions;
+        }
+        if other.extras.is_some() {
+            self.extras = other.extras;
+        }
     }
 }
 //#endregion 🔖️AccessorDiff
@@ -725,17 +868,39 @@ impl ItemDiff<GltfMaterial> for GltfMaterialDiff {
     }
     fn apply(&self, base: &GltfMaterial) -> GltfMaterial {
         let mut next = base.clone();
-        if let Some(v) = &self.name { next.name = v.clone(); }
-        if let Some(v) = &self.pbr_metallic_roughness { next.pbr_metallic_roughness = v.clone(); }
-        if let Some(v) = &self.normal_texture { next.normal_texture = v.clone(); }
-        if let Some(v) = &self.occlusion_texture { next.occlusion_texture = v.clone(); }
-        if let Some(v) = &self.emissive_texture { next.emissive_texture = v.clone(); }
-        if let Some(v) = self.emissive_factor { next.emissive_factor = v; }
-        if let Some(v) = self.alpha_mode { next.alpha_mode = v; }
-        if let Some(v) = self.alpha_cutoff { next.alpha_cutoff = v; }
-        if let Some(v) = self.double_sided { next.double_sided = v; }
-        if let Some(v) = &self.extensions { next.extensions = v.clone(); }
-        if let Some(v) = &self.extras { next.extras = v.clone(); }
+        if let Some(v) = &self.name {
+            next.name = v.clone();
+        }
+        if let Some(v) = &self.pbr_metallic_roughness {
+            next.pbr_metallic_roughness = v.clone();
+        }
+        if let Some(v) = &self.normal_texture {
+            next.normal_texture = v.clone();
+        }
+        if let Some(v) = &self.occlusion_texture {
+            next.occlusion_texture = v.clone();
+        }
+        if let Some(v) = &self.emissive_texture {
+            next.emissive_texture = v.clone();
+        }
+        if let Some(v) = self.emissive_factor {
+            next.emissive_factor = v;
+        }
+        if let Some(v) = self.alpha_mode {
+            next.alpha_mode = v;
+        }
+        if let Some(v) = self.alpha_cutoff {
+            next.alpha_cutoff = v;
+        }
+        if let Some(v) = self.double_sided {
+            next.double_sided = v;
+        }
+        if let Some(v) = &self.extensions {
+            next.extensions = v.clone();
+        }
+        if let Some(v) = &self.extras {
+            next.extras = v.clone();
+        }
         next
     }
     fn inverse(&self, base: &GltfMaterial) -> Self {
@@ -754,17 +919,39 @@ impl ItemDiff<GltfMaterial> for GltfMaterialDiff {
         }
     }
     fn absorb_into(&mut self, other: Self) {
-        if other.name.is_some() { self.name = other.name; }
-        if other.pbr_metallic_roughness.is_some() { self.pbr_metallic_roughness = other.pbr_metallic_roughness; }
-        if other.normal_texture.is_some() { self.normal_texture = other.normal_texture; }
-        if other.occlusion_texture.is_some() { self.occlusion_texture = other.occlusion_texture; }
-        if other.emissive_texture.is_some() { self.emissive_texture = other.emissive_texture; }
-        if other.emissive_factor.is_some() { self.emissive_factor = other.emissive_factor; }
-        if other.alpha_mode.is_some() { self.alpha_mode = other.alpha_mode; }
-        if other.alpha_cutoff.is_some() { self.alpha_cutoff = other.alpha_cutoff; }
-        if other.double_sided.is_some() { self.double_sided = other.double_sided; }
-        if other.extensions.is_some() { self.extensions = other.extensions; }
-        if other.extras.is_some() { self.extras = other.extras; }
+        if other.name.is_some() {
+            self.name = other.name;
+        }
+        if other.pbr_metallic_roughness.is_some() {
+            self.pbr_metallic_roughness = other.pbr_metallic_roughness;
+        }
+        if other.normal_texture.is_some() {
+            self.normal_texture = other.normal_texture;
+        }
+        if other.occlusion_texture.is_some() {
+            self.occlusion_texture = other.occlusion_texture;
+        }
+        if other.emissive_texture.is_some() {
+            self.emissive_texture = other.emissive_texture;
+        }
+        if other.emissive_factor.is_some() {
+            self.emissive_factor = other.emissive_factor;
+        }
+        if other.alpha_mode.is_some() {
+            self.alpha_mode = other.alpha_mode;
+        }
+        if other.alpha_cutoff.is_some() {
+            self.alpha_cutoff = other.alpha_cutoff;
+        }
+        if other.double_sided.is_some() {
+            self.double_sided = other.double_sided;
+        }
+        if other.extensions.is_some() {
+            self.extensions = other.extensions;
+        }
+        if other.extras.is_some() {
+            self.extras = other.extras;
+        }
     }
 }
 //#endregion 🔖️MaterialDiff
@@ -802,11 +989,21 @@ impl ItemDiff<GltfBuffer> for GltfBufferDiff {
     }
     fn apply(&self, base: &GltfBuffer) -> GltfBuffer {
         let mut next = base.clone();
-        if let Some(v) = self.byte_length { next.byte_length = v; }
-        if let Some(v) = &self.uri { next.uri = v.clone(); }
-        if let Some(v) = &self.name { next.name = v.clone(); }
-        if let Some(v) = &self.extensions { next.extensions = v.clone(); }
-        if let Some(v) = &self.extras { next.extras = v.clone(); }
+        if let Some(v) = self.byte_length {
+            next.byte_length = v;
+        }
+        if let Some(v) = &self.uri {
+            next.uri = v.clone();
+        }
+        if let Some(v) = &self.name {
+            next.name = v.clone();
+        }
+        if let Some(v) = &self.extensions {
+            next.extensions = v.clone();
+        }
+        if let Some(v) = &self.extras {
+            next.extras = v.clone();
+        }
         next
     }
     fn inverse(&self, base: &GltfBuffer) -> Self {
@@ -819,11 +1016,21 @@ impl ItemDiff<GltfBuffer> for GltfBufferDiff {
         }
     }
     fn absorb_into(&mut self, other: Self) {
-        if other.byte_length.is_some() { self.byte_length = other.byte_length; }
-        if other.uri.is_some() { self.uri = other.uri; }
-        if other.name.is_some() { self.name = other.name; }
-        if other.extensions.is_some() { self.extensions = other.extensions; }
-        if other.extras.is_some() { self.extras = other.extras; }
+        if other.byte_length.is_some() {
+            self.byte_length = other.byte_length;
+        }
+        if other.uri.is_some() {
+            self.uri = other.uri;
+        }
+        if other.name.is_some() {
+            self.name = other.name;
+        }
+        if other.extensions.is_some() {
+            self.extensions = other.extensions;
+        }
+        if other.extras.is_some() {
+            self.extras = other.extras;
+        }
     }
 }
 //#endregion 🔖️BufferDiff
@@ -946,27 +1153,69 @@ impl MutationDiff<GltfSnapshot> for GltfDiff {
     fn apply(&self, base: &GltfSnapshot) -> GltfSnapshot {
         let mut next = base.clone();
         let doc = &mut next.document;
-        if let Some(d) = &self.asset { doc.asset = d.apply(&doc.asset); }
-        if let Some(v) = self.scene { doc.scene = v; }
-        if let Some(d) = &self.scenes { doc.scenes = d.apply(&doc.scenes); }
-        if let Some(d) = &self.nodes { doc.nodes = d.apply(&doc.nodes); }
-        if let Some(d) = &self.meshes { doc.meshes = d.apply(&doc.meshes); }
-        if let Some(d) = &self.accessors { doc.accessors = d.apply(&doc.accessors); }
-        if let Some(d) = &self.buffer_views { doc.buffer_views = d.apply(&doc.buffer_views); }
-        if let Some(d) = &self.buffers { doc.buffers = d.apply(&doc.buffers); }
-        if let Some(d) = &self.buffer_bytes { next.buffers = d.apply(&next.buffers); }
-        if let Some(d) = &self.materials { doc.materials = d.apply(&doc.materials); }
-        if let Some(d) = &self.textures { doc.textures = d.apply(&doc.textures); }
-        if let Some(d) = &self.images { doc.images = d.apply(&doc.images); }
-        if let Some(d) = &self.samplers { doc.samplers = d.apply(&doc.samplers); }
-        if let Some(d) = &self.skins { doc.skins = d.apply(&doc.skins); }
-        if let Some(d) = &self.animations { doc.animations = d.apply(&doc.animations); }
-        if let Some(d) = &self.cameras { doc.cameras = d.apply(&doc.cameras); }
-        if let Some(v) = &self.extensions_used { doc.extensions_used = v.clone(); }
-        if let Some(v) = &self.extensions_required { doc.extensions_required = v.clone(); }
-        if let Some(v) = &self.extensions { doc.extensions = v.clone(); }
-        if let Some(v) = &self.extras { doc.extras = v.clone(); }
-        if let Some(v) = self.source_form { next.source_form = v; }
+        if let Some(d) = &self.asset {
+            doc.asset = d.apply(&doc.asset);
+        }
+        if let Some(v) = self.scene {
+            doc.scene = v;
+        }
+        if let Some(d) = &self.scenes {
+            doc.scenes = d.apply(&doc.scenes);
+        }
+        if let Some(d) = &self.nodes {
+            doc.nodes = d.apply(&doc.nodes);
+        }
+        if let Some(d) = &self.meshes {
+            doc.meshes = d.apply(&doc.meshes);
+        }
+        if let Some(d) = &self.accessors {
+            doc.accessors = d.apply(&doc.accessors);
+        }
+        if let Some(d) = &self.buffer_views {
+            doc.buffer_views = d.apply(&doc.buffer_views);
+        }
+        if let Some(d) = &self.buffers {
+            doc.buffers = d.apply(&doc.buffers);
+        }
+        if let Some(d) = &self.buffer_bytes {
+            next.buffers = d.apply(&next.buffers);
+        }
+        if let Some(d) = &self.materials {
+            doc.materials = d.apply(&doc.materials);
+        }
+        if let Some(d) = &self.textures {
+            doc.textures = d.apply(&doc.textures);
+        }
+        if let Some(d) = &self.images {
+            doc.images = d.apply(&doc.images);
+        }
+        if let Some(d) = &self.samplers {
+            doc.samplers = d.apply(&doc.samplers);
+        }
+        if let Some(d) = &self.skins {
+            doc.skins = d.apply(&doc.skins);
+        }
+        if let Some(d) = &self.animations {
+            doc.animations = d.apply(&doc.animations);
+        }
+        if let Some(d) = &self.cameras {
+            doc.cameras = d.apply(&doc.cameras);
+        }
+        if let Some(v) = &self.extensions_used {
+            doc.extensions_used = v.clone();
+        }
+        if let Some(v) = &self.extensions_required {
+            doc.extensions_required = v.clone();
+        }
+        if let Some(v) = &self.extensions {
+            doc.extensions = v.clone();
+        }
+        if let Some(v) = &self.extras {
+            doc.extras = v.clone();
+        }
+        if let Some(v) = self.source_form {
+            next.source_form = v;
+        }
         next
     }
 
@@ -976,7 +1225,9 @@ impl MutationDiff<GltfSnapshot> for GltfDiff {
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
-        if other.scene.is_some() { self.scene = other.scene; }
+        if other.scene.is_some() {
+            self.scene = other.scene;
+        }
         macro_rules! absorb_collection {
             ($field:ident) => {
                 match (&mut self.$field, other.$field) {
@@ -1000,11 +1251,21 @@ impl MutationDiff<GltfSnapshot> for GltfDiff {
         absorb_collection!(skins);
         absorb_collection!(animations);
         absorb_collection!(cameras);
-        if other.extensions_used.is_some() { self.extensions_used = other.extensions_used; }
-        if other.extensions_required.is_some() { self.extensions_required = other.extensions_required; }
-        if other.extensions.is_some() { self.extensions = other.extensions; }
-        if other.extras.is_some() { self.extras = other.extras; }
-        if other.source_form.is_some() { self.source_form = other.source_form; }
+        if other.extensions_used.is_some() {
+            self.extensions_used = other.extensions_used;
+        }
+        if other.extensions_required.is_some() {
+            self.extensions_required = other.extensions_required;
+        }
+        if other.extensions.is_some() {
+            self.extensions = other.extensions;
+        }
+        if other.extras.is_some() {
+            self.extras = other.extras;
+        }
+        if other.source_form.is_some() {
+            self.source_form = other.source_form;
+        }
     }
 }
 
@@ -1245,7 +1506,11 @@ pub(crate) fn dec_u64(s: &str) -> Result<u64, String> {
     s.parse::<u64>().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 pub(crate) fn enc_bool(v: bool) -> String {
-    if v { "1".to_string() } else { "0".to_string() }
+    if v {
+        "1".to_string()
+    } else {
+        "0".to_string()
+    }
 }
 pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
     match s {
@@ -1471,13 +1736,7 @@ pub(crate) fn dec_asset_diff(s: &str) -> Result<GltfAssetDiff, String> {
 }
 
 pub(crate) fn enc_scene(sc: &GltfScene) -> String {
-    format!(
-        "[{},{},{},{}]",
-        enc_usize_vec(&sc.nodes),
-        encode_option(&sc.name, |v| enc_str(v)),
-        encode_option(&sc.extensions, enc_json),
-        encode_option(&sc.extras, enc_json),
-    )
+    format!("[{},{},{},{}]", enc_usize_vec(&sc.nodes), encode_option(&sc.name, |v| enc_str(v)), encode_option(&sc.extensions, enc_json), encode_option(&sc.extras, enc_json),)
 }
 pub(crate) fn dec_scene(s: &str) -> Result<GltfScene, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -1485,23 +1744,12 @@ pub(crate) fn dec_scene(s: &str) -> Result<GltfScene, String> {
     Ok(GltfScene { nodes: dec_usize_vec(nodes)?, name: decode_option(name, dec_str)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
 pub(crate) fn enc_scene_diff(d: &GltfSceneDiff) -> String {
-    format!(
-        "[{},{},{},{}]",
-        encode_option(&d.nodes, |v| enc_usize_vec(v)),
-        encode_option_option(&d.name, |v| enc_str(v)),
-        encode_option_option(&d.extensions, enc_json),
-        encode_option_option(&d.extras, enc_json),
-    )
+    format!("[{},{},{},{}]", encode_option(&d.nodes, |v| enc_usize_vec(v)), encode_option_option(&d.name, |v| enc_str(v)), encode_option_option(&d.extensions, enc_json), encode_option_option(&d.extras, enc_json),)
 }
 pub(crate) fn dec_scene_diff(s: &str) -> Result<GltfSceneDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [nodes, name, extensions, extras] = parts.as_slice() else { return Err(format!("scene diff: expected 4 fields, got {}", parts.len())) };
-    Ok(GltfSceneDiff {
-        nodes: decode_option(nodes, dec_usize_vec)?,
-        name: decode_option_option(name, dec_str)?,
-        extensions: decode_option_option(extensions, dec_json)?,
-        extras: decode_option_option(extras, dec_json)?,
-    })
+    Ok(GltfSceneDiff { nodes: decode_option(nodes, dec_usize_vec)?, name: decode_option_option(name, dec_str)?, extensions: decode_option_option(extensions, dec_json)?, extras: decode_option_option(extras, dec_json)? })
 }
 
 pub(crate) fn enc_node(n: &GltfNode) -> String {
@@ -1613,25 +1861,12 @@ pub(crate) fn dec_primitive_vec(s: &str) -> Result<Vec<GltfPrimitive>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_primitive).collect()
 }
 pub(crate) fn enc_mesh(m: &GltfMesh) -> String {
-    format!(
-        "[{},{},{},{},{}]",
-        enc_primitive_vec(&m.primitives),
-        enc_f64_slice(&m.weights),
-        encode_option(&m.name, |v| enc_str(v)),
-        encode_option(&m.extensions, enc_json),
-        encode_option(&m.extras, enc_json),
-    )
+    format!("[{},{},{},{},{}]", enc_primitive_vec(&m.primitives), enc_f64_slice(&m.weights), encode_option(&m.name, |v| enc_str(v)), encode_option(&m.extensions, enc_json), encode_option(&m.extras, enc_json),)
 }
 pub(crate) fn dec_mesh(s: &str) -> Result<GltfMesh, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [primitives, weights, name, extensions, extras] = parts.as_slice() else { return Err(format!("mesh: expected 5 fields, got {}", parts.len())) };
-    Ok(GltfMesh {
-        primitives: dec_primitive_vec(primitives)?,
-        weights: dec_f64_vec(weights)?,
-        name: decode_option(name, dec_str)?,
-        extensions: decode_option(extensions, dec_json)?,
-        extras: decode_option(extras, dec_json)?,
-    })
+    Ok(GltfMesh { primitives: dec_primitive_vec(primitives)?, weights: dec_f64_vec(weights)?, name: decode_option(name, dec_str)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
 pub(crate) fn enc_mesh_diff(d: &GltfMeshDiff) -> String {
     format!(
@@ -1949,14 +2184,7 @@ pub(crate) fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
 
 //#region 🔖️TextureImageSamplerSkinGroupCodecs
 pub(crate) fn enc_texture(t: &GltfTexture) -> String {
-    format!(
-        "[{},{},{},{},{}]",
-        encode_option(&t.sampler, |v| v.to_string()),
-        encode_option(&t.source, |v| v.to_string()),
-        encode_option(&t.name, |v| enc_str(v)),
-        encode_option(&t.extensions, enc_json),
-        encode_option(&t.extras, enc_json),
-    )
+    format!("[{},{},{},{},{}]", encode_option(&t.sampler, |v| v.to_string()), encode_option(&t.source, |v| v.to_string()), encode_option(&t.name, |v| enc_str(v)), encode_option(&t.extensions, enc_json), encode_option(&t.extras, enc_json),)
 }
 pub(crate) fn dec_texture(s: &str) -> Result<GltfTexture, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -2090,15 +2318,7 @@ pub(crate) fn dec_animation(s: &str) -> Result<GltfAnimation, String> {
 
 //#region 🔖️CameraGroupCodecs
 pub(crate) fn enc_perspective(p: &GltfPerspective) -> String {
-    format!(
-        "[{},{},{},{},{},{}]",
-        encode_option(&p.aspect_ratio, |v| enc_f64(*v)),
-        enc_f64(p.yfov),
-        encode_option(&p.zfar, |v| enc_f64(*v)),
-        enc_f64(p.znear),
-        encode_option(&p.extensions, enc_json),
-        encode_option(&p.extras, enc_json),
-    )
+    format!("[{},{},{},{},{},{}]", encode_option(&p.aspect_ratio, |v| enc_f64(*v)), enc_f64(p.yfov), encode_option(&p.zfar, |v| enc_f64(*v)), enc_f64(p.znear), encode_option(&p.extensions, enc_json), encode_option(&p.extras, enc_json),)
 }
 pub(crate) fn dec_perspective(s: &str) -> Result<GltfPerspective, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -2211,9 +2431,7 @@ pub(crate) fn enc_document(d: &GltfDocument) -> String {
 }
 pub(crate) fn dec_document(s: &str) -> Result<GltfDocument, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [asset, scene, scenes, nodes, meshes, accessors, buffer_views, buffers, materials, textures, images, samplers, skins, animations, cameras, extensions_used, extensions_required, extensions, extras] =
-        parts.as_slice()
-    else {
+    let [asset, scene, scenes, nodes, meshes, accessors, buffer_views, buffers, materials, textures, images, samplers, skins, animations, cameras, extensions_used, extensions_required, extensions, extras] = parts.as_slice() else {
         return Err(format!("document: expected 19 fields, got {}", parts.len()));
     };
     Ok(GltfDocument {
@@ -2241,13 +2459,7 @@ pub(crate) fn dec_document(s: &str) -> Result<GltfDocument, String> {
 /// 📸️ Whole [`GltfSnapshot`] (schema + document + raw buffer bytes + source form) -- used by
 /// `GltfMutation::SetSnapshot`'s hand-rolled `OpText`/`OpBinary`.
 pub(crate) fn enc_gltf_snapshot(s: &GltfSnapshot) -> String {
-    format!(
-        "[{},{},{},{}]",
-        enc_str(&s.schema),
-        enc_document(&s.document),
-        format!("[{}]", s.buffers.iter().map(|b| enc_bytes(b)).collect::<Vec<_>>().join(",")),
-        enc_source_form(s.source_form),
-    )
+    format!("[{},{},{},{}]", enc_str(&s.schema), enc_document(&s.document), format!("[{}]", s.buffers.iter().map(|b| enc_bytes(b)).collect::<Vec<_>>().join(",")), enc_source_form(s.source_form),)
 }
 pub(crate) fn dec_gltf_snapshot(s: &str) -> Result<GltfSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -2289,7 +2501,10 @@ pub(crate) fn read_bin_str(r: &mut dsl::ByteReader) -> Result<String, dsl::PackE
 pub(crate) fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
     match v {
         None => w.write_u8(0),
-        Some(val) => { w.write_u8(1); write_value(w, val); }
+        Some(val) => {
+            w.write_u8(1);
+            write_value(w, val);
+        }
     }
 }
 pub(crate) fn read_bin_option<T>(r: &mut dsl::ByteReader, read_value: impl FnOnce(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
@@ -2308,7 +2523,10 @@ pub(crate) fn write_bin_tri<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, w
     match v {
         None => w.write_u8(0),
         Some(None) => w.write_u8(1),
-        Some(Some(val)) => { w.write_u8(2); write_value(w, val); }
+        Some(Some(val)) => {
+            w.write_u8(2);
+            write_value(w, val);
+        }
     }
 }
 pub(crate) fn read_bin_tri<T>(r: &mut dsl::ByteReader, read_value: impl FnOnce(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
@@ -2364,7 +2582,10 @@ pub(crate) fn read_bin_string_vec(r: &mut dsl::ByteReader) -> Result<Vec<String>
     read_bin_vec(r, read_bin_str)
 }
 pub(crate) fn write_bin_attr_pairs(w: &mut dsl::ByteWriter, v: &[(String, usize)]) {
-    write_bin_vec(w, v, |w, (k, idx): &(String, usize)| { write_bin_str(w, k); w.write_varint_u64(*idx as u64); });
+    write_bin_vec(w, v, |w, (k, idx): &(String, usize)| {
+        write_bin_str(w, k);
+        w.write_varint_u64(*idx as u64);
+    });
 }
 pub(crate) fn read_bin_attr_pairs(r: &mut dsl::ByteReader) -> Result<Vec<(String, usize)>, dsl::PackError> {
     read_bin_vec(r, |r| Ok((read_bin_str(r)?, r.read_varint_u64()? as usize)))
@@ -2380,13 +2601,28 @@ pub(crate) fn gltf_bin_err(e: dsl::PackError) -> protocol::ProtocolError {
 pub(crate) fn write_bin_json(w: &mut dsl::ByteWriter, v: &GltfJson) {
     match v {
         GltfJson::Null => w.write_u8(0),
-        GltfJson::Bool(b) => { w.write_u8(1); w.write_u8(if *b { 1 } else { 0 }); }
-        GltfJson::Number(n) => { w.write_u8(2); w.write_f64_le(*n); }
-        GltfJson::String(s) => { w.write_u8(3); write_bin_str(w, s); }
-        GltfJson::Array(items) => { w.write_u8(4); write_bin_vec(w, items, write_bin_json); }
+        GltfJson::Bool(b) => {
+            w.write_u8(1);
+            w.write_u8(if *b { 1 } else { 0 });
+        }
+        GltfJson::Number(n) => {
+            w.write_u8(2);
+            w.write_f64_le(*n);
+        }
+        GltfJson::String(s) => {
+            w.write_u8(3);
+            write_bin_str(w, s);
+        }
+        GltfJson::Array(items) => {
+            w.write_u8(4);
+            write_bin_vec(w, items, write_bin_json);
+        }
         GltfJson::Object(members) => {
             w.write_u8(5);
-            write_bin_vec(w, members, |w, (k, v): &(String, GltfJson)| { write_bin_str(w, k); write_bin_json(w, v); });
+            write_bin_vec(w, members, |w, (k, v): &(String, GltfJson)| {
+                write_bin_str(w, k);
+                write_bin_json(w, v);
+            });
         }
     }
 }
@@ -2423,38 +2659,87 @@ pub(crate) fn read_bin_component_type(r: &mut dsl::ByteReader) -> Result<GltfCom
 /// only exist on the TEXT side; the binary frame is free to use its own dense encoding since
 /// nothing outside this codec pair ever reads these bytes directly).
 pub(crate) fn write_bin_accessor_type(w: &mut dsl::ByteWriter, t: GltfAccessorType) {
-    w.write_u8(match t { GltfAccessorType::Scalar => 0, GltfAccessorType::Vec2 => 1, GltfAccessorType::Vec3 => 2, GltfAccessorType::Vec4 => 3, GltfAccessorType::Mat2 => 4, GltfAccessorType::Mat3 => 5, GltfAccessorType::Mat4 => 6 });
+    w.write_u8(match t {
+        GltfAccessorType::Scalar => 0,
+        GltfAccessorType::Vec2 => 1,
+        GltfAccessorType::Vec3 => 2,
+        GltfAccessorType::Vec4 => 3,
+        GltfAccessorType::Mat2 => 4,
+        GltfAccessorType::Mat3 => 5,
+        GltfAccessorType::Mat4 => 6,
+    });
 }
 pub(crate) fn read_bin_accessor_type(r: &mut dsl::ByteReader) -> Result<GltfAccessorType, dsl::PackError> {
     Ok(match r.read_u8()? {
-        0 => GltfAccessorType::Scalar, 1 => GltfAccessorType::Vec2, 2 => GltfAccessorType::Vec3, 3 => GltfAccessorType::Vec4,
-        4 => GltfAccessorType::Mat2, 5 => GltfAccessorType::Mat3, 6 => GltfAccessorType::Mat4,
+        0 => GltfAccessorType::Scalar,
+        1 => GltfAccessorType::Vec2,
+        2 => GltfAccessorType::Vec3,
+        3 => GltfAccessorType::Vec4,
+        4 => GltfAccessorType::Mat2,
+        5 => GltfAccessorType::Mat3,
+        6 => GltfAccessorType::Mat4,
         other => return Err(dsl::PackError::Malformed { what: "gltf accessor_type", offset: 0, detail: format!("unknown tag {other}") }),
     })
 }
 pub(crate) fn write_bin_alpha_mode(w: &mut dsl::ByteWriter, m: GltfAlphaMode) {
-    w.write_u8(match m { GltfAlphaMode::Opaque => 0, GltfAlphaMode::Mask => 1, GltfAlphaMode::Blend => 2 });
+    w.write_u8(match m {
+        GltfAlphaMode::Opaque => 0,
+        GltfAlphaMode::Mask => 1,
+        GltfAlphaMode::Blend => 2,
+    });
 }
 pub(crate) fn read_bin_alpha_mode(r: &mut dsl::ByteReader) -> Result<GltfAlphaMode, dsl::PackError> {
-    Ok(match r.read_u8()? { 0 => GltfAlphaMode::Opaque, 1 => GltfAlphaMode::Mask, 2 => GltfAlphaMode::Blend, other => return Err(dsl::PackError::Malformed { what: "gltf alpha_mode", offset: 0, detail: format!("unknown tag {other}") }) })
+    Ok(match r.read_u8()? {
+        0 => GltfAlphaMode::Opaque,
+        1 => GltfAlphaMode::Mask,
+        2 => GltfAlphaMode::Blend,
+        other => return Err(dsl::PackError::Malformed { what: "gltf alpha_mode", offset: 0, detail: format!("unknown tag {other}") }),
+    })
 }
 pub(crate) fn write_bin_interpolation(w: &mut dsl::ByteWriter, i: GltfInterpolation) {
-    w.write_u8(match i { GltfInterpolation::Linear => 0, GltfInterpolation::Step => 1, GltfInterpolation::CubicSpline => 2 });
+    w.write_u8(match i {
+        GltfInterpolation::Linear => 0,
+        GltfInterpolation::Step => 1,
+        GltfInterpolation::CubicSpline => 2,
+    });
 }
 pub(crate) fn read_bin_interpolation(r: &mut dsl::ByteReader) -> Result<GltfInterpolation, dsl::PackError> {
-    Ok(match r.read_u8()? { 0 => GltfInterpolation::Linear, 1 => GltfInterpolation::Step, 2 => GltfInterpolation::CubicSpline, other => return Err(dsl::PackError::Malformed { what: "gltf interpolation", offset: 0, detail: format!("unknown tag {other}") }) })
+    Ok(match r.read_u8()? {
+        0 => GltfInterpolation::Linear,
+        1 => GltfInterpolation::Step,
+        2 => GltfInterpolation::CubicSpline,
+        other => return Err(dsl::PackError::Malformed { what: "gltf interpolation", offset: 0, detail: format!("unknown tag {other}") }),
+    })
 }
 pub(crate) fn write_bin_animation_path(w: &mut dsl::ByteWriter, p: GltfAnimationPath) {
-    w.write_u8(match p { GltfAnimationPath::Translation => 0, GltfAnimationPath::Rotation => 1, GltfAnimationPath::Scale => 2, GltfAnimationPath::Weights => 3 });
+    w.write_u8(match p {
+        GltfAnimationPath::Translation => 0,
+        GltfAnimationPath::Rotation => 1,
+        GltfAnimationPath::Scale => 2,
+        GltfAnimationPath::Weights => 3,
+    });
 }
 pub(crate) fn read_bin_animation_path(r: &mut dsl::ByteReader) -> Result<GltfAnimationPath, dsl::PackError> {
-    Ok(match r.read_u8()? { 0 => GltfAnimationPath::Translation, 1 => GltfAnimationPath::Rotation, 2 => GltfAnimationPath::Scale, 3 => GltfAnimationPath::Weights, other => return Err(dsl::PackError::Malformed { what: "gltf animation_path", offset: 0, detail: format!("unknown tag {other}") }) })
+    Ok(match r.read_u8()? {
+        0 => GltfAnimationPath::Translation,
+        1 => GltfAnimationPath::Rotation,
+        2 => GltfAnimationPath::Scale,
+        3 => GltfAnimationPath::Weights,
+        other => return Err(dsl::PackError::Malformed { what: "gltf animation_path", offset: 0, detail: format!("unknown tag {other}") }),
+    })
 }
 pub(crate) fn write_bin_source_form(w: &mut dsl::ByteWriter, f: GltfSourceForm) {
-    w.write_u8(match f { GltfSourceForm::Json => 0, GltfSourceForm::Glb => 1 });
+    w.write_u8(match f {
+        GltfSourceForm::Json => 0,
+        GltfSourceForm::Glb => 1,
+    });
 }
 pub(crate) fn read_bin_source_form(r: &mut dsl::ByteReader) -> Result<GltfSourceForm, dsl::PackError> {
-    Ok(match r.read_u8()? { 0 => GltfSourceForm::Json, 1 => GltfSourceForm::Glb, other => return Err(dsl::PackError::Malformed { what: "gltf source_form", offset: 0, detail: format!("unknown tag {other}") }) })
+    Ok(match r.read_u8()? {
+        0 => GltfSourceForm::Json,
+        1 => GltfSourceForm::Glb,
+        other => return Err(dsl::PackError::Malformed { what: "gltf source_form", offset: 0, detail: format!("unknown tag {other}") }),
+    })
 }
 //#endregion 🔖️RealBinaryUnitEnumCodecs
 
@@ -2618,7 +2903,13 @@ pub(crate) fn write_bin_mesh_diff(w: &mut dsl::ByteWriter, d: &GltfMeshDiff) {
     write_bin_tri(w, &d.extras, write_bin_json);
 }
 pub(crate) fn read_bin_mesh_diff(r: &mut dsl::ByteReader) -> Result<GltfMeshDiff, dsl::PackError> {
-    Ok(GltfMeshDiff { primitives: read_bin_option(r, read_bin_primitive_vec)?, weights: read_bin_option(r, read_bin_f64_vec)?, name: read_bin_tri(r, read_bin_str)?, extensions: read_bin_tri(r, read_bin_json)?, extras: read_bin_tri(r, read_bin_json)? })
+    Ok(GltfMeshDiff {
+        primitives: read_bin_option(r, read_bin_primitive_vec)?,
+        weights: read_bin_option(r, read_bin_f64_vec)?,
+        name: read_bin_tri(r, read_bin_str)?,
+        extensions: read_bin_tri(r, read_bin_json)?,
+        extras: read_bin_tri(r, read_bin_json)?,
+    })
 }
 pub(crate) fn write_bin_sparse_indices(w: &mut dsl::ByteWriter, v: &GltfSparseIndices) {
     w.write_varint_u64(v.buffer_view as u64);
@@ -2829,7 +3120,13 @@ pub(crate) fn write_bin_buffer_diff(w: &mut dsl::ByteWriter, d: &GltfBufferDiff)
     write_bin_tri(w, &d.extras, write_bin_json);
 }
 pub(crate) fn read_bin_buffer_diff(r: &mut dsl::ByteReader) -> Result<GltfBufferDiff, dsl::PackError> {
-    Ok(GltfBufferDiff { byte_length: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?, uri: read_bin_tri(r, read_bin_str)?, name: read_bin_tri(r, read_bin_str)?, extensions: read_bin_tri(r, read_bin_json)?, extras: read_bin_tri(r, read_bin_json)? })
+    Ok(GltfBufferDiff {
+        byte_length: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        uri: read_bin_tri(r, read_bin_str)?,
+        name: read_bin_tri(r, read_bin_str)?,
+        extensions: read_bin_tri(r, read_bin_json)?,
+        extras: read_bin_tri(r, read_bin_json)?,
+    })
 }
 pub(crate) fn write_bin_buffer_view(w: &mut dsl::ByteWriter, v: &GltfBufferView) {
     w.write_varint_u64(v.buffer as u64);
@@ -2864,7 +3161,13 @@ pub(crate) fn write_bin_texture(w: &mut dsl::ByteWriter, t: &GltfTexture) {
     write_bin_json_opt(w, &t.extras);
 }
 pub(crate) fn read_bin_texture(r: &mut dsl::ByteReader) -> Result<GltfTexture, dsl::PackError> {
-    Ok(GltfTexture { sampler: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?, source: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
+    Ok(GltfTexture {
+        sampler: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        source: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        name: read_bin_option(r, read_bin_str)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
+    })
 }
 pub(crate) fn write_bin_image(w: &mut dsl::ByteWriter, i: &GltfImage) {
     write_bin_option(w, &i.uri, |w, v| write_bin_str(w, v));
@@ -2961,13 +3264,7 @@ pub(crate) fn write_bin_animation(w: &mut dsl::ByteWriter, a: &GltfAnimation) {
     write_bin_json_opt(w, &a.extras);
 }
 pub(crate) fn read_bin_animation(r: &mut dsl::ByteReader) -> Result<GltfAnimation, dsl::PackError> {
-    Ok(GltfAnimation {
-        channels: read_bin_vec(r, read_bin_animation_channel)?,
-        samplers: read_bin_vec(r, read_bin_animation_sampler)?,
-        name: read_bin_option(r, read_bin_str)?,
-        extensions: read_bin_json_opt(r)?,
-        extras: read_bin_json_opt(r)?,
-    })
+    Ok(GltfAnimation { channels: read_bin_vec(r, read_bin_animation_channel)?, samplers: read_bin_vec(r, read_bin_animation_sampler)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 //#endregion 🔖️RealBinaryAnimationGroupCodecs
 
@@ -2997,8 +3294,14 @@ pub(crate) fn read_bin_orthographic(r: &mut dsl::ByteReader) -> Result<GltfOrtho
 /// 🔀️ `GltfCameraProjection` real data-carrying enum -- tag `u8` (0=Perspective, 1=Orthographic).
 pub(crate) fn write_bin_camera_projection(w: &mut dsl::ByteWriter, p: &GltfCameraProjection) {
     match p {
-        GltfCameraProjection::Perspective(v) => { w.write_u8(0); write_bin_perspective(w, v); }
-        GltfCameraProjection::Orthographic(v) => { w.write_u8(1); write_bin_orthographic(w, v); }
+        GltfCameraProjection::Perspective(v) => {
+            w.write_u8(0);
+            write_bin_perspective(w, v);
+        }
+        GltfCameraProjection::Orthographic(v) => {
+            w.write_u8(1);
+            write_bin_orthographic(w, v);
+        }
     }
 }
 pub(crate) fn read_bin_camera_projection(r: &mut dsl::ByteReader) -> Result<GltfCameraProjection, dsl::PackError> {
@@ -3025,13 +3328,31 @@ pub(crate) fn read_bin_camera(r: &mut dsl::ByteReader) -> Result<GltfCamera, dsl
 /// counts + real per-item recursive encoding (never text-as-bytes).
 pub(crate) fn write_bin_collection<T, D>(w: &mut dsl::ByteWriter, c: &GltfCollectionDiff<T, D>, write_item: impl Fn(&mut dsl::ByteWriter, &T), write_diff: impl Fn(&mut dsl::ByteWriter, &D)) {
     write_bin_vec(w, &c.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
-    write_bin_vec(w, &c.modified, |w, m: &GltfModified<D>| { w.write_varint_u64(m.index as u64); write_diff(w, &m.diff); });
-    write_bin_vec(w, &c.added, |w, a: &GltfAdded<T>| { w.write_varint_u64(a.index as u64); write_item(w, &a.item); });
+    write_bin_vec(w, &c.modified, |w, m: &GltfModified<D>| {
+        w.write_varint_u64(m.index as u64);
+        write_diff(w, &m.diff);
+    });
+    write_bin_vec(w, &c.added, |w, a: &GltfAdded<T>| {
+        w.write_varint_u64(a.index as u64);
+        write_item(w, &a.item);
+    });
 }
-pub(crate) fn read_bin_collection<T, D>(r: &mut dsl::ByteReader, read_item: impl Fn(&mut dsl::ByteReader) -> Result<T, dsl::PackError>, read_diff: impl Fn(&mut dsl::ByteReader) -> Result<D, dsl::PackError>) -> Result<GltfCollectionDiff<T, D>, dsl::PackError> {
+pub(crate) fn read_bin_collection<T, D>(
+    r: &mut dsl::ByteReader,
+    read_item: impl Fn(&mut dsl::ByteReader) -> Result<T, dsl::PackError>,
+    read_diff: impl Fn(&mut dsl::ByteReader) -> Result<D, dsl::PackError>,
+) -> Result<GltfCollectionDiff<T, D>, dsl::PackError> {
     let removed = read_bin_usize_vec(r)?;
-    let modified = read_bin_vec(r, |r| { let index = r.read_varint_u64()? as usize; let diff = read_diff(r)?; Ok(GltfModified { index, diff }) })?;
-    let added = read_bin_vec(r, |r| { let index = r.read_varint_u64()? as usize; let item = read_item(r)?; Ok(GltfAdded { index, item }) })?;
+    let modified = read_bin_vec(r, |r| {
+        let index = r.read_varint_u64()? as usize;
+        let diff = read_diff(r)?;
+        Ok(GltfModified { index, diff })
+    })?;
+    let added = read_bin_vec(r, |r| {
+        let index = r.read_varint_u64()? as usize;
+        let item = read_item(r)?;
+        Ok(GltfAdded { index, item })
+    })?;
     Ok(GltfCollectionDiff { removed, modified, added })
 }
 /// 🧵 A single opaque length-prefixed blob wrapping one collection's real binary encoding --
@@ -3044,7 +3365,11 @@ pub(crate) fn write_bin_collection_blob<T, D>(c: &GltfCollectionDiff<T, D>, writ
     write_bin_collection(&mut inner, c, write_item, write_diff);
     inner.into_bytes()
 }
-pub(crate) fn read_bin_collection_blob<T, D>(bytes: &[u8], read_item: impl Fn(&mut dsl::ByteReader) -> Result<T, dsl::PackError>, read_diff: impl Fn(&mut dsl::ByteReader) -> Result<D, dsl::PackError>) -> Result<GltfCollectionDiff<T, D>, dsl::PackError> {
+pub(crate) fn read_bin_collection_blob<T, D>(
+    bytes: &[u8],
+    read_item: impl Fn(&mut dsl::ByteReader) -> Result<T, dsl::PackError>,
+    read_diff: impl Fn(&mut dsl::ByteReader) -> Result<D, dsl::PackError>,
+) -> Result<GltfCollectionDiff<T, D>, dsl::PackError> {
     let mut inner = dsl::ByteReader::new(bytes);
     read_bin_collection(&mut inner, read_item, read_diff)
 }
@@ -3108,39 +3433,76 @@ pub(crate) fn write_bin_gltf_snapshot(w: &mut dsl::ByteWriter, s: &GltfSnapshot)
     write_bin_source_form(w, s.source_form);
 }
 pub(crate) fn read_bin_gltf_snapshot(r: &mut dsl::ByteReader) -> Result<GltfSnapshot, dsl::PackError> {
-    Ok(GltfSnapshot {
-        schema: read_bin_str(r)?,
-        document: read_bin_document(r)?,
-        buffers: read_bin_vec(r, read_bin_blob)?,
-        source_form: read_bin_source_form(r)?,
-    })
+    Ok(GltfSnapshot { schema: read_bin_str(r)?, document: read_bin_document(r)?, buffers: read_bin_vec(r, read_bin_blob)?, source_form: read_bin_source_form(r)? })
 }
 //#endregion 🔖️RealBinaryDocumentCodec
 
 //#region 🔖️TopLevel
 fn print_gltf_diff(d: &GltfDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.asset { tokens.push(format!("asset={}", enc_asset_diff(v))); }
-    if let Some(v) = d.scene { tokens.push(format!("scene={}", encode_option(&v, |x| x.to_string()))); }
-    if let Some(v) = &d.scenes { tokens.push(format!("scenes={}", enc_collection(v, enc_scene, enc_scene_diff))); }
-    if let Some(v) = &d.nodes { tokens.push(format!("nodes={}", enc_collection(v, enc_node, enc_node_diff))); }
-    if let Some(v) = &d.meshes { tokens.push(format!("meshes={}", enc_collection(v, enc_mesh, enc_mesh_diff))); }
-    if let Some(v) = &d.accessors { tokens.push(format!("accessors={}", enc_collection(v, enc_accessor, enc_accessor_diff))); }
-    if let Some(v) = &d.buffer_views { tokens.push(format!("buffer-views={}", enc_collection(v, enc_buffer_view, enc_buffer_view))); }
-    if let Some(v) = &d.buffers { tokens.push(format!("buffers={}", enc_collection(v, enc_buffer, enc_buffer_diff))); }
-    if let Some(v) = &d.buffer_bytes { tokens.push(format!("buffer-bytes={}", enc_collection(v, |b: &Vec<u8>| enc_bytes(b), |b: &Vec<u8>| enc_bytes(b)))); }
-    if let Some(v) = &d.materials { tokens.push(format!("materials={}", enc_collection(v, enc_material, enc_material_diff))); }
-    if let Some(v) = &d.textures { tokens.push(format!("textures={}", enc_collection(v, enc_texture, enc_texture))); }
-    if let Some(v) = &d.images { tokens.push(format!("images={}", enc_collection(v, enc_image, enc_image))); }
-    if let Some(v) = &d.samplers { tokens.push(format!("samplers={}", enc_collection(v, enc_sampler, enc_sampler))); }
-    if let Some(v) = &d.skins { tokens.push(format!("skins={}", enc_collection(v, enc_skin, enc_skin))); }
-    if let Some(v) = &d.animations { tokens.push(format!("animations={}", enc_collection(v, enc_animation, enc_animation))); }
-    if let Some(v) = &d.cameras { tokens.push(format!("cameras={}", enc_collection(v, enc_camera, enc_camera))); }
-    if let Some(v) = &d.extensions_used { tokens.push(format!("extensions-used={}", enc_string_vec(v))); }
-    if let Some(v) = &d.extensions_required { tokens.push(format!("extensions-required={}", enc_string_vec(v))); }
-    if let Some(v) = &d.extensions { tokens.push(format!("extensions={}", encode_option(v, enc_json))); }
-    if let Some(v) = &d.extras { tokens.push(format!("extras={}", encode_option(v, enc_json))); }
-    if let Some(v) = d.source_form { tokens.push(format!("source-form={}", enc_source_form(v))); }
+    if let Some(v) = &d.asset {
+        tokens.push(format!("asset={}", enc_asset_diff(v)));
+    }
+    if let Some(v) = d.scene {
+        tokens.push(format!("scene={}", encode_option(&v, |x| x.to_string())));
+    }
+    if let Some(v) = &d.scenes {
+        tokens.push(format!("scenes={}", enc_collection(v, enc_scene, enc_scene_diff)));
+    }
+    if let Some(v) = &d.nodes {
+        tokens.push(format!("nodes={}", enc_collection(v, enc_node, enc_node_diff)));
+    }
+    if let Some(v) = &d.meshes {
+        tokens.push(format!("meshes={}", enc_collection(v, enc_mesh, enc_mesh_diff)));
+    }
+    if let Some(v) = &d.accessors {
+        tokens.push(format!("accessors={}", enc_collection(v, enc_accessor, enc_accessor_diff)));
+    }
+    if let Some(v) = &d.buffer_views {
+        tokens.push(format!("buffer-views={}", enc_collection(v, enc_buffer_view, enc_buffer_view)));
+    }
+    if let Some(v) = &d.buffers {
+        tokens.push(format!("buffers={}", enc_collection(v, enc_buffer, enc_buffer_diff)));
+    }
+    if let Some(v) = &d.buffer_bytes {
+        tokens.push(format!("buffer-bytes={}", enc_collection(v, |b: &Vec<u8>| enc_bytes(b), |b: &Vec<u8>| enc_bytes(b))));
+    }
+    if let Some(v) = &d.materials {
+        tokens.push(format!("materials={}", enc_collection(v, enc_material, enc_material_diff)));
+    }
+    if let Some(v) = &d.textures {
+        tokens.push(format!("textures={}", enc_collection(v, enc_texture, enc_texture)));
+    }
+    if let Some(v) = &d.images {
+        tokens.push(format!("images={}", enc_collection(v, enc_image, enc_image)));
+    }
+    if let Some(v) = &d.samplers {
+        tokens.push(format!("samplers={}", enc_collection(v, enc_sampler, enc_sampler)));
+    }
+    if let Some(v) = &d.skins {
+        tokens.push(format!("skins={}", enc_collection(v, enc_skin, enc_skin)));
+    }
+    if let Some(v) = &d.animations {
+        tokens.push(format!("animations={}", enc_collection(v, enc_animation, enc_animation)));
+    }
+    if let Some(v) = &d.cameras {
+        tokens.push(format!("cameras={}", enc_collection(v, enc_camera, enc_camera)));
+    }
+    if let Some(v) = &d.extensions_used {
+        tokens.push(format!("extensions-used={}", enc_string_vec(v)));
+    }
+    if let Some(v) = &d.extensions_required {
+        tokens.push(format!("extensions-required={}", enc_string_vec(v)));
+    }
+    if let Some(v) = &d.extensions {
+        tokens.push(format!("extensions={}", encode_option(v, enc_json)));
+    }
+    if let Some(v) = &d.extras {
+        tokens.push(format!("extras={}", encode_option(v, enc_json)));
+    }
+    if let Some(v) = d.source_form {
+        tokens.push(format!("source-form={}", enc_source_form(v)));
+    }
     tokens.join(" ")
 }
 fn parse_gltf_diff(line: &str) -> Result<GltfDiff, String> {
@@ -3149,28 +3511,51 @@ fn parse_gltf_diff(line: &str) -> Result<GltfDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("asset=") { d.asset = Some(dec_asset_diff(rest)?); }
-        else if let Some(rest) = token.strip_prefix("scene=") { d.scene = Some(decode_option(rest, parse_usize)?); }
-        else if let Some(rest) = token.strip_prefix("scenes=") { d.scenes = Some(dec_collection(rest, dec_scene, dec_scene_diff)?); }
-        else if let Some(rest) = token.strip_prefix("nodes=") { d.nodes = Some(dec_collection(rest, dec_node, dec_node_diff)?); }
-        else if let Some(rest) = token.strip_prefix("meshes=") { d.meshes = Some(dec_collection(rest, dec_mesh, dec_mesh_diff)?); }
-        else if let Some(rest) = token.strip_prefix("accessors=") { d.accessors = Some(dec_collection(rest, dec_accessor, dec_accessor_diff)?); }
-        else if let Some(rest) = token.strip_prefix("buffer-views=") { d.buffer_views = Some(dec_collection(rest, dec_buffer_view, dec_buffer_view)?); }
-        else if let Some(rest) = token.strip_prefix("buffer-bytes=") { d.buffer_bytes = Some(dec_collection(rest, dec_bytes, dec_bytes)?); }
-        else if let Some(rest) = token.strip_prefix("buffers=") { d.buffers = Some(dec_collection(rest, dec_buffer, dec_buffer_diff)?); }
-        else if let Some(rest) = token.strip_prefix("materials=") { d.materials = Some(dec_collection(rest, dec_material, dec_material_diff)?); }
-        else if let Some(rest) = token.strip_prefix("textures=") { d.textures = Some(dec_collection(rest, dec_texture, dec_texture)?); }
-        else if let Some(rest) = token.strip_prefix("images=") { d.images = Some(dec_collection(rest, dec_image, dec_image)?); }
-        else if let Some(rest) = token.strip_prefix("samplers=") { d.samplers = Some(dec_collection(rest, dec_sampler, dec_sampler)?); }
-        else if let Some(rest) = token.strip_prefix("skins=") { d.skins = Some(dec_collection(rest, dec_skin, dec_skin)?); }
-        else if let Some(rest) = token.strip_prefix("animations=") { d.animations = Some(dec_collection(rest, dec_animation, dec_animation)?); }
-        else if let Some(rest) = token.strip_prefix("cameras=") { d.cameras = Some(dec_collection(rest, dec_camera, dec_camera)?); }
-        else if let Some(rest) = token.strip_prefix("extensions-used=") { d.extensions_used = Some(dec_string_vec(rest)?); }
-        else if let Some(rest) = token.strip_prefix("extensions-required=") { d.extensions_required = Some(dec_string_vec(rest)?); }
-        else if let Some(rest) = token.strip_prefix("extensions=") { d.extensions = Some(decode_option(rest, dec_json)?); }
-        else if let Some(rest) = token.strip_prefix("extras=") { d.extras = Some(decode_option(rest, dec_json)?); }
-        else if let Some(rest) = token.strip_prefix("source-form=") { d.source_form = Some(dec_source_form(rest)?); }
-        else { return Err(format!("gltf diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("asset=") {
+            d.asset = Some(dec_asset_diff(rest)?);
+        } else if let Some(rest) = token.strip_prefix("scene=") {
+            d.scene = Some(decode_option(rest, parse_usize)?);
+        } else if let Some(rest) = token.strip_prefix("scenes=") {
+            d.scenes = Some(dec_collection(rest, dec_scene, dec_scene_diff)?);
+        } else if let Some(rest) = token.strip_prefix("nodes=") {
+            d.nodes = Some(dec_collection(rest, dec_node, dec_node_diff)?);
+        } else if let Some(rest) = token.strip_prefix("meshes=") {
+            d.meshes = Some(dec_collection(rest, dec_mesh, dec_mesh_diff)?);
+        } else if let Some(rest) = token.strip_prefix("accessors=") {
+            d.accessors = Some(dec_collection(rest, dec_accessor, dec_accessor_diff)?);
+        } else if let Some(rest) = token.strip_prefix("buffer-views=") {
+            d.buffer_views = Some(dec_collection(rest, dec_buffer_view, dec_buffer_view)?);
+        } else if let Some(rest) = token.strip_prefix("buffer-bytes=") {
+            d.buffer_bytes = Some(dec_collection(rest, dec_bytes, dec_bytes)?);
+        } else if let Some(rest) = token.strip_prefix("buffers=") {
+            d.buffers = Some(dec_collection(rest, dec_buffer, dec_buffer_diff)?);
+        } else if let Some(rest) = token.strip_prefix("materials=") {
+            d.materials = Some(dec_collection(rest, dec_material, dec_material_diff)?);
+        } else if let Some(rest) = token.strip_prefix("textures=") {
+            d.textures = Some(dec_collection(rest, dec_texture, dec_texture)?);
+        } else if let Some(rest) = token.strip_prefix("images=") {
+            d.images = Some(dec_collection(rest, dec_image, dec_image)?);
+        } else if let Some(rest) = token.strip_prefix("samplers=") {
+            d.samplers = Some(dec_collection(rest, dec_sampler, dec_sampler)?);
+        } else if let Some(rest) = token.strip_prefix("skins=") {
+            d.skins = Some(dec_collection(rest, dec_skin, dec_skin)?);
+        } else if let Some(rest) = token.strip_prefix("animations=") {
+            d.animations = Some(dec_collection(rest, dec_animation, dec_animation)?);
+        } else if let Some(rest) = token.strip_prefix("cameras=") {
+            d.cameras = Some(dec_collection(rest, dec_camera, dec_camera)?);
+        } else if let Some(rest) = token.strip_prefix("extensions-used=") {
+            d.extensions_used = Some(dec_string_vec(rest)?);
+        } else if let Some(rest) = token.strip_prefix("extensions-required=") {
+            d.extensions_required = Some(dec_string_vec(rest)?);
+        } else if let Some(rest) = token.strip_prefix("extensions=") {
+            d.extensions = Some(decode_option(rest, dec_json)?);
+        } else if let Some(rest) = token.strip_prefix("extras=") {
+            d.extras = Some(decode_option(rest, dec_json)?);
+        } else if let Some(rest) = token.strip_prefix("source-form=") {
+            d.source_form = Some(dec_source_form(rest)?);
+        } else {
+            return Err(format!("gltf diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -3201,7 +3586,13 @@ impl protocol::DiffCodec for GltfDiff {
         // `source_form`'s fixed-width payloads — because they are NOT the last field in the frame
         // and their own internal shape has no fixed width `walk_protocol` could otherwise skip
         // past without knowing its byte length up front.
-        write_bin_option(&mut w, &self.asset, |w, v| write_bin_blob(w, &{ let mut inner = dsl::ByteWriter::new(); write_bin_asset_diff(&mut inner, v); inner.into_bytes() }));
+        write_bin_option(&mut w, &self.asset, |w, v| {
+            write_bin_blob(w, &{
+                let mut inner = dsl::ByteWriter::new();
+                write_bin_asset_diff(&mut inner, v);
+                inner.into_bytes()
+            })
+        });
         write_bin_tri(&mut w, &self.scene, |w, v| w.write_varint_u64(*v as u64));
         write_bin_option(&mut w, &self.scenes, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_scene, write_bin_scene_diff)));
         write_bin_option(&mut w, &self.nodes, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_node, write_bin_node_diff)));
@@ -3217,41 +3608,142 @@ impl protocol::DiffCodec for GltfDiff {
         write_bin_option(&mut w, &self.skins, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_skin, write_bin_skin)));
         write_bin_option(&mut w, &self.animations, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_animation, write_bin_animation)));
         write_bin_option(&mut w, &self.cameras, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_camera, write_bin_camera)));
-        write_bin_option(&mut w, &self.extensions_used, |w, v| write_bin_blob(w, &{ let mut inner = dsl::ByteWriter::new(); write_bin_string_vec(&mut inner, v); inner.into_bytes() }));
-        write_bin_option(&mut w, &self.extensions_required, |w, v| write_bin_blob(w, &{ let mut inner = dsl::ByteWriter::new(); write_bin_string_vec(&mut inner, v); inner.into_bytes() }));
-        write_bin_tri(&mut w, &self.extensions, |w, v| write_bin_blob(w, &{ let mut inner = dsl::ByteWriter::new(); write_bin_json(&mut inner, v); inner.into_bytes() }));
-        write_bin_tri(&mut w, &self.extras, |w, v| write_bin_blob(w, &{ let mut inner = dsl::ByteWriter::new(); write_bin_json(&mut inner, v); inner.into_bytes() }));
+        write_bin_option(&mut w, &self.extensions_used, |w, v| {
+            write_bin_blob(w, &{
+                let mut inner = dsl::ByteWriter::new();
+                write_bin_string_vec(&mut inner, v);
+                inner.into_bytes()
+            })
+        });
+        write_bin_option(&mut w, &self.extensions_required, |w, v| {
+            write_bin_blob(w, &{
+                let mut inner = dsl::ByteWriter::new();
+                write_bin_string_vec(&mut inner, v);
+                inner.into_bytes()
+            })
+        });
+        write_bin_tri(&mut w, &self.extensions, |w, v| {
+            write_bin_blob(w, &{
+                let mut inner = dsl::ByteWriter::new();
+                write_bin_json(&mut inner, v);
+                inner.into_bytes()
+            })
+        });
+        write_bin_tri(&mut w, &self.extras, |w, v| {
+            write_bin_blob(w, &{
+                let mut inner = dsl::ByteWriter::new();
+                write_bin_json(&mut inner, v);
+                inner.into_bytes()
+            })
+        });
         write_bin_option(&mut w, &self.source_form, |w, v| write_bin_source_form(w, *v));
         Ok(w.into_bytes())
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = dsl::ByteReader::new(bytes);
-        let asset = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; let mut inner = dsl::ByteReader::new(&b); read_bin_asset_diff(&mut inner) }).map_err(gltf_bin_err)?;
-        let scene = read_bin_tri(&mut r, |r| Ok(r.read_varint_u64()? as usize)).map_err(gltf_bin_err)?;
-        let scenes = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_scene, read_bin_scene_diff) }).map_err(gltf_bin_err)?;
-        let nodes = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_node, read_bin_node_diff) }).map_err(gltf_bin_err)?;
-        let meshes = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_mesh, read_bin_mesh_diff) }).map_err(gltf_bin_err)?;
-        let accessors = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_accessor, read_bin_accessor_diff) }).map_err(gltf_bin_err)?;
-        let buffer_views = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_buffer_view, read_bin_buffer_view) }).map_err(gltf_bin_err)?;
-        let buffers = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_buffer, read_bin_buffer_diff) }).map_err(gltf_bin_err)?;
-        let buffer_bytes = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_blob, read_bin_blob) }).map_err(gltf_bin_err)?;
-        let materials = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_material, read_bin_material_diff) }).map_err(gltf_bin_err)?;
-        let textures = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_texture, read_bin_texture) }).map_err(gltf_bin_err)?;
-        let images = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_image, read_bin_image) }).map_err(gltf_bin_err)?;
-        let samplers = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_sampler, read_bin_sampler) }).map_err(gltf_bin_err)?;
-        let skins = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_skin, read_bin_skin) }).map_err(gltf_bin_err)?;
-        let animations = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_animation, read_bin_animation) }).map_err(gltf_bin_err)?;
-        let cameras = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_camera, read_bin_camera) }).map_err(gltf_bin_err)?;
-        let extensions_used = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; let mut inner = dsl::ByteReader::new(&b); read_bin_string_vec(&mut inner) }).map_err(gltf_bin_err)?;
-        let extensions_required = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; let mut inner = dsl::ByteReader::new(&b); read_bin_string_vec(&mut inner) }).map_err(gltf_bin_err)?;
-        let extensions = read_bin_tri(&mut r, |r| { let b = read_bin_blob(r)?; let mut inner = dsl::ByteReader::new(&b); read_bin_json(&mut inner) }).map_err(gltf_bin_err)?;
-        let extras = read_bin_tri(&mut r, |r| { let b = read_bin_blob(r)?; let mut inner = dsl::ByteReader::new(&b); read_bin_json(&mut inner) }).map_err(gltf_bin_err)?;
-        let source_form = read_bin_option(&mut r, read_bin_source_form).map_err(gltf_bin_err)?;
-        Ok(GltfDiff {
-            asset, scene, scenes, nodes, meshes, accessors, buffer_views, buffers, buffer_bytes, materials,
-            textures, images, samplers, skins, animations, cameras, extensions_used, extensions_required,
-            extensions, extras, source_form,
+        let asset = read_bin_option(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            let mut inner = dsl::ByteReader::new(&b);
+            read_bin_asset_diff(&mut inner)
         })
+        .map_err(gltf_bin_err)?;
+        let scene = read_bin_tri(&mut r, |r| Ok(r.read_varint_u64()? as usize)).map_err(gltf_bin_err)?;
+        let scenes = read_bin_option(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            read_bin_collection_blob(&b, read_bin_scene, read_bin_scene_diff)
+        })
+        .map_err(gltf_bin_err)?;
+        let nodes = read_bin_option(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            read_bin_collection_blob(&b, read_bin_node, read_bin_node_diff)
+        })
+        .map_err(gltf_bin_err)?;
+        let meshes = read_bin_option(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            read_bin_collection_blob(&b, read_bin_mesh, read_bin_mesh_diff)
+        })
+        .map_err(gltf_bin_err)?;
+        let accessors = read_bin_option(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            read_bin_collection_blob(&b, read_bin_accessor, read_bin_accessor_diff)
+        })
+        .map_err(gltf_bin_err)?;
+        let buffer_views = read_bin_option(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            read_bin_collection_blob(&b, read_bin_buffer_view, read_bin_buffer_view)
+        })
+        .map_err(gltf_bin_err)?;
+        let buffers = read_bin_option(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            read_bin_collection_blob(&b, read_bin_buffer, read_bin_buffer_diff)
+        })
+        .map_err(gltf_bin_err)?;
+        let buffer_bytes = read_bin_option(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            read_bin_collection_blob(&b, read_bin_blob, read_bin_blob)
+        })
+        .map_err(gltf_bin_err)?;
+        let materials = read_bin_option(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            read_bin_collection_blob(&b, read_bin_material, read_bin_material_diff)
+        })
+        .map_err(gltf_bin_err)?;
+        let textures = read_bin_option(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            read_bin_collection_blob(&b, read_bin_texture, read_bin_texture)
+        })
+        .map_err(gltf_bin_err)?;
+        let images = read_bin_option(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            read_bin_collection_blob(&b, read_bin_image, read_bin_image)
+        })
+        .map_err(gltf_bin_err)?;
+        let samplers = read_bin_option(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            read_bin_collection_blob(&b, read_bin_sampler, read_bin_sampler)
+        })
+        .map_err(gltf_bin_err)?;
+        let skins = read_bin_option(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            read_bin_collection_blob(&b, read_bin_skin, read_bin_skin)
+        })
+        .map_err(gltf_bin_err)?;
+        let animations = read_bin_option(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            read_bin_collection_blob(&b, read_bin_animation, read_bin_animation)
+        })
+        .map_err(gltf_bin_err)?;
+        let cameras = read_bin_option(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            read_bin_collection_blob(&b, read_bin_camera, read_bin_camera)
+        })
+        .map_err(gltf_bin_err)?;
+        let extensions_used = read_bin_option(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            let mut inner = dsl::ByteReader::new(&b);
+            read_bin_string_vec(&mut inner)
+        })
+        .map_err(gltf_bin_err)?;
+        let extensions_required = read_bin_option(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            let mut inner = dsl::ByteReader::new(&b);
+            read_bin_string_vec(&mut inner)
+        })
+        .map_err(gltf_bin_err)?;
+        let extensions = read_bin_tri(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            let mut inner = dsl::ByteReader::new(&b);
+            read_bin_json(&mut inner)
+        })
+        .map_err(gltf_bin_err)?;
+        let extras = read_bin_tri(&mut r, |r| {
+            let b = read_bin_blob(r)?;
+            let mut inner = dsl::ByteReader::new(&b);
+            read_bin_json(&mut inner)
+        })
+        .map_err(gltf_bin_err)?;
+        let source_form = read_bin_option(&mut r, read_bin_source_form).map_err(gltf_bin_err)?;
+        Ok(GltfDiff { asset, scene, scenes, nodes, meshes, accessors, buffer_views, buffers, buffer_bytes, materials, textures, images, samplers, skins, animations, cameras, extensions_used, extensions_required, extensions, extras, source_form })
     }
 }
 //#endregion 🔖️TopLevel
@@ -3271,17 +3763,22 @@ mod tests {
         GltfNode { children: vec![seed], mesh: Some(seed), name: Some(format!("node{seed}")), ..GltfNode::default() }
     }
     fn mesh(seed: usize) -> GltfMesh {
-        GltfMesh {
-            primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), seed)], material: Some(seed), mode: Some(4), ..GltfPrimitive::default() }],
-            name: Some(format!("mesh{seed}")),
-            ..GltfMesh::default()
-        }
+        GltfMesh { primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), seed)], material: Some(seed), mode: Some(4), ..GltfPrimitive::default() }], name: Some(format!("mesh{seed}")), ..GltfMesh::default() }
     }
     fn accessor(seed: usize) -> GltfAccessor {
         GltfAccessor {
-            buffer_view: Some(seed), byte_offset: 0, component_type: GltfComponentType::Float, normalized: false,
-            count: seed + 1, kind: GltfAccessorType::Vec3, max: Some(vec![1.0]), min: Some(vec![0.0]), sparse: None,
-            name: Some(format!("acc{seed}")), extensions: None, extras: None,
+            buffer_view: Some(seed),
+            byte_offset: 0,
+            component_type: GltfComponentType::Float,
+            normalized: false,
+            count: seed + 1,
+            kind: GltfAccessorType::Vec3,
+            max: Some(vec![1.0]),
+            min: Some(vec![0.0]),
+            sparse: None,
+            name: Some(format!("acc{seed}")),
+            extensions: None,
+            extras: None,
         }
     }
     fn material(seed: usize) -> GltfMaterial {
@@ -3347,10 +3844,7 @@ mod tests {
     fn absorb_law_insert_then_set_field_patches_into_added() {
         let f = node(1);
         let mut d1 = GltfNodesDiff { added: vec![GltfAdded { index: 1, item: f.clone() }], ..Default::default() };
-        let d2 = GltfNodesDiff {
-            modified: vec![GltfModified { index: 1, diff: GltfNodeDiff { name: Some(Some("renamed".into())), ..Default::default() } }],
-            ..Default::default()
-        };
+        let d2 = GltfNodesDiff { modified: vec![GltfModified { index: 1, diff: GltfNodeDiff { name: Some(Some("renamed".into())), ..Default::default() } }], ..Default::default() };
         d1.absorb(d2);
         assert!(d1.modified.is_empty());
         assert_eq!(d1.added.len(), 1);
@@ -3489,8 +3983,17 @@ mod tests {
                 skins: vec![],
                 animations: vec![],
                 cameras: vec![crate::artifacts::gltf::schema::snapshot::GltfCamera {
-                    projection: crate::artifacts::gltf::schema::snapshot::GltfCameraProjection::Perspective(crate::artifacts::gltf::schema::snapshot::GltfPerspective { aspect_ratio: Some(1.5), yfov: 0.8, zfar: Some(100.0), znear: 0.1, extensions: None, extras: None }),
-                    name: Some("cam".into()), extensions: None, extras: None,
+                    projection: crate::artifacts::gltf::schema::snapshot::GltfCameraProjection::Perspective(crate::artifacts::gltf::schema::snapshot::GltfPerspective {
+                        aspect_ratio: Some(1.5),
+                        yfov: 0.8,
+                        zfar: Some(100.0),
+                        znear: 0.1,
+                        extensions: None,
+                        extras: None,
+                    }),
+                    name: Some("cam".into()),
+                    extensions: None,
+                    extras: None,
                 }],
                 extensions_used: vec![],
                 extensions_required: vec![],
@@ -3594,30 +4097,13 @@ mod handcrafted_diff_codec_tests {
         }
     }
     fn accessor_sparse_a() -> GltfAccessor {
-        GltfAccessor {
-            buffer_view: Some(1),
-            byte_offset: 0,
-            component_type: GltfComponentType::UnsignedShort,
-            normalized: true,
-            count: 4,
-            kind: GltfAccessorType::Vec2,
-            max: None,
-            min: None,
-            sparse: None,
-            name: None,
-            extensions: None,
-            extras: None,
-        }
+        GltfAccessor { buffer_view: Some(1), byte_offset: 0, component_type: GltfComponentType::UnsignedShort, normalized: true, count: 4, kind: GltfAccessorType::Vec2, max: None, min: None, sparse: None, name: None, extensions: None, extras: None }
     }
     /// 🎯️ `sparse` flips `None -> Some(GltfSparseAccessor{..})` -- the one accessor field not
     /// exercised by `sweep_a`/`sweep_b` above.
     fn accessor_sparse_b() -> GltfAccessor {
         GltfAccessor {
-            sparse: Some(GltfSparseAccessor {
-                count: 2,
-                indices: GltfSparseIndices { buffer_view: 2, byte_offset: 0, component_type: GltfComponentType::UnsignedByte },
-                values: GltfSparseValues { buffer_view: 3, byte_offset: 0 },
-            }),
+            sparse: Some(GltfSparseAccessor { count: 2, indices: GltfSparseIndices { buffer_view: 2, byte_offset: 0, component_type: GltfComponentType::UnsignedByte }, values: GltfSparseValues { buffer_view: 3, byte_offset: 0 } }),
             max: Some(vec![1.0, 1.0]),
             ..accessor_sparse_a()
         }
@@ -3631,10 +4117,7 @@ mod handcrafted_diff_codec_tests {
     /// `None`).
     fn material_textures_b() -> GltfMaterial {
         GltfMaterial {
-            pbr_metallic_roughness: Some(crate::artifacts::gltf::schema::snapshot::GltfPbrMetallicRoughness {
-                base_color_texture: Some(GltfTextureInfo { index: 0, tex_coord: 1, extensions: None, extras: None }),
-                ..Default::default()
-            }),
+            pbr_metallic_roughness: Some(crate::artifacts::gltf::schema::snapshot::GltfPbrMetallicRoughness { base_color_texture: Some(GltfTextureInfo { index: 0, tex_coord: 1, extensions: None, extras: None }), ..Default::default() }),
             normal_texture: Some(GltfNormalTextureInfo { index: 1, tex_coord: 0, scale: 2.0, extensions: None, extras: None }),
             occlusion_texture: Some(GltfOcclusionTextureInfo { index: 2, tex_coord: 0, strength: 0.5, extensions: None, extras: None }),
             emissive_texture: Some(GltfTextureInfo { index: 3, tex_coord: 0, extensions: None, extras: None }),

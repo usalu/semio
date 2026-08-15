@@ -1,5 +1,5 @@
-use crate::artifacts::csv::{CsvSnapshot};
-use crate::artifacts::csv::schema::mutations::{CsvMutation, apply_csv_mutation};
+use crate::artifacts::csv::schema::mutations::{apply_csv_mutation, CsvMutation};
+use crate::artifacts::csv::CsvSnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
 pub fn apply(projection: &mut CsvSnapshot, mutation: &CsvMutation) {

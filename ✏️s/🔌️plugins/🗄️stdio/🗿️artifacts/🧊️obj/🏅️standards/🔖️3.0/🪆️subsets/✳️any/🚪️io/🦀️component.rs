@@ -22,10 +22,7 @@
 //! through the text codec).
 //#region 🔖️Codec
 //#region 🔖️IndexResolution
-use crate::artifacts::obj::schema::snapshot::{
-    ObjFace, ObjFaceVertex, ObjGroup, ObjNormal, ObjObject, ObjSmoothingRange, ObjTexCoord,
-    ObjUnknownStatement, ObjUsemtlRange, ObjVertex,
-};
+use crate::artifacts::obj::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjNormal, ObjObject, ObjSmoothingRange, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange, ObjVertex};
 use crate::artifacts::obj::{ObjSnapshot, STDIO_OBJ_DOCUMENT_SCHEMA};
 use std::collections::HashMap;
 
@@ -52,17 +49,9 @@ fn parse_face_vertex(token: &str, vertex_count: usize, texcoord_count: usize, no
     let v_raw: i64 = parts.next().ok_or("empty face token")?.parse().map_err(|e| format!("face vertex index: {e}"))?;
     let vertex = resolve_index(vertex_count, v_raw)?;
     let vt_raw = parts.next().unwrap_or("");
-    let texcoord = if vt_raw.is_empty() {
-        None
-    } else {
-        Some(resolve_index(texcoord_count, vt_raw.parse().map_err(|e| format!("face texcoord index: {e}"))?)?)
-    };
+    let texcoord = if vt_raw.is_empty() { None } else { Some(resolve_index(texcoord_count, vt_raw.parse().map_err(|e| format!("face texcoord index: {e}"))?)?) };
     let vn_raw = parts.next().unwrap_or("");
-    let normal = if vn_raw.is_empty() {
-        None
-    } else {
-        Some(resolve_index(normal_count, vn_raw.parse().map_err(|e| format!("face normal index: {e}"))?)?)
-    };
+    let normal = if vn_raw.is_empty() { None } else { Some(resolve_index(normal_count, vn_raw.parse().map_err(|e| format!("face normal index: {e}"))?)?) };
     Ok(ObjFaceVertex { vertex, texcoord, normal })
 }
 //#endregion 🔖️IndexResolution
@@ -192,19 +181,7 @@ pub fn decode_obj(text: &str) -> Result<ObjSnapshot, String> {
         }
     }
 
-    Ok(ObjSnapshot {
-        schema: STDIO_OBJ_DOCUMENT_SCHEMA.into(),
-        vertices,
-        texcoords,
-        normals,
-        faces,
-        groups,
-        objects,
-        mtllib,
-        usemtl,
-        smoothing_groups,
-        unknown_statements,
-    })
+    Ok(ObjSnapshot { schema: STDIO_OBJ_DOCUMENT_SCHEMA.into(), vertices, texcoords, normals, faces, groups, objects, mtllib, usemtl, smoothing_groups, unknown_statements })
 }
 //#endregion 🔖️Decode
 
@@ -240,18 +217,10 @@ pub fn encode_obj(snap: &ObjSnapshot) -> String {
         out.push_str(&format!("vn {} {} {}\n", vn.x, vn.y, vn.z));
     }
 
-    let object_at = |i: usize| -> Option<&str> {
-        snap.objects.iter().find(|o| o.faces.contains(&i)).map(|o| o.name.as_str())
-    };
-    let groups_at = |i: usize| -> Vec<&str> {
-        snap.groups.iter().filter(|g| g.faces.contains(&i)).map(|g| g.name.as_str()).collect()
-    };
-    let material_at = |i: usize| -> Option<&str> {
-        snap.usemtl.iter().rev().find(|r| r.face_index_from <= i).map(|r| r.material.as_str())
-    };
-    let smoothing_at = |i: usize| -> Option<Option<u32>> {
-        snap.smoothing_groups.iter().rev().find(|r| r.face_index_from <= i).map(|r| r.group)
-    };
+    let object_at = |i: usize| -> Option<&str> { snap.objects.iter().find(|o| o.faces.contains(&i)).map(|o| o.name.as_str()) };
+    let groups_at = |i: usize| -> Vec<&str> { snap.groups.iter().filter(|g| g.faces.contains(&i)).map(|g| g.name.as_str()).collect() };
+    let material_at = |i: usize| -> Option<&str> { snap.usemtl.iter().rev().find(|r| r.face_index_from <= i).map(|r| r.material.as_str()) };
+    let smoothing_at = |i: usize| -> Option<Option<u32>> { snap.smoothing_groups.iter().rev().find(|r| r.face_index_from <= i).map(|r| r.group) };
 
     let mut prev_object: Option<&str> = None;
     let mut prev_groups: Vec<&str> = Vec::new();
@@ -317,14 +286,13 @@ pub fn encode_obj(snap: &ObjSnapshot) -> String {
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::obj::ObjSnapshot;
     use crate::artifacts::obj::standards::v3_0::subsets::any::schema::ObjAnalyzer;
+    use crate::artifacts::obj::ObjSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
-
 
     pub struct ObjComposerComposition;
 
@@ -353,10 +321,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "ObjComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = ObjAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "ObjComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "ObjComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -442,14 +407,8 @@ mod tests {
         assert_eq!(snap.groups[0], ObjGroup { name: "Front".into(), faces: vec![0, 1] });
         assert_eq!(snap.groups[1], ObjGroup { name: "Back".into(), faces: vec![2, 3] });
 
-        assert_eq!(snap.usemtl, vec![
-            ObjUsemtlRange { face_index_from: 0, material: "Red".into() },
-            ObjUsemtlRange { face_index_from: 2, material: "Blue".into() },
-        ]);
-        assert_eq!(snap.smoothing_groups, vec![
-            ObjSmoothingRange { face_index_from: 0, group: Some(1) },
-            ObjSmoothingRange { face_index_from: 2, group: None },
-        ]);
+        assert_eq!(snap.usemtl, vec![ObjUsemtlRange { face_index_from: 0, material: "Red".into() }, ObjUsemtlRange { face_index_from: 2, material: "Blue".into() },]);
+        assert_eq!(snap.smoothing_groups, vec![ObjSmoothingRange { face_index_from: 0, group: Some(1) }, ObjSmoothingRange { face_index_from: 2, group: None },]);
 
         assert_eq!(snap.faces[1].vertices[0].vertex, 2);
         assert_eq!(snap.faces[1].vertices[0].texcoord, Some(0));
@@ -510,11 +469,7 @@ mod tests {
         assert_eq!(snap1.mtllib, snap2.mtllib);
         assert_eq!(snap1.usemtl, snap2.usemtl);
         assert_eq!(snap1.smoothing_groups, snap2.smoothing_groups);
-        assert_eq!(
-            snap1.unknown_statements.iter().map(|u| u.raw.clone()).collect::<Vec<_>>(),
-            snap2.unknown_statements.iter().map(|u| u.raw.clone()).collect::<Vec<_>>(),
-            "unknown-statement content and relative order must be retained"
-        );
+        assert_eq!(snap1.unknown_statements.iter().map(|u| u.raw.clone()).collect::<Vec<_>>(), snap2.unknown_statements.iter().map(|u| u.raw.clone()).collect::<Vec<_>>(), "unknown-statement content and relative order must be retained");
 
         // 🔁 second-generation stability: a true fixed point from here on.
         let text3 = encode_obj(&snap2);
@@ -541,19 +496,11 @@ mod tests {
         /// message).
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }
@@ -658,9 +605,9 @@ mod tests {
 //#region 🚪️DerivedIoRegistry
 /// 🚪️ Dissolved out of `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::obj::standards::v3_0::subsets::any::schema::ObjComposer as ObjRawAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 

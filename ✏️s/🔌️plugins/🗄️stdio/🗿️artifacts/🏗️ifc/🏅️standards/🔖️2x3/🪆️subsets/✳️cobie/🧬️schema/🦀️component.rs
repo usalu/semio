@@ -4,20 +4,17 @@
 pub use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use dsl::{Diagnostic, Severity};
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::check_cobie_conformance;
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::Ifc2x3Diff;
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
+    use crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::check_cobie_conformance;
     use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
+    use dsl::{Diagnostic, Severity};
+    use semio_framework_plugin::ArtifactBuilder;
 
     fn seeded_document() -> Part21Document {
         let header = Part21Header {
-            file_description: vec![
-                Part21Value::List(vec![Part21Value::Str("ViewDefinition [FMHandOverView]".into())]),
-                Part21Value::Str("2;1".into()),
-            ],
+            file_description: vec![Part21Value::List(vec![Part21Value::Str("ViewDefinition [FMHandOverView]".into())]), Part21Value::Str("2;1".into())],
             file_name: vec![],
             file_schema: vec![Part21Value::List(vec![Part21Value::Str("IFC2X3".into())])],
         };
@@ -44,10 +41,7 @@ pub mod derived_construction {
         pub fn add_space(mut self, name: &str) -> Self {
             let id = self.next_id;
             self.next_id += 1;
-            let instance = Part21Instance {
-                id,
-                entities: vec![("IFCSPACE".into(), vec![Part21Value::Str(format!("guid-{id}")), Part21Value::Unset, Part21Value::Str(name.to_string())])],
-            };
+            let instance = Part21Instance { id, entities: vec![("IFCSPACE".into(), vec![Part21Value::Str(format!("guid-{id}")), Part21Value::Unset, Part21Value::Str(name.to_string())])] };
             apply_ifc2x3_mutation(&mut self.snapshot, &Ifc2x3Mutation::UpsertInstance { instance });
             self
         }
@@ -86,7 +80,11 @@ pub mod derived_construction {
         }
         fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let hard: Vec<Diagnostic> = check_cobie_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
-            if hard.is_empty() { Ok(self.snapshot) } else { Err(hard) }
+            if hard.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(hard)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -117,10 +115,10 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
-    use semio_framework_plugin::{AnalyzeSource, Analysis, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
-    use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::{Ifc2x3Analyzer as Ifc2x3AnyAnalyzer, Ifc2x3Parts};
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
+    use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::{Ifc2x3Analyzer as Ifc2x3AnyAnalyzer, Ifc2x3Parts};
+    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("cobie") };
 
@@ -143,14 +141,7 @@ pub mod derived_analysis {
         snapshot.document.header.file_schema.iter().any(|v| v.as_list().map(|items| items.iter().any(|item| item.as_str() == Some(name))).unwrap_or(false))
     }
     fn view_definition_names(snapshot: &Ifc2x3Snapshot, view: &str) -> bool {
-        snapshot
-            .document
-            .header
-            .file_description
-            .first()
-            .and_then(|v| v.as_list())
-            .map(|items| items.iter().any(|item| item.as_str().map(|s| s.contains(view)).unwrap_or(false)))
-            .unwrap_or(false)
+        snapshot.document.header.file_description.first().and_then(|v| v.as_list()).map(|items| items.iter().any(|item| item.as_str().map(|s| s.contains(view)).unwrap_or(false))).unwrap_or(false)
     }
 
     //#region 🔖️Conformance
@@ -177,10 +168,10 @@ pub mod derived_analysis {
         let has_building = snapshot.document.by_type("IFCBUILDING").next().is_some();
         let has_storey = snapshot.document.by_type("IFCBUILDINGSTOREY").next().is_some();
         if !has_building || !has_storey {
-            out.push(soft(CODE_BUILDING_STOREY, format!("missing {}{}{} -- COBie's Facility/Floor sheets need both",
-                if !has_building { "IFCBUILDING" } else { "" },
-                if !has_building && !has_storey { " and " } else { "" },
-                if !has_storey { "IFCBUILDINGSTOREY" } else { "" })));
+            out.push(soft(
+                CODE_BUILDING_STOREY,
+                format!("missing {}{}{} -- COBie's Facility/Floor sheets need both", if !has_building { "IFCBUILDING" } else { "" }, if !has_building && !has_storey { " and " } else { "" }, if !has_storey { "IFCBUILDINGSTOREY" } else { "" }),
+            ));
         }
 
         let has_type = snapshot.document.instances.iter().any(|i| i.primary().map(|(name, _)| name.ends_with("TYPE")).unwrap_or(false));
@@ -235,22 +226,12 @@ pub mod derived_analysis {
         }
 
         fn conforming_snapshot() -> Ifc2x3Snapshot {
-            let space = Part21Instance {
-                id: 1,
-                entities: vec![(
-                    "IFCSPACE".into(),
-                    vec![Part21Value::Str("guid".into()), Part21Value::Unset, Part21Value::Str("Room 101".into())],
-                )],
-            };
+            let space = Part21Instance { id: 1, entities: vec![("IFCSPACE".into(), vec![Part21Value::Str("guid".into()), Part21Value::Unset, Part21Value::Str("Room 101".into())])] };
             let building = Part21Instance { id: 2, entities: vec![("IFCBUILDING".into(), vec![])] };
             let storey = Part21Instance { id: 3, entities: vec![("IFCBUILDINGSTOREY".into(), vec![])] };
             let door_type = Part21Instance { id: 4, entities: vec![("IFCDOORTYPE".into(), vec![])] };
             let rel = Part21Instance { id: 5, entities: vec![("IFCRELDEFINESBYTYPE".into(), vec![])] };
-            Ifc2x3Snapshot {
-                schema: "stdio.ifc.2x3".into(),
-                document: Part21Document { header: header("FMHandOverView"), instances: vec![space, building, storey, door_type, rel] },
-                edm_preamble: None,
-            }
+            Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: Part21Document { header: header("FMHandOverView"), instances: vec![space, building, storey, door_type, rel] }, edm_preamble: None }
         }
 
         #[test]

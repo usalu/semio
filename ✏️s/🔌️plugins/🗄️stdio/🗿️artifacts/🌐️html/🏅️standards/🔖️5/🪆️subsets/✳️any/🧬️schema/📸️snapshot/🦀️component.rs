@@ -131,11 +131,7 @@ pub struct HtmlSnapshot {
 
 impl Default for HtmlSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_HTML_DOCUMENT_SCHEMA.into(),
-            doctype: Some("DOCTYPE html".into()),
-            root: HtmlNode::element("html"),
-        }
+        Self { schema: STDIO_HTML_DOCUMENT_SCHEMA.into(), doctype: Some("DOCTYPE html".into()), root: HtmlNode::element("html") }
     }
 }
 //#endregion 🔖️Model
@@ -143,8 +139,7 @@ impl Default for HtmlSnapshot {
 //#region 🔖️VoidElements
 /// 🚪️ The HTML5/WHATWG void-element set (14 elements) — these never have a closing tag and never
 /// carry children; the encoder must not emit `</tag>` (or self-close `/>`) for them.
-const VOID_ELEMENTS: &[&str] =
-    &["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"];
+const VOID_ELEMENTS: &[&str] = &["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"];
 
 pub fn is_void_element(name: &str) -> bool {
     VOID_ELEMENTS.iter().any(|v| v.eq_ignore_ascii_case(name))
@@ -179,7 +174,15 @@ fn decode_entities(raw: &str) -> String {
 }
 
 fn utf8_char_len(lead: u8) -> usize {
-    if lead >= 0xF0 { 4 } else if lead >= 0xE0 { 3 } else if lead >= 0xC0 { 2 } else { 1 }
+    if lead >= 0xF0 {
+        4
+    } else if lead >= 0xE0 {
+        3
+    } else if lead >= 0xC0 {
+        2
+    } else {
+        1
+    }
 }
 
 /// 🔓️ Attempts to decode ONE entity starting at `s[0] == '&'`. Returns `(char, bytes_consumed)`.
@@ -485,10 +488,7 @@ impl<'a> Parser<'a> {
             return Ok(HtmlNode::Element { name, attributes, children: Vec::new() });
         }
         if self_closed {
-            return Err(TextError::new(
-                format!("'/>' self-closing syntax is only supported on void elements, found on non-void '<{name}/>'"),
-                open_span,
-            ));
+            return Err(TextError::new(format!("'/>' self-closing syntax is only supported on void elements, found on non-void '<{name}/>'"), open_span));
         }
 
         if let Some(kind) = RawTextKind::from_tag_name(&name) {
@@ -664,12 +664,7 @@ impl store::ArtifactDsl for HtmlSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = write_html_document(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        )
-        .expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -678,23 +673,14 @@ impl store::ArtifactPack for HtmlSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = write_html_document(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        )
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         let text = std::str::from_utf8(&inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -748,10 +734,7 @@ mod tests {
 
     #[test]
     fn parses_comment_and_script_style_rawtext() {
-        let snap = parse_html_document(
-            "<html><!-- hi --><style>.a { color: red; }</style><script>if (1 < 2) { console.log(\"</not-a-tag>\"); }</script></html>",
-        )
-        .unwrap();
+        let snap = parse_html_document("<html><!-- hi --><style>.a { color: red; }</style><script>if (1 < 2) { console.log(\"</not-a-tag>\"); }</script></html>").unwrap();
         match &snap.root {
             HtmlNode::Element { children, .. } => {
                 assert!(matches!(&children[0], HtmlNode::Comment { text } if text == " hi "));
@@ -818,15 +801,7 @@ mod tests {
         let snap = HtmlSnapshot {
             schema: STDIO_HTML_DOCUMENT_SCHEMA.into(),
             doctype: Some("DOCTYPE html".into()),
-            root: el(
-                "html",
-                vec![HtmlAttr::new("lang", "en")],
-                vec![el(
-                    "body",
-                    vec![],
-                    vec![el("p", vec![HtmlAttr::boolean("disabled")], vec![text("hi "), el("br", vec![], vec![]), text(" there")])],
-                )],
-            ),
+            root: el("html", vec![HtmlAttr::new("lang", "en")], vec![el("body", vec![], vec![el("p", vec![HtmlAttr::boolean("disabled")], vec![text("hi "), el("br", vec![], vec![]), text(" there")])])]),
         };
         let printed = write_html_document(&snap);
         let reparsed = parse_html_document(&printed).unwrap();

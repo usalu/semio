@@ -17,7 +17,7 @@
 //! `🧬️mutations/🏗️create-column`/`🗑️delete-column`/`🔀reorder-columns`.
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value, enc_semio_value, enc_str, dec_str, write_str_lp, read_str_lp};
+use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value, dec_str, enc_semio_value, enc_str, read_str_lp, write_str_lp};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -262,7 +262,9 @@ fn decode_table_snapshot_binary(bytes: &[u8]) -> Result<SemioTableSnapshot, Stri
 /// 🎁 Real structured text/binary codecs, wrapped in the repo-wide `store::semio_format` envelope.
 impl store::ArtifactDsl for SemioTableSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str { STDIO_SEMIOTABLE_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_SEMIOTABLE_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -274,11 +276,7 @@ impl store::ArtifactDsl for SemioTableSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_table_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -287,22 +285,14 @@ impl store::ArtifactPack for SemioTableSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_table_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_table_snapshot_binary(&inner).map_err(store::PackError::Schema)
@@ -322,11 +312,7 @@ impl store::ArtifactPack for SemioTableSnapshot {
 pub(crate) fn demo_table_snapshot() -> SemioTableSnapshot {
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
-        columns: vec![
-            SemioTableColumn { name: "label".into(), kind: SemioTableCellKind::Str },
-            SemioTableColumn { name: "score".into(), kind: SemioTableCellKind::Float },
-            SemioTableColumn { name: "active".into(), kind: SemioTableCellKind::Bool },
-        ],
+        columns: vec![SemioTableColumn { name: "label".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "score".into(), kind: SemioTableCellKind::Float }, SemioTableColumn { name: "active".into(), kind: SemioTableCellKind::Bool }],
         rows: vec![
             SemioTableRow { cells: vec![SemioValue::Str { value: "widget".into() }, SemioValue::Float { lexeme: "3.500".into() }, SemioValue::Bool { value: true }] },
             SemioTableRow { cells: vec![SemioValue::Null, SemioValue::Int { lexeme: "42".into() }, SemioValue::Bytes { value: vec![0, 1, 2, 255] }] },

@@ -147,7 +147,11 @@ fn dedent_by_chars(line: &str, width: usize) -> Option<String> {
         Some(idx) => Some(line[idx..].to_string()),
         None if count == width => Some(String::new()),
         None => {
-            if line.chars().all(|c| c == ' ') { Some(String::new()) } else { None }
+            if line.chars().all(|c| c == ' ') {
+                Some(String::new())
+            } else {
+                None
+            }
         }
     }
 }
@@ -190,10 +194,7 @@ fn parse_blocks(lines: &[&str]) -> Vec<MdBlock> {
                 code_lines.push(lines[i]);
                 i += 1;
             }
-            blocks.push(MdBlock::CodeBlock {
-                info: if info.is_empty() { None } else { Some(info) },
-                literal: code_lines.join("\n"),
-            });
+            blocks.push(MdBlock::CodeBlock { info: if info.is_empty() { None } else { Some(info) }, literal: code_lines.join("\n") });
             continue;
         }
         if let Some(rest) = indented_code_line(line) {
@@ -251,15 +252,7 @@ fn parse_blocks(lines: &[&str]) -> Vec<MdBlock> {
         i += 1;
         while i < lines.len() {
             let l = lines[i];
-            if l.trim().is_empty()
-                || fence_open(l).is_some()
-                || indented_code_line(l).is_some()
-                || atx_heading(l).is_some()
-                || list_item_marker(l).is_some()
-                || blockquote_marker(l).is_some()
-                || thematic_break(l)
-                || html_block_start(l)
-            {
+            if l.trim().is_empty() || fence_open(l).is_some() || indented_code_line(l).is_some() || atx_heading(l).is_some() || list_item_marker(l).is_some() || blockquote_marker(l).is_some() || thematic_break(l) || html_block_start(l) {
                 break;
             }
             para_lines.push(l);

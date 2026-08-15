@@ -5,8 +5,8 @@
 //! "changed or not" slot, same shape as `DeflateDiff::payload`.
 
 use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3FrameHeader, Mp3Snapshot};
-use protocol::MutationDiff;
 use protocol::command::DiffAlgebra;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
@@ -27,32 +27,36 @@ pub struct Mp3Diff {
 impl MutationDiff<Mp3Snapshot> for Mp3Diff {
     fn apply(&self, base: &Mp3Snapshot) -> Mp3Snapshot {
         let mut next = base.clone();
-        if let Some(v) = &self.id3v2 { next.id3v2 = v.clone(); }
-        if let Some(v) = &self.frames { next.frames = v.clone(); }
-        if let Some(v) = &self.id3v1 { next.id3v1 = v.clone(); }
+        if let Some(v) = &self.id3v2 {
+            next.id3v2 = v.clone();
+        }
+        if let Some(v) = &self.frames {
+            next.frames = v.clone();
+        }
+        if let Some(v) = &self.id3v1 {
+            next.id3v1 = v.clone();
+        }
         next
     }
     fn absorb(&mut self, other: Self) {
-        if other.id3v2.is_some() { self.id3v2 = other.id3v2; }
-        if other.frames.is_some() { self.frames = other.frames; }
-        if other.id3v1.is_some() { self.id3v1 = other.id3v1; }
+        if other.id3v2.is_some() {
+            self.id3v2 = other.id3v2;
+        }
+        if other.frames.is_some() {
+            self.frames = other.frames;
+        }
+        if other.id3v1.is_some() {
+            self.id3v1 = other.id3v1;
+        }
     }
 }
 
 impl DiffAlgebra<Mp3Snapshot> for Mp3Diff {
     fn between(base: &Mp3Snapshot, other: &Mp3Snapshot) -> Self {
-        Mp3Diff {
-            id3v2: (base.id3v2 != other.id3v2).then(|| other.id3v2.clone()),
-            frames: (base.frames != other.frames).then(|| other.frames.clone()),
-            id3v1: (base.id3v1 != other.id3v1).then(|| other.id3v1.clone()),
-        }
+        Mp3Diff { id3v2: (base.id3v2 != other.id3v2).then(|| other.id3v2.clone()), frames: (base.frames != other.frames).then(|| other.frames.clone()), id3v1: (base.id3v1 != other.id3v1).then(|| other.id3v1.clone()) }
     }
     fn inverse(&self, base: &Mp3Snapshot) -> Self {
-        Mp3Diff {
-            id3v2: self.id3v2.as_ref().map(|_| base.id3v2.clone()),
-            frames: self.frames.as_ref().map(|_| base.frames.clone()),
-            id3v1: self.id3v1.as_ref().map(|_| base.id3v1.clone()),
-        }
+        Mp3Diff { id3v2: self.id3v2.as_ref().map(|_| base.id3v2.clone()), frames: self.frames.as_ref().map(|_| base.frames.clone()), id3v1: self.id3v1.as_ref().map(|_| base.id3v1.clone()) }
     }
     fn is_empty(&self) -> bool {
         self.id3v2.is_none() && self.frames.is_none() && self.id3v1.is_none()
@@ -136,10 +140,26 @@ fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<
         other => Err(format!("option decode: bad shape {other:?}")),
     }
 }
-fn parse_u8(s: &str) -> Result<u8, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
-fn parse_u16(s: &str) -> Result<u16, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
-fn parse_bool(s: &str) -> Result<bool, String> { match s { "1" => Ok(true), "0" => Ok(false), other => Err(format!("bad bool {other:?}")) } }
-fn enc_bool(b: bool) -> &'static str { if b { "1" } else { "0" } }
+fn parse_u8(s: &str) -> Result<u8, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+fn parse_u16(s: &str) -> Result<u16, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+fn parse_bool(s: &str) -> Result<bool, String> {
+    match s {
+        "1" => Ok(true),
+        "0" => Ok(false),
+        other => Err(format!("bad bool {other:?}")),
+    }
+}
+fn enc_bool(b: bool) -> &'static str {
+    if b {
+        "1"
+    } else {
+        "0"
+    }
+}
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
@@ -186,9 +206,18 @@ fn dec_id3v1(s: &str) -> Result<Id3v1Tag, String> {
 fn enc_mp3_header(h: &Mp3FrameHeader) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{}]",
-        h.mpeg_version_id, h.layer, enc_bool(h.protection_bit), h.bitrate_index, h.sample_rate_index,
-        enc_bool(h.padding), enc_bool(h.private_bit), h.channel_mode, h.mode_extension,
-        enc_bool(h.copyright), enc_bool(h.original), h.emphasis
+        h.mpeg_version_id,
+        h.layer,
+        enc_bool(h.protection_bit),
+        h.bitrate_index,
+        h.sample_rate_index,
+        enc_bool(h.padding),
+        enc_bool(h.private_bit),
+        h.channel_mode,
+        h.mode_extension,
+        enc_bool(h.copyright),
+        enc_bool(h.original),
+        h.emphasis
     )
 }
 /// 🧭️ `s` is the header's OWN bracketed group (e.g. `[3,1,1,9,0,0,0,3,0,0,1,0]`) — callers strip
@@ -241,9 +270,15 @@ fn dec_mp3_frames(s: &str) -> Result<Vec<Mp3Frame>, String> {
 //#region 🔖️TopLevel
 fn print_mp3_diff(d: &Mp3Diff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.id3v2 { tokens.push(format!("id3v2={}", encode_option(v, |t| enc_id3v2(t)))); }
-    if let Some(v) = &d.frames { tokens.push(format!("frames={}", enc_mp3_frames(v))); }
-    if let Some(v) = &d.id3v1 { tokens.push(format!("id3v1={}", encode_option(v, |t| enc_id3v1(t)))); }
+    if let Some(v) = &d.id3v2 {
+        tokens.push(format!("id3v2={}", encode_option(v, |t| enc_id3v2(t))));
+    }
+    if let Some(v) = &d.frames {
+        tokens.push(format!("frames={}", enc_mp3_frames(v)));
+    }
+    if let Some(v) = &d.id3v1 {
+        tokens.push(format!("id3v1={}", encode_option(v, |t| enc_id3v1(t))));
+    }
     tokens.join(" ")
 }
 fn parse_mp3_diff(line: &str) -> Result<Mp3Diff, String> {
@@ -252,10 +287,15 @@ fn parse_mp3_diff(line: &str) -> Result<Mp3Diff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("id3v2=") { d.id3v2 = Some(decode_option(rest, dec_id3v2)?); }
-        else if let Some(rest) = token.strip_prefix("frames=") { d.frames = Some(dec_mp3_frames(rest)?); }
-        else if let Some(rest) = token.strip_prefix("id3v1=") { d.id3v1 = Some(decode_option(rest, dec_id3v1)?); }
-        else { return Err(format!("mp3 diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("id3v2=") {
+            d.id3v2 = Some(decode_option(rest, dec_id3v2)?);
+        } else if let Some(rest) = token.strip_prefix("frames=") {
+            d.frames = Some(dec_mp3_frames(rest)?);
+        } else if let Some(rest) = token.strip_prefix("id3v1=") {
+            d.id3v1 = Some(decode_option(rest, dec_id3v1)?);
+        } else {
+            return Err(format!("mp3 diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -273,8 +313,7 @@ impl protocol::DiffCodec for Mp3Diff {
         Ok(self.print_diff().into_bytes())
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes)
-            .map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
         Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
     }
 }
@@ -289,20 +328,12 @@ mod tests {
 
     fn frame() -> Mp3Frame {
         Mp3Frame {
-            header: Mp3FrameHeader {
-                mpeg_version_id: 3, layer: 1, protection_bit: true, bitrate_index: 9, sample_rate_index: 0,
-                padding: false, private_bit: false, channel_mode: 3, mode_extension: 0, copyright: false, original: true, emphasis: 0,
-            },
+            header: Mp3FrameHeader { mpeg_version_id: 3, layer: 1, protection_bit: true, bitrate_index: 9, sample_rate_index: 0, padding: false, private_bit: false, channel_mode: 3, mode_extension: 0, copyright: false, original: true, emphasis: 0 },
             payload: vec![0u8; 4],
         }
     }
     fn sweep_a() -> Mp3Snapshot {
-        Mp3Snapshot {
-            id3v2: None,
-            frames: vec![frame()],
-            id3v1: None,
-            ..Mp3Snapshot::default()
-        }
+        Mp3Snapshot { id3v2: None, frames: vec![frame()], id3v1: None, ..Mp3Snapshot::default() }
     }
     fn sweep_b() -> Mp3Snapshot {
         Mp3Snapshot {
@@ -393,14 +424,7 @@ mod tests {
     fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
-        let cases = vec![
-            Mp3Diff::default(),
-            Mp3Diff::between(&a, &b),
-            Mp3Diff::between(&b, &a),
-            diff_set_id3v2(None),
-            diff_set_id3v1(None),
-            diff_set_frames(vec![]),
-        ];
+        let cases = vec![Mp3Diff::default(), Mp3Diff::between(&a, &b), Mp3Diff::between(&b, &a), diff_set_id3v2(None), diff_set_id3v1(None), diff_set_frames(vec![])];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

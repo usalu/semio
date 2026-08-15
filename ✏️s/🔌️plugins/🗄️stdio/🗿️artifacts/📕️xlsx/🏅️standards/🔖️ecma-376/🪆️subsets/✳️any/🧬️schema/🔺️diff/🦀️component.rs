@@ -48,7 +48,9 @@ pub struct NamedTripleDiff<K, D, T> {
 }
 
 impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
-    fn default() -> Self { Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() } }
+    fn default() -> Self {
+        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -200,7 +202,11 @@ where
             added.push(o.clone());
         }
     }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(NamedTripleDiff { removed, modified, added }) }
+    if removed.is_empty() && modified.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(NamedTripleDiff { removed, modified, added })
+    }
 }
 
 fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
@@ -243,13 +249,7 @@ where
 /// 🧮️ Name-keyed absorb — identity is the KEY (not position): a `d2`-removal of a `d1`-added key
 /// annihilates the add; a `d2`-modify of a `d1`-added key patches into the carried payload;
 /// everything else composes directly on the shared key space.
-fn absorb_named<K, T, D>(
-    d1: NamedTripleDiff<K, D, T>,
-    d2: NamedTripleDiff<K, D, T>,
-    key_of: impl Fn(&T) -> K,
-    absorb_item: impl Fn(D, D) -> D,
-    apply_item: impl Fn(&mut T, &D),
-) -> NamedTripleDiff<K, D, T>
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -292,7 +292,9 @@ where
 //#endregion 🔖️GenericNamedEngine
 
 //#region 🔖️WorkbookDiffLogic
-fn cell_key(cell: &XlsxCell) -> (u32, u32) { (cell.row, cell.col) }
+fn cell_key(cell: &XlsxCell) -> (u32, u32) {
+    (cell.row, cell.col)
+}
 
 fn diff_cell(old: &XlsxCell, new: &XlsxCell) -> Option<XlsxCellDiff> {
     if old.value == new.value {
@@ -326,7 +328,11 @@ fn absorb_cell_diff(mut a: XlsxCellDiff, b: XlsxCellDiff) -> XlsxCellDiff {
 
 fn diff_sheet(old: &XlsxSheet, new: &XlsxSheet) -> Option<XlsxSheetDiff> {
     let cells = between_named(&old.cells, &new.cells, cell_key, diff_cell);
-    if cells.is_none() { None } else { Some(XlsxSheetDiff { cells }) }
+    if cells.is_none() {
+        None
+    } else {
+        Some(XlsxSheetDiff { cells })
+    }
 }
 
 fn apply_sheet(sheet: &mut XlsxSheet, diff: &XlsxSheetDiff) {
@@ -387,7 +393,11 @@ fn absorb_shared_strings_diff(a: XlsxSharedStringsDiff, b: XlsxSharedStringsDiff
 fn diff_workbook(base: &XlsxWorkbook, other: &XlsxWorkbook) -> Option<XlsxWorkbookDiff> {
     let sheets = between_named(&base.sheets, &other.sheets, |s| s.name.clone(), diff_sheet);
     let shared_strings = diff_shared_strings(&base.shared_strings, &other.shared_strings);
-    if sheets.is_none() && shared_strings.is_none() { None } else { Some(XlsxWorkbookDiff { sheets, shared_strings }) }
+    if sheets.is_none() && shared_strings.is_none() {
+        None
+    } else {
+        Some(XlsxWorkbookDiff { sheets, shared_strings })
+    }
 }
 
 fn apply_workbook_diff(workbook: &mut XlsxWorkbook, diff: &XlsxWorkbookDiff) {
@@ -400,10 +410,7 @@ fn apply_workbook_diff(workbook: &mut XlsxWorkbook, diff: &XlsxWorkbookDiff) {
 }
 
 fn inverse_workbook_diff(base: &XlsxWorkbook, diff: &XlsxWorkbookDiff) -> XlsxWorkbookDiff {
-    XlsxWorkbookDiff {
-        sheets: diff.sheets.as_ref().map(|sd| inverse_named(&base.sheets, sd, |s| s.name.clone(), inverse_sheet)),
-        shared_strings: diff.shared_strings.as_ref().map(|ssd| inverse_shared_strings(&base.shared_strings, ssd)),
-    }
+    XlsxWorkbookDiff { sheets: diff.sheets.as_ref().map(|sd| inverse_named(&base.sheets, sd, |s| s.name.clone(), inverse_sheet)), shared_strings: diff.shared_strings.as_ref().map(|ssd| inverse_shared_strings(&base.shared_strings, ssd)) }
 }
 
 fn absorb_workbook_diff(a: XlsxWorkbookDiff, b: XlsxWorkbookDiff) -> XlsxWorkbookDiff {
@@ -442,17 +449,18 @@ fn absorb_ct_entries(a: XlsxOpcCtEntriesDiff, b: XlsxOpcCtEntriesDiff) -> XlsxOp
 fn diff_content_types(old: &OpcContentTypes, new: &OpcContentTypes) -> Option<XlsxOpcContentTypesDiff> {
     let defaults = diff_ct_entries(&old.defaults, &new.defaults);
     let overrides = diff_ct_entries(&old.overrides, &new.overrides);
-    if defaults.is_none() && overrides.is_none() { None } else { Some(XlsxOpcContentTypesDiff { defaults, overrides }) }
+    if defaults.is_none() && overrides.is_none() {
+        None
+    } else {
+        Some(XlsxOpcContentTypesDiff { defaults, overrides })
+    }
 }
 
 fn diff_part(old: &OpcPart, new: &OpcPart) -> Option<XlsxOpcPartDiff> {
     if old == new {
         return None;
     }
-    Some(XlsxOpcPartDiff {
-        content_type: (old.content_type != new.content_type).then(|| new.content_type.clone()),
-        bytes: (old.bytes != new.bytes).then(|| new.bytes.clone()),
-    })
+    Some(XlsxOpcPartDiff { content_type: (old.content_type != new.content_type).then(|| new.content_type.clone()), bytes: (old.bytes != new.bytes).then(|| new.bytes.clone()) })
 }
 
 fn apply_part(part: &mut OpcPart, diff: &XlsxOpcPartDiff) {
@@ -471,10 +479,7 @@ fn part_with_diff_applied(part: &OpcPart, diff: &XlsxOpcPartDiff) -> OpcPart {
 }
 
 fn inverse_part(base: &OpcPart, diff: &XlsxOpcPartDiff) -> XlsxOpcPartDiff {
-    XlsxOpcPartDiff {
-        content_type: diff.content_type.as_ref().map(|_| base.content_type.clone()),
-        bytes: diff.bytes.as_ref().map(|_| base.bytes.clone()),
-    }
+    XlsxOpcPartDiff { content_type: diff.content_type.as_ref().map(|_| base.content_type.clone()), bytes: diff.bytes.as_ref().map(|_| base.bytes.clone()) }
 }
 
 fn absorb_part_diff(mut a: XlsxOpcPartDiff, b: XlsxOpcPartDiff) -> XlsxOpcPartDiff {
@@ -495,11 +500,7 @@ fn diff_rel(old: &OpcRelationship, new: &OpcRelationship) -> Option<XlsxOpcRelDi
     if old == new {
         return None;
     }
-    Some(XlsxOpcRelDiff {
-        rel_type: (old.rel_type != new.rel_type).then(|| new.rel_type.clone()),
-        target: (old.target != new.target).then(|| new.target.clone()),
-        target_mode: (old.target_mode != new.target_mode).then_some(new.target_mode),
-    })
+    Some(XlsxOpcRelDiff { rel_type: (old.rel_type != new.rel_type).then(|| new.rel_type.clone()), target: (old.target != new.target).then(|| new.target.clone()), target_mode: (old.target_mode != new.target_mode).then_some(new.target_mode) })
 }
 
 fn apply_rel(rel: &mut OpcRelationship, diff: &XlsxOpcRelDiff) {
@@ -515,11 +516,7 @@ fn apply_rel(rel: &mut OpcRelationship, diff: &XlsxOpcRelDiff) {
 }
 
 fn inverse_rel(base: &OpcRelationship, diff: &XlsxOpcRelDiff) -> XlsxOpcRelDiff {
-    XlsxOpcRelDiff {
-        rel_type: diff.rel_type.as_ref().map(|_| base.rel_type.clone()),
-        target: diff.target.as_ref().map(|_| base.target.clone()),
-        target_mode: diff.target_mode.map(|_| base.target_mode),
-    }
+    XlsxOpcRelDiff { rel_type: diff.rel_type.as_ref().map(|_| base.rel_type.clone()), target: diff.target.as_ref().map(|_| base.target.clone()), target_mode: diff.target_mode.map(|_| base.target_mode) }
 }
 
 fn absorb_rel_diff(mut a: XlsxOpcRelDiff, b: XlsxOpcRelDiff) -> XlsxOpcRelDiff {
@@ -576,7 +573,11 @@ fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap
             added.push((owner.clone(), list.clone()));
         }
     }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(XlsxOpcRelationshipsDiff { removed, modified, added }) }
+    if removed.is_empty() && modified.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(XlsxOpcRelationshipsDiff { removed, modified, added })
+    }
 }
 
 fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &XlsxOpcRelationshipsDiff) {
@@ -611,20 +612,18 @@ fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &Xl
 }
 
 fn absorb_relationships(d1: XlsxOpcRelationshipsDiff, d2: XlsxOpcRelationshipsDiff) -> XlsxOpcRelationshipsDiff {
-    absorb_named(
-        d1,
-        d2,
-        |(owner, _)| owner.clone(),
-        absorb_rel_list_diff,
-        |(_, list), diff| *list = rel_list_with_diff_applied(list, diff),
-    )
+    absorb_named(d1, d2, |(owner, _)| owner.clone(), absorb_rel_list_diff, |(_, list), diff| *list = rel_list_with_diff_applied(list, diff))
 }
 
 fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<XlsxOpcDiff> {
     let content_types = diff_content_types(&base.content_types, &other.content_types);
     let parts = diff_parts(&base.parts, &other.parts);
     let relationships = diff_relationships(&base.relationships, &other.relationships);
-    if content_types.is_none() && parts.is_none() && relationships.is_none() { None } else { Some(XlsxOpcDiff { content_types, parts, relationships }) }
+    if content_types.is_none() && parts.is_none() && relationships.is_none() {
+        None
+    } else {
+        Some(XlsxOpcDiff { content_types, parts, relationships })
+    }
 }
 
 fn apply_opc_diff(opc: &mut OpcPackage, diff: &XlsxOpcDiff) {
@@ -646,10 +645,10 @@ fn apply_opc_diff(opc: &mut OpcPackage, diff: &XlsxOpcDiff) {
 
 fn inverse_opc_diff(base: &OpcPackage, diff: &XlsxOpcDiff) -> XlsxOpcDiff {
     XlsxOpcDiff {
-        content_types: diff.content_types.as_ref().map(|d| XlsxOpcContentTypesDiff {
-            defaults: d.defaults.as_ref().map(|dd| inverse_ct_entries(&base.content_types.defaults, dd)),
-            overrides: d.overrides.as_ref().map(|dd| inverse_ct_entries(&base.content_types.overrides, dd)),
-        }),
+        content_types: diff
+            .content_types
+            .as_ref()
+            .map(|d| XlsxOpcContentTypesDiff { defaults: d.defaults.as_ref().map(|dd| inverse_ct_entries(&base.content_types.defaults, dd)), overrides: d.overrides.as_ref().map(|dd| inverse_ct_entries(&base.content_types.overrides, dd)) }),
         parts: diff.parts.as_ref().map(|d| inverse_named(&base.parts, d, |p| p.path.clone(), inverse_part)),
         relationships: diff.relationships.as_ref().map(|d| inverse_relationships(&base.relationships, d)),
     }
@@ -718,10 +717,7 @@ impl MutationDiff<XlsxSnapshot> for XlsxDiff {
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<XlsxSnapshot> for XlsxDiff {
     fn inverse(&self, base: &XlsxSnapshot) -> Self {
-        XlsxDiff {
-            opc: self.opc.as_ref().map(|d| inverse_opc_diff(&base.opc, d)),
-            workbook: self.workbook.as_ref().map(|d| inverse_workbook_diff(&base.workbook, d)),
-        }
+        XlsxDiff { opc: self.opc.as_ref().map(|d| inverse_opc_diff(&base.opc, d)), workbook: self.workbook.as_ref().map(|d| inverse_workbook_diff(&base.workbook, d)) }
     }
 
     fn between(base: &XlsxSnapshot, other: &XlsxSnapshot) -> Self {
@@ -759,13 +755,7 @@ pub fn diff_rename_sheet(old_sheet: &XlsxSheet, new_name: &str) -> XlsxDiff {
         return XlsxDiff::default();
     }
     let renamed = XlsxSheet { name: new_name.to_string(), cells: old_sheet.cells.clone() };
-    XlsxDiff {
-        opc: None,
-        workbook: Some(XlsxWorkbookDiff {
-            sheets: Some(XlsxSheetsDiff { removed: vec![old_sheet.name.clone()], added: vec![renamed], ..Default::default() }),
-            shared_strings: None,
-        }),
-    }
+    XlsxDiff { opc: None, workbook: Some(XlsxWorkbookDiff { sheets: Some(XlsxSheetsDiff { removed: vec![old_sheet.name.clone()], added: vec![renamed], ..Default::default() }), shared_strings: None }) }
 }
 
 /// 🧩 Builds the diff for setting (inserting or replacing) one cell's value in sheet `sheet_name`.
@@ -775,29 +765,20 @@ pub fn diff_set_cell(sheet: &XlsxSheet, row: u32, col: u32, value: XlsxCellValue
         Some(_) => XlsxSheetDiff { cells: Some(XlsxCellsDiff { modified: vec![NamedModified { key: (row, col), diff: XlsxCellDiff { value: Some(value) } }], ..Default::default() }) },
         None => XlsxSheetDiff { cells: Some(XlsxCellsDiff { added: vec![XlsxCell { row, col, value }], ..Default::default() }) },
     };
-    XlsxDiff {
-        opc: None,
-        workbook: Some(XlsxWorkbookDiff { sheets: Some(XlsxSheetsDiff { modified: vec![NamedModified { key: sheet.name.clone(), diff: sheet_diff }], ..Default::default() }), shared_strings: None }),
-    }
+    XlsxDiff { opc: None, workbook: Some(XlsxWorkbookDiff { sheets: Some(XlsxSheetsDiff { modified: vec![NamedModified { key: sheet.name.clone(), diff: sheet_diff }], ..Default::default() }), shared_strings: None }) }
 }
 
 /// 🧩 Builds the diff for removing the cell at `(row, col)` in sheet `sheet_name`.
 pub fn diff_remove_cell(sheet_name: &str, row: u32, col: u32) -> XlsxDiff {
     let sheet_diff = XlsxSheetDiff { cells: Some(XlsxCellsDiff { removed: vec![(row, col)], ..Default::default() }) };
-    XlsxDiff {
-        opc: None,
-        workbook: Some(XlsxWorkbookDiff { sheets: Some(XlsxSheetsDiff { modified: vec![NamedModified { key: sheet_name.to_string(), diff: sheet_diff }], ..Default::default() }), shared_strings: None }),
-    }
+    XlsxDiff { opc: None, workbook: Some(XlsxWorkbookDiff { sheets: Some(XlsxSheetsDiff { modified: vec![NamedModified { key: sheet_name.to_string(), diff: sheet_diff }], ..Default::default() }), shared_strings: None }) }
 }
 
 /// 🧩 Builds the diff for appending a new shared string, returning its assigned index alongside
 /// the diff (callers building `SharedString(idx)` cell values need the index up front).
 pub fn diff_insert_shared_string(existing_len: usize, value: &str) -> (usize, XlsxDiff) {
     let idx = existing_len;
-    let diff = XlsxDiff {
-        opc: None,
-        workbook: Some(XlsxWorkbookDiff { sheets: None, shared_strings: Some(XlsxSharedStringsDiff { added: vec![(idx, value.to_string())], ..Default::default() }) }),
-    };
+    let diff = XlsxDiff { opc: None, workbook: Some(XlsxWorkbookDiff { sheets: None, shared_strings: Some(XlsxSharedStringsDiff { added: vec![(idx, value.to_string())], ..Default::default() }) }) };
     (idx, diff)
 }
 
@@ -926,12 +907,7 @@ fn enc_triple<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_key: impl Fn(&K) -
     let added = triple.added.iter().map(|t| enc_item(t)).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_triple<K, D, T>(
-    body: &str,
-    dec_key: impl Fn(&str) -> Result<K, String>,
-    dec_diff: impl Fn(&str) -> Result<D, String>,
-    dec_item: impl Fn(&str) -> Result<T, String>,
-) -> Result<NamedTripleDiff<K, D, T>, String> {
+fn dec_triple<K, D, T>(body: &str, dec_key: impl Fn(&str) -> Result<K, String>, dec_diff: impl Fn(&str) -> Result<D, String>, dec_item: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().map(|s| dec_key(s)).collect::<Result<Vec<_>, String>>()?;
@@ -1122,12 +1098,7 @@ pub(crate) fn dec_rel(s: &str) -> Result<OpcRelationship, String> {
     Ok(OpcRelationship { id: dec_str(id)?, rel_type: dec_str(rel_type)?, target: dec_str(target)?, target_mode: dec_target_mode(mode)? })
 }
 fn enc_rel_diff(d: &XlsxOpcRelDiff) -> String {
-    format!(
-        "[{},{},{}]",
-        encode_option(&d.rel_type, |v| enc_str(v)),
-        encode_option(&d.target, |v| enc_str(v)),
-        encode_option(&d.target_mode, |v| enc_target_mode(v)),
-    )
+    format!("[{},{},{}]", encode_option(&d.rel_type, |v| enc_str(v)), encode_option(&d.target, |v| enc_str(v)), encode_option(&d.target_mode, |v| enc_target_mode(v)),)
 }
 fn dec_rel_diff(s: &str) -> Result<XlsxOpcRelDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -1157,12 +1128,7 @@ fn dec_relationships_diff(s: &str) -> Result<XlsxOpcRelationshipsDiff, String> {
     dec_triple(s, dec_str, dec_rel_list_diff, dec_owner_rels)
 }
 fn enc_opc_diff(d: &XlsxOpcDiff) -> String {
-    format!(
-        "[{},{},{}]",
-        encode_option(&d.content_types, |v| enc_content_types_diff(v)),
-        encode_option(&d.parts, |v| enc_parts_diff(v)),
-        encode_option(&d.relationships, |v| enc_relationships_diff(v)),
-    )
+    format!("[{},{},{}]", encode_option(&d.content_types, |v| enc_content_types_diff(v)), encode_option(&d.parts, |v| enc_parts_diff(v)), encode_option(&d.relationships, |v| enc_relationships_diff(v)),)
 }
 fn dec_opc_diff(s: &str) -> Result<XlsxOpcDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -1360,13 +1326,7 @@ pub(crate) fn dec_sheet_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSh
 /// INDEX-positional collection (unlike docx's `body`/`runs`/`rows`/`cells`) -- `shared_strings` is
 /// modeled as a NAME-keyed (here `usize`-keyed) `NamedTripleDiff` too, so only this one generic
 /// binary twin is needed (docx's sibling `IndexedTripleDiff` binary twin has no xlsx counterpart).
-fn enc_named_triple_bin<K, D, T>(
-    diff: &NamedTripleDiff<K, D, T>,
-    enc_k: impl Fn(&K, &mut Vec<u8>),
-    enc_d: impl Fn(&D, &mut Vec<u8>),
-    enc_t: impl Fn(&T, &mut Vec<u8>),
-    out: &mut Vec<u8>,
-) {
+fn enc_named_triple_bin<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K, &mut Vec<u8>), enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
     for k in &diff.removed {
         enc_k(k, out);
@@ -1430,8 +1390,12 @@ fn dec_cell_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCellDiff,
     Ok(XlsxCellDiff { value })
 }
 
-fn enc_cells_diff_bin(d: &XlsxCellsDiff, out: &mut Vec<u8>) { enc_named_triple_bin(d, enc_cell_key_bin, enc_cell_diff_bin, enc_cell_bin, out) }
-fn dec_cells_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCellsDiff, String> { dec_named_triple_bin(reader, dec_cell_key_bin, dec_cell_diff_bin, dec_cell_bin) }
+fn enc_cells_diff_bin(d: &XlsxCellsDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, enc_cell_key_bin, enc_cell_diff_bin, enc_cell_bin, out)
+}
+fn dec_cells_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCellsDiff, String> {
+    dec_named_triple_bin(reader, dec_cell_key_bin, dec_cell_diff_bin, dec_cell_bin)
+}
 
 fn enc_sheet_diff_bin(d: &XlsxSheetDiff, out: &mut Vec<u8>) {
     out.push(if d.cells.is_some() { 1 } else { 0 });
@@ -1444,8 +1408,12 @@ fn dec_sheet_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSheetDif
     Ok(XlsxSheetDiff { cells })
 }
 
-fn enc_sheets_diff_bin(d: &XlsxSheetsDiff, out: &mut Vec<u8>) { enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_sheet_diff_bin, enc_sheet_bin, out) }
-fn dec_sheets_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSheetsDiff, String> { dec_named_triple_bin(reader, |r| read_str_lp(r), dec_sheet_diff_bin, dec_sheet_bin) }
+fn enc_sheets_diff_bin(d: &XlsxSheetsDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_sheet_diff_bin, enc_sheet_bin, out)
+}
+fn dec_sheets_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSheetsDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_sheet_diff_bin, dec_sheet_bin)
+}
 
 fn enc_shared_string_item_bin(item: &(usize, String), out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, item.0 as u64);
@@ -1631,8 +1599,12 @@ impl protocol::DiffCodec for XlsxDiff {
     /// own recursive binary payload follows in that fixed order (see `🔖️BinaryCodecs` above).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u8 = 0;
-        if self.opc.is_some() { flags |= 0b01; }
-        if self.workbook.is_some() { flags |= 0b10; }
+        if self.opc.is_some() {
+            flags |= 0b01;
+        }
+        if self.workbook.is_some() {
+            flags |= 0b10;
+        }
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
         if let Some(opc) = &self.opc {
             enc_opc_diff_bin(opc, &mut out);

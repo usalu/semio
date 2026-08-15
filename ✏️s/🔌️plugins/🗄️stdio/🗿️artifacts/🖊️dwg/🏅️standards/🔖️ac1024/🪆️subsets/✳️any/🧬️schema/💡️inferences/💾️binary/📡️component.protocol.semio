@@ -4,6 +4,10 @@ version 1
 schema s.stdio.dwg.inference
 start frame
 framing magic 0x8953f83f7d340d0b
+
+struct DwgStructure { layer_count u64 entity_count u64 geometry_value_count u64 geometry_index_count u64 text_character_count u64 codepage u64 version utf8 }
+struct DwgInference { structure DwgStructure }
+
 header fixed 32
 field format_major u16
 field format_minor u16

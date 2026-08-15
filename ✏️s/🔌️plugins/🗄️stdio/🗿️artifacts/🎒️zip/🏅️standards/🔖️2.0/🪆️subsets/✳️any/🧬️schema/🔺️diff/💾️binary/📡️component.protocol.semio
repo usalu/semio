@@ -5,27 +5,6 @@ schema stdio.zip
 start diff
 framing record
 
-# P2-P2: REAL binary diff frame, replacing F6's `print_diff().into_bytes()` text-as-binary
-# shortcut (per the P2-W0 census, 100% of stdio's `DiffCodec::encode` impls were still on it — see
-# ../🦀️component.rs's upgraded `impl protocol::DiffCodec for ZipDiff`, `#region 🔖️BinaryDiffCodec`).
-# `ZipDiff` is FLAT — unlike json's self-recursive `JsonValue`, neither `comment` nor `entries` is
-# a recursive value type, so the top-level shape genuinely IS two independent optional sections,
-# and the header below is real, walkable, non-opaque:
-#
-# `format` (=1) + `has_comment` (0/1) + `has_entries` (0/1) as three real fixed `u8` fields.
-#
-# What stays opaque is only the VARIABLE part: when present, `comment` is a length-prefixed UTF-8
-# string, and `entries` is three runtime-counted lists (`removed`: names; `modified`: name +
-# sparse per-field patch; `added`: index + a whole 14-field `ZipEntry`) — this dialect's `Array`
-# primitive repeats one FIXED-WIDTH `Prim`, not a repeated multi-field RECORD of varying per-item
-# shape, so a count-prefixed list of `ZipEntryDiff`/`ZipEntry` records has no field-by-field walk
-# at this declarative layer today (the same category of gap as json's `Prim::Ref` recursion —
-# filed in this wave's `mechanism_gaps`). The Rust `encode_diff`/`decode_diff` side IS genuinely
-# real, structured, recursively-typed binary (`enc_entry_bin`/`enc_entries_diff_bin` in the same
-# file, LEB128-varint-framed via `store::pack_rt::write_varint_u64`/`store::ByteReader`) — this
-# protocol file honestly bounds only what it can field-by-field walk.
-
+# 🔺️ Shared wire DslValue containing archive comment and name-keyed logical entry changes.
 field format u8
-field has_comment u8
-field has_entries u8
-chain payload bytes
+chain diff bytes

@@ -43,18 +43,34 @@ impl SemioObjectDiff {
 impl MutationDiff<SemioObjectSnapshot> for SemioObjectDiff {
     fn apply(&self, base: &SemioObjectSnapshot) -> SemioObjectSnapshot {
         let mut next = base.clone();
-        if let Some(t) = &self.transform { next.transform = t.clone(); }
-        if let Some(b) = &self.brep { next.brep = b.clone(); }
-        if let Some(m) = &self.mesh { next.mesh = m.clone(); }
-        if let Some(p) = &self.properties { next.properties = p.clone(); }
+        if let Some(t) = &self.transform {
+            next.transform = t.clone();
+        }
+        if let Some(b) = &self.brep {
+            next.brep = b.clone();
+        }
+        if let Some(m) = &self.mesh {
+            next.mesh = m.clone();
+        }
+        if let Some(p) = &self.properties {
+            next.properties = p.clone();
+        }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.transform.is_some() { self.transform = other.transform; }
-        if other.brep.is_some() { self.brep = other.brep; }
-        if other.mesh.is_some() { self.mesh = other.mesh; }
-        if other.properties.is_some() { self.properties = other.properties; }
+        if other.transform.is_some() {
+            self.transform = other.transform;
+        }
+        if other.brep.is_some() {
+            self.brep = other.brep;
+        }
+        if other.mesh.is_some() {
+            self.mesh = other.mesh;
+        }
+        if other.properties.is_some() {
+            self.properties = other.properties;
+        }
     }
 }
 
@@ -76,26 +92,38 @@ impl protocol::command::DiffAlgebra<SemioObjectSnapshot> for SemioObjectDiff {
             properties: self.properties.as_ref().map(|_| base.properties.clone()),
         }
     }
-    fn is_empty(&self) -> bool { self.is_empty_diff() }
+    fn is_empty(&self) -> bool {
+        self.is_empty_diff()
+    }
 }
 //#endregion 🔖️Diff
 
 //#region 🔖️HandcraftedDiffCodec
-use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{enc_child_opt, dec_child_opt, enc_transform, dec_transform};
+use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{dec_child_opt, dec_transform, enc_child_opt, enc_transform};
 
 /// 🧾️ `<hex-flag><line>` per field, `\n`-joined, empty string = no-op diff — real, not decorative.
 /// `t=`/`b=`/`m=`/`p=` prefixes; a field absent from the diff simply has no line.
 fn print_object_diff(d: &SemioObjectDiff) -> String {
     let mut lines = Vec::new();
-    if let Some(t) = &d.transform { lines.push(format!("t={}", enc_transform(t))); }
-    if let Some(b) = &d.brep { lines.push(format!("b={}", enc_child_opt(b))); }
-    if let Some(m) = &d.mesh { lines.push(format!("m={}", enc_child_opt(m))); }
-    if let Some(p) = &d.properties { lines.push(format!("p={}", enc_child_opt(p))); }
+    if let Some(t) = &d.transform {
+        lines.push(format!("t={}", enc_transform(t)));
+    }
+    if let Some(b) = &d.brep {
+        lines.push(format!("b={}", enc_child_opt(b)));
+    }
+    if let Some(m) = &d.mesh {
+        lines.push(format!("m={}", enc_child_opt(m)));
+    }
+    if let Some(p) = &d.properties {
+        lines.push(format!("p={}", enc_child_opt(p)));
+    }
     lines.join(";")
 }
 fn parse_object_diff(line: &str) -> Result<SemioObjectDiff, String> {
     let mut d = SemioObjectDiff::default();
-    if line.is_empty() { return Ok(d); }
+    if line.is_empty() {
+        return Ok(d);
+    }
     for field in line.split(';') {
         let (tag, rest) = field.split_once('=').ok_or_else(|| format!("object diff: missing '=' in {field:?}"))?;
         match tag {
@@ -110,7 +138,9 @@ fn parse_object_diff(line: &str) -> Result<SemioObjectDiff, String> {
 }
 
 impl protocol::DiffCodec for SemioObjectDiff {
-    fn print_diff(&self) -> String { print_object_diff(self) }
+    fn print_diff(&self) -> String {
+        print_object_diff(self)
+    }
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_object_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
@@ -118,22 +148,38 @@ impl protocol::DiffCodec for SemioObjectDiff {
     /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=transform, bit1=brep,
     /// bit2=mesh, bit3=properties), then each present field's own real encoding in bit order.
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{write_transform, write_child_opt};
+        use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{write_child_opt, write_transform};
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence: u8 = 0;
-        if self.transform.is_some() { presence |= 0b0001; }
-        if self.brep.is_some() { presence |= 0b0010; }
-        if self.mesh.is_some() { presence |= 0b0100; }
-        if self.properties.is_some() { presence |= 0b1000; }
+        if self.transform.is_some() {
+            presence |= 0b0001;
+        }
+        if self.brep.is_some() {
+            presence |= 0b0010;
+        }
+        if self.mesh.is_some() {
+            presence |= 0b0100;
+        }
+        if self.properties.is_some() {
+            presence |= 0b1000;
+        }
         let mut out = vec![DIFF_BINARY_FORMAT, presence];
-        if let Some(t) = &self.transform { write_transform(&mut out, t); }
-        if let Some(b) = &self.brep { write_child_opt(&mut out, b); }
-        if let Some(m) = &self.mesh { write_child_opt(&mut out, m); }
-        if let Some(p) = &self.properties { write_child_opt(&mut out, p); }
+        if let Some(t) = &self.transform {
+            write_transform(&mut out, t);
+        }
+        if let Some(b) = &self.brep {
+            write_child_opt(&mut out, b);
+        }
+        if let Some(m) = &self.mesh {
+            write_child_opt(&mut out, m);
+        }
+        if let Some(p) = &self.properties {
+            write_child_opt(&mut out, p);
+        }
         Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{read_transform, read_child_opt};
+        use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{read_child_opt, read_transform};
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated".to_string() });
@@ -178,8 +224,8 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioObjectDiff> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::DiffCodec;
     use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::demo_object_snapshot;
+    use protocol::DiffCodec;
 
     #[test]
     fn apply_replaces_touched_fields_only() {

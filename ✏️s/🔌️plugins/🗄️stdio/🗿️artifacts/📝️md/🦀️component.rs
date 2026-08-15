@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::md::schema::snapshot::MdSnapshot;
-pub use crate::artifacts::md::schema::MdArtifact;
 pub use crate::artifacts::md::schema::diff::MdDiff;
 pub use crate::artifacts::md::schema::mutations::MdMutation;
+pub use crate::artifacts::md::schema::snapshot::MdSnapshot;
+pub use crate::artifacts::md::schema::MdArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_MD_DOCUMENT_SCHEMA: &str = "stdio.md";
@@ -27,7 +27,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: STDIO_MD_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
@@ -128,9 +128,9 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::md::standards::v_commonmark::subsets::any::io::io_registry as v_commonmark;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -139,10 +139,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("MdComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("MdComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

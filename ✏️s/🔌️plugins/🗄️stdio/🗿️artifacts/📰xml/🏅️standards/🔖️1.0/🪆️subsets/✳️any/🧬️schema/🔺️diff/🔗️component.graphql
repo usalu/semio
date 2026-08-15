@@ -5,7 +5,7 @@ for the absent/null/set distinction. """
 type XmlDiff {
   prolog: [XmlNode!]
   declaration: XmlDeclaration
-  doctype: String
+  doctype: XmlDoctype
   root: XmlNodeDiff
 }
 

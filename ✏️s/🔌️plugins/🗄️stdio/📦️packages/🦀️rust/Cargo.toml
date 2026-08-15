@@ -21,6 +21,8 @@ path = "📦️glue.rs"
 [dependencies]
 async-trait = "0.1.88"
 blake3 = "1"
+flate2 = { workspace = true }
+libz-sys = { workspace = true }
 pollster = "0.4.0"
 semio-framework-3d = { path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust", package = "semio-framework-3d" }
 semio-framework-geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
@@ -37,6 +39,9 @@ thiserror = { workspace = true }
 
 [dev-dependencies]
 criterion = { version = "0.5", default-features = false, features = ["html_reports"] }
+miniz_oxide = "=0.8.9"
+zlib-rs = "=0.6.3"
+zopfli = "=0.8.3"
 
 [[bench]]
 name = "brep_kernel"

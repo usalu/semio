@@ -9,7 +9,10 @@
 //! equivalent and are dropped (documented — same architectural boundary the import leaf
 //! describes for BLOCKS/INSERT).
 
-use crate::artifacts::dxf::{DxfSnapshot, schema::snapshot::{DxfEntity, DxfHeaderVar, DxfLayer, DxfTables, DxfValue}};
+use crate::artifacts::dxf::{
+    schema::snapshot::{DxfEntity, DxfHeaderVar, DxfLayer, DxfTables, DxfValue},
+    DxfSnapshot,
+};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment, SemioDrawingSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
@@ -46,8 +49,15 @@ fn flatten_to_polyline(segments: &[PathSegment]) -> (Vec<SemioPoint2>, bool) {
     let mut start = SemioPoint2::default();
     for seg in segments {
         match *seg {
-            PathSegment::MoveTo { to } => { points.push(to); cur = to; start = to; }
-            PathSegment::LineTo { to } => { points.push(to); cur = to; }
+            PathSegment::MoveTo { to } => {
+                points.push(to);
+                cur = to;
+                start = to;
+            }
+            PathSegment::LineTo { to } => {
+                points.push(to);
+                cur = to;
+            }
             PathSegment::CubicTo { c1, c2, to } => {
                 for i in 1..=32 {
                     let t = i as f64 / 32.0;
@@ -79,7 +89,9 @@ fn flatten_to_polyline(segments: &[PathSegment]) -> (Vec<SemioPoint2>, bool) {
                     if let Some((cx, cy)) = arc_center(cur, to, rx) {
                         let a0 = (cur.y - cy).atan2(cur.x - cx);
                         let mut a1 = (to.y - cy).atan2(to.x - cx);
-                        if a1 < a0 { a1 += std::f64::consts::TAU; }
+                        if a1 < a0 {
+                            a1 += std::f64::consts::TAU;
+                        }
                         for i in 1..=32 {
                             let t = i as f64 / 32.0;
                             let a = a0 + (a1 - a0) * t;
@@ -93,7 +105,10 @@ fn flatten_to_polyline(segments: &[PathSegment]) -> (Vec<SemioPoint2>, bool) {
                 }
                 cur = to;
             }
-            PathSegment::Close => { closed = true; cur = start; }
+            PathSegment::Close => {
+                closed = true;
+                cur = start;
+            }
         }
     }
     (points, closed)
@@ -106,7 +121,9 @@ fn arc_center(p0: SemioPoint2, p1: SemioPoint2, r: f64) -> Option<(f64, f64)> {
     let (mx, my) = ((p0.x + p1.x) / 2.0, (p0.y + p1.y) / 2.0);
     let (dx, dy) = (p1.x - p0.x, p1.y - p0.y);
     let d = (dx * dx + dy * dy).sqrt();
-    if d < EPS || d > 2.0 * r { return None; }
+    if d < EPS || d > 2.0 * r {
+        return None;
+    }
     let h = (r * r - (d / 2.0) * (d / 2.0)).max(0.0).sqrt();
     let (ux, uy) = (-dy / d, dx / d);
     Some((mx + ux * h, my + uy * h))
@@ -121,7 +138,9 @@ fn dxf_entity_from_node(node: &DrawNode, layer: &str) -> Option<DxfEntity> {
                 return Some(DxfEntity::Circle { center: [cx, cy, 0.0], radius: r, layer: layer.into(), unknown_group_codes: vec![] });
             }
             let (points, closed) = flatten_to_polyline(segments);
-            if points.len() < 2 { return None; }
+            if points.len() < 2 {
+                return None;
+            }
             let vertices = points.iter().map(|p| crate::artifacts::dxf::schema::snapshot::DxfVertex { x: p.x, y: p.y, z: 0.0, bulge: 0.0, unknown_group_codes: vec![] }).collect();
             Some(DxfEntity::Polyline { vertices, closed, layer: layer.into(), unknown_group_codes: vec![] })
         }
@@ -132,8 +151,16 @@ fn dxf_entity_from_node(node: &DrawNode, layer: &str) -> Option<DxfEntity> {
 
 fn collect_entities(node: &DrawNode, layer: &str, out: &mut Vec<DxfEntity>) {
     match node {
-        DrawNode::Group { children, .. } => { for c in children { collect_entities(c, layer, out); } }
-        other => { if let Some(e) = dxf_entity_from_node(other, layer) { out.push(e); } }
+        DrawNode::Group { children, .. } => {
+            for c in children {
+                collect_entities(c, layer, out);
+            }
+        }
+        other => {
+            if let Some(e) = dxf_entity_from_node(other, layer) {
+                out.push(e);
+            }
+        }
     }
 }
 //#endregion 🔖️EntityBuild

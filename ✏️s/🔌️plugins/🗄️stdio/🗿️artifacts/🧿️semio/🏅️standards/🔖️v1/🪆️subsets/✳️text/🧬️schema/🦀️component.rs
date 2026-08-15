@@ -17,7 +17,9 @@ pub struct SemioTextArtifact {
 }
 
 impl Default for SemioTextArtifact {
-    fn default() -> Self { Self::from_snapshot(SemioTextSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(SemioTextSnapshot::default())
+    }
 }
 
 impl SemioTextArtifact {
@@ -68,18 +70,22 @@ pub fn semio_text_artifact_schema_descriptor() -> schema::ArtifactSchemaDescript
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::text::schema::diff::SemioTextDiff;
     use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
     use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextRun, SemioTextSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioTextBuilderConstruction { snapshot: SemioTextSnapshot }
+    pub struct SemioTextBuilderConstruction {
+        snapshot: SemioTextSnapshot,
+    }
 
     //#region 🔖️TypedConstructors
     impl SemioTextBuilderConstruction {
         /// 🏗️ Starts a fresh, empty text document.
-        pub fn new() -> Self { Self { snapshot: SemioTextSnapshot::default() } }
+        pub fn new() -> Self {
+            Self { snapshot: SemioTextSnapshot::default() }
+        }
         /// 🏗️ Appends one run, in order.
         pub fn add_run(mut self, language: impl Into<String>, content: impl Into<String>, marks: Vec<SemioTextMark>) -> Self {
             self.snapshot.runs.push(SemioTextRun { language: language.into(), content: content.into(), marks });
@@ -92,8 +98,12 @@ pub mod derived_construction {
         type Snapshot = SemioTextSnapshot;
         type Mutation = SemioTextMutation;
         type Diff = SemioTextDiff;
-        fn empty() -> Self { Self { snapshot: SemioTextSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: SemioTextSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioTextSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -109,7 +119,9 @@ pub mod derived_construction {
             self.snapshot = <SemioTextDiff as protocol::MutationDiff<SemioTextSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 
     //#region 🔖️Tests
@@ -120,11 +132,7 @@ pub mod derived_construction {
 
         #[test]
         fn typed_constructors_build_a_populated_snapshot() {
-            let snapshot = SemioTextBuilderConstruction::new()
-                .add_run("en", "hello", vec![])
-                .add_run("en", "world", vec![SemioTextMark { kind: SemioTextMarkKind::Bold, href: String::new() }])
-                .build()
-                .expect("build");
+            let snapshot = SemioTextBuilderConstruction::new().add_run("en", "hello", vec![]).add_run("en", "world", vec![SemioTextMark { kind: SemioTextMarkKind::Bold, href: String::new() }]).build().expect("build");
             assert_eq!(snapshot.runs.len(), 2);
             assert_eq!(snapshot.runs[1].marks.len(), 1);
         }
@@ -136,11 +144,13 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioTextParts { pub snapshot: Option<SemioTextSnapshot> }
+    pub struct SemioTextParts {
+        pub snapshot: Option<SemioTextSnapshot>,
+    }
 
     pub struct SemioTextAnalyzerAnalysis;
 
@@ -152,10 +162,18 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
-                    if text.contains(STDIO_SEMIOTEXT_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                    if text.contains(STDIO_SEMIOTEXT_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }

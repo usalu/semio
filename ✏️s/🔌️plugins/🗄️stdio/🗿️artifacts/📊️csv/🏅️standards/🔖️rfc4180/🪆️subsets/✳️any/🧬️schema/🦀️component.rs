@@ -32,20 +32,12 @@ impl Default for CsvArtifact {
 impl CsvArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> CsvSnapshot {
-        CsvSnapshot {
-            schema: self.schema.clone(),
-            has_header: self.has_header,
-            records: self.records.clone(),
-        }
+        CsvSnapshot { schema: self.schema.clone(), has_header: self.has_header, records: self.records.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: CsvSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            has_header: snapshot.has_header,
-            records: snapshot.records,
-        }
+        Self { schema: snapshot.schema, has_header: snapshot.has_header, records: snapshot.records }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -95,8 +87,8 @@ pub fn csv_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::csv::{CsvDiff, CsvMutation, CsvSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.csv` snapshot.
@@ -131,7 +123,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -141,8 +137,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::csv::CsvSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.csv` parts.
@@ -217,22 +213,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <CsvSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }

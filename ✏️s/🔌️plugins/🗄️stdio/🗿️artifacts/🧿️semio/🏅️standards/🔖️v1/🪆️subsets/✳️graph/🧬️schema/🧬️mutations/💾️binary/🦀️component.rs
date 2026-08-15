@@ -16,11 +16,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 /// 🧾️ Keyword table + variant ordinal, 0-indexed in enum declaration order — the binary frame's
 /// `tag` byte, `📖️grammar/component.grammar.semio`'s `op` alternatives, and this array must all
 /// agree (see `committed_facet_files_parse`/`ops_grammar_conformance_law` in `🚪️io/🦀️component.rs`).
-const OP_KEYWORDS: [&str; 11] = [
-    "createNode", "deleteNode", "changeNodeKind", "changeNodeLabel", "moveNode",
-    "addNodePort", "removeNodePort", "addNodeProperty", "removeNodeProperty",
-    "createEdge", "deleteEdge",
-];
+const OP_KEYWORDS: [&str; 11] = ["createNode", "deleteNode", "changeNodeKind", "changeNodeLabel", "moveNode", "addNodePort", "removeNodePort", "addNodeProperty", "removeNodeProperty", "createEdge", "deleteEdge"];
 
 fn variant_ordinal(m: &SemioGraphMutation) -> u8 {
     match m {

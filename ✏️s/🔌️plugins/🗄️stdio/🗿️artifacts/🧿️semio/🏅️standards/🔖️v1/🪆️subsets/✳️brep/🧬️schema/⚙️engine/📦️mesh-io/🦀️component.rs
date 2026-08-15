@@ -18,18 +18,18 @@
 //! external `semio_framework_3d::engine::*` forward-edge pattern the parent `engine/component.rs`
 //! already uses.
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId;
-use semio_framework_3d::engine::MeshTransfer;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::artifacts::dwg::{dwg_drawing_to_mesh, dwg_from_bytes, dwg_to_bytes, mesh_to_dwg_drawing};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_planar_face_from_points;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
+use semio_framework_3d::engine::MeshTransfer;
 use semio_framework_mesh_engine::{mesh_from_obj, mesh_from_stl, mesh_to_obj, mesh_to_stl, GlbExporter, GlbImporter, MeshData, MeshExporter, MeshImporter};
-use crate::artifacts::dwg::{dwg_drawing_to_mesh, dwg_from_bytes, dwg_to_bytes, mesh_to_dwg_drawing};
 
 // #region 🔖️Types
 
@@ -62,11 +62,7 @@ pub fn triangle_mesh_from_transfer(transfer: &MeshTransfer) -> TriangleMesh {
     for chunk in transfer.normal.chunks_exact(3) {
         normals.push(Vec3::new(chunk[0] as f64, chunk[1] as f64, chunk[2] as f64));
     }
-    TriangleMesh {
-        positions,
-        normals,
-        indices: transfer.index.clone(),
-    }
+    TriangleMesh { positions, normals, indices: transfer.index.clone() }
 }
 
 /// 📦 Converts a [`TriangleMesh`] into framework-core [`MeshData`].
@@ -79,12 +75,7 @@ pub fn mesh_to_mesh_data(mesh: &TriangleMesh) -> MeshData {
     for n in &mesh.normals {
         normals.extend_from_slice(&[n.x as f32, n.y as f32, n.z as f32]);
     }
-    MeshData {
-        positions,
-        normals,
-        indices: mesh.indices.clone(),
-        ..MeshData::default()
-    }
+    MeshData { positions, normals, indices: mesh.indices.clone(), ..MeshData::default() }
 }
 
 /// 📦 Converts [`MeshData`] into a [`TriangleMesh`].
@@ -99,11 +90,7 @@ pub fn mesh_from_mesh_data(data: &MeshData) -> TriangleMesh {
             normals.push(Vec3::new(chunk[0] as f64, chunk[1] as f64, chunk[2] as f64));
         }
     }
-    TriangleMesh {
-        positions,
-        normals,
-        indices: data.indices.clone(),
-    }
+    TriangleMesh { positions, normals, indices: data.indices.clone() }
 }
 
 // #endregion 🔖️Convert
@@ -171,9 +158,7 @@ pub fn import_stl(data: &[u8]) -> Result<TriangleMesh, KernelError> {
     if is_ascii_stl(data) {
         read_ascii_stl(data)
     } else {
-        mesh_from_stl(data)
-            .map(|data| mesh_from_mesh_data(&data))
-            .map_err(KernelError::Operation)
+        mesh_from_stl(data).map(|data| mesh_from_mesh_data(&data)).map_err(KernelError::Operation)
     }
 }
 
@@ -195,10 +180,7 @@ pub fn export_glb(mesh: &TriangleMesh) -> Result<Vec<u8>, KernelError> {
 
 /// 📦 Decodes GLB into a [`TriangleMesh`] using [`GlbImporter`].
 pub fn import_glb(data: &[u8]) -> Result<TriangleMesh, KernelError> {
-    GlbImporter
-        .import(data)
-        .map(|data| mesh_from_mesh_data(&data))
-        .map_err(KernelError::Operation)
+    GlbImporter.import(data).map(|data| mesh_from_mesh_data(&data)).map_err(KernelError::Operation)
 }
 
 /// 📦 Encodes DWG mesh bytes from a [`TriangleMesh`].

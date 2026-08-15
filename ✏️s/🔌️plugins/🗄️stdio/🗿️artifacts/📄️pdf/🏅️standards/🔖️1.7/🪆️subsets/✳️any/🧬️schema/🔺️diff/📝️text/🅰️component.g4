@@ -1,24 +1,18 @@
-// ANTLR4 grammar for the real serde_json-tagged wire shape of `PdfDiff` (1.7) -- matches
-// ../🔣️component.json / ../🟦️component.ts field-for-field. `PdfDiff` has no dedicated OpText
-// envelope yet (F6 wave); this is plain JSON.
+// ANTLR4 grammar for PdfDiff's sparse structural logical text protocol. Recursive payloads carry
+// typed COS values, decoded stream bytes, and typed filter pipelines without JSON or native PDF.
 grammar Stdio_pdf_1_7_Diff;
 
-pdfDiff: '{' (member (',' member)*)? '}';
-member: '"declaredVersion"' ':' STRING
-      | '"info"' ':' pdfInfo
-      | '"pages"' ':' pdfPagesDiff
-      | '"objects"' ':' pdfObjectsDiff
-      | '"trailer"' ':' pdfDictDiff
-      ;
-pdfInfo: '{' (infoMember (',' infoMember)*)? '}';
-infoMember: ('"title"' | '"author"' | '"subject"' | '"keywords"' | '"creator"' | '"producer"') ':' STRING;
-pdfPagesDiff: '{' (tripleMember (',' tripleMember)*)? '}';
-pdfObjectsDiff: '{' (tripleMember (',' tripleMember)*)? '}';
-pdfDictDiff: '{' (tripleMember (',' tripleMember)*)? '}';
-tripleMember: ('"removed"' | '"modified"' | '"added"') ':' jsonArray;
+pdfDiff: field* EOF;
+field
+    : 'declared-version=' ATOM
+    | 'info=' payload
+    | 'pages=' triple
+    | 'objects=' triple
+    | 'trailer=' triple
+    ;
+triple: payload ';' payload ';' payload;
+payload: '[' payloadItem* ']';
+payloadItem: payload | ATOM | ',' | ':' | ';';
 
-jsonValue: jsonObject | jsonArray | STRING | NUMBER | 'true' | 'false' | 'null';
-jsonObject: '{' (STRING ':' jsonValue (',' STRING ':' jsonValue)*)? '}';
-jsonArray: '[' (jsonValue (',' jsonValue)*)? ']';
-STRING: '"' (~["\\] | '\\' .)* '"';
-NUMBER: '-'? [0-9]+ ('.' [0-9]+)?;
+ATOM: [A-Za-z0-9.+-]+;
+WS: ' '+ -> skip;

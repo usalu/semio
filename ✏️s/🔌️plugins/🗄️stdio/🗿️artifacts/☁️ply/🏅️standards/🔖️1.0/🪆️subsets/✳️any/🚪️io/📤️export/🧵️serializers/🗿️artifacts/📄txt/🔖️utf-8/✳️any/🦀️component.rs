@@ -1,7 +1,7 @@
 //! 📤️ Serialize `stdio.ply` to stdio.txt.
 
-use crate::artifacts::txt::TxtSnapshot;
 use crate::artifacts::ply::PlySnapshot;
+use crate::artifacts::txt::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register serializer hooks.

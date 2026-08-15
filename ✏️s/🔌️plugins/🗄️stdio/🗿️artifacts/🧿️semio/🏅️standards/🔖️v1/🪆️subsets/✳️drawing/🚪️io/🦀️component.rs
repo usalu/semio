@@ -4,18 +4,18 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{
-        ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, IoPayload, StandardId, SubsetId,
-        SubsetValidator, SubsetValidatorEntry, register_subset_validator, subset_validator_entry_of, register_composer_entries, deserializer_entry_of, serializer_entry_of,
-    };
-    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
-    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::SemioDrawingAnalyzer;
-    use crate::artifacts::semio::standards::v1::subsets::drawing::io::import::deserializers::artifacts::svg::v1_1::any::SemioDrawingFromSvg;
+    use crate::artifacts::semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::dxf::v_r12::any::SemioDrawingToDxf;
+    use crate::artifacts::semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::pdf::v1_7::any::SemioDrawingToPdf;
     use crate::artifacts::semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
     use crate::artifacts::semio::standards::v1::subsets::drawing::io::import::deserializers::artifacts::dxf::v_r12::any::SemioDrawingFromDxf;
-    use crate::artifacts::semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::dxf::v_r12::any::SemioDrawingToDxf;
     use crate::artifacts::semio::standards::v1::subsets::drawing::io::import::deserializers::artifacts::pdf::v1_7::any::SemioDrawingFromPdf;
-    use crate::artifacts::semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::pdf::v1_7::any::SemioDrawingToPdf;
+    use crate::artifacts::semio::standards::v1::subsets::drawing::io::import::deserializers::artifacts::svg::v1_1::any::SemioDrawingFromSvg;
+    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
+    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::SemioDrawingAnalyzer;
+    use semio_framework_plugin::{
+        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition,
+        Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
+    };
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 
@@ -26,7 +26,9 @@ pub mod derived_composition {
         type Snapshot = SemioDrawingSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] { &[DIALECT] }
+        fn reads() -> &'static [Dialect] {
+            &[DIALECT]
+        }
 
         fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
@@ -41,10 +43,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "SemioDrawingComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = SemioDrawingAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "SemioDrawingComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "SemioDrawingComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -66,11 +65,7 @@ pub mod derived_composition {
             };
             match decoded {
                 Some(snapshot) => check_drawing_invariants(&snapshot),
-                None => vec![dsl::Diagnostic::error(
-                    "stdio.semio_drawing.validate-decode-failed",
-                    dsl::TextSpan::at(1, 1),
-                    "SemioDrawingValidator: payload did not decode as a SemioDrawingSnapshot".to_string(),
-                )],
+                None => vec![dsl::Diagnostic::error("stdio.semio_drawing.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioDrawingValidator: payload did not decode as a SemioDrawingSnapshot".to_string())],
             }
         }
     }
@@ -83,11 +78,7 @@ pub mod derived_composition {
         let mut seen_layer_ids = std::collections::HashSet::new();
         for layer in &snapshot.layers {
             if !seen_layer_ids.insert(layer.id.clone()) {
-                diagnostics.push(dsl::Diagnostic::error(
-                    "stdio.semio_drawing.duplicate-layer-id",
-                    dsl::TextSpan::at(1, 1),
-                    format!("SemioDrawingValidator: duplicate layer id {:?}", layer.id),
-                ));
+                diagnostics.push(dsl::Diagnostic::error("stdio.semio_drawing.duplicate-layer-id", dsl::TextSpan::at(1, 1), format!("SemioDrawingValidator: duplicate layer id {:?}", layer.id)));
             }
         }
 
@@ -95,11 +86,7 @@ pub mod derived_composition {
             match node {
                 DrawNode::Path { style: Some(name), .. } | DrawNode::Text { style: Some(name), .. } => {
                     if !style_names.contains(name.as_str()) {
-                        diagnostics.push(dsl::Diagnostic::error(
-                            "stdio.semio_drawing.dangling-style-ref",
-                            dsl::TextSpan::at(1, 1),
-                            format!("SemioDrawingValidator: node references undefined style {name:?}"),
-                        ));
+                        diagnostics.push(dsl::Diagnostic::error("stdio.semio_drawing.dangling-style-ref", dsl::TextSpan::at(1, 1), format!("SemioDrawingValidator: node references undefined style {name:?}")));
                     }
                 }
                 DrawNode::Group { children, .. } => {
@@ -119,7 +106,9 @@ pub mod derived_composition {
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    fn validator_entry() -> &'static SubsetValidatorEntry { VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioDrawingValidator>) }
+    fn validator_entry() -> &'static SubsetValidatorEntry {
+        VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioDrawingValidator>)
+    }
     //#endregion 🔖️SubsetValidator
 
     //#region 🔖️IoEntries
@@ -130,11 +119,18 @@ pub mod derived_composition {
     /// vector ops) — see each pair's own leaf doc comment for the full rationale.
     static IO_ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
     fn io_entries() -> &'static [ComposerEntry] {
-        IO_ENTRIES.get_or_init(|| vec![
-            deserializer_entry_of::<SemioDrawingFromSvg>(), serializer_entry_of::<SemioDrawingToSvg>(),
-            deserializer_entry_of::<SemioDrawingFromDxf>(), serializer_entry_of::<SemioDrawingToDxf>(),
-            deserializer_entry_of::<SemioDrawingFromPdf>(), serializer_entry_of::<SemioDrawingToPdf>(),
-        ]).as_slice()
+        IO_ENTRIES
+            .get_or_init(|| {
+                vec![
+                    deserializer_entry_of::<SemioDrawingFromSvg>(),
+                    serializer_entry_of::<SemioDrawingToSvg>(),
+                    deserializer_entry_of::<SemioDrawingFromDxf>(),
+                    serializer_entry_of::<SemioDrawingToDxf>(),
+                    deserializer_entry_of::<SemioDrawingFromPdf>(),
+                    serializer_entry_of::<SemioDrawingToPdf>(),
+                ]
+            })
+            .as_slice()
     }
     //#endregion 🔖️IoEntries
 
@@ -143,7 +139,9 @@ pub mod derived_composition {
     /// semio↔format io bridges. Called from this artifact's standard-level `engine::register()`.
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::drawing::schema::semio_drawing_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioDrawingSnapshot, crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation>(crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA));
+        store::register_document_codec(store::ArtifactCodec::of::<SemioDrawingSnapshot, crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation>(
+            crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
+        ));
         register_subset_validator(validator_entry());
         register_composer_entries(io_entries());
         register_artifact_inferences();
@@ -206,19 +204,11 @@ pub mod derived_composition {
             /// `walk_protocol` laws below.
             #[test]
             fn committed_facet_files_parse() {
-                for (label, text) in [
-                    ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-                ] {
+                for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                     assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
                 }
-                for (label, text) in [
-                    ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-                ] {
+                for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                     dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
                 }
             }

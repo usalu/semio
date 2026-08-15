@@ -20,7 +20,9 @@ pub struct SemioGraphArtifact {
 }
 
 impl Default for SemioGraphArtifact {
-    fn default() -> Self { Self::from_snapshot(SemioGraphSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(SemioGraphSnapshot::default())
+    }
 }
 
 impl SemioGraphArtifact {
@@ -72,20 +74,24 @@ pub fn semio_graph_artifact_schema_descriptor() -> schema::ArtifactSchemaDescrip
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
     use crate::artifacts::semio::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
     use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
     use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphSnapshot};
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioGraphBuilderConstruction { snapshot: SemioGraphSnapshot }
+    pub struct SemioGraphBuilderConstruction {
+        snapshot: SemioGraphSnapshot,
+    }
 
     //#region 🔖️TypedConstructors
     impl SemioGraphBuilderConstruction {
         /// 🏗️ Starts a fresh, empty graph document.
-        pub fn new() -> Self { Self { snapshot: SemioGraphSnapshot::default() } }
+        pub fn new() -> Self {
+            Self { snapshot: SemioGraphSnapshot::default() }
+        }
         /// 🏗️ Appends one node, in insertion order (id-keyed set — order carries no display
         /// meaning, but insertion order is preserved for determinism).
         pub fn add_node(mut self, id: impl Into<String>, kind: impl Into<String>, label: impl Into<String>, position: SemioPoint2, ports: Vec<SemioGraphPort>, properties: Vec<SemioValueEntry>) -> Self {
@@ -104,8 +110,12 @@ pub mod derived_construction {
         type Snapshot = SemioGraphSnapshot;
         type Mutation = SemioGraphMutation;
         type Diff = SemioGraphDiff;
-        fn empty() -> Self { Self { snapshot: SemioGraphSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: SemioGraphSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioGraphSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -121,7 +131,9 @@ pub mod derived_construction {
             self.snapshot = <SemioGraphDiff as protocol::MutationDiff<SemioGraphSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 
     //#region 🔖️Tests
@@ -148,11 +160,13 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioGraphParts { pub snapshot: Option<SemioGraphSnapshot> }
+    pub struct SemioGraphParts {
+        pub snapshot: Option<SemioGraphSnapshot>,
+    }
 
     pub struct SemioGraphAnalyzerAnalysis;
 
@@ -164,10 +178,18 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
-                    if text.contains(STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                    if text.contains(STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }

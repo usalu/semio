@@ -55,7 +55,6 @@ mod tests {
                 slides: vec![PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("hello world")], position: Default::default() }, PptxShape::Picture { blip_rel_id: "rId1".into(), position: Default::default() }] }],
             },
             xml_parts: Vec::new(),
-            physical: None,
         };
         let outline = PptxOutline::compute(&snapshot);
         assert_eq!(outline.slide_count, 1);

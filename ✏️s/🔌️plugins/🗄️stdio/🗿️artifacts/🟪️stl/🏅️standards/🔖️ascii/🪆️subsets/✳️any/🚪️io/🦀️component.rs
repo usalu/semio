@@ -26,10 +26,7 @@ pub fn decode_stl_ascii(text: &str) -> Result<StlSnapshot, String> {
     for line in lines {
         let line = line.trim();
         if let Some(rest) = line.strip_prefix("facet normal") {
-            let coords: Vec<f64> = rest
-                .split_whitespace()
-                .map(|s| s.parse::<f64>().map_err(|e| e.to_string()))
-                .collect::<Result<Vec<_>, _>>()?;
+            let coords: Vec<f64> = rest.split_whitespace().map(|s| s.parse::<f64>().map_err(|e| e.to_string())).collect::<Result<Vec<_>, _>>()?;
             if coords.len() < 3 {
                 return Err("stl ascii: facet normal needs 3 coords".into());
             }
@@ -46,11 +43,7 @@ pub fn decode_stl_ascii(text: &str) -> Result<StlSnapshot, String> {
             triangles.push(StlTriangle { normal, vertices });
             in_loop = false;
         } else if in_loop && line.starts_with("vertex") {
-            let coords: Vec<f64> = line
-                .trim_start_matches("vertex")
-                .split_whitespace()
-                .map(|s| s.parse::<f64>().map_err(|e| e.to_string()))
-                .collect::<Result<Vec<_>, _>>()?;
+            let coords: Vec<f64> = line.trim_start_matches("vertex").split_whitespace().map(|s| s.parse::<f64>().map_err(|e| e.to_string())).collect::<Result<Vec<_>, _>>()?;
             if coords.len() < 3 {
                 return Err("stl ascii: vertex needs 3 coords".into());
             }
@@ -93,10 +86,7 @@ pub fn decode_stl_binary(bytes: &[u8]) -> Result<StlSnapshot, String> {
     if bytes.len() < 84 {
         return Err("stl binary: header too short".into());
     }
-    let solid_name = String::from_utf8_lossy(&bytes[0..80])
-        .trim_end_matches('\0')
-        .trim()
-        .to_string();
+    let solid_name = String::from_utf8_lossy(&bytes[0..80]).trim_end_matches('\0').trim().to_string();
     let count = u32::from_le_bytes(bytes[80..84].try_into().unwrap()) as usize;
     let mut triangles = Vec::with_capacity(count);
     let mut off = 84usize;
@@ -104,13 +94,8 @@ pub fn decode_stl_binary(bytes: &[u8]) -> Result<StlSnapshot, String> {
         if off + 50 > bytes.len() {
             return Err("stl binary: truncated facet record".into());
         }
-        let read_vec3 = |b: &[u8], at: usize| -> [f64; 3] {
-            [
-                f32::from_le_bytes(b[at..at + 4].try_into().unwrap()) as f64,
-                f32::from_le_bytes(b[at + 4..at + 8].try_into().unwrap()) as f64,
-                f32::from_le_bytes(b[at + 8..at + 12].try_into().unwrap()) as f64,
-            ]
-        };
+        let read_vec3 =
+            |b: &[u8], at: usize| -> [f64; 3] { [f32::from_le_bytes(b[at..at + 4].try_into().unwrap()) as f64, f32::from_le_bytes(b[at + 4..at + 8].try_into().unwrap()) as f64, f32::from_le_bytes(b[at + 8..at + 12].try_into().unwrap()) as f64] };
         let normal = read_vec3(bytes, off);
         off += 12;
         let mut vertices = [[0.0; 3]; 3];
@@ -174,15 +159,14 @@ pub fn decode_stl_auto(bytes: &[u8]) -> Result<StlSnapshot, String> {
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::stl::StlSnapshot;
     use crate::artifacts::stl::standards::v_ascii::subsets::any::schema::StlAnalyzer;
+    use crate::artifacts::stl::StlSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
-
 
     pub struct StlComposerComposition;
 
@@ -211,10 +195,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "StlComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = StlAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "StlComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "StlComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -248,22 +229,9 @@ mod tests {
     /// off-by-one in facet/vertex slot tracking that a single-triangle fixture would miss. Each
     /// facet gets a distinct, non-zero normal to exercise the persisted-normal round trip.
     fn tetrahedron() -> StlSnapshot {
-        let corners = [
-            [0.0, 0.0, 0.0],
-            [1.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0],
-            [0.0, 0.0, 1.0],
-        ];
-        let faces: [(usize, usize, usize, [f64; 3]); 4] = [
-            (0, 1, 2, [0.0, 0.0, -1.0]),
-            (0, 1, 3, [0.0, -1.0, 0.0]),
-            (1, 2, 3, [1.0, 1.0, 1.0]),
-            (0, 2, 3, [-1.0, 0.0, 0.0]),
-        ];
-        let triangles = faces
-            .iter()
-            .map(|&(a, b, c, normal)| StlTriangle { normal, vertices: [corners[a], corners[b], corners[c]] })
-            .collect();
+        let corners = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
+        let faces: [(usize, usize, usize, [f64; 3]); 4] = [(0, 1, 2, [0.0, 0.0, -1.0]), (0, 1, 3, [0.0, -1.0, 0.0]), (1, 2, 3, [1.0, 1.0, 1.0]), (0, 2, 3, [-1.0, 0.0, 0.0])];
+        let triangles = faces.iter().map(|&(a, b, c, normal)| StlTriangle { normal, vertices: [corners[a], corners[b], corners[c]] }).collect();
         StlSnapshot { schema: STDIO_STL_DOCUMENT_SCHEMA.into(), solid_name: "tetrahedron".into(), triangles }
     }
 
@@ -343,19 +311,11 @@ mod tests {
         /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }
@@ -457,9 +417,9 @@ mod tests {
 //#region 🚪️DerivedIoRegistry
 /// 🚪️ Dissolved out of `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::stl::standards::v_ascii::subsets::any::schema::StlComposer as StlRawAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 

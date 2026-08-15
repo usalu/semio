@@ -1,5 +1,5 @@
-use crate::artifacts::obj::{ObjSnapshot};
 use crate::artifacts::obj::schema::mutations::ObjMutation;
+use crate::artifacts::obj::ObjSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

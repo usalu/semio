@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::pdf::schema::snapshot::PdfSnapshot;
-pub use crate::artifacts::pdf::schema::PdfArtifact;
 pub use crate::artifacts::pdf::schema::diff::PdfDiff;
 pub use crate::artifacts::pdf::schema::mutations::PdfMutation;
+pub use crate::artifacts::pdf::schema::snapshot::PdfSnapshot;
+pub use crate::artifacts::pdf::schema::PdfArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_PDF_DOCUMENT_SCHEMA: &str = "stdio.pdf";
@@ -59,9 +59,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
         .composers(crate::artifacts::pdf::standards::v1_7::subsets::any::io::io_registry::entries())
         .subset_validators(pdf_1_7_subset_validators())
         .languages(pilot_languages_1_7())
-        .document_codec_bare::<PdfSnapshot, PdfMutation>(
-            crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA,
-        )
+        .document_codec_bare::<PdfSnapshot, PdfMutation>(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA)
         .build()
 }
 
@@ -76,10 +74,7 @@ pub fn declaration_1_4() -> semio_framework_plugin::ArtifactDeclaration {
         .composers(crate::artifacts::pdf::standards::v1_4::subsets::any::io::io_registry::entries())
         .subset_validators(pdf_1_4_subset_validators())
         .languages(pilot_languages_1_4())
-        .document_codec_bare::<
-            crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot,
-            crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::PdfMutation,
-        >(STDIO_PDF_DOCUMENT_SCHEMA)
+        .document_codec_bare::<crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot, crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA)
         .build()
 }
 
@@ -255,17 +250,17 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: STDIO_PDF_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::pdf::standards::v1_4::subsets::any::io::io_registry as v1_4;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::io::io_registry as v1_7;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -274,10 +269,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("PdfComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("PdfComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

@@ -80,16 +80,10 @@ impl MutationDiff<SemioTableSnapshot> for SemioTableDiff {
 /// `🔺️diff` leaf already produces.
 impl protocol::command::DiffAlgebra<SemioTableSnapshot> for SemioTableDiff {
     fn between(base: &SemioTableSnapshot, other: &SemioTableSnapshot) -> Self {
-        SemioTableDiff {
-            columns: (base.columns != other.columns).then(|| SemioTableColumnList { values: other.columns.clone() }),
-            rows: (base.rows != other.rows).then(|| SemioTableRowList { values: other.rows.clone() }),
-        }
+        SemioTableDiff { columns: (base.columns != other.columns).then(|| SemioTableColumnList { values: other.columns.clone() }), rows: (base.rows != other.rows).then(|| SemioTableRowList { values: other.rows.clone() }) }
     }
     fn inverse(&self, base: &SemioTableSnapshot) -> Self {
-        SemioTableDiff {
-            columns: self.columns.as_ref().map(|_| SemioTableColumnList { values: base.columns.clone() }),
-            rows: self.rows.as_ref().map(|_| SemioTableRowList { values: base.rows.clone() }),
-        }
+        SemioTableDiff { columns: self.columns.as_ref().map(|_| SemioTableColumnList { values: base.columns.clone() }), rows: self.rows.as_ref().map(|_| SemioTableRowList { values: base.rows.clone() }) }
     }
     fn is_empty(&self) -> bool {
         self.is_empty_diff()
@@ -104,7 +98,7 @@ impl protocol::command::DiffAlgebra<SemioTableSnapshot> for SemioTableDiff {
 /// both present). `split_top_level(line, ';')` parses back (bracket-nesting aware, so a `;` can
 /// never appear inside an encoded column/row's own hex/bracket payload — there is none — this is
 /// purely a top-level field separator).
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{enc_column, dec_column, enc_row, dec_row};
+use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{dec_column, dec_row, enc_column, enc_row};
 
 fn enc_columns(list: &SemioTableColumnList) -> String {
     format!("[{}]", list.values.iter().map(enc_column).collect::<Vec<_>>().join(","))
@@ -152,7 +146,9 @@ fn parse_table_diff(line: &str) -> Result<SemioTableDiff, String> {
 }
 
 impl protocol::DiffCodec for SemioTableDiff {
-    fn print_diff(&self) -> String { print_table_diff(self) }
+    fn print_diff(&self) -> String {
+        print_table_diff(self)
+    }
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_table_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
@@ -250,16 +246,12 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioTableDiff> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::DiffCodec;
     use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    use protocol::DiffCodec;
 
     fn one_col_row(name: &str, kind: SemioTableCellKind, value: SemioValue) -> SemioTableSnapshot {
-        SemioTableSnapshot {
-            schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
-            columns: vec![SemioTableColumn { name: name.into(), kind }],
-            rows: vec![SemioTableRow { cells: vec![value] }],
-        }
+        SemioTableSnapshot { schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(), columns: vec![SemioTableColumn { name: name.into(), kind }], rows: vec![SemioTableRow { cells: vec![value] }] }
     }
 
     #[test]

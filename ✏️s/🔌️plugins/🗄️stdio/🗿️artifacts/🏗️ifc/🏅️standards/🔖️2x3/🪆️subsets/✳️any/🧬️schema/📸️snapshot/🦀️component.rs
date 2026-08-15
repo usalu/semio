@@ -10,6 +10,10 @@
 //! itself is genuinely shared (IFC2X3 is STEP Part-21 syntax + a different EXPRESS schema), but
 //! `Ifc2x3Snapshot` the TYPE is this standard's own.
 
+use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::{
+    dec_edm_preamble_bin, dec_instance_list, dec_instance_list_bin, dec_optional_edm_preamble, dec_part21_header, dec_part21_header_bin, dec_str, enc_edm_preamble_bin, enc_instance_list, enc_instance_list_bin, enc_instance_list_into,
+    enc_optional_edm_preamble, enc_part21_header, enc_part21_header_bin, enc_str, read_str_bin, write_str_bin,
+};
 use crate::artifacts::step::engine::part21::Part21Document;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -65,30 +69,55 @@ impl Default for Ifc2x3Snapshot {
         Self { schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document: Part21Document::default(), edm_preamble: None }
     }
 }
+
+/// ✅ Validates the logical IFC2X3 document without materializing native Part-21 text.
+pub fn validate_ifc2x3_snapshot(snapshot: &Ifc2x3Snapshot) -> Result<(), String> {
+    if snapshot.schema != STDIO_IFC2X3_DOCUMENT_SCHEMA {
+        return Err(format!("ifc2x3: unsupported snapshot schema {:?}", snapshot.schema));
+    }
+    let declares_ifc2x3 = snapshot.document.header.file_schema.iter().any(|value| value.as_list().map(|items| items.iter().any(|item| item.as_str() == Some("IFC2X3"))).unwrap_or(false));
+    if !declares_ifc2x3 {
+        return Err("ifc2x3: FILE_SCHEMA does not declare IFC2X3".into());
+    }
+    let mut ids = std::collections::HashSet::new();
+    for instance in &snapshot.document.instances {
+        if !ids.insert(instance.id) {
+            return Err(format!("ifc2x3: duplicate instance #{}", instance.id));
+        }
+        if instance.entities.is_empty() {
+            return Err(format!("ifc2x3: instance #{} has no entities", instance.id));
+        }
+    }
+    Ok(())
+}
 //#endregion 🔖️Snapshot
 
 //#region 🔖️Codec
 impl store::ArtifactDsl for Ifc2x3Snapshot {
     const EXTENSION: &'static str = "ifc";
-    fn envelope_id() -> &'static str { STDIO_IFC2X3_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_IFC2X3_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(body.as_bytes())
-            .map_err(|e| store::TextError::new(format!("ifc2x3 parse: {e}"), dsl::TextSpan::at(1, 1)))
+        parse_snapshot(body.trim()).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(self).expect("Ifc2x3Snapshot::print_dsl requires a valid logical model");
-        let body = String::from_utf8(bytes).expect("IFC2X3 writer emits UTF-8");
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let mut body = String::with_capacity(self.document.instances.len().saturating_mul(64));
+        body.push_str("schema=");
+        body.push_str(&enc_str(&self.schema));
+        body.push_str(" header=");
+        body.push_str(&enc_part21_header(&self.document.header));
+        body.push_str(" instances=");
+        enc_instance_list_into(&self.document.instances, &mut body);
+        body.push_str(" edm-preamble=");
+        body.push_str(&enc_optional_edm_preamble(&self.edm_preamble));
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -96,27 +125,77 @@ impl store::ArtifactDsl for Ifc2x3Snapshot {
 impl store::ArtifactPack for Ifc2x3Snapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(self).map_err(store::PackError::Schema)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let mut raw = vec![store::pack_rt::OP_BINARY_FORMAT];
+        write_str_bin(&mut raw, &self.schema);
+        enc_part21_header_bin(&self.document.header, &mut raw);
+        enc_instance_list_bin(&self.document.instances, &mut raw);
+        match &self.edm_preamble {
+            None => raw.push(0),
+            Some(preamble) => {
+                raw.push(1);
+                enc_edm_preamble_bin(preamble, &mut raw);
+            }
+        }
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(&inner).map_err(store::PackError::Schema)
+        let mut reader = store::ByteReader::new(&inner);
+        let format = reader.read_u8().map_err(|error| store::PackError::Schema(format!("snapshot format: {error}")))?;
+        if format != store::pack_rt::OP_BINARY_FORMAT {
+            return Err(store::PackError::Schema(format!("snapshot format: unsupported format {format}")));
+        }
+        let schema = read_str_bin(&mut reader).map_err(|error| store::PackError::Schema(format!("snapshot schema: {error}")))?;
+        let header = dec_part21_header_bin(&mut reader).map_err(|error| store::PackError::Schema(format!("snapshot header: {error}")))?;
+        let instances = dec_instance_list_bin(&mut reader).map_err(|error| store::PackError::Schema(format!("snapshot instances: {error}")))?;
+        let edm_preamble = match reader.read_u8().map_err(|error| store::PackError::Schema(format!("snapshot EDM preamble presence: {error}")))? {
+            0 => None,
+            1 => Some(dec_edm_preamble_bin(&mut reader).map_err(|error| store::PackError::Schema(format!("snapshot EDM preamble: {error}")))?),
+            tag => return Err(store::PackError::Schema(format!("snapshot EDM preamble presence: unknown tag {tag}"))),
+        };
+        if reader.remaining() != 0 {
+            return Err(store::PackError::Schema(format!("snapshot trailing bytes: {}", reader.remaining())));
+        }
+        Ok(Self { schema, document: Part21Document { header, instances }, edm_preamble })
     }
+}
+
+fn parse_snapshot(body: &str) -> Result<Ifc2x3Snapshot, String> {
+    let mut schema = None;
+    let mut header = None;
+    let mut instances = None;
+    let mut edm_preamble = None;
+    for token in body.split_whitespace() {
+        if let Some(value) = token.strip_prefix("schema=") {
+            if schema.replace(dec_str(value)?).is_some() {
+                return Err("duplicate snapshot schema".into());
+            }
+        } else if let Some(value) = token.strip_prefix("header=") {
+            if header.replace(dec_part21_header(value)?).is_some() {
+                return Err("duplicate snapshot header".into());
+            }
+        } else if let Some(value) = token.strip_prefix("instances=") {
+            if instances.replace(dec_instance_list(value)?).is_some() {
+                return Err("duplicate snapshot instances".into());
+            }
+        } else if let Some(value) = token.strip_prefix("edm-preamble=") {
+            if edm_preamble.replace(dec_optional_edm_preamble(value)?).is_some() {
+                return Err("duplicate snapshot EDM preamble".into());
+            }
+        } else {
+            return Err(format!("ifc2x3 snapshot: unknown token {token:?}"));
+        }
+    }
+    Ok(Ifc2x3Snapshot {
+        schema: schema.ok_or_else(|| "missing snapshot schema".to_string())?,
+        document: Part21Document { header: header.ok_or_else(|| "missing snapshot header".to_string())?, instances: instances.ok_or_else(|| "missing snapshot instances".to_string())? },
+        edm_preamble: edm_preamble.ok_or_else(|| "missing snapshot EDM preamble".to_string())?,
+    })
 }
 //#endregion 🔖️Codec

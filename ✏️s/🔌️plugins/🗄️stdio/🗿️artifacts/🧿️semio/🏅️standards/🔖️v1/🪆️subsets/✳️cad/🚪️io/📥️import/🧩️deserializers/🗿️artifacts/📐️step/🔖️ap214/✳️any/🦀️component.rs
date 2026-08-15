@@ -17,9 +17,12 @@
 //! - A `LINE`/`CIRCLE` whose reference chain doesn't resolve (missing entity, wrong referenced
 //!   type, non-numeric arg) is skipped, not fabricated with zeros.
 
-use crate::artifacts::step::{StepSnapshot, schema::snapshot::{StepEntity, StepValue}};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadEntity, CadEntityRecord, SemioCadSnapshot, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
+use crate::artifacts::step::{
+    schema::snapshot::{StepEntity, StepValue},
+    StepSnapshot,
+};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 use std::collections::HashMap;
 
@@ -35,7 +38,10 @@ fn real_of(v: &StepValue) -> Option<f64> {
     }
 }
 fn reference_of(v: &StepValue) -> Option<u64> {
-    match v { StepValue::Reference(id) => Some(*id), _ => None }
+    match v {
+        StepValue::Reference(id) => Some(*id),
+        _ => None,
+    }
 }
 fn xy_of_aggregate(v: &StepValue) -> Option<(f64, f64)> {
     match v {
@@ -57,13 +63,19 @@ fn resolve_point(id: u64, idx: &HashMap<u64, &StepEntity>) -> Option<(f64, f64)>
 fn resolve_line(e: &StepEntity, idx: &HashMap<u64, &StepEntity>) -> Option<CadEntity> {
     let start = resolve_point(reference_of(e.args.get(1)?)?, idx)?;
     let vector = idx.get(&reference_of(e.args.get(2)?)?)?;
-    if vector.name != "VECTOR" { return None; }
+    if vector.name != "VECTOR" {
+        return None;
+    }
     let magnitude = real_of(vector.args.get(2)?)?;
     let direction = idx.get(&reference_of(vector.args.get(1)?)?)?;
-    if direction.name != "DIRECTION" { return None; }
+    if direction.name != "DIRECTION" {
+        return None;
+    }
     let (dx, dy) = xy_of_aggregate(direction.args.get(1)?)?;
     let len = (dx * dx + dy * dy).sqrt();
-    if len == 0.0 { return None; }
+    if len == 0.0 {
+        return None;
+    }
     let end = (start.0 + (dx / len) * magnitude, start.1 + (dy / len) * magnitude);
     Some(CadEntity::Line { a: SemioPoint2 { x: start.0, y: start.1 }, b: SemioPoint2 { x: end.0, y: end.1 } })
 }

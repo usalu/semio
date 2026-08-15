@@ -54,19 +54,9 @@ mod tests {
                     width: 1920,
                     height: 1080,
                     rate: SemioRational { num: 30, den: 1 },
-                    samples: vec![
-                        SemioVideoSample { pts: 0, key: true, data: vec![] },
-                        SemioVideoSample { pts: 59, key: false, data: vec![] },
-                    ],
+                    samples: vec![SemioVideoSample { pts: 0, key: true, data: vec![] }, SemioVideoSample { pts: 59, key: false, data: vec![] }],
                 },
-                SemioVideoStream {
-                    kind: SemioVideoStreamKind::Audio,
-                    codec: "aac".into(),
-                    width: 0,
-                    height: 0,
-                    rate: SemioRational { num: 48_000, den: 1 },
-                    samples: vec![SemioVideoSample { pts: 96_000, key: true, data: vec![] }],
-                },
+                SemioVideoStream { kind: SemioVideoStreamKind::Audio, codec: "aac".into(), width: 0, height: 0, rate: SemioRational { num: 48_000, den: 1 }, samples: vec![SemioVideoSample { pts: 96_000, key: true, data: vec![] }] },
             ],
         }
     }

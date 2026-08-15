@@ -4,21 +4,20 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{
-        ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId,
-        SubsetValidator, SubsetValidatorEntry, register_subset_validator, subset_validator_entry_of,
-        ComposerEntry, ArtifactDeserializer as _, ArtifactSerializer as _, deserializer_entry_of, serializer_entry_of, register_composer_entries,
-    };
+    use super::super::export::serializers::artifacts::docx::v_ecma_376::any::SemioDocumentToDocx;
+    use super::super::export::serializers::artifacts::md::v_commonmark::any::SemioDocumentToMd;
+    use super::super::export::serializers::artifacts::pdf::v1_7::any::SemioDocumentToPdf;
+    use super::super::export::serializers::artifacts::txt::v_utf_8::any::SemioDocumentToTxt;
+    use super::super::import::deserializers::artifacts::docx::v_ecma_376::any::SemioDocumentFromDocx;
+    use super::super::import::deserializers::artifacts::md::v_commonmark::any::SemioDocumentFromMd;
+    use super::super::import::deserializers::artifacts::pdf::v1_7::any::SemioDocumentFromPdf;
+    use super::super::import::deserializers::artifacts::txt::v_utf_8::any::SemioDocumentFromTxt;
     use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, SemioDocumentSnapshot};
     use crate::artifacts::semio::standards::v1::subsets::document::schema::SemioDocumentAnalyzer;
-    use super::super::import::deserializers::artifacts::docx::v_ecma_376::any::SemioDocumentFromDocx;
-    use super::super::export::serializers::artifacts::docx::v_ecma_376::any::SemioDocumentToDocx;
-    use super::super::import::deserializers::artifacts::md::v_commonmark::any::SemioDocumentFromMd;
-    use super::super::export::serializers::artifacts::md::v_commonmark::any::SemioDocumentToMd;
-    use super::super::import::deserializers::artifacts::txt::v_utf_8::any::SemioDocumentFromTxt;
-    use super::super::export::serializers::artifacts::txt::v_utf_8::any::SemioDocumentToTxt;
-    use super::super::import::deserializers::artifacts::pdf::v1_7::any::SemioDocumentFromPdf;
-    use super::super::export::serializers::artifacts::pdf::v1_7::any::SemioDocumentToPdf;
+    use semio_framework_plugin::{
+        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ArtifactDeserializer as _, ArtifactSerializer as _,
+        ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
+    };
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("document") };
 
@@ -29,7 +28,9 @@ pub mod derived_composition {
         type Snapshot = SemioDocumentSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] { &[DIALECT] }
+        fn reads() -> &'static [Dialect] {
+            &[DIALECT]
+        }
 
         fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
@@ -44,10 +45,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "SemioDocumentComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = SemioDocumentAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "SemioDocumentComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "SemioDocumentComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -66,18 +64,10 @@ pub mod derived_composition {
             for block in blocks {
                 match block {
                     DocBlock::Paragraph { style_id: Some(id), .. } | DocBlock::Heading { style_id: Some(id), .. } if !known_styles.contains(id.as_str()) => {
-                        out.push(dsl::Diagnostic::error(
-                            "stdio.semio_document.unresolved-style-id",
-                            dsl::TextSpan::at(1, 1),
-                            format!("SemioDocumentValidator: block references unknown style id {id:?}"),
-                        ));
+                        out.push(dsl::Diagnostic::error("stdio.semio_document.unresolved-style-id", dsl::TextSpan::at(1, 1), format!("SemioDocumentValidator: block references unknown style id {id:?}")));
                     }
                     DocBlock::Image { image_id, .. } if !known_images.contains(image_id.as_str()) => {
-                        out.push(dsl::Diagnostic::error(
-                            "stdio.semio_document.unresolved-image-id",
-                            dsl::TextSpan::at(1, 1),
-                            format!("SemioDocumentValidator: Image block references unknown image id {image_id:?}"),
-                        ));
+                        out.push(dsl::Diagnostic::error("stdio.semio_document.unresolved-image-id", dsl::TextSpan::at(1, 1), format!("SemioDocumentValidator: Image block references unknown image id {image_id:?}")));
                     }
                     _ => {}
                 }
@@ -107,11 +97,7 @@ pub mod derived_composition {
             seen.insert(style.id.clone());
             loop {
                 if !seen.insert(cursor.clone()) {
-                    diagnostics.push(dsl::Diagnostic::error(
-                        "stdio.semio_document.based-on-cycle",
-                        dsl::TextSpan::at(1, 1),
-                        format!("SemioDocumentValidator: style {:?} has a based_on cycle through {cursor:?}", style.id),
-                    ));
+                    diagnostics.push(dsl::Diagnostic::error("stdio.semio_document.based-on-cycle", dsl::TextSpan::at(1, 1), format!("SemioDocumentValidator: style {:?} has a based_on cycle through {cursor:?}", style.id)));
                     break;
                 }
                 match snapshot.styles.iter().find(|s| s.id == cursor) {
@@ -120,11 +106,7 @@ pub mod derived_composition {
                         None => break,
                     },
                     None => {
-                        diagnostics.push(dsl::Diagnostic::error(
-                            "stdio.semio_document.unresolved-based-on",
-                            dsl::TextSpan::at(1, 1),
-                            format!("SemioDocumentValidator: style {:?} has based_on {cursor:?} which does not resolve", style.id),
-                        ));
+                        diagnostics.push(dsl::Diagnostic::error("stdio.semio_document.unresolved-based-on", dsl::TextSpan::at(1, 1), format!("SemioDocumentValidator: style {:?} has based_on {cursor:?} which does not resolve", style.id)));
                         break;
                     }
                 }
@@ -146,17 +128,15 @@ pub mod derived_composition {
             };
             match decoded {
                 Some(snapshot) => check_document_referential_integrity(&snapshot),
-                None => vec![dsl::Diagnostic::error(
-                    "stdio.semio_document.validate-decode-failed",
-                    dsl::TextSpan::at(1, 1),
-                    "SemioDocumentValidator: payload did not decode as a SemioDocumentSnapshot".to_string(),
-                )],
+                None => vec![dsl::Diagnostic::error("stdio.semio_document.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioDocumentValidator: payload did not decode as a SemioDocumentSnapshot".to_string())],
             }
         }
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    fn validator_entry() -> &'static SubsetValidatorEntry { VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioDocumentValidator>) }
+    fn validator_entry() -> &'static SubsetValidatorEntry {
+        VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioDocumentValidator>)
+    }
     //#endregion 🔖️SubsetValidator
 
     //#region 🔖️IoEntries
@@ -190,7 +170,9 @@ pub mod derived_composition {
     /// `engine::register()`.
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::document::schema::semio_document_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioDocumentSnapshot, crate::artifacts::semio::standards::v1::subsets::document::schema::mutations::SemioDocumentMutation>(crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA));
+        store::register_document_codec(store::ArtifactCodec::of::<SemioDocumentSnapshot, crate::artifacts::semio::standards::v1::subsets::document::schema::mutations::SemioDocumentMutation>(
+            crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA,
+        ));
         register_subset_validator(validator_entry());
         register_composer_entries(io_entries());
         register_artifact_inferences();
@@ -216,10 +198,7 @@ pub mod derived_composition {
                 schema: crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
                 styles: vec![DocStyle { id: "base".into(), name: "Base".into(), based_on: None }, DocStyle { id: "child".into(), name: "Child".into(), based_on: Some("base".into()) }],
                 images: vec![DocImage { id: "img1".into(), mime: "image/png".into(), bytes: vec![1] }],
-                blocks: vec![
-                    DocBlock::Paragraph { style_id: Some("child".into()), runs: Vec::new() },
-                    DocBlock::Image { image_id: "img1".into(), alt: "alt".into(), width: None, height: None },
-                ],
+                blocks: vec![DocBlock::Paragraph { style_id: Some("child".into()), runs: Vec::new() }, DocBlock::Image { image_id: "img1".into(), alt: "alt".into(), width: None, height: None }],
             };
             let bytes = store::ArtifactPack::encode_pack(&snapshot);
             let diagnostics = SemioDocumentValidator::validate(&IoPayload::Binary(bytes));
@@ -232,10 +211,7 @@ pub mod derived_composition {
                 schema: crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
                 styles: Vec::new(),
                 images: Vec::new(),
-                blocks: vec![
-                    DocBlock::Paragraph { style_id: Some("missing-style".into()), runs: Vec::new() },
-                    DocBlock::Image { image_id: "missing-image".into(), alt: String::new(), width: None, height: None },
-                ],
+                blocks: vec![DocBlock::Paragraph { style_id: Some("missing-style".into()), runs: Vec::new() }, DocBlock::Image { image_id: "missing-image".into(), alt: String::new(), width: None, height: None }],
             };
             let bytes = store::ArtifactPack::encode_pack(&snapshot);
             let diagnostics = SemioDocumentValidator::validate(&IoPayload::Binary(bytes));
@@ -263,9 +239,7 @@ pub mod derived_composition {
                 images: Vec::new(),
                 blocks: vec![DocBlock::Table {
                     rows: vec![crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocTableRow {
-                        cells: vec![crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocTableCell {
-                            blocks: vec![DocBlock::Image { image_id: "nested-missing".into(), alt: String::new(), width: None, height: None }],
-                        }],
+                        cells: vec![crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocTableCell { blocks: vec![DocBlock::Image { image_id: "nested-missing".into(), alt: String::new(), width: None, height: None }] }],
                     }],
                 }],
             };
@@ -291,8 +265,8 @@ pub mod derived_composition {
 
         #[test]
         fn docx_round_trip_is_stable() {
-            use crate::artifacts::docx::DocxSnapshot;
             use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle};
+            use crate::artifacts::docx::DocxSnapshot;
             use crate::artifacts::zip::opc::OpcPackage;
 
             let docx1 = DocxSnapshot::from_parts(
@@ -317,8 +291,8 @@ pub mod derived_composition {
 
         #[test]
         fn md_round_trip_is_stable() {
-            use crate::artifacts::md::MdSnapshot;
             use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
+            use crate::artifacts::md::MdSnapshot;
 
             let md1 = MdSnapshot {
                 schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(),
@@ -336,8 +310,8 @@ pub mod derived_composition {
 
         #[test]
         fn txt_round_trip_is_stable() {
-            use crate::artifacts::txt::TxtSnapshot;
             use crate::artifacts::txt::schema::snapshot::LineEnding;
+            use crate::artifacts::txt::TxtSnapshot;
 
             let txt1 = TxtSnapshot { schema: crate::artifacts::txt::STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: vec!["First line.".into(), String::new(), "Third line.".into()], trailing_newline: true, line_ending: LineEnding::Lf };
             let semio1 = SemioDocumentFromTxt::deserialize(&txt1).expect("deserialize");
@@ -380,19 +354,11 @@ pub mod derived_composition {
             /// `walk_protocol` laws below.
             #[test]
             fn committed_facet_files_parse() {
-                for (label, text) in [
-                    ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-                ] {
+                for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                     assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
                 }
-                for (label, text) in [
-                    ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-                ] {
+                for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                     dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
                 }
             }

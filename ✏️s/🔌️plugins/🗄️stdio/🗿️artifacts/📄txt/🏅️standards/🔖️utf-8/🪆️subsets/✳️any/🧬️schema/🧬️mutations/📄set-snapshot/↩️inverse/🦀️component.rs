@@ -1,5 +1,5 @@
-use crate::artifacts::txt::{TxtSnapshot};
 use crate::artifacts::txt::schema::mutations::TxtMutation;
+use crate::artifacts::txt::TxtSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

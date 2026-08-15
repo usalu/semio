@@ -1,7 +1,7 @@
 //! 🧬️ Mp4Artifact schema — full artifact state, mirrors `Mp4Snapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
 
-use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Box, Mp4Ftyp, Mp4Movie, Mp4Snapshot, Mp4Track};
+use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Ftyp, Mp4Movie, Mp4Snapshot, Mp4Track};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -18,30 +18,20 @@ pub struct Mp4Artifact {
     #[state(artifact)]
     #[serde(default)]
     pub tracks: Vec<Mp4Track>,
-    #[state(artifact)]
-    #[serde(default)]
-    pub unknown_boxes: Vec<Mp4Box>,
 }
 
 impl Mp4Artifact {
     pub fn to_snapshot(&self) -> Mp4Snapshot {
-        Mp4Snapshot {
-            schema: self.schema.clone(),
-            ftyp: self.ftyp.clone(),
-            movie: self.movie.clone(),
-            tracks: self.tracks.clone(),
-            unknown_boxes: self.unknown_boxes.clone(),
-        }
+        Mp4Snapshot { schema: self.schema.clone(), ftyp: self.ftyp.clone(), movie: self.movie.clone(), tracks: self.tracks.clone() }
     }
     pub fn from_snapshot(snapshot: Mp4Snapshot) -> Self {
-        Self { schema: snapshot.schema, ftyp: snapshot.ftyp, movie: snapshot.movie, tracks: snapshot.tracks, unknown_boxes: snapshot.unknown_boxes }
+        Self { schema: snapshot.schema, ftyp: snapshot.ftyp, movie: snapshot.movie, tracks: snapshot.tracks }
     }
     pub fn set_snapshot(&mut self, snapshot: Mp4Snapshot) {
         self.schema = snapshot.schema;
         self.ftyp = snapshot.ftyp;
         self.movie = snapshot.movie;
         self.tracks = snapshot.tracks;
-        self.unknown_boxes = snapshot.unknown_boxes;
     }
 }
 
@@ -80,20 +70,26 @@ pub fn mp4_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::diff::Mp4Diff;
-    use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::{Mp4Mutation, apply_mp4_mutation};
+    use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::{apply_mp4_mutation, Mp4Mutation};
     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct Mp4BuilderConstruction { snapshot: Mp4Snapshot }
+    pub struct Mp4BuilderConstruction {
+        snapshot: Mp4Snapshot,
+    }
 
     impl ArtifactBuilder for Mp4BuilderConstruction {
         type Snapshot = Mp4Snapshot;
         type Mutation = Mp4Mutation;
         type Diff = Mp4Diff;
-        fn empty() -> Self { Self { snapshot: Mp4Snapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: Mp4Snapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Mp4Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -108,7 +104,9 @@ pub mod derived_construction {
             self.snapshot = <Mp4Diff as protocol::MutationDiff<Mp4Snapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 }
 pub use derived_construction::*;
@@ -116,12 +114,14 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::mp4::standards::isobmff::subsets::any::io;
     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Snapshot, STDIO_MP4_DOCUMENT_SCHEMA};
-    use crate::artifacts::mp4::standards::isobmff::subsets::any::io as io;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct Mp4Parts { pub snapshot: Option<Mp4Snapshot> }
+    pub struct Mp4Parts {
+        pub snapshot: Option<Mp4Snapshot>,
+    }
 
     pub struct Mp4AnalyzerAnalysis;
 
@@ -136,7 +136,11 @@ pub mod derived_analysis {
                         return IoConfidence::High;
                     }
                     let marker = STDIO_MP4_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
                     if io::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_MP4_DOCUMENT_SCHEMA) {

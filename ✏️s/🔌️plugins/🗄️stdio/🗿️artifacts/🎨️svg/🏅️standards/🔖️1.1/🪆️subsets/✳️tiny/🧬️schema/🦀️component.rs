@@ -8,11 +8,11 @@
 pub use crate::artifacts::svg::standards::v1_1::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
+    use crate::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::set_element_attr;
+    use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::check_svg_tiny_conformance;
+    use crate::artifacts::svg::{SvgDiff, SvgMutation, SvgSnapshot};
     use dsl::Diagnostic;
     use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::check_svg_tiny_conformance;
-    use crate::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::set_element_attr;
-    use crate::artifacts::svg::{SvgDiff, SvgMutation, SvgSnapshot};
 
     //#region 🔖️Builder
     #[derive(Clone, Debug, Default)]
@@ -112,12 +112,12 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
-    use semio_framework_plugin::{AnalyzeSource, Analysis, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use crate::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::SvgSnapshot;
     use crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgAnalyzer as SvgAnyAnalyzer;
     pub use crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgParts;
-    use crate::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::SvgSnapshot;
     use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlNode};
+    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("tiny") };
@@ -126,10 +126,7 @@ pub mod derived_analysis {
     /// 🚫 Elements SVG Tiny 1.1 excludes outright (Full 1.1 features Tiny doesn't retain). `fe*`
     /// filter primitives are matched separately by prefix (there are too many to enumerate, and
     /// Tiny 1.1 forbids the whole `filter` mechanism, primitives included).
-    const BLOCKED_ELEMENTS: &[&str] = &[
-        "style", "script", "symbol", "marker", "clipPath", "mask", "pattern", "linearGradient", "radialGradient", "stop", "filter", "cursor", "textPath",
-        "tspan", "tref", "view",
-    ];
+    const BLOCKED_ELEMENTS: &[&str] = &["style", "script", "symbol", "marker", "clipPath", "mask", "pattern", "linearGradient", "radialGradient", "stop", "filter", "cursor", "textPath", "tspan", "tref", "view"];
 
     /// 🚫 Presentation attributes SVG Tiny 1.1 forbids on ANY element.
     const BLOCKED_ATTRS: &[&str] = &["style", "opacity", "fill-opacity", "stroke-opacity", "clip-path", "mask", "filter"];
@@ -270,10 +267,7 @@ pub mod derived_analysis {
 
         #[test]
         fn fully_conforming_document_reports_no_diagnostics() {
-            let snapshot = svg_root(
-                vec![attr("baseProfile", "tiny"), attr("version", "1.1")],
-                vec![elem("rect", vec![attr("x", "0"), attr("y", "0"), attr("width", "10"), attr("height", "10")])],
-            );
+            let snapshot = svg_root(vec![attr("baseProfile", "tiny"), attr("version", "1.1")], vec![elem("rect", vec![attr("x", "0"), attr("y", "0"), attr("width", "10"), attr("height", "10")])]);
             let diagnostics = check_svg_tiny_conformance(&snapshot);
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }

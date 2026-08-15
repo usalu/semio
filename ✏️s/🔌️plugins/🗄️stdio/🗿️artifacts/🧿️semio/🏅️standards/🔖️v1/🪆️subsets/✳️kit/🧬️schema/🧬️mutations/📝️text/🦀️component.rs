@@ -7,16 +7,11 @@ pub use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations:
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::split_top_level;
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::{
-    add_design::mutation::AddDesign, add_type::mutation::AddType,
-    bind_representation::mutation::BindRepresentation, change_representation_pin::mutation::ChangeRepresentationPin,
-    create_model::mutation::CreateModel, create_object::mutation::CreateObject, create_properties::mutation::CreateProperties,
-    delete_model::mutation::DeleteModel, delete_object::mutation::DeleteObject, delete_properties::mutation::DeleteProperties,
-    edit_design::mutation::EditDesign, remove_design::mutation::RemoveDesign, remove_type::mutation::RemoveType,
-    rename_type::mutation::RenameType, unbind_representation::mutation::UnbindRepresentation,
+    add_design::mutation::AddDesign, add_type::mutation::AddType, bind_representation::mutation::BindRepresentation, change_representation_pin::mutation::ChangeRepresentationPin, create_model::mutation::CreateModel,
+    create_object::mutation::CreateObject, create_properties::mutation::CreateProperties, delete_model::mutation::DeleteModel, delete_object::mutation::DeleteObject, delete_properties::mutation::DeleteProperties, edit_design::mutation::EditDesign,
+    remove_design::mutation::RemoveDesign, remove_type::mutation::RemoveType, rename_type::mutation::RenameType, unbind_representation::mutation::UnbindRepresentation,
 };
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{
-    dec_connection, dec_piece, dec_pin, dec_ref, dec_str, enc_connection, enc_piece, enc_pin, enc_ref, enc_str,
-};
+use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{dec_connection, dec_piece, dec_pin, dec_ref, dec_str, enc_connection, enc_piece, enc_pin, enc_ref, enc_str};
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
@@ -24,7 +19,9 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Primitives
-fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+fn parse_usize(s: &str) -> Result<usize, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
 fn enc_pieces(pieces: &[crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitPiece]) -> String {
     format!("[{}]", pieces.iter().map(enc_piece).collect::<Vec<_>>().join(","))
 }
@@ -63,7 +60,9 @@ fn print_kit_mutation(m: &SemioKitMutation) -> String {
 }
 
 fn parse_kit_mutation(line: &str) -> Result<SemioKitMutation, String> {
-    if line == "deleteProperties" { return Ok(SemioKitMutation::DeleteProperties(DeleteProperties {})); }
+    if line == "deleteProperties" {
+        return Ok(SemioKitMutation::DeleteProperties(DeleteProperties {}));
+    }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("kit mutation: missing ':' in {line:?}"))?;
     match tag {
         "createObject" => {
@@ -115,7 +114,9 @@ fn parse_kit_mutation(line: &str) -> Result<SemioKitMutation, String> {
 }
 
 impl protocol::OpText for SemioKitMutation {
-    fn print_op(&self) -> String { print_kit_mutation(self) }
+    fn print_op(&self) -> String {
+        print_kit_mutation(self)
+    }
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_kit_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }

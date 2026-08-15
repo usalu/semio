@@ -1,7 +1,7 @@
 // 🌳 svg embeds xml's NODE model directly (real import; spec-mandated reuse), never redefined
 // here -- see xml's own `📸️snapshot/🟦️component.ts` for the canonical shape.
-import type { XmlDeclaration, XmlNode } from '../../../../../../../📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️component.ts';
-export type { XmlDeclaration, XmlNode };
+import type { XmlDeclaration, XmlDoctype, XmlNode } from '../../../../../../../📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️component.ts';
+export type { XmlDeclaration, XmlDoctype, XmlNode };
 
 /** 📸️ Opaque handle -- the full `SvgSnapshot` shape lives in `../📸️snapshot/🟦️component.ts`
  * (still a placeholder pending that facet's own rewrite; see this wave's report). */
@@ -36,7 +36,7 @@ export type SvgMutation =
   | { mutation: 'noMutation' }
   | { mutation: 'setSnapshot'; snapshot: SvgSnapshot }
   | { mutation: 'setDeclaration'; declaration?: XmlDeclaration }
-  | { mutation: 'setDoctype'; doctype?: string }
+  | { mutation: 'setDoctype'; doctype?: XmlDoctype }
   | { mutation: 'insertElement'; parent: NodePath; index: number; node: XmlNode }
   | { mutation: 'removeElement'; parent: NodePath; index: number }
   | { mutation: 'setElementName'; path: NodePath; name: string }

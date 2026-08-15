@@ -3,17 +3,13 @@
 //! handcrafted per variant, index/field-aware, reading the pre-state it needs from `base`.
 
 use crate::artifacts::epw::standards::energyplus::subsets::any::schema::diff::{
-    dec_data_periods, dec_location, dec_record, dec_str, diff_set_snapshot, enc_data_periods, enc_location,
-    enc_record, enc_str, split_top_level, strip_brackets, EpwDiff, EpwRecordAdded, EpwRecordDiff, EpwRecordModified,
-    EpwRecordsDiff,
+    dec_data_periods, dec_location, dec_record, dec_str, diff_set_snapshot, enc_data_periods, enc_location, enc_record, enc_str, split_top_level, strip_brackets, EpwDiff, EpwRecordAdded, EpwRecordDiff, EpwRecordModified, EpwRecordsDiff,
 };
-use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{
-    EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot,
-};
-use protocol::{Mutation, OpText};
-use serde::{Deserialize, Serialize};
+use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot};
 #[cfg(test)]
 use protocol::OpBinary;
+use protocol::{Mutation, OpText};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.epw`.
@@ -105,29 +101,12 @@ impl Mutation<EpwSnapshot> for EpwMutation {
             EpwMutation::SetComments1 { value } => EpwDiff { comments_1: Some(value.clone()), ..EpwDiff::default() },
             EpwMutation::SetComments2 { value } => EpwDiff { comments_2: Some(value.clone()), ..EpwDiff::default() },
             EpwMutation::SetDataPeriods { data_periods } => EpwDiff { data_periods: Some(data_periods.clone()), ..EpwDiff::default() },
-            EpwMutation::InsertRecord { index, record } => EpwDiff {
-                records: Some(EpwRecordsDiff {
-                    removed: Vec::new(),
-                    modified: Vec::new(),
-                    added: vec![EpwRecordAdded { index: *index, record: record.clone() }],
-                }),
-                ..EpwDiff::default()
-            },
-            EpwMutation::RemoveRecord { index } => EpwDiff {
-                records: Some(EpwRecordsDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }),
-                ..EpwDiff::default()
-            },
+            EpwMutation::InsertRecord { index, record } => EpwDiff { records: Some(EpwRecordsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![EpwRecordAdded { index: *index, record: record.clone() }] }), ..EpwDiff::default() },
+            EpwMutation::RemoveRecord { index } => EpwDiff { records: Some(EpwRecordsDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }), ..EpwDiff::default() },
             EpwMutation::SetRecordField { record_index, field_index, value } => {
                 let mut fdiff = EpwRecordDiff::default();
                 fdiff.set_at(*field_index, Some(value.clone()));
-                EpwDiff {
-                    records: Some(EpwRecordsDiff {
-                        removed: Vec::new(),
-                        modified: vec![EpwRecordModified { index: *record_index, diff: fdiff }],
-                        added: Vec::new(),
-                    }),
-                    ..EpwDiff::default()
-                }
+                EpwDiff { records: Some(EpwRecordsDiff { removed: Vec::new(), modified: vec![EpwRecordModified { index: *record_index, diff: fdiff }], added: Vec::new() }), ..EpwDiff::default() }
             }
         }
     }
@@ -149,12 +128,10 @@ impl Mutation<EpwSnapshot> for EpwMutation {
                 Some(record) => vec![EpwMutation::InsertRecord { index: *index, record: record.clone() }],
                 None => vec![EpwMutation::NoMutation],
             },
-            EpwMutation::SetRecordField { record_index, field_index, .. } => {
-                match base.records.get(*record_index).and_then(|r| r.field_at(*field_index)) {
-                    Some(prior) => vec![EpwMutation::SetRecordField { record_index: *record_index, field_index: *field_index, value: prior.to_string() }],
-                    None => vec![EpwMutation::NoMutation],
-                }
-            }
+            EpwMutation::SetRecordField { record_index, field_index, .. } => match base.records.get(*record_index).and_then(|r| r.field_at(*field_index)) {
+                Some(prior) => vec![EpwMutation::SetRecordField { record_index: *record_index, field_index: *field_index, value: prior.to_string() }],
+                None => vec![EpwMutation::NoMutation],
+            },
         }
     }
 }
@@ -184,11 +161,7 @@ fn dec_epw_snapshot(s: &str) -> Result<EpwSnapshot, String> {
     let [schema, location, design_conditions, typical_extreme_periods, ground_temperatures, holidays_dst, comments_1, comments_2, data_periods, records] = parts.as_slice() else {
         return Err(format!("epw snapshot: expected 10 fields, got {}", parts.len()));
     };
-    let records = split_top_level(strip_brackets(records)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(dec_record)
-        .collect::<Result<Vec<_>, String>>()?;
+    let records = split_top_level(strip_brackets(records)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_record).collect::<Result<Vec<_>, String>>()?;
     Ok(EpwSnapshot {
         schema: dec_str(schema)?,
         location: dec_location(location)?,
@@ -217,10 +190,7 @@ fn print_epw_mutation(m: &EpwMutation) -> String {
         EpwMutation::SetDataPeriods { data_periods } => format!("set-data-periods data-periods={}", enc_data_periods(data_periods)),
         EpwMutation::InsertRecord { index, record } => format!("insert-record index={index} record={}", enc_record(record)),
         EpwMutation::RemoveRecord { index } => format!("remove-record index={index}"),
-        EpwMutation::SetRecordField { record_index, field_index, value } => format!(
-            "set-record-field record-index={record_index} field-index={field_index} value={}",
-            enc_str(value),
-        ),
+        EpwMutation::SetRecordField { record_index, field_index, value } => format!("set-record-field record-index={record_index} field-index={field_index} value={}", enc_str(value),),
     }
 }
 fn parse_epw_mutation(line: &str) -> Result<EpwMutation, String> {
@@ -228,13 +198,7 @@ fn parse_epw_mutation(line: &str) -> Result<EpwMutation, String> {
         return Ok(EpwMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("epw mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("epw mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("epw mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
@@ -249,11 +213,7 @@ fn parse_epw_mutation(line: &str) -> Result<EpwMutation, String> {
         "set-data-periods" => Ok(EpwMutation::SetDataPeriods { data_periods: dec_data_periods(arg("data-periods")?)? }),
         "insert-record" => Ok(EpwMutation::InsertRecord { index: usize_arg("index")?, record: dec_record(arg("record")?)? }),
         "remove-record" => Ok(EpwMutation::RemoveRecord { index: usize_arg("index")? }),
-        "set-record-field" => Ok(EpwMutation::SetRecordField {
-            record_index: usize_arg("record-index")?,
-            field_index: usize_arg("field-index")?,
-            value: dec_str(arg("value")?)?,
-        }),
+        "set-record-field" => Ok(EpwMutation::SetRecordField { record_index: usize_arg("record-index")?, field_index: usize_arg("field-index")?, value: dec_str(arg("value")?)? }),
         other => Err(format!("epw mutation: unknown keyword {other:?}")),
     }
 }
@@ -283,8 +243,8 @@ impl protocol::OpBinary for EpwMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::MutationDiff;
     use protocol::command::DiffAlgebra;
+    use protocol::MutationDiff;
 
     //#region 🔖️Fixtures
     fn location(city: &str) -> EpwLocation {
@@ -304,9 +264,7 @@ mod tests {
     fn data_periods() -> EpwDataPeriods {
         EpwDataPeriods {
             records_per_hour: 1,
-            periods: vec![crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwDataPeriod {
-                name: "Data".into(), start_day_of_week: "Sunday".into(), start_date: " 1/ 1".into(), end_date: " 1/ 1".into(),
-            }],
+            periods: vec![crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwDataPeriod { name: "Data".into(), start_day_of_week: "Sunday".into(), start_date: " 1/ 1".into(), end_date: " 1/ 1".into() }],
         }
     }
     fn base_snapshot() -> EpwSnapshot {
@@ -351,9 +309,7 @@ mod tests {
             comments_2: "COMMENTS 2,swept".into(),
             data_periods: EpwDataPeriods {
                 records_per_hour: 2,
-                periods: vec![crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwDataPeriod {
-                    name: "Swept".into(), start_day_of_week: "Monday".into(), start_date: "1/ 2".into(), end_date: "1/ 2".into(),
-                }],
+                periods: vec![crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwDataPeriod { name: "Swept".into(), start_day_of_week: "Monday".into(), start_date: "1/ 2".into(), end_date: "1/ 2".into() }],
             },
             records: vec![modified, record("3", "-6.2"), record("99", "swept-new")],
             ..EpwSnapshot::default()

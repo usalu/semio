@@ -1,6 +1,6 @@
 //! 📥️ Deserialize `stdio.gltf` from stdio.json.
-use crate::artifacts::json::JsonSnapshot;
 use crate::artifacts::gltf::GltfSnapshot;
+use crate::artifacts::json::JsonSnapshot;
 pub fn register() {}
 /// 🧪️ P2-FG3: real cross-artifact glue — was a literal `serde_json::to_vec(&from.value)` JSON
 /// round-trip (flagged by `p2-w0-recon-report.md`'s own JSON-transfer census as a real transfer-

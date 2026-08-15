@@ -109,16 +109,8 @@ mod tests {
             header_vars: Vec::new(),
             tables: Default::default(),
             other_tables: Vec::new(),
-            blocks: vec![DxfBlock {
-                name: "b1".into(),
-                base_point: [0.0, 0.0, 0.0],
-                entities: vec![DxfEntity::Circle { center: [5.0, 7.5, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] }],
-                unknown_group_codes: vec![],
-            }],
-            entities: vec![
-                DxfEntity::Line { start: [-2.0, 1.0, 0.0], end: [0.0, 2.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] },
-                DxfEntity::Other { kind: "3DFACE".into(), group_codes: vec![] },
-            ],
+            blocks: vec![DxfBlock { name: "b1".into(), base_point: [0.0, 0.0, 0.0], entities: vec![DxfEntity::Circle { center: [5.0, 7.5, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] }], unknown_group_codes: vec![] }],
+            entities: vec![DxfEntity::Line { start: [-2.0, 1.0, 0.0], end: [0.0, 2.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }, DxfEntity::Other { kind: "3DFACE".into(), group_codes: vec![] }],
         };
         let bounds = compute_dxf_bounds(&snapshot);
         assert_eq!(bounds.min, [-2.0, 1.0, 0.0]);

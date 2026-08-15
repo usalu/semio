@@ -2,14 +2,13 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::jpg::JpgSnapshot;
     use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::JpgAnalyzer;
+    use crate::artifacts::jpg::JpgSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
-
 
     pub struct JpgComposerComposition;
 
@@ -38,10 +37,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "JpgComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = JpgAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "JpgComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "JpgComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -60,10 +56,7 @@ pub use derived_composition::*;
 // `register_schema_specs` cluster (superseded by `declaration()` in the artifact root, zero real
 // callers) were deleted outright, not relocated. `empty_jpg_snapshot`/`demo_jpg_snapshot` moved to
 // `../🧬️schema` (pure helpers over the document type).
-use crate::artifacts::jpg::schema::snapshot::{
-    JfifDensityUnits, JfifThumbnail, JpgFrameComponent, JpgFrameHeader, JpgHuffmanClass,
-    JpgHuffmanTable, JpgQuantTable, JpgScanComponent, JpgSegment,
-};
+use crate::artifacts::jpg::schema::snapshot::{JfifDensityUnits, JfifThumbnail, JpgFrameComponent, JpgFrameHeader, JpgHuffmanClass, JpgHuffmanTable, JpgQuantTable, JpgScanComponent, JpgSegment};
 use crate::artifacts::jpg::{JpgSnapshot, STDIO_JPG_DOCUMENT_SCHEMA};
 use std::collections::HashMap;
 
@@ -92,14 +85,7 @@ impl std::error::Error for JpgError {}
 /// 🔀 `NATURAL[zigzag_index]` — DQT/DCT coefficients are stored/decoded in
 /// zigzag scan order; this maps back to row-major 8x8 block position.
 const ZIGZAG_TO_NATURAL: [usize; 64] = [
-    0, 1, 8, 16, 9, 2, 3, 10,
-    17, 24, 32, 25, 18, 11, 4, 5,
-    12, 19, 26, 33, 40, 48, 41, 34,
-    27, 20, 13, 6, 7, 14, 21, 28,
-    35, 42, 49, 56, 57, 50, 43, 36,
-    29, 22, 15, 23, 30, 37, 44, 51,
-    58, 59, 52, 45, 38, 31, 39, 46,
-    53, 60, 61, 54, 47, 55, 62, 63,
+    0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11, 4, 5, 12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6, 7, 14, 21, 28, 35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63,
 ];
 //#endregion ZigZag
 
@@ -143,9 +129,13 @@ fn idct_8x8(block: &[f64; 64]) -> [f64; 64] {
     let mut out = [0f64; 64];
     for c in 0..8 {
         let mut col = [0f64; 8];
-        for r in 0..8 { col[r] = tmp[r * 8 + c]; }
+        for r in 0..8 {
+            col[r] = tmp[r * 8 + c];
+        }
         let res = idct_1d(&col);
-        for r in 0..8 { out[r * 8 + c] = res[r]; }
+        for r in 0..8 {
+            out[r * 8 + c] = res[r];
+        }
     }
     out
 }
@@ -154,9 +144,13 @@ fn fdct_8x8(block: &[f64; 64]) -> [f64; 64] {
     let mut tmp = [0f64; 64];
     for c in 0..8 {
         let mut col = [0f64; 8];
-        for r in 0..8 { col[r] = block[r * 8 + c]; }
+        for r in 0..8 {
+            col[r] = block[r * 8 + c];
+        }
         let res = fdct_1d(&col);
-        for r in 0..8 { tmp[r * 8 + c] = res[r]; }
+        for r in 0..8 {
+            tmp[r * 8 + c] = res[r];
+        }
     }
     let mut out = [0f64; 64];
     for r in 0..8 {
@@ -185,7 +179,9 @@ struct HuffTable {
 fn build_huffman(bits: &[u8; 16], values: &[u8]) -> Result<HuffTable, JpgError> {
     let mut sizes: Vec<u8> = Vec::new();
     for (l, &count) in bits.iter().enumerate() {
-        for _ in 0..count { sizes.push((l + 1) as u8); }
+        for _ in 0..count {
+            sizes.push((l + 1) as u8);
+        }
     }
     if sizes.len() != values.len() {
         return Err(JpgError::Malformed("DHT bits/values length mismatch".into()));
@@ -223,16 +219,22 @@ struct BitWriter {
     nbits: u32,
 }
 impl BitWriter {
-    fn new() -> Self { Self { bytes: Vec::new(), acc: 0, nbits: 0 } }
+    fn new() -> Self {
+        Self { bytes: Vec::new(), acc: 0, nbits: 0 }
+    }
     fn put_bits(&mut self, value: u16, len: u8) {
-        if len == 0 { return; }
+        if len == 0 {
+            return;
+        }
         self.acc = (self.acc << len) | (value as u32 & ((1u32 << len) - 1));
         self.nbits += len as u32;
         while self.nbits >= 8 {
             self.nbits -= 8;
             let byte = ((self.acc >> self.nbits) & 0xFF) as u8;
             self.bytes.push(byte);
-            if byte == 0xFF { self.bytes.push(0x00); }
+            if byte == 0xFF {
+                self.bytes.push(0x00);
+            }
         }
     }
     fn flush(&mut self) {
@@ -240,7 +242,9 @@ impl BitWriter {
             let pad = 8 - self.nbits;
             let byte = ((self.acc << pad) & 0xFF) as u8;
             self.bytes.push(byte);
-            if byte == 0xFF { self.bytes.push(0x00); }
+            if byte == 0xFF {
+                self.bytes.push(0x00);
+            }
             self.nbits = 0;
             self.acc = 0;
         }
@@ -258,13 +262,20 @@ struct BitReader<'a> {
     nbits: u32,
 }
 impl<'a> BitReader<'a> {
-    fn new(data: &'a [u8], pos: usize) -> Self { Self { data, pos, acc: 0, nbits: 0 } }
+    fn new(data: &'a [u8], pos: usize) -> Self {
+        Self { data, pos, acc: 0, nbits: 0 }
+    }
     fn next_byte(&mut self) -> Option<u8> {
-        if self.pos >= self.data.len() { return None; }
+        if self.pos >= self.data.len() {
+            return None;
+        }
         let b = self.data[self.pos];
         if b == 0xFF {
             let b2 = self.data.get(self.pos + 1).copied().unwrap_or(0);
-            if b2 == 0x00 { self.pos += 2; return Some(0xFF); }
+            if b2 == 0x00 {
+                self.pos += 2;
+                return Some(0xFF);
+            }
             return None;
         }
         self.pos += 1;
@@ -273,7 +284,10 @@ impl<'a> BitReader<'a> {
     fn read_bit(&mut self) -> Result<u8, JpgError> {
         if self.nbits == 0 {
             match self.next_byte() {
-                Some(b) => { self.acc = b as u32; self.nbits = 8; }
+                Some(b) => {
+                    self.acc = b as u32;
+                    self.nbits = 8;
+                }
                 None => return Err(JpgError::Malformed("unexpected marker inside entropy-coded segment".into())),
             }
         }
@@ -282,14 +296,18 @@ impl<'a> BitReader<'a> {
     }
     fn read_bits(&mut self, n: u8) -> Result<u16, JpgError> {
         let mut v = 0u16;
-        for _ in 0..n { v = (v << 1) | self.read_bit()? as u16; }
+        for _ in 0..n {
+            v = (v << 1) | self.read_bit()? as u16;
+        }
         Ok(v)
     }
     fn decode_symbol(&mut self, table: &HuffTable) -> Result<u8, JpgError> {
         let mut code: u16 = 0;
         for len in 1..=table.max_len {
             code = (code << 1) | self.read_bit()? as u16;
-            if let Some(v) = table.decode.get(&(len, code)) { return Ok(*v); }
+            if let Some(v) = table.decode.get(&(len, code)) {
+                return Ok(*v);
+            }
         }
         Err(JpgError::Malformed("huffman decode: no matching code".into()))
     }
@@ -310,16 +328,27 @@ impl<'a> BitReader<'a> {
 /// ➕ Sign-extends a JPEG-encoded magnitude/sign pair (T.81 F.12): values
 /// below `2^(size-1)` are negative, encoded as `value - (2^size - 1)`.
 fn extend_sign(value: u16, size: u8) -> i32 {
-    if size == 0 { return 0; }
+    if size == 0 {
+        return 0;
+    }
     let v = value as i32;
     let vt = 1i32 << (size - 1);
-    if v < vt { v - (1 << size) + 1 } else { v }
+    if v < vt {
+        v - (1 << size) + 1
+    } else {
+        v
+    }
 }
 
 fn size_of(mut v: i32) -> u8 {
-    if v < 0 { v = -v; }
+    if v < 0 {
+        v = -v;
+    }
     let mut s = 0u8;
-    while v > 0 { s += 1; v >>= 1; }
+    while v > 0 {
+        s += 1;
+        v >>= 1;
+    }
     s
 }
 //#endregion BitIo
@@ -341,7 +370,10 @@ fn encode_block(bw: &mut BitWriter, coeffs: &[i32; 64], dc_pred: &mut i32, dc_ta
     }
     let mut run = 0u8;
     for &v in coeffs.iter().skip(1) {
-        if v == 0 { run += 1; continue; }
+        if v == 0 {
+            run += 1;
+            continue;
+        }
         while run >= 16 {
             let (len, code) = *ac_table.encode.get(&0xF0).ok_or_else(|| JpgError::Malformed("ac ZRL symbol not in table".into()))?;
             bw.put_bits(code, len);
@@ -375,11 +407,16 @@ fn decode_block(br: &mut BitReader, dc_pred: &mut i32, dc_table: &HuffTable, ac_
         let run = rs >> 4;
         let sz = rs & 0x0F;
         if sz == 0 {
-            if run == 15 { z += 16; continue; } // ZRL
+            if run == 15 {
+                z += 16;
+                continue;
+            } // ZRL
             break; // EOB
         }
         z += run as usize;
-        if z >= 64 { return Err(JpgError::Malformed("ac coefficient run overruns block".into())); }
+        if z >= 64 {
+            return Err(JpgError::Malformed("ac coefficient run overruns block".into()));
+        }
         let bits = br.read_bits(sz)?;
         out[z] = extend_sign(bits, sz);
         z += 1;
@@ -391,25 +428,13 @@ fn decode_block(br: &mut BitReader, dc_pred: &mut i32, dc_table: &HuffTable, ac_
 //#region QuantTables
 /// 📊 Annex K.1 example luminance quantization table (natural/row-major order).
 const STD_LUMA_Q: [i32; 64] = [
-    16, 11, 10, 16, 24, 40, 51, 61,
-    12, 12, 14, 19, 26, 58, 60, 55,
-    14, 13, 16, 24, 40, 57, 69, 56,
-    14, 17, 22, 29, 51, 87, 80, 62,
-    18, 22, 37, 56, 68, 109, 103, 77,
-    24, 35, 55, 64, 81, 104, 113, 92,
-    49, 64, 78, 87, 103, 121, 120, 101,
-    72, 92, 95, 98, 112, 100, 103, 99,
+    16, 11, 10, 16, 24, 40, 51, 61, 12, 12, 14, 19, 26, 58, 60, 55, 14, 13, 16, 24, 40, 57, 69, 56, 14, 17, 22, 29, 51, 87, 80, 62, 18, 22, 37, 56, 68, 109, 103, 77, 24, 35, 55, 64, 81, 104, 113, 92, 49, 64, 78, 87, 103, 121, 120, 101, 72, 92, 95,
+    98, 112, 100, 103, 99,
 ];
 /// 📊 Annex K.1 example chrominance quantization table (natural order).
 const STD_CHROMA_Q: [i32; 64] = [
-    17, 18, 24, 47, 99, 99, 99, 99,
-    18, 21, 26, 66, 99, 99, 99, 99,
-    24, 26, 56, 99, 99, 99, 99, 99,
-    47, 66, 99, 99, 99, 99, 99, 99,
-    99, 99, 99, 99, 99, 99, 99, 99,
-    99, 99, 99, 99, 99, 99, 99, 99,
-    99, 99, 99, 99, 99, 99, 99, 99,
-    99, 99, 99, 99, 99, 99, 99, 99,
+    17, 18, 24, 47, 99, 99, 99, 99, 18, 21, 26, 66, 99, 99, 99, 99, 24, 26, 56, 99, 99, 99, 99, 99, 47, 66, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
+    99, 99, 99,
 ];
 
 /// 📈 IJG-standard quality→scale mapping applied to the Annex K base tables.
@@ -428,7 +453,9 @@ fn scale_quality(base: &[i32; 64], quality: i32) -> [i32; 64] {
 /// directly with a zigzag-order coefficient at position `z`.
 fn quant_zigzag(natural: &[i32; 64]) -> [i32; 64] {
     let mut out = [0i32; 64];
-    for z in 0..64 { out[z] = natural[ZIGZAG_TO_NATURAL[z]]; }
+    for z in 0..64 {
+        out[z] = natural[ZIGZAG_TO_NATURAL[z]];
+    }
     out
 }
 //#endregion QuantTables
@@ -440,58 +467,30 @@ fn quant_zigzag(natural: &[i32; 64]) -> [i32; 64] {
 /// doesn't depend on matching the spec's tables byte-for-byte, only on
 /// internal consistency between what's written and what's parsed.
 const DC_LUMA_BITS: [u8; 16] = [0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0];
-fn dc_luma_values() -> Vec<u8> { (0..=11).collect() }
+fn dc_luma_values() -> Vec<u8> {
+    (0..=11).collect()
+}
 const DC_CHROMA_BITS: [u8; 16] = [0, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0];
-fn dc_chroma_values() -> Vec<u8> { (0..=11).collect() }
+fn dc_chroma_values() -> Vec<u8> {
+    (0..=11).collect()
+}
 const AC_LUMA_BITS: [u8; 16] = [0, 2, 1, 3, 3, 2, 4, 3, 5, 5, 4, 4, 0, 0, 1, 0x7d];
 fn ac_luma_values() -> Vec<u8> {
     vec![
-        0x01, 0x02, 0x03, 0x00, 0x04, 0x11, 0x05, 0x12,
-        0x21, 0x31, 0x41, 0x06, 0x13, 0x51, 0x61, 0x07,
-        0x22, 0x71, 0x14, 0x32, 0x81, 0x91, 0xa1, 0x08,
-        0x23, 0x42, 0xb1, 0xc1, 0x15, 0x52, 0xd1, 0xf0,
-        0x24, 0x33, 0x62, 0x72, 0x82, 0x09, 0x0a, 0x16,
-        0x17, 0x18, 0x19, 0x1a, 0x25, 0x26, 0x27, 0x28,
-        0x29, 0x2a, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39,
-        0x3a, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49,
-        0x4a, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59,
-        0x5a, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69,
-        0x6a, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79,
-        0x7a, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89,
-        0x8a, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98,
-        0x99, 0x9a, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7,
-        0xa8, 0xa9, 0xaa, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6,
-        0xb7, 0xb8, 0xb9, 0xba, 0xc2, 0xc3, 0xc4, 0xc5,
-        0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xd2, 0xd3, 0xd4,
-        0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xe1, 0xe2,
-        0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea,
-        0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8,
+        0x01, 0x02, 0x03, 0x00, 0x04, 0x11, 0x05, 0x12, 0x21, 0x31, 0x41, 0x06, 0x13, 0x51, 0x61, 0x07, 0x22, 0x71, 0x14, 0x32, 0x81, 0x91, 0xa1, 0x08, 0x23, 0x42, 0xb1, 0xc1, 0x15, 0x52, 0xd1, 0xf0, 0x24, 0x33, 0x62, 0x72, 0x82, 0x09, 0x0a, 0x16,
+        0x17, 0x18, 0x19, 0x1a, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69,
+        0x6a, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6,
+        0xb7, 0xb8, 0xb9, 0xba, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8,
         0xf9, 0xfa,
     ]
 }
 const AC_CHROMA_BITS: [u8; 16] = [0, 2, 1, 2, 4, 4, 3, 4, 7, 5, 4, 4, 0, 1, 2, 0x77];
 fn ac_chroma_values() -> Vec<u8> {
     vec![
-        0x00, 0x01, 0x02, 0x03, 0x11, 0x04, 0x05, 0x21,
-        0x31, 0x06, 0x12, 0x41, 0x51, 0x07, 0x61, 0x71,
-        0x13, 0x22, 0x32, 0x81, 0x08, 0x14, 0x42, 0x91,
-        0xa1, 0xb1, 0xc1, 0x09, 0x23, 0x33, 0x52, 0xf0,
-        0x15, 0x62, 0x72, 0xd1, 0x0a, 0x16, 0x24, 0x34,
-        0xe1, 0x25, 0xf1, 0x17, 0x18, 0x19, 0x1a, 0x26,
-        0x27, 0x28, 0x29, 0x2a, 0x35, 0x36, 0x37, 0x38,
-        0x39, 0x3a, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48,
-        0x49, 0x4a, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58,
-        0x59, 0x5a, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
-        0x69, 0x6a, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78,
-        0x79, 0x7a, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87,
-        0x88, 0x89, 0x8a, 0x92, 0x93, 0x94, 0x95, 0x96,
-        0x97, 0x98, 0x99, 0x9a, 0xa2, 0xa3, 0xa4, 0xa5,
-        0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xb2, 0xb3, 0xb4,
-        0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xc2, 0xc3,
-        0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xd2,
-        0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda,
-        0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9,
-        0xea, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8,
+        0x00, 0x01, 0x02, 0x03, 0x11, 0x04, 0x05, 0x21, 0x31, 0x06, 0x12, 0x41, 0x51, 0x07, 0x61, 0x71, 0x13, 0x22, 0x32, 0x81, 0x08, 0x14, 0x42, 0x91, 0xa1, 0xb1, 0xc1, 0x09, 0x23, 0x33, 0x52, 0xf0, 0x15, 0x62, 0x72, 0xd1, 0x0a, 0x16, 0x24, 0x34,
+        0xe1, 0x25, 0xf1, 0x17, 0x18, 0x19, 0x1a, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
+        0x69, 0x6a, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xb2, 0xb3, 0xb4,
+        0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8,
         0xf9, 0xfa,
     ]
 }
@@ -526,7 +525,11 @@ fn box_downsample(src: &[f64], sw: usize, sh: usize, fx: usize, fy: usize) -> (V
     for y in 0..dh {
         for x in 0..dw {
             let mut sum = 0f64;
-            for dy in 0..fy { for dx in 0..fx { sum += src[(y * fy + dy) * sw + (x * fx + dx)]; } }
+            for dy in 0..fy {
+                for dx in 0..fx {
+                    sum += src[(y * fy + dy) * sw + (x * fx + dx)];
+                }
+            }
             out[y * dw + x] = sum / (fx * fy) as f64;
         }
     }
@@ -569,7 +572,9 @@ fn encode_jfif_app0(snap: &JpgSnapshot) -> Vec<u8> {
 /// emits) — `restart_interval` is retained but this encoder never emits `DRI`/restart markers
 /// (documented deviation, `## deviations`).
 pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
-    if snap.width == 0 || snap.height == 0 { return Err(JpgError::Malformed("empty image".into())); }
+    if snap.width == 0 || snap.height == 0 {
+        return Err(JpgError::Malformed("empty image".into()));
+    }
     if snap.pixels.len() != (snap.width as usize) * (snap.height as usize) * 4 {
         return Err(JpgError::Malformed("pixels length mismatch".into()));
     }
@@ -659,11 +664,7 @@ pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
     write_dht(&mut out, 0, 1, &DC_CHROMA_BITS, &dc_chroma_values());
     write_dht(&mut out, 1, 1, &AC_CHROMA_BITS, &ac_chroma_values());
 
-    let scan_comps: Vec<JpgScanComponent> = vec![
-        JpgScanComponent { id: 1, dc_table_id: 0, ac_table_id: 0 },
-        JpgScanComponent { id: 2, dc_table_id: 1, ac_table_id: 1 },
-        JpgScanComponent { id: 3, dc_table_id: 1, ac_table_id: 1 },
-    ];
+    let scan_comps: Vec<JpgScanComponent> = vec![JpgScanComponent { id: 1, dc_table_id: 0, ac_table_id: 0 }, JpgScanComponent { id: 2, dc_table_id: 1, ac_table_id: 1 }, JpgScanComponent { id: 3, dc_table_id: 1, ac_table_id: 1 }];
     let mut sos = vec![0xFFu8, 0xDA];
     let sos_len = 6 + 2 * scan_comps.len();
     sos.push((sos_len >> 8) as u8);
@@ -688,10 +689,16 @@ pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
                     let ox = (mx * hmax + bx) * 8;
                     let oy = (my * vmax + by) * 8;
                     let mut block = [0f64; 64];
-                    for r in 0..8 { for c in 0..8 { block[r * 8 + c] = yfull[(oy + r) * pw + (ox + c)] - 128.0; } }
+                    for r in 0..8 {
+                        for c in 0..8 {
+                            block[r * 8 + c] = yfull[(oy + r) * pw + (ox + c)] - 128.0;
+                        }
+                    }
                     let coeff = fdct_8x8(&block);
                     let mut zz = [0i32; 64];
-                    for z in 0..64 { zz[z] = (coeff[ZIGZAG_TO_NATURAL[z]] / luma_q[z] as f64).round() as i32; }
+                    for z in 0..64 {
+                        zz[z] = (coeff[ZIGZAG_TO_NATURAL[z]] / luma_q[z] as f64).round() as i32;
+                    }
                     encode_block(&mut bw, &zz, &mut dc_pred[0], &dc_luma, &ac_luma)?;
                 }
             }
@@ -700,10 +707,16 @@ pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
                 let ox = mx * 8;
                 let oy = my * 8;
                 let mut block = [0f64; 64];
-                for r in 0..8 { for c in 0..8 { block[r * 8 + c] = plane[(oy + r) * cpw + (ox + c)] - 128.0; } }
+                for r in 0..8 {
+                    for c in 0..8 {
+                        block[r * 8 + c] = plane[(oy + r) * cpw + (ox + c)] - 128.0;
+                    }
+                }
                 let coeff = fdct_8x8(&block);
                 let mut zz = [0i32; 64];
-                for z in 0..64 { zz[z] = (coeff[ZIGZAG_TO_NATURAL[z]] / chroma_q[z] as f64).round() as i32; }
+                for z in 0..64 {
+                    zz[z] = (coeff[ZIGZAG_TO_NATURAL[z]] / chroma_q[z] as f64).round() as i32;
+                }
                 encode_block(&mut bw, &zz, &mut dc_pred[1 + ci], &dc_chroma, &ac_chroma)?;
             }
         }
@@ -733,7 +746,9 @@ fn write_dht(out: &mut Vec<u8>, class: u8, id: u8, bits: &[u8; 16], values: &[u8
 /// doesn't match — a non-JFIF APP0 (e.g. a bare Exif/other APP0) is retained verbatim in
 /// `other_segments` instead by the caller.
 fn parse_jfif_app0(seg: &[u8]) -> Option<(JfifVersion, JfifDensityUnits, u16, u16, Option<JfifThumbnail>)> {
-    if seg.len() < 14 || &seg[0..5] != b"JFIF\0" { return None; }
+    if seg.len() < 14 || &seg[0..5] != b"JFIF\0" {
+        return None;
+    }
     let version = (seg[5], seg[6]);
     let units = JfifDensityUnits::from_u8(seg[7]).ok()?;
     let x_density = ((seg[8] as u16) << 8) | seg[9] as u16;
@@ -741,11 +756,7 @@ fn parse_jfif_app0(seg: &[u8]) -> Option<(JfifVersion, JfifDensityUnits, u16, u1
     let tw = seg[12];
     let th = seg[13];
     let need = 3 * tw as usize * th as usize;
-    let thumbnail = if tw > 0 && th > 0 && seg.len() >= 14 + need {
-        Some(JfifThumbnail { width: tw, height: th, rgb_data: seg[14..14 + need].to_vec() })
-    } else {
-        None
-    };
+    let thumbnail = if tw > 0 && th > 0 && seg.len() >= 14 + need { Some(JfifThumbnail { width: tw, height: th, rgb_data: seg[14..14 + need].to_vec() }) } else { None };
     Some((version, units, x_density, y_density, thumbnail))
 }
 type JfifVersion = (u8, u8);
@@ -775,8 +786,13 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
     let mut jfif_thumbnail: Option<JfifThumbnail> = None;
 
     loop {
-        if i + 1 >= data.len() { return Err(JpgError::Malformed("truncated before EOI".into())); }
-        if data[i] != 0xFF { i += 1; continue; }
+        if i + 1 >= data.len() {
+            return Err(JpgError::Malformed("truncated before EOI".into()));
+        }
+        if data[i] != 0xFF {
+            i += 1;
+            continue;
+        }
         let marker = data[i + 1];
         i += 2;
         match marker {
@@ -785,20 +801,19 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
             0xC0 => {
                 let len = read_u16(data, i)?;
                 let seg = slice_at(data, i + 2, len.saturating_sub(2))?;
-                if seg.len() < 6 { return Err(JpgError::Malformed("SOF0 segment too short".into())); }
+                if seg.len() < 6 {
+                    return Err(JpgError::Malformed("SOF0 segment too short".into()));
+                }
                 let height = ((seg[1] as u16) << 8) | seg[2] as u16;
                 let width = ((seg[3] as u16) << 8) | seg[4] as u16;
                 let nc = seg[5] as usize;
                 let mut components = Vec::with_capacity(nc);
                 for k in 0..nc {
                     let base = 6 + k * 3;
-                    if base + 2 >= seg.len() { return Err(JpgError::Malformed("SOF0 component list truncated".into())); }
-                    components.push(JpgFrameComponent {
-                        id: seg[base],
-                        h_sampling: seg[base + 1] >> 4,
-                        v_sampling: seg[base + 1] & 0x0F,
-                        quant_table_id: seg[base + 2],
-                    });
+                    if base + 2 >= seg.len() {
+                        return Err(JpgError::Malformed("SOF0 component list truncated".into()));
+                    }
+                    components.push(JpgFrameComponent { id: seg[base], h_sampling: seg[base + 1] >> 4, v_sampling: seg[base + 1] & 0x0F, quant_table_id: seg[base + 2] });
                 }
                 frame = Some(JpgFrameHeader { precision: seg[0], width, height, components });
                 sof_marker = marker;
@@ -826,7 +841,9 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                 let mut p = i + 2;
                 let end = i + len;
                 while p < end {
-                    if p >= data.len() { return Err(JpgError::Malformed("DQT truncated".into())); }
+                    if p >= data.len() {
+                        return Err(JpgError::Malformed("DQT truncated".into()));
+                    }
                     let pq = data[p] >> 4;
                     let tq = data[p] & 0x0F;
                     p += 1;
@@ -858,7 +875,9 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                 let mut p = i + 2;
                 let end = i + len;
                 while p < end {
-                    if p + 16 >= data.len() { return Err(JpgError::Malformed("DHT truncated".into())); }
+                    if p + 16 >= data.len() {
+                        return Err(JpgError::Malformed("DHT truncated".into()));
+                    }
                     let class = data[p] >> 4;
                     let id = data[p] & 0x0F;
                     p += 1;
@@ -870,7 +889,11 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                     p += count;
                     let table = build_huffman(&bits, &values)?;
                     let huffman_class = JpgHuffmanClass::from_u8(class).map_err(JpgError::Malformed)?;
-                    if class == 0 { dc_tables.insert(id, table); } else { ac_tables.insert(id, table); }
+                    if class == 0 {
+                        dc_tables.insert(id, table);
+                    } else {
+                        ac_tables.insert(id, table);
+                    }
                     huffman_tables.retain(|t| !(t.class == huffman_class && t.id == id));
                     huffman_tables.push(JpgHuffmanTable { id, class: huffman_class, bits, values });
                 }
@@ -981,16 +1004,7 @@ fn slice_at(data: &[u8], at: usize, len: usize) -> Result<&[u8], JpgError> {
 /// chroma upsampling for subsampled components; grayscale skips color
 /// conversion entirely) into RGBA.
 #[allow(clippy::too_many_arguments)]
-fn decode_scan(
-    data: &[u8],
-    start: usize,
-    frame: &JpgFrameHeader,
-    scan_tabs: &[(u8, u8)],
-    quant: &HashMap<u8, [i32; 64]>,
-    dc_tables: &HashMap<u8, HuffTable>,
-    ac_tables: &HashMap<u8, HuffTable>,
-    restart_interval: u16,
-) -> Result<Vec<u8>, JpgError> {
+fn decode_scan(data: &[u8], start: usize, frame: &JpgFrameHeader, scan_tabs: &[(u8, u8)], quant: &HashMap<u8, [i32; 64]>, dc_tables: &HashMap<u8, HuffTable>, ac_tables: &HashMap<u8, HuffTable>, restart_interval: u16) -> Result<Vec<u8>, JpgError> {
     let hmax = frame.components.iter().map(|c| c.h_sampling).max().unwrap_or(1).max(1) as usize;
     let vmax = frame.components.iter().map(|c| c.v_sampling).max().unwrap_or(1).max(1) as usize;
     let mcu_w = 8 * hmax;
@@ -1015,7 +1029,9 @@ fn decode_scan(
         for mx in 0..mcus_x {
             if restart_interval > 0 && mcus_since_restart == restart_interval as u32 && (my != 0 || mx != 0) {
                 br.skip_restart_marker()?;
-                for p in dc_pred.iter_mut() { *p = 0; }
+                for p in dc_pred.iter_mut() {
+                    *p = 0;
+                }
                 mcus_since_restart = 0;
             }
             for (ci, c) in frame.components.iter().enumerate() {
@@ -1028,11 +1044,17 @@ fn decode_scan(
                     for bx in 0..c.h_sampling.max(1) as usize {
                         let zz = decode_block(&mut br, &mut dc_pred[ci], dc_tab, ac_tab)?;
                         let mut natural = [0f64; 64];
-                        for z in 0..64 { natural[ZIGZAG_TO_NATURAL[z]] = (zz[z] * q[z]) as f64; }
+                        for z in 0..64 {
+                            natural[ZIGZAG_TO_NATURAL[z]] = (zz[z] * q[z]) as f64;
+                        }
                         let spatial = idct_8x8(&natural);
                         let ox = (mx * c.h_sampling.max(1) as usize + bx) * 8;
                         let oy = (my * c.v_sampling.max(1) as usize + by) * 8;
-                        for r in 0..8 { for cc in 0..8 { planes[ci][(oy + r) * pwc + (ox + cc)] = spatial[r * 8 + cc] + 128.0; } }
+                        for r in 0..8 {
+                            for cc in 0..8 {
+                                planes[ci][(oy + r) * pwc + (ox + cc)] = spatial[r * 8 + cc] + 128.0;
+                            }
+                        }
                     }
                 }
             }
@@ -1042,11 +1064,7 @@ fn decode_scan(
 
     let grayscale = frame.components.len() == 1;
     let y_idx = frame.components.iter().position(|c| c.id == 1).unwrap_or(0);
-    let (cb_idx, cr_idx) = if grayscale {
-        (None, None)
-    } else {
-        (frame.components.iter().position(|c| c.id == 2), frame.components.iter().position(|c| c.id == 3))
-    };
+    let (cb_idx, cr_idx) = if grayscale { (None, None) } else { (frame.components.iter().position(|c| c.id == 2), frame.components.iter().position(|c| c.id == 3)) };
     let mut rgba = vec![0u8; width * height * 4];
     for y in 0..height {
         for x in 0..width {
@@ -1134,7 +1152,9 @@ mod tests {
     #[test]
     fn idct_fdct_is_identity() {
         let mut block = [0f64; 64];
-        for (i, v) in block.iter_mut().enumerate() { *v = ((i * 37 % 255) as f64) - 128.0; }
+        for (i, v) in block.iter_mut().enumerate() {
+            *v = ((i * 37 % 255) as f64) - 128.0;
+        }
         let coeff = fdct_8x8(&block);
         let recon = idct_8x8(&coeff);
         let maxerr = block.iter().zip(recon.iter()).fold(0f64, |m, (a, b)| m.max((a - b).abs()));
@@ -1213,7 +1233,12 @@ mod tests {
     fn solid_color_still_round_trips() {
         let (w, h) = (16u32, 16u32);
         let mut img = vec![0u8; (w * h * 4) as usize];
-        for px in img.chunks_mut(4) { px[0] = 200; px[1] = 100; px[2] = 50; px[3] = 255; }
+        for px in img.chunks_mut(4) {
+            px[0] = 200;
+            px[1] = 100;
+            px[2] = 50;
+            px[3] = 255;
+        }
         let snap = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), width: w, height: h, pixels: img.clone(), ..JpgSnapshot::default() };
         let bytes = encode_jpg(&snap).expect("encode");
         let decoded = decode_jpg(&bytes).expect("decode");
@@ -1258,19 +1283,11 @@ mod tests {
         /// message).
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }
@@ -1388,10 +1405,10 @@ mod tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::JpgComposer as JpgRawAnyComposer;
     use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::JpgBaselineComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 

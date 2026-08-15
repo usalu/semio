@@ -1,7 +1,7 @@
 //! Serialize stdio.bcf to stdio.binary (encode ZIP bytes).
 
-use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
 use crate::artifacts::bcf::BcfSnapshot;
+use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
 
 //#region Codec
 /// Register serializer hooks.
@@ -9,12 +9,8 @@ pub fn register() {}
 
 /// 🎒️ Encode BcfSnapshot as ZIP container bytes.
 pub fn serialize(from: &BcfSnapshot) -> Result<BinarySnapshot, store::PackError> {
-    let bytes = crate::artifacts::bcf::io::encode_bcf(from)
-        .map_err(|e| store::PackError::Schema(e))?;
-    Ok(BinarySnapshot {
-        schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(),
-        bytes,
-    })
+    let bytes = crate::artifacts::bcf::io::encode_bcf(from).map_err(|e| store::PackError::Schema(e))?;
+    Ok(BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
 }
 
 /// Encode ZIP then wrap as binary pack bytes.

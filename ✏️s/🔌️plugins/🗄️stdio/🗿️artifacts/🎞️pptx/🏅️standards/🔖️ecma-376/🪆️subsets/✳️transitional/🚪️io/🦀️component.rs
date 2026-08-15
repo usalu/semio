@@ -5,15 +5,12 @@
 //! `✳️any/🚪️io` already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use std::sync::OnceLock;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
-    use semio_framework_plugin::{
-        ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
-        register_subset_validator, subset_validator_entry_of,
-    };
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::PptxComposer as PptxAnyComposer;
+    use crate::artifacts::pptx::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
     use crate::artifacts::pptx::PptxSnapshot;
+    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use std::sync::OnceLock;
 
     const DIALECT_TRANSITIONAL: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId("transitional") };
     const DIALECT_ANY: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
@@ -38,10 +35,7 @@ pub mod derived_composition {
             if !hard.is_empty() {
                 let mut all = hard.clone();
                 all.extend(soft);
-                return Err(ComposeError {
-                    message: format!("ISO/IEC 29500-4 Transitional conformance violated: {} hard issue(s) -- not stamping the transitional dialect", hard.len()),
-                    diagnostics: all,
-                });
+                return Err(ComposeError { message: format!("ISO/IEC 29500-4 Transitional conformance violated: {} hard issue(s) -- not stamping the transitional dialect", hard.len()), diagnostics: all });
             }
             let mut diagnostics = inner.diagnostics;
             diagnostics.extend(soft);
@@ -94,8 +88,8 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
+        use crate::artifacts::zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
         use semio_framework_plugin::AnalyzeSource;
-        use crate::artifacts::zip::opc::{self, OpcPackage, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
 
         const TRANSITIONAL_PRESENTATION_XML: &str = concat!(
             r#"<p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">"#,

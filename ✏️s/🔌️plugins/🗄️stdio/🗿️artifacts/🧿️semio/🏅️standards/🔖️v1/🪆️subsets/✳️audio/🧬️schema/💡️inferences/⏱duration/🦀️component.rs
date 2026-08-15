@@ -35,13 +35,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
 
     fn snapshot(sample_rate: u32, channel_lengths: &[usize]) -> SemioAudioSnapshot {
-        SemioAudioSnapshot {
-            schema: STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA.into(),
-            sample_rate,
-            format: Default::default(),
-            channels: channel_lengths.iter().map(|&len| SemioAudioChannel { samples: vec![0.0; len] }).collect(),
-            tags: Vec::new(),
-        }
+        SemioAudioSnapshot { schema: STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA.into(), sample_rate, format: Default::default(), channels: channel_lengths.iter().map(|&len| SemioAudioChannel { samples: vec![0.0; len] }).collect(), tags: Vec::new() }
     }
 
     #[test]

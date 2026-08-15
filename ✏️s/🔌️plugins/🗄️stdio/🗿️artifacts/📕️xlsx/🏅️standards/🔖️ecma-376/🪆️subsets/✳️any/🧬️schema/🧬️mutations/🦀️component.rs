@@ -2,17 +2,16 @@
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, key/index-aware.
 
 use crate::artifacts::xlsx::schema::diff::{
-    dec_cell_value, dec_cell_value_bin, dec_ct_entry, dec_opc_part_bin, dec_owner_rels, dec_part, dec_rel_bin, dec_sheet, dec_sheet_bin, dec_str,
-    diff_insert_sheet, diff_insert_shared_string, diff_remove_cell, diff_remove_shared_string, diff_remove_sheet, diff_rename_sheet, diff_set_cell,
-    diff_set_shared_string, diff_set_snapshot, enc_cell_value, enc_cell_value_bin, enc_ct_entry, enc_opc_part_bin, enc_owner_rels, enc_part,
-    enc_rel_bin, enc_sheet, enc_sheet_bin, enc_str, read_str_lp, split_top_level, strip_brackets, write_str_lp, XlsxDiff,
+    dec_cell_value, dec_cell_value_bin, dec_ct_entry, dec_opc_part_bin, dec_owner_rels, dec_part, dec_rel_bin, dec_sheet, dec_sheet_bin, dec_str, diff_insert_shared_string, diff_insert_sheet, diff_remove_cell, diff_remove_shared_string,
+    diff_remove_sheet, diff_rename_sheet, diff_set_cell, diff_set_shared_string, diff_set_snapshot, enc_cell_value, enc_cell_value_bin, enc_ct_entry, enc_opc_part_bin, enc_owner_rels, enc_part, enc_rel_bin, enc_sheet, enc_sheet_bin, enc_str,
+    read_str_lp, split_top_level, strip_brackets, write_str_lp, XlsxDiff,
 };
 use crate::artifacts::xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
 use crate::artifacts::xlsx::XlsxSnapshot;
-use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
-use protocol::{Mutation, OpText};
+use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship, OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 #[cfg(test)]
 use protocol::OpBinary;
+use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -210,7 +209,7 @@ fn dec_opc_package(s: &str) -> Result<OpcPackage, String> {
     let outer = split_top_level(strip_brackets(s)?, ',');
     let [parts, ct, rels] = outer.as_slice() else { return Err(format!("opc package: expected 3 fields, got {}", outer.len())) };
     let parts = split_top_level(strip_brackets(parts)?, ',').into_iter().map(dec_part).collect::<Result<Vec<_>, String>>()?;
-    Ok(OpcPackage { parts, content_types: dec_content_types(ct)?, relationships: dec_relationships_map(rels)? })
+    Ok(OpcPackage { parts, content_types: dec_content_types(ct)?, relationships: dec_relationships_map(rels)?, ..Default::default() })
 }
 fn enc_workbook(wb: &XlsxWorkbook) -> String {
     let sheets = wb.sheets.iter().map(enc_sheet).collect::<Vec<_>>().join(",");
@@ -254,12 +253,7 @@ fn parse_xlsx_mutation(line: &str) -> Result<XlsxMutation, String> {
         return Ok(XlsxMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("xlsx mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').map(|tok| tok.split_once('=').ok_or_else(|| format!("xlsx mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("xlsx mutation: missing arg '{k}' for '{keyword}'"));
     let u32_arg = |k: &str| -> Result<u32, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
@@ -359,7 +353,7 @@ fn dec_opc_package_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPackage,
         }
         relationships.insert(owner, list);
     }
-    Ok(OpcPackage { parts, content_types, relationships })
+    Ok(OpcPackage { parts, content_types, relationships, ..Default::default() })
 }
 fn enc_workbook_bin(wb: &XlsxWorkbook, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, wb.sheets.len() as u64);
@@ -514,10 +508,7 @@ impl protocol::OpBinary for XlsxMutation {
 /// `sample_mutations` (the last renamed for the same convention).
 pub(crate) fn fixture() -> XlsxSnapshot {
     crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
-        sheets: vec![
-            XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] },
-            XlsxSheet { name: "Sheet2".into(), cells: vec![] },
-        ],
+        sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }, XlsxSheet { name: "Sheet2".into(), cells: vec![] }],
         shared_strings: vec!["hello".into()],
     })
 }
@@ -554,26 +545,14 @@ pub(crate) fn sweep_a() -> XlsxSnapshot {
     // any engine-built snapshot keeps this a clean whole-owner remove+add in that scenario
     // (captured/restored as one atomic `(owner, Vec<Rel>)` tuple, order-exact by construction)
     // while still genuinely exercising `relationships.modified` here in `field_sweep`.
-    opc.relationships.insert(
-        "xl/toModify.xml".into(),
-        vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "worksheets/old.xml".into(), target_mode: OpcTargetMode::Internal }],
-    );
-    opc.relationships.insert(
-        "xl/toRemove.xml".into(),
-        vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/ownerToRemove".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }],
-    );
+    opc.relationships.insert("xl/toModify.xml".into(), vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "worksheets/old.xml".into(), target_mode: OpcTargetMode::Internal }]);
+    opc.relationships.insert("xl/toRemove.xml".into(), vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/ownerToRemove".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }]);
 
     XlsxSnapshot::from_parts(
         opc,
         XlsxWorkbook {
             sheets: vec![
-                XlsxSheet {
-                    name: "toModify".into(),
-                    cells: vec![
-                        XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) },
-                        XlsxCell { row: 2, col: 0, value: XlsxCellValue::Boolean(false) },
-                    ],
-                },
+                XlsxSheet { name: "toModify".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }, XlsxCell { row: 2, col: 0, value: XlsxCellValue::Boolean(false) }] },
                 XlsxSheet { name: "stay".into(), cells: vec![] },
                 XlsxSheet { name: "toDrop".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::SharedString(0) }] },
             ],
@@ -603,10 +582,7 @@ pub(crate) fn sweep_b() -> XlsxSnapshot {
     // change).
     opc.content_types.set_override("xl/toModify.xml", "application/xml-modified");
     opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "xl/workbook.xml");
-    opc.relationships.insert(
-        "xl/toModify.xml".into(),
-        vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "worksheets/new.xml".into(), target_mode: OpcTargetMode::Internal }],
-    );
+    opc.relationships.insert("xl/toModify.xml".into(), vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "worksheets/new.xml".into(), target_mode: OpcTargetMode::Internal }]);
     opc.relationships.insert("xl/added.xml".into(), vec![OpcRelationship { id: "rId3".into(), rel_type: "http://example/added".into(), target: "media/added.png".into(), target_mode: OpcTargetMode::Internal }]);
 
     XlsxSnapshot::from_parts(
@@ -1051,12 +1027,7 @@ mod tests {
             XlsxMutation::SetCell { sheet_name: "Sheet1".into(), row: 2, col: 0, value: XlsxCellValue::SharedString(3) },
             XlsxMutation::SetCell { sheet_name: "Sheet1".into(), row: 3, col: 0, value: XlsxCellValue::Boolean(false) },
             XlsxMutation::SetCell { sheet_name: "Sheet1".into(), row: 4, col: 0, value: XlsxCellValue::InlineString("has, weird: [chars]".into()) },
-            XlsxMutation::SetCell {
-                sheet_name: "Sheet1".into(),
-                row: 5,
-                col: 0,
-                value: XlsxCellValue::Formula { expr: "SUM(A1:A4)".into(), cached: Some(Box::new(XlsxCellValue::Number(1.5))) },
-            },
+            XlsxMutation::SetCell { sheet_name: "Sheet1".into(), row: 5, col: 0, value: XlsxCellValue::Formula { expr: "SUM(A1:A4)".into(), cached: Some(Box::new(XlsxCellValue::Number(1.5))) } },
             XlsxMutation::SetCell { sheet_name: "Sheet1".into(), row: 6, col: 0, value: XlsxCellValue::Formula { expr: "NA()".into(), cached: None } },
             XlsxMutation::RemoveCell { sheet_name: "Sheet1".into(), row: 1, col: 0 },
             XlsxMutation::InsertSharedString { value: "z".into() },

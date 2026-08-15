@@ -3,12 +3,16 @@
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "demo";
-pub fn label() -> LocalizedLabel { LocalizedLabel::native("Demo", "Demo") }
+pub fn label() -> LocalizedLabel {
+    LocalizedLabel::native("Demo", "Demo")
+}
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.semio");
 /// 📦️ Genuine `encode_docx(demo_docx_snapshot())` bytes (populated by engine fixture honesty).
 pub const NATIVE_BYTES: &[u8] = include_bytes!("🖼️assets/📜️example.docx");
-pub fn source() -> ExampleSource { ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON) }
+pub fn source() -> ExampleSource {
+    ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
+}
 
 #[cfg(test)]
 mod tests {
@@ -33,11 +37,7 @@ mod tests {
         type Inference = DocxInference;
 
         fn dialect() -> store::os_io::ArtifactDialect {
-            store::os_io::ArtifactDialect {
-                artifact_kind: "s.stdio.docx".into(),
-                standard: "ecma-376".into(),
-                subset: "*".into(),
-            }
+            store::os_io::ArtifactDialect { artifact_kind: "s.stdio.docx".into(), standard: "ecma-376".into(), subset: "*".into() }
         }
 
         fn fidelity() -> IoFidelityClass {
@@ -79,11 +79,7 @@ mod tests {
 
     #[test]
     fn demo_subset_integrated_roundtrip() {
-        let asset = ExampleAsset {
-            bytes: NATIVE_BYTES,
-            text: None,
-            provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/📜️example.docx",
-        };
+        let asset = ExampleAsset { bytes: NATIVE_BYTES, text: None, provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/📜️example.docx" };
         test_support::assert_subset_roundtrip::<DocxAnyRoundtrip>(&asset, None);
     }
 }

@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.stdio.dwg.ac1024.inference;
 
-// 💡️ Dwg (ac1024) inference schema — structural byte/section/page statistics over the real D1/D2 section-page decode.
+// 💡️ Dwg (ac1024) inference schema over logical drawing concepts.
 
 message DwgInference {
   // @derived
@@ -9,12 +9,11 @@ message DwgInference {
 }
 
 message DwgStructure {
-  uint32 byte_count = 1;
-  uint32 section_count = 2;
-  uint32 page_count = 3;
-  uint32 decoded_page_count = 4;
-  uint32 error_page_count = 5;
-  uint64 declared_total_size = 6;
-  uint32 codepage = 7;
-  string version = 8;
+  uint32 layer_count = 1;
+  uint32 entity_count = 2;
+  uint32 geometry_value_count = 3;
+  uint32 geometry_index_count = 4;
+  uint32 text_character_count = 5;
+  uint32 codepage = 6;
+  string version = 7;
 }

@@ -1,7 +1,7 @@
 //! 🧬️ JsonArtifact schema — full artifact state.
 
-use crate::artifacts::json::{JsonSnapshot};
 use crate::artifacts::json::schema::snapshot::JsonValue;
+use crate::artifacts::json::JsonSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -29,18 +29,12 @@ impl Default for JsonArtifact {
 impl JsonArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> JsonSnapshot {
-        JsonSnapshot {
-            schema: self.schema.clone(),
-            value: self.value.clone(),
-        }
+        JsonSnapshot { schema: self.schema.clone(), value: self.value.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: JsonSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            value: snapshot.value,
-        }
+        Self { schema: snapshot.schema, value: snapshot.value }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -89,8 +83,8 @@ pub fn json_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::json::{JsonDiff, JsonMutation, JsonSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.json` snapshot.
@@ -125,7 +119,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -135,8 +133,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::json::JsonSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.json` parts.
@@ -199,22 +197,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <JsonSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }

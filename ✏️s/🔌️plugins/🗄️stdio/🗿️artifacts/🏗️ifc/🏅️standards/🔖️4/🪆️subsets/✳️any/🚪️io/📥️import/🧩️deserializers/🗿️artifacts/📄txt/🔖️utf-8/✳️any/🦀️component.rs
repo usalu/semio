@@ -1,11 +1,9 @@
 //! 📥️ Deserialize `stdio.ifc` from stdio.txt.
-use crate::artifacts::txt::TxtSnapshot;
 use crate::artifacts::ifc::{IfcSnapshot, STDIO_IFC_DOCUMENT_SCHEMA};
+use crate::artifacts::txt::TxtSnapshot;
 pub fn register() {}
 pub fn deserialize(from: &TxtSnapshot) -> Result<IfcSnapshot, store::TextError> {
-    let document = crate::artifacts::step::engine::part21::parse_part21(from.to_body().trim()).map_err(|e| {
-        store::TextError::new(format!("ifc parse: {e}"), dsl::TextSpan::at(1, 1))
-    })?;
+    let document = crate::artifacts::step::engine::part21::parse_part21(from.to_body().trim()).map_err(|e| store::TextError::new(format!("ifc parse: {e}"), dsl::TextSpan::at(1, 1)))?;
     Ok(crate::artifacts::ifc::schema::snapshot::from_part21_document(STDIO_IFC_DOCUMENT_SCHEMA, &document))
 }
 pub fn deserialize_text(text: &str) -> Result<IfcSnapshot, store::TextError> {

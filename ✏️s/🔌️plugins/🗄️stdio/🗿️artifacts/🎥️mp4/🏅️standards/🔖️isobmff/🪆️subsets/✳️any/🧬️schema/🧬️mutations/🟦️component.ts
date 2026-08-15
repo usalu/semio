@@ -9,6 +9,4 @@ export type Mp4Mutation =
   | { mutation: "setTrackCodec"; trackIndex: number; codec: import("../📸️snapshot/🟦️component").Mp4Codec }
   | { mutation: "insertSample"; trackIndex: number; index: number; sample: import("../📸️snapshot/🟦️component").Mp4Sample }
   | { mutation: "removeSample"; trackIndex: number; index: number }
-  | { mutation: "setSampleSync"; trackIndex: number; index: number; sync: boolean }
-  | { mutation: "addUnknownBox"; index: number; item: import("../📸️snapshot/🟦️component").Mp4Box }
-  | { mutation: "removeUnknownBox"; index: number };
+  | { mutation: "setSampleSync"; trackIndex: number; index: number; sync: boolean };

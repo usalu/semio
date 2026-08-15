@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::xml::schema::snapshot::XmlSnapshot;
-pub use crate::artifacts::xml::schema::XmlArtifact;
 pub use crate::artifacts::xml::schema::diff::XmlDiff;
 pub use crate::artifacts::xml::schema::mutations::XmlMutation;
+pub use crate::artifacts::xml::schema::snapshot::XmlSnapshot;
+pub use crate::artifacts::xml::schema::XmlArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_XML_DOCUMENT_SCHEMA: &str = "stdio.xml";
@@ -27,7 +27,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
@@ -71,9 +71,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
 /// `subsets::valid::io::derived_composition`'s private `validator_entry()`.
 fn pilot_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
-    ENTRIES
-        .get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::xml::standards::v1_0::subsets::valid::io::XmlValidValidator>()])
-        .as_slice()
+    ENTRIES.get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::xml::standards::v1_0::subsets::valid::io::XmlValidValidator>()]).as_slice()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -143,9 +141,9 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::xml::standards::v1_0::subsets::any::io::io_registry as v1_0;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -154,10 +152,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("XmlComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("XmlComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

@@ -1,4 +1,79 @@
-; abnf stdio.pdf.1.7 diff -- on the wire this is UTF-8-encoded JSON (RFC8259), tagged per
-; ../🔣️component.json; see ../📝️text/📖️component.grammar.semio for the full tagged-object
-; grammar. This leaf names the byte-level encoding, not a placeholder payload.
-pdf-diff-bytes = 1*OCTET ; UTF-8 encoding of the RFC8259 JSON text described in ../📝️text/
+; Structured PdfDiff binary protocol emitted by DiffCodec::encode_diff.
+; Flags bits 0-4 select declared-version, info, pages, objects, and trailer in fixed order.
+; Bits 5-7 are invalid. Counts and lengths are unsigned LEB128; signed integers are zigzag.
+pdf-diff = format flags [declared-version] [pdf-info] [pages-diff] [objects-diff] [dict-diff]
+format = %x01
+flags = OCTET
+
+varint = *continuation final-octet
+continuation = %x80-FF
+final-octet = %x00-7F
+bytes-lp = varint *OCTET
+string-lp = bytes-lp
+zigzag-i64 = varint
+boolean = %x00 / %x01
+presence = boolean
+decimal = boolean string-lp varint
+f64-le = 8OCTET
+box = 4f64-le
+objref = varint varint
+
+declared-version = string-lp
+pdf-info = 6optional-string
+optional-string = presence [string-lp]
+
+page = box presence [box] zigzag-i64 string-lp
+page-diff = presence [box] presence [presence [box]] presence [zigzag-i64] presence [string-lp]
+pages-diff = removed-indices modified-pages added-pages
+removed-indices = varint *varint
+modified-pages = varint *(varint page-diff)
+added-pages = varint *(varint page)
+
+dict-entry = string-lp pdf-object
+dict-diff = removed-keys modified-entries added-entries
+removed-keys = varint *string-lp
+modified-entries = varint *(string-lp value-diff)
+added-entries = varint *(varint string-lp pdf-object)
+
+array-diff = removed-indices modified-values added-values
+modified-values = varint *(varint value-diff)
+added-values = varint *(varint pdf-object)
+
+objects-diff = removed-objects modified-objects added-objects
+removed-objects = varint *objref
+modified-objects = varint *(objref value-diff)
+added-objects = varint *(varint objref pdf-object)
+
+pdf-object = null-object / bool-object / int-object / real-object / string-object /
+             name-object / array-object / dict-object / ref-object / stream-object
+null-object = %x00
+bool-object = %x01 boolean
+int-object = %x02 zigzag-i64
+real-object = %x03 decimal
+string-object = %x04 bytes-lp
+name-object = %x05 string-lp
+array-object = %x06 varint *pdf-object
+dict-object = %x07 varint *dict-entry
+ref-object = %x08 objref
+stream-object = %x09 varint *dict-entry bytes-lp stream-filters
+
+value-diff = replace-diff / bool-diff / int-diff / real-diff / string-diff /
+             name-diff / ref-diff / array-value-diff / dict-value-diff / stream-value-diff
+replace-diff = %x00 pdf-object
+bool-diff = %x01 boolean
+int-diff = %x02 zigzag-i64
+real-diff = %x03 decimal
+string-diff = %x04 bytes-lp
+name-diff = %x05 string-lp
+ref-diff = %x06 objref
+array-value-diff = %x07 array-diff
+dict-value-diff = %x08 dict-diff
+stream-value-diff = %x09 presence [dict-diff] presence [bytes-lp] presence [stream-filters]
+
+stream-filters = varint *stream-filter
+stream-filter = flate-filter / ascii-hex-filter / ascii85-filter / run-length-filter
+flate-filter = %x00 presence [predictor]
+ascii-hex-filter = %x01
+ascii85-filter = %x02
+run-length-filter = %x03
+predictor = varint varint varint varint

@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::xlsx::schema::snapshot::XlsxSnapshot;
-pub use crate::artifacts::xlsx::schema::XlsxArtifact;
 pub use crate::artifacts::xlsx::schema::diff::XlsxDiff;
 pub use crate::artifacts::xlsx::schema::mutations::XlsxMutation;
+pub use crate::artifacts::xlsx::schema::snapshot::XlsxSnapshot;
+pub use crate::artifacts::xlsx::schema::XlsxArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_XLSX_DOCUMENT_SCHEMA: &str = "stdio.xlsx";
@@ -51,12 +51,8 @@ fn xlsx_subset_validators() -> &'static [semio_framework_plugin::SubsetValidator
     ENTRIES
         .get_or_init(|| {
             vec![
-                semio_framework_plugin::subset_validator_entry_of::<
-                    crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::io::XlsxStrictValidator,
-                >(),
-                semio_framework_plugin::subset_validator_entry_of::<
-                    crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::io::XlsxTransitionalValidator,
-                >(),
+                semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::io::XlsxStrictValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::io::XlsxTransitionalValidator>(),
             ]
         })
         .as_slice()
@@ -140,16 +136,16 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: STDIO_XLSX_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::io_registry as v_ecma_376;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -158,10 +154,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("XlsxComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("XlsxComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

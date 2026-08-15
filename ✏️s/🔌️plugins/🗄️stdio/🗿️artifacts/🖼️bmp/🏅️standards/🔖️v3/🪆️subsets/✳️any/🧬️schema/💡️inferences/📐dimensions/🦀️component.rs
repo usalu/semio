@@ -24,13 +24,7 @@ pub struct BmpDimensions {
 
 /// 📐️ Computes [`BmpDimensions`] from a snapshot's header fields — pure, total, O(1).
 pub fn compute_bmp_dimensions(snapshot: &BmpSnapshot) -> BmpDimensions {
-    BmpDimensions {
-        width: snapshot.width,
-        height: snapshot.height,
-        bit_depth: snapshot.bits_per_pixel,
-        has_alpha: snapshot.bits_per_pixel == 32,
-        pixel_count: snapshot.width as u64 * snapshot.height as u64,
-    }
+    BmpDimensions { width: snapshot.width, height: snapshot.height, bit_depth: snapshot.bits_per_pixel, has_alpha: snapshot.bits_per_pixel == 32, pixel_count: snapshot.width as u64 * snapshot.height as u64 }
 }
 //#endregion 🔖️Dimensions
 

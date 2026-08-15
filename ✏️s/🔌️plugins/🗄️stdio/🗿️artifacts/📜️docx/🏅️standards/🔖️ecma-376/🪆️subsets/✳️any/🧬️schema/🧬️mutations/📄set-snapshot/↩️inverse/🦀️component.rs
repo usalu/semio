@@ -1,5 +1,5 @@
-use crate::artifacts::docx::{DocxSnapshot};
 use crate::artifacts::docx::schema::mutations::DocxMutation;
+use crate::artifacts::docx::DocxSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

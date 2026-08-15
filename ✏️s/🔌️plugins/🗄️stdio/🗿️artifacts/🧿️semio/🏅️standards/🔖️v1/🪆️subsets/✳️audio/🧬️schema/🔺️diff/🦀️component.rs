@@ -13,14 +13,12 @@
 //! no `DslField` impl of its own.
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{self, IndexAdded, IndexModified, IndexedTripleDiff};
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{
-    SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag,
-};
-use protocol::MutationDiff;
+use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
 use protocol::command::DiffAlgebra;
 /// 🔧️ Unconditional — `impl protocol::DiffCodec for SemioAudioDiff` below's `encode_diff`/
 /// `decode_diff` are now real production code (binary upgrade, this wave), not test-only.
 use protocol::DiffCodec;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️IndexTransport
@@ -57,11 +55,7 @@ fn indexed_is_empty<D, T>(t: &IndexedTripleDiff<D, T>) -> bool {
     t.removed.is_empty() && t.modified.is_empty() && t.added.is_empty()
 }
 
-fn indexed_between<T: Clone + PartialEq, D>(
-    base: &[T],
-    other: &[T],
-    diff_between: impl Fn(&T, &T) -> Option<D>,
-) -> IndexedTripleDiff<D, T> {
+fn indexed_between<T: Clone + PartialEq, D>(base: &[T], other: &[T], diff_between: impl Fn(&T, &T) -> Option<D>) -> IndexedTripleDiff<D, T> {
     let min = base.len().min(other.len());
     let mut modified = Vec::new();
     for i in 0..min {
@@ -87,7 +81,9 @@ fn indexed_apply<T: Clone, D>(triple: &IndexedTripleDiff<D, T>, base: &[T], diff
     removed_sorted.sort_unstable();
     removed_sorted.reverse();
     for &r in &removed_sorted {
-        if r < next.len() { next.remove(r); }
+        if r < next.len() {
+            next.remove(r);
+        }
     }
     let mut out: Vec<T> = next.into_iter().flatten().collect();
     let mut added_sorted = triple.added.clone();
@@ -103,12 +99,7 @@ fn indexed_apply<T: Clone, D>(triple: &IndexedTripleDiff<D, T>, base: &[T], diff
 /// module's doc comment for the derivation and the plan's 3 mandated canonical cases, all
 /// re-verified for this generic form in this file's own tests below).
 #[allow(clippy::too_many_arguments)]
-fn indexed_absorb<T: Clone, D: Clone>(
-    mine: &mut IndexedTripleDiff<D, T>,
-    other: IndexedTripleDiff<D, T>,
-    mut absorb_diff: impl FnMut(&mut D, D),
-    apply_diff_to_item: impl Fn(&D, &T) -> T,
-) {
+fn indexed_absorb<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, other: IndexedTripleDiff<D, T>, mut absorb_diff: impl FnMut(&mut D, D), apply_diff_to_item: impl Fn(&D, &T) -> T) {
     let removed1 = std::mem::take(&mut mine.removed);
     let modified1: Vec<(usize, D)> = std::mem::take(&mut mine.modified).into_iter().map(|m| (m.index, m.diff)).collect();
     let added1: Vec<(usize, T)> = std::mem::take(&mut mine.added).into_iter().map(|a| (a.index, a.item)).collect();
@@ -193,11 +184,7 @@ fn indexed_absorb<T: Clone, D: Clone>(
 
 /// ↩️ Diff-level inverse for a generic index-keyed collection triple, given the ORIGINAL base
 /// items — generalized from gif's `inverse_indexed_collection`.
-fn indexed_inverse<T: Clone, D>(
-    triple: &IndexedTripleDiff<D, T>,
-    base_items: &[T],
-    diff_inverse: impl Fn(&D, &T) -> D,
-) -> IndexedTripleDiff<D, T> {
+fn indexed_inverse<T: Clone, D>(triple: &IndexedTripleDiff<D, T>, base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> IndexedTripleDiff<D, T> {
     let mut removed_sorted: Vec<usize> = triple.removed.clone();
     removed_sorted.sort_unstable();
     let mut added_index_sorted: Vec<usize> = triple.added.iter().map(|a| a.index).collect();
@@ -235,20 +222,26 @@ pub struct SemioAudioChannelDiff {
 }
 
 impl SemioAudioChannelDiff {
-    pub fn is_empty(&self) -> bool { self.samples.is_none() }
+    pub fn is_empty(&self) -> bool {
+        self.samples.is_none()
+    }
     pub fn between(base: &SemioAudioChannel, other: &SemioAudioChannel) -> Self {
         Self { samples: (base.samples != other.samples).then_some(other.samples.clone()) }
     }
     pub fn apply(&self, base: &SemioAudioChannel) -> SemioAudioChannel {
         let mut next = base.clone();
-        if let Some(v) = &self.samples { next.samples = v.clone(); }
+        if let Some(v) = &self.samples {
+            next.samples = v.clone();
+        }
         next
     }
     pub fn inverse(&self, base: &SemioAudioChannel) -> Self {
         Self { samples: self.samples.as_ref().map(|_| base.samples.clone()) }
     }
     fn absorb(&mut self, other: Self) {
-        if other.samples.is_some() { self.samples = other.samples; }
+        if other.samples.is_some() {
+            self.samples = other.samples;
+        }
     }
 }
 
@@ -308,26 +301,35 @@ pub struct SemioAudioDiff {
 
 impl SemioAudioDiff {
     pub fn is_empty_diff(&self) -> bool {
-        self.sample_rate.is_none()
-            && self.format.is_none()
-            && self.channels.as_ref().map(indexed_is_empty).unwrap_or(true)
-            && self.tags.as_ref().map(indexed_is_empty).unwrap_or(true)
+        self.sample_rate.is_none() && self.format.is_none() && self.channels.as_ref().map(indexed_is_empty).unwrap_or(true) && self.tags.as_ref().map(indexed_is_empty).unwrap_or(true)
     }
 }
 
 impl MutationDiff<SemioAudioSnapshot> for SemioAudioDiff {
     fn apply(&self, base: &SemioAudioSnapshot) -> SemioAudioSnapshot {
         let mut next = base.clone();
-        if let Some(v) = self.sample_rate { next.sample_rate = v; }
-        if let Some(v) = self.format { next.format = v; }
-        if let Some(d) = &self.channels { next.channels = channels_apply(d, &next.channels); }
-        if let Some(d) = &self.tags { next.tags = tags_apply(d, &next.tags); }
+        if let Some(v) = self.sample_rate {
+            next.sample_rate = v;
+        }
+        if let Some(v) = self.format {
+            next.format = v;
+        }
+        if let Some(d) = &self.channels {
+            next.channels = channels_apply(d, &next.channels);
+        }
+        if let Some(d) = &self.tags {
+            next.tags = tags_apply(d, &next.tags);
+        }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.sample_rate.is_some() { self.sample_rate = other.sample_rate; }
-        if other.format.is_some() { self.format = other.format; }
+        if other.sample_rate.is_some() {
+            self.sample_rate = other.sample_rate;
+        }
+        if other.format.is_some() {
+            self.format = other.format;
+        }
         match (&mut self.channels, other.channels) {
             (Some(mine), Some(theirs)) => channels_absorb(mine, theirs),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
@@ -362,7 +364,9 @@ impl DiffAlgebra<SemioAudioSnapshot> for SemioAudioDiff {
         }
     }
 
-    fn is_empty(&self) -> bool { self.is_empty_diff() }
+    fn is_empty(&self) -> bool {
+        self.is_empty_diff()
+    }
 }
 
 /// 🧩️ Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
@@ -397,11 +401,19 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 pub(crate) fn hex_decode_string(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) fn parse_u32(s: &str) -> Result<u32, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+pub(crate) fn parse_u32(s: &str) -> Result<u32, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
 
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> { triples::split_top_level(s, sep) }
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> { triples::strip_brackets(s) }
+pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+    triples::split_top_level(s, sep)
+}
+pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+    triples::strip_brackets(s)
+}
 
 fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
@@ -449,15 +461,25 @@ pub(crate) fn enc_f32_list(v: &[f32]) -> String {
 }
 pub(crate) fn dec_f32_list(s: &str) -> Result<Vec<f32>, String> {
     let inner = strip_brackets(s)?;
-    if inner.is_empty() { return Ok(Vec::new()); }
+    if inner.is_empty() {
+        return Ok(Vec::new());
+    }
     split_top_level(inner, ',').into_iter().map(|tok| u32::from_str_radix(tok, 16).map(f32::from_bits).map_err(|e| e.to_string())).collect()
 }
 
-pub(crate) fn enc_channel(c: &SemioAudioChannel) -> String { enc_f32_list(&c.samples) }
-pub(crate) fn dec_channel(s: &str) -> Result<SemioAudioChannel, String> { Ok(SemioAudioChannel { samples: dec_f32_list(s)? }) }
+pub(crate) fn enc_channel(c: &SemioAudioChannel) -> String {
+    enc_f32_list(&c.samples)
+}
+pub(crate) fn dec_channel(s: &str) -> Result<SemioAudioChannel, String> {
+    Ok(SemioAudioChannel { samples: dec_f32_list(s)? })
+}
 
-fn enc_channel_diff(d: &SemioAudioChannelDiff) -> String { encode_option(&d.samples, |v| enc_f32_list(v)) }
-fn dec_channel_diff(s: &str) -> Result<SemioAudioChannelDiff, String> { Ok(SemioAudioChannelDiff { samples: decode_option(s, dec_f32_list)? }) }
+fn enc_channel_diff(d: &SemioAudioChannelDiff) -> String {
+    encode_option(&d.samples, |v| enc_f32_list(v))
+}
+fn dec_channel_diff(s: &str) -> Result<SemioAudioChannelDiff, String> {
+    Ok(SemioAudioChannelDiff { samples: decode_option(s, dec_f32_list)? })
+}
 
 pub(crate) fn enc_tag(t: &SemioAudioTag) -> String {
     format!("[{},{}]", hex_encode(t.key.as_bytes()), hex_encode(t.value.as_bytes()))
@@ -472,14 +494,7 @@ pub(crate) fn dec_tag(s: &str) -> Result<SemioAudioTag, String> {
 /// payload (via the mutations module) and directly nowhere else; kept here alongside its sibling
 /// value codecs.
 pub(crate) fn enc_snapshot(s: &SemioAudioSnapshot) -> String {
-    format!(
-        "[{},{},{},[{}],[{}]]",
-        hex_encode(s.schema.as_bytes()),
-        s.sample_rate,
-        enc_format(s.format),
-        s.channels.iter().map(enc_channel).collect::<Vec<_>>().join(","),
-        s.tags.iter().map(enc_tag).collect::<Vec<_>>().join(","),
-    )
+    format!("[{},{},{},[{}],[{}]]", hex_encode(s.schema.as_bytes()), s.sample_rate, enc_format(s.format), s.channels.iter().map(enc_channel).collect::<Vec<_>>().join(","), s.tags.iter().map(enc_tag).collect::<Vec<_>>().join(","),)
 }
 pub(crate) fn dec_snapshot(s: &str) -> Result<SemioAudioSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -488,21 +503,19 @@ pub(crate) fn dec_snapshot(s: &str) -> Result<SemioAudioSnapshot, String> {
     };
     let channels = split_top_level(strip_brackets(channels_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_channel).collect::<Result<Vec<_>, String>>()?;
     let tags = split_top_level(strip_brackets(tags_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_tag).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioAudioSnapshot {
-        schema: hex_decode_string(schema_hex)?,
-        sample_rate: parse_u32(sample_rate)?,
-        format: dec_format(format)?,
-        channels,
-        tags,
-    })
+    Ok(SemioAudioSnapshot { schema: hex_decode_string(schema_hex)?, sample_rate: parse_u32(sample_rate)?, format: dec_format(format)?, channels, tags })
 }
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️TopLevel
 fn print_audio_diff(d: &SemioAudioDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = d.sample_rate { tokens.push(format!("rate={v}")); }
-    if let Some(v) = d.format { tokens.push(format!("format={}", enc_format(v))); }
+    if let Some(v) = d.sample_rate {
+        tokens.push(format!("rate={v}"));
+    }
+    if let Some(v) = d.format {
+        tokens.push(format!("format={}", enc_format(v)));
+    }
     if let Some(v) = &d.channels {
         tokens.push(format!("channels{{{}}}", triples::enc_indexed_triple(v, enc_channel_diff, enc_channel)));
     }
@@ -513,19 +526,23 @@ fn print_audio_diff(d: &SemioAudioDiff) -> String {
 }
 fn parse_audio_diff(line: &str) -> Result<SemioAudioDiff, String> {
     let mut d = SemioAudioDiff::default();
-    if line.is_empty() { return Ok(d); }
+    if line.is_empty() {
+        return Ok(d);
+    }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("rate=") { d.sample_rate = Some(parse_u32(rest)?); }
-        else if let Some(rest) = token.strip_prefix("format=") { d.format = Some(dec_format(rest)?); }
-        else if let Some(rest) = token.strip_prefix("channels{") {
+        if let Some(rest) = token.strip_prefix("rate=") {
+            d.sample_rate = Some(parse_u32(rest)?);
+        } else if let Some(rest) = token.strip_prefix("format=") {
+            d.format = Some(dec_format(rest)?);
+        } else if let Some(rest) = token.strip_prefix("channels{") {
             let body = rest.strip_suffix('}').ok_or_else(|| "channels: missing closing brace".to_string())?;
             d.channels = Some(triples::dec_indexed_triple(body, dec_channel_diff, dec_channel)?);
-        }
-        else if let Some(rest) = token.strip_prefix("tags{") {
+        } else if let Some(rest) = token.strip_prefix("tags{") {
             let body = rest.strip_suffix('}').ok_or_else(|| "tags: missing closing brace".to_string())?;
             d.tags = Some(triples::dec_indexed_triple(body, dec_tag, dec_tag)?);
+        } else {
+            return Err(format!("audio diff: unknown token {token:?}"));
         }
-        else { return Err(format!("audio diff: unknown token {token:?}")); }
     }
     Ok(d)
 }
@@ -544,7 +561,9 @@ fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
 }
 
 impl protocol::DiffCodec for SemioAudioDiff {
-    fn print_diff(&self) -> String { print_audio_diff(self) }
+    fn print_diff(&self) -> String {
+        print_audio_diff(self)
+    }
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_audio_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
@@ -560,15 +579,31 @@ impl protocol::DiffCodec for SemioAudioDiff {
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;
-        if self.sample_rate.is_some() { presence |= 0b0001; }
-        if self.format.is_some() { presence |= 0b0010; }
-        if self.channels.is_some() { presence |= 0b0100; }
-        if self.tags.is_some() { presence |= 0b1000; }
+        if self.sample_rate.is_some() {
+            presence |= 0b0001;
+        }
+        if self.format.is_some() {
+            presence |= 0b0010;
+        }
+        if self.channels.is_some() {
+            presence |= 0b0100;
+        }
+        if self.tags.is_some() {
+            presence |= 0b1000;
+        }
         let mut out = vec![DIFF_BINARY_FORMAT, presence];
-        if let Some(v) = self.sample_rate { write_str_lp(&mut out, &v.to_string()); }
-        if let Some(v) = self.format { write_str_lp(&mut out, enc_format(v)); }
-        if let Some(v) = &self.channels { write_str_lp(&mut out, &triples::enc_indexed_triple(v, enc_channel_diff, enc_channel)); }
-        if let Some(v) = &self.tags { write_str_lp(&mut out, &triples::enc_indexed_triple(v, enc_tag, enc_tag)); }
+        if let Some(v) = self.sample_rate {
+            write_str_lp(&mut out, &v.to_string());
+        }
+        if let Some(v) = self.format {
+            write_str_lp(&mut out, enc_format(v));
+        }
+        if let Some(v) = &self.channels {
+            write_str_lp(&mut out, &triples::enc_indexed_triple(v, enc_channel_diff, enc_channel));
+        }
+        if let Some(v) = &self.tags {
+            write_str_lp(&mut out, &triples::enc_indexed_triple(v, enc_tag, enc_tag));
+        }
         Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -584,19 +619,27 @@ impl protocol::DiffCodec for SemioAudioDiff {
         let sample_rate = if presence & 0b0001 != 0 {
             let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff sample_rate blob", offset: 2, detail: e })?;
             Some(parse_u32(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff sample_rate text", offset: 2, detail: e })?)
-        } else { None };
+        } else {
+            None
+        };
         let format = if presence & 0b0010 != 0 {
             let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff format blob", offset: 2, detail: e })?;
             Some(dec_format(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff format text", offset: 2, detail: e })?)
-        } else { None };
+        } else {
+            None
+        };
         let channels = if presence & 0b0100 != 0 {
             let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff channels blob", offset: 2, detail: e })?;
             Some(triples::dec_indexed_triple(&text, dec_channel_diff, dec_channel).map_err(|e| protocol::ProtocolError::Malformed { what: "diff channels text", offset: 2, detail: e })?)
-        } else { None };
+        } else {
+            None
+        };
         let tags = if presence & 0b1000 != 0 {
             let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff tags blob", offset: 2, detail: e })?;
             Some(triples::dec_indexed_triple(&text, dec_tag, dec_tag).map_err(|e| protocol::ProtocolError::Malformed { what: "diff tags text", offset: 2, detail: e })?)
-        } else { None };
+        } else {
+            None
+        };
         Ok(SemioAudioDiff { sample_rate, format, channels, tags })
     }
 }
@@ -626,11 +669,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioAudioDiff> {
         tags: vec![SemioAudioTag { key: "title".into(), value: "two".into() }, SemioAudioTag { key: "artist".into(), value: "someone".into() }],
         ..SemioAudioSnapshot::default()
     };
-    vec![
-        SemioAudioDiff::default(),
-        <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&a, &b),
-        <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&b, &a),
-    ]
+    vec![SemioAudioDiff::default(), <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&a, &b), <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&b, &a)]
 }
 //#endregion 🔖️Demo
 
@@ -683,10 +722,7 @@ mod tests {
     fn absorb_insert_then_set_field_patches_into_added() {
         let c = channel(1.0, 2);
         let mut d1: SemioAudioChannelsDiff = IndexedTripleDiff { added: vec![IndexAdded { index: 1, item: c.clone() }], ..Default::default() };
-        let d2: SemioAudioChannelsDiff = IndexedTripleDiff {
-            modified: vec![IndexModified { index: 1, diff: SemioAudioChannelDiff { samples: Some(vec![9.0, 9.0]) } }],
-            ..Default::default()
-        };
+        let d2: SemioAudioChannelsDiff = IndexedTripleDiff { modified: vec![IndexModified { index: 1, diff: SemioAudioChannelDiff { samples: Some(vec![9.0, 9.0]) } }], ..Default::default() };
         channels_absorb(&mut d1, d2);
         assert!(d1.modified.is_empty());
         assert_eq!(d1.added.len(), 1);
@@ -753,20 +789,9 @@ mod tests {
     /// (split across both directions, matching the recipe's own guidance).
     #[test]
     fn field_sweep_covers_every_mutable_field() {
-        let sweep_a = SemioAudioSnapshot {
-            sample_rate: 44_100,
-            format: SemioAudioFormat::Pcm16,
-            channels: vec![channel(0.0, 4), channel(1.0, 4)],
-            tags: vec![SemioAudioTag { key: "title".into(), value: "first".into() }],
-            ..SemioAudioSnapshot::default()
-        };
-        let sweep_b = SemioAudioSnapshot {
-            sample_rate: 96_000,
-            format: SemioAudioFormat::Float64,
-            channels: vec![channel(9.0, 4), channel(1.0, 4), channel(2.0, 4)],
-            tags: vec![],
-            ..SemioAudioSnapshot::default()
-        };
+        let sweep_a =
+            SemioAudioSnapshot { sample_rate: 44_100, format: SemioAudioFormat::Pcm16, channels: vec![channel(0.0, 4), channel(1.0, 4)], tags: vec![SemioAudioTag { key: "title".into(), value: "first".into() }], ..SemioAudioSnapshot::default() };
+        let sweep_b = SemioAudioSnapshot { sample_rate: 96_000, format: SemioAudioFormat::Float64, channels: vec![channel(9.0, 4), channel(1.0, 4), channel(2.0, 4)], tags: vec![], ..SemioAudioSnapshot::default() };
 
         let ab = <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&sweep_a, &sweep_b);
         assert_eq!(ab.apply(&sweep_a), sweep_b);
@@ -801,11 +826,7 @@ mod tests {
         b.channels.push(channel(4.0, 3));
         b.tags.push(SemioAudioTag { key: "artist".into(), value: "someone".into() });
 
-        let cases = vec![
-            SemioAudioDiff::default(),
-            <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&a, &b),
-            <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&b, &a),
-        ];
+        let cases = vec![SemioAudioDiff::default(), <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&a, &b), <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&b, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

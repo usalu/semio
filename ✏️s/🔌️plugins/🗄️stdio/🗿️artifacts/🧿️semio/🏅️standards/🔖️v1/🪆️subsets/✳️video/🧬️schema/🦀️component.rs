@@ -17,21 +17,17 @@ pub struct SemioVideoArtifact {
 }
 
 impl Default for SemioVideoArtifact {
-    fn default() -> Self { Self::from_snapshot(SemioVideoSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(SemioVideoSnapshot::default())
+    }
 }
 
 impl SemioVideoArtifact {
     pub fn to_snapshot(&self) -> SemioVideoSnapshot {
-        SemioVideoSnapshot {
-            schema: self.schema.clone(),
-            streams: self.streams.clone(),
-        }
+        SemioVideoSnapshot { schema: self.schema.clone(), streams: self.streams.clone() }
     }
     pub fn from_snapshot(snapshot: SemioVideoSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            streams: snapshot.streams,
-        }
+        Self { schema: snapshot.schema, streams: snapshot.streams }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioVideoSnapshot) {
         self.schema = snapshot.schema;
@@ -74,20 +70,26 @@ pub fn semio_video_artifact_schema_descriptor() -> schema::ArtifactSchemaDescrip
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::video::schema::diff::SemioVideoDiff;
-    use crate::artifacts::semio::standards::v1::subsets::video::schema::mutations::{SemioVideoMutation, apply_semio_video_mutation};
+    use crate::artifacts::semio::standards::v1::subsets::video::schema::mutations::{apply_semio_video_mutation, SemioVideoMutation};
     use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioVideoBuilderConstruction { snapshot: SemioVideoSnapshot }
+    pub struct SemioVideoBuilderConstruction {
+        snapshot: SemioVideoSnapshot,
+    }
 
     impl ArtifactBuilder for SemioVideoBuilderConstruction {
         type Snapshot = SemioVideoSnapshot;
         type Mutation = SemioVideoMutation;
         type Diff = SemioVideoDiff;
-        fn empty() -> Self { Self { snapshot: SemioVideoSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: SemioVideoSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioVideoSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -102,7 +104,9 @@ pub mod derived_construction {
             self.snapshot = <SemioVideoDiff as protocol::MutationDiff<SemioVideoSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 }
 pub use derived_construction::*;
@@ -110,11 +114,13 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioVideoSnapshot, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioVideoParts { pub snapshot: Option<SemioVideoSnapshot> }
+    pub struct SemioVideoParts {
+        pub snapshot: Option<SemioVideoSnapshot>,
+    }
 
     pub struct SemioVideoAnalyzerAnalysis;
 
@@ -126,10 +132,18 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
-                    if text.contains(STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                    if text.contains(STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }

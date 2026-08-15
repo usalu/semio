@@ -7,33 +7,20 @@
 //! `t="inlineStr"` (literal text) distinction the format itself makes survives round-trip, and a
 //! diff over `shared_strings` means something (see `🧬️schema/🔺️diff`).
 
-use crate::artifacts::xlsx::{schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook}, XlsxSnapshot};
+use super::super::super::{attr, XlsxError, REL_TYPE_SHARED_STRINGS, REL_TYPE_WORKSHEET, SHARED_STRINGS_CONTENT_TYPE, SHARED_STRINGS_PART, SML_NS, WORKBOOK_CONTENT_TYPE, WORKBOOK_PART, WORKSHEET_CONTENT_TYPE};
+use crate::artifacts::xlsx::{
+    schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook},
+    XlsxSnapshot,
+};
 use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlDocument, XmlNode};
 use crate::artifacts::zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
-use super::super::super::{attr, SHARED_STRINGS_CONTENT_TYPE, SHARED_STRINGS_PART, SML_NS, WORKBOOK_CONTENT_TYPE, WORKBOOK_PART, WORKSHEET_CONTENT_TYPE, REL_TYPE_SHARED_STRINGS, REL_TYPE_WORKSHEET, XlsxError};
 
 //#region 🔖️SharedStringsXml
 fn sst_to_xml(shared: &[String]) -> XmlDocument {
-    let children = shared
-        .iter()
-        .map(|s| {
-            XmlNode::Element {
-                name: "si".into(),
-                attrs: vec![],
-                children: vec![XmlNode::Element {
-                    name: "t".into(),
-                    attrs: vec![attr("xml:space", "preserve")],
-                    children: vec![XmlNode::Text { text: s.clone() }],
-                }],
-            }
-        })
-        .collect();
+    let children =
+        shared.iter().map(|s| XmlNode::Element { name: "si".into(), attrs: vec![], children: vec![XmlNode::Element { name: "t".into(), attrs: vec![attr("xml:space", "preserve")], children: vec![XmlNode::Text { text: s.clone() }] }] }).collect();
     XmlDocument {
-        root: Some(XmlNode::Element {
-            name: "sst".into(),
-            attrs: vec![attr("xmlns", SML_NS), attr("count", &shared.len().to_string()), attr("uniqueCount", &shared.len().to_string())],
-            children,
-        }),
+        root: Some(XmlNode::Element { name: "sst".into(), attrs: vec![attr("xmlns", SML_NS), attr("count", &shared.len().to_string()), attr("uniqueCount", &shared.len().to_string())], children }),
         doctype: None,
         declaration: None,
         prolog: Vec::new(),
@@ -48,20 +35,10 @@ fn workbook_to_xml(workbook: &XlsxWorkbook, rids: &[String]) -> XmlDocument {
         .iter()
         .zip(rids.iter())
         .enumerate()
-        .map(|(i, (sheet, rid))| {
-            XmlNode::Element {
-                name: "sheet".into(),
-                attrs: vec![attr("name", &sheet.name), attr("sheetId", &(i + 1).to_string()), attr("r:id", rid)],
-                children: vec![],
-            }
-        })
+        .map(|(i, (sheet, rid))| XmlNode::Element { name: "sheet".into(), attrs: vec![attr("name", &sheet.name), attr("sheetId", &(i + 1).to_string()), attr("r:id", rid)], children: vec![] })
         .collect();
     XmlDocument {
-        root: Some(XmlNode::Element {
-            name: "workbook".into(),
-            attrs: vec![attr("xmlns", SML_NS), attr("xmlns:r", super::super::super::R_NS)],
-            children: vec![XmlNode::Element { name: "sheets".into(), attrs: vec![], children: sheets }],
-        }),
+        root: Some(XmlNode::Element { name: "workbook".into(), attrs: vec![attr("xmlns", SML_NS), attr("xmlns:r", super::super::super::R_NS)], children: vec![XmlNode::Element { name: "sheets".into(), attrs: vec![], children: sheets }] }),
         doctype: None,
         declaration: None,
         prolog: Vec::new(),
@@ -83,7 +60,11 @@ fn f_element(expr: &str) -> XmlNode {
 }
 
 fn format_number(n: f64) -> String {
-    if n.fract() == 0.0 && n.abs() < 1e15 { format!("{}", n as i64) } else { n.to_string() }
+    if n.fract() == 0.0 && n.abs() < 1e15 {
+        format!("{}", n as i64)
+    } else {
+        n.to_string()
+    }
 }
 
 /// 🔎️ Renders a CACHED formula value (the `<v>`/`t` pair that follows `<f>expr</f>`, if any) —
@@ -151,11 +132,7 @@ fn worksheet_to_xml(sheet: &XlsxSheet) -> XmlDocument {
         })
         .collect();
     XmlDocument {
-        root: Some(XmlNode::Element {
-            name: "worksheet".into(),
-            attrs: vec![attr("xmlns", SML_NS)],
-            children: vec![XmlNode::Element { name: "sheetData".into(), attrs: vec![], children: rows }],
-        }),
+        root: Some(XmlNode::Element { name: "worksheet".into(), attrs: vec![attr("xmlns", SML_NS)], children: vec![XmlNode::Element { name: "sheetData".into(), attrs: vec![], children: rows }] }),
         doctype: None,
         declaration: None,
         prolog: Vec::new(),
@@ -196,12 +173,7 @@ fn regenerate_workbook_parts(opc: &mut OpcPackage, workbook: &XlsxWorkbook) {
         workbook_rels.push(OpcRelationship { id: rid.clone(), rel_type: REL_TYPE_WORKSHEET.into(), target: format!("worksheets/sheet{}.xml", i + 1), target_mode: OpcTargetMode::Internal });
         rids.push(rid);
     }
-    workbook_rels.push(OpcRelationship {
-        id: format!("rId{}", workbook.sheets.len() + 1),
-        rel_type: REL_TYPE_SHARED_STRINGS.into(),
-        target: "sharedStrings.xml".into(),
-        target_mode: OpcTargetMode::Internal,
-    });
+    workbook_rels.push(OpcRelationship { id: format!("rId{}", workbook.sheets.len() + 1), rel_type: REL_TYPE_SHARED_STRINGS.into(), target: "sharedStrings.xml".into(), target_mode: OpcTargetMode::Internal });
     opc.relationships.insert(WORKBOOK_PART.to_string(), workbook_rels);
 
     let workbook_bytes = xml_document_to_text(&workbook_to_xml(workbook, &rids)).into_bytes();

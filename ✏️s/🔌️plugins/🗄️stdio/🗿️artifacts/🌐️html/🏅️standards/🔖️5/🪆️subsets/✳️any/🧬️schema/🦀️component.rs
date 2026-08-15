@@ -19,23 +19,17 @@ pub struct HtmlArtifact {
 }
 
 impl Default for HtmlArtifact {
-    fn default() -> Self { Self::from_snapshot(HtmlSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(HtmlSnapshot::default())
+    }
 }
 
 impl HtmlArtifact {
     pub fn to_snapshot(&self) -> HtmlSnapshot {
-        HtmlSnapshot {
-            schema: self.schema.clone(),
-            doctype: self.doctype.clone(),
-            root: self.root.clone(),
-        }
+        HtmlSnapshot { schema: self.schema.clone(), doctype: self.doctype.clone(), root: self.root.clone() }
     }
     pub fn from_snapshot(snapshot: HtmlSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            doctype: snapshot.doctype,
-            root: snapshot.root,
-        }
+        Self { schema: snapshot.schema, doctype: snapshot.doctype, root: snapshot.root }
     }
     pub fn set_snapshot(&mut self, snapshot: HtmlSnapshot) {
         self.schema = snapshot.schema;
@@ -79,20 +73,26 @@ pub fn html_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::html::standards::v5::subsets::any::schema::diff::HtmlDiff;
-    use crate::artifacts::html::standards::v5::subsets::any::schema::mutations::{HtmlMutation, apply_html_mutation};
+    use crate::artifacts::html::standards::v5::subsets::any::schema::mutations::{apply_html_mutation, HtmlMutation};
     use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct HtmlBuilderConstruction { snapshot: HtmlSnapshot }
+    pub struct HtmlBuilderConstruction {
+        snapshot: HtmlSnapshot,
+    }
 
     impl ArtifactBuilder for HtmlBuilderConstruction {
         type Snapshot = HtmlSnapshot;
         type Mutation = HtmlMutation;
         type Diff = HtmlDiff;
-        fn empty() -> Self { Self { snapshot: HtmlSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: HtmlSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<HtmlSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -107,7 +107,9 @@ pub mod derived_construction {
             self.snapshot = <HtmlDiff as protocol::MutationDiff<HtmlSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 }
 pub use derived_construction::*;
@@ -115,12 +117,14 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
-    use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::{HtmlSnapshot, STDIO_HTML_DOCUMENT_SCHEMA};
     use crate::artifacts::html::standards::v5::subsets::any::io::import::deserializers as engine;
+    use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::{HtmlSnapshot, STDIO_HTML_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct HtmlParts { pub snapshot: Option<HtmlSnapshot> }
+    pub struct HtmlParts {
+        pub snapshot: Option<HtmlSnapshot>,
+    }
 
     pub struct HtmlAnalyzerAnalysis;
 
@@ -135,7 +139,11 @@ pub mod derived_analysis {
                         return IoConfidence::High;
                     }
                     let marker = STDIO_HTML_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
                     if engine::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_HTML_DOCUMENT_SCHEMA) {

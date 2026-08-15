@@ -6,5 +6,4 @@ message Mp4Artifact {
   string schema = 1;
   semio.stdio_mp4.snapshot.Mp4Ftyp ftyp = 2;
   repeated semio.stdio_mp4.snapshot.Mp4Track tracks = 3;
-  repeated semio.stdio_mp4.snapshot.Mp4Box unknown_boxes = 4;
 }

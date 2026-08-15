@@ -15,11 +15,11 @@
 //!   own default "HeadingN" style ids), not a fabrication.
 //! - `RunStyle::{size,font,color,link}` have no `DocxRun` field and are dropped.
 
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::docx::DocxSnapshot;
 use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
+use crate::artifacts::docx::DocxSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
 use crate::artifacts::zip::opc::OpcPackage;
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
 fn map_semio_run(run: &DocRun) -> DocxRun {
@@ -44,10 +44,7 @@ pub(crate) fn map_semio_block(block: &DocBlock) -> Vec<DocxBlock> {
         DocBlock::Table { rows } => vec![DocxBlock::Table(DocxTable {
             rows: rows
                 .iter()
-                .map(|row| DocxTableRow {
-                    cells: row.cells.iter().map(|cell| DocxTableCell { blocks: cell.blocks.iter().flat_map(map_semio_block).collect(), extra_cell_properties: Vec::new() }).collect(),
-                    extra_row_properties: Vec::new(),
-                })
+                .map(|row| DocxTableRow { cells: row.cells.iter().map(|cell| DocxTableCell { blocks: cell.blocks.iter().flat_map(map_semio_block).collect(), extra_cell_properties: Vec::new() }).collect(), extra_row_properties: Vec::new() })
                 .collect(),
             extra_table_properties: Vec::new(),
         })],

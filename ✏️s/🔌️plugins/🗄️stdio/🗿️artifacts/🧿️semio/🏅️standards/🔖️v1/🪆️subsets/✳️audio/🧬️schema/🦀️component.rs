@@ -25,27 +25,17 @@ pub struct SemioAudioArtifact {
 }
 
 impl Default for SemioAudioArtifact {
-    fn default() -> Self { Self::from_snapshot(SemioAudioSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(SemioAudioSnapshot::default())
+    }
 }
 
 impl SemioAudioArtifact {
     pub fn to_snapshot(&self) -> SemioAudioSnapshot {
-        SemioAudioSnapshot {
-            schema: self.schema.clone(),
-            sample_rate: self.sample_rate,
-            format: self.format,
-            channels: self.channels.clone(),
-            tags: self.tags.clone(),
-        }
+        SemioAudioSnapshot { schema: self.schema.clone(), sample_rate: self.sample_rate, format: self.format, channels: self.channels.clone(), tags: self.tags.clone() }
     }
     pub fn from_snapshot(snapshot: SemioAudioSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            sample_rate: snapshot.sample_rate,
-            format: snapshot.format,
-            channels: snapshot.channels,
-            tags: snapshot.tags,
-        }
+        Self { schema: snapshot.schema, sample_rate: snapshot.sample_rate, format: snapshot.format, channels: snapshot.channels, tags: snapshot.tags }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioAudioSnapshot) {
         self.schema = snapshot.schema;
@@ -91,14 +81,16 @@ pub fn semio_audio_artifact_schema_descriptor() -> schema::ArtifactSchemaDescrip
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::diff::SemioAudioDiff;
-    use crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::{SemioAudioMutation, apply_semio_audio_mutation};
+    use crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::{apply_semio_audio_mutation, SemioAudioMutation};
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     #[derive(Clone, Debug, Default)]
-    pub struct SemioAudioBuilderConstruction { snapshot: SemioAudioSnapshot }
+    pub struct SemioAudioBuilderConstruction {
+        snapshot: SemioAudioSnapshot,
+    }
 
     //#region 🔖️TypedConstructors
     impl SemioAudioBuilderConstruction {
@@ -133,8 +125,12 @@ pub mod derived_construction {
         type Snapshot = SemioAudioSnapshot;
         type Mutation = SemioAudioMutation;
         type Diff = SemioAudioDiff;
-        fn empty() -> Self { Self { snapshot: SemioAudioSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: SemioAudioSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -149,7 +145,9 @@ pub mod derived_construction {
             self.snapshot = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
     //#endregion 🔖️Builder
 
@@ -176,8 +174,7 @@ pub mod derived_construction {
             let builder = SemioAudioBuilderConstruction::new(48_000, SemioAudioFormat::Float32);
             let (builder, diff) = builder.mutate(SemioAudioMutation::InsertChannel { index: 0, channel: SemioAudioChannel { samples: vec![1.0, 2.0] } });
             let snapshot_after_mutate = builder.clone().build().expect("build");
-            let rebuilt = SemioAudioBuilderConstruction::empty().absorb(SemioAudioDiff::default()).mutate(SemioAudioMutation::SetSampleRate { sample_rate: 48_000 }).0
-                .mutate(SemioAudioMutation::SetFormat { format: SemioAudioFormat::Float32 }).0;
+            let rebuilt = SemioAudioBuilderConstruction::empty().absorb(SemioAudioDiff::default()).mutate(SemioAudioMutation::SetSampleRate { sample_rate: 48_000 }).0.mutate(SemioAudioMutation::SetFormat { format: SemioAudioFormat::Float32 }).0;
             let rebuilt = rebuilt.absorb(diff);
             assert_eq!(rebuilt.build().expect("build"), snapshot_after_mutate);
         }
@@ -201,12 +198,14 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioSnapshot, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     #[derive(Clone, Debug, Default)]
-    pub struct SemioAudioParts { pub snapshot: Option<SemioAudioSnapshot> }
+    pub struct SemioAudioParts {
+        pub snapshot: Option<SemioAudioSnapshot>,
+    }
     //#endregion 🔖️Parts
 
     //#region 🔖️Analyzer
@@ -220,10 +219,18 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
-                    if text.contains(STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                    if text.contains(STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }

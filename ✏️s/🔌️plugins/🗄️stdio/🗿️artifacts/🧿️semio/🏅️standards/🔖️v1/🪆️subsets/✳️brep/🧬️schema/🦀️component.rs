@@ -1,9 +1,7 @@
 //! 🧬️ SemioBrepArtifact schema — full artifact state, mirrors `SemioBrepSnapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
-    BrepEdge, BrepFace, BrepLoop, BrepShell, BrepSolid, BrepVertex, SemioBrepSnapshot,
-};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepEdge, BrepFace, BrepLoop, BrepShell, BrepSolid, BrepVertex, SemioBrepSnapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -34,31 +32,17 @@ pub struct SemioBrepArtifact {
 }
 
 impl Default for SemioBrepArtifact {
-    fn default() -> Self { Self::from_snapshot(SemioBrepSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(SemioBrepSnapshot::default())
+    }
 }
 
 impl SemioBrepArtifact {
     pub fn to_snapshot(&self) -> SemioBrepSnapshot {
-        SemioBrepSnapshot {
-            schema: self.schema.clone(),
-            vertices: self.vertices.clone(),
-            edges: self.edges.clone(),
-            loops: self.loops.clone(),
-            faces: self.faces.clone(),
-            shells: self.shells.clone(),
-            solids: self.solids.clone(),
-        }
+        SemioBrepSnapshot { schema: self.schema.clone(), vertices: self.vertices.clone(), edges: self.edges.clone(), loops: self.loops.clone(), faces: self.faces.clone(), shells: self.shells.clone(), solids: self.solids.clone() }
     }
     pub fn from_snapshot(snapshot: SemioBrepSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            vertices: snapshot.vertices,
-            edges: snapshot.edges,
-            loops: snapshot.loops,
-            faces: snapshot.faces,
-            shells: snapshot.shells,
-            solids: snapshot.solids,
-        }
+        Self { schema: snapshot.schema, vertices: snapshot.vertices, edges: snapshot.edges, loops: snapshot.loops, faces: snapshot.faces, shells: snapshot.shells, solids: snapshot.solids }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioBrepSnapshot) {
         *self = Self::from_snapshot(snapshot);
@@ -100,20 +84,26 @@ pub fn semio_brep_artifact_schema_descriptor() -> schema::ArtifactSchemaDescript
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::SemioBrepDiff;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioBrepBuilderConstruction { snapshot: SemioBrepSnapshot }
+    pub struct SemioBrepBuilderConstruction {
+        snapshot: SemioBrepSnapshot,
+    }
 
     impl ArtifactBuilder for SemioBrepBuilderConstruction {
         type Snapshot = SemioBrepSnapshot;
         type Mutation = SemioBrepMutation;
         type Diff = SemioBrepDiff;
-        fn empty() -> Self { Self { snapshot: SemioBrepSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: SemioBrepSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -129,7 +119,9 @@ pub mod derived_construction {
             self.snapshot = <SemioBrepDiff as protocol::MutationDiff<SemioBrepSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 }
 pub use derived_construction::*;
@@ -137,11 +129,13 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{SemioBrepSnapshot, STDIO_SEMIOBREP_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioBrepParts { pub snapshot: Option<SemioBrepSnapshot> }
+    pub struct SemioBrepParts {
+        pub snapshot: Option<SemioBrepSnapshot>,
+    }
 
     pub struct SemioBrepAnalyzerAnalysis;
 
@@ -153,10 +147,18 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOBREP_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
-                    if text.contains(STDIO_SEMIOBREP_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                    if text.contains(STDIO_SEMIOBREP_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }

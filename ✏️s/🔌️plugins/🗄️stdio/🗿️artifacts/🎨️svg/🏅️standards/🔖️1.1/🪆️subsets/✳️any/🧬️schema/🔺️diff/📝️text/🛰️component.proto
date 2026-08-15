@@ -1,8 +1,8 @@
 syntax = "proto3";
 package semio.stdio_svg.diff_text;
 
-// 📝️ JSON text per the sibling SvgDiff message shape.
+// 📝️ Structured tagged/hex text emitted by SvgDiff::print_diff.
 message Artifact {
   string schema = 1;
-  string json_text = 2;
+  string structured_text = 2;
 }

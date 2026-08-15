@@ -9,8 +9,8 @@ use protocol::MutationDiff;
 // trait but the facade wasn't updated — see s1-spine-report.md) so it's reached via the
 // still-public `os_spr::command` path instead of touching that framework facade file.
 use protocol::os_spr::command::DiffAlgebra;
-use serde::{Deserialize, Serialize};
 use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
 //#region 🔖️LinesDiff
@@ -71,12 +71,7 @@ impl TxtLinesDiff {
             }
         }
         let removed: HashSet<usize> = self.removed.iter().copied().collect();
-        let mut survivors: Vec<String> = items
-            .into_iter()
-            .enumerate()
-            .filter(|(i, _)| !removed.contains(i))
-            .filter_map(|(_, v)| v)
-            .collect();
+        let mut survivors: Vec<String> = items.into_iter().enumerate().filter(|(i, _)| !removed.contains(i)).filter_map(|(_, v)| v).collect();
         let mut added = self.added.clone();
         added.sort_by_key(|a| a.index);
         for a in added {
@@ -98,9 +93,7 @@ impl TxtLinesDiff {
             }
         }
         let removed: Vec<usize> = (next.len()..base.len()).collect();
-        let added: Vec<TxtLineAdded> = (base.len()..next.len())
-            .map(|i| TxtLineAdded { index: i, text: next[i].clone() })
-            .collect();
+        let added: Vec<TxtLineAdded> = (base.len()..next.len()).map(|i| TxtLineAdded { index: i, text: next[i].clone() }).collect();
         TxtLinesDiff { removed, modified, added }
     }
 }
@@ -124,12 +117,7 @@ enum Lbl {
 /// it can run without any real snapshot.
 fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
     let removed_set: HashSet<usize> = removed.iter().copied().collect();
-    let mut survivors: Vec<Lbl> = labels
-        .into_iter()
-        .enumerate()
-        .filter(|(i, _)| !removed_set.contains(i))
-        .map(|(_, l)| l)
-        .collect();
+    let mut survivors: Vec<Lbl> = labels.into_iter().enumerate().filter(|(i, _)| !removed_set.contains(i)).map(|(_, l)| l).collect();
     let mut added_sorted = added.to_vec();
     added_sorted.sort_by_key(|(idx, _)| *idx);
     for (idx, label) in added_sorted {
@@ -153,13 +141,8 @@ fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
     // not just `d1`'s -- a `d1` that's empty/a no-op must not collapse the virtual base to zero
     // elements when `d2` still references real base positions `d1` never touched (a real bug
     // this exact formula had until byte-splice fuzz-testing caught its twin in `BinaryDiff`).
-    let max_ref = d1.removed.iter().copied()
-        .chain(d1.modified.iter().map(|m| m.index))
-        .chain(d1.added.iter().map(|a| a.index))
-        .chain(d2.removed.iter().copied())
-        .chain(d2.modified.iter().map(|m| m.index))
-        .chain(d2.added.iter().map(|a| a.index))
-        .max();
+    let max_ref =
+        d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).chain(d1.added.iter().map(|a| a.index)).chain(d2.removed.iter().copied()).chain(d2.modified.iter().map(|m| m.index)).chain(d2.added.iter().map(|a| a.index)).max();
     let l1 = max_ref.map(|m| m + 2).unwrap_or(0);
 
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
@@ -172,8 +155,12 @@ fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
     let mut mid_pos_of_added1: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
     for (pos, l) in mid_labels.iter().enumerate() {
         match l {
-            Lbl::Base(i) => { mid_pos_of_base.insert(*i, pos); }
-            Lbl::Added1(j) => { mid_pos_of_added1.insert(*j, pos); }
+            Lbl::Base(i) => {
+                mid_pos_of_base.insert(*i, pos);
+            }
+            Lbl::Added1(j) => {
+                mid_pos_of_added1.insert(*j, pos);
+            }
             Lbl::Added2(_) => {}
         }
     }
@@ -187,10 +174,8 @@ fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
     let d2_added: Vec<(usize, Lbl)> = d2.added.iter().enumerate().map(|(k, a)| (a.index, Lbl::Added2(k))).collect();
     let after_labels = simulate_labels(mid_labels, &d2.removed, &d2_added);
 
-    let d2_modified_at: std::collections::HashMap<usize, &str> =
-        d2.modified.iter().map(|m| (m.index, m.text.as_str())).collect();
-    let d1_modified_at: std::collections::HashMap<usize, &str> =
-        d1.modified.iter().map(|m| (m.index, m.text.as_str())).collect();
+    let d2_modified_at: std::collections::HashMap<usize, &str> = d2.modified.iter().map(|m| (m.index, m.text.as_str())).collect();
+    let d1_modified_at: std::collections::HashMap<usize, &str> = d1.modified.iter().map(|m| (m.index, m.text.as_str())).collect();
 
     let mut present_base: HashSet<usize> = HashSet::new();
     let mut modified = Vec::new();
@@ -201,9 +186,7 @@ fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
             Lbl::Base(i) if i != usize::MAX => {
                 present_base.insert(i);
                 let mid_pos = mid_pos_of_base.get(&i).copied();
-                let text = mid_pos
-                    .and_then(|m| d2_modified_at.get(&m).copied())
-                    .or_else(|| d1_modified_at.get(&i).copied());
+                let text = mid_pos.and_then(|m| d2_modified_at.get(&m).copied()).or_else(|| d1_modified_at.get(&i).copied());
                 if let Some(text) = text {
                     modified.push(TxtLineModified { index: i, text: text.to_string() });
                 }
@@ -212,9 +195,7 @@ fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
             Lbl::Added1(j) => {
                 let mid_pos = mid_pos_of_added1.get(&j).copied();
                 let base_text = &d1.added[j].text;
-                let text = mid_pos
-                    .and_then(|m| d2_modified_at.get(&m).copied())
-                    .unwrap_or(base_text.as_str());
+                let text = mid_pos.and_then(|m| d2_modified_at.get(&m).copied()).unwrap_or(base_text.as_str());
                 added.push(TxtLineAdded { index: pos, text: text.to_string() });
             }
             Lbl::Added2(k) => {
@@ -271,15 +252,23 @@ impl MutationDiff<TxtSnapshot> for TxtDiff {
     /// ➕️ Sequential-coalesce only (see trait docs): `self` is base→mid, `other` is mid→after.
     /// Scalars are LWW; `lines` composes via [`absorb_pair`]'s structural index-transport.
     fn absorb(&mut self, other: Self) {
-        if let Some(tn) = other.trailing_newline { self.trailing_newline = Some(tn); }
-        if let Some(le) = other.line_ending { self.line_ending = Some(le); }
+        if let Some(tn) = other.trailing_newline {
+            self.trailing_newline = Some(tn);
+        }
+        if let Some(le) = other.line_ending {
+            self.line_ending = Some(le);
+        }
         self.lines = match (self.lines.take(), other.lines) {
             (None, None) => None,
             (Some(l1), None) => Some(l1),
             (None, Some(l2)) => Some(l2),
             (Some(l1), Some(l2)) => {
                 let merged = absorb_pair(&l1, &l2);
-                if merged.is_empty() { None } else { Some(merged) }
+                if merged.is_empty() {
+                    None
+                } else {
+                    Some(merged)
+                }
             }
         };
     }
@@ -303,9 +292,7 @@ impl DiffAlgebra<TxtSnapshot> for TxtDiff {
     }
 
     fn is_empty(&self) -> bool {
-        self.trailing_newline.is_none()
-            && self.line_ending.is_none()
-            && self.lines.as_ref().map_or(true, TxtLinesDiff::is_empty)
+        self.trailing_newline.is_none() && self.line_ending.is_none() && self.lines.as_ref().map_or(true, TxtLinesDiff::is_empty)
     }
 }
 
@@ -321,7 +308,9 @@ pub fn diff_set_snapshot(base: &TxtSnapshot, snapshot: &TxtSnapshot) -> TxtDiff 
 mod tests {
     use super::*;
 
-    fn lines(v: &[&str]) -> Vec<String> { v.iter().map(|s| s.to_string()).collect() }
+    fn lines(v: &[&str]) -> Vec<String> {
+        v.iter().map(|s| s.to_string()).collect()
+    }
 
     #[test]
     fn insert_then_remove_before_matches_canonical_shape() {
@@ -336,7 +325,10 @@ mod tests {
         assert!(ld.modified.is_empty());
 
         let base = TxtSnapshot { lines: lines(&["a", "b", "c", "d"]), ..Default::default() };
-        let sequential = { let mid = d1.apply(&base); d2.apply(&mid) };
+        let sequential = {
+            let mid = d1.apply(&base);
+            d2.apply(&mid)
+        };
         assert_eq!(merged.apply(&base), sequential);
     }
 
@@ -347,7 +339,10 @@ mod tests {
         let mut merged = d1.clone();
         merged.absorb(d2.clone());
         let base = TxtSnapshot { lines: lines(&["a", "b", "c", "d"]), ..Default::default() };
-        let sequential = { let mid = d1.apply(&base); d2.apply(&mid) };
+        let sequential = {
+            let mid = d1.apply(&base);
+            d2.apply(&mid)
+        };
         assert_eq!(merged.apply(&base), sequential);
         assert!(sequential.lines.contains(&"f".to_string()) && sequential.lines.contains(&"g".to_string()));
     }
@@ -363,7 +358,10 @@ mod tests {
         assert_eq!(ld.added, vec![TxtLineAdded { index: 1, text: "v".into() }]);
 
         let base = TxtSnapshot { lines: lines(&["a", "b", "c"]), ..Default::default() };
-        let sequential = { let mid = d1.apply(&base); d2.apply(&mid) };
+        let sequential = {
+            let mid = d1.apply(&base);
+            d2.apply(&mid)
+        };
         assert_eq!(merged.apply(&base), sequential);
     }
 
@@ -378,7 +376,10 @@ mod tests {
         assert!(ld.modified.is_empty());
 
         let base = TxtSnapshot { lines: lines(&["a", "b"]), ..Default::default() };
-        let sequential = { let mid = d1.apply(&base); d2.apply(&mid) };
+        let sequential = {
+            let mid = d1.apply(&base);
+            d2.apply(&mid)
+        };
         assert_eq!(merged.apply(&base), sequential);
     }
 
@@ -399,7 +400,11 @@ mod tests {
         right.absorb(mid);
 
         assert_eq!(left.apply(&base), right.apply(&base));
-        let sequential = { let s1 = d1.apply(&base); let s2 = d2.apply(&s1); d3.apply(&s2) };
+        let sequential = {
+            let s1 = d1.apply(&base);
+            let s2 = d2.apply(&s1);
+            d3.apply(&s2)
+        };
         assert_eq!(left.apply(&base), sequential);
     }
 
@@ -441,10 +446,7 @@ mod tests {
                 lines: Some(TxtLinesDiff {
                     removed: vec![0, 2],
                     modified: vec![TxtLineModified { index: 1, text: "changed".into() }],
-                    added: vec![
-                        TxtLineAdded { index: 0, text: "new-head".into() },
-                        TxtLineAdded { index: 3, text: "new-tail".into() },
-                    ],
+                    added: vec![TxtLineAdded { index: 0, text: "new-head".into() }, TxtLineAdded { index: 3, text: "new-tail".into() }],
                 }),
             },
             TxtDiff::between(&a, &b),
@@ -488,10 +490,7 @@ mod tests {
                 lines: Some(TxtLinesDiff {
                     removed: vec![0, 2],
                     modified: vec![TxtLineModified { index: 1, text: "changed".into() }],
-                    added: vec![
-                        TxtLineAdded { index: 0, text: "new-head".into() },
-                        TxtLineAdded { index: 3, text: "new-tail".into() },
-                    ],
+                    added: vec![TxtLineAdded { index: 0, text: "new-head".into() }, TxtLineAdded { index: 3, text: "new-tail".into() }],
                 }),
             },
             TxtDiff::between(&a, &b),

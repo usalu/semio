@@ -32,21 +32,11 @@ impl Default for LasArtifact {
 
 impl LasArtifact {
     pub fn to_snapshot(&self) -> LasSnapshot {
-        LasSnapshot {
-            schema: self.schema.clone(),
-            header: self.header.clone(),
-            vlrs: self.vlrs.clone(),
-            points: self.points.clone(),
-        }
+        LasSnapshot { schema: self.schema.clone(), header: self.header.clone(), vlrs: self.vlrs.clone(), points: self.points.clone() }
     }
 
     pub fn from_snapshot(snapshot: LasSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            header: snapshot.header,
-            vlrs: snapshot.vlrs,
-            points: snapshot.points,
-        }
+        Self { schema: snapshot.schema, header: snapshot.header, vlrs: snapshot.vlrs, points: snapshot.points }
     }
 
     pub fn set_snapshot(&mut self, snapshot: LasSnapshot) {
@@ -95,8 +85,8 @@ pub fn las_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::las::{LasDiff, LasMutation, LasSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.las` snapshot.
@@ -131,7 +121,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -141,8 +135,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::las::LasSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.las` parts.
@@ -164,7 +158,11 @@ pub mod derived_analysis {
             const SIG: [u8; 4] = *b"LASF";
             match source {
                 AnalyzeSource::Binary(bytes) => {
-                    if bytes.len() >= 4 && bytes[0..4] == SIG { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.len() >= 4 && bytes[0..4] == SIG {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
                     // 🔍 stdio.las's text envelope is a hex dump of the raw bytes after the
@@ -184,7 +182,11 @@ pub mod derived_analysis {
                             Err(_) => return IoConfidence::Low,
                         }
                     }
-                    if decoded == SIG { IoConfidence::High } else { IoConfidence::Low }
+                    if decoded == SIG {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }
@@ -199,22 +201,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <LasSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -269,31 +263,53 @@ pub fn demo_las_snapshot() -> crate::artifacts::las::LasSnapshot {
             point_data_record_length: 20,
             number_of_point_records: 2,
             points_by_return: [2, 0, 0, 0, 0],
-            x_scale: 0.01, y_scale: 0.01, z_scale: 0.01,
-            x_offset: 0.0, y_offset: 0.0, z_offset: 0.0,
-            max_x: 200.0, min_x: 100.0, max_y: 0.0, min_y: -50.0, max_z: 11.0, min_z: 10.0,
+            x_scale: 0.01,
+            y_scale: 0.01,
+            z_scale: 0.01,
+            x_offset: 0.0,
+            y_offset: 0.0,
+            z_offset: 0.0,
+            max_x: 200.0,
+            min_x: 100.0,
+            max_y: 0.0,
+            min_y: -50.0,
+            max_z: 11.0,
+            min_z: 10.0,
             ..LasHeader::default()
         },
-        vlrs: vec![LasVlr {
-            user_id: "LASF_Projection".into(),
-            record_id: 34735,
-            description: "GeoKeyDirectoryTag".into(),
-            data: vec![1, 0, 1, 0, 0, 0, 3, 0],
-        }],
+        vlrs: vec![LasVlr { user_id: "LASF_Projection".into(), record_id: 34735, description: "GeoKeyDirectoryTag".into(), data: vec![1, 0, 1, 0, 0, 0, 3, 0] }],
         points: vec![
             LasPoint {
-                x: 100.0, y: -50.0, z: 10.0, intensity: 100,
-                return_number: 1, number_of_returns: 1,
-                scan_direction_flag: false, edge_of_flight_line: false,
-                classification: 2, scan_angle_rank: -5, user_data: 0, point_source_id: 1000,
-                gps_time: None, rgb: None,
+                x: 100.0,
+                y: -50.0,
+                z: 10.0,
+                intensity: 100,
+                return_number: 1,
+                number_of_returns: 1,
+                scan_direction_flag: false,
+                edge_of_flight_line: false,
+                classification: 2,
+                scan_angle_rank: -5,
+                user_data: 0,
+                point_source_id: 1000,
+                gps_time: None,
+                rgb: None,
             },
             LasPoint {
-                x: 101.23, y: -49.5, z: 10.01, intensity: 110,
-                return_number: 2, number_of_returns: 2,
-                scan_direction_flag: true, edge_of_flight_line: true,
-                classification: 4, scan_angle_rank: 3, user_data: 1, point_source_id: 1001,
-                gps_time: None, rgb: None,
+                x: 101.23,
+                y: -49.5,
+                z: 10.01,
+                intensity: 110,
+                return_number: 2,
+                number_of_returns: 2,
+                scan_direction_flag: true,
+                edge_of_flight_line: true,
+                classification: 4,
+                scan_angle_rank: 3,
+                user_data: 1,
+                point_source_id: 1001,
+                gps_time: None,
+                rgb: None,
             },
         ],
     }

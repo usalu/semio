@@ -9,11 +9,11 @@
 //! embeds xml's *node* model, never xml's *diff* model).
 
 use crate::artifacts::svg::SvgSnapshot;
-use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlNode};
-use protocol::MutationDiff;
+use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode};
 use protocol::command::DiffAlgebra;
-use serde::{Deserialize, Serialize};
+use protocol::MutationDiff;
 use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.svg`. No `snapshot: Option<SvgSnapshot>` full-replace slot -- even
@@ -40,7 +40,7 @@ pub struct SvgDiff {
     /// 📜️ Tri-state: `None` = unchanged, `Some(None)` = doctype removed, `Some(Some(s))` = set.
     #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub doctype: Option<Option<String>>,
+    pub doctype: Option<Option<XmlDoctype>>,
     /// 🌳 `None` = root subtree unchanged; `Some(diff)` = the root changed (recursive, possibly
     /// down to a deeply nested leaf via `diff_at_path`, or a wholesale `Replace` incl. root
     /// presence/absence itself).
@@ -146,15 +146,7 @@ pub struct SvgChildAdded {
 pub fn diff_at_path(path: &[usize], leaf: SvgNodeDiff) -> SvgDiff {
     let mut node_diff = leaf;
     for &index in path.iter().rev() {
-        node_diff = SvgNodeDiff::Element(SvgElementDiff {
-            name: None,
-            attributes: None,
-            children: Some(SvgChildrenDiff {
-                removed: Vec::new(),
-                modified: vec![SvgChildModified { index, diff: node_diff }],
-                added: Vec::new(),
-            }),
-        });
+        node_diff = SvgNodeDiff::Element(SvgElementDiff { name: None, attributes: None, children: Some(SvgChildrenDiff { removed: Vec::new(), modified: vec![SvgChildModified { index, diff: node_diff }], added: Vec::new() }) });
     }
     SvgDiff { prolog: None, declaration: None, doctype: None, root: Some(node_diff) }
 }
@@ -401,7 +393,11 @@ fn between_attrs(base: &[XmlAttr], other: &[XmlAttr]) -> Option<SvgAttributesDif
             added.push(SvgAttrAdded { index: i, name: o.name.clone(), value: o.value.clone() });
         }
     }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(SvgAttributesDiff { removed, modified, added }) }
+    if removed.is_empty() && modified.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(SvgAttributesDiff { removed, modified, added })
+    }
 }
 
 /// 🧮️ Naive positional child diff per the recipe's "between matching" rule for index-keyed
@@ -419,7 +415,11 @@ fn between_children(base: &[XmlNode], other: &[XmlNode]) -> Option<SvgChildrenDi
     }
     let removed: Vec<usize> = (other.len()..base.len()).collect();
     let added: Vec<SvgChildAdded> = (min_len..other.len()).map(|i| SvgChildAdded { index: i, item: other[i].clone() }).collect();
-    if modified.is_empty() && removed.is_empty() && added.is_empty() { None } else { Some(SvgChildrenDiff { removed, modified, added }) }
+    if modified.is_empty() && removed.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(SvgChildrenDiff { removed, modified, added })
+    }
 }
 //#endregion 🔖️DiffAlgebra
 
@@ -643,7 +643,9 @@ pub(crate) fn enc_str(s: &str) -> String {
 pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+fn parse_usize(s: &str) -> Result<usize, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
 
 pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
@@ -738,21 +740,101 @@ fn dec_attr(s: &str) -> Result<XmlAttr, String> {
     Ok(XmlAttr { name: dec_str(name)?, value: dec_str(value)? })
 }
 pub(crate) fn enc_declaration(d: &XmlDeclaration) -> String {
-    format!(
-        "[{},{},{}]",
-        enc_str(&d.version),
-        encode_option(&d.encoding, |v| enc_str(v)),
-        encode_option(&d.standalone, |v| if *v { "1".to_string() } else { "0".to_string() }),
-    )
+    format!("[{},{},{}]", enc_str(&d.version), encode_option(&d.encoding, |v| enc_str(v)), encode_option(&d.standalone, |v| if *v { "1".to_string() } else { "0".to_string() }),)
 }
 pub(crate) fn dec_declaration(s: &str) -> Result<XmlDeclaration, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [version, encoding, standalone] = parts.as_slice() else { return Err(format!("declaration: expected 3 fields, got {}", parts.len())) };
-    Ok(XmlDeclaration {
-        version: dec_str(version)?,
-        encoding: decode_option(encoding, dec_str)?,
-        standalone: decode_option(standalone, |v| Ok(v == "1"))?,
-    })
+    Ok(XmlDeclaration { version: dec_str(version)?, encoding: decode_option(encoding, dec_str)?, standalone: decode_option(standalone, |v| Ok(v == "1"))? })
+}
+pub(crate) fn enc_doctype(doctype: &XmlDoctype) -> String {
+    let external = encode_option(&doctype.external_id, |external| match external {
+        XmlExternalId::System { system_id } => format!("S[{}]", enc_str(system_id)),
+        XmlExternalId::Public { public_id, system_id } => {
+            format!("P[{},{}]", enc_str(public_id), enc_str(system_id))
+        }
+    });
+    let declarations = doctype
+        .declarations
+        .iter()
+        .map(|declaration| match declaration {
+            XmlDtdDeclaration::Entity { parameter, name, value } => format!("E[{},{},{}]", if *parameter { "1" } else { "0" }, enc_str(name), enc_str(value)),
+        })
+        .collect::<Vec<_>>()
+        .join(",");
+    format!("[{},{},[{}]]", enc_str(&doctype.name), external, declarations)
+}
+pub(crate) fn dec_doctype(s: &str) -> Result<XmlDoctype, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [name, external, declarations] = parts.as_slice() else {
+        return Err(format!("doctype: expected 3 fields, got {}", parts.len()));
+    };
+    let external_id = decode_option(external, |value| {
+        let (tag, rest) = value.split_at(1);
+        let fields = split_top_level(strip_brackets(rest)?, ',');
+        match (tag, fields.as_slice()) {
+            ("S", [system_id]) => Ok(XmlExternalId::System { system_id: dec_str(system_id)? }),
+            ("P", [public_id, system_id]) => Ok(XmlExternalId::Public { public_id: dec_str(public_id)?, system_id: dec_str(system_id)? }),
+            _ => Err(format!("doctype external id: bad shape {value:?}")),
+        }
+    })?;
+    let declarations = split_top_level(strip_brackets(declarations)?, ',')
+        .into_iter()
+        .filter(|value| !value.is_empty())
+        .map(|value| {
+            let (tag, rest) = value.split_at(1);
+            let fields = split_top_level(strip_brackets(rest)?, ',');
+            match (tag, fields.as_slice()) {
+                ("E", [parameter, name, value]) => Ok(XmlDtdDeclaration::Entity { parameter: *parameter == "1", name: dec_str(name)?, value: dec_str(value)? }),
+                _ => Err(format!("doctype declaration: bad shape {value:?}")),
+            }
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    Ok(XmlDoctype { name: dec_str(name)?, external_id, declarations })
+}
+pub(crate) fn enc_doctype_bin(doctype: &XmlDoctype, out: &mut Vec<u8>) {
+    write_str_lp(out, &doctype.name);
+    match &doctype.external_id {
+        None => out.push(0),
+        Some(XmlExternalId::System { system_id }) => {
+            out.push(1);
+            write_str_lp(out, system_id);
+        }
+        Some(XmlExternalId::Public { public_id, system_id }) => {
+            out.push(2);
+            write_str_lp(out, public_id);
+            write_str_lp(out, system_id);
+        }
+    }
+    store::pack_rt::write_varint_u64(out, doctype.declarations.len() as u64);
+    for declaration in &doctype.declarations {
+        match declaration {
+            XmlDtdDeclaration::Entity { parameter, name, value } => {
+                out.push(1);
+                out.push(u8::from(*parameter));
+                write_str_lp(out, name);
+                write_str_lp(out, value);
+            }
+        }
+    }
+}
+pub(crate) fn dec_doctype_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlDoctype, String> {
+    let name = read_str_lp(reader)?;
+    let external_id = match reader.read_u8().map_err(|error| error.to_string())? {
+        0 => None,
+        1 => Some(XmlExternalId::System { system_id: read_str_lp(reader)? }),
+        2 => Some(XmlExternalId::Public { public_id: read_str_lp(reader)?, system_id: read_str_lp(reader)? }),
+        tag => return Err(format!("unknown XML external id tag {tag}")),
+    };
+    let count = reader.read_varint_u64().map_err(|error| error.to_string())? as usize;
+    let mut declarations = Vec::with_capacity(count);
+    for _ in 0..count {
+        match reader.read_u8().map_err(|error| error.to_string())? {
+            1 => declarations.push(XmlDtdDeclaration::Entity { parameter: reader.read_u8().map_err(|error| error.to_string())? != 0, name: read_str_lp(reader)?, value: read_str_lp(reader)? }),
+            tag => return Err(format!("unknown XML DTD declaration tag {tag}")),
+        }
+    }
+    Ok(XmlDoctype { name, external_id, declarations })
 }
 /// 🌳 Recursive: `E[name,[attrs],[children]]` / `T[text]` / `D[text]` (CData) / `M[text]` (comment)
 /// / `P[target,data]` (processing instruction) — single-letter tag prefix, no ambiguity with the
@@ -903,15 +985,23 @@ fn dec_attrs_diff(body: &str) -> Result<SvgAttributesDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("attrs diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (name, value) = entry.split_once(':').ok_or_else(|| format!("attr modified: bad entry {entry:?}"))?;
-        Ok(SvgAttrModified { name: dec_str(name)?, value: dec_str(value)? })
-    }).collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("attr added: bad entry {entry:?}"))?;
-        let (name, value) = rest.split_once(':').ok_or_else(|| format!("attr added: bad entry {entry:?}"))?;
-        Ok(SvgAttrAdded { index: parse_usize(idx)?, name: dec_str(name)?, value: dec_str(value)? })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (name, value) = entry.split_once(':').ok_or_else(|| format!("attr modified: bad entry {entry:?}"))?;
+            Ok(SvgAttrModified { name: dec_str(name)?, value: dec_str(value)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("attr added: bad entry {entry:?}"))?;
+            let (name, value) = rest.split_once(':').ok_or_else(|| format!("attr added: bad entry {entry:?}"))?;
+            Ok(SvgAttrAdded { index: parse_usize(idx)?, name: dec_str(name)?, value: dec_str(value)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok(SvgAttributesDiff { removed, modified, added })
 }
 
@@ -923,8 +1013,14 @@ fn enc_node_diff(d: &SvgNodeDiff) -> String {
         SvgNodeDiff::Element(e) => format!(
             "E[{},{},{}]",
             encode_option(&e.name, |v| enc_str(v)),
-            match &e.attributes { Some(a) => format!("[1,{}]", enc_attrs_diff(a)), None => "[0]".to_string() },
-            match &e.children { Some(c) => format!("[1,{}]", enc_children_diff(c)), None => "[0]".to_string() },
+            match &e.attributes {
+                Some(a) => format!("[1,{}]", enc_attrs_diff(a)),
+                None => "[0]".to_string(),
+            },
+            match &e.children {
+                Some(c) => format!("[1,{}]", enc_children_diff(c)),
+                None => "[0]".to_string(),
+            },
         ),
         SvgNodeDiff::Text { text } => format!("T[{}]", encode_option(text, |v| enc_str(v))),
         SvgNodeDiff::Replace { node } => format!("R[{}]", encode_option(node, |v| enc_xml_node(v))),
@@ -964,14 +1060,22 @@ fn dec_children_diff(body: &str) -> Result<SvgChildrenDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("children diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("child modified: bad entry {entry:?}"))?;
-        Ok(SvgChildModified { index: parse_usize(idx)?, diff: dec_node_diff(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("child added: bad entry {entry:?}"))?;
-        Ok(SvgChildAdded { index: parse_usize(idx)?, item: dec_xml_node(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("child modified: bad entry {entry:?}"))?;
+            Ok(SvgChildModified { index: parse_usize(idx)?, diff: dec_node_diff(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("child added: bad entry {entry:?}"))?;
+            Ok(SvgChildAdded { index: parse_usize(idx)?, item: dec_xml_node(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok(SvgChildrenDiff { removed, modified, added })
 }
 
@@ -1121,10 +1225,18 @@ fn dec_children_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<SvgChildr
 //#region 🔖️TopLevel
 fn print_svg_diff(d: &SvgDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.prolog { tokens.push(format!("prolog={}", enc_prolog(v))); }
-    if let Some(v) = &d.declaration { tokens.push(format!("declaration={}", encode_option(v, enc_declaration))); }
-    if let Some(v) = &d.doctype { tokens.push(format!("doctype={}", encode_option(v, |v| enc_str(v)))); }
-    if let Some(v) = &d.root { tokens.push(format!("root={}", enc_node_diff(v))); }
+    if let Some(v) = &d.prolog {
+        tokens.push(format!("prolog={}", enc_prolog(v)));
+    }
+    if let Some(v) = &d.declaration {
+        tokens.push(format!("declaration={}", encode_option(v, enc_declaration)));
+    }
+    if let Some(v) = &d.doctype {
+        tokens.push(format!("doctype={}", encode_option(v, enc_doctype)));
+    }
+    if let Some(v) = &d.root {
+        tokens.push(format!("root={}", enc_node_diff(v)));
+    }
     tokens.join(" ")
 }
 fn parse_svg_diff(line: &str) -> Result<SvgDiff, String> {
@@ -1133,11 +1245,17 @@ fn parse_svg_diff(line: &str) -> Result<SvgDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("prolog=") { d.prolog = Some(dec_prolog(rest)?); }
-        else if let Some(rest) = token.strip_prefix("declaration=") { d.declaration = Some(decode_option(rest, dec_declaration)?); }
-        else if let Some(rest) = token.strip_prefix("doctype=") { d.doctype = Some(decode_option(rest, dec_str)?); }
-        else if let Some(rest) = token.strip_prefix("root=") { d.root = Some(dec_node_diff(rest)?); }
-        else { return Err(format!("svg diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("prolog=") {
+            d.prolog = Some(dec_prolog(rest)?);
+        } else if let Some(rest) = token.strip_prefix("declaration=") {
+            d.declaration = Some(decode_option(rest, dec_declaration)?);
+        } else if let Some(rest) = token.strip_prefix("doctype=") {
+            d.doctype = Some(decode_option(rest, dec_doctype)?);
+        } else if let Some(rest) = token.strip_prefix("root=") {
+            d.root = Some(dec_node_diff(rest)?);
+        } else {
+            return Err(format!("svg diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -1157,10 +1275,18 @@ impl protocol::DiffCodec for SvgDiff {
     /// recursive payload follows in that fixed order.
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u8 = 0;
-        if self.declaration.is_some() { flags |= 0b001; }
-        if self.doctype.is_some() { flags |= 0b010; }
-        if self.root.is_some() { flags |= 0b100; }
-        if self.prolog.is_some() { flags |= 0b1000; }
+        if self.declaration.is_some() {
+            flags |= 0b001;
+        }
+        if self.doctype.is_some() {
+            flags |= 0b010;
+        }
+        if self.root.is_some() {
+            flags |= 0b100;
+        }
+        if self.prolog.is_some() {
+            flags |= 0b1000;
+        }
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
         if let Some(prolog) = &self.prolog {
             enc_prolog_bin(prolog, &mut out);
@@ -1174,7 +1300,7 @@ impl protocol::DiffCodec for SvgDiff {
         if let Some(doctype) = &self.doctype {
             out.push(if doctype.is_some() { 1 } else { 0 });
             if let Some(doctype) = doctype {
-                write_str_lp(&mut out, doctype);
+                enc_doctype_bin(doctype, &mut out);
             }
         }
         if let Some(root) = &self.root {
@@ -1187,11 +1313,7 @@ impl protocol::DiffCodec for SvgDiff {
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let prolog = if flags & 0b1000 != 0 {
-            Some(dec_prolog_bin(&mut reader).map_err(|e| malformed("diff prolog", reader.position(), e))?)
-        } else {
-            None
-        };
+        let prolog = if flags & 0b1000 != 0 { Some(dec_prolog_bin(&mut reader).map_err(|e| malformed("diff prolog", reader.position(), e))?) } else { None };
         let declaration = if flags & 0b001 != 0 {
             let has = reader.read_u8().map_err(|e| malformed("diff declaration presence", reader.position(), e.to_string()))?;
             Some(if has != 0 { Some(dec_declaration_bin(&mut reader).map_err(|e| malformed("diff declaration", reader.position(), e))?) } else { None })
@@ -1200,7 +1322,7 @@ impl protocol::DiffCodec for SvgDiff {
         };
         let doctype = if flags & 0b010 != 0 {
             let has = reader.read_u8().map_err(|e| malformed("diff doctype presence", reader.position(), e.to_string()))?;
-            Some(if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("diff doctype", reader.position(), e))?) } else { None })
+            Some(if has != 0 { Some(dec_doctype_bin(&mut reader).map_err(|e| malformed("diff doctype", reader.position(), e))?) } else { None })
         } else {
             None
         };
@@ -1222,11 +1344,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SvgDiff> {
     use crate::artifacts::xml::schema::snapshot::XmlDocument;
 
     fn elem(name: &str, attrs: Vec<(&str, &str)>, children: Vec<XmlNode>) -> XmlNode {
-        XmlNode::Element {
-            name: name.to_string(),
-            attrs: attrs.into_iter().map(|(n, v)| XmlAttr { name: n.to_string(), value: v.to_string() }).collect(),
-            children,
-        }
+        XmlNode::Element { name: name.to_string(), attrs: attrs.into_iter().map(|(n, v)| XmlAttr { name: n.to_string(), value: v.to_string() }).collect(), children }
     }
     fn snapshot(doc: XmlDocument) -> SvgSnapshot {
         SvgSnapshot { doc, ..Default::default() }
@@ -1238,16 +1356,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SvgDiff> {
         declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
         prolog: Vec::new(),
     });
-    let b = snapshot(XmlDocument {
-        root: Some(elem(
-            "svg",
-            vec![("width", "20"), ("height", "30")],
-            vec![elem("circle", vec![("r", "5")], vec![]), XmlNode::Text { text: "hi".into() }],
-        )),
-        doctype: None,
-        declaration: None,
-        prolog: Vec::new(),
-    });
+    let b = snapshot(XmlDocument { root: Some(elem("svg", vec![("width", "20"), ("height", "30")], vec![elem("circle", vec![("r", "5")], vec![]), XmlNode::Text { text: "hi".into() }])), doctype: None, declaration: None, prolog: Vec::new() });
     let c = snapshot(XmlDocument { root: None, doctype: None, declaration: None, prolog: Vec::new() });
 
     vec![SvgDiff::default(), SvgDiff::between(&a, &b), SvgDiff::between(&b, &a), SvgDiff::between(&a, &c), SvgDiff::between(&c, &a)]

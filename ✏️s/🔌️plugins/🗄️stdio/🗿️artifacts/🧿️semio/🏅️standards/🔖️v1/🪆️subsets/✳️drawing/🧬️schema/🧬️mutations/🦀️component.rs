@@ -19,23 +19,23 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
-use super::create_layer;
-use super::delete_layer;
-use super::create_node;
-use super::delete_node;
-use super::move_node;
-use super::drag_nodes;
-use super::rotate;
-use super::scale;
-use super::reorder_nodes;
-use super::group;
-use super::ungroup;
-use super::flatten;
-use super::unflatten;
-use super::replace_path;
-use super::replace_fill;
 use super::change_stroke_color;
 use super::change_stroke_width;
+use super::create_layer;
+use super::create_node;
+use super::delete_layer;
+use super::delete_node;
+use super::drag_nodes;
+use super::flatten;
+use super::group;
+use super::move_node;
+use super::reorder_nodes;
+use super::replace_fill;
+use super::replace_path;
+use super::rotate;
+use super::scale;
+use super::unflatten;
+use super::ungroup;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -307,7 +307,10 @@ mod tests {
         let after_fill = round_trip(&base, &fill_m);
         assert_eq!(after_fill.styles[0].fill, None);
 
-        let color_m = SemioDrawingMutation::ChangeStrokeColor(change_stroke_color::mutation::ChangeStrokeColor { style_name: "s1".into(), new_color: Some(crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }) });
+        let color_m = SemioDrawingMutation::ChangeStrokeColor(change_stroke_color::mutation::ChangeStrokeColor {
+            style_name: "s1".into(),
+            new_color: Some(crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),
+        });
         let after_color = round_trip(&base, &color_m);
         assert_eq!(after_color.styles[0].stroke, Some(crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }));
 

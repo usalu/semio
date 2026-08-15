@@ -35,11 +35,7 @@ mod tests {
     use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviMainHeader, AviStream};
 
     fn snapshot(total_frames: u32, micro_sec_per_frame: u32, stream_count: usize) -> AviSnapshot {
-        AviSnapshot {
-            main_header: AviMainHeader { total_frames, micro_sec_per_frame, ..AviMainHeader::default() },
-            streams: (0..stream_count).map(|_| AviStream::default()).collect(),
-            ..AviSnapshot::default()
-        }
+        AviSnapshot { main_header: AviMainHeader { total_frames, micro_sec_per_frame, ..AviMainHeader::default() }, streams: (0..stream_count).map(|_| AviStream::default()).collect(), ..AviSnapshot::default() }
     }
 
     #[test]

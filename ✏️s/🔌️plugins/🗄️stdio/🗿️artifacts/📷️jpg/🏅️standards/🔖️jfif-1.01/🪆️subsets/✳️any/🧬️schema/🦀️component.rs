@@ -26,7 +26,9 @@ pub struct JpgArtifact {
 }
 
 impl Default for JpgArtifact {
-    fn default() -> Self { Self::from_snapshot(JpgSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(JpgSnapshot::default())
+    }
 }
 
 impl JpgArtifact {
@@ -82,8 +84,8 @@ pub fn jpg_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::jpg::{JpgDiff, JpgMutation, JpgSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.jpg` snapshot.
@@ -118,7 +120,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -128,8 +134,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::jpg::JpgSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.jpg` parts.
@@ -151,7 +157,11 @@ pub mod derived_analysis {
             const SIG: [u8; 2] = [0xFF, 0xD8]; // SOI
             match source {
                 AnalyzeSource::Binary(bytes) => {
-                    if bytes.len() >= 2 && bytes[0..2] == SIG { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.len() >= 2 && bytes[0..2] == SIG {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
                     // 🔍 stdio.jpg's text envelope is a hex dump of the raw bytes after the
@@ -171,7 +181,11 @@ pub mod derived_analysis {
                             Err(_) => return IoConfidence::Low,
                         }
                     }
-                    if decoded == SIG { IoConfidence::High } else { IoConfidence::Low }
+                    if decoded == SIG {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }
@@ -186,22 +200,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <JpgSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }

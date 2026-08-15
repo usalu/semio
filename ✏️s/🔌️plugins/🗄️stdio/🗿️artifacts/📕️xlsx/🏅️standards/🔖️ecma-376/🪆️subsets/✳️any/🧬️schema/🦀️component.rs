@@ -88,9 +88,9 @@ pub fn xlsx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
     use crate::artifacts::xlsx::{XlsxDiff, XlsxMutation, XlsxSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.xlsx` snapshot.
@@ -125,7 +125,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -161,8 +165,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::xlsx::XlsxSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.xlsx` parts.
@@ -199,22 +203,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <XlsxSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -228,7 +224,9 @@ pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🔖️DocumentHelpers
-pub fn empty_xlsx_snapshot() -> XlsxSnapshot { XlsxSnapshot::default() }
+pub fn empty_xlsx_snapshot() -> XlsxSnapshot {
+    XlsxSnapshot::default()
+}
 
 /// 📄️ FG-wave: the demo `stdio.xlsx` document — a genuinely non-trivial `XlsxSnapshot` exercising
 /// every `XlsxCellValue` variant (`SharedString`, `Number`, `Boolean`, `Formula` with a cached
@@ -297,8 +295,8 @@ mod tests {
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::{build_minimal_xlsx, encode_xlsx};
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::import::deserializers::{decode_xlsx, sniff_xlsx_bytes};
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::{
-        column_index, column_letter, XlsxError, REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SHARED_STRINGS, REL_TYPE_SHARED_STRINGS_STRICT, REL_TYPE_WORKSHEET,
-        SHARED_STRINGS_CONTENT_TYPE, SHARED_STRINGS_PART, WORKBOOK_CONTENT_TYPE, WORKBOOK_PART, WORKSHEET_CONTENT_TYPE,
+        column_index, column_letter, XlsxError, REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SHARED_STRINGS, REL_TYPE_SHARED_STRINGS_STRICT, REL_TYPE_WORKSHEET, SHARED_STRINGS_CONTENT_TYPE, SHARED_STRINGS_PART, WORKBOOK_CONTENT_TYPE, WORKBOOK_PART,
+        WORKSHEET_CONTENT_TYPE,
     };
     use crate::artifacts::xml::schema::snapshot::xml_document_from_text;
     use crate::artifacts::zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
@@ -387,12 +385,7 @@ mod tests {
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
 
-        let sst_xml = concat!(
-            r#"<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="2" uniqueCount="2">"#,
-            "<si><t>Quarter</t></si>",
-            "<si><t>Revenue &amp; Profit</t></si>",
-            "</sst>",
-        );
+        let sst_xml = concat!(r#"<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="2" uniqueCount="2">"#, "<si><t>Quarter</t></si>", "<si><t>Revenue &amp; Profit</t></si>", "</sst>",);
         opc.set_part(SHARED_STRINGS_PART, SHARED_STRINGS_CONTENT_TYPE, sst_xml.as_bytes().to_vec());
 
         let sheet_xml = concat!(
@@ -440,15 +433,12 @@ mod tests {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.set_part(SHARED_STRINGS_PART, SHARED_STRINGS_CONTENT_TYPE, br#"<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="0" uniqueCount="0"></sst>"#.to_vec());
-        opc.set_part(
-            "xl/worksheets/sheet1.xml",
-            WORKSHEET_CONTENT_TYPE,
-            br#"<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="s"><v>7</v></c></row></sheetData></worksheet>"#.to_vec(),
-        );
+        opc.set_part("xl/worksheets/sheet1.xml", WORKSHEET_CONTENT_TYPE, br#"<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="s"><v>7</v></c></row></sheetData></worksheet>"#.to_vec());
         opc.set_part(
             WORKBOOK_PART,
             WORKBOOK_CONTENT_TYPE,
-            br#"<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="S" sheetId="1" r:id="rId1"/></sheets></workbook>"#.to_vec(),
+            br#"<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="S" sheetId="1" r:id="rId1"/></sheets></workbook>"#
+                .to_vec(),
         );
         opc.add_relationship(WORKBOOK_PART, "rId1", REL_TYPE_WORKSHEET, "worksheets/sheet1.xml");
         opc.add_relationship(WORKBOOK_PART, "rId2", REL_TYPE_SHARED_STRINGS, "sharedStrings.xml");
@@ -509,20 +499,10 @@ mod tests {
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
 
-        let sst_xml = concat!(
-            r#"<sst xmlns="http://purl.oclc.org/ooxml/spreadsheetml/main" count="1" uniqueCount="1">"#,
-            "<si><t>Strict</t></si>",
-            "</sst>",
-        );
+        let sst_xml = concat!(r#"<sst xmlns="http://purl.oclc.org/ooxml/spreadsheetml/main" count="1" uniqueCount="1">"#, "<si><t>Strict</t></si>", "</sst>",);
         opc.set_part(SHARED_STRINGS_PART, SHARED_STRINGS_CONTENT_TYPE, sst_xml.as_bytes().to_vec());
 
-        let sheet_xml = concat!(
-            r#"<worksheet xmlns="http://purl.oclc.org/ooxml/spreadsheetml/main">"#,
-            "<sheetData>",
-            r#"<row r="1"><c r="A1" t="s"><v>0</v></c></row>"#,
-            "</sheetData>",
-            "</worksheet>",
-        );
+        let sheet_xml = concat!(r#"<worksheet xmlns="http://purl.oclc.org/ooxml/spreadsheetml/main">"#, "<sheetData>", r#"<row r="1"><c r="A1" t="s"><v>0</v></c></row>"#, "</sheetData>", "</worksheet>",);
         opc.set_part("xl/worksheets/sheet1.xml", WORKSHEET_CONTENT_TYPE, sheet_xml.as_bytes().to_vec());
 
         let workbook_xml = concat!(
@@ -562,19 +542,11 @@ mod tests {
         /// message).
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }
@@ -604,8 +576,7 @@ mod tests {
             let modeled_fixed = ["[Content_Types].xml", "_rels/.rels", "xl/workbook.xml", "xl/_rels/workbook.xml.rels", "xl/sharedStrings.xml"];
             let mut checked = 0;
             for entry in &zip.entries {
-                let is_modeled = modeled_fixed.contains(&entry.name.as_str())
-                    || (entry.name.starts_with("xl/worksheets/") && entry.name.ends_with(".xml"));
+                let is_modeled = modeled_fixed.contains(&entry.name.as_str()) || (entry.name.starts_with("xl/worksheets/") && entry.name.ends_with(".xml"));
                 if !is_modeled {
                     continue;
                 }

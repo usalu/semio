@@ -1,5 +1,5 @@
-use crate::artifacts::png::{PngSnapshot};
-use crate::artifacts::png::schema::mutations::{PngMutation, apply_png_mutation};
+use crate::artifacts::png::schema::mutations::{apply_png_mutation, PngMutation};
+use crate::artifacts::png::PngSnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
 pub fn apply(projection: &mut PngSnapshot, mutation: &PngMutation) {

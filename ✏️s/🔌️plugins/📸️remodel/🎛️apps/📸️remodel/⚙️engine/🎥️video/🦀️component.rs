@@ -190,10 +190,8 @@ pub struct AviInfo {
 fn probe_mp4(bytes: &[u8]) -> Result<Mp4Info, VideoError> {
     let snapshot = mp4_engine::decode_mp4(bytes).map_err(VideoError::Container)?;
     let track = snapshot.tracks.first().ok_or(VideoError::NoVideoTrack)?;
-    let (codec, avc_config) = match &track.codec {
-        Mp4Codec::Avc { sps, pps, nal_length_size } => (VideoCodec::Avc, Some((sps.clone(), pps.clone(), *nal_length_size))),
-        Mp4Codec::Other { fourcc, .. } => (codec_from_fourcc_str(fourcc), None),
-    };
+    let codec = VideoCodec::Avc;
+    let avc_config = Some((track.codec.sps.clone(), track.codec.pps.clone(), track.codec.nal_length_size));
     let timescale = track.timescale.max(1);
     let mut dts_accum: u64 = 0;
     let mut samples = Vec::with_capacity(track.samples.len());
@@ -2938,13 +2936,12 @@ pub fn write_mp4_mjpeg(frames: &[Vec<u8>], fps: f64) -> Vec<u8> {
     let (width, height) = frames.first().and_then(|f| remodel_image::decode_jpeg(f).ok()).map_or((0, 0), |img| (img.width, img.height));
     let delta = if fps > 0.0 { (1000.0 / fps).round() as u32 } else { 1000 }.max(1);
     let samples = frames.iter().map(|data| Mp4Sample { data: data.clone(), duration: delta, cts_offset: 0, sync: true }).collect();
-    let track = Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec::Other { fourcc: "mjpg".into(), raw: visual_sample_entry_box(b"mjpg", width, height) }, width, height, samples };
+    let track = Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec::default(), width, height, metadata: Default::default(), chunk_sample_counts: vec![samples.len() as u32], samples };
     let snapshot = Mp4Snapshot {
         schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
         ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "mp41".into()] },
+        movie: Default::default(),
         tracks: vec![track],
-        unknown_boxes: Vec::new(),
-        physical: None,
     };
     mp4_engine::encode_mp4(&snapshot)
 }
@@ -2963,13 +2960,12 @@ pub fn write_mp4_avc(nal_samples: &[Vec<u8>], sps_nal: &[u8], pps_nal: &[u8], fp
     let (width, height) = sps_nal_dimensions(sps_nal);
     let delta = if fps > 0.0 { (1000.0 / fps).round() as u32 } else { 1000 }.max(1);
     let samples = nal_samples.iter().map(|data| Mp4Sample { data: data.clone(), duration: delta, cts_offset: 0, sync: true }).collect();
-    let track = Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec::Avc { sps: vec![sps_nal.to_vec()], pps: vec![pps_nal.to_vec()], nal_length_size: 4 }, width, height, samples };
+    let track = Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec { sps: vec![sps_nal.to_vec()], pps: vec![pps_nal.to_vec()], nal_length_size: 4, extension: None }, width, height, metadata: Default::default(), chunk_sample_counts: vec![samples.len() as u32], samples };
     let snapshot = Mp4Snapshot {
         schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
         ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "avc1".into(), "mp41".into()] },
+        movie: Default::default(),
         tracks: vec![track],
-        unknown_boxes: Vec::new(),
-        physical: None,
     };
     mp4_engine::encode_mp4(&snapshot)
 }
@@ -3107,7 +3103,7 @@ fn select_sample_indices(total: usize, opts: &VideoIngestOptions) -> Vec<usize> 
     out
 }
 
-/// 🧬️ SPS/PPS as separate NAL lists (stdio's `Mp4Codec::Avc` shape) flattened back into
+/// 🧬️ SPS/PPS as separate NAL lists (stdio's `Mp4Codec` shape) flattened back into
 /// [`H264Decoder::new`]'s expected `(u16 length, NAL)*` format.
 fn flatten_sps_pps(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>]) -> Vec<u8> {
     let mut out = Vec::new();
@@ -3304,7 +3300,7 @@ mod tests {
 
     #[test]
     fn mp4_probe_reports_no_video_track_when_none_present() {
-        let snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] }, tracks: vec![], unknown_boxes: vec![], physical: None };
+        let snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] }, movie: Default::default(), tracks: vec![] };
         let bytes = mp4_engine::encode_mp4(&snapshot);
         assert!(matches!(probe_mp4(&bytes), Err(VideoError::NoVideoTrack)));
     }
@@ -3409,12 +3405,14 @@ mod tests {
         let track = Mp4Track {
             track_id: 1,
             timescale: 1000,
-            codec: Mp4Codec::Other { fourcc: "hvc1".into(), raw: visual_sample_entry_box(b"hvc1", 4, 4) },
+            codec: Mp4Codec::default(),
             width: 4,
             height: 4,
+            metadata: Default::default(),
+            chunk_sample_counts: vec![1],
             samples: vec![Mp4Sample { data: vec![0; 10], duration: 100, cts_offset: 0, sync: true }],
         };
-        let snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] }, tracks: vec![track], unknown_boxes: vec![], physical: None };
+        let snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] }, movie: Default::default(), tracks: vec![track] };
         let bytes = mp4_engine::encode_mp4(&snapshot);
         let info = probe_mp4(&bytes).expect("hvc1 still probes for provenance");
         assert_eq!(info.codec, VideoCodec::Hevc);

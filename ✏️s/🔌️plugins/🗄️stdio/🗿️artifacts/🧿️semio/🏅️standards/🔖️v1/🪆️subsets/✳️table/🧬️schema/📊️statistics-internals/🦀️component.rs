@@ -7,9 +7,9 @@
 //! CONCURRENT wave M3d dissolved `semio_framework_math::algebra` entirely) sibling-subset
 //! `✳️value/🧬️schema/➕️algebra-internals` for `MatD`/`VecD` — see that file's own doc comment.
 
-use crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::{MatD, VecD};
 use crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::{ChiSquared, Continuous, Normal, StudentT};
 use crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table;
+use crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::{MatD, VecD};
 use std::collections::HashMap;
 
 // #region 🔖️Error

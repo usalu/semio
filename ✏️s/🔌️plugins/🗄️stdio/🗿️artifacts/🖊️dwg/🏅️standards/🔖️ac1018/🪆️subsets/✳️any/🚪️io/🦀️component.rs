@@ -7,14 +7,13 @@
 //! unions both standards' `io_registry::entries()`.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::dwg::DwgSnapshot;
     use crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::DwgAnalyzer;
+    use crate::artifacts::dwg::DwgSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
-
 
     pub struct DwgComposerComposition;
 
@@ -43,10 +42,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "DwgComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = DwgAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "DwgComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "DwgComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -59,9 +55,9 @@ pub use derived_composition::*;
 /// unioned with ac1024's own `io_registry::entries()` by the root `crate::artifacts::dwg::
 /// declaration()`'s `dwg_combined_composer_entries()`.
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::DwgComposer as DwgRawAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 

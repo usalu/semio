@@ -68,10 +68,7 @@ pub fn compute_ply_bounds(snapshot: &PlySnapshot) -> PlyBounds {
     for element in &snapshot.elements {
         if element.name == "vertex" {
             vertex_count += element.rows.len() as u32;
-            let coords: Option<(usize, usize, usize)> = property_index(&element.properties, "x")
-                .zip(property_index(&element.properties, "y"))
-                .zip(property_index(&element.properties, "z"))
-                .map(|((ix, iy), iz)| (ix, iy, iz));
+            let coords: Option<(usize, usize, usize)> = property_index(&element.properties, "x").zip(property_index(&element.properties, "y")).zip(property_index(&element.properties, "z")).map(|((ix, iy), iz)| (ix, iy, iz));
             if let Some((ix, iy, iz)) = coords {
                 for row in &element.rows {
                     let x = row.values.get(ix).and_then(ply_value_as_f64);
@@ -122,15 +119,7 @@ mod tests {
 
     #[test]
     fn bounds_matches_hand_built_element_extent() {
-        let snapshot = PlySnapshot {
-            schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
-            format: PlyFormat::Ascii,
-            comments: Vec::new(),
-            elements: vec![
-                vertex_element(vec![[-1.0, 0.0, 2.0], [3.0, 5.0, -2.0], [0.0, 1.0, 1.0]]),
-                face_element(2),
-            ],
-        };
+        let snapshot = PlySnapshot { schema: STDIO_PLY_DOCUMENT_SCHEMA.into(), format: PlyFormat::Ascii, comments: Vec::new(), elements: vec![vertex_element(vec![[-1.0, 0.0, 2.0], [3.0, 5.0, -2.0], [0.0, 1.0, 1.0]]), face_element(2)] };
         let bounds = compute_ply_bounds(&snapshot);
         assert_eq!(bounds.min, [-1.0, 0.0, -2.0]);
         assert_eq!(bounds.max, [3.0, 5.0, 2.0]);
@@ -140,12 +129,7 @@ mod tests {
 
     #[test]
     fn inference_determinism_law() {
-        let snapshot = PlySnapshot {
-            schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
-            format: PlyFormat::Ascii,
-            comments: Vec::new(),
-            elements: vec![vertex_element(vec![[1.0, 1.0, 1.0]])],
-        };
+        let snapshot = PlySnapshot { schema: STDIO_PLY_DOCUMENT_SCHEMA.into(), format: PlyFormat::Ascii, comments: Vec::new(), elements: vec![vertex_element(vec![[1.0, 1.0, 1.0]])] };
         assert_eq!(compute_ply_bounds(&snapshot), compute_ply_bounds(&snapshot));
     }
 

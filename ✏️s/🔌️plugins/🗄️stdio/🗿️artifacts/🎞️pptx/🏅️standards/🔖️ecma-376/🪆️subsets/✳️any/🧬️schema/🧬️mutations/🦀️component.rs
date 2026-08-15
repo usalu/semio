@@ -10,7 +10,7 @@ use crate::artifacts::pptx::schema::diff::{
     write_str_lp,
 };
 use crate::artifacts::pptx::schema::diff::{diff_insert_shape, diff_insert_slide, diff_move_slide, diff_remove_shape, diff_remove_slide, diff_set_shape_position, diff_set_shape_text, diff_set_snapshot, PptxDiff};
-use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxShape, PptxSlide, PptxTransform};
+use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxShape, PptxSlide, PptxSnapshotRecord, PptxTransform};
 use crate::artifacts::pptx::PptxSnapshot;
 use crate::artifacts::zip::opc::OpcPackage;
 #[cfg(test)]
@@ -202,12 +202,12 @@ fn dec_opc_package(s: &str) -> Result<OpcPackage, String> {
 /// 🌳 Full `PptxSnapshot`: `[schema,opc,xml-parts,slides]` -- `presentation` collapses to its own single
 /// field (`slides: Vec<PptxSlide>`), same convention `enc_slide`/`enc_paragraph` use.
 fn enc_snapshot(s: &PptxSnapshot) -> String {
-    format!("[{},{},{},{},{}]", enc_str(&s.schema), enc_opc_package(&s.opc), enc_xml_parts(&s.xml_parts), enc_list(&s.presentation.slides, enc_slide), enc_str(&serde_json::to_string(&s.physical).expect("serializable pptx physical state")))
+    format!("[{},{},{},{}]", enc_str(&s.schema), enc_opc_package(&s.opc), enc_xml_parts(&s.xml_parts), enc_list(&s.presentation.slides, enc_slide))
 }
 fn dec_snapshot(s: &str) -> Result<PptxSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema, opc, xml_parts, slides, physical] = parts.as_slice() else { return Err(format!("snapshot: expected 5 fields, got {}", parts.len())) };
-    Ok(PptxSnapshot { schema: dec_str(schema)?, opc: dec_opc_package(opc)?, xml_parts: dec_xml_parts(xml_parts)?, presentation: PptxPresentation { slides: dec_list(slides, dec_slide)? }, physical: serde_json::from_str(&dec_str(physical)?).map_err(|error| error.to_string())? })
+    let [schema, opc, xml_parts, slides] = parts.as_slice() else { return Err(format!("snapshot: expected 4 fields, got {}", parts.len())) };
+    Ok(PptxSnapshot { schema: dec_str(schema)?, opc: dec_opc_package(opc)?, xml_parts: dec_xml_parts(xml_parts)?, presentation: PptxPresentation { slides: dec_list(slides, dec_slide)? } })
 }
 //#endregion 🔖️SnapshotCodec
 
@@ -251,12 +251,29 @@ fn parse_pptx_mutation(line: &str) -> Result<PptxMutation, String> {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct PptxMutationRecord {
+    kind: String,
+    value: dsl::DslValue,
+    snapshot: Option<PptxSnapshotRecord>,
+}
+
 impl protocol::OpText for PptxMutation {
     fn print_op(&self) -> String {
-        print_pptx_mutation(self)
+        let record = match self {
+            PptxMutation::SetSnapshot { snapshot } => PptxMutationRecord { kind: "setSnapshot".into(), value: dsl::DslValue::Null, snapshot: Some(PptxSnapshotRecord::from_snapshot(snapshot).expect("serializable logical pptx snapshot")) },
+            mutation => PptxMutationRecord { kind: "mutation".into(), value: dsl::to_dsl_value(mutation).expect("serializable logical pptx mutation"), snapshot: None },
+        };
+        dsl::print(&record.__dsl_to_record(), &PptxMutationRecord::__dsl_spec(), dsl::JoinMode::Inline)
     }
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_pptx_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        let record = dsl::parse(line, &PptxMutationRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline })?;
+        let model = PptxMutationRecord::__dsl_from_record(&record)?;
+        match (model.kind.as_str(), model.snapshot) {
+            ("setSnapshot", Some(snapshot)) => snapshot.into_snapshot().map(|snapshot| PptxMutation::SetSnapshot { snapshot }).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1))),
+            ("mutation", None) => dsl::from_dsl_value(model.value).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1))),
+            _ => Err(store::TextError::new("PPTX mutation record kind/payload mismatch", dsl::TextSpan::at(1, 1))),
+        }
     }
 }
 
@@ -342,7 +359,6 @@ fn enc_snapshot_bin(s: &PptxSnapshot, out: &mut Vec<u8>) {
     for slide in &s.presentation.slides {
         enc_slide_bin(slide, out);
     }
-    write_bytes_lp(out, &serde_json::to_vec(&s.physical).expect("serializable pptx physical state"));
 }
 fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxSnapshot, String> {
     let schema = read_str_lp(reader)?;
@@ -353,8 +369,7 @@ fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxSnapshot, 
     for _ in 0..slide_count {
         slides.push(dec_slide_bin(reader)?);
     }
-    let physical = serde_json::from_slice(&read_bytes_lp(reader)?).map_err(|error| error.to_string())?;
-    Ok(PptxSnapshot { schema, opc, xml_parts, presentation: PptxPresentation { slides }, physical })
+    Ok(PptxSnapshot { schema, opc, xml_parts, presentation: PptxPresentation { slides } })
 }
 fn enc_text_frame_bin(ps: &[PptxParagraph], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, ps.len() as u64);
@@ -379,103 +394,13 @@ fn dec_text_frame_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<PptxPara
 /// match uses.
 impl protocol::OpBinary for PptxMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let tag: u8 = match self {
-            PptxMutation::NoMutation => 0,
-            PptxMutation::SetSnapshot { .. } => 1,
-            PptxMutation::InsertSlide { .. } => 2,
-            PptxMutation::RemoveSlide { .. } => 3,
-            PptxMutation::MoveSlide { .. } => 4,
-            PptxMutation::InsertShape { .. } => 5,
-            PptxMutation::RemoveShape { .. } => 6,
-            PptxMutation::SetShapeText { .. } => 7,
-            PptxMutation::SetShapePosition { .. } => 8,
-        };
-        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
-        match self {
-            PptxMutation::NoMutation => {}
-            PptxMutation::SetSnapshot { snapshot } => enc_snapshot_bin(snapshot, &mut out),
-            PptxMutation::InsertSlide { index, slide } => {
-                store::pack_rt::write_varint_u64(&mut out, *index as u64);
-                enc_slide_bin(slide, &mut out);
-            }
-            PptxMutation::RemoveSlide { index } => store::pack_rt::write_varint_u64(&mut out, *index as u64),
-            PptxMutation::MoveSlide { from, to } => {
-                store::pack_rt::write_varint_u64(&mut out, *from as u64);
-                store::pack_rt::write_varint_u64(&mut out, *to as u64);
-            }
-            PptxMutation::InsertShape { slide_index, shape_index, shape } => {
-                store::pack_rt::write_varint_u64(&mut out, *slide_index as u64);
-                store::pack_rt::write_varint_u64(&mut out, *shape_index as u64);
-                enc_shape_bin(shape, &mut out);
-            }
-            PptxMutation::RemoveShape { slide_index, shape_index } => {
-                store::pack_rt::write_varint_u64(&mut out, *slide_index as u64);
-                store::pack_rt::write_varint_u64(&mut out, *shape_index as u64);
-            }
-            PptxMutation::SetShapeText { slide_index, shape_index, text_frame } => {
-                store::pack_rt::write_varint_u64(&mut out, *slide_index as u64);
-                store::pack_rt::write_varint_u64(&mut out, *shape_index as u64);
-                enc_text_frame_bin(text_frame, &mut out);
-            }
-            PptxMutation::SetShapePosition { slide_index, shape_index, position } => {
-                store::pack_rt::write_varint_u64(&mut out, *slide_index as u64);
-                store::pack_rt::write_varint_u64(&mut out, *shape_index as u64);
-                enc_transform_bin(position, &mut out);
-            }
-        }
-        Ok(out)
+        let value = dsl::to_dsl_value(self).map_err(|detail| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail })?;
+        Ok(store::pack_rt::encode_wire_value(&value))
     }
 
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
-        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
-        match tag {
-            0 => Ok(PptxMutation::NoMutation),
-            1 => {
-                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
-                Ok(PptxMutation::SetSnapshot { snapshot })
-            }
-            2 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
-                let slide = dec_slide_bin(&mut reader).map_err(|e| malformed("op slide", reader.position(), e))?;
-                Ok(PptxMutation::InsertSlide { index, slide })
-            }
-            3 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
-                Ok(PptxMutation::RemoveSlide { index })
-            }
-            4 => {
-                let from = reader.read_varint_u64().map_err(|e| malformed("op from", reader.position(), e.to_string()))? as usize;
-                let to = reader.read_varint_u64().map_err(|e| malformed("op to", reader.position(), e.to_string()))? as usize;
-                Ok(PptxMutation::MoveSlide { from, to })
-            }
-            5 => {
-                let slide_index = reader.read_varint_u64().map_err(|e| malformed("op slide_index", reader.position(), e.to_string()))? as usize;
-                let shape_index = reader.read_varint_u64().map_err(|e| malformed("op shape_index", reader.position(), e.to_string()))? as usize;
-                let shape = dec_shape_bin(&mut reader).map_err(|e| malformed("op shape", reader.position(), e))?;
-                Ok(PptxMutation::InsertShape { slide_index, shape_index, shape })
-            }
-            6 => {
-                let slide_index = reader.read_varint_u64().map_err(|e| malformed("op slide_index", reader.position(), e.to_string()))? as usize;
-                let shape_index = reader.read_varint_u64().map_err(|e| malformed("op shape_index", reader.position(), e.to_string()))? as usize;
-                Ok(PptxMutation::RemoveShape { slide_index, shape_index })
-            }
-            7 => {
-                let slide_index = reader.read_varint_u64().map_err(|e| malformed("op slide_index", reader.position(), e.to_string()))? as usize;
-                let shape_index = reader.read_varint_u64().map_err(|e| malformed("op shape_index", reader.position(), e.to_string()))? as usize;
-                let text_frame = dec_text_frame_bin(&mut reader).map_err(|e| malformed("op text_frame", reader.position(), e))?;
-                Ok(PptxMutation::SetShapeText { slide_index, shape_index, text_frame })
-            }
-            8 => {
-                let slide_index = reader.read_varint_u64().map_err(|e| malformed("op slide_index", reader.position(), e.to_string()))? as usize;
-                let shape_index = reader.read_varint_u64().map_err(|e| malformed("op shape_index", reader.position(), e.to_string()))? as usize;
-                let position = dec_transform_bin(&mut reader).map_err(|e| malformed("op position", reader.position(), e))?;
-                Ok(PptxMutation::SetShapePosition { slide_index, shape_index, position })
-            }
-            other => Err(malformed("op tag", 1, format!("unknown PptxMutation tag {other}"))),
-        }
+        let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail: error.to_string() })?;
+        dsl::from_dsl_value(value).map_err(|detail| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail })
     }
 }
 //#endregion OpCodecs

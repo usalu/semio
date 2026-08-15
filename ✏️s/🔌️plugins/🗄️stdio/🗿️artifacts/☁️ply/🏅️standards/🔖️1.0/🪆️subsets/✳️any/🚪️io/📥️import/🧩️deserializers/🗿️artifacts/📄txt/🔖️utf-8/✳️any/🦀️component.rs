@@ -1,7 +1,7 @@
 //! 📥️ Deserialize `stdio.ply` from stdio.txt.
 
-use crate::artifacts::txt::TxtSnapshot;
 use crate::artifacts::ply::PlySnapshot;
+use crate::artifacts::txt::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register deserializer hooks.
@@ -10,8 +10,7 @@ pub fn register() {}
 /// 📥 Parse ply text into a PlySnapshot (real ascii/binary-format-declaring ply text, via the
 /// engine's canonical decode — no more `parse_ply_text` mesh-only `(vertices, faces)` tuple).
 pub fn deserialize(from: &TxtSnapshot) -> Result<PlySnapshot, store::TextError> {
-    crate::artifacts::ply::engine::decode_ply(from.to_body().as_bytes())
-        .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    crate::artifacts::ply::engine::decode_ply(from.to_body().as_bytes()).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
 }
 
 /// 📥 Parse DSL/text bytes via txt then ply.

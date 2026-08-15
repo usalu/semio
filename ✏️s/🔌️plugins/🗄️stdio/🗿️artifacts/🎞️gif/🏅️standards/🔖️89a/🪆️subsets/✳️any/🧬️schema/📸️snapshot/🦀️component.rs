@@ -122,7 +122,9 @@ pub struct GifAppExtension {
 }
 
 impl Default for GifAppExtension {
-    fn default() -> Self { Self { identifier: [0; 8], auth_code: [0; 3], data: Vec::new() } }
+    fn default() -> Self {
+        Self { identifier: [0; 8], auth_code: [0; 3], data: Vec::new() }
+    }
 }
 //#endregion AppExtension
 
@@ -225,18 +227,7 @@ pub struct GifSnapshot {
 
 impl Default for GifSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_GIF89A_DOCUMENT_SCHEMA.into(),
-            width: 0,
-            height: 0,
-            gct: None,
-            background_color_index: 0,
-            pixel_aspect_ratio: 0,
-            loop_count: None,
-            frames: Vec::new(),
-            comments: Vec::new(),
-            app_extensions: Vec::new(),
-        }
+        Self { schema: STDIO_GIF89A_DOCUMENT_SCHEMA.into(), width: 0, height: 0, gct: None, background_color_index: 0, pixel_aspect_ratio: 0, loop_count: None, frames: Vec::new(), comments: Vec::new(), app_extensions: Vec::new() }
     }
 }
 //#endregion Snapshot
@@ -244,7 +235,9 @@ impl Default for GifSnapshot {
 //#region HandcraftedArtifactCodecs
 impl store::ArtifactDsl for GifSnapshot {
     const EXTENSION: &'static str = "gif";
-    fn envelope_id() -> &'static str { STDIO_GIF89A_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_GIF89A_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -258,9 +251,7 @@ impl store::ArtifactDsl for GifSnapshot {
         let mut bytes = Vec::with_capacity(hex.len() / 2);
         let mut i = 0usize;
         while i < hex.len() {
-            let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| {
-                store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1))
-            })?;
+            let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
             bytes.push(byte);
             i += 2;
         }
@@ -270,11 +261,7 @@ impl store::ArtifactDsl for GifSnapshot {
     fn print_dsl(&self) -> String {
         let bytes = crate::artifacts::gif::standards::v89a::engine::encode_gif(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -283,23 +270,14 @@ impl store::ArtifactPack for GifSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::gif::standards::v89a::engine::encode_gif(self).map_err(store::PackError::Schema)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         crate::artifacts::gif::standards::v89a::engine::decode_gif(&inner).map_err(store::PackError::Schema)

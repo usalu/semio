@@ -22,12 +22,7 @@ pub struct SemioObjectComposition {
 
 /// 🧩️ Computes [`SemioObjectComposition`] — pure, total, O(1).
 pub fn compute_semio_object_composition(snapshot: &SemioObjectSnapshot) -> SemioObjectComposition {
-    SemioObjectComposition {
-        has_brep: snapshot.brep.is_some(),
-        has_mesh: snapshot.mesh.is_some(),
-        has_properties: snapshot.properties.is_some(),
-        position: snapshot.transform.translation,
-    }
+    SemioObjectComposition { has_brep: snapshot.brep.is_some(), has_mesh: snapshot.mesh.is_some(), has_properties: snapshot.properties.is_some(), position: snapshot.transform.translation }
 }
 //#endregion 🔖️Composition
 
@@ -48,11 +43,7 @@ mod tests {
     fn populated() -> SemioObjectSnapshot {
         SemioObjectSnapshot {
             schema: STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA.into(),
-            transform: SemioTransform {
-                translation: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 },
-                rotation: SemioQuaternion::default(),
-                scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 },
-            },
+            transform: SemioTransform { translation: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 }, rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } },
             brep: Some(store::ArtifactChild::new("brep-01".into(), store::os_io::ArtifactRef { artifact_id: "crate-brep".into(), dialect: dialect("brep") })),
             mesh: Some(store::ArtifactChild::new("mesh-01".into(), store::os_io::ArtifactRef { artifact_id: "crate-mesh".into(), dialect: dialect("mesh") })),
             properties: Some(store::ArtifactChild::new("props-01".into(), store::os_io::ArtifactRef { artifact_id: "crate-props".into(), dialect: dialect("value") })),

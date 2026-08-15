@@ -17,7 +17,20 @@ message PdfDecimal {
   uint32 scale = 3;
 }
 
-// ISO 32000-1 §7.3 COS object grammar, including streams. `str_value` is a byte string.
+message PdfPredictor {
+  uint32 predictor = 1;
+  uint32 colors = 2;
+  uint32 bits_per_component = 3;
+  uint32 columns = 4;
+}
+
+message PdfStreamFilter {
+  enum Kind { FLATE = 0; ASCII_HEX = 1; ASCII_85 = 2; RUN_LENGTH = 3; }
+  Kind kind = 1;
+  optional PdfPredictor predictor = 2;
+}
+
+// ISO 32000-1 §7.3 COS object grammar. `stream_data` is filter-decoded logical data.
 message PdfObject {
   enum Kind {
     NULL = 0;
@@ -42,7 +55,7 @@ message PdfObject {
   ObjRef ref_value = 9;
   repeated PdfDictEntry stream_dict = 10;
   bytes stream_data = 11;
-  optional string stream_raw_filter = 12;
+  repeated PdfStreamFilter stream_filters = 12;
 }
 
 message PdfIndirectObject {

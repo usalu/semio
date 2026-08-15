@@ -21,13 +21,30 @@ pub const STDIO_SEMIOBREP_DOCUMENT_SCHEMA: &str = "stdio.semio.brep";
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum BrepCurve {
-    Line { origin: SemioPoint3, direction: SemioPoint3 },
-    Circle { center: SemioPoint3, axis: SemioPoint3, radius: f64 },
-    Ellipse { center: SemioPoint3, axis: SemioPoint3, radius_major: f64, radius_minor: f64 },
+    Line {
+        origin: SemioPoint3,
+        direction: SemioPoint3,
+    },
+    Circle {
+        center: SemioPoint3,
+        axis: SemioPoint3,
+        radius: f64,
+    },
+    Ellipse {
+        center: SemioPoint3,
+        axis: SemioPoint3,
+        radius_major: f64,
+        radius_minor: f64,
+    },
     /// 🎛️ Rational B-spline curve: a flat `control_points`/`weights` run alongside `knots`
     /// (length `control_points.len() + degree + 1`, per the standard open-uniform-or-not knot
     /// vector convention) — no nested fixed arrays, per the f6 §4.3 gap.
-    Nurbs { control_points: Vec<SemioPoint3>, weights: Vec<f64>, degree: u32, knots: Vec<f64> },
+    Nurbs {
+        control_points: Vec<SemioPoint3>,
+        weights: Vec<f64>,
+        degree: u32,
+        knots: Vec<f64>,
+    },
 }
 
 /// 🩹️ Needed ONLY so `BrepEdge`/entity structs can derive `Default` (in turn needed only because
@@ -35,7 +52,9 @@ pub enum BrepCurve {
 /// SHARED `🧰️triples::NamedTripleDiff<K,D,T>`'s `added: Vec<T>` — see the "shared infra gaps" note
 /// in the wave report; never constructed as a meaningful default in real code paths.
 impl Default for BrepCurve {
-    fn default() -> Self { BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3::default() } }
+    fn default() -> Self {
+        BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3::default() }
+    }
 }
 //#endregion 🔖️Curve
 
@@ -44,11 +63,31 @@ impl Default for BrepCurve {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum BrepSurface {
-    Plane { origin: SemioPoint3, normal: SemioPoint3 },
-    Cylinder { origin: SemioPoint3, axis: SemioPoint3, radius: f64 },
-    Cone { origin: SemioPoint3, axis: SemioPoint3, radius: f64, half_angle: f64 },
-    Sphere { center: SemioPoint3, radius: f64 },
-    Torus { center: SemioPoint3, axis: SemioPoint3, major_radius: f64, minor_radius: f64 },
+    Plane {
+        origin: SemioPoint3,
+        normal: SemioPoint3,
+    },
+    Cylinder {
+        origin: SemioPoint3,
+        axis: SemioPoint3,
+        radius: f64,
+    },
+    Cone {
+        origin: SemioPoint3,
+        axis: SemioPoint3,
+        radius: f64,
+        half_angle: f64,
+    },
+    Sphere {
+        center: SemioPoint3,
+        radius: f64,
+    },
+    Torus {
+        center: SemioPoint3,
+        axis: SemioPoint3,
+        major_radius: f64,
+        minor_radius: f64,
+    },
     /// 🎛️ Rational B-spline surface: `control_points` is a flat `u_count * v_count` row-major
     /// grid (never a nested `Vec<Vec<_>>`/fixed array — f6 §4.3).
     Nurbs {
@@ -65,7 +104,9 @@ pub enum BrepSurface {
 
 /// 🩹️ See `BrepCurve`'s `Default` impl doc comment — same reason.
 impl Default for BrepSurface {
-    fn default() -> Self { BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3::default() } }
+    fn default() -> Self {
+        BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3::default() }
+    }
 }
 //#endregion 🔖️Surface
 
@@ -185,15 +226,7 @@ pub struct SemioBrepSnapshot {
 
 impl Default for SemioBrepSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(),
-            vertices: Default::default(),
-            edges: Default::default(),
-            loops: Default::default(),
-            faces: Default::default(),
-            shells: Default::default(),
-            solids: Default::default(),
-        }
+        Self { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices: Default::default(), edges: Default::default(), loops: Default::default(), faces: Default::default(), shells: Default::default(), solids: Default::default() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -237,10 +270,18 @@ fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 fn enc_bool(b: bool) -> &'static str {
-    if b { "1" } else { "0" }
+    if b {
+        "1"
+    } else {
+        "0"
+    }
 }
 fn parse_bool(s: &str) -> Result<bool, String> {
-    match s { "1" => Ok(true), "0" => Ok(false), other => Err(format!("bad bool {other:?}")) }
+    match s {
+        "1" => Ok(true),
+        "0" => Ok(false),
+        other => Err(format!("bad bool {other:?}")),
+    }
 }
 fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
@@ -268,13 +309,7 @@ fn enc_curve(c: &BrepCurve) -> String {
         BrepCurve::Ellipse { center, axis, radius_major, radius_minor } => {
             format!("E[{},{},{},{}]", enc_point3(center), enc_point3(axis), radius_major, radius_minor)
         }
-        BrepCurve::Nurbs { control_points, weights, degree, knots } => format!(
-            "N[{},{},{},{}]",
-            enc_list(control_points, enc_point3),
-            enc_list(weights, |w: &f64| w.to_string()),
-            degree,
-            enc_list(knots, |k: &f64| k.to_string()),
-        ),
+        BrepCurve::Nurbs { control_points, weights, degree, knots } => format!("N[{},{},{},{}]", enc_list(control_points, enc_point3), enc_list(weights, |w: &f64| w.to_string()), degree, enc_list(knots, |k: &f64| k.to_string()),),
     }
 }
 fn dec_curve(s: &str) -> Result<BrepCurve, String> {
@@ -369,42 +404,54 @@ fn dec_surface(s: &str) -> Result<BrepSurface, String> {
     }
 }
 
-fn enc_loop_edge(le: &BrepLoopEdge) -> String { format!("[{},{}]", enc_str(&le.edge), enc_bool(le.orientation)) }
+fn enc_loop_edge(le: &BrepLoopEdge) -> String {
+    format!("[{},{}]", enc_str(&le.edge), enc_bool(le.orientation))
+}
 fn dec_loop_edge(s: &str) -> Result<BrepLoopEdge, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [edge, orientation] = parts.as_slice() else { return Err(format!("loop edge: expected 2 fields, got {}", parts.len())) };
     Ok(BrepLoopEdge { edge: dec_str(edge)?, orientation: parse_bool(orientation)? })
 }
 
-fn enc_shell_face(sf: &BrepShellFace) -> String { format!("[{},{}]", enc_str(&sf.face), enc_bool(sf.orientation)) }
+fn enc_shell_face(sf: &BrepShellFace) -> String {
+    format!("[{},{}]", enc_str(&sf.face), enc_bool(sf.orientation))
+}
 fn dec_shell_face(s: &str) -> Result<BrepShellFace, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [face, orientation] = parts.as_slice() else { return Err(format!("shell face: expected 2 fields, got {}", parts.len())) };
     Ok(BrepShellFace { face: dec_str(face)?, orientation: parse_bool(orientation)? })
 }
 
-fn enc_solid_shell(ss: &BrepSolidShell) -> String { format!("[{},{}]", enc_str(&ss.shell), enc_bool(ss.is_void)) }
+fn enc_solid_shell(ss: &BrepSolidShell) -> String {
+    format!("[{},{}]", enc_str(&ss.shell), enc_bool(ss.is_void))
+}
 fn dec_solid_shell(s: &str) -> Result<BrepSolidShell, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [shell, is_void] = parts.as_slice() else { return Err(format!("solid shell: expected 2 fields, got {}", parts.len())) };
     Ok(BrepSolidShell { shell: dec_str(shell)?, is_void: parse_bool(is_void)? })
 }
 
-fn enc_vertex(v: &BrepVertex) -> String { format!("[{},{}]", enc_str(&v.id), enc_point3(&v.point)) }
+fn enc_vertex(v: &BrepVertex) -> String {
+    format!("[{},{}]", enc_str(&v.id), enc_point3(&v.point))
+}
 fn dec_vertex(s: &str) -> Result<BrepVertex, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, point] = parts.as_slice() else { return Err(format!("vertex: expected 2 fields, got {}", parts.len())) };
     Ok(BrepVertex { id: dec_str(id)?, point: dec_point3(point)? })
 }
 
-fn enc_edge(e: &BrepEdge) -> String { format!("[{},{},{},{}]", enc_str(&e.id), enc_str(&e.start_vertex), enc_str(&e.end_vertex), enc_curve(&e.curve)) }
+fn enc_edge(e: &BrepEdge) -> String {
+    format!("[{},{},{},{}]", enc_str(&e.id), enc_str(&e.start_vertex), enc_str(&e.end_vertex), enc_curve(&e.curve))
+}
 fn dec_edge(s: &str) -> Result<BrepEdge, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, start_vertex, end_vertex, curve] = parts.as_slice() else { return Err(format!("edge: expected 4 fields, got {}", parts.len())) };
     Ok(BrepEdge { id: dec_str(id)?, start_vertex: dec_str(start_vertex)?, end_vertex: dec_str(end_vertex)?, curve: dec_curve(curve)? })
 }
 
-fn enc_loop(l: &BrepLoop) -> String { format!("[{},{}]", enc_str(&l.id), enc_list(&l.edges, enc_loop_edge)) }
+fn enc_loop(l: &BrepLoop) -> String {
+    format!("[{},{}]", enc_str(&l.id), enc_list(&l.edges, enc_loop_edge))
+}
 fn dec_loop(s: &str) -> Result<BrepLoop, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, edges] = parts.as_slice() else { return Err(format!("loop: expected 2 fields, got {}", parts.len())) };
@@ -412,10 +459,7 @@ fn dec_loop(s: &str) -> Result<BrepLoop, String> {
 }
 
 fn enc_face(f: &BrepFace) -> String {
-    format!(
-        "[{},{},{},{},{}]",
-        enc_str(&f.id), enc_str(&f.outer_loop), enc_list(&f.inner_loops, |s: &String| enc_str(s)), enc_surface(&f.surface), enc_bool(f.orientation),
-    )
+    format!("[{},{},{},{},{}]", enc_str(&f.id), enc_str(&f.outer_loop), enc_list(&f.inner_loops, |s: &String| enc_str(s)), enc_surface(&f.surface), enc_bool(f.orientation),)
 }
 fn dec_face(s: &str) -> Result<BrepFace, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -423,14 +467,18 @@ fn dec_face(s: &str) -> Result<BrepFace, String> {
     Ok(BrepFace { id: dec_str(id)?, outer_loop: dec_str(outer_loop)?, inner_loops: dec_list(inner_loops, dec_str)?, surface: dec_surface(surface)?, orientation: parse_bool(orientation)? })
 }
 
-fn enc_shell(sh: &BrepShell) -> String { format!("[{},{}]", enc_str(&sh.id), enc_list(&sh.faces, enc_shell_face)) }
+fn enc_shell(sh: &BrepShell) -> String {
+    format!("[{},{}]", enc_str(&sh.id), enc_list(&sh.faces, enc_shell_face))
+}
 fn dec_shell(s: &str) -> Result<BrepShell, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, faces] = parts.as_slice() else { return Err(format!("shell: expected 2 fields, got {}", parts.len())) };
     Ok(BrepShell { id: dec_str(id)?, faces: dec_list(faces, dec_shell_face)? })
 }
 
-fn enc_solid(so: &BrepSolid) -> String { format!("[{},{}]", enc_str(&so.id), enc_list(&so.shells, enc_solid_shell)) }
+fn enc_solid(so: &BrepSolid) -> String {
+    format!("[{},{}]", enc_str(&so.id), enc_list(&so.shells, enc_solid_shell))
+}
 fn dec_solid(s: &str) -> Result<BrepSolid, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, shells] = parts.as_slice() else { return Err(format!("solid: expected 2 fields, got {}", parts.len())) };
@@ -590,18 +638,8 @@ fn read_curve(reader: &mut store::ByteReader<'_>) -> Result<BrepCurve, String> {
     match tag {
         0 => Ok(BrepCurve::Line { origin: read_point3(reader)?, direction: read_point3(reader)? }),
         1 => Ok(BrepCurve::Circle { center: read_point3(reader)?, axis: read_point3(reader)?, radius: reader.read_f64_le().map_err(|e| e.to_string())? }),
-        2 => Ok(BrepCurve::Ellipse {
-            center: read_point3(reader)?,
-            axis: read_point3(reader)?,
-            radius_major: reader.read_f64_le().map_err(|e| e.to_string())?,
-            radius_minor: reader.read_f64_le().map_err(|e| e.to_string())?,
-        }),
-        3 => Ok(BrepCurve::Nurbs {
-            control_points: read_point3_vec(reader)?,
-            weights: read_f64_vec(reader)?,
-            degree: reader.read_varint_u64().map_err(|e| e.to_string())? as u32,
-            knots: read_f64_vec(reader)?,
-        }),
+        2 => Ok(BrepCurve::Ellipse { center: read_point3(reader)?, axis: read_point3(reader)?, radius_major: reader.read_f64_le().map_err(|e| e.to_string())?, radius_minor: reader.read_f64_le().map_err(|e| e.to_string())? }),
+        3 => Ok(BrepCurve::Nurbs { control_points: read_point3_vec(reader)?, weights: read_f64_vec(reader)?, degree: reader.read_varint_u64().map_err(|e| e.to_string())? as u32, knots: read_f64_vec(reader)? }),
         other => Err(format!("curve: unknown binary tag {other}")),
     }
 }
@@ -657,19 +695,9 @@ fn read_surface(reader: &mut store::ByteReader<'_>) -> Result<BrepSurface, Strin
     match tag {
         0 => Ok(BrepSurface::Plane { origin: read_point3(reader)?, normal: read_point3(reader)? }),
         1 => Ok(BrepSurface::Cylinder { origin: read_point3(reader)?, axis: read_point3(reader)?, radius: reader.read_f64_le().map_err(|e| e.to_string())? }),
-        2 => Ok(BrepSurface::Cone {
-            origin: read_point3(reader)?,
-            axis: read_point3(reader)?,
-            radius: reader.read_f64_le().map_err(|e| e.to_string())?,
-            half_angle: reader.read_f64_le().map_err(|e| e.to_string())?,
-        }),
+        2 => Ok(BrepSurface::Cone { origin: read_point3(reader)?, axis: read_point3(reader)?, radius: reader.read_f64_le().map_err(|e| e.to_string())?, half_angle: reader.read_f64_le().map_err(|e| e.to_string())? }),
         3 => Ok(BrepSurface::Sphere { center: read_point3(reader)?, radius: reader.read_f64_le().map_err(|e| e.to_string())? }),
-        4 => Ok(BrepSurface::Torus {
-            center: read_point3(reader)?,
-            axis: read_point3(reader)?,
-            major_radius: reader.read_f64_le().map_err(|e| e.to_string())?,
-            minor_radius: reader.read_f64_le().map_err(|e| e.to_string())?,
-        }),
+        4 => Ok(BrepSurface::Torus { center: read_point3(reader)?, axis: read_point3(reader)?, major_radius: reader.read_f64_le().map_err(|e| e.to_string())?, minor_radius: reader.read_f64_le().map_err(|e| e.to_string())? }),
         5 => Ok(BrepSurface::Nurbs {
             control_points: read_point3_vec(reader)?,
             weights: read_f64_vec(reader)?,
@@ -871,7 +899,9 @@ fn decode_brep_snapshot_binary(bytes: &[u8]) -> Result<SemioBrepSnapshot, String
 /// `store::semio_format` envelope, unchanged.
 impl store::ArtifactDsl for SemioBrepSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str { STDIO_SEMIOBREP_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_SEMIOBREP_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -883,11 +913,7 @@ impl store::ArtifactDsl for SemioBrepSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_brep_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -896,22 +922,14 @@ impl store::ArtifactPack for SemioBrepSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_brep_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_brep_snapshot_binary(&inner).map_err(store::PackError::Schema)
@@ -929,44 +947,14 @@ impl store::ArtifactPack for SemioBrepSnapshot {
 #[cfg(test)]
 pub(crate) fn demo_brep_snapshot() -> SemioBrepSnapshot {
     let mut s = SemioBrepSnapshot::default();
-    s.vertices = vec![
-        BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } },
-        BrepVertex { id: "v2".into(), point: SemioPoint3 { x: 4.0, y: 0.0, z: 0.0 } },
-        BrepVertex { id: "v3".into(), point: SemioPoint3 { x: 4.0, y: 3.0, z: 0.0 } },
-    ];
+    s.vertices =
+        vec![BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } }, BrepVertex { id: "v2".into(), point: SemioPoint3 { x: 4.0, y: 0.0, z: 0.0 } }, BrepVertex { id: "v3".into(), point: SemioPoint3 { x: 4.0, y: 3.0, z: 0.0 } }];
     s.edges = vec![
-        BrepEdge {
-            id: "e1".into(),
-            start_vertex: "v1".into(),
-            end_vertex: "v2".into(),
-            curve: BrepCurve::Line { origin: s.vertices[0].point, direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } },
-        },
-        BrepEdge {
-            id: "e2".into(),
-            start_vertex: "v2".into(),
-            end_vertex: "v3".into(),
-            curve: BrepCurve::Circle { center: SemioPoint3 { x: 4.0, y: 1.5, z: 0.0 }, axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 1.5 },
-        },
-        BrepEdge {
-            id: "e3".into(),
-            start_vertex: "v3".into(),
-            end_vertex: "v1".into(),
-            curve: BrepCurve::Nurbs {
-                control_points: vec![s.vertices[2].point, s.vertices[0].point],
-                weights: vec![1.0, 1.0],
-                degree: 1,
-                knots: vec![0.0, 0.0, 1.0, 1.0],
-            },
-        },
+        BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v2".into(), curve: BrepCurve::Line { origin: s.vertices[0].point, direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } },
+        BrepEdge { id: "e2".into(), start_vertex: "v2".into(), end_vertex: "v3".into(), curve: BrepCurve::Circle { center: SemioPoint3 { x: 4.0, y: 1.5, z: 0.0 }, axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 1.5 } },
+        BrepEdge { id: "e3".into(), start_vertex: "v3".into(), end_vertex: "v1".into(), curve: BrepCurve::Nurbs { control_points: vec![s.vertices[2].point, s.vertices[0].point], weights: vec![1.0, 1.0], degree: 1, knots: vec![0.0, 0.0, 1.0, 1.0] } },
     ];
-    s.loops = vec![BrepLoop {
-        id: "l1".into(),
-        edges: vec![
-            BrepLoopEdge { edge: "e1".into(), orientation: true },
-            BrepLoopEdge { edge: "e2".into(), orientation: true },
-            BrepLoopEdge { edge: "e3".into(), orientation: true },
-        ],
-    }];
+    s.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }, BrepLoopEdge { edge: "e2".into(), orientation: true }, BrepLoopEdge { edge: "e3".into(), orientation: true }] }];
     s.faces = vec![BrepFace {
         id: "f1".into(),
         outer_loop: "l1".into(),
@@ -1006,20 +994,15 @@ mod tests {
         s.edges = vec![
             BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v2".into(), curve: BrepCurve::Line { origin: s.vertices[0].point, direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } },
             BrepEdge { id: "e2".into(), start_vertex: "v2".into(), end_vertex: "v3".into(), curve: BrepCurve::Line { origin: s.vertices[1].point, direction: SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 } } },
-            BrepEdge { id: "e3".into(), start_vertex: "v3".into(), end_vertex: "v1".into(), curve: BrepCurve::Nurbs { control_points: vec![s.vertices[2].point, s.vertices[0].point], weights: vec![1.0, 1.0], degree: 1, knots: vec![0.0, 0.0, 1.0, 1.0] } },
+            BrepEdge {
+                id: "e3".into(),
+                start_vertex: "v3".into(),
+                end_vertex: "v1".into(),
+                curve: BrepCurve::Nurbs { control_points: vec![s.vertices[2].point, s.vertices[0].point], weights: vec![1.0, 1.0], degree: 1, knots: vec![0.0, 0.0, 1.0, 1.0] },
+            },
         ];
-        s.loops = vec![BrepLoop { id: "l1".into(), edges: vec![
-            BrepLoopEdge { edge: "e1".into(), orientation: true },
-            BrepLoopEdge { edge: "e2".into(), orientation: true },
-            BrepLoopEdge { edge: "e3".into(), orientation: true },
-        ] }];
-        s.faces = vec![BrepFace {
-            id: "f1".into(),
-            outer_loop: "l1".into(),
-            inner_loops: vec![],
-            surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } },
-            orientation: true,
-        }];
+        s.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }, BrepLoopEdge { edge: "e2".into(), orientation: true }, BrepLoopEdge { edge: "e3".into(), orientation: true }] }];
+        s.faces = vec![BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } }, orientation: true }];
         s.shells = vec![BrepShell { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: true }] }];
         s.solids = vec![BrepSolid { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: false }] }];
         s

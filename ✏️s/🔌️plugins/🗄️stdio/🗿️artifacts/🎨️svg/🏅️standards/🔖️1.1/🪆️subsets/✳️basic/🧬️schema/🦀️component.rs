@@ -8,11 +8,11 @@
 pub use crate::artifacts::svg::standards::v1_1::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
+    use crate::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::set_element_attr;
+    use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::check_svg_basic_conformance;
+    use crate::artifacts::svg::{SvgDiff, SvgMutation, SvgSnapshot};
     use dsl::Diagnostic;
     use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::check_svg_basic_conformance;
-    use crate::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::set_element_attr;
-    use crate::artifacts::svg::{SvgDiff, SvgMutation, SvgSnapshot};
 
     //#region 🔖️Builder
     #[derive(Clone, Debug, Default)]
@@ -91,11 +91,7 @@ pub mod derived_construction {
         fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = SvgBasicBuilderConstruction::empty().build().unwrap();
             if let Some(XmlNode::Element { children, .. }) = snapshot.doc.root.as_mut() {
-                children.push(XmlNode::Element {
-                    name: "filter".into(),
-                    attrs: vec![XmlAttr { name: "id".into(), value: "f1".into() }],
-                    children: vec![XmlNode::Element { name: "feMorphology".into(), attrs: vec![], children: vec![] }],
-                });
+                children.push(XmlNode::Element { name: "filter".into(), attrs: vec![XmlAttr { name: "id".into(), value: "f1".into() }], children: vec![XmlNode::Element { name: "feMorphology".into(), attrs: vec![], children: vec![] }] });
             }
             let (mutated, _diff) = SvgBasicBuilderConstruction::from_snapshot(SvgSnapshot::default()).mutate(SvgMutation::SetSnapshot { snapshot });
             let err = mutated.build().expect_err("a feMorphology primitive must fail build()");
@@ -115,13 +111,13 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use std::collections::HashMap;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
-    use semio_framework_plugin::{AnalyzeSource, Analysis, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use crate::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::SvgSnapshot;
     use crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgAnalyzer as SvgAnyAnalyzer;
     pub use crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgParts;
-    use crate::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::SvgSnapshot;
     use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlNode};
+    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use std::collections::HashMap;
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("basic") };
@@ -129,8 +125,7 @@ pub mod derived_analysis {
     //#region 🔖️Vocabulary
     /// 🚫 Expensive raster filter primitives SVG Basic 1.1 excludes (Full 1.1 has them; Basic's
     /// constrained-device target doesn't).
-    const BLOCKED_FILTER_PRIMITIVES: &[&str] =
-        &["feConvolveMatrix", "feDisplacementMap", "feTurbulence", "feMorphology", "feDiffuseLighting", "feSpecularLighting", "feDistantLight", "fePointLight", "feSpotLight"];
+    const BLOCKED_FILTER_PRIMITIVES: &[&str] = &["feConvolveMatrix", "feDisplacementMap", "feTurbulence", "feMorphology", "feDiffuseLighting", "feSpecularLighting", "feDistantLight", "fePointLight", "feSpotLight"];
 
     const TEXT_ELEMENTS: &[&str] = &["text", "tspan", "tref", "textPath"];
 
@@ -187,11 +182,7 @@ pub mod derived_analysis {
     /// `clip-path="url(#id)"` reference can resolve to the REAL clipPath's descendants rather than a
     /// guess.
     fn clip_path_children_by_id<'a>(elements: &[(&'a str, &'a [XmlAttr], &'a [XmlNode])]) -> HashMap<&'a str, &'a [XmlNode]> {
-        elements
-            .iter()
-            .filter(|(name, ..)| local_name(name) == "clipPath")
-            .filter_map(|(_, attrs, children)| attr_val(attrs, "id").map(|id| (id, *children)))
-            .collect()
+        elements.iter().filter(|(name, ..)| local_name(name) == "clipPath").filter_map(|(_, attrs, children)| attr_val(attrs, "id").map(|id| (id, *children))).collect()
     }
 
     fn find_nested_svg(children: &[XmlNode], out: &mut Vec<String>) {
@@ -320,36 +311,21 @@ pub mod derived_analysis {
 
         #[test]
         fn lighting_child_primitive_is_hard() {
-            let snapshot = svg_root(
-                base_attrs(),
-                vec![elem("filter", vec![attr("id", "f1")], vec![elem("feDiffuseLighting", vec![], vec![elem("feDistantLight", vec![], vec![])])])],
-            );
+            let snapshot = svg_root(base_attrs(), vec![elem("filter", vec![attr("id", "f1")], vec![elem("feDiffuseLighting", vec![], vec![elem("feDistantLight", vec![], vec![])])])]);
             let diagnostics = check_svg_basic_conformance(&snapshot);
             assert_eq!(diagnostics.iter().filter(|d| d.code.0 == CODE_FILTER_PRIMITIVE).count(), 2, "expected both feDiffuseLighting and feDistantLight flagged: {diagnostics:?}");
         }
 
         #[test]
         fn clip_path_referencing_text_is_hard() {
-            let snapshot = svg_root(
-                base_attrs(),
-                vec![
-                    elem("clipPath", vec![attr("id", "c1")], vec![elem("text", vec![], vec![XmlNode::Text { text: "hi".into() }])]),
-                    elem("rect", vec![attr("clip-path", "url(#c1)")], vec![]),
-                ],
-            );
+            let snapshot = svg_root(base_attrs(), vec![elem("clipPath", vec![attr("id", "c1")], vec![elem("text", vec![], vec![XmlNode::Text { text: "hi".into() }])]), elem("rect", vec![attr("clip-path", "url(#c1)")], vec![])]);
             let diagnostics = check_svg_basic_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_CLIP_PATH_TEXT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
         fn clip_path_referencing_shapes_only_is_clean() {
-            let snapshot = svg_root(
-                base_attrs(),
-                vec![
-                    elem("clipPath", vec![attr("id", "c1")], vec![elem("circle", vec![attr("cx", "5"), attr("cy", "5"), attr("r", "5")], vec![])]),
-                    elem("rect", vec![attr("clip-path", "url(#c1)")], vec![]),
-                ],
-            );
+            let snapshot = svg_root(base_attrs(), vec![elem("clipPath", vec![attr("id", "c1")], vec![elem("circle", vec![attr("cx", "5"), attr("cy", "5"), attr("r", "5")], vec![])]), elem("rect", vec![attr("clip-path", "url(#c1)")], vec![])]);
             let diagnostics = check_svg_basic_conformance(&snapshot);
             assert!(diagnostics.iter().all(|d| d.code.0 != CODE_CLIP_PATH_TEXT), "got {diagnostics:?}");
         }

@@ -1,5 +1,5 @@
-use crate::artifacts::jpg::{JpgSnapshot};
 use crate::artifacts::jpg::schema::mutations::JpgMutation;
+use crate::artifacts::jpg::JpgSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

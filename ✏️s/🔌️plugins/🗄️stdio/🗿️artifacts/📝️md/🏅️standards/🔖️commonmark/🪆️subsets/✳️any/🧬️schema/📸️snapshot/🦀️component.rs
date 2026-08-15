@@ -59,8 +59,13 @@ pub enum MdInline {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum MdBlock {
-    Heading { level: u8, inlines: Vec<MdInline> },
-    Paragraph { inlines: Vec<MdInline> },
+    Heading {
+        level: u8,
+        inlines: Vec<MdInline>,
+    },
+    Paragraph {
+        inlines: Vec<MdInline>,
+    },
     /// 📃 `tight` records whether ANY blank line separated items/item-blocks in the source (loose
     /// if so) -- CommonMark's own render distinction (loose wraps item content in `<p>`, tight
     /// does not); this codec always models item content as `MdBlock::Paragraph` regardless, so
@@ -80,12 +85,16 @@ pub enum MdBlock {
         info: Option<String>,
         literal: String,
     },
-    BlockQuote { blocks: Vec<MdBlock> },
+    BlockQuote {
+        blocks: Vec<MdBlock>,
+    },
     ThematicBreak,
     /// 🏷️ Raw HTML block, retained verbatim per the commonmark spec's embedded-HTML allowance --
     /// simplified single-rule recognition (starts with `<tag`/`</tag`/`<!--`, ends at the next
     /// blank line) rather than the full 7-condition spec grammar (documented scope cut).
-    HtmlBlock { raw: String },
+    HtmlBlock {
+        raw: String,
+    },
 }
 
 /// 📸️ Persisted `stdio.md` snapshot: the complete top-level block sequence.
@@ -102,20 +111,14 @@ pub struct MdSnapshot {
 
 impl Default for MdSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_MD_DOCUMENT_SCHEMA.into(),
-            blocks: Vec::new(),
-        }
+        Self { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: Vec::new() }
     }
 }
 
 impl MdSnapshot {
     pub fn from_text(text: &str) -> Self {
         let blocks = crate::artifacts::md::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(text);
-        Self {
-            schema: STDIO_MD_DOCUMENT_SCHEMA.into(),
-            blocks,
-        }
+        Self { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks }
     }
 
     pub fn to_text(&self) -> String {
@@ -127,7 +130,9 @@ impl MdSnapshot {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for MdSnapshot {
     const EXTENSION: &'static str = "md";
-    fn envelope_id() -> &'static str { "stdio.md" }
+    fn envelope_id() -> &'static str {
+        "stdio.md"
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -138,11 +143,7 @@ impl store::ArtifactDsl for MdSnapshot {
         Ok(Self { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks })
     }
     fn print_dsl(&self) -> String {
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         let body = crate::artifacts::md::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&self.blocks);
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -152,22 +153,13 @@ impl store::ArtifactPack for MdSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::md::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&self.blocks);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, raw.as_bytes()))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         let body = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;

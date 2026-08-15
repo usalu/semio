@@ -305,9 +305,9 @@ pub fn split_nurbs(curve: &NurbsCurve3, t: f64) -> (NurbsCurve3, NurbsCurve3) {
 // #region 🔖️Tests
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::bspline::de_boor;
     use super::Curve3;
+    use super::*;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
 

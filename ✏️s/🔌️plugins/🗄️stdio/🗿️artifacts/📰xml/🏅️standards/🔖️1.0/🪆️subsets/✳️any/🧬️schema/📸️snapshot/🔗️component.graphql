@@ -33,10 +33,15 @@ type XmlDeclaration {
   standalone: Boolean
 }
 
+enum XmlExternalIdKind { SYSTEM PUBLIC }
+type XmlExternalId { kind: XmlExternalIdKind! publicId: String systemId: String! }
+type XmlDtdEntity { parameter: Boolean! name: String! value: String! }
+type XmlDoctype { name: String! externalId: XmlExternalId declarations: [XmlDtdEntity!]! }
+
 """ 📰 Well-formed XML document root. """
 type XmlDocument {
   root: XmlNode
-  doctype: String
+  doctype: XmlDoctype
   declaration: XmlDeclaration
   prolog: [XmlNode!]!
 }

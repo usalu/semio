@@ -990,8 +990,8 @@ pub mod writer {
     fn build_raw_mp4_snapshot(width: u32, height: u32, frame_rate: f64, frames: &[Vec<u8>]) -> Mp4Snapshot {
         let timescale = (frame_rate.round() as u32).max(1);
         let samples = frames.iter().map(|pixels| Mp4Sample { data: pixels.clone(), duration: 1, cts_offset: 0, sync: true }).collect();
-        let codec = Mp4Codec::Other { fourcc: String::from_utf8_lossy(&RAW_RGBA8_FOURCC).into_owned(), raw: raw_visual_sample_entry(width as u16, height as u16) };
-        let track = Mp4Track { track_id: 1, timescale, codec, width, height, samples };
+        let codec = Mp4Codec::default();
+        let track = Mp4Track { track_id: 1, timescale, codec, width, height, metadata: Default::default(), chunk_sample_counts: vec![samples.len() as u32], samples };
         Mp4Snapshot { tracks: vec![track], ..Mp4Snapshot::default() }
     }
     //#endregion 🔖️Mp4RawCodec

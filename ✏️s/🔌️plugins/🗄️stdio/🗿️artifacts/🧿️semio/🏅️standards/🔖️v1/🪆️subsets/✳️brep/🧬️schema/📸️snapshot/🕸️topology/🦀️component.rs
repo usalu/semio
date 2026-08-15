@@ -15,9 +15,9 @@ use std::collections::HashMap;
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, CoedgeId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, Store, SurfaceId, VertexId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::{LabelSource, PersistentLabel};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::{LabelSource, PersistentLabel};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Pnt3;
 use semio_framework_os_kernel::EngineRep;
 
@@ -295,14 +295,7 @@ impl EngineRep<BrepArenaSeed> for Body {
         let mut edge_ids: HashMap<PersistentLabel, EdgeId> = HashMap::with_capacity(seed.edges.len());
         for e in &seed.edges {
             let curve_id = body.curves3.insert(e.curve.clone());
-            let id = body.edges.insert(Edge {
-                curve: curve_id,
-                range: e.range,
-                v0: vertex_ids[&e.v0],
-                v1: vertex_ids[&e.v1],
-                tol: e.tol,
-                label: e.label,
-            });
+            let id = body.edges.insert(Edge { curve: curve_id, range: e.range, v0: vertex_ids[&e.v0], v1: vertex_ids[&e.v1], tol: e.tol, label: e.label });
             edge_ids.insert(e.label, id);
         }
 
@@ -321,14 +314,7 @@ impl EngineRep<BrepArenaSeed> for Body {
             let surface_id = body.surfaces.insert(f.surface.clone());
             let outer = f.outer.map(|i| loop_ids[i]);
             let inners: Vec<LoopId> = f.inners.iter().map(|&i| loop_ids[i]).collect();
-            let id = body.faces.insert(Face {
-                surface: surface_id,
-                outer,
-                inners: inners.clone(),
-                flipped: f.flipped,
-                tol: f.tol,
-                label: f.label,
-            });
+            let id = body.faces.insert(Face { surface: surface_id, outer, inners: inners.clone(), flipped: f.flipped, tol: f.tol, label: f.label });
             if let Some(outer_id) = outer {
                 body.loops.get_mut(outer_id).expect("just inserted").face = id;
             }
@@ -365,24 +351,9 @@ pub fn to_seed(body: &Body) -> BrepArenaSeed {
     let face_label = |id: FaceId| -> PersistentLabel { body.faces.get(id).expect("live face").label };
     let shell_label = |id: ShellId| -> PersistentLabel { body.shells.get(id).expect("live shell").label };
 
-    let vertices: Vec<SeedVertex> = body
-        .vertices
-        .iter()
-        .map(|(_, v)| SeedVertex { label: v.label, position: v.position, tol: v.tol })
-        .collect();
+    let vertices: Vec<SeedVertex> = body.vertices.iter().map(|(_, v)| SeedVertex { label: v.label, position: v.position, tol: v.tol }).collect();
 
-    let edges: Vec<SeedEdge> = body
-        .edges
-        .iter()
-        .map(|(_, e)| SeedEdge {
-            label: e.label,
-            v0: vertex_label(e.v0),
-            v1: vertex_label(e.v1),
-            curve: body.curves3.get(e.curve).expect("live curve").clone(),
-            range: e.range,
-            tol: e.tol,
-        })
-        .collect();
+    let edges: Vec<SeedEdge> = body.edges.iter().map(|(_, e)| SeedEdge { label: e.label, v0: vertex_label(e.v0), v1: vertex_label(e.v1), curve: body.curves3.get(e.curve).expect("live curve").clone(), range: e.range, tol: e.tol }).collect();
 
     // One entry per distinct LoopId, in the order faces first reference it — the same order
     // `build` assigns indices in, which is what the round-trip law needs to hold.
@@ -394,11 +365,7 @@ pub fn to_seed(body: &Body) -> BrepArenaSeed {
             if let Some(&i) = loop_index.get(&loop_id) {
                 return i;
             }
-            let ring: Vec<(PersistentLabel, bool)> = body
-                .loop_coedges(loop_id)
-                .into_iter()
-                .filter_map(|cid| body.coedges.get(cid).map(|c| (edge_label(c.edge), c.forward)))
-                .collect();
+            let ring: Vec<(PersistentLabel, bool)> = body.loop_coedges(loop_id).into_iter().filter_map(|cid| body.coedges.get(cid).map(|c| (edge_label(c.edge), c.forward))).collect();
             let i = loops.len();
             loops.push(ring);
             loop_index.insert(loop_id, i);
@@ -406,41 +373,14 @@ pub fn to_seed(body: &Body) -> BrepArenaSeed {
         };
         let outer = f.outer.map(|l| resolve_loop(l));
         let inners: Vec<usize> = f.inners.iter().map(|&l| resolve_loop(l)).collect();
-        faces.push(SeedFace {
-            label: f.label,
-            surface: body.surfaces.get(f.surface).expect("live surface").clone(),
-            outer,
-            inners,
-            flipped: f.flipped,
-            tol: f.tol,
-        });
+        faces.push(SeedFace { label: f.label, surface: body.surfaces.get(f.surface).expect("live surface").clone(), outer, inners, flipped: f.flipped, tol: f.tol });
     }
 
-    let shells: Vec<SeedShell> = body
-        .shells
-        .iter()
-        .map(|(_, s)| SeedShell { label: s.label, faces: s.faces.iter().map(|&f| face_label(f)).collect() })
-        .collect();
+    let shells: Vec<SeedShell> = body.shells.iter().map(|(_, s)| SeedShell { label: s.label, faces: s.faces.iter().map(|&f| face_label(f)).collect() }).collect();
 
-    let solids: Vec<SeedSolid> = body
-        .solids
-        .iter()
-        .map(|(_, s)| SeedSolid {
-            label: s.label,
-            outer: shell_label(s.outer),
-            inners: s.inners.iter().map(|&sh| shell_label(sh)).collect(),
-        })
-        .collect();
+    let solids: Vec<SeedSolid> = body.solids.iter().map(|(_, s)| SeedSolid { label: s.label, outer: shell_label(s.outer), inners: s.inners.iter().map(|&sh| shell_label(sh)).collect() }).collect();
 
-    BrepArenaSeed {
-        next_label: body.labels.next(),
-        vertices,
-        edges,
-        loops,
-        faces,
-        shells,
-        solids,
-    }
+    BrepArenaSeed { next_label: body.labels.next(), vertices, edges, loops, faces, shells, solids }
 }
 
 // #endregion 🔖️EngineRep
@@ -818,12 +758,7 @@ mod tests {
     fn engine_rep_build_round_trips_a_loose_planar_face() {
         let mut body = Body::new();
         let mut rec = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder::new();
-        crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_planar_face_from_points(
-            &mut body,
-            &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0)],
-            &mut rec,
-        )
-        .unwrap();
+        crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_planar_face_from_points(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0)], &mut rec).unwrap();
 
         let seed = to_seed(&body);
         let rebuilt = Body::build(&seed);

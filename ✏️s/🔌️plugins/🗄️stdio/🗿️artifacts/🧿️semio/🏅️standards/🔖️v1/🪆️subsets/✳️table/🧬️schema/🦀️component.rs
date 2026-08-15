@@ -20,7 +20,9 @@ pub struct SemioTableArtifact {
 }
 
 impl Default for SemioTableArtifact {
-    fn default() -> Self { Self::from_snapshot(SemioTableSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(SemioTableSnapshot::default())
+    }
 }
 
 impl SemioTableArtifact {
@@ -72,18 +74,22 @@ pub fn semio_table_artifact_schema_descriptor() -> schema::ArtifactSchemaDescrip
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::table::schema::diff::SemioTableDiff;
     use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
     use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioTableBuilderConstruction { snapshot: SemioTableSnapshot }
+    pub struct SemioTableBuilderConstruction {
+        snapshot: SemioTableSnapshot,
+    }
 
     //#region 🔖️TypedConstructors
     impl SemioTableBuilderConstruction {
         /// 🏗️ Starts a fresh, empty table document.
-        pub fn new() -> Self { Self { snapshot: SemioTableSnapshot::default() } }
+        pub fn new() -> Self {
+            Self { snapshot: SemioTableSnapshot::default() }
+        }
         /// 🏗️ Appends one column, in order.
         pub fn add_column(mut self, name: impl Into<String>, kind: SemioTableCellKind) -> Self {
             self.snapshot.columns.push(SemioTableColumn { name: name.into(), kind });
@@ -101,8 +107,12 @@ pub mod derived_construction {
         type Snapshot = SemioTableSnapshot;
         type Mutation = SemioTableMutation;
         type Diff = SemioTableDiff;
-        fn empty() -> Self { Self { snapshot: SemioTableSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: SemioTableSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioTableSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -118,7 +128,9 @@ pub mod derived_construction {
             self.snapshot = <SemioTableDiff as protocol::MutationDiff<SemioTableSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 
     //#region 🔖️Tests
@@ -129,11 +141,7 @@ pub mod derived_construction {
 
         #[test]
         fn typed_constructors_build_a_populated_snapshot() {
-            let snapshot = SemioTableBuilderConstruction::new()
-                .add_column("label", SemioTableCellKind::Str)
-                .add_row(SemioTableRow { cells: vec![SemioValue::Str { value: "hello".into() }] })
-                .build()
-                .expect("build");
+            let snapshot = SemioTableBuilderConstruction::new().add_column("label", SemioTableCellKind::Str).add_row(SemioTableRow { cells: vec![SemioValue::Str { value: "hello".into() }] }).build().expect("build");
             assert_eq!(snapshot.columns.len(), 1);
             assert_eq!(snapshot.rows[0].cells.len(), 1);
         }
@@ -145,11 +153,13 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioTableParts { pub snapshot: Option<SemioTableSnapshot> }
+    pub struct SemioTableParts {
+        pub snapshot: Option<SemioTableSnapshot>,
+    }
 
     pub struct SemioTableAnalyzerAnalysis;
 
@@ -161,10 +171,18 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
-                    if text.contains(STDIO_SEMIOTABLE_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                    if text.contains(STDIO_SEMIOTABLE_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }

@@ -6,13 +6,13 @@
 pub use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use dsl::{Diagnostic, Severity};
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::ifc::standards::v2x3::subsets::cv20::schema::check_cv20_conformance;
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::Ifc2x3Diff;
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
+    use crate::artifacts::ifc::standards::v2x3::subsets::cv20::schema::check_cv20_conformance;
     use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
+    use dsl::{Diagnostic, Severity};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Seed
     const PLACEMENT_ID: u64 = 10;
@@ -21,10 +21,7 @@ pub mod derived_construction {
 
     fn seeded_document() -> Part21Document {
         let header = Part21Header {
-            file_description: vec![
-                Part21Value::List(vec![Part21Value::Str("ViewDefinition [CoordinationView]".into())]),
-                Part21Value::Str("2;1".into()),
-            ],
+            file_description: vec![Part21Value::List(vec![Part21Value::Str("ViewDefinition [CoordinationView]".into())]), Part21Value::Str("2;1".into())],
             file_name: vec![],
             file_schema: vec![Part21Value::List(vec![Part21Value::Str("IFC2X3".into())])],
         };
@@ -70,17 +67,7 @@ pub mod derived_construction {
         pub fn add_product(mut self, id: u64, type_name: &str, name: &str) -> Self {
             let instance = Part21Instance {
                 id,
-                entities: vec![(
-                    type_name.to_string(),
-                    vec![
-                        Part21Value::Str(format!("guid-{id}")),
-                        Part21Value::Unset,
-                        Part21Value::Str(name.to_string()),
-                        Part21Value::Unset,
-                        Part21Value::Unset,
-                        Part21Value::Ref(PLACEMENT_ID),
-                    ],
-                )],
+                entities: vec![(type_name.to_string(), vec![Part21Value::Str(format!("guid-{id}")), Part21Value::Unset, Part21Value::Str(name.to_string()), Part21Value::Unset, Part21Value::Unset, Part21Value::Ref(PLACEMENT_ID)])],
             };
             apply_ifc2x3_mutation(&mut self.snapshot, &Ifc2x3Mutation::UpsertInstance { instance });
             self
@@ -131,7 +118,11 @@ pub mod derived_construction {
         /// fails `build()`; soft diagnostics pass through as advisory (the `Err` path is not taken).
         fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let hard: Vec<Diagnostic> = check_cv20_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
-            if hard.is_empty() { Ok(self.snapshot) } else { Err(hard) }
+            if hard.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(hard)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -162,10 +153,10 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
-    use semio_framework_plugin::{AnalyzeSource, Analysis, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
-    use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::{Ifc2x3Analyzer as Ifc2x3AnyAnalyzer, Ifc2x3Parts};
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
+    use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::{Ifc2x3Analyzer as Ifc2x3AnyAnalyzer, Ifc2x3Parts};
+    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("cv20") };
@@ -184,9 +175,7 @@ pub mod derived_analysis {
 
     /// 🏗️ Curated common `IfcProduct` subtypes this honestly-scoped placement check applies to (see
     /// module doc comment for why this is a proxy list, not the full `IfcProduct` hierarchy).
-    const GEOMETRY_BEARING_PRODUCT_TYPES: &[&str] = &[
-        "IFCWALL", "IFCWALLSTANDARDCASE", "IFCDOOR", "IFCWINDOW", "IFCSLAB", "IFCBEAM", "IFCCOLUMN", "IFCROOF", "IFCSTAIR", "IFCBUILDINGELEMENTPROXY",
-    ];
+    const GEOMETRY_BEARING_PRODUCT_TYPES: &[&str] = &["IFCWALL", "IFCWALLSTANDARDCASE", "IFCDOOR", "IFCWINDOW", "IFCSLAB", "IFCBEAM", "IFCCOLUMN", "IFCROOF", "IFCSTAIR", "IFCBUILDINGELEMENTPROXY"];
 
     fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
@@ -200,14 +189,7 @@ pub mod derived_analysis {
     }
 
     fn view_definition_names(snapshot: &Ifc2x3Snapshot, view: &str) -> bool {
-        snapshot
-            .document
-            .header
-            .file_description
-            .first()
-            .and_then(|v| v.as_list())
-            .map(|items| items.iter().any(|item| item.as_str().map(|s| s.contains(view)).unwrap_or(false)))
-            .unwrap_or(false)
+        snapshot.document.header.file_description.first().and_then(|v| v.as_list()).map(|items| items.iter().any(|item| item.as_str().map(|s| s.contains(view)).unwrap_or(false))).unwrap_or(false)
     }
     //#endregion 🔖️Shared
 
@@ -245,12 +227,7 @@ pub mod derived_analysis {
         for ty in GEOMETRY_BEARING_PRODUCT_TYPES {
             for inst in snapshot.document.by_type(ty) {
                 let args = inst.entity(ty).expect("matched by_type");
-                let placed = args
-                    .get(5)
-                    .and_then(|v| v.as_ref_id())
-                    .and_then(|id| snapshot.document.instance(id))
-                    .map(|placement| placement.is_type("IFCLOCALPLACEMENT"))
-                    .unwrap_or(false);
+                let placed = args.get(5).and_then(|v| v.as_ref_id()).and_then(|id| snapshot.document.instance(id)).map(|placement| placement.is_type("IFCLOCALPLACEMENT")).unwrap_or(false);
                 if !placed {
                     out.push(soft(CODE_PRODUCT_PLACEMENT, format!("{ty} instance #{} does not resolve ObjectPlacement to an IFCLOCALPLACEMENT", inst.id)));
                 }
@@ -338,11 +315,7 @@ pub mod derived_analysis {
                 )],
             };
             let units = Part21Instance { id: 20, entities: vec![("IFCUNITASSIGNMENT".into(), vec![])] };
-            Ifc2x3Snapshot {
-                schema: "stdio.ifc.2x3".into(),
-                document: Part21Document { header: header("CoordinationView"), instances: vec![placement, project, wall, units] },
-                edm_preamble: None,
-            }
+            Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: Part21Document { header: header("CoordinationView"), instances: vec![placement, project, wall, units] }, edm_preamble: None }
         }
 
         #[test]

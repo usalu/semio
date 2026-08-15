@@ -5,7 +5,7 @@
 //! No GCE-shaped mutations here (delay/disposal/transparency/loop) — 87a genuinely has none of
 //! those concepts; that scope lives entirely on 89a's mutation enum.
 
-use crate::artifacts::gif::standards::v87a::subsets::any::schema::diff::{self, GifDiff, GifImageDiff, GifImagesDiff, GifImageModified, GifImageAdded};
+use crate::artifacts::gif::standards::v87a::subsets::any::schema::diff::{self, GifDiff, GifImageAdded, GifImageDiff, GifImageModified, GifImagesDiff};
 use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifRgb, GifSnapshot};
 use protocol::{Mutation, MutationDiff};
 #[cfg(test)]
@@ -35,27 +35,48 @@ pub enum GifMutation {
         #[dsl(block)]
         snapshot: GifSnapshot,
     },
-    SetScreenSize { width: u32, height: u32 },
+    SetScreenSize {
+        width: u32,
+        height: u32,
+    },
     SetGlobalColorTable {
         #[dsl(block)]
         gct: Option<GifColorTable>,
     },
-    SetBackgroundColorIndex { index: u8 },
-    SetPixelAspectRatio { ratio: u8 },
+    SetBackgroundColorIndex {
+        index: u8,
+    },
+    SetPixelAspectRatio {
+        ratio: u8,
+    },
     InsertImage {
         index: usize,
         #[dsl(block)]
         image: GifImage,
     },
-    RemoveImage { index: usize },
-    MoveImage { from: usize, to: usize },
-    SetImageGeometry { index: usize, left: u32, top: u32, width: u32, height: u32 },
+    RemoveImage {
+        index: usize,
+    },
+    MoveImage {
+        from: usize,
+        to: usize,
+    },
+    SetImageGeometry {
+        index: usize,
+        left: u32,
+        top: u32,
+        width: u32,
+        height: u32,
+    },
     SetImagePixels {
         index: usize,
         #[dsl(base64)]
         indices: Vec<u8>,
     },
-    SetImageInterlace { index: usize, interlace: bool },
+    SetImageInterlace {
+        index: usize,
+        interlace: bool,
+    },
 }
 //#endregion 🔖️Mutations
 
@@ -66,12 +87,7 @@ pub enum GifMutation {
 /// `demo_mutation_cases()`.
 pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
     let base = crate::artifacts::gif::standards::v87a::subsets::any::schema::demo_gif_snapshot();
-    let sample_image = GifImage {
-        left: 0, top: 0, width: 2, height: 2,
-        interlace: false,
-        lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: 9, g: 9, b: 9 }; 2] }),
-        indices: vec![0, 1, 1, 0],
-    };
+    let sample_image = GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: 9, g: 9, b: 9 }; 2] }), indices: vec![0, 1, 1, 0] };
     vec![
         GifMutation::NoMutation,
         GifMutation::SetSnapshot { snapshot: base.clone() },
@@ -106,31 +122,12 @@ impl Mutation<GifSnapshot> for GifMutation {
         match self {
             GifMutation::NoMutation => GifDiff::default(),
             GifMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
-            GifMutation::SetScreenSize { width, height } => GifDiff {
-                width: (*width != base.width).then_some(*width),
-                height: (*height != base.height).then_some(*height),
-                ..Default::default()
-            },
-            GifMutation::SetGlobalColorTable { gct } => GifDiff {
-                gct: (*gct != base.gct).then_some(gct.clone()),
-                ..Default::default()
-            },
-            GifMutation::SetBackgroundColorIndex { index } => GifDiff {
-                background_color_index: (*index != base.background_color_index).then_some(*index),
-                ..Default::default()
-            },
-            GifMutation::SetPixelAspectRatio { ratio } => GifDiff {
-                pixel_aspect_ratio: (*ratio != base.pixel_aspect_ratio).then_some(*ratio),
-                ..Default::default()
-            },
-            GifMutation::InsertImage { index, image } => GifDiff {
-                images: Some(GifImagesDiff { added: vec![GifImageAdded { index: (*index).min(base.images.len()), image: image.clone() }], ..Default::default() }),
-                ..Default::default()
-            },
-            GifMutation::RemoveImage { index } => GifDiff {
-                images: Some(GifImagesDiff { removed: vec![*index], ..Default::default() }),
-                ..Default::default()
-            },
+            GifMutation::SetScreenSize { width, height } => GifDiff { width: (*width != base.width).then_some(*width), height: (*height != base.height).then_some(*height), ..Default::default() },
+            GifMutation::SetGlobalColorTable { gct } => GifDiff { gct: (*gct != base.gct).then_some(gct.clone()), ..Default::default() },
+            GifMutation::SetBackgroundColorIndex { index } => GifDiff { background_color_index: (*index != base.background_color_index).then_some(*index), ..Default::default() },
+            GifMutation::SetPixelAspectRatio { ratio } => GifDiff { pixel_aspect_ratio: (*ratio != base.pixel_aspect_ratio).then_some(*ratio), ..Default::default() },
+            GifMutation::InsertImage { index, image } => GifDiff { images: Some(GifImagesDiff { added: vec![GifImageAdded { index: (*index).min(base.images.len()), image: image.clone() }], ..Default::default() }), ..Default::default() },
+            GifMutation::RemoveImage { index } => GifDiff { images: Some(GifImagesDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
             GifMutation::MoveImage { from, to } => {
                 let mut images = base.images.clone();
                 if *from < images.len() {
@@ -177,7 +174,9 @@ impl Mutation<GifSnapshot> for GifMutation {
                     let at = (*to).min(images.len());
                     images.insert(at, item);
                     at
-                } else { *from };
+                } else {
+                    *from
+                };
                 vec![GifMutation::MoveImage { from: landed_at, to: *from }]
             }
             GifMutation::SetImageGeometry { index, .. } => match base.images.get(*index) {
@@ -238,23 +237,11 @@ mod tests {
     use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifRgb;
 
     fn sample_image(seed: u8) -> GifImage {
-        GifImage {
-            left: 0, top: 0, width: 2, height: 2,
-            interlace: false,
-            lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: seed, g: seed, b: seed }; 2] }),
-            indices: vec![0, 1, 1, 0],
-        }
+        GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: seed, g: seed, b: seed }; 2] }), indices: vec![0, 1, 1, 0] }
     }
 
     fn base_snapshot() -> GifSnapshot {
-        GifSnapshot {
-            schema: "stdio.gif".into(),
-            width: 2, height: 2,
-            gct: None,
-            background_color_index: 0,
-            pixel_aspect_ratio: 0,
-            images: vec![sample_image(1), sample_image(2), sample_image(3)],
-        }
+        GifSnapshot { schema: "stdio.gif".into(), width: 2, height: 2, gct: None, background_color_index: 0, pixel_aspect_ratio: 0, images: vec![sample_image(1), sample_image(2), sample_image(3)] }
     }
 
     fn round_trips(base: &GifSnapshot, mutation: GifMutation) {

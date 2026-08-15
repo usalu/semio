@@ -1,5 +1,5 @@
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
+use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

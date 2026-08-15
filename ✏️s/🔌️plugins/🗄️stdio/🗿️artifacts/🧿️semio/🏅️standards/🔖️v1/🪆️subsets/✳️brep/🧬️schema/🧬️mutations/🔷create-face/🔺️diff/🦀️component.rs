@@ -12,7 +12,11 @@ pub fn diff(payload: &CreateFace, base: &SemioBrepSnapshot) -> SemioBrepDiff {
         return SemioBrepDiff::default();
     }
     SemioBrepDiff {
-        faces: Some(NamedTripleDiff { removed: vec![], modified: vec![], added: vec![BrepFace { id: payload.id.clone(), outer_loop: payload.outer_loop.clone(), inner_loops: payload.inner_loops.clone(), surface: payload.surface.clone(), orientation: payload.orientation }] }),
+        faces: Some(NamedTripleDiff {
+            removed: vec![],
+            modified: vec![],
+            added: vec![BrepFace { id: payload.id.clone(), outer_loop: payload.outer_loop.clone(), inner_loops: payload.inner_loops.clone(), surface: payload.surface.clone(), orientation: payload.orientation }],
+        }),
         ..Default::default()
     }
 }

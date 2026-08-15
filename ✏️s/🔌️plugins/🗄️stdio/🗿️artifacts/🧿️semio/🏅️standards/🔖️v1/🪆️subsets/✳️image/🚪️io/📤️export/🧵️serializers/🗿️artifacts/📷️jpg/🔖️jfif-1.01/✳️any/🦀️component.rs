@@ -10,7 +10,7 @@
 //! - Only `metadata` entries with `key == "comment"` round-trip (as a `COM` segment); any other
 //!   key has no textual home on `JpgSnapshot` and is dropped.
 
-use crate::artifacts::jpg::{JpgSnapshot, schema::snapshot::JpgSegment};
+use crate::artifacts::jpg::{schema::snapshot::JpgSegment, JpgSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
@@ -33,20 +33,8 @@ impl ArtifactSerializer for SemioImageToJpg {
         if frame.rgba8.len() != (from.width as usize) * (from.height as usize) * 4 {
             return Err(store::PackError::Schema("semio/image→jpg: frame pixel length does not match width*height*4".into()));
         }
-        let other_segments = from
-            .metadata
-            .iter()
-            .filter(|m| m.key == "comment")
-            .map(|m| JpgSegment { marker: COM_MARKER, data: m.value.clone().into_bytes() })
-            .collect();
-        Ok(JpgSnapshot {
-            schema: crate::artifacts::jpg::STDIO_JPG_DOCUMENT_SCHEMA.into(),
-            width: from.width,
-            height: from.height,
-            pixels: frame.rgba8.clone(),
-            other_segments,
-            ..JpgSnapshot::default()
-        })
+        let other_segments = from.metadata.iter().filter(|m| m.key == "comment").map(|m| JpgSegment { marker: COM_MARKER, data: m.value.clone().into_bytes() }).collect();
+        Ok(JpgSnapshot { schema: crate::artifacts::jpg::STDIO_JPG_DOCUMENT_SCHEMA.into(), width: from.width, height: from.height, pixels: frame.rgba8.clone(), other_segments, ..JpgSnapshot::default() })
     }
 }
 //#endregion 🔖️Serializer

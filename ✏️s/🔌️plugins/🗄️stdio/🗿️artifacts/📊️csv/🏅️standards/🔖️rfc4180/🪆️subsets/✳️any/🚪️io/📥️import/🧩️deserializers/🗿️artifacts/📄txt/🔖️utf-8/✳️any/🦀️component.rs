@@ -1,7 +1,7 @@
 //! 📥️ Deserialize `stdio.csv` from stdio.txt.
 
-use crate::artifacts::txt::TxtSnapshot;
 use crate::artifacts::csv::CsvSnapshot;
+use crate::artifacts::txt::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register deserializer hooks.

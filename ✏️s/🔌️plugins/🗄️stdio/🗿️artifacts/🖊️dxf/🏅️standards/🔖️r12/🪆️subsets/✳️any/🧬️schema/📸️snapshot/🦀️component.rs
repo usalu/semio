@@ -90,7 +90,11 @@ fn parse_i64(v: &str) -> i64 {
 }
 fn format_f64(v: f64) -> String {
     let s = format!("{v}");
-    if s.contains('.') || s.contains('e') || s.contains("inf") || s.contains("NaN") { s } else { format!("{s}.0") }
+    if s.contains('.') || s.contains('e') || s.contains("inf") || s.contains("NaN") {
+        s
+    } else {
+        format!("{s}.0")
+    }
 }
 //#endregion 🔖️DxfValue
 
@@ -303,14 +307,7 @@ pub struct DxfSnapshot {
 
 impl Default for DxfSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_DXF_DOCUMENT_SCHEMA.into(),
-            header_vars: Vec::new(),
-            tables: DxfTables::default(),
-            other_tables: Vec::new(),
-            blocks: Vec::new(),
-            entities: Vec::new(),
-        }
+        Self { schema: STDIO_DXF_DOCUMENT_SCHEMA.into(), header_vars: Vec::new(), tables: DxfTables::default(), other_tables: Vec::new(), blocks: Vec::new(), entities: Vec::new() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -377,7 +374,9 @@ fn parse_header_section(tags: &[DxfTag]) -> Vec<DxfHeaderVar> {
             let name = tags[i].value.clone();
             let start = i + 1;
             let mut end = start;
-            while end < tags.len() && tags[end].code != 9 { end += 1; }
+            while end < tags.len() && tags[end].code != 9 {
+                end += 1;
+            }
             vars.push(parse_header_var(name, &tags[start..end]));
             i = end;
         } else {
@@ -460,7 +459,9 @@ fn split_table_entries<'a>(tags: &'a [DxfTag], entry_kind: &str) -> Vec<&'a [Dxf
         if tags[i].code == 0 && tags[i].value == entry_kind {
             let start = i + 1;
             let mut end = start;
-            while end < tags.len() && tags[end].code != 0 { end += 1; }
+            while end < tags.len() && tags[end].code != 0 {
+                end += 1;
+            }
             out.push(&tags[start..end]);
             i = end;
         } else {
@@ -479,16 +480,26 @@ fn parse_tables_section(tags: &[DxfTag]) -> (DxfTables, Vec<DxfOtherTable>) {
     while i < tags.len() {
         if tags[i].code == 0 && tags[i].value == "TABLE" {
             i += 1;
-            let table_name = if i < tags.len() && tags[i].code == 2 { let n = tags[i].value.clone(); i += 1; n } else { String::new() };
+            let table_name = if i < tags.len() && tags[i].code == 2 {
+                let n = tags[i].value.clone();
+                i += 1;
+                n
+            } else {
+                String::new()
+            };
             let raw_body_start = i;
             let mut body_end = raw_body_start;
-            while body_end < tags.len() && !(tags[body_end].code == 0 && tags[body_end].value == "ENDTAB") { body_end += 1; }
+            while body_end < tags.len() && !(tags[body_end].code == 0 && tags[body_end].value == "ENDTAB") {
+                body_end += 1;
+            }
             match table_name.as_str() {
                 "LAYER" | "STYLE" | "LTYPE" => {
                     // 🧭️ Known kinds: skip table-level fields (70 count, 5 handle, …) up to the
                     // first entry's `0/<KIND>` marker before splitting into per-entry slices.
                     let mut entries_start = raw_body_start;
-                    while entries_start < body_end && tags[entries_start].code != 0 { entries_start += 1; }
+                    while entries_start < body_end && tags[entries_start].code != 0 {
+                        entries_start += 1;
+                    }
                     let body = &tags[entries_start..body_end];
                     match table_name.as_str() {
                         "LAYER" => tables.layers = split_table_entries(body, "LAYER").into_iter().map(build_layer).collect(),
@@ -503,7 +514,9 @@ fn parse_tables_section(tags: &[DxfTag]) -> (DxfTables, Vec<DxfOtherTable>) {
                 _ => others.push(DxfOtherTable { name: table_name, tags: tags[raw_body_start..body_end].to_vec() }),
             }
             i = body_end;
-            if i < tags.len() && tags[i].code == 0 && tags[i].value == "ENDTAB" { i += 1; }
+            if i < tags.len() && tags[i].code == 0 && tags[i].value == "ENDTAB" {
+                i += 1;
+            }
         } else {
             i += 1;
         }
@@ -517,21 +530,27 @@ fn print_layer(out: &mut String, l: &DxfLayer) {
     push_tag(out, 70, &l.flags.to_string());
     push_tag(out, 62, &l.color.to_string());
     push_tag(out, 6, &l.linetype);
-    for (code, v) in &l.unknown_group_codes { push_tag(out, *code, &format_dxf_value(v)); }
+    for (code, v) in &l.unknown_group_codes {
+        push_tag(out, *code, &format_dxf_value(v));
+    }
 }
 fn print_style(out: &mut String, s: &DxfStyle) {
     push_tag(out, 0, "STYLE");
     push_tag(out, 2, &s.name);
     push_tag(out, 70, &s.flags.to_string());
     push_tag(out, 3, &s.font_name);
-    for (code, v) in &s.unknown_group_codes { push_tag(out, *code, &format_dxf_value(v)); }
+    for (code, v) in &s.unknown_group_codes {
+        push_tag(out, *code, &format_dxf_value(v));
+    }
 }
 fn print_linetype(out: &mut String, l: &DxfLinetype) {
     push_tag(out, 0, "LTYPE");
     push_tag(out, 2, &l.name);
     push_tag(out, 70, &l.flags.to_string());
     push_tag(out, 3, &l.description);
-    for (code, v) in &l.unknown_group_codes { push_tag(out, *code, &format_dxf_value(v)); }
+    for (code, v) in &l.unknown_group_codes {
+        push_tag(out, *code, &format_dxf_value(v));
+    }
 }
 
 fn print_table_block(out: &mut String, name: &str, count: usize, mut body: impl FnMut(&mut String)) {
@@ -545,13 +564,27 @@ fn print_table_block(out: &mut String, name: &str, count: usize, mut body: impl 
 fn print_tables_section(tables: &DxfTables, others: &[DxfOtherTable], out: &mut String) {
     push_tag(out, 0, "SECTION");
     push_tag(out, 2, "TABLES");
-    print_table_block(out, "LAYER", tables.layers.len(), |out| for l in &tables.layers { print_layer(out, l); });
-    print_table_block(out, "STYLE", tables.styles.len(), |out| for s in &tables.styles { print_style(out, s); });
-    print_table_block(out, "LTYPE", tables.linetypes.len(), |out| for l in &tables.linetypes { print_linetype(out, l); });
+    print_table_block(out, "LAYER", tables.layers.len(), |out| {
+        for l in &tables.layers {
+            print_layer(out, l);
+        }
+    });
+    print_table_block(out, "STYLE", tables.styles.len(), |out| {
+        for s in &tables.styles {
+            print_style(out, s);
+        }
+    });
+    print_table_block(out, "LTYPE", tables.linetypes.len(), |out| {
+        for l in &tables.linetypes {
+            print_linetype(out, l);
+        }
+    });
     for t in others {
         push_tag(out, 0, "TABLE");
         push_tag(out, 2, &t.name);
-        for tag in &t.tags { push_tag(out, tag.code, &tag.value); }
+        for tag in &t.tags {
+            push_tag(out, tag.code, &tag.value);
+        }
         push_tag(out, 0, "ENDTAB");
     }
     push_tag(out, 0, "ENDSEC");
@@ -580,8 +613,12 @@ fn build_entity(kind: &str, body: &[DxfTag]) -> DxfEntity {
             for t in body {
                 match t.code {
                     8 => layer = t.value.clone(),
-                    10 => start[0] = parse_f64(&t.value), 20 => start[1] = parse_f64(&t.value), 30 => start[2] = parse_f64(&t.value),
-                    11 => end[0] = parse_f64(&t.value), 21 => end[1] = parse_f64(&t.value), 31 => end[2] = parse_f64(&t.value),
+                    10 => start[0] = parse_f64(&t.value),
+                    20 => start[1] = parse_f64(&t.value),
+                    30 => start[2] = parse_f64(&t.value),
+                    11 => end[0] = parse_f64(&t.value),
+                    21 => end[1] = parse_f64(&t.value),
+                    31 => end[2] = parse_f64(&t.value),
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
                 }
             }
@@ -592,7 +629,9 @@ fn build_entity(kind: &str, body: &[DxfTag]) -> DxfEntity {
             for t in body {
                 match t.code {
                     8 => layer = t.value.clone(),
-                    10 => center[0] = parse_f64(&t.value), 20 => center[1] = parse_f64(&t.value), 30 => center[2] = parse_f64(&t.value),
+                    10 => center[0] = parse_f64(&t.value),
+                    20 => center[1] = parse_f64(&t.value),
+                    30 => center[2] = parse_f64(&t.value),
                     40 => radius = parse_f64(&t.value),
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
                 }
@@ -604,7 +643,9 @@ fn build_entity(kind: &str, body: &[DxfTag]) -> DxfEntity {
             for t in body {
                 match t.code {
                     8 => layer = t.value.clone(),
-                    10 => center[0] = parse_f64(&t.value), 20 => center[1] = parse_f64(&t.value), 30 => center[2] = parse_f64(&t.value),
+                    10 => center[0] = parse_f64(&t.value),
+                    20 => center[1] = parse_f64(&t.value),
+                    30 => center[2] = parse_f64(&t.value),
                     40 => radius = parse_f64(&t.value),
                     50 => sa = parse_f64(&t.value),
                     51 => ea = parse_f64(&t.value),
@@ -618,7 +659,9 @@ fn build_entity(kind: &str, body: &[DxfTag]) -> DxfEntity {
             for t in body {
                 match t.code {
                     8 => layer = t.value.clone(),
-                    10 => position[0] = parse_f64(&t.value), 20 => position[1] = parse_f64(&t.value), 30 => position[2] = parse_f64(&t.value),
+                    10 => position[0] = parse_f64(&t.value),
+                    20 => position[1] = parse_f64(&t.value),
+                    30 => position[2] = parse_f64(&t.value),
                     40 => height = parse_f64(&t.value),
                     1 => value = t.value.clone(),
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
@@ -631,24 +674,35 @@ fn build_entity(kind: &str, body: &[DxfTag]) -> DxfEntity {
             for t in body {
                 match t.code {
                     8 => layer = t.value.clone(),
-                    10 => points[0][0] = parse_f64(&t.value), 20 => points[0][1] = parse_f64(&t.value), 30 => points[0][2] = parse_f64(&t.value),
-                    11 => points[1][0] = parse_f64(&t.value), 21 => points[1][1] = parse_f64(&t.value), 31 => points[1][2] = parse_f64(&t.value),
-                    12 => points[2][0] = parse_f64(&t.value), 22 => points[2][1] = parse_f64(&t.value), 32 => points[2][2] = parse_f64(&t.value),
-                    13 => points[3][0] = parse_f64(&t.value), 23 => points[3][1] = parse_f64(&t.value), 33 => points[3][2] = parse_f64(&t.value),
+                    10 => points[0][0] = parse_f64(&t.value),
+                    20 => points[0][1] = parse_f64(&t.value),
+                    30 => points[0][2] = parse_f64(&t.value),
+                    11 => points[1][0] = parse_f64(&t.value),
+                    21 => points[1][1] = parse_f64(&t.value),
+                    31 => points[1][2] = parse_f64(&t.value),
+                    12 => points[2][0] = parse_f64(&t.value),
+                    22 => points[2][1] = parse_f64(&t.value),
+                    32 => points[2][2] = parse_f64(&t.value),
+                    13 => points[3][0] = parse_f64(&t.value),
+                    23 => points[3][1] = parse_f64(&t.value),
+                    33 => points[3][2] = parse_f64(&t.value),
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
                 }
             }
             DxfEntity::Solid { points, layer, unknown_group_codes: unknown }
         }
         "INSERT" => {
-            let (mut block_name, mut position, mut scale, mut rotation, mut layer, mut unknown) =
-                (String::new(), [0.0; 3], [1.0, 1.0, 1.0], 0.0, String::new(), Vec::new());
+            let (mut block_name, mut position, mut scale, mut rotation, mut layer, mut unknown) = (String::new(), [0.0; 3], [1.0, 1.0, 1.0], 0.0, String::new(), Vec::new());
             for t in body {
                 match t.code {
                     8 => layer = t.value.clone(),
                     2 => block_name = t.value.clone(),
-                    10 => position[0] = parse_f64(&t.value), 20 => position[1] = parse_f64(&t.value), 30 => position[2] = parse_f64(&t.value),
-                    41 => scale[0] = parse_f64(&t.value), 42 => scale[1] = parse_f64(&t.value), 43 => scale[2] = parse_f64(&t.value),
+                    10 => position[0] = parse_f64(&t.value),
+                    20 => position[1] = parse_f64(&t.value),
+                    30 => position[2] = parse_f64(&t.value),
+                    41 => scale[0] = parse_f64(&t.value),
+                    42 => scale[1] = parse_f64(&t.value),
+                    43 => scale[2] = parse_f64(&t.value),
                     50 => rotation = parse_f64(&t.value),
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
                 }
@@ -665,7 +719,9 @@ fn build_entity(kind: &str, body: &[DxfTag]) -> DxfEntity {
 fn parse_polyline(tags: &[DxfTag], mut i: usize) -> (DxfEntity, usize) {
     let header_start = i;
     let mut header_end = header_start;
-    while header_end < tags.len() && tags[header_end].code != 0 { header_end += 1; }
+    while header_end < tags.len() && tags[header_end].code != 0 {
+        header_end += 1;
+    }
     let (mut layer, mut closed, mut unknown) = (String::new(), false, Vec::new());
     for t in &tags[header_start..header_end] {
         match t.code {
@@ -681,13 +737,17 @@ fn parse_polyline(tags: &[DxfTag], mut i: usize) -> (DxfEntity, usize) {
         i += 1;
         let vstart = i;
         let mut vend = vstart;
-        while vend < tags.len() && tags[vend].code != 0 { vend += 1; }
+        while vend < tags.len() && tags[vend].code != 0 {
+            vend += 1;
+        }
         vertices.push(build_vertex(&tags[vstart..vend]));
         i = vend;
     }
     if i < tags.len() && tags[i].code == 0 && tags[i].value == "SEQEND" {
         i += 1;
-        while i < tags.len() && tags[i].code != 0 { i += 1; }
+        while i < tags.len() && tags[i].code != 0 {
+            i += 1;
+        }
     }
     (DxfEntity::Polyline { vertices, closed, layer, unknown_group_codes: unknown }, i)
 }
@@ -716,7 +776,9 @@ fn parse_entities_until(tags: &[DxfTag], mut i: usize, stop_kind: &str) -> (Vec<
         } else {
             let body_start = i;
             let mut body_end = body_start;
-            while body_end < tags.len() && tags[body_end].code != 0 { body_end += 1; }
+            while body_end < tags.len() && tags[body_end].code != 0 {
+                body_end += 1;
+            }
             entities.push(build_entity(&kind, &tags[body_start..body_end]));
             i = body_end;
         }
@@ -725,7 +787,9 @@ fn parse_entities_until(tags: &[DxfTag], mut i: usize, stop_kind: &str) -> (Vec<
 }
 
 fn print_unknown(out: &mut String, codes: &[(i32, DxfValue)]) {
-    for (code, v) in codes { push_tag(out, *code, &format_dxf_value(v)); }
+    for (code, v) in codes {
+        push_tag(out, *code, &format_dxf_value(v));
+    }
 }
 
 fn print_entity(e: &DxfEntity, out: &mut String) {
@@ -733,21 +797,29 @@ fn print_entity(e: &DxfEntity, out: &mut String) {
         DxfEntity::Line { start, end, layer, unknown_group_codes } => {
             push_tag(out, 0, "LINE");
             push_tag(out, 8, layer);
-            push_tag(out, 10, &format_f64(start[0])); push_tag(out, 20, &format_f64(start[1])); push_tag(out, 30, &format_f64(start[2]));
-            push_tag(out, 11, &format_f64(end[0])); push_tag(out, 21, &format_f64(end[1])); push_tag(out, 31, &format_f64(end[2]));
+            push_tag(out, 10, &format_f64(start[0]));
+            push_tag(out, 20, &format_f64(start[1]));
+            push_tag(out, 30, &format_f64(start[2]));
+            push_tag(out, 11, &format_f64(end[0]));
+            push_tag(out, 21, &format_f64(end[1]));
+            push_tag(out, 31, &format_f64(end[2]));
             print_unknown(out, unknown_group_codes);
         }
         DxfEntity::Circle { center, radius, layer, unknown_group_codes } => {
             push_tag(out, 0, "CIRCLE");
             push_tag(out, 8, layer);
-            push_tag(out, 10, &format_f64(center[0])); push_tag(out, 20, &format_f64(center[1])); push_tag(out, 30, &format_f64(center[2]));
+            push_tag(out, 10, &format_f64(center[0]));
+            push_tag(out, 20, &format_f64(center[1]));
+            push_tag(out, 30, &format_f64(center[2]));
             push_tag(out, 40, &format_f64(*radius));
             print_unknown(out, unknown_group_codes);
         }
         DxfEntity::Arc { center, radius, start_angle, end_angle, layer, unknown_group_codes } => {
             push_tag(out, 0, "ARC");
             push_tag(out, 8, layer);
-            push_tag(out, 10, &format_f64(center[0])); push_tag(out, 20, &format_f64(center[1])); push_tag(out, 30, &format_f64(center[2]));
+            push_tag(out, 10, &format_f64(center[0]));
+            push_tag(out, 20, &format_f64(center[1]));
+            push_tag(out, 30, &format_f64(center[2]));
             push_tag(out, 40, &format_f64(*radius));
             push_tag(out, 50, &format_f64(*start_angle));
             push_tag(out, 51, &format_f64(*end_angle));
@@ -765,7 +837,9 @@ fn print_entity(e: &DxfEntity, out: &mut String) {
                 // the source — it's optional, inheriting the polyline's layer when absent) is
                 // already captured in `unknown_group_codes` by `build_vertex`; emitting it again
                 // here would duplicate the tag on decode(encode(...)).
-                push_tag(out, 10, &format_f64(v.x)); push_tag(out, 20, &format_f64(v.y)); push_tag(out, 30, &format_f64(v.z));
+                push_tag(out, 10, &format_f64(v.x));
+                push_tag(out, 20, &format_f64(v.y));
+                push_tag(out, 30, &format_f64(v.z));
                 push_tag(out, 42, &format_f64(v.bulge));
                 print_unknown(out, &v.unknown_group_codes);
             }
@@ -774,7 +848,9 @@ fn print_entity(e: &DxfEntity, out: &mut String) {
         DxfEntity::Text { position, height, value, layer, unknown_group_codes } => {
             push_tag(out, 0, "TEXT");
             push_tag(out, 8, layer);
-            push_tag(out, 10, &format_f64(position[0])); push_tag(out, 20, &format_f64(position[1])); push_tag(out, 30, &format_f64(position[2]));
+            push_tag(out, 10, &format_f64(position[0]));
+            push_tag(out, 20, &format_f64(position[1]));
+            push_tag(out, 30, &format_f64(position[2]));
             push_tag(out, 40, &format_f64(*height));
             push_tag(out, 1, value);
             print_unknown(out, unknown_group_codes);
@@ -794,8 +870,12 @@ fn print_entity(e: &DxfEntity, out: &mut String) {
             push_tag(out, 0, "INSERT");
             push_tag(out, 8, layer);
             push_tag(out, 2, block_name);
-            push_tag(out, 10, &format_f64(position[0])); push_tag(out, 20, &format_f64(position[1])); push_tag(out, 30, &format_f64(position[2]));
-            push_tag(out, 41, &format_f64(scale[0])); push_tag(out, 42, &format_f64(scale[1])); push_tag(out, 43, &format_f64(scale[2]));
+            push_tag(out, 10, &format_f64(position[0]));
+            push_tag(out, 20, &format_f64(position[1]));
+            push_tag(out, 30, &format_f64(position[2]));
+            push_tag(out, 41, &format_f64(scale[0]));
+            push_tag(out, 42, &format_f64(scale[1]));
+            push_tag(out, 43, &format_f64(scale[2]));
             push_tag(out, 50, &format_f64(*rotation));
             print_unknown(out, unknown_group_codes);
         }
@@ -807,7 +887,9 @@ fn print_entity(e: &DxfEntity, out: &mut String) {
 }
 
 fn print_entities(entities: &[DxfEntity], out: &mut String) {
-    for e in entities { print_entity(e, out); }
+    for e in entities {
+        print_entity(e, out);
+    }
 }
 //#endregion 🔖️EntityCodec
 
@@ -820,12 +902,16 @@ fn parse_blocks_section(tags: &[DxfTag]) -> Vec<DxfBlock> {
             i += 1;
             let header_start = i;
             let mut header_end = header_start;
-            while header_end < tags.len() && tags[header_end].code != 0 { header_end += 1; }
+            while header_end < tags.len() && tags[header_end].code != 0 {
+                header_end += 1;
+            }
             let (mut name, mut bx, mut by, mut bz, mut unknown) = (String::new(), 0.0, 0.0, 0.0, Vec::new());
             for t in &tags[header_start..header_end] {
                 match t.code {
                     2 => name = t.value.clone(),
-                    10 => bx = parse_f64(&t.value), 20 => by = parse_f64(&t.value), 30 => bz = parse_f64(&t.value),
+                    10 => bx = parse_f64(&t.value),
+                    20 => by = parse_f64(&t.value),
+                    30 => bz = parse_f64(&t.value),
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
                 }
             }
@@ -834,7 +920,9 @@ fn parse_blocks_section(tags: &[DxfTag]) -> Vec<DxfBlock> {
             i = next_i;
             if i < tags.len() && tags[i].code == 0 && tags[i].value == "ENDBLK" {
                 i += 1;
-                while i < tags.len() && tags[i].code != 0 { i += 1; }
+                while i < tags.len() && tags[i].code != 0 {
+                    i += 1;
+                }
             }
             blocks.push(DxfBlock { name, base_point: [bx, by, bz], entities, unknown_group_codes: unknown });
         } else {
@@ -850,7 +938,9 @@ fn print_blocks_section(blocks: &[DxfBlock], out: &mut String) {
     for b in blocks {
         push_tag(out, 0, "BLOCK");
         push_tag(out, 2, &b.name);
-        push_tag(out, 10, &format_f64(b.base_point[0])); push_tag(out, 20, &format_f64(b.base_point[1])); push_tag(out, 30, &format_f64(b.base_point[2]));
+        push_tag(out, 10, &format_f64(b.base_point[0]));
+        push_tag(out, 20, &format_f64(b.base_point[1]));
+        push_tag(out, 30, &format_f64(b.base_point[2]));
         print_unknown(out, &b.unknown_group_codes);
         print_entities(&b.entities, out);
         push_tag(out, 0, "ENDBLK");
@@ -869,20 +959,37 @@ pub fn parse_dxf_document(text: &str) -> Result<DxfSnapshot, String> {
     while i < tags.len() {
         if tags[i].code == 0 && tags[i].value == "SECTION" {
             i += 1;
-            let section_name = if i < tags.len() && tags[i].code == 2 { let n = tags[i].value.clone(); i += 1; n } else { String::new() };
+            let section_name = if i < tags.len() && tags[i].code == 2 {
+                let n = tags[i].value.clone();
+                i += 1;
+                n
+            } else {
+                String::new()
+            };
             let body_start = i;
             let mut body_end = body_start;
-            while body_end < tags.len() && !(tags[body_end].code == 0 && tags[body_end].value == "ENDSEC") { body_end += 1; }
+            while body_end < tags.len() && !(tags[body_end].code == 0 && tags[body_end].value == "ENDSEC") {
+                body_end += 1;
+            }
             let body = &tags[body_start..body_end];
             match section_name.as_str() {
                 "HEADER" => snap.header_vars = parse_header_section(body),
-                "TABLES" => { let (t, o) = parse_tables_section(body); snap.tables = t; snap.other_tables = o; }
+                "TABLES" => {
+                    let (t, o) = parse_tables_section(body);
+                    snap.tables = t;
+                    snap.other_tables = o;
+                }
                 "BLOCKS" => snap.blocks = parse_blocks_section(body),
-                "ENTITIES" => { let (e, _) = parse_entities_until(body, 0, "ENDSEC"); snap.entities = e; }
+                "ENTITIES" => {
+                    let (e, _) = parse_entities_until(body, 0, "ENDSEC");
+                    snap.entities = e;
+                }
                 _ => {} // R12 has no other section kinds
             }
             i = body_end;
-            if i < tags.len() && tags[i].code == 0 && tags[i].value == "ENDSEC" { i += 1; }
+            if i < tags.len() && tags[i].code == 0 && tags[i].value == "ENDSEC" {
+                i += 1;
+            }
         } else if tags[i].code == 0 && tags[i].value == "EOF" {
             break;
         } else {
@@ -911,7 +1018,9 @@ pub fn print_dxf_document(snap: &DxfSnapshot) -> String {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for DxfSnapshot {
     const EXTENSION: &'static str = "dxf";
-    fn envelope_id() -> &'static str { "stdio.dxf" }
+    fn envelope_id() -> &'static str {
+        "stdio.dxf"
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -922,11 +1031,7 @@ impl store::ArtifactDsl for DxfSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = print_dxf_document(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -935,22 +1040,13 @@ impl store::ArtifactPack for DxfSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = print_dxf_document(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -986,7 +1082,8 @@ mod tests {
             "0\nPOLYLINE\n8\n0\n66\n1\n70\n1\n0\nVERTEX\n8\n0\n10\n0\n20\n0\n30\n0\n0\nVERTEX\n8\n0\n10\n1\n20\n0\n30\n0\n0\nSEQEND\n",
             "0\n3DFACE\n8\n0\n10\n0\n20\n0\n30\n0\n",
             "0\nENDSEC\n0\nEOF\n",
-        ).to_string()
+        )
+        .to_string()
     }
 
     #[test]
@@ -1017,7 +1114,10 @@ mod tests {
         assert!(matches!(snap.entities[4], DxfEntity::Solid { .. }));
         assert!(matches!(snap.entities[5], DxfEntity::Insert { .. }));
         match &snap.entities[6] {
-            DxfEntity::Polyline { vertices, closed, .. } => { assert_eq!(vertices.len(), 2); assert!(*closed); }
+            DxfEntity::Polyline { vertices, closed, .. } => {
+                assert_eq!(vertices.len(), 2);
+                assert!(*closed);
+            }
             other => panic!("expected Polyline, got {other:?}"),
         }
         match &snap.entities[7] {

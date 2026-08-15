@@ -9,10 +9,10 @@
 pub use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance;
     use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::JpgBuilder as JpgAnyBuilder;
+    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance;
     use crate::artifacts::jpg::{JpgDiff, JpgMutation, JpgSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     #[derive(Clone, Debug, Default)]
@@ -23,15 +23,25 @@ pub mod derived_construction {
         type Mutation = JpgMutation;
         type Diff = JpgDiff;
 
-        fn empty() -> Self { Self(JpgAnyBuilder::empty()) }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(JpgAnyBuilder::from_snapshot(snapshot)) }
-        fn from_text(text: &str) -> Result<Self, store::TextError> { Ok(Self(JpgAnyBuilder::from_text(text)?)) }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> { Ok(Self(JpgAnyBuilder::from_binary(bytes)?)) }
+        fn empty() -> Self {
+            Self(JpgAnyBuilder::empty())
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self(JpgAnyBuilder::from_snapshot(snapshot))
+        }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self(JpgAnyBuilder::from_text(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self(JpgAnyBuilder::from_binary(bytes)?))
+        }
         fn mutate(self, mutation: Self::Mutation) -> (Self, Self::Diff) {
             let (inner, diff) = self.0.mutate(mutation);
             (Self(inner), diff)
         }
-        fn absorb(self, diff: Self::Diff) -> Self { Self(self.0.absorb(diff)) }
+        fn absorb(self, diff: Self::Diff) -> Self {
+            Self(self.0.absorb(diff))
+        }
 
         /// 🛡️ The real construction gate: however the wrapped snapshot got here, a hard baseline
         /// violation fails `build()` -- soft diagnostics are not surfaced here (`ArtifactBuilder`'s
@@ -39,9 +49,12 @@ pub mod derived_construction {
         /// contract of "diagnostics accumulated during mutation, not from validation".
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             let snapshot = self.0.build()?;
-            let hard: Vec<dsl::Diagnostic> =
-                check_baseline_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal)).collect();
-            if hard.is_empty() { Ok(snapshot) } else { Err(hard) }
+            let hard: Vec<dsl::Diagnostic> = check_baseline_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal)).collect();
+            if hard.is_empty() {
+                Ok(snapshot)
+            } else {
+                Err(hard)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -87,12 +100,12 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
-    use semio_framework_plugin::{AnalyzeSource, Analysis, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use crate::artifacts::jpg::schema::snapshot::JpgHuffmanClass;
     use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::JpgAnalyzer as JpgAnyAnalyzer;
     pub use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::JpgParts;
-    use crate::artifacts::jpg::schema::snapshot::JpgHuffmanClass;
     use crate::artifacts::jpg::JpgSnapshot;
+    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("baseline") };
@@ -125,21 +138,12 @@ pub mod derived_analysis {
         let mut out = Vec::new();
 
         let Some(frame) = &snapshot.frame else {
-            out.push(hard(
-                CODE_NO_FRAME,
-                "no SOF0 frame header retained on this snapshot -- baseline conformance cannot be certified without one (never decoded, or built without going through engine::decode_jpg)".into(),
-            ));
+            out.push(hard(CODE_NO_FRAME, "no SOF0 frame header retained on this snapshot -- baseline conformance cannot be certified without one (never decoded, or built without going through engine::decode_jpg)".into()));
             return out;
         };
 
         if snapshot.sof_marker != SOF0 {
-            out.push(hard(
-                CODE_SOF_MARKER,
-                format!(
-                    "frame marker 0x{:02X} is not SOF0 (0x{SOF0:02X}) -- T.81 Annex F baseline sequential DCT is SOF0 only (no progressive/extended/arithmetic SOFn variants)",
-                    snapshot.sof_marker
-                ),
-            ));
+            out.push(hard(CODE_SOF_MARKER, format!("frame marker 0x{:02X} is not SOF0 (0x{SOF0:02X}) -- T.81 Annex F baseline sequential DCT is SOF0 only (no progressive/extended/arithmetic SOFn variants)", snapshot.sof_marker)));
         }
         if frame.precision != 8 {
             out.push(hard(CODE_PRECISION, format!("sample precision {} is not 8 -- T.81 §4.2 baseline sequential DCT mandates 8-bit samples", frame.precision)));
@@ -151,25 +155,14 @@ pub mod derived_analysis {
         let dc_count = snapshot.huffman_tables.iter().filter(|t| t.class == JpgHuffmanClass::Dc).count();
         let ac_count = snapshot.huffman_tables.iter().filter(|t| t.class == JpgHuffmanClass::Ac).count();
         if dc_count > 2 || ac_count > 2 {
-            out.push(soft(
-                CODE_HUFFMAN_TABLE_COUNT,
-                format!(
-                    "{dc_count} DC / {ac_count} AC Huffman table(s) defined -- typical JFIF baseline practice never needs more than 2 of each (one luma, one chroma)"
-                ),
-            ));
+            out.push(soft(CODE_HUFFMAN_TABLE_COUNT, format!("{dc_count} DC / {ac_count} AC Huffman table(s) defined -- typical JFIF baseline practice never needs more than 2 of each (one luma, one chroma)")));
         }
         if frame.components.len() > 4 {
-            out.push(soft(
-                CODE_COMPONENT_SAMPLING,
-                format!("{} frame components -- JFIF 1.01 conventionally encodes grayscale (1) or YCbCr (3) images; more than 4 is unusual", frame.components.len()),
-            ));
+            out.push(soft(CODE_COMPONENT_SAMPLING, format!("{} frame components -- JFIF 1.01 conventionally encodes grayscale (1) or YCbCr (3) images; more than 4 is unusual", frame.components.len())));
         }
         for c in &frame.components {
             if !(1..=4).contains(&c.h_sampling) || !(1..=4).contains(&c.v_sampling) {
-                out.push(soft(
-                    CODE_COMPONENT_SAMPLING,
-                    format!("component {} has sampling factors {}x{} outside JFIF's conventional 1..=4 range", c.id, c.h_sampling, c.v_sampling),
-                ));
+                out.push(soft(CODE_COMPONENT_SAMPLING, format!("component {} has sampling factors {}x{} outside JFIF's conventional 1..=4 range", c.id, c.h_sampling, c.v_sampling)));
             }
         }
         out

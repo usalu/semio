@@ -1,3 +1,2 @@
-/** 📝️ Text representation for `stdio.svg` (diff) -- `JSON.stringify` of the SvgDiff shape (see
- * `../🟦️component.ts`). */
+/** 📝️ Structured tagged/hex text emitted by `SvgDiff.printDiff`. */
 export type SvgDiffText = string;

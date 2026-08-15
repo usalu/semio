@@ -8,13 +8,13 @@
 pub use crate::artifacts::xml::standards::v1_0::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use dsl::{Diagnostic, Severity};
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::xml::standards::v1_0::subsets::any::schema::XmlBuilder as XmlAnyBuilder;
     use crate::artifacts::xml::standards::v1_0::subsets::any::schema::diff::XmlDiff;
     use crate::artifacts::xml::standards::v1_0::subsets::any::schema::mutations::XmlMutation;
     use crate::artifacts::xml::standards::v1_0::subsets::any::schema::snapshot::XmlSnapshot;
+    use crate::artifacts::xml::standards::v1_0::subsets::any::schema::XmlBuilder as XmlAnyBuilder;
     use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::check_valid_conformance;
+    use dsl::{Diagnostic, Severity};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     #[derive(Clone, Debug, Default)]
@@ -71,7 +71,7 @@ pub mod derived_construction {
         #[test]
         fn conforming_snapshot_builds_clean() {
             let snapshot = XmlValidBuilderConstruction::from_text("<!DOCTYPE root>\n<root/>").expect("parses").build().expect("conforming construction must build");
-            assert_eq!(snapshot.doc.doctype.as_deref(), Some("<!DOCTYPE root>"));
+            assert_eq!(snapshot.doc.doctype.as_ref().map(|doctype| doctype.name.as_str()), Some("root"));
         }
 
         #[test]
@@ -96,11 +96,11 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
-    use semio_framework_plugin::{AnalyzeSource, Analysis, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use crate::artifacts::xml::standards::v1_0::subsets::any::schema::snapshot::{XmlNode, XmlSnapshot};
     use crate::artifacts::xml::standards::v1_0::subsets::any::schema::XmlAnalyzer as XmlAnyAnalyzer;
     pub use crate::artifacts::xml::standards::v1_0::subsets::any::schema::XmlParts;
-    use crate::artifacts::xml::standards::v1_0::subsets::any::schema::snapshot::{XmlNode, XmlSnapshot};
+    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xml", standard: StandardId("1.0"), subset: SubsetId("valid") };
@@ -111,32 +111,12 @@ pub mod derived_analysis {
     pub const CODE_STANDALONE_EXTERNAL_SUBSET: &str = "stdio.xml.valid.standalone-external-subset";
     pub const CODE_VALIDITY_NOT_VERIFIED: &str = "stdio.xml.valid.validity-not-fully-verified";
 
-    /// 🔍️ Parses the declared root `Name` out of a raw `<!DOCTYPE ...>` string -- the first name
-    /// token after the (case-insensitively matched) `<!DOCTYPE` keyword, per §2.8's `doctypedecl`
-    /// production (`'<!DOCTYPE' S Name (S ExternalID)? S? ('[' intSubset ']' S?)? '>'`).
-    fn parse_doctype_root_name(doctype: &str) -> Option<&str> {
-        let lower = doctype.to_ascii_lowercase();
-        if !lower.starts_with("<!doctype") {
-            return None;
-        }
-        let rest = doctype["<!doctype".len()..].trim_start();
-        let end = rest.find(|c: char| c.is_whitespace() || c == '[' || c == '>').unwrap_or(rest.len());
-        let name = &rest[..end];
-        if name.is_empty() { None } else { Some(name) }
-    }
-
     /// 🌳️ The actual root element's tag name, if a root element is present at all.
     fn root_element_name(snapshot: &XmlSnapshot) -> Option<&str> {
         match &snapshot.doc.root {
             Some(XmlNode::Element { name, .. }) => Some(name.as_str()),
             _ => None,
         }
-    }
-
-    /// 🔗️ Real, honest scan: does the raw doctype string reference an external subset -- a
-    /// `SYSTEM`/`PUBLIC` external ID per §4.2.2 -- without parsing its content?
-    fn doctype_references_external_subset(doctype: &str) -> bool {
-        doctype.contains("SYSTEM") || doctype.contains("PUBLIC")
     }
 
     fn hard(code: &'static str, message: String) -> Diagnostic {
@@ -159,22 +139,14 @@ pub mod derived_analysis {
                 out.push(hard(CODE_DOCTYPE_MISSING, "no <!DOCTYPE ...> declaration present -- XML 1.0 §5.1 validity requires one (a document without one can be well-formed at best)".into()));
             }
             Some(doctype) => {
-                if let Some(declared_root) = parse_doctype_root_name(doctype) {
-                    if let Some(actual_root) = root_element_name(snapshot) {
-                        if declared_root != actual_root {
-                            out.push(hard(
-                                CODE_ROOT_NAME_MISMATCH,
-                                format!("doctype declares root name '{declared_root}' but the actual root element is '<{actual_root}>' -- §2.8 requires the DOCTYPE Name to match the document element"),
-                            ));
-                        }
+                if let Some(actual_root) = root_element_name(snapshot) {
+                    if doctype.name != actual_root {
+                        out.push(hard(CODE_ROOT_NAME_MISMATCH, format!("doctype declares root name '{}' but the actual root element is '<{actual_root}>' -- §2.8 requires the DOCTYPE Name to match the document element", doctype.name)));
                     }
                 }
-                if doctype_references_external_subset(doctype) {
+                if doctype.external_id.is_some() {
                     if snapshot.doc.declaration.as_ref().and_then(|d| d.standalone) == Some(true) {
-                        out.push(soft(
-                            CODE_STANDALONE_EXTERNAL_SUBSET,
-                            "XML declaration says standalone=\"yes\" but the doctype references an external subset (SYSTEM/PUBLIC) -- suspicious per §2.9".into(),
-                        ));
+                        out.push(soft(CODE_STANDALONE_EXTERNAL_SUBSET, "XML declaration says standalone=\"yes\" but the doctype references an external subset (SYSTEM/PUBLIC) -- suspicious per §2.9".into()));
                     }
                 }
             }
@@ -225,7 +197,7 @@ pub mod derived_analysis {
             XmlSnapshot {
                 doc: XmlDocument {
                     declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: None, standalone }),
-                    doctype: doctype.map(|s| s.to_string()),
+                    doctype: doctype.map(Into::into),
                     prolog: Vec::new(),
                     root: Some(XmlNode::Element { name: root_name.into(), attrs: Vec::new(), children: Vec::new() }),
                 },

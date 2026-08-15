@@ -1,82 +1,12 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.zip/diff.json",
   "title": "ZipDiff",
-  "$defs": {
-    "ZipExtraField": {
-      "type": "object",
-      "required": ["id"],
-      "properties": {
-        "id": { "type": "integer" },
-        "payload": { "type": "array", "items": { "type": "integer" } }
-      }
-    },
-    "ZipEntry": {
-      "type": "object",
-      "required": ["name"],
-      "properties": {
-        "name": { "type": "string" },
-        "data": { "type": "array", "items": { "type": "integer" } },
-        "method": { "type": "string", "enum": ["stored", "deflate"] },
-        "dosDate": { "type": "integer" },
-        "dosTime": { "type": "integer" },
-        "unixMtime": { "type": ["integer", "null"] },
-        "flags": { "type": "integer" },
-        "versionMadeBy": { "type": "integer" },
-        "versionNeeded": { "type": "integer" },
-        "internalAttrs": { "type": "integer" },
-        "externalAttrs": { "type": "integer" },
-        "localExtra": { "type": "array", "items": { "$ref": "#/$defs/ZipExtraField" } },
-        "centralExtra": { "type": "array", "items": { "$ref": "#/$defs/ZipExtraField" } },
-        "comment": { "type": "string" }
-      }
-    },
-    "ZipEntryDiff": {
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "data": { "type": "array", "items": { "type": "integer" } },
-        "method": { "type": "string", "enum": ["stored", "deflate"] },
-        "dosDate": { "type": "integer" },
-        "dosTime": { "type": "integer" },
-        "unixMtime": { "type": ["integer", "null"] },
-        "flags": { "type": "integer" },
-        "versionMadeBy": { "type": "integer" },
-        "versionNeeded": { "type": "integer" },
-        "internalAttrs": { "type": "integer" },
-        "externalAttrs": { "type": "integer" },
-        "localExtra": { "type": "array", "items": { "$ref": "#/$defs/ZipExtraField" } },
-        "centralExtra": { "type": "array", "items": { "$ref": "#/$defs/ZipExtraField" } },
-        "comment": { "type": "string" }
-      }
-    },
-    "ZipEntryModified": {
-      "type": "object",
-      "required": ["name", "diff"],
-      "properties": {
-        "name": { "type": "string" },
-        "diff": { "$ref": "#/$defs/ZipEntryDiff" }
-      }
-    },
-    "ZipEntryAdded": {
-      "type": "object",
-      "required": ["index", "entry"],
-      "properties": {
-        "index": { "type": "integer", "minimum": 0 },
-        "entry": { "$ref": "#/$defs/ZipEntry" }
-      }
-    },
-    "ZipEntriesDiff": {
-      "type": "object",
-      "properties": {
-        "removed": { "type": "array", "items": { "type": "string" } },
-        "modified": { "type": "array", "items": { "$ref": "#/$defs/ZipEntryModified" } },
-        "added": { "type": "array", "items": { "$ref": "#/$defs/ZipEntryAdded" } }
-      }
-    }
-  },
   "type": "object",
-  "properties": {
-    "comment": { "type": "string", "x-semio-state": "artifact" },
-    "entries": { "$ref": "#/$defs/ZipEntriesDiff", "x-semio-state": "artifact" }
-  }
+  "$defs": {
+    "ZipEntry": { "type": "object", "required": ["name", "data"], "properties": { "name": { "type": "string" }, "data": { "type": "array", "items": { "type": "integer" } } } },
+    "ZipEntryDiff": { "type": "object", "properties": { "name": { "type": "string" }, "data": { "type": "array", "items": { "type": "integer" } } } },
+    "ZipEntryModified": { "type": "object", "required": ["name", "diff"], "properties": { "name": { "type": "string" }, "diff": { "$ref": "#/$defs/ZipEntryDiff" } } },
+    "ZipEntriesDiff": { "type": "object", "properties": { "removed": { "type": "array", "items": { "type": "string" } }, "modified": { "type": "array", "items": { "$ref": "#/$defs/ZipEntryModified" } }, "added": { "type": "array", "items": { "$ref": "#/$defs/ZipEntry" } } } }
+  },
+  "properties": { "comment": { "type": "string" }, "entries": { "$ref": "#/$defs/ZipEntriesDiff" } }
 }

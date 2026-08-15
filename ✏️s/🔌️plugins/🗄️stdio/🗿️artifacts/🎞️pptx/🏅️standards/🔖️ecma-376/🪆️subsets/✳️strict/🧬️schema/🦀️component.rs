@@ -11,11 +11,11 @@
 pub use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
+    use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::PptxBuilder as PptxAnyBuilder;
+    use crate::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::check_strict_conformance;
+    use crate::artifacts::pptx::{PptxDiff, PptxMutation, PptxSnapshot};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::check_strict_conformance;
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::PptxBuilder as PptxAnyBuilder;
-    use crate::artifacts::pptx::{PptxDiff, PptxMutation, PptxSnapshot};
 
     //#region 🔖️Builder
     #[derive(Clone, Debug, Default)]
@@ -117,11 +117,11 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
-    use semio_framework_plugin::{AnalyzeSource, Analysis, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::{PptxAnalyzer as PptxAnyAnalyzer, PptxParts};
     use crate::artifacts::pptx::PptxSnapshot;
     use crate::artifacts::zip::opc::OpcPackage;
+    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId("strict") };
@@ -202,10 +202,7 @@ pub mod derived_analysis {
         for owner in owners {
             for rel in &opc.relationships[owner] {
                 if rel.rel_type.starts_with(TRANSITIONAL_REL_BASE) {
-                    out.push(hard(
-                        CODE_REL_BASE,
-                        format!("relationship {} owned by '{owner}' uses the Transitional officeDocument relationships base ({}) -- Strict requires {STRICT_REL_BASE}", rel.id, rel.rel_type),
-                    ));
+                    out.push(hard(CODE_REL_BASE, format!("relationship {} owned by '{owner}' uses the Transitional officeDocument relationships base ({}) -- Strict requires {STRICT_REL_BASE}", rel.id, rel.rel_type)));
                 }
             }
         }
@@ -249,7 +246,7 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::zip::opc::{OpcPackage, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
+        use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
         const STRICT_PRESENTATION_XML: &str = concat!(
             r#"<p:presentation xmlns:a="http://purl.oclc.org/ooxml/drawingml/main" xmlns:p="http://purl.oclc.org/ooxml/presentationml/main" xmlns:r="http://purl.oclc.org/ooxml/officeDocument/relationships" conformance="strict">"#,

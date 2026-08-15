@@ -86,11 +86,7 @@ pub struct SemioFlowSnapshot {
 
 impl Default for SemioFlowSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
-            nodes: Default::default(),
-            edges: Default::default(),
-        }
+        Self { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes: Default::default(), edges: Default::default() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -155,14 +151,7 @@ fn dec_param(s: &str) -> Result<FlowParam, String> {
     Ok(FlowParam { key: dec_str(key)?, value: dec_str(value)? })
 }
 fn enc_node(n: &FlowNode) -> String {
-    format!(
-        "[{},{},{},{},{}]",
-        enc_str(&n.id),
-        enc_str(&n.kind),
-        enc_str(&n.label),
-        format!("[{}]", n.params.iter().map(enc_param).collect::<Vec<_>>().join(",")),
-        enc_point2(&n.position)
-    )
+    format!("[{},{},{},{},{}]", enc_str(&n.id), enc_str(&n.kind), enc_str(&n.label), format!("[{}]", n.params.iter().map(enc_param).collect::<Vec<_>>().join(",")), enc_point2(&n.position))
 }
 fn dec_node(s: &str) -> Result<FlowNode, String> {
     let inner = strip_brackets(s)?;
@@ -186,12 +175,7 @@ fn dec_edge(s: &str) -> Result<FlowEdge, String> {
 /// edges-line`. Newlines are pure lexer trivia in the shared dialect, so this is genuinely
 /// recognizable by `dsl::Recognizer`, not merely readable.
 fn print_flow_snapshot_body(s: &SemioFlowSnapshot) -> String {
-    format!(
-        "schema={}\nnodes=[{}]\nedges=[{}]",
-        enc_str(&s.schema),
-        s.nodes.iter().map(enc_node).collect::<Vec<_>>().join(","),
-        s.edges.iter().map(enc_edge).collect::<Vec<_>>().join(",")
-    )
+    format!("schema={}\nnodes=[{}]\nedges=[{}]", enc_str(&s.schema), s.nodes.iter().map(enc_node).collect::<Vec<_>>().join(","), s.edges.iter().map(enc_edge).collect::<Vec<_>>().join(","))
 }
 fn parse_flow_snapshot_body(body: &str) -> Result<SemioFlowSnapshot, String> {
     let mut schema = None;
@@ -313,7 +297,9 @@ fn decode_flow_snapshot_binary(bytes: &[u8]) -> Result<SemioFlowSnapshot, String
 /// unchanged.
 impl store::ArtifactDsl for SemioFlowSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str { STDIO_SEMIOFLOW_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_SEMIOFLOW_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -325,11 +311,7 @@ impl store::ArtifactDsl for SemioFlowSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_flow_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -338,22 +320,14 @@ impl store::ArtifactPack for SemioFlowSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_flow_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_flow_snapshot_binary(&inner).map_err(store::PackError::Schema)
@@ -378,20 +352,9 @@ pub(crate) fn demo_flow_snapshot() -> SemioFlowSnapshot {
                 params: vec![FlowParam { key: "count".into(), value: "3".into() }, FlowParam { key: "unit".into(), value: "items".into() }],
                 position: SemioPoint2 { x: 0.0, y: 0.0 },
             },
-            FlowNode {
-                id: "n2".into(),
-                kind: "sink".into(),
-                label: "Sink".into(),
-                params: Vec::new(),
-                position: SemioPoint2 { x: 120.5, y: -30.25 },
-            },
+            FlowNode { id: "n2".into(), kind: "sink".into(), label: "Sink".into(), params: Vec::new(), position: SemioPoint2 { x: 120.5, y: -30.25 } },
         ],
-        edges: vec![FlowEdge {
-            id: "e1".into(),
-            from: PortRef { node: "n1".into(), port: "out".into() },
-            to: PortRef { node: "n2".into(), port: "in".into() },
-            kind: "data".into(),
-        }],
+        edges: vec![FlowEdge { id: "e1".into(), from: PortRef { node: "n1".into(), port: "out".into() }, to: PortRef { node: "n2".into(), port: "in".into() }, kind: "data".into() }],
     }
 }
 //#endregion 🔖️Demo
@@ -405,27 +368,10 @@ mod tests {
         SemioFlowSnapshot {
             schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
             nodes: vec![
-                FlowNode {
-                    id: "n1".into(),
-                    kind: "source".into(),
-                    label: "Source".into(),
-                    params: vec![FlowParam { key: "count".into(), value: "3".into() }],
-                    position: SemioPoint2 { x: 0.0, y: 0.0 },
-                },
-                FlowNode {
-                    id: "n2".into(),
-                    kind: "sink".into(),
-                    label: "Sink".into(),
-                    params: Vec::new(),
-                    position: SemioPoint2 { x: 100.0, y: 50.0 },
-                },
+                FlowNode { id: "n1".into(), kind: "source".into(), label: "Source".into(), params: vec![FlowParam { key: "count".into(), value: "3".into() }], position: SemioPoint2 { x: 0.0, y: 0.0 } },
+                FlowNode { id: "n2".into(), kind: "sink".into(), label: "Sink".into(), params: Vec::new(), position: SemioPoint2 { x: 100.0, y: 50.0 } },
             ],
-            edges: vec![FlowEdge {
-                id: "e1".into(),
-                from: PortRef { node: "n1".into(), port: "out".into() },
-                to: PortRef { node: "n2".into(), port: "in".into() },
-                kind: "data".into(),
-            }],
+            edges: vec![FlowEdge { id: "e1".into(), from: PortRef { node: "n1".into(), port: "out".into() }, to: PortRef { node: "n2".into(), port: "in".into() }, kind: "data".into() }],
         }
     }
 

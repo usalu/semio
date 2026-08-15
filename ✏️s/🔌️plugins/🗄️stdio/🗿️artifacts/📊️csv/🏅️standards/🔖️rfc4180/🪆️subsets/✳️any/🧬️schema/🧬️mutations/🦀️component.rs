@@ -2,16 +2,13 @@
 //! (constructs the sparse `CsvDiff` directly — apply-and-capture is banned); `inverse()` is
 //! handcrafted per variant, index-aware, reading the pre-state it needs from `base`.
 
-use crate::artifacts::csv::schema::diff::{
-    dec_record, dec_str, diff_set_snapshot, enc_record, enc_str, split_top_level, strip_brackets,
-    CsvDiff, CsvFieldDiff, CsvRecordAdded, CsvRecordDiff, CsvRecordModified, CsvRecordsDiff,
-};
+use crate::artifacts::csv::schema::diff::{dec_record, dec_str, diff_set_snapshot, enc_record, enc_str, split_top_level, strip_brackets, CsvDiff, CsvFieldDiff, CsvRecordAdded, CsvRecordDiff, CsvRecordModified, CsvRecordsDiff};
 use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
 use crate::artifacts::csv::CsvSnapshot;
-use protocol::{Mutation, MutationDiff, OpText};
-use serde::{Deserialize, Serialize};
 #[cfg(test)]
 use protocol::OpBinary;
+use protocol::{Mutation, MutationDiff, OpText};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.csv`.
@@ -77,42 +74,13 @@ impl Mutation<CsvSnapshot> for CsvMutation {
         match self {
             CsvMutation::NoMutation => CsvDiff::default(),
             CsvMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-            CsvMutation::SetHasHeader { has_header } => {
-                CsvDiff { has_header: Some(*has_header), records: None }
-            }
-            CsvMutation::InsertRecord { index, record } => CsvDiff {
-                has_header: None,
-                records: Some(CsvRecordsDiff {
-                    removed: Vec::new(),
-                    modified: Vec::new(),
-                    added: vec![CsvRecordAdded { index: *index, record: record.clone() }],
-                }),
-            },
-            CsvMutation::RemoveRecord { index } => CsvDiff {
-                has_header: None,
-                records: Some(CsvRecordsDiff {
-                    removed: vec![*index],
-                    modified: Vec::new(),
-                    added: Vec::new(),
-                }),
-            },
+            CsvMutation::SetHasHeader { has_header } => CsvDiff { has_header: Some(*has_header), records: None },
+            CsvMutation::InsertRecord { index, record } => CsvDiff { has_header: None, records: Some(CsvRecordsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![CsvRecordAdded { index: *index, record: record.clone() }] }) },
+            CsvMutation::RemoveRecord { index } => CsvDiff { has_header: None, records: Some(CsvRecordsDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }) },
             CsvMutation::SetField { record_index, field_index, value, quoted } => {
                 let mut fields = vec![None; field_index + 1];
-                fields[*field_index] = Some(CsvFieldDiff {
-                    value: Some(value.clone()),
-                    quoted: Some(*quoted),
-                });
-                CsvDiff {
-                    has_header: None,
-                    records: Some(CsvRecordsDiff {
-                        removed: Vec::new(),
-                        modified: vec![CsvRecordModified {
-                            index: *record_index,
-                            diff: CsvRecordDiff { fields: Some(fields) },
-                        }],
-                        added: Vec::new(),
-                    }),
-                }
+                fields[*field_index] = Some(CsvFieldDiff { value: Some(value.clone()), quoted: Some(*quoted) });
+                CsvDiff { has_header: None, records: Some(CsvRecordsDiff { removed: Vec::new(), modified: vec![CsvRecordModified { index: *record_index, diff: CsvRecordDiff { fields: Some(fields) } }], added: Vec::new() }) }
             }
         }
     }
@@ -133,17 +101,10 @@ impl Mutation<CsvSnapshot> for CsvMutation {
                 Some(record) => vec![CsvMutation::InsertRecord { index: *index, record: record.clone() }],
                 None => vec![CsvMutation::NoMutation],
             },
-            CsvMutation::SetField { record_index, field_index, .. } => {
-                match base.records.get(*record_index).and_then(|r| r.fields.get(*field_index)) {
-                    Some(field) => vec![CsvMutation::SetField {
-                        record_index: *record_index,
-                        field_index: *field_index,
-                        value: field.value.clone(),
-                        quoted: field.quoted,
-                    }],
-                    None => vec![CsvMutation::NoMutation],
-                }
-            }
+            CsvMutation::SetField { record_index, field_index, .. } => match base.records.get(*record_index).and_then(|r| r.fields.get(*field_index)) {
+                Some(field) => vec![CsvMutation::SetField { record_index: *record_index, field_index: *field_index, value: field.value.clone(), quoted: field.quoted }],
+                None => vec![CsvMutation::NoMutation],
+            },
         }
     }
 }
@@ -157,23 +118,14 @@ impl Mutation<CsvSnapshot> for CsvMutation {
 /// (space-separated), same convention gif89a's/svg's own hand-rolled `OpText` impls use, one
 /// match arm per variant (no `DslVariants` scaffolding available since nothing here derives it).
 fn enc_csv_snapshot(s: &CsvSnapshot) -> String {
-    format!(
-        "[{},{},[{}]]",
-        enc_str(&s.schema),
-        if s.has_header { 1 } else { 0 },
-        s.records.iter().map(enc_record).collect::<Vec<_>>().join(","),
-    )
+    format!("[{},{},[{}]]", enc_str(&s.schema), if s.has_header { 1 } else { 0 }, s.records.iter().map(enc_record).collect::<Vec<_>>().join(","),)
 }
 fn dec_csv_snapshot(s: &str) -> Result<CsvSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, has_header, records] = parts.as_slice() else {
         return Err(format!("csv snapshot: expected 3 fields, got {}", parts.len()));
     };
-    let records = split_top_level(strip_brackets(records)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(dec_record)
-        .collect::<Result<Vec<_>, String>>()?;
+    let records = split_top_level(strip_brackets(records)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_record).collect::<Result<Vec<_>, String>>()?;
     Ok(CsvSnapshot { schema: dec_str(schema)?, has_header: *has_header == "1", records })
 }
 
@@ -184,10 +136,7 @@ fn print_csv_mutation(m: &CsvMutation) -> String {
         CsvMutation::SetHasHeader { has_header } => format!("set-has-header has-header={}", if *has_header { 1 } else { 0 }),
         CsvMutation::InsertRecord { index, record } => format!("insert-record index={index} record={}", enc_record(record)),
         CsvMutation::RemoveRecord { index } => format!("remove-record index={index}"),
-        CsvMutation::SetField { record_index, field_index, value, quoted } => format!(
-            "set-field record-index={record_index} field-index={field_index} value={} quoted={}",
-            enc_str(value), if *quoted { 1 } else { 0 },
-        ),
+        CsvMutation::SetField { record_index, field_index, value, quoted } => format!("set-field record-index={record_index} field-index={field_index} value={} quoted={}", enc_str(value), if *quoted { 1 } else { 0 },),
     }
 }
 fn parse_csv_mutation(line: &str) -> Result<CsvMutation, String> {
@@ -195,13 +144,7 @@ fn parse_csv_mutation(line: &str) -> Result<CsvMutation, String> {
         return Ok(CsvMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("csv mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("csv mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("csv mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
@@ -209,12 +152,7 @@ fn parse_csv_mutation(line: &str) -> Result<CsvMutation, String> {
         "set-has-header" => Ok(CsvMutation::SetHasHeader { has_header: arg("has-header")? == "1" }),
         "insert-record" => Ok(CsvMutation::InsertRecord { index: usize_arg("index")?, record: dec_record(arg("record")?)? }),
         "remove-record" => Ok(CsvMutation::RemoveRecord { index: usize_arg("index")? }),
-        "set-field" => Ok(CsvMutation::SetField {
-            record_index: usize_arg("record-index")?,
-            field_index: usize_arg("field-index")?,
-            value: dec_str(arg("value")?)?,
-            quoted: arg("quoted")? == "1",
-        }),
+        "set-field" => Ok(CsvMutation::SetField { record_index: usize_arg("record-index")?, field_index: usize_arg("field-index")?, value: dec_str(arg("value")?)?, quoted: arg("quoted")? == "1" }),
         other => Err(format!("csv mutation: unknown keyword {other:?}")),
     }
 }
@@ -373,15 +311,7 @@ mod tests {
         CsvRecord { fields: fields.iter().map(|(v, q)| field(v, *q)).collect() }
     }
     fn base_snapshot() -> CsvSnapshot {
-        CsvSnapshot {
-            schema: "stdio.csv".into(),
-            has_header: true,
-            records: vec![
-                record(&[("name", false), ("note", true)]),
-                record(&[("a", false), ("b", false)]),
-                record(&[("x", false), ("y", false)]),
-            ],
-        }
+        CsvSnapshot { schema: "stdio.csv".into(), has_header: true, records: vec![record(&[("name", false), ("note", true)]), record(&[("a", false), ("b", false)]), record(&[("x", false), ("y", false)])] }
     }
     //#endregion 🔖️Fixtures
 
@@ -390,29 +320,13 @@ mod tests {
     /// be removed, one that will be modified in every field, one untouched (so `sweep_b`'s
     /// added record has something stable to anchor its own index against).
     fn sweep_a() -> CsvSnapshot {
-        CsvSnapshot {
-            schema: "stdio.csv".into(),
-            has_header: true,
-            records: vec![
-                record(&[("gone", false), ("also-gone", true)]),
-                record(&[("old-a", false), ("old-b", true)]),
-                record(&[("stable", false)]),
-            ],
-        }
+        CsvSnapshot { schema: "stdio.csv".into(), has_header: true, records: vec![record(&[("gone", false), ("also-gone", true)]), record(&[("old-a", false), ("old-b", true)]), record(&[("stable", false)])] }
     }
     /// 🧬️ Sweep B: `has_header` flips, record 0 is removed, record 1 (now index 0) is
     /// modified in every field (value AND quoted), record 2 (now index 1) is untouched, and
     /// a brand-new record is added at the end.
     fn sweep_b() -> CsvSnapshot {
-        CsvSnapshot {
-            schema: "stdio.csv".into(),
-            has_header: false,
-            records: vec![
-                record(&[("new-a", true), ("new-b", false)]),
-                record(&[("stable", false)]),
-                record(&[("brand-new", true)]),
-            ],
-        }
+        CsvSnapshot { schema: "stdio.csv".into(), has_header: false, records: vec![record(&[("new-a", true), ("new-b", false)]), record(&[("stable", false)]), record(&[("brand-new", true)])] }
     }
     //#endregion 🔖️FieldSweepFixtures
 
@@ -595,13 +509,7 @@ mod tests {
         let mutations = vec![
             CsvMutation::NoMutation,
             CsvMutation::SetSnapshot { snapshot: sweep_b() },
-            CsvMutation::SetSnapshot {
-                snapshot: CsvSnapshot {
-                    schema: "stdio.csv".into(),
-                    has_header: false,
-                    records: vec![record(&[("a, tricky [value]", true), ("plain", false)])],
-                },
-            },
+            CsvMutation::SetSnapshot { snapshot: CsvSnapshot { schema: "stdio.csv".into(), has_header: false, records: vec![record(&[("a, tricky [value]", true), ("plain", false)])] } },
             CsvMutation::SetHasHeader { has_header: true },
             CsvMutation::SetHasHeader { has_header: false },
             CsvMutation::InsertRecord { index: 1, record: record(&[("new, [tricky]", true)]) },

@@ -3,8 +3,8 @@
 //! (table cells may themselves hold nested paragraphs/tables — both count is recursive);
 //! `wordCount` is a whitespace-split word count over every run's `text`, anywhere in the tree.
 
-use crate::artifacts::docx::DocxSnapshot;
 use crate::artifacts::docx::schema::snapshot::DocxBlock;
+use crate::artifacts::docx::DocxSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline

@@ -1,6 +1,6 @@
 //! 🧩 set_snapshot diff leaf.
 
-use crate::artifacts::md::schema::diff::{MdDiff, diff_set_snapshot};
+use crate::artifacts::md::schema::diff::{diff_set_snapshot, MdDiff};
 use crate::artifacts::md::MdSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot: the sparse field-by-field delta from `base` to `snapshot`

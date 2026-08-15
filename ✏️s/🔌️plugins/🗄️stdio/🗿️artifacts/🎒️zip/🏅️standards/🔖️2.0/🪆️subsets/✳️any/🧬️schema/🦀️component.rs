@@ -1,6 +1,6 @@
 //! 🧬️ ZipArtifact schema — full artifact state.
 
-use crate::artifacts::zip::schema::snapshot::{ZipCompressionMethod, ZipEntry, ZipExtraField, ZipPhysicalLayout};
+use crate::artifacts::zip::schema::snapshot::ZipEntry;
 use crate::artifacts::zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -19,9 +19,6 @@ pub struct ZipArtifact {
     #[state(artifact)]
     #[serde(default)]
     pub comment: String,
-    #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub physical: Option<ZipPhysicalLayout>,
 }
 //#endregion Artifact
 
@@ -35,12 +32,12 @@ impl Default for ZipArtifact {
 impl ZipArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> ZipSnapshot {
-        ZipSnapshot { schema: self.schema.clone(), entries: self.entries.clone(), comment: self.comment.clone(), physical: self.physical.clone() }
+        ZipSnapshot { schema: self.schema.clone(), entries: self.entries.clone(), comment: self.comment.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: ZipSnapshot) -> Self {
-        Self { schema: snapshot.schema, entries: snapshot.entries, comment: snapshot.comment, physical: snapshot.physical }
+        Self { schema: snapshot.schema, entries: snapshot.entries, comment: snapshot.comment }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -48,7 +45,6 @@ impl ZipArtifact {
         self.schema = snapshot.schema;
         self.entries = snapshot.entries;
         self.comment = snapshot.comment;
-        self.physical = snapshot.physical;
     }
 }
 //#endregion Conversions
@@ -62,10 +58,7 @@ pub fn empty_zip_snapshot() -> ZipSnapshot {
     ZipSnapshot::default()
 }
 
-/// 📦️ P2-P2: the demo `stdio.zip` document — two real entries (one `Stored`, one `Deflate`),
-/// each with extra fields, timestamps (one carrying a real Info-ZIP `UT` mtime, the other without
-/// — exercising the tri-state at the fixture level too), distinct attrs/comments, plus an
-/// archive-level comment. The single source of truth for
+/// 📦️ Demo logical ZIP document with two decompressed semantic members and an archive comment.
 /// `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are literally
 /// this snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` in
 /// `💡️inferences/🦀️component.rs`) and for this artifact's own `protocol_walk_law` (walked against
@@ -74,57 +67,8 @@ pub fn empty_zip_snapshot() -> ZipSnapshot {
 pub fn demo_zip_snapshot() -> ZipSnapshot {
     ZipSnapshot {
         schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
-        entries: vec![
-            ZipEntry {
-                name: "readme.txt".into(),
-                data: b"hello from stdio.zip".to_vec(),
-                method: ZipCompressionMethod::Stored,
-                dos_date: 0x5678,
-                dos_time: 0x1234,
-                unix_mtime: Some(1_700_000_000),
-                // `encode_zip` always sets bit 11 (UTF-8) and clears bit 3 (data descriptor)
-                // unconditionally — this fixture's `flags` is already in that post-round-trip
-                // normal form (matching `encode_full_metadata_round_trip`'s own documented
-                // pattern) so `fixture_honesty_law`'s `parse_dsl(fixture) == demo()` holds exactly.
-                flags: 0x0800,
-                version_made_by: 20,
-                version_needed: 20,
-                internal_attrs: 0,
-                external_attrs: 0o100644 << 16,
-                // Real Info-ZIP `UT` (0x5455) extended-timestamp payload: mtime-present flag byte
-                // + LE i32 seconds — this is what `parse_ut_mtime` actually decodes back into
-                // `unix_mtime` above (a raw, non-UT-shaped payload would silently round-trip to a
-                // DIFFERENT `unix_mtime`, exactly the bug this fixture must avoid).
-                local_extra: vec![ZipExtraField {
-                    id: 0x5455,
-                    payload: {
-                        let mut p = vec![0x01u8];
-                        p.extend_from_slice(&1_700_000_000i32.to_le_bytes());
-                        p
-                    },
-                }],
-                central_extra: vec![],
-                comment: "a readme".into(),
-            },
-            ZipEntry {
-                name: "data/poem.txt".into(),
-                data: b"deflate this small poem, it should compress reasonably well well well".to_vec(),
-                method: ZipCompressionMethod::Deflate,
-                dos_date: 0x1111,
-                dos_time: 0x2222,
-                unix_mtime: None,
-                flags: 0x0800,
-                version_made_by: 63,
-                version_needed: 20,
-                internal_attrs: 1,
-                external_attrs: 0o100755 << 16,
-                local_extra: vec![],
-                central_extra: vec![ZipExtraField { id: 9, payload: vec![9, 9] }],
-                comment: String::new(),
-            },
-        ],
+        entries: vec![ZipEntry { name: "readme.txt".into(), data: b"hello from stdio.zip".to_vec() }, ZipEntry { name: "data/poem.txt".into(), data: b"deflate this small poem, it should compress reasonably well well well".to_vec() }],
         comment: "demo archive comment".into(),
-        physical: None,
     }
 }
 //#endregion 🔖️DocumentHelpers
@@ -167,7 +111,7 @@ pub fn zip_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::zip::schema::snapshot::{ZipCompressionMethod, ZipEntry};
+    use crate::artifacts::zip::schema::snapshot::ZipEntry;
     use crate::artifacts::zip::{ZipDiff, ZipMutation, ZipSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -215,15 +159,15 @@ pub mod derived_construction {
 
     //#region 🔖️TypedConstructors
     impl ZipBuilderConstruction {
-        /// ➕️ Adds a member stored with no compression (method 0).
+        /// ➕️ Adds a logical member; native compression is deterministic serializer policy.
         pub fn with_stored_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
-            self.snapshot.entries.push(ZipEntry { name: name.into(), data, method: ZipCompressionMethod::Stored, ..Default::default() });
+            self.snapshot.entries.push(ZipEntry { name: name.into(), data });
             self
         }
 
-        /// ➕️ Adds a member compressed via the real deflate codec (method 8).
+        /// ➕️ Adds a logical member; native compression is deterministic serializer policy.
         pub fn with_deflate_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
-            self.snapshot.entries.push(ZipEntry { name: name.into(), data, method: ZipCompressionMethod::Deflate, ..Default::default() });
+            self.snapshot.entries.push(ZipEntry { name: name.into(), data });
             self
         }
 
@@ -294,13 +238,20 @@ pub mod derived_analysis {
                             diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <ZipSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                    AnalyzeSource::Binary(bytes) => {
+                        let result = if matches!(crate::artifacts::zip::standards::v2_0::subsets::any::io::sniff_zip_bytes(bytes), crate::artifacts::zip::standards::v2_0::subsets::any::io::SniffConfidence::High) {
+                            crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(bytes).map_err(|err| err.to_string())
+                        } else {
+                            <ZipSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|err| err.to_string())
+                        };
+                        match result {
+                            Ok(snapshot) => parts.snapshot = Some(snapshot),
+                            Err(err) => {
+                                confidence = IoConfidence::Low;
+                                diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err));
+                            }
                         }
-                    },
+                    }
                 }
             }
             Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }

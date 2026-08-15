@@ -28,17 +28,15 @@
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
 /// 🧱️ REUSE, don't reinvent — `document::DocBlock`'s own real, already-tested text codec
 /// (`ws-codec-document-report.md`), re-exported here so both this file's own leaf encoders AND
 /// the sibling `🧬️mutations`/`📸️snapshot` facets can import `{enc_block, dec_block}` from THIS
 /// module (matching the pre-existing convention where this file is the one place that owns every
 /// value codec presentation's other facets import from).
 pub(crate) use crate::artifacts::semio::standards::v1::subsets::document::schema::diff::{dec_block, enc_block};
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{
-    PlaceholderKind, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage, SlideShape, SlideTableCell, SlideTableRow,
-};
+use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage, SlideShape, SlideTableCell, SlideTableRow};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 use schema::ArtifactSchema;
@@ -59,14 +57,22 @@ pub struct IndexedTripleDiff<D, T> {
     pub added: Vec<IndexAdded<T>>,
 }
 impl<D, T> Default for IndexedTripleDiff<D, T> {
-    fn default() -> Self { Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() } }
+    fn default() -> Self {
+        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
+    }
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct IndexModified<D> { pub index: usize, pub diff: D }
+pub struct IndexModified<D> {
+    pub index: usize,
+    pub diff: D,
+}
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct IndexAdded<T> { pub index: usize, pub item: T }
+pub struct IndexAdded<T> {
+    pub index: usize,
+    pub item: T,
+}
 
 /// 🏷️ Name-keyed collection triple (own local copy).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -80,11 +86,16 @@ pub struct NamedTripleDiff<K, D, T> {
     pub added: Vec<T>,
 }
 impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
-    fn default() -> Self { Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() } }
+    fn default() -> Self {
+        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
+    }
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct NamedModified<K, D> { pub key: K, pub diff: D }
+pub struct NamedModified<K, D> {
+    pub key: K,
+    pub diff: D,
+}
 //#endregion 🔖️GenericCollectionTriples
 
 //#region 🔖️CollectionDiffAliases
@@ -142,11 +153,33 @@ pub struct SlideTableRowDiff {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "shapeKind", rename_all = "camelCase")]
 pub enum SlideShapeDiff {
-    TextBox { #[serde(default, skip_serializing_if = "Option::is_none")] frame: Option<SlideFrameDiff>, #[serde(default, skip_serializing_if = "Option::is_none")] blocks: Option<DocBlocksDiff> },
-    Picture { #[serde(default, skip_serializing_if = "Option::is_none")] frame: Option<SlideFrameDiff>, #[serde(default, skip_serializing_if = "Option::is_none")] image: Option<SlidePictureImageDiff> },
-    Table { #[serde(default, skip_serializing_if = "Option::is_none")] frame: Option<SlideFrameDiff>, #[serde(default, skip_serializing_if = "Option::is_none")] rows: Option<SlideTableRowsDiff> },
-    Placeholder { #[serde(default, skip_serializing_if = "Option::is_none")] frame: Option<SlideFrameDiff>, #[serde(default, skip_serializing_if = "Option::is_none")] kind: Option<PlaceholderKind> },
-    Replace { shape: SlideShape },
+    TextBox {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        frame: Option<SlideFrameDiff>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        blocks: Option<DocBlocksDiff>,
+    },
+    Picture {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        frame: Option<SlideFrameDiff>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        image: Option<SlidePictureImageDiff>,
+    },
+    Table {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        frame: Option<SlideFrameDiff>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        rows: Option<SlideTableRowsDiff>,
+    },
+    Placeholder {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        frame: Option<SlideFrameDiff>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        kind: Option<PlaceholderKind>,
+    },
+    Replace {
+        shape: SlideShape,
+    },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -212,7 +245,11 @@ where
     }
     let removed: Vec<usize> = (other.len()..base.len()).collect();
     let added: Vec<IndexAdded<T>> = (min_len..other.len()).map(|i| IndexAdded { index: i, item: other[i].clone() }).collect();
-    if modified.is_empty() && removed.is_empty() && added.is_empty() { None } else { Some(IndexedTripleDiff { removed, modified, added }) }
+    if modified.is_empty() && removed.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(IndexedTripleDiff { removed, modified, added })
+    }
 }
 
 fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
@@ -295,12 +332,7 @@ fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdd
 }
 
 #[allow(clippy::too_many_arguments)]
-fn absorb_indexed<T, D>(
-    d1: IndexedTripleDiff<D, T>,
-    d2: IndexedTripleDiff<D, T>,
-    absorb_item: impl Fn(D, D) -> D,
-    apply_item: impl Fn(&T, &D) -> T,
-) -> IndexedTripleDiff<D, T>
+fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
 where
     T: Clone,
     D: Clone,
@@ -405,7 +437,11 @@ where
             added.push(o.clone());
         }
     }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(NamedTripleDiff { removed, modified, added }) }
+    if removed.is_empty() && modified.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(NamedTripleDiff { removed, modified, added })
+    }
 }
 
 fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
@@ -445,13 +481,7 @@ where
     NamedTripleDiff { removed, modified, added }
 }
 
-fn absorb_named<K, T, D>(
-    d1: NamedTripleDiff<K, D, T>,
-    d2: NamedTripleDiff<K, D, T>,
-    key_of: impl Fn(&T) -> K,
-    absorb_item: impl Fn(D, D) -> D,
-    apply_item: impl Fn(&mut T, &D),
-) -> NamedTripleDiff<K, D, T>
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -509,16 +539,18 @@ fn diff_frame(old: &SlideFrame, new: &SlideFrame) -> Option<SlideFrameDiff> {
     if old == new {
         return None;
     }
-    Some(SlideFrameDiff {
-        origin: (old.origin != new.origin).then_some(new.origin),
-        width: (old.width != new.width).then_some(new.width),
-        height: (old.height != new.height).then_some(new.height),
-    })
+    Some(SlideFrameDiff { origin: (old.origin != new.origin).then_some(new.origin), width: (old.width != new.width).then_some(new.width), height: (old.height != new.height).then_some(new.height) })
 }
 fn apply_frame(frame: &mut SlideFrame, diff: &SlideFrameDiff) {
-    if let Some(v) = diff.origin { frame.origin = v; }
-    if let Some(v) = diff.width { frame.width = v; }
-    if let Some(v) = diff.height { frame.height = v; }
+    if let Some(v) = diff.origin {
+        frame.origin = v;
+    }
+    if let Some(v) = diff.width {
+        frame.width = v;
+    }
+    if let Some(v) = diff.height {
+        frame.height = v;
+    }
 }
 fn frame_with_diff_applied(frame: &SlideFrame, diff: &SlideFrameDiff) -> SlideFrame {
     let mut out = *frame;
@@ -526,16 +558,18 @@ fn frame_with_diff_applied(frame: &SlideFrame, diff: &SlideFrameDiff) -> SlideFr
     out
 }
 fn inverse_frame(base: &SlideFrame, diff: &SlideFrameDiff) -> SlideFrameDiff {
-    SlideFrameDiff {
-        origin: diff.origin.map(|_| base.origin),
-        width: diff.width.map(|_| base.width),
-        height: diff.height.map(|_| base.height),
-    }
+    SlideFrameDiff { origin: diff.origin.map(|_| base.origin), width: diff.width.map(|_| base.width), height: diff.height.map(|_| base.height) }
 }
 fn absorb_frame(mut a: SlideFrameDiff, b: SlideFrameDiff) -> SlideFrameDiff {
-    if b.origin.is_some() { a.origin = b.origin; }
-    if b.width.is_some() { a.width = b.width; }
-    if b.height.is_some() { a.height = b.height; }
+    if b.origin.is_some() {
+        a.origin = b.origin;
+    }
+    if b.width.is_some() {
+        a.width = b.width;
+    }
+    if b.height.is_some() {
+        a.height = b.height;
+    }
     a
 }
 
@@ -543,16 +577,18 @@ fn diff_image(old: &SlidePictureImage, new: &SlidePictureImage) -> Option<SlideP
     if old == new {
         return None;
     }
-    Some(SlidePictureImageDiff {
-        asset_id: (old.asset_id != new.asset_id).then(|| new.asset_id.clone()),
-        mime: (old.mime != new.mime).then(|| new.mime.clone()),
-        bytes: (old.bytes != new.bytes).then(|| new.bytes.clone()),
-    })
+    Some(SlidePictureImageDiff { asset_id: (old.asset_id != new.asset_id).then(|| new.asset_id.clone()), mime: (old.mime != new.mime).then(|| new.mime.clone()), bytes: (old.bytes != new.bytes).then(|| new.bytes.clone()) })
 }
 fn apply_image(image: &mut SlidePictureImage, diff: &SlidePictureImageDiff) {
-    if let Some(v) = &diff.asset_id { image.asset_id = v.clone(); }
-    if let Some(v) = &diff.mime { image.mime = v.clone(); }
-    if let Some(v) = &diff.bytes { image.bytes = v.clone(); }
+    if let Some(v) = &diff.asset_id {
+        image.asset_id = v.clone();
+    }
+    if let Some(v) = &diff.mime {
+        image.mime = v.clone();
+    }
+    if let Some(v) = &diff.bytes {
+        image.bytes = v.clone();
+    }
 }
 fn image_with_diff_applied(image: &SlidePictureImage, diff: &SlidePictureImageDiff) -> SlidePictureImage {
     let mut out = image.clone();
@@ -560,16 +596,18 @@ fn image_with_diff_applied(image: &SlidePictureImage, diff: &SlidePictureImageDi
     out
 }
 fn inverse_image(base: &SlidePictureImage, diff: &SlidePictureImageDiff) -> SlidePictureImageDiff {
-    SlidePictureImageDiff {
-        asset_id: diff.asset_id.as_ref().map(|_| base.asset_id.clone()),
-        mime: diff.mime.as_ref().map(|_| base.mime.clone()),
-        bytes: diff.bytes.as_ref().map(|_| base.bytes.clone()),
-    }
+    SlidePictureImageDiff { asset_id: diff.asset_id.as_ref().map(|_| base.asset_id.clone()), mime: diff.mime.as_ref().map(|_| base.mime.clone()), bytes: diff.bytes.as_ref().map(|_| base.bytes.clone()) }
 }
 fn absorb_image(mut a: SlidePictureImageDiff, b: SlidePictureImageDiff) -> SlidePictureImageDiff {
-    if b.asset_id.is_some() { a.asset_id = b.asset_id; }
-    if b.mime.is_some() { a.mime = b.mime; }
-    if b.bytes.is_some() { a.bytes = b.bytes; }
+    if b.asset_id.is_some() {
+        a.asset_id = b.asset_id;
+    }
+    if b.mime.is_some() {
+        a.mime = b.mime;
+    }
+    if b.bytes.is_some() {
+        a.bytes = b.bytes;
+    }
     a
 }
 
@@ -600,22 +638,38 @@ fn diff_shape(old: &SlideShape, new: &SlideShape) -> Option<SlideShapeDiff> {
         (SlideShape::TextBox { frame: of, blocks: ob }, SlideShape::TextBox { frame: nf, blocks: nb }) => {
             let frame = diff_frame(of, nf);
             let blocks = between_indexed(ob, nb, diff_doc_block);
-            if frame.is_none() && blocks.is_none() { None } else { Some(SlideShapeDiff::TextBox { frame, blocks }) }
+            if frame.is_none() && blocks.is_none() {
+                None
+            } else {
+                Some(SlideShapeDiff::TextBox { frame, blocks })
+            }
         }
         (SlideShape::Picture { frame: of, image: oi }, SlideShape::Picture { frame: nf, image: ni }) => {
             let frame = diff_frame(of, nf);
             let image = diff_image(oi, ni);
-            if frame.is_none() && image.is_none() { None } else { Some(SlideShapeDiff::Picture { frame, image }) }
+            if frame.is_none() && image.is_none() {
+                None
+            } else {
+                Some(SlideShapeDiff::Picture { frame, image })
+            }
         }
         (SlideShape::Table { frame: of, rows: or }, SlideShape::Table { frame: nf, rows: nr }) => {
             let frame = diff_frame(of, nf);
             let rows = between_indexed(or, nr, diff_table_row);
-            if frame.is_none() && rows.is_none() { None } else { Some(SlideShapeDiff::Table { frame, rows }) }
+            if frame.is_none() && rows.is_none() {
+                None
+            } else {
+                Some(SlideShapeDiff::Table { frame, rows })
+            }
         }
         (SlideShape::Placeholder { frame: of, kind: ok }, SlideShape::Placeholder { frame: nf, kind: nk }) => {
             let frame = diff_frame(of, nf);
             let kind = (ok != nk).then(|| nk.clone());
-            if frame.is_none() && kind.is_none() { None } else { Some(SlideShapeDiff::Placeholder { frame, kind }) }
+            if frame.is_none() && kind.is_none() {
+                None
+            } else {
+                Some(SlideShapeDiff::Placeholder { frame, kind })
+            }
         }
         _ => Some(SlideShapeDiff::Replace { shape: new.clone() }),
     }
@@ -635,35 +689,55 @@ fn apply_shape(shape: &mut SlideShape, diff: &SlideShapeDiff) {
         SlideShapeDiff::Replace { shape: new } => *shape = new.clone(),
         SlideShapeDiff::TextBox { frame, blocks } => {
             if let SlideShape::TextBox { frame: f, blocks: b } = shape {
-                if let Some(fd) = frame { apply_frame(f, fd); }
-                if let Some(bd) = blocks { apply_indexed(b, bd, apply_doc_block); }
+                if let Some(fd) = frame {
+                    apply_frame(f, fd);
+                }
+                if let Some(bd) = blocks {
+                    apply_indexed(b, bd, apply_doc_block);
+                }
             }
         }
         SlideShapeDiff::Picture { frame, image } => {
             if let SlideShape::Picture { frame: f, image: i } = shape {
-                if let Some(fd) = frame { apply_frame(f, fd); }
-                if let Some(id) = image { apply_image(i, id); }
+                if let Some(fd) = frame {
+                    apply_frame(f, fd);
+                }
+                if let Some(id) = image {
+                    apply_image(i, id);
+                }
             }
         }
         SlideShapeDiff::Table { frame, rows } => {
             if let SlideShape::Table { frame: f, rows: r } = shape {
-                if let Some(fd) = frame { apply_frame(f, fd); }
-                if let Some(rd) = rows { apply_indexed(r, rd, apply_table_row); }
+                if let Some(fd) = frame {
+                    apply_frame(f, fd);
+                }
+                if let Some(rd) = rows {
+                    apply_indexed(r, rd, apply_table_row);
+                }
             }
         }
         SlideShapeDiff::Placeholder { frame, kind } => {
             if let SlideShape::Placeholder { frame: f, kind: k } = shape {
-                if let Some(fd) = frame { apply_frame(f, fd); }
-                if let Some(kd) = kind { *k = kd.clone(); }
+                if let Some(fd) = frame {
+                    apply_frame(f, fd);
+                }
+                if let Some(kd) = kind {
+                    *k = kd.clone();
+                }
             }
         }
     }
 }
 fn apply_table_row(row: &mut SlideTableRow, diff: &SlideTableRowDiff) {
-    if let Some(cd) = &diff.cells { apply_indexed(&mut row.cells, cd, apply_table_cell); }
+    if let Some(cd) = &diff.cells {
+        apply_indexed(&mut row.cells, cd, apply_table_cell);
+    }
 }
 fn apply_table_cell(cell: &mut SlideTableCell, diff: &SlideTableCellDiff) {
-    if let Some(bd) = &diff.blocks { apply_indexed(&mut cell.blocks, bd, apply_doc_block); }
+    if let Some(bd) = &diff.blocks {
+        apply_indexed(&mut cell.blocks, bd, apply_doc_block);
+    }
 }
 fn shape_with_diff_applied(shape: &SlideShape, diff: &SlideShapeDiff) -> SlideShape {
     let mut out = shape.clone();
@@ -681,10 +755,7 @@ fn inverse_shape(base: &SlideShape, diff: &SlideShapeDiff) -> SlideShapeDiff {
         SlideShapeDiff::Replace { .. } => SlideShapeDiff::Replace { shape: base.clone() },
         SlideShapeDiff::TextBox { frame, blocks } => {
             let SlideShape::TextBox { frame: bf, blocks: bb } = base else { return SlideShapeDiff::Replace { shape: base.clone() } };
-            SlideShapeDiff::TextBox {
-                frame: frame.as_ref().map(|fd| inverse_frame(bf, fd)),
-                blocks: blocks.as_ref().map(|bd| inverse_indexed(bb, bd, inverse_doc_block)),
-            }
+            SlideShapeDiff::TextBox { frame: frame.as_ref().map(|fd| inverse_frame(bf, fd)), blocks: blocks.as_ref().map(|bd| inverse_indexed(bb, bd, inverse_doc_block)) }
         }
         SlideShapeDiff::Picture { frame, image } => {
             let SlideShape::Picture { frame: bf, image: bi } = base else { return SlideShapeDiff::Replace { shape: base.clone() } };
@@ -711,20 +782,14 @@ fn absorb_shape(a: SlideShapeDiff, b: SlideShapeDiff) -> SlideShapeDiff {
     match (a, b) {
         (_, SlideShapeDiff::Replace { shape }) => SlideShapeDiff::Replace { shape },
         (SlideShapeDiff::Replace { shape }, b) => SlideShapeDiff::Replace { shape: shape_with_diff_applied(&shape, &b) },
-        (SlideShapeDiff::TextBox { frame: fa, blocks: ba }, SlideShapeDiff::TextBox { frame: fb, blocks: bb }) => SlideShapeDiff::TextBox {
-            frame: absorb_opt(fa, fb, absorb_frame),
-            blocks: absorb_opt(ba, bb, |x, y| absorb_indexed(x, y, absorb_doc_block, doc_block_with_diff_applied)),
-        },
-        (SlideShapeDiff::Picture { frame: fa, image: ia }, SlideShapeDiff::Picture { frame: fb, image: ib }) => {
-            SlideShapeDiff::Picture { frame: absorb_opt(fa, fb, absorb_frame), image: absorb_opt(ia, ib, absorb_image) }
+        (SlideShapeDiff::TextBox { frame: fa, blocks: ba }, SlideShapeDiff::TextBox { frame: fb, blocks: bb }) => {
+            SlideShapeDiff::TextBox { frame: absorb_opt(fa, fb, absorb_frame), blocks: absorb_opt(ba, bb, |x, y| absorb_indexed(x, y, absorb_doc_block, doc_block_with_diff_applied)) }
         }
-        (SlideShapeDiff::Table { frame: fa, rows: ra }, SlideShapeDiff::Table { frame: fb, rows: rb }) => SlideShapeDiff::Table {
-            frame: absorb_opt(fa, fb, absorb_frame),
-            rows: absorb_opt(ra, rb, |x, y| absorb_indexed(x, y, absorb_table_row_diff, table_row_with_diff_applied)),
-        },
-        (SlideShapeDiff::Placeholder { frame: fa, kind: ka }, SlideShapeDiff::Placeholder { frame: fb, kind: kb }) => {
-            SlideShapeDiff::Placeholder { frame: absorb_opt(fa, fb, absorb_frame), kind: kb.or(ka) }
+        (SlideShapeDiff::Picture { frame: fa, image: ia }, SlideShapeDiff::Picture { frame: fb, image: ib }) => SlideShapeDiff::Picture { frame: absorb_opt(fa, fb, absorb_frame), image: absorb_opt(ia, ib, absorb_image) },
+        (SlideShapeDiff::Table { frame: fa, rows: ra }, SlideShapeDiff::Table { frame: fb, rows: rb }) => {
+            SlideShapeDiff::Table { frame: absorb_opt(fa, fb, absorb_frame), rows: absorb_opt(ra, rb, |x, y| absorb_indexed(x, y, absorb_table_row_diff, table_row_with_diff_applied)) }
         }
+        (SlideShapeDiff::Placeholder { frame: fa, kind: ka }, SlideShapeDiff::Placeholder { frame: fb, kind: kb }) => SlideShapeDiff::Placeholder { frame: absorb_opt(fa, fb, absorb_frame), kind: kb.or(ka) },
         (_, b) => b,
     }
 }
@@ -733,7 +798,13 @@ fn absorb_table_cell_diff(mut a: SlideTableCellDiff, b: SlideTableCellDiff) -> S
     a
 }
 fn absorb_table_row_diff(mut a: SlideTableRowDiff, b: SlideTableRowDiff) -> SlideTableRowDiff {
-    a.cells = absorb_opt(a.cells.take(), b.cells, |x, y| absorb_indexed(x, y, absorb_table_cell_diff, |c, d| { let mut out = c.clone(); apply_table_cell(&mut out, d); out }));
+    a.cells = absorb_opt(a.cells.take(), b.cells, |x, y| {
+        absorb_indexed(x, y, absorb_table_cell_diff, |c, d| {
+            let mut out = c.clone();
+            apply_table_cell(&mut out, d);
+            out
+        })
+    });
     a
 }
 //#endregion 🔖️ShapeDiffLogic
@@ -746,26 +817,46 @@ fn diff_master(old: &SlideMaster, new: &SlideMaster) -> Option<SlideMasterDiff> 
 fn diff_layout(old: &SlideLayout, new: &SlideLayout) -> Option<SlideLayoutDiff> {
     let master_id = (old.master_id != new.master_id).then(|| new.master_id.clone());
     let shapes = between_indexed(&old.shapes, &new.shapes, diff_shape);
-    if master_id.is_none() && shapes.is_none() { None } else { Some(SlideLayoutDiff { master_id, shapes }) }
+    if master_id.is_none() && shapes.is_none() {
+        None
+    } else {
+        Some(SlideLayoutDiff { master_id, shapes })
+    }
 }
 fn diff_slide(old: &Slide, new: &Slide) -> Option<SlideDiff> {
     let layout_id = (old.layout_id != new.layout_id).then(|| new.layout_id.clone());
     let shapes = between_indexed(&old.shapes, &new.shapes, diff_shape);
     let notes = between_indexed(&old.notes, &new.notes, diff_doc_block);
-    if layout_id.is_none() && shapes.is_none() && notes.is_none() { None } else { Some(SlideDiff { layout_id, shapes, notes }) }
+    if layout_id.is_none() && shapes.is_none() && notes.is_none() {
+        None
+    } else {
+        Some(SlideDiff { layout_id, shapes, notes })
+    }
 }
 
 fn apply_master(master: &mut SlideMaster, diff: &SlideMasterDiff) {
-    if let Some(sd) = &diff.shapes { apply_indexed(&mut master.shapes, sd, apply_shape); }
+    if let Some(sd) = &diff.shapes {
+        apply_indexed(&mut master.shapes, sd, apply_shape);
+    }
 }
 fn apply_layout(layout: &mut SlideLayout, diff: &SlideLayoutDiff) {
-    if let Some(v) = &diff.master_id { layout.master_id = v.clone(); }
-    if let Some(sd) = &diff.shapes { apply_indexed(&mut layout.shapes, sd, apply_shape); }
+    if let Some(v) = &diff.master_id {
+        layout.master_id = v.clone();
+    }
+    if let Some(sd) = &diff.shapes {
+        apply_indexed(&mut layout.shapes, sd, apply_shape);
+    }
 }
 fn apply_slide(slide: &mut Slide, diff: &SlideDiff) {
-    if let Some(v) = &diff.layout_id { slide.layout_id = v.clone(); }
-    if let Some(sd) = &diff.shapes { apply_indexed(&mut slide.shapes, sd, apply_shape); }
-    if let Some(nd) = &diff.notes { apply_indexed(&mut slide.notes, nd, apply_doc_block); }
+    if let Some(v) = &diff.layout_id {
+        slide.layout_id = v.clone();
+    }
+    if let Some(sd) = &diff.shapes {
+        apply_indexed(&mut slide.shapes, sd, apply_shape);
+    }
+    if let Some(nd) = &diff.notes {
+        apply_indexed(&mut slide.notes, nd, apply_doc_block);
+    }
 }
 fn slide_with_diff_applied(slide: &Slide, diff: &SlideDiff) -> Slide {
     let mut out = slide.clone();
@@ -777,10 +868,7 @@ fn inverse_master(base: &SlideMaster, diff: &SlideMasterDiff) -> SlideMasterDiff
     SlideMasterDiff { shapes: diff.shapes.as_ref().map(|sd| inverse_indexed(&base.shapes, sd, inverse_shape)) }
 }
 fn inverse_layout(base: &SlideLayout, diff: &SlideLayoutDiff) -> SlideLayoutDiff {
-    SlideLayoutDiff {
-        master_id: diff.master_id.as_ref().map(|_| base.master_id.clone()),
-        shapes: diff.shapes.as_ref().map(|sd| inverse_indexed(&base.shapes, sd, inverse_shape)),
-    }
+    SlideLayoutDiff { master_id: diff.master_id.as_ref().map(|_| base.master_id.clone()), shapes: diff.shapes.as_ref().map(|sd| inverse_indexed(&base.shapes, sd, inverse_shape)) }
 }
 fn inverse_slide(base: &Slide, diff: &SlideDiff) -> SlideDiff {
     SlideDiff {
@@ -795,12 +883,16 @@ fn absorb_master_diff(mut a: SlideMasterDiff, b: SlideMasterDiff) -> SlideMaster
     a
 }
 fn absorb_layout_diff(mut a: SlideLayoutDiff, b: SlideLayoutDiff) -> SlideLayoutDiff {
-    if b.master_id.is_some() { a.master_id = b.master_id; }
+    if b.master_id.is_some() {
+        a.master_id = b.master_id;
+    }
     a.shapes = absorb_opt(a.shapes.take(), b.shapes, |x, y| absorb_indexed(x, y, absorb_shape, shape_with_diff_applied));
     a
 }
 fn absorb_slide_diff(mut a: SlideDiff, b: SlideDiff) -> SlideDiff {
-    if b.layout_id.is_some() { a.layout_id = b.layout_id; }
+    if b.layout_id.is_some() {
+        a.layout_id = b.layout_id;
+    }
     a.shapes = absorb_opt(a.shapes.take(), b.shapes, |x, y| absorb_indexed(x, y, absorb_shape, shape_with_diff_applied));
     a.notes = absorb_opt(a.notes.take(), b.notes, |x, y| absorb_indexed(x, y, absorb_doc_block, doc_block_with_diff_applied));
     a
@@ -819,9 +911,15 @@ fn diff_snapshot(base: &SemioPresentationSnapshot, other: &SemioPresentationSnap
 impl MutationDiff<SemioPresentationSnapshot> for SemioPresentationDiff {
     fn apply(&self, base: &SemioPresentationSnapshot) -> SemioPresentationSnapshot {
         let mut next = base.clone();
-        if let Some(d) = &self.masters { apply_named(&mut next.masters, d, |m| m.id.clone(), apply_master); }
-        if let Some(d) = &self.layouts { apply_named(&mut next.layouts, d, |l| l.id.clone(), apply_layout); }
-        if let Some(d) = &self.slides { apply_indexed(&mut next.slides, d, apply_slide); }
+        if let Some(d) = &self.masters {
+            apply_named(&mut next.masters, d, |m| m.id.clone(), apply_master);
+        }
+        if let Some(d) = &self.layouts {
+            apply_named(&mut next.layouts, d, |l| l.id.clone(), apply_layout);
+        }
+        if let Some(d) = &self.slides {
+            apply_indexed(&mut next.slides, d, apply_slide);
+        }
         next
     }
 
@@ -960,17 +1058,31 @@ pub fn diff_set_layout_master(id: &str, master_id: &str) -> SemioPresentationDif
 /// enums). `IndexedTripleDiff`/`NamedTripleDiff`'s own `enc_indexed_triple`/`enc_named_triple`
 /// (shared `engine::triples`) drive every collection instantiation below.
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|b| format!("{b:02x}")).collect() }
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
-pub(crate) fn enc_f64(v: f64) -> String { v.to_bits().to_string() }
-pub(crate) fn enc_bool(b: bool) -> String { if b { "1".to_string() } else { "0".to_string() } }
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+pub(crate) fn enc_f64(v: f64) -> String {
+    v.to_bits().to_string()
+}
+pub(crate) fn enc_bool(b: bool) -> String {
+    if b {
+        "1".to_string()
+    } else {
+        "0".to_string()
+    }
+}
 pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
     match s {
         "1" => Ok(true),
@@ -978,8 +1090,12 @@ pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
         other => Err(format!("bool: bad value {other:?}")),
     }
 }
-pub(crate) fn dec_f64(s: &str) -> Result<f64, String> { s.parse::<u64>().map(f64::from_bits).map_err(|e: std::num::ParseIntError| e.to_string()) }
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+pub(crate) fn dec_f64(s: &str) -> Result<f64, String> {
+    s.parse::<u64>().map(f64::from_bits).map_err(|e: std::num::ParseIntError| e.to_string())
+}
+pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
 pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
@@ -1003,21 +1119,27 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-pub(crate) fn enc_semio_point2(p: &SemioPoint2) -> String { format!("[{},{}]", enc_f64(p.x), enc_f64(p.y)) }
+pub(crate) fn enc_semio_point2(p: &SemioPoint2) -> String {
+    format!("[{},{}]", enc_f64(p.x), enc_f64(p.y))
+}
 pub(crate) fn dec_semio_point2(s: &str) -> Result<SemioPoint2, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [x, y] = parts.as_slice() else { return Err(format!("point2: expected 2 fields, got {}", parts.len())) };
     Ok(SemioPoint2 { x: dec_f64(x)?, y: dec_f64(y)? })
 }
-pub(crate) fn enc_frame(f: &SlideFrame) -> String { format!("[{},{},{}]", enc_semio_point2(&f.origin), enc_f64(f.width), enc_f64(f.height)) }
+pub(crate) fn enc_frame(f: &SlideFrame) -> String {
+    format!("[{},{},{}]", enc_semio_point2(&f.origin), enc_f64(f.width), enc_f64(f.height))
+}
 pub(crate) fn dec_frame(s: &str) -> Result<SlideFrame, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [origin, width, height] = parts.as_slice() else { return Err(format!("frame: expected 3 fields, got {}", parts.len())) };
     Ok(SlideFrame { origin: dec_semio_point2(origin)?, width: dec_f64(width)?, height: dec_f64(height)? })
 }
-pub(crate) fn enc_image(i: &SlidePictureImage) -> String { format!("[{},{},{}]", enc_str(&i.asset_id), enc_str(&i.mime), hex_encode(&i.bytes)) }
+pub(crate) fn enc_image(i: &SlidePictureImage) -> String {
+    format!("[{},{},{}]", enc_str(&i.asset_id), enc_str(&i.mime), hex_encode(&i.bytes))
+}
 pub(crate) fn dec_image(s: &str) -> Result<SlidePictureImage, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
@@ -1054,10 +1176,18 @@ pub(crate) fn dec_placeholder_kind(s: &str) -> Result<PlaceholderKind, String> {
 /// (Paragraph/Heading's `runs: Vec<DocRun>`, List's `items: Vec<DocListItem>`, Table's
 /// `rows: Vec<DocTableRow>` -> `cells: Vec<DocTableCell>`, Quote's recursive `Vec<DocBlock>`) — a
 /// prior draft of this file duplicated all of these, a real policy violation this wave fixes.
-pub(crate) fn enc_table_cell(c: &SlideTableCell) -> String { enc_list(&c.blocks, enc_block) }
-pub(crate) fn dec_table_cell(s: &str) -> Result<SlideTableCell, String> { Ok(SlideTableCell { blocks: dec_list(s, dec_block)? }) }
-pub(crate) fn enc_table_row(r: &SlideTableRow) -> String { enc_list(&r.cells, enc_table_cell) }
-pub(crate) fn dec_table_row(s: &str) -> Result<SlideTableRow, String> { Ok(SlideTableRow { cells: dec_list(s, dec_table_cell)? }) }
+pub(crate) fn enc_table_cell(c: &SlideTableCell) -> String {
+    enc_list(&c.blocks, enc_block)
+}
+pub(crate) fn dec_table_cell(s: &str) -> Result<SlideTableCell, String> {
+    Ok(SlideTableCell { blocks: dec_list(s, dec_block)? })
+}
+pub(crate) fn enc_table_row(r: &SlideTableRow) -> String {
+    enc_list(&r.cells, enc_table_cell)
+}
+pub(crate) fn dec_table_row(s: &str) -> Result<SlideTableRow, String> {
+    Ok(SlideTableRow { cells: dec_list(s, dec_table_cell)? })
+}
 /// 🌳️ `X[frame,blocks]` TextBox / `P[frame,image]` Picture / `T[frame,rows]` Table /
 /// `H[frame,kind]` placeHolder.
 pub(crate) fn enc_shape(shape: &SlideShape) -> String {
@@ -1092,14 +1222,18 @@ pub(crate) fn dec_shape(s: &str) -> Result<SlideShape, String> {
         other => Err(format!("shape: unknown tag {other:?}")),
     }
 }
-pub(crate) fn enc_master(m: &SlideMaster) -> String { format!("[{},{}]", enc_str(&m.id), enc_list(&m.shapes, enc_shape)) }
+pub(crate) fn enc_master(m: &SlideMaster) -> String {
+    format!("[{},{}]", enc_str(&m.id), enc_list(&m.shapes, enc_shape))
+}
 pub(crate) fn dec_master(s: &str) -> Result<SlideMaster, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [id, shapes] = parts.as_slice() else { return Err(format!("master: expected 2 fields, got {}", parts.len())) };
     Ok(SlideMaster { id: dec_str(id)?, shapes: dec_list(shapes, dec_shape)? })
 }
-pub(crate) fn enc_layout(l: &SlideLayout) -> String { format!("[{},{},{}]", enc_str(&l.id), enc_str(&l.master_id), enc_list(&l.shapes, enc_shape)) }
+pub(crate) fn enc_layout(l: &SlideLayout) -> String {
+    format!("[{},{},{}]", enc_str(&l.id), enc_str(&l.master_id), enc_list(&l.shapes, enc_shape))
+}
 pub(crate) fn dec_layout(s: &str) -> Result<SlideLayout, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
@@ -1140,14 +1274,22 @@ fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, String
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("indexed triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("indexed modified: bad entry {entry:?}"))?;
-        Ok(IndexModified { index: parse_usize(idx)?, diff: dec_d(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("indexed added: bad entry {entry:?}"))?;
-        Ok(IndexAdded { index: parse_usize(idx)?, item: dec_t(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("indexed modified: bad entry {entry:?}"))?;
+            Ok(IndexModified { index: parse_usize(idx)?, diff: dec_d(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("indexed added: bad entry {entry:?}"))?;
+            Ok(IndexAdded { index: parse_usize(idx)?, item: dec_t(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok(IndexedTripleDiff { removed, modified, added })
 }
 /// 🏷️ `[removed];[modified];[added]` — generic over `NamedTripleDiff<K,D,T>`'s own `K`/`D`/`T`.
@@ -1161,10 +1303,14 @@ fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, String>,
     let three = split_top_level(s, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_k(e)).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (k, rest) = entry.split_once(':').ok_or_else(|| format!("named triple modified: bad entry {entry:?}"))?;
-        Ok(NamedModified { key: dec_k(k)?, diff: dec_d(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (k, rest) = entry.split_once(':').ok_or_else(|| format!("named triple modified: bad entry {entry:?}"))?;
+            Ok(NamedModified { key: dec_k(k)?, diff: dec_d(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_t(e)).collect::<Result<Vec<_>, String>>()?;
     Ok(NamedTripleDiff { removed, modified, added })
 }
@@ -1189,18 +1335,42 @@ fn dec_image_diff(s: &str) -> Result<SlidePictureImageDiff, String> {
     let [asset_id, mime, bytes] = parts.as_slice() else { return Err(format!("image diff: expected 3 fields, got {}", parts.len())) };
     Ok(SlidePictureImageDiff { asset_id: decode_option(asset_id, dec_str)?, mime: decode_option(mime, dec_str)?, bytes: decode_option(bytes, hex_decode)? })
 }
-fn enc_doc_blocks_diff(d: &DocBlocksDiff) -> String { enc_indexed_triple(d, enc_block, enc_block) }
-fn dec_doc_blocks_diff(s: &str) -> Result<DocBlocksDiff, String> { dec_indexed_triple(s, dec_block, dec_block) }
-fn enc_table_cell_diff(d: &SlideTableCellDiff) -> String { format!("[{}]", encode_option(&d.blocks, enc_doc_blocks_diff)) }
-fn dec_table_cell_diff(s: &str) -> Result<SlideTableCellDiff, String> { Ok(SlideTableCellDiff { blocks: decode_option(strip_brackets(s)?, dec_doc_blocks_diff)? }) }
-fn enc_table_cells_diff(d: &SlideTableCellsDiff) -> String { enc_indexed_triple(d, enc_table_cell_diff, enc_table_cell) }
-fn dec_table_cells_diff(s: &str) -> Result<SlideTableCellsDiff, String> { dec_indexed_triple(s, dec_table_cell_diff, dec_table_cell) }
-fn enc_table_row_diff(d: &SlideTableRowDiff) -> String { format!("[{}]", encode_option(&d.cells, enc_table_cells_diff)) }
-fn dec_table_row_diff(s: &str) -> Result<SlideTableRowDiff, String> { Ok(SlideTableRowDiff { cells: decode_option(strip_brackets(s)?, dec_table_cells_diff)? }) }
-fn enc_table_rows_diff(d: &SlideTableRowsDiff) -> String { enc_indexed_triple(d, enc_table_row_diff, enc_table_row) }
-fn dec_table_rows_diff(s: &str) -> Result<SlideTableRowsDiff, String> { dec_indexed_triple(s, dec_table_row_diff, dec_table_row) }
-fn enc_shapes_diff(d: &SlideShapesDiff) -> String { enc_indexed_triple(d, enc_shape_diff, enc_shape) }
-fn dec_shapes_diff(s: &str) -> Result<SlideShapesDiff, String> { dec_indexed_triple(s, dec_shape_diff, dec_shape) }
+fn enc_doc_blocks_diff(d: &DocBlocksDiff) -> String {
+    enc_indexed_triple(d, enc_block, enc_block)
+}
+fn dec_doc_blocks_diff(s: &str) -> Result<DocBlocksDiff, String> {
+    dec_indexed_triple(s, dec_block, dec_block)
+}
+fn enc_table_cell_diff(d: &SlideTableCellDiff) -> String {
+    format!("[{}]", encode_option(&d.blocks, enc_doc_blocks_diff))
+}
+fn dec_table_cell_diff(s: &str) -> Result<SlideTableCellDiff, String> {
+    Ok(SlideTableCellDiff { blocks: decode_option(strip_brackets(s)?, dec_doc_blocks_diff)? })
+}
+fn enc_table_cells_diff(d: &SlideTableCellsDiff) -> String {
+    enc_indexed_triple(d, enc_table_cell_diff, enc_table_cell)
+}
+fn dec_table_cells_diff(s: &str) -> Result<SlideTableCellsDiff, String> {
+    dec_indexed_triple(s, dec_table_cell_diff, dec_table_cell)
+}
+fn enc_table_row_diff(d: &SlideTableRowDiff) -> String {
+    format!("[{}]", encode_option(&d.cells, enc_table_cells_diff))
+}
+fn dec_table_row_diff(s: &str) -> Result<SlideTableRowDiff, String> {
+    Ok(SlideTableRowDiff { cells: decode_option(strip_brackets(s)?, dec_table_cells_diff)? })
+}
+fn enc_table_rows_diff(d: &SlideTableRowsDiff) -> String {
+    enc_indexed_triple(d, enc_table_row_diff, enc_table_row)
+}
+fn dec_table_rows_diff(s: &str) -> Result<SlideTableRowsDiff, String> {
+    dec_indexed_triple(s, dec_table_row_diff, dec_table_row)
+}
+fn enc_shapes_diff(d: &SlideShapesDiff) -> String {
+    enc_indexed_triple(d, enc_shape_diff, enc_shape)
+}
+fn dec_shapes_diff(s: &str) -> Result<SlideShapesDiff, String> {
+    dec_indexed_triple(s, dec_shape_diff, dec_shape)
+}
 /// 🌳️ `X[frame,blocks]`/`P[frame,image]`/`T[frame,rows]`/`H[frame,kind]`/`R[shape]` (wholesale
 /// replace, shape KIND changed).
 fn enc_shape_diff(d: &SlideShapeDiff) -> String {
@@ -1240,9 +1410,15 @@ fn dec_shape_diff(s: &str) -> Result<SlideShapeDiff, String> {
         other => Err(format!("shape diff: unknown tag {other:?}")),
     }
 }
-fn enc_master_diff(d: &SlideMasterDiff) -> String { format!("[{}]", encode_option(&d.shapes, enc_shapes_diff)) }
-fn dec_master_diff(s: &str) -> Result<SlideMasterDiff, String> { Ok(SlideMasterDiff { shapes: decode_option(strip_brackets(s)?, dec_shapes_diff)? }) }
-fn enc_layout_diff(d: &SlideLayoutDiff) -> String { format!("[{},{}]", encode_option(&d.master_id, |v| enc_str(v)), encode_option(&d.shapes, enc_shapes_diff)) }
+fn enc_master_diff(d: &SlideMasterDiff) -> String {
+    format!("[{}]", encode_option(&d.shapes, enc_shapes_diff))
+}
+fn dec_master_diff(s: &str) -> Result<SlideMasterDiff, String> {
+    Ok(SlideMasterDiff { shapes: decode_option(strip_brackets(s)?, dec_shapes_diff)? })
+}
+fn enc_layout_diff(d: &SlideLayoutDiff) -> String {
+    format!("[{},{}]", encode_option(&d.master_id, |v| enc_str(v)), encode_option(&d.shapes, enc_shapes_diff))
+}
 fn dec_layout_diff(s: &str) -> Result<SlideLayoutDiff, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
@@ -1250,12 +1426,7 @@ fn dec_layout_diff(s: &str) -> Result<SlideLayoutDiff, String> {
     Ok(SlideLayoutDiff { master_id: decode_option(master_id, dec_str)?, shapes: decode_option(shapes, dec_shapes_diff)? })
 }
 fn enc_slide_diff(d: &SlideDiff) -> String {
-    format!(
-        "[{},{},{}]",
-        encode_option(&d.layout_id, |inner: &Option<String>| encode_option(inner, |v| enc_str(v))),
-        encode_option(&d.shapes, enc_shapes_diff),
-        encode_option(&d.notes, enc_doc_blocks_diff)
-    )
+    format!("[{},{},{}]", encode_option(&d.layout_id, |inner: &Option<String>| encode_option(inner, |v| enc_str(v))), encode_option(&d.shapes, enc_shapes_diff), encode_option(&d.notes, enc_doc_blocks_diff))
 }
 fn dec_slide_diff(s: &str) -> Result<SlideDiff, String> {
     let inner = strip_brackets(s)?;
@@ -1263,20 +1434,38 @@ fn dec_slide_diff(s: &str) -> Result<SlideDiff, String> {
     let [layout_id, shapes, notes] = parts.as_slice() else { return Err(format!("slide diff: expected 3 fields, got {}", parts.len())) };
     Ok(SlideDiff { layout_id: decode_option(layout_id, |s| decode_option(s, dec_str))?, shapes: decode_option(shapes, dec_shapes_diff)?, notes: decode_option(notes, dec_doc_blocks_diff)? })
 }
-fn enc_masters_diff(d: &SlideMastersDiff) -> String { enc_named_triple(d, |k| enc_str(k), enc_master_diff, enc_master) }
-fn dec_masters_diff(s: &str) -> Result<SlideMastersDiff, String> { dec_named_triple(s, dec_str, dec_master_diff, dec_master) }
-fn enc_layouts_diff(d: &SlideLayoutsDiff) -> String { enc_named_triple(d, |k| enc_str(k), enc_layout_diff, enc_layout) }
-fn dec_layouts_diff(s: &str) -> Result<SlideLayoutsDiff, String> { dec_named_triple(s, dec_str, dec_layout_diff, dec_layout) }
-fn enc_slides_diff(d: &SlidesDiff) -> String { enc_indexed_triple(d, enc_slide_diff, enc_slide) }
-fn dec_slides_diff(s: &str) -> Result<SlidesDiff, String> { dec_indexed_triple(s, dec_slide_diff, dec_slide) }
+fn enc_masters_diff(d: &SlideMastersDiff) -> String {
+    enc_named_triple(d, |k| enc_str(k), enc_master_diff, enc_master)
+}
+fn dec_masters_diff(s: &str) -> Result<SlideMastersDiff, String> {
+    dec_named_triple(s, dec_str, dec_master_diff, dec_master)
+}
+fn enc_layouts_diff(d: &SlideLayoutsDiff) -> String {
+    enc_named_triple(d, |k| enc_str(k), enc_layout_diff, enc_layout)
+}
+fn dec_layouts_diff(s: &str) -> Result<SlideLayoutsDiff, String> {
+    dec_named_triple(s, dec_str, dec_layout_diff, dec_layout)
+}
+fn enc_slides_diff(d: &SlidesDiff) -> String {
+    enc_indexed_triple(d, enc_slide_diff, enc_slide)
+}
+fn dec_slides_diff(s: &str) -> Result<SlidesDiff, String> {
+    dec_indexed_triple(s, dec_slide_diff, dec_slide)
+}
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
 fn print_presentation_diff(d: &SemioPresentationDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.masters { tokens.push(format!("masters={}", enc_masters_diff(v))); }
-    if let Some(v) = &d.layouts { tokens.push(format!("layouts={}", enc_layouts_diff(v))); }
-    if let Some(v) = &d.slides { tokens.push(format!("slides={}", enc_slides_diff(v))); }
+    if let Some(v) = &d.masters {
+        tokens.push(format!("masters={}", enc_masters_diff(v)));
+    }
+    if let Some(v) = &d.layouts {
+        tokens.push(format!("layouts={}", enc_layouts_diff(v)));
+    }
+    if let Some(v) = &d.slides {
+        tokens.push(format!("slides={}", enc_slides_diff(v)));
+    }
     tokens.join(" ")
 }
 fn parse_presentation_diff(line: &str) -> Result<SemioPresentationDiff, String> {
@@ -1285,10 +1474,15 @@ fn parse_presentation_diff(line: &str) -> Result<SemioPresentationDiff, String> 
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("masters=") { d.masters = Some(dec_masters_diff(rest)?); }
-        else if let Some(rest) = token.strip_prefix("layouts=") { d.layouts = Some(dec_layouts_diff(rest)?); }
-        else if let Some(rest) = token.strip_prefix("slides=") { d.slides = Some(dec_slides_diff(rest)?); }
-        else { return Err(format!("presentation diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("masters=") {
+            d.masters = Some(dec_masters_diff(rest)?);
+        } else if let Some(rest) = token.strip_prefix("layouts=") {
+            d.layouts = Some(dec_layouts_diff(rest)?);
+        } else if let Some(rest) = token.strip_prefix("slides=") {
+            d.slides = Some(dec_slides_diff(rest)?);
+        } else {
+            return Err(format!("presentation diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -1393,45 +1587,31 @@ impl protocol::DiffCodec for SemioPresentationDiff {
 /// every prior semio wave uses.
 #[cfg(test)]
 pub(crate) fn snapshot_a() -> SemioPresentationSnapshot {
-        SemioPresentationSnapshot {
-            schema: "s.stdio.semio.presentation".into(),
-            masters: vec![
-                SlideMaster { id: "keep".into(), shapes: vec![SlideShape::Placeholder { frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 10.0, height: 10.0 }, kind: PlaceholderKind::Title }] },
-                SlideMaster { id: "toRemove".into(), shapes: Vec::new() },
-            ],
-            layouts: vec![SlideLayout { id: "layout1".into(), master_id: "toRemove".into(), shapes: Vec::new() }],
-            slides: vec![
-                Slide {
-                    id: "s1".into(),
-                    layout_id: None,
-                    shapes: vec![SlideShape::TextBox {
-                        frame: SlideFrame { origin: SemioPoint2 { x: 1.0, y: 1.0 }, width: 5.0, height: 5.0 },
-                        blocks: vec![DocBlock::paragraph("old")],
-                    }],
-                    notes: Vec::new(),
-                },
-                Slide { id: "toDrop".into(), layout_id: Some("layout1".into()), shapes: Vec::new(), notes: Vec::new() },
-            ],
-        }
+    SemioPresentationSnapshot {
+        schema: "s.stdio.semio.presentation".into(),
+        masters: vec![
+            SlideMaster { id: "keep".into(), shapes: vec![SlideShape::Placeholder { frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 10.0, height: 10.0 }, kind: PlaceholderKind::Title }] },
+            SlideMaster { id: "toRemove".into(), shapes: Vec::new() },
+        ],
+        layouts: vec![SlideLayout { id: "layout1".into(), master_id: "toRemove".into(), shapes: Vec::new() }],
+        slides: vec![
+            Slide { id: "s1".into(), layout_id: None, shapes: vec![SlideShape::TextBox { frame: SlideFrame { origin: SemioPoint2 { x: 1.0, y: 1.0 }, width: 5.0, height: 5.0 }, blocks: vec![DocBlock::paragraph("old")] }], notes: Vec::new() },
+            Slide { id: "toDrop".into(), layout_id: Some("layout1".into()), shapes: Vec::new(), notes: Vec::new() },
+        ],
     }
+}
 
 #[cfg(test)]
 pub(crate) fn snapshot_b() -> SemioPresentationSnapshot {
     SemioPresentationSnapshot {
         schema: "s.stdio.semio.presentation".into(),
-        masters: vec![
-            SlideMaster { id: "keep".into(), shapes: Vec::new() },
-            SlideMaster { id: "added".into(), shapes: Vec::new() },
-        ],
+        masters: vec![SlideMaster { id: "keep".into(), shapes: Vec::new() }, SlideMaster { id: "added".into(), shapes: Vec::new() }],
         layouts: vec![SlideLayout { id: "layout1".into(), master_id: "keep".into(), shapes: Vec::new() }],
         slides: vec![Slide {
             id: "s1".into(),
             layout_id: Some("layout1".into()),
             shapes: vec![
-                SlideShape::TextBox {
-                    frame: SlideFrame { origin: SemioPoint2 { x: 1.0, y: 1.0 }, width: 5.0, height: 5.0 },
-                    blocks: vec![DocBlock::paragraph("new")],
-                },
+                SlideShape::TextBox { frame: SlideFrame { origin: SemioPoint2 { x: 1.0, y: 1.0 }, width: 5.0, height: 5.0 }, blocks: vec![DocBlock::paragraph("new")] },
                 SlideShape::Picture { frame: SlideFrame { origin: SemioPoint2::default(), width: 1.0, height: 1.0 }, image: SlidePictureImage { asset_id: "a".into(), mime: "image/png".into(), bytes: vec![9] } },
             ],
             notes: vec![DocBlock::paragraph("noted")],
@@ -1446,12 +1626,7 @@ pub(crate) fn snapshot_b() -> SemioPresentationSnapshot {
 pub(crate) fn demo_diff_cases() -> Vec<SemioPresentationDiff> {
     let a = snapshot_a();
     let b = snapshot_b();
-    vec![
-        SemioPresentationDiff::default(),
-        SemioPresentationDiff::between(&a, &b),
-        SemioPresentationDiff::between(&b, &a),
-        SemioPresentationDiff::between(&a, &a),
-    ]
+    vec![SemioPresentationDiff::default(), SemioPresentationDiff::between(&a, &b), SemioPresentationDiff::between(&b, &a), SemioPresentationDiff::between(&a, &a)]
 }
 //#endregion 🔖️Demo
 
@@ -1494,12 +1669,7 @@ mod handcrafted_diff_codec_tests {
     fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot_a();
         let b = snapshot_b();
-        let cases = vec![
-            SemioPresentationDiff::default(),
-            SemioPresentationDiff::between(&a, &b),
-            SemioPresentationDiff::between(&b, &a),
-            SemioPresentationDiff::between(&a, &a),
-        ];
+        let cases = vec![SemioPresentationDiff::default(), SemioPresentationDiff::between(&a, &b), SemioPresentationDiff::between(&b, &a), SemioPresentationDiff::between(&a, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

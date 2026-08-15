@@ -6,20 +6,20 @@
 
 use std::collections::HashMap;
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{FaceId, SolidId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::boolean::{boolean_solid, BooleanOp};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-use semio_framework_3d::engine::MeshTransfer;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{solid_bounding_box, solid_volume, AxisAlignedBox};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_convex_hull, make_planar_face_from_points};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::sweep::extrude_face;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{solid_bounding_box, solid_volume, AxisAlignedBox};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{FaceId, SolidId};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
+use semio_framework_3d::engine::MeshTransfer;
 
 // #region 🔖️Api
 
@@ -28,16 +28,8 @@ pub fn offset_face(body: &mut Body, face: FaceId, distance: f64, rec: &mut OpRec
     if !distance.is_finite() {
         return Err(KernelError::InvalidInput("offset distance must be finite".into()));
     }
-    let face_data = body
-        .faces
-        .get(face)
-        .ok_or_else(|| KernelError::MissingEntity(format!("face {face}")))?
-        .clone();
-    let surface = body
-        .surfaces
-        .get(face_data.surface)
-        .ok_or_else(|| KernelError::MissingEntity(format!("surface {}", face_data.surface)))?
-        .clone();
+    let face_data = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face}")))?.clone();
+    let surface = body.surfaces.get(face_data.surface).ok_or_else(|| KernelError::MissingEntity(format!("surface {}", face_data.surface)))?.clone();
     let Surface::Plane { frame } = surface else {
         return Err(KernelError::InvalidInput("offset_face requires a planar face".into()));
     };
@@ -46,10 +38,7 @@ pub fn offset_face(body: &mut Body, face: FaceId, distance: f64, rec: &mut OpRec
     if face_data.flipped {
         normal = -normal;
     }
-    let offset_pts: Vec<Pnt3> = polygon
-        .iter()
-        .map(|p| Pnt3::new(p.x + normal.x * distance, p.y + normal.y * distance, p.z + normal.z * distance))
-        .collect();
+    let offset_pts: Vec<Pnt3> = polygon.iter().map(|p| Pnt3::new(p.x + normal.x * distance, p.y + normal.y * distance, p.z + normal.z * distance)).collect();
     make_planar_face_from_points(body, &offset_pts, rec)
 }
 
@@ -58,16 +47,8 @@ pub fn thicken_face(body: &mut Body, face: FaceId, distance: f64, rec: &mut OpRe
     if !distance.is_finite() || distance.abs() <= 1e-15 {
         return Err(KernelError::InvalidInput("thicken distance must be non-zero".into()));
     }
-    let face_data = body
-        .faces
-        .get(face)
-        .ok_or_else(|| KernelError::MissingEntity(format!("face {face}")))?
-        .clone();
-    let surface = body
-        .surfaces
-        .get(face_data.surface)
-        .ok_or_else(|| KernelError::MissingEntity(format!("surface {}", face_data.surface)))?
-        .clone();
+    let face_data = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face}")))?.clone();
+    let surface = body.surfaces.get(face_data.surface).ok_or_else(|| KernelError::MissingEntity(format!("surface {}", face_data.surface)))?.clone();
     let Surface::Plane { frame } = surface else {
         return thicken_face_hull(body, face, distance, rec);
     };
@@ -75,8 +56,7 @@ pub fn thicken_face(body: &mut Body, face: FaceId, distance: f64, rec: &mut OpRe
     if face_data.flipped {
         normal = -normal;
     }
-    extrude_face(body, face, normal, distance.abs(), rec)
-        .or_else(|_| thicken_face_hull(body, face, distance, rec))
+    extrude_face(body, face, normal, distance.abs(), rec).or_else(|_| thicken_face_hull(body, face, distance, rec))
 }
 
 /// ↔️ Uniform solid offset (positive expands, negative shrinks).
@@ -124,15 +104,8 @@ pub fn shell_solid(body: &mut Body, solid: SolidId, thickness: f64, rec: &mut Op
     }
 }
 
-
 /// ↔️ Shell a solid and leave the listed faces open by cutting through-face openings.
-pub fn shell_solid_with_open_faces(
-    body: &mut Body,
-    solid: SolidId,
-    thickness: f64,
-    open_faces: &[FaceId],
-    rec: &mut OpRecorder,
-) -> Result<SolidId, KernelError> {
+pub fn shell_solid_with_open_faces(body: &mut Body, solid: SolidId, thickness: f64, open_faces: &[FaceId], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     let shelled = shell_solid(body, solid, thickness, rec)?;
     if open_faces.is_empty() {
         return Ok(shelled);
@@ -147,10 +120,7 @@ pub fn shell_solid_with_open_faces(
         let normal = face_normal_hint(&corners).unwrap_or(Vec3::new(0.0, 0.0, 1.0));
         let n = normal.normalized().unwrap_or(Vec3::new(0.0, 0.0, 1.0));
         let half = thickness * 2.0 + tol * 10.0;
-        let extruded: Vec<Pnt3> = corners
-            .iter()
-            .flat_map(|p| [*p + n * half, *p - n * half])
-            .collect();
+        let extruded: Vec<Pnt3> = corners.iter().flat_map(|p| [*p + n * half, *p - n * half]).collect();
         if let Ok(cutter) = make_convex_hull(body, &extruded, rec) {
             if let Ok(cut) = boolean_solid(body, result, cutter, BooleanOp::Cut, tol, rec) {
                 result = cut;
@@ -192,14 +162,7 @@ fn face_normal_hint(pts: &[Pnt3]) -> Option<Vec3> {
 }
 
 /// ↔️ Apply draft angle `angle_rad` to `face` of `solid` (MVP: AABB shear for boxes).
-pub fn draft_angle(
-    body: &mut Body,
-    solid: SolidId,
-    _face: FaceId,
-    angle_rad: f64,
-    pull_dir: Vec3,
-    rec: &mut OpRecorder,
-) -> Result<SolidId, KernelError> {
+pub fn draft_angle(body: &mut Body, solid: SolidId, _face: FaceId, angle_rad: f64, pull_dir: Vec3, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if body.solids.get(solid).is_none() {
         return Err(KernelError::MissingEntity(format!("solid {solid}")));
     }
@@ -209,9 +172,7 @@ pub fn draft_angle(
     if !angle_rad.is_finite() {
         return Err(KernelError::InvalidInput("draft angle must be finite".into()));
     }
-    let pull = pull_dir
-        .normalized()
-        .ok_or_else(|| KernelError::InvalidInput("pull direction must be non-zero".into()))?;
+    let pull = pull_dir.normalized().ok_or_else(|| KernelError::InvalidInput("pull direction must be non-zero".into()))?;
     if looks_like_box(body, solid)? {
         let bb = solid_bounding_box(body, solid)?;
         let sheared = shear_aabb_corners(&bb, pull, angle_rad);
@@ -236,16 +197,11 @@ fn looks_like_box(body: &Body, solid: SolidId) -> Result<bool, KernelError> {
 }
 
 fn aabb_volume(bb: &AxisAlignedBox) -> f64 {
-    (bb.max.x - bb.min.x).max(0.0)
-        * (bb.max.y - bb.min.y).max(0.0)
-        * (bb.max.z - bb.min.z).max(0.0)
+    (bb.max.x - bb.min.x).max(0.0) * (bb.max.y - bb.min.y).max(0.0) * (bb.max.z - bb.min.z).max(0.0)
 }
 
 fn inflate_aabb(bb: &AxisAlignedBox, distance: f64) -> AxisAlignedBox {
-    AxisAlignedBox {
-        min: Pnt3::new(bb.min.x - distance, bb.min.y - distance, bb.min.z - distance),
-        max: Pnt3::new(bb.max.x + distance, bb.max.y + distance, bb.max.z + distance),
-    }
+    AxisAlignedBox { min: Pnt3::new(bb.min.x - distance, bb.min.y - distance, bb.min.z - distance), max: Pnt3::new(bb.max.x + distance, bb.max.y + distance, bb.max.z + distance) }
 }
 
 fn aabb_corners(bb: &AxisAlignedBox) -> [Pnt3; 8] {
@@ -312,37 +268,23 @@ fn mesh_offset_points(body: &Body, solid: SolidId, distance: f64, tol: f64) -> R
     }
     let mut out = Vec::with_capacity(normals.len());
     for (key, mut n) in normals {
-        let p = positions
-            .get(&key)
-            .copied()
-            .unwrap_or(Pnt3::new(0.0, 0.0, 0.0));
+        let p = positions.get(&key).copied().unwrap_or(Pnt3::new(0.0, 0.0, 0.0));
         if let Some(nn) = n.normalized() {
             n = nn;
         } else {
             n = Vec3::Z;
         }
-        out.push(Pnt3::new(
-            p.x + n.x * distance,
-            p.y + n.y * distance,
-            p.z + n.z * distance,
-        ));
+        out.push(Pnt3::new(p.x + n.x * distance, p.y + n.y * distance, p.z + n.z * distance));
     }
     Ok(out)
 }
 
 fn quantize(p: Pnt3, scale: f64) -> (i64, i64, i64) {
-    (
-        (p.x * scale).round() as i64,
-        (p.y * scale).round() as i64,
-        (p.z * scale).round() as i64,
-    )
+    ((p.x * scale).round() as i64, (p.y * scale).round() as i64, (p.z * scale).round() as i64)
 }
 
 fn mesh_points(mesh: &MeshTransfer) -> Vec<Pnt3> {
-    mesh.position
-        .chunks_exact(3)
-        .map(|c| Pnt3::new(c[0] as f64, c[1] as f64, c[2] as f64))
-        .collect()
+    mesh.position.chunks_exact(3).map(|c| Pnt3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect()
 }
 
 fn mesh_triangles(mesh: &MeshTransfer) -> Vec<(Pnt3, Pnt3, Pnt3)> {
@@ -359,9 +301,7 @@ fn mesh_triangles(mesh: &MeshTransfer) -> Vec<(Pnt3, Pnt3, Pnt3)> {
             })
             .collect();
     }
-    pts.chunks_exact(3)
-        .map(|c| (c[0], c[1], c[2]))
-        .collect()
+    pts.chunks_exact(3).map(|c| (c[0], c[1], c[2])).collect()
 }
 
 // #endregion 🧮Mesh
@@ -369,49 +309,29 @@ fn mesh_triangles(mesh: &MeshTransfer) -> Vec<(Pnt3, Pnt3, Pnt3)> {
 // #region 🧮Face
 
 fn face_outer_polygon(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, KernelError> {
-    let face_data = body
-        .faces
-        .get(face)
-        .ok_or_else(|| KernelError::MissingEntity(format!("face {face:?}")))?;
-    let outer = face_data
-        .outer
-        .ok_or_else(|| KernelError::InvalidInput("face has no outer loop".into()))?;
+    let face_data = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face:?}")))?;
+    let outer = face_data.outer.ok_or_else(|| KernelError::InvalidInput("face has no outer loop".into()))?;
     let coedges = body.loop_coedges(outer);
     if coedges.is_empty() {
         return Err(KernelError::InvalidInput("face outer loop is empty".into()));
     }
     let mut points = Vec::new();
     for cid in coedges {
-        let coedge = body
-            .coedges
-            .get(cid)
-            .ok_or_else(|| KernelError::MissingEntity(format!("coedge {cid:?}")))?;
-        let edge = body
-            .edges
-            .get(coedge.edge)
-            .ok_or_else(|| KernelError::MissingEntity(format!("edge {:?}", coedge.edge)))?;
-        let curve = body
-            .curves3
-            .get(edge.curve)
-            .ok_or_else(|| KernelError::MissingEntity(format!("curve {:?}", edge.curve)))?;
+        let coedge = body.coedges.get(cid).ok_or_else(|| KernelError::MissingEntity(format!("coedge {cid:?}")))?;
+        let edge = body.edges.get(coedge.edge).ok_or_else(|| KernelError::MissingEntity(format!("edge {:?}", coedge.edge)))?;
+        let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity(format!("curve {:?}", edge.curve)))?;
         match curve {
             Curve3::Circle { frame, radius } => {
                 let segments = 16usize.max(3);
                 let (t0, t1) = edge.range;
                 for i in 0..segments {
-                    let t = if coedge.forward {
-                        t0 + (t1 - t0) * i as f64 / segments as f64
-                    } else {
-                        t1 - (t1 - t0) * i as f64 / segments as f64
-                    };
+                    let t = if coedge.forward { t0 + (t1 - t0) * i as f64 / segments as f64 } else { t1 - (t1 - t0) * i as f64 / segments as f64 };
                     points.push(curve.eval(t));
                 }
                 let _ = (frame, radius);
             }
             _ => {
-                let (start, _) = body
-                    .coedge_endpoints(cid)
-                    .ok_or_else(|| KernelError::MissingEntity(format!("coedge endpoints {cid:?}")))?;
+                let (start, _) = body.coedge_endpoints(cid).ok_or_else(|| KernelError::MissingEntity(format!("coedge endpoints {cid:?}")))?;
                 let p = body.vertices.get(start).expect("vertex").position;
                 points.push(p);
             }
@@ -470,17 +390,7 @@ mod tests {
     fn thicken_rectangle_positive_volume() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        let face = make_planar_face_from_points(
-            &mut body,
-            &[
-                Pnt3::new(0.0, 0.0, 0.0),
-                Pnt3::new(2.0, 0.0, 0.0),
-                Pnt3::new(2.0, 1.0, 0.0),
-                Pnt3::new(0.0, 1.0, 0.0),
-            ],
-            &mut rec,
-        )
-        .unwrap();
+        let face = make_planar_face_from_points(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(2.0, 0.0, 0.0), Pnt3::new(2.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0)], &mut rec).unwrap();
         let solid = thicken_face(&mut body, face, 0.5, &mut rec).unwrap();
         let v = solid_volume(&body, solid, 1e-4).unwrap();
         assert!(v > 0.0, "volume {v}");

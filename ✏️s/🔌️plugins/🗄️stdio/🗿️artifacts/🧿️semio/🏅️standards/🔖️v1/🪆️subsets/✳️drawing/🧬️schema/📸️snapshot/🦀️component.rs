@@ -15,12 +15,30 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum PathSegment {
-    MoveTo { to: SemioPoint2 },
-    LineTo { to: SemioPoint2 },
-    CubicTo { c1: SemioPoint2, c2: SemioPoint2, to: SemioPoint2 },
-    QuadTo { c: SemioPoint2, to: SemioPoint2 },
+    MoveTo {
+        to: SemioPoint2,
+    },
+    LineTo {
+        to: SemioPoint2,
+    },
+    CubicTo {
+        c1: SemioPoint2,
+        c2: SemioPoint2,
+        to: SemioPoint2,
+    },
+    QuadTo {
+        c: SemioPoint2,
+        to: SemioPoint2,
+    },
     /// 🌙️ Elliptical arc, SVG `A rx ry x-rotation large-arc sweep x y` shape.
-    ArcTo { rx: f64, ry: f64, x_rotation: f64, large_arc: bool, sweep: bool, to: SemioPoint2 },
+    ArcTo {
+        rx: f64,
+        ry: f64,
+        x_rotation: f64,
+        large_arc: bool,
+        sweep: bool,
+        to: SemioPoint2,
+    },
     Close,
 }
 //#endregion 🔖️PathSegment
@@ -54,7 +72,9 @@ pub enum DrawNode {
 }
 
 impl Default for DrawNode {
-    fn default() -> Self { DrawNode::Group { transform: SemioTransform::identity(), children: Vec::new() } }
+    fn default() -> Self {
+        DrawNode::Group { transform: SemioTransform::identity(), children: Vec::new() }
+    }
 }
 //#endregion 🔖️DrawNode
 
@@ -107,7 +127,9 @@ pub struct DrawCanvas {
 }
 
 impl Default for DrawCanvas {
-    fn default() -> Self { Self { width: 0.0, height: 0.0, background: None } }
+    fn default() -> Self {
+        Self { width: 0.0, height: 0.0, background: None }
+    }
 }
 //#endregion 🔖️Canvas
 
@@ -134,12 +156,7 @@ pub struct SemioDrawingSnapshot {
 
 impl Default for SemioDrawingSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
-            canvas: DrawCanvas::default(),
-            styles: Vec::new(),
-            layers: Vec::new(),
-        }
+        Self { schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(), canvas: DrawCanvas::default(), styles: Vec::new(), layers: Vec::new() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -180,10 +197,18 @@ pub(crate) fn parse_f32(s: &str) -> Result<f32, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
 pub(crate) fn enc_bool(b: bool) -> &'static str {
-    if b { "1" } else { "0" }
+    if b {
+        "1"
+    } else {
+        "0"
+    }
 }
 pub(crate) fn parse_bool(s: &str) -> Result<bool, String> {
-    match s { "1" => Ok(true), "0" => Ok(false), other => Err(format!("bad bool {other:?}")) }
+    match s {
+        "1" => Ok(true),
+        "0" => Ok(false),
+        other => Err(format!("bad bool {other:?}")),
+    }
 }
 pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
@@ -334,14 +359,7 @@ pub(crate) fn dec_node(s: &str) -> Result<DrawNode, String> {
 }
 
 pub(crate) fn enc_style(s: &DrawStyle) -> String {
-    format!(
-        "[{},{},{},{},{}]",
-        enc_str(&s.name),
-        encode_option(&s.fill, enc_rgba),
-        encode_option(&s.stroke, enc_rgba),
-        encode_option(&s.stroke_width, |v: &f64| v.to_string()),
-        encode_option(&s.opacity, |v: &f32| v.to_string()),
-    )
+    format!("[{},{},{},{},{}]", enc_str(&s.name), encode_option(&s.fill, enc_rgba), encode_option(&s.stroke, enc_rgba), encode_option(&s.stroke_width, |v: &f64| v.to_string()), encode_option(&s.opacity, |v: &f32| v.to_string()),)
 }
 pub(crate) fn dec_style(s: &str) -> Result<DrawStyle, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -372,13 +390,7 @@ pub(crate) fn dec_canvas(s: &str) -> Result<DrawCanvas, String> {
 /// canvas-line styles-line layers-line`. Newlines are pure lexer trivia in the shared dialect, so
 /// this is genuinely recognizable by `dsl::Recognizer`, not merely readable.
 fn print_drawing_snapshot_body(s: &SemioDrawingSnapshot) -> String {
-    format!(
-        "schema={}\ncanvas={}\nstyles=[{}]\nlayers=[{}]",
-        enc_str(&s.schema),
-        enc_canvas(&s.canvas),
-        s.styles.iter().map(enc_style).collect::<Vec<_>>().join(","),
-        s.layers.iter().map(enc_layer).collect::<Vec<_>>().join(","),
-    )
+    format!("schema={}\ncanvas={}\nstyles=[{}]\nlayers=[{}]", enc_str(&s.schema), enc_canvas(&s.canvas), s.styles.iter().map(enc_style).collect::<Vec<_>>().join(","), s.layers.iter().map(enc_layer).collect::<Vec<_>>().join(","),)
 }
 fn parse_drawing_snapshot_body(body: &str) -> Result<SemioDrawingSnapshot, String> {
     let mut schema = None;
@@ -440,11 +452,7 @@ fn write_point3(out: &mut Vec<u8>, p: &SemioPoint3) {
     out.extend_from_slice(&p.z.to_le_bytes());
 }
 fn read_point3(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint3, String> {
-    Ok(SemioPoint3 {
-        x: reader.read_f64_le().map_err(|e| e.to_string())?,
-        y: reader.read_f64_le().map_err(|e| e.to_string())?,
-        z: reader.read_f64_le().map_err(|e| e.to_string())?,
-    })
+    Ok(SemioPoint3 { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())?, z: reader.read_f64_le().map_err(|e| e.to_string())? })
 }
 fn write_quaternion(out: &mut Vec<u8>, q: &SemioQuaternion) {
     out.extend_from_slice(&q.x.to_le_bytes());
@@ -453,12 +461,7 @@ fn write_quaternion(out: &mut Vec<u8>, q: &SemioQuaternion) {
     out.extend_from_slice(&q.w.to_le_bytes());
 }
 fn read_quaternion(reader: &mut store::ByteReader<'_>) -> Result<SemioQuaternion, String> {
-    Ok(SemioQuaternion {
-        x: reader.read_f64_le().map_err(|e| e.to_string())?,
-        y: reader.read_f64_le().map_err(|e| e.to_string())?,
-        z: reader.read_f64_le().map_err(|e| e.to_string())?,
-        w: reader.read_f64_le().map_err(|e| e.to_string())?,
-    })
+    Ok(SemioQuaternion { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())?, z: reader.read_f64_le().map_err(|e| e.to_string())?, w: reader.read_f64_le().map_err(|e| e.to_string())? })
 }
 fn write_transform(out: &mut Vec<u8>, t: &SemioTransform) {
     write_point3(out, &t.translation);
@@ -717,7 +720,9 @@ fn decode_drawing_snapshot_binary(bytes: &[u8]) -> Result<SemioDrawingSnapshot, 
 /// `store::semio_format` envelope, unchanged.
 impl store::ArtifactDsl for SemioDrawingSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str { STDIO_SEMIODRAWING_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_SEMIODRAWING_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -729,11 +734,7 @@ impl store::ArtifactDsl for SemioDrawingSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_drawing_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -742,22 +743,14 @@ impl store::ArtifactPack for SemioDrawingSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_drawing_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_drawing_snapshot_binary(&inner).map_err(store::PackError::Schema)

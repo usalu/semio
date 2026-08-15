@@ -1,78 +1,37 @@
-//! 🗂 `structure` — ac1024's honest structural statistic. This standard's `DwgSnapshot` (see
-//! `📸️snapshot/🦀️component.rs`) performs real D1/D2 structural decode (section+page location,
-//! per-page decompression) but never decodes any geometric entity out of the decoded bytes (D3-D4
-//! bitcode/header-variable parsing is out of this ticket's scope), so a bounding-box inference
-//! (dxf's `📦bounds/`) would be dishonest here; `structure` is the closest honest derived
-//! statistic — real byte/section/page counts folded over `sections[].pages[]`, richer than
-//! ac1018's own flat byte/section-name-only struct because THIS standard's snapshot genuinely has
-//! more decoded structure. A pure whole-snapshot fold (no per-entity `InferredField` semantics —
-//! sections/pages are a flat structural list, not a DAG) — no `InferredField` needed.
+//! 🗂 `structure` — logical drawing statistics derived only from modeled layers and entities.
 
 use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Structure
-/// 🗂️ Dwg (ac1024) structural byte/section/page statistics.
+/// 🗂️ Dwg (ac1024) logical drawing statistics.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DwgStructure {
-    pub byte_count: u32,
-    pub section_count: u32,
-    pub page_count: u32,
-    pub decoded_page_count: u32,
-    pub error_page_count: u32,
-    pub declared_total_size: u64,
+    pub layer_count: u32,
+    pub entity_count: u32,
+    pub geometry_value_count: u32,
+    pub geometry_index_count: u32,
+    pub text_character_count: u32,
     pub codepage: u16,
     pub version: String,
 }
 
-/// 🩹 Hand-rolled: matches `compute_dwg_structure(&DwgSnapshot::default())` exactly
-/// (`DwgSnapshot::default()`'s `source`/`sections` are empty, `codepage` is `0`, `version` is
-/// `String::new()` — verified directly against `📸️snapshot/🦀️component.rs`'s own `Default` impl,
-/// not assumed).
 impl Default for DwgStructure {
     fn default() -> Self {
-        Self {
-            byte_count: 0,
-            section_count: 0,
-            page_count: 0,
-            decoded_page_count: 0,
-            error_page_count: 0,
-            declared_total_size: 0,
-            codepage: 0,
-            version: String::new(),
-        }
+        Self { layer_count: 0, entity_count: 0, geometry_value_count: 0, geometry_index_count: 0, text_character_count: 0, codepage: 0, version: String::new() }
     }
 }
 
-/// 🗂️ Computes [`DwgStructure`] by folding `sections[].pages[]` (page/decoded/error counts,
-/// declared-size sum) plus a few O(1) top-level field reads.
+/// 🗂️ Computes [`DwgStructure`] from standard logical drawing concepts.
 pub fn compute_dwg_structure(snapshot: &DwgSnapshot) -> DwgStructure {
-    let mut page_count = 0u32;
-    let mut decoded_page_count = 0u32;
-    let mut error_page_count = 0u32;
-    let mut declared_total_size = 0u64;
-
-    for section in &snapshot.sections {
-        declared_total_size += section.declared_size;
-        for page in &section.pages {
-            page_count += 1;
-            if !page.decoded.is_empty() {
-                decoded_page_count += 1;
-            }
-            if page.error.is_some() {
-                error_page_count += 1;
-            }
-        }
-    }
-
+    let entities = snapshot.drawing.entities();
     DwgStructure {
-        byte_count: snapshot.sections.iter().flat_map(|section| &section.pages).map(|page| page.decoded.len() as u64).sum::<u64>().min(u32::MAX as u64) as u32,
-        section_count: snapshot.sections.len() as u32,
-        page_count,
-        decoded_page_count,
-        error_page_count,
-        declared_total_size,
+        layer_count: snapshot.drawing.layers.len() as u32,
+        entity_count: entities.len() as u32,
+        geometry_value_count: entities.iter().map(|entity| entity.geometry.values.len() as u32).sum(),
+        geometry_index_count: entities.iter().map(|entity| entity.geometry.indices.len() as u32).sum(),
+        text_character_count: entities.iter().map(|entity| entity.geometry.text.chars().count() as u32).sum(),
         codepage: snapshot.codepage,
         version: snapshot.version.clone(),
     }
@@ -83,69 +42,48 @@ pub fn compute_dwg_structure(snapshot: &DwgSnapshot) -> DwgStructure {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::{DwgSection, DwgSectionPage};
+    use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::{DwgEntityBody, DwgEntityCommon, DwgLineEntity, DwgLogicalDrawing, DwgLogicalLayer, DwgLogicalObject, DwgLogicalObjectBody, DwgObjectCategory};
 
     #[test]
-    fn structure_matches_hand_built_sections_and_pages() {
+    fn structure_matches_hand_built_logical_drawing() {
         let snapshot = DwgSnapshot {
             schema: "s.stdio.dwg".into(),
             version: "AC1024".into(),
             maintenance_version: 3,
             codepage: 30,
-            drawing: Default::default(),
-            section_names: vec!["AcDb:Header".into(), "AcDb:Classes".into()],
-            sections: vec![
-                DwgSection {
-                    name: "AcDb:Header".into(),
-                    compressed: true,
-                    declared_size: 100,
-                    pages: vec![
-                        DwgSectionPage { page_number: 0, start_offset: 0x100, decompressed_size: 40, decoded: vec![1, 2, 3], error: None },
-                        DwgSectionPage { page_number: 1, start_offset: 0x140, decompressed_size: 30, decoded: Vec::new(), error: Some("bad crc".into()) },
-                    ],
+            drawing: DwgLogicalDrawing {
+                layers: vec![DwgLogicalLayer { name: "0".into(), color: 7 }],
+                objects: vec![DwgLogicalObject {
+                    handle: 1,
+                    type_code: 19,
+                    class_name: "LINE".into(),
+                    category: DwgObjectCategory::Entity,
+                    body: Some(DwgLogicalObjectBody::Entity(DwgEntityBody::Line(DwgLineEntity {
+                        common: DwgEntityCommon { linetype_scale: 1.0, lineweight: 29, ..Default::default() },
+                        start: vec![1.0, 2.0, 3.0],
+                        end: vec![4.0, 5.0, 6.0],
+                        thickness: 0.0,
+                        extrusion: vec![0.0, 0.0, 1.0],
+                    }))),
                     ..Default::default()
-                },
-                DwgSection {
-                    name: "AcDb:Classes".into(),
-                    compressed: false,
-                    declared_size: 50,
-                    pages: vec![DwgSectionPage { page_number: 0, start_offset: 0x200, decompressed_size: 50, decoded: vec![9], error: None }],
-                    ..Default::default()
-                },
-            ],
-            decode_status: crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::DwgDecodeStatus::SectionsLocated,
-            physical: Default::default(),
+                }],
+                ..Default::default()
+            },
+            ..Default::default()
         };
         let structure = compute_dwg_structure(&snapshot);
-        assert_eq!(structure.byte_count, 4);
-        assert_eq!(structure.section_count, 2);
-        assert_eq!(structure.page_count, 3);
-        assert_eq!(structure.decoded_page_count, 2);
-        assert_eq!(structure.error_page_count, 1);
-        assert_eq!(structure.declared_total_size, 150);
+        assert_eq!(structure.layer_count, 1);
+        assert_eq!(structure.entity_count, 1);
+        assert_eq!(structure.geometry_value_count, 6);
+        assert_eq!(structure.geometry_index_count, 0);
+        assert_eq!(structure.text_character_count, 0);
         assert_eq!(structure.codepage, 30);
         assert_eq!(structure.version, "AC1024");
     }
 
     #[test]
     fn inference_determinism_law() {
-        let snapshot = DwgSnapshot {
-            schema: "s.stdio.dwg".into(),
-            version: "AC1024".into(),
-            maintenance_version: 0,
-            codepage: 30,
-            drawing: Default::default(),
-            section_names: vec!["AcDb:Header".into()],
-            sections: vec![DwgSection {
-                name: "AcDb:Header".into(),
-                compressed: true,
-                declared_size: 10,
-                pages: vec![DwgSectionPage { page_number: 0, start_offset: 0, decompressed_size: 5, decoded: vec![1], error: None }],
-                ..Default::default()
-            }],
-            decode_status: crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::DwgDecodeStatus::SectionsDecompressed,
-            physical: Default::default(),
-        };
+        let snapshot = DwgSnapshot { schema: "s.stdio.dwg".into(), version: "AC1024".into(), codepage: 30, ..Default::default() };
         assert_eq!(compute_dwg_structure(&snapshot), compute_dwg_structure(&snapshot));
     }
 

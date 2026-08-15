@@ -10,10 +10,10 @@
 //! `Other{fourcc:"anim "}` marker -- this is a structurally-valid container capturing ONLY real
 //! timing, never a fabricated playable video, matching the ticket's "honest boundary" rule.
 
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::mp4::Mp4Snapshot;
 use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Track};
+use crate::artifacts::mp4::Mp4Snapshot;
 use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") };
@@ -48,9 +48,9 @@ impl ArtifactSerializer for SemioAnimationToMp4 {
         let tracks = if samples.is_empty() {
             Vec::new()
         } else {
-            vec![Mp4Track { track_id: 1, timescale: SYNTHETIC_TIMESCALE, codec: Mp4Codec::Other { fourcc: "anim".into(), raw: Vec::new() }, width: 0, height: 0, metadata: Default::default(), chunk_sample_counts: vec![samples.len() as u32], samples }]
+            vec![Mp4Track { track_id: 1, timescale: SYNTHETIC_TIMESCALE, codec: Mp4Codec::default(), width: 0, height: 0, metadata: Default::default(), chunk_sample_counts: vec![samples.len() as u32], samples }]
         };
-        Ok(Mp4Snapshot { schema: "stdio.mp4".into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: Vec::new() }, movie: Default::default(), tracks, unknown_boxes: Vec::new() })
+        Ok(Mp4Snapshot { schema: "stdio.mp4".into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: Vec::new() }, movie: Default::default(), tracks })
     }
 }
 
@@ -68,11 +68,7 @@ mod tests {
                 channels: vec![AnimChannel {
                     target: AnimTarget { node: "n".into(), property: AnimTargetProperty::Translation },
                     interpolation: AnimInterpolation::Linear,
-                    keyframes: vec![
-                        AnimKeyframe { t: 0.0, value: AnimValue::Scalar { value: 0.0 } },
-                        AnimKeyframe { t: 0.5, value: AnimValue::Scalar { value: 1.0 } },
-                        AnimKeyframe { t: 1.0, value: AnimValue::Scalar { value: 2.0 } },
-                    ],
+                    keyframes: vec![AnimKeyframe { t: 0.0, value: AnimValue::Scalar { value: 0.0 } }, AnimKeyframe { t: 0.5, value: AnimValue::Scalar { value: 1.0 } }, AnimKeyframe { t: 1.0, value: AnimValue::Scalar { value: 2.0 } }],
                 }],
             }],
         }

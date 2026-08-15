@@ -35,22 +35,12 @@ impl Default for TxtArtifact {
 impl TxtArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> TxtSnapshot {
-        TxtSnapshot {
-            schema: self.schema.clone(),
-            lines: self.lines.clone(),
-            trailing_newline: self.trailing_newline,
-            line_ending: self.line_ending,
-        }
+        TxtSnapshot { schema: self.schema.clone(), lines: self.lines.clone(), trailing_newline: self.trailing_newline, line_ending: self.line_ending }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: TxtSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            lines: snapshot.lines,
-            trailing_newline: snapshot.trailing_newline,
-            line_ending: snapshot.line_ending,
-        }
+        Self { schema: snapshot.schema, lines: snapshot.lines, trailing_newline: snapshot.trailing_newline, line_ending: snapshot.line_ending }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -101,8 +91,8 @@ pub fn txt_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::txt::{TxtDiff, TxtMutation, TxtSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.txt` snapshot.
@@ -137,7 +127,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -147,8 +141,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::txt::TxtSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.txt` parts.
@@ -198,22 +192,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <TxtSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -342,12 +328,7 @@ mod tests {
     /// for why a flat, unkeyed `Vec<String>` collection needs an asymmetric length to exercise
     /// `removed`/`added` at all.
     fn sweep_a() -> TxtSnapshot {
-        TxtSnapshot {
-            schema: STDIO_TXT_DOCUMENT_SCHEMA.into(),
-            lines: vec!["keep-me".into(), "modify-me".into()],
-            trailing_newline: false,
-            line_ending: LineEnding::Lf,
-        }
+        TxtSnapshot { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: vec!["keep-me".into(), "modify-me".into()], trailing_newline: false, line_ending: LineEnding::Lf }
     }
 
     /// 🧹 Canonical "every mutable field differs" snapshot B: one line unchanged (`keep-me`),
@@ -355,12 +336,7 @@ mod tests {
     /// (`added!`) that only exists because `sweep_b` is longer than `sweep_a`;
     /// `trailing_newline`/`line_ending` both flip.
     fn sweep_b() -> TxtSnapshot {
-        TxtSnapshot {
-            schema: STDIO_TXT_DOCUMENT_SCHEMA.into(),
-            lines: vec!["keep-me".into(), "modified!".into(), "added!".into()],
-            trailing_newline: true,
-            line_ending: LineEnding::CrLf,
-        }
+        TxtSnapshot { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: vec!["keep-me".into(), "modified!".into(), "added!".into()], trailing_newline: true, line_ending: LineEnding::CrLf }
     }
 
     /// 🧪️ `field_sweep`: THE acceptance criterion. `between` round-trips both directions, every

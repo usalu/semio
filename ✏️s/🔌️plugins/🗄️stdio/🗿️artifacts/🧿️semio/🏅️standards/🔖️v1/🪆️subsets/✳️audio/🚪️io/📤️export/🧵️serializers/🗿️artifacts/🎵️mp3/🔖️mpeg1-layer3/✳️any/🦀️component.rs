@@ -10,9 +10,9 @@
 //! `audio←mp3` (metadata + opaque payload) therefore has NO general inverse in this bridge --
 //! documented here, not silently pretended otherwise.
 
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use crate::artifacts::mp3::Mp3Snapshot;
 use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp3", standard: StandardId("mpeg1-layer3"), subset: SubsetId("*") };
@@ -38,7 +38,8 @@ impl ArtifactSerializer for SemioAudioToMp3 {
              frames (Huffman/MDCT psychoacoustic encoding); no MP3 encoder exists in this repository \
              and implementing one is out of scope for a snapshot-to-snapshot io bridge (zero codec \
              reimplementation) -- this is the honest mirror of mp3→audio's own opaque-payload boundary, \
-             not a bug".to_string(),
+             not a bug"
+                .to_string(),
         ))
     }
 }

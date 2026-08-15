@@ -8,12 +8,12 @@
 pub use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use dsl::{Diagnostic, Severity};
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlNode};
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxSnapshot, XlsxWorkbook};
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::{check_strict_conformance, STRICT_R_NS, STRICT_SML_NS};
     use crate::artifacts::xlsx::{XlsxDiff, XlsxMutation};
+    use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlNode};
+    use dsl::{Diagnostic, Severity};
+    use semio_framework_plugin::ArtifactBuilder;
 
     const WORKBOOK_PART: &str = "xl/workbook.xml";
     const WORKBOOK_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml";
@@ -139,12 +139,12 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
-    use semio_framework_plugin::{AnalyzeSource, Analysis, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
-    use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlNode};
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxSnapshot;
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::XlsxAnalyzer as XlsxAnyAnalyzer;
     pub use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::XlsxParts;
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxSnapshot;
+    use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlNode};
+    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("strict") };
@@ -198,12 +198,7 @@ pub mod derived_analysis {
             .parts
             .iter()
             .filter(|p| p.path.starts_with("xl/worksheets/") && p.path.ends_with(".xml") && p.content_type != WORKSHEET_CONTENT_TYPE)
-            .map(|p| {
-                soft(
-                    CODE_WORKSHEET_CONTENT_TYPE,
-                    format!("worksheet part {} resolves content type {:?}, expected {WORKSHEET_CONTENT_TYPE:?} (ECMA-376 Part 1 §12.3.24)", p.path, p.content_type),
-                )
-            })
+            .map(|p| soft(CODE_WORKSHEET_CONTENT_TYPE, format!("worksheet part {} resolves content type {:?}, expected {WORKSHEET_CONTENT_TYPE:?} (ECMA-376 Part 1 §12.3.24)", p.path, p.content_type)))
             .collect()
     }
 
@@ -222,20 +217,14 @@ pub mod derived_analysis {
             out.push(hard(CODE_NAMESPACE_MISMATCH, format!("{WORKBOOK_PART} root xmlns is {xmlns:?}, expected the Strict SpreadsheetML namespace {STRICT_SML_NS:?} (ISO/IEC 29500-1)")));
         }
         if xmlns_r.as_deref() != Some(STRICT_R_NS) {
-            out.push(hard(
-                CODE_RELATIONSHIPS_NAMESPACE_MISMATCH,
-                format!("{WORKBOOK_PART} root xmlns:r is {xmlns_r:?}, expected the Strict officeDocument relationships namespace {STRICT_R_NS:?}"),
-            ));
+            out.push(hard(CODE_RELATIONSHIPS_NAMESPACE_MISMATCH, format!("{WORKBOOK_PART} root xmlns:r is {xmlns_r:?}, expected the Strict officeDocument relationships namespace {STRICT_R_NS:?}")));
         }
         if conformance.as_deref() != Some("strict") {
             out.push(hard(CODE_CONFORMANCE_ATTRIBUTE, format!("{WORKBOOK_PART} workbook@conformance is {conformance:?}, expected \"strict\" (ISO/IEC 29500-1 §12.3.24)")));
         }
         for part in &snapshot.opc.parts {
             if part.content_type == VML_CONTENT_TYPE {
-                out.push(hard(
-                    CODE_VML_FORBIDDEN,
-                    format!("part {} declares legacy VML drawing content type {VML_CONTENT_TYPE:?} -- ISO/IEC 29500-1 Strict removes VML support entirely", part.path),
-                ));
+                out.push(hard(CODE_VML_FORBIDDEN, format!("part {} declares legacy VML drawing content type {VML_CONTENT_TYPE:?} -- ISO/IEC 29500-1 Strict removes VML support entirely", part.path)));
             }
         }
         out.extend(worksheet_content_type_gaps(snapshot));
@@ -290,16 +279,7 @@ pub mod derived_analysis {
             if let Some(c) = conformance {
                 attrs.push(attr("conformance", c));
             }
-            let doc = XmlDocument {
-                root: Some(XmlNode::Element {
-                    name: "workbook".into(),
-                    attrs,
-                    children: vec![XmlNode::Element { name: "sheets".into(), attrs: vec![], children: vec![] }],
-                }),
-                doctype: None,
-                declaration: None,
-                prolog: Vec::new(),
-            };
+            let doc = XmlDocument { root: Some(XmlNode::Element { name: "workbook".into(), attrs, children: vec![XmlNode::Element { name: "sheets".into(), attrs: vec![], children: vec![] }] }), doctype: None, declaration: None, prolog: Vec::new() };
             xml_document_to_text(&doc).into_bytes()
         }
 
@@ -318,11 +298,7 @@ pub mod derived_analysis {
 
         #[test]
         fn transitional_namespace_is_hard() {
-            let snapshot = snapshot_with_workbook(
-                "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
-                "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
-                Some("strict"),
-            );
+            let snapshot = snapshot_with_workbook("http://schemas.openxmlformats.org/spreadsheetml/2006/main", "http://schemas.openxmlformats.org/officeDocument/2006/relationships", Some("strict"));
             let diagnostics = check_strict_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_NAMESPACE_MISMATCH && d.severity == Severity::Error), "got {diagnostics:?}");
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_RELATIONSHIPS_NAMESPACE_MISMATCH && d.severity == Severity::Error), "got {diagnostics:?}");

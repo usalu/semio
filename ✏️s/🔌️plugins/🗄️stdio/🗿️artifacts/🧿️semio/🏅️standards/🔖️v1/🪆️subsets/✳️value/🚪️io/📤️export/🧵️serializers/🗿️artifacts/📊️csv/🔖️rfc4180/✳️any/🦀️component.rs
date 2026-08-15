@@ -16,10 +16,10 @@
 //!   `encode_csv` layer; only the "quoted even though not structurally required" bit the
 //!   deserializer never captured in the first place is what's absent here.
 
+use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
 use crate::artifacts::csv::CsvSnapshot;
 use crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA;
-use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{ValueId, SemioValueSnapshot, SemioValue};
+use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot, ValueId};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use std::collections::{HashMap, HashSet};
 
@@ -124,8 +124,8 @@ pub fn csv_from_semio(root: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::value::io::import::deserializers::artifacts::csv::v_rfc4180::any::semio_value_from_csv;
     use crate::artifacts::csv::schema::snapshot::CsvField as CsvFieldT;
+    use crate::artifacts::semio::standards::v1::subsets::value::io::import::deserializers::artifacts::csv::v_rfc4180::any::semio_value_from_csv;
 
     fn field(s: &str) -> CsvFieldT {
         CsvFieldT { value: s.into(), quoted: false }
@@ -145,11 +145,7 @@ mod tests {
         let snapshot = CsvSnapshot {
             schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),
             has_header: true,
-            records: vec![
-                CsvRecord { fields: vec![field("name"), field("age"), field("city")] },
-                CsvRecord { fields: vec![field("Ada"), field("36"), field("London")] },
-                CsvRecord { fields: vec![field("Grace"), field("85"), field("New York")] },
-            ],
+            records: vec![CsvRecord { fields: vec![field("name"), field("age"), field("city")] }, CsvRecord { fields: vec![field("Ada"), field("36"), field("London")] }, CsvRecord { fields: vec![field("Grace"), field("85"), field("New York")] }],
         };
         let s1 = semio_value_from_csv(&snapshot);
         let csv_x = round_trip(&snapshot);

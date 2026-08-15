@@ -1,5 +1,5 @@
-use crate::artifacts::dxf::{DxfSnapshot};
-use crate::artifacts::dxf::schema::mutations::{DxfMutation, apply_dxf_mutation};
+use crate::artifacts::dxf::schema::mutations::{apply_dxf_mutation, DxfMutation};
+use crate::artifacts::dxf::DxfSnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
 pub fn apply(projection: &mut DxfSnapshot, mutation: &DxfMutation) {

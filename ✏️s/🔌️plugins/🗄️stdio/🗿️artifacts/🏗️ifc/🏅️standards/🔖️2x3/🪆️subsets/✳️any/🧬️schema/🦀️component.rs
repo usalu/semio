@@ -86,10 +86,10 @@ pub fn ifc2x3_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::Ifc2x3Diff;
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     #[derive(Clone, Debug, Default)]
@@ -123,7 +123,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -133,8 +137,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.ifc.2x3` parts.
@@ -151,7 +155,11 @@ pub mod derived_analysis {
     fn sniff_text(body: &str) -> IoConfidence {
         let trimmed = body.trim_start();
         if trimmed.starts_with("ISO-10303-21") {
-            if trimmed.contains("IFC2X3") { IoConfidence::High } else { IoConfidence::Medium }
+            if trimmed.contains("IFC2X3") {
+                IoConfidence::High
+            } else {
+                IoConfidence::Medium
+            }
         } else {
             IoConfidence::Low
         }
@@ -187,14 +195,18 @@ pub mod derived_analysis {
             let mut confidence = IoConfidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match if text.trim_start().starts_with("ISO-10303-21") {
+                        crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(text.as_bytes()).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
+                    } else {
+                        <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)
+                    } {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
                             diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(bytes).map_err(store::PackError::Schema)) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
@@ -268,29 +280,25 @@ pub fn empty_ifc2x3_snapshot() -> Ifc2x3Snapshot {
 pub fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
     use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
     let document = Part21Document {
-            header: Part21Header {
-                file_description: vec![Part21Value::List(vec![]), Part21Value::Str("2;1".into())],
-                file_name: vec![
-                    Part21Value::Str("semio.ifc".into()),
-                    Part21Value::Str("2026-08-11T00:00:00".into()),
-                    Part21Value::List(vec![Part21Value::Str("Ueli".into())]),
-                    Part21Value::List(vec![Part21Value::Str("semio".into())]),
-                    Part21Value::Str("semio".into()),
-                    Part21Value::Str("".into()),
-                    Part21Value::Str("".into()),
-                ],
-                file_schema: vec![Part21Value::List(vec![Part21Value::Str("IFC2X3".into())])],
-            },
-            instances: vec![
-                Part21Instance { id: 1, entities: vec![("IFCPROJECT".into(), vec![Part21Value::Str("gid-project".into()), Part21Value::Ref(2), Part21Value::Str("Demo Project".into())])] },
-                Part21Instance { id: 2, entities: vec![("IFCOWNERHISTORY".into(), vec![Part21Value::Unset, Part21Value::Int(0)])] },
+        header: Part21Header {
+            file_description: vec![Part21Value::List(vec![]), Part21Value::Str("2;1".into())],
+            file_name: vec![
+                Part21Value::Str("semio.ifc".into()),
+                Part21Value::Str("2026-08-11T00:00:00".into()),
+                Part21Value::List(vec![Part21Value::Str("Ueli".into())]),
+                Part21Value::List(vec![Part21Value::Str("semio".into())]),
+                Part21Value::Str("semio".into()),
+                Part21Value::Str("".into()),
+                Part21Value::Str("".into()),
             ],
-        };
-    let snapshot = Ifc2x3Snapshot {
-        schema: crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA.into(),
-        document,
-        edm_preamble: None,
+            file_schema: vec![Part21Value::List(vec![Part21Value::Str("IFC2X3".into())])],
+        },
+        instances: vec![
+            Part21Instance { id: 1, entities: vec![("IFCPROJECT".into(), vec![Part21Value::Str("gid-project".into()), Part21Value::Ref(2), Part21Value::Str("Demo Project".into())])] },
+            Part21Instance { id: 2, entities: vec![("IFCOWNERHISTORY".into(), vec![Part21Value::Unset, Part21Value::Int(0)])] },
+        ],
     };
+    let snapshot = Ifc2x3Snapshot { schema: crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document, edm_preamble: None };
     snapshot
 }
 //#endregion 🔖️DocumentHelpers
@@ -312,9 +320,7 @@ pub fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
 /// calling it a second time here would be a redundant registration, same reasoning gif's
 /// `89a::engine::register` doc comment gives).
 pub fn register() {
-    ::schema::register_artifact_schema_descriptor(
-        crate::artifacts::ifc::standards::v2x3::subsets::any::schema::ifc2x3_artifact_schema_descriptor(),
-    );
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::ifc::standards::v2x3::subsets::any::schema::ifc2x3_artifact_schema_descriptor());
     register_artifact_inferences();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<Ifc2x3Snapshot, crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::Ifc2x3Mutation>(

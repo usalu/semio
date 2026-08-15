@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
-pub use crate::artifacts::avi::standards::v1_0::subsets::any::schema::AviArtifact;
 pub use crate::artifacts::avi::standards::v1_0::subsets::any::schema::diff::AviDiff;
 pub use crate::artifacts::avi::standards::v1_0::subsets::any::schema::mutations::AviMutation;
+pub use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
+pub use crate::artifacts::avi::standards::v1_0::subsets::any::schema::AviArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_AVI_DOCUMENT_SCHEMA: &str = "stdio.avi";
@@ -54,9 +54,9 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
 //#endregion 🔖️Declaration
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::avi::standards::v1_0::subsets::any::io::io_registry as std_composer;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -65,10 +65,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("AviComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("AviComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

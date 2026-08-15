@@ -1,16 +1,4 @@
 syntax = "proto3";
 package semio.s.stdio.dwg.ac1018.inference;
-
-// 💡️ Dwg (ac1018) inference schema — structural byte/section statistics over the undecoded raw payload.
-
-message DwgInference {
-  // @derived
-  DwgStructure structure = 1;
-}
-
-message DwgStructure {
-  uint32 byte_count = 1;
-  uint32 section_count = 2;
-  uint32 codepage = 3;
-  string version = 4;
-}
+message DwgInference { DwgStructure structure = 1; }
+message DwgStructure { uint32 layer_count = 1; uint32 entity_count = 2; uint32 geometry_value_count = 3; uint32 geometry_index_count = 4; uint32 text_character_count = 5; uint32 codepage = 6; string version = 7; }

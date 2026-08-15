@@ -71,10 +71,7 @@ mod tests {
 
     fn frame(mpeg_version_id: u8, layer: u8, sample_rate_index: u8, channel_mode: u8) -> Mp3Frame {
         Mp3Frame {
-            header: Mp3FrameHeader {
-                mpeg_version_id, layer, protection_bit: true, bitrate_index: 9, sample_rate_index,
-                padding: false, private_bit: false, channel_mode, mode_extension: 0, copyright: false, original: false, emphasis: 0,
-            },
+            header: Mp3FrameHeader { mpeg_version_id, layer, protection_bit: true, bitrate_index: 9, sample_rate_index, padding: false, private_bit: false, channel_mode, mode_extension: 0, copyright: false, original: false, emphasis: 0 },
             payload: Vec::new(),
         }
     }

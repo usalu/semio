@@ -12,10 +12,8 @@
 //!   (`key: "comment"`); every other `other_segments` entry (unrecognized APPn, etc.) has no
 //!   textual home on `SemioImageMetadataEntry` and is dropped.
 
-use crate::artifacts::jpg::{JpgSnapshot, schema::snapshot::JpgSegment};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{
-    SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA,
-};
+use crate::artifacts::jpg::{schema::snapshot::JpgSegment, JpgSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId::ANY };
@@ -38,12 +36,7 @@ impl ArtifactDeserializer for SemioImageFromJpg {
             return Err(store::PackError::Schema("jpg→semio/image: pixels length does not match width*height*4".into()));
         }
         let bit_depth = from.frame.as_ref().map(|f| f.precision).unwrap_or(8);
-        let metadata = from
-            .other_segments
-            .iter()
-            .filter(|s: &&JpgSegment| s.marker == COM_MARKER)
-            .map(|s| SemioImageMetadataEntry { key: "comment".into(), value: String::from_utf8_lossy(&s.data).into_owned() })
-            .collect();
+        let metadata = from.other_segments.iter().filter(|s: &&JpgSegment| s.marker == COM_MARKER).map(|s| SemioImageMetadataEntry { key: "comment".into(), value: String::from_utf8_lossy(&s.data).into_owned() }).collect();
         Ok(SemioImageSnapshot {
             schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
             width: from.width,
@@ -64,13 +57,7 @@ mod tests {
     use super::*;
 
     fn sample_jpg() -> JpgSnapshot {
-        JpgSnapshot {
-            width: 2,
-            height: 1,
-            pixels: vec![255, 0, 0, 255, 0, 255, 0, 255],
-            other_segments: vec![JpgSegment { marker: COM_MARKER, data: b"semio fixture".to_vec() }],
-            ..JpgSnapshot::default()
-        }
+        JpgSnapshot { width: 2, height: 1, pixels: vec![255, 0, 0, 255, 0, 255, 0, 255], other_segments: vec![JpgSegment { marker: COM_MARKER, data: b"semio fixture".to_vec() }], ..JpgSnapshot::default() }
     }
 
     #[test]

@@ -1,16 +1,15 @@
-# 💡️ Dwg (ac1024) inference schema — structural byte/section/page statistics over the real D1/D2 section-page decode.
+# 💡️ Dwg (ac1024) inference schema over logical drawing concepts.
 
 type DwgInference {
   structure: DwgStructure! @derived
 }
 
 type DwgStructure {
-  byteCount: Int!
-  sectionCount: Int!
-  pageCount: Int!
-  decodedPageCount: Int!
-  errorPageCount: Int!
-  declaredTotalSize: Float!
+  layerCount: Int!
+  entityCount: Int!
+  geometryValueCount: Int!
+  geometryIndexCount: Int!
+  textCharacterCount: Int!
   codepage: Int!
   version: String!
 }

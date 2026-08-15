@@ -4,8 +4,8 @@
 //! document with only a root element is depth 1, no root at all is depth 0); `hasDoctype` mirrors
 //! the snapshot's own `doctype` presence.
 
-use crate::artifacts::xml::XmlSnapshot;
 use crate::artifacts::xml::schema::snapshot::XmlNode;
+use crate::artifacts::xml::XmlSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
@@ -56,11 +56,7 @@ mod tests {
 
     #[test]
     fn counts_elements_and_depth_over_nested_structure() {
-        let root = XmlNode::Element {
-            name: "root".into(),
-            attrs: vec![],
-            children: vec![XmlNode::Element { name: "child".into(), attrs: vec![], children: vec![XmlNode::Text { text: "hi".into() }] }],
-        };
+        let root = XmlNode::Element { name: "root".into(), attrs: vec![], children: vec![XmlNode::Element { name: "child".into(), attrs: vec![], children: vec![XmlNode::Text { text: "hi".into() }] }] };
         let snapshot = XmlSnapshot { schema: "stdio.xml".into(), doc: XmlDocument { root: Some(root), doctype: Some("<!DOCTYPE root>".into()), declaration: None, prolog: Vec::new() } };
         let outline = XmlOutline::compute(&snapshot);
         assert_eq!(outline.element_count, 2);

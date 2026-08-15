@@ -44,9 +44,7 @@ pub fn compute_semio_animation_duration(snapshot: &SemioAnimationSnapshot) -> Se
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{
-        AnimChannel, AnimKeyframe, AnimTarget, AnimTimeline, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA,
-    };
+    use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimKeyframe, AnimTarget, AnimTimeline, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
 
     fn keyframe(t: f64) -> AnimKeyframe {
         AnimKeyframe { t, value: Default::default() }
@@ -62,10 +60,7 @@ mod tests {
 
     #[test]
     fn duration_is_the_latest_keyframe_across_every_channel() {
-        let snap = snapshot(vec![
-            AnimTimeline { name: None, channels: vec![channel(vec![keyframe(0.0), keyframe(1.5)])] },
-            AnimTimeline { name: None, channels: vec![channel(vec![keyframe(0.0), keyframe(3.25)]), channel(vec![keyframe(2.0)])] },
-        ]);
+        let snap = snapshot(vec![AnimTimeline { name: None, channels: vec![channel(vec![keyframe(0.0), keyframe(1.5)])] }, AnimTimeline { name: None, channels: vec![channel(vec![keyframe(0.0), keyframe(3.25)]), channel(vec![keyframe(2.0)])] }]);
         let duration = compute_semio_animation_duration(&snap);
         assert_eq!(duration, SemioAnimationDuration { duration_seconds: 3.25, timeline_count: 2, channel_count: 3, keyframe_count: 5 });
     }

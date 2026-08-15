@@ -10,13 +10,13 @@
 //! sibling `<g id="layer-<id>">`, so MULTIPLE layers DO survive, just not as anything SVG itself
 //! calls a layer); colors are emitted as `rgba(r,g,b,a)` (matches the import leaf's own parser).
 
-use crate::artifacts::svg::{
-    SvgSnapshot,
-    schema::snapshot::{CommonAttrs, Matrix2D, PathCommand, PresentationAttrs, SvgElement, TransformOp, ViewBox, svg_element_to_xml_node},
-};
-use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioRgba, SemioTransform};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
+use crate::artifacts::svg::{
+    schema::snapshot::{svg_element_to_xml_node, CommonAttrs, Matrix2D, PathCommand, PresentationAttrs, SvgElement, TransformOp, ViewBox},
+    SvgSnapshot,
+};
+use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
@@ -24,14 +24,16 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: 
 
 //#region 🔖️PathBuild
 fn segments_to_commands(segs: &[PathSegment]) -> Vec<PathCommand> {
-    segs.iter().map(|s| match *s {
-        PathSegment::MoveTo { to } => PathCommand::MoveTo { x: to.x, y: to.y, relative: false },
-        PathSegment::LineTo { to } => PathCommand::LineTo { x: to.x, y: to.y, relative: false },
-        PathSegment::CubicTo { c1, c2, to } => PathCommand::CurveTo { x1: c1.x, y1: c1.y, x2: c2.x, y2: c2.y, x: to.x, y: to.y, relative: false },
-        PathSegment::QuadTo { c, to } => PathCommand::QuadraticCurveTo { x1: c.x, y1: c.y, x: to.x, y: to.y, relative: false },
-        PathSegment::ArcTo { rx, ry, x_rotation, large_arc, sweep, to } => PathCommand::Arc { rx, ry, x_axis_rotation: x_rotation, large_arc, sweep, x: to.x, y: to.y, relative: false },
-        PathSegment::Close => PathCommand::ClosePath,
-    }).collect()
+    segs.iter()
+        .map(|s| match *s {
+            PathSegment::MoveTo { to } => PathCommand::MoveTo { x: to.x, y: to.y, relative: false },
+            PathSegment::LineTo { to } => PathCommand::LineTo { x: to.x, y: to.y, relative: false },
+            PathSegment::CubicTo { c1, c2, to } => PathCommand::CurveTo { x1: c1.x, y1: c1.y, x2: c2.x, y2: c2.y, x: to.x, y: to.y, relative: false },
+            PathSegment::QuadTo { c, to } => PathCommand::QuadraticCurveTo { x1: c.x, y1: c.y, x: to.x, y: to.y, relative: false },
+            PathSegment::ArcTo { rx, ry, x_rotation, large_arc, sweep, to } => PathCommand::Arc { rx, ry, x_axis_rotation: x_rotation, large_arc, sweep, x: to.x, y: to.y, relative: false },
+            PathSegment::Close => PathCommand::ClosePath,
+        })
+        .collect()
 }
 //#endregion 🔖️PathBuild
 
@@ -53,10 +55,18 @@ fn style_to_common(style_name: Option<&str>, styles: &[DrawStyle]) -> CommonAttr
     if let Some(name) = style_name {
         if let Some(s) = styles.iter().find(|s| s.name == name) {
             let mut p = PresentationAttrs::default();
-            if let Some(fill) = &s.fill { p.fill = Some(color_to_css(fill)); }
-            if let Some(stroke) = &s.stroke { p.stroke = Some(color_to_css(stroke)); }
-            if let Some(sw) = s.stroke_width { p.stroke_width = Some(sw.to_string()); }
-            if let Some(op) = s.opacity { p.opacity = Some(op.to_string()); }
+            if let Some(fill) = &s.fill {
+                p.fill = Some(color_to_css(fill));
+            }
+            if let Some(stroke) = &s.stroke {
+                p.stroke = Some(color_to_css(stroke));
+            }
+            if let Some(sw) = s.stroke_width {
+                p.stroke_width = Some(sw.to_string());
+            }
+            if let Some(op) = s.opacity {
+                p.opacity = Some(op.to_string());
+            }
             common.presentation = p;
         }
     }
@@ -139,10 +149,7 @@ impl ArtifactSerializer for SemioDrawingToSvg {
             xmlns: Some("http://www.w3.org/2000/svg".into()),
             children: layer_groups,
         };
-        Ok(SvgSnapshot {
-            schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(),
-            doc: XmlDocument { root: Some(svg_element_to_xml_node(&root)), doctype: None, declaration: None, prolog: Vec::new() },
-        })
+        Ok(SvgSnapshot { schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(svg_element_to_xml_node(&root)), doctype: None, declaration: None, prolog: Vec::new() } })
     }
 }
 //#endregion 🔖️Serializer
@@ -193,8 +200,14 @@ mod tests {
         let drawing = sample_drawing();
         let svg = SemioDrawingToSvg::serialize(&drawing).expect("serialize");
         let root = crate::artifacts::svg::schema::snapshot::svg_element_from_xml_node(svg.doc.root.as_ref().unwrap()).expect("typed view");
-        let layer_group = match &root { SvgElement::Svg { children, .. } => &children[0], _ => panic!("expected svg root") };
-        let image_el = match layer_group { SvgElement::Group { children, .. } => &children[1], _ => panic!("expected layer group") };
+        let layer_group = match &root {
+            SvgElement::Svg { children, .. } => &children[0],
+            _ => panic!("expected svg root"),
+        };
+        let image_el = match layer_group {
+            SvgElement::Group { children, .. } => &children[1],
+            _ => panic!("expected layer group"),
+        };
         match image_el {
             SvgElement::Unknown { name, attrs, .. } => {
                 assert_eq!(name, "image");

@@ -1,11 +1,11 @@
 //! 🧬️ MdMutation — document mutation dispatch. Every variant's `diff()` is handcrafted (never
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, path/index-aware.
 
-use crate::artifacts::md::schema::diff::{diff_at_path, diff_set_snapshot, MdBlockDiff, MdBlocksLeafDiff, MdDiff};
-pub use crate::artifacts::md::schema::diff::MdPathStep;
 use crate::artifacts::md::schema::diff::navigate_container;
+pub use crate::artifacts::md::schema::diff::MdPathStep;
 use crate::artifacts::md::schema::diff::{dec_block, dec_block_list, dec_inline_list, dec_str, enc_block, enc_block_list, enc_inline_list, enc_str, parse_usize, split_top_level, strip_brackets};
 use crate::artifacts::md::schema::diff::{dec_block_bin, dec_block_list_bin, dec_inline_list_bin, enc_block_bin, enc_block_list_bin, enc_inline_list_bin, read_str_bin, write_str_bin};
+use crate::artifacts::md::schema::diff::{diff_at_path, diff_set_snapshot, MdBlockDiff, MdBlocksLeafDiff, MdDiff};
 use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
 use crate::artifacts::md::MdSnapshot;
 use protocol::{Mutation, OpText};
@@ -84,24 +84,12 @@ impl Mutation<MdSnapshot> for MdMutation {
             MdMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             MdMutation::InsertBlock { path, index, block } => diff_at_path(path, *index, MdBlocksLeafDiff::Added(block.clone())),
             MdMutation::RemoveBlock { path, index } => diff_at_path(path, *index, MdBlocksLeafDiff::Removed),
-            MdMutation::ReplaceBlock { path, index, block } => {
-                diff_at_path(path, *index, MdBlocksLeafDiff::Modified(MdBlockDiff::Replace { block: block.clone() }))
-            }
-            MdMutation::SetInlines { path, index, inlines } => {
-                match navigate_container(&base.blocks, path).and_then(|c| c.get(*index)) {
-                    Some(MdBlock::Heading { .. }) => diff_at_path(
-                        path,
-                        *index,
-                        MdBlocksLeafDiff::Modified(MdBlockDiff::Heading { level: None, inlines: Some(inlines.clone()) }),
-                    ),
-                    Some(MdBlock::Paragraph { .. }) => diff_at_path(
-                        path,
-                        *index,
-                        MdBlocksLeafDiff::Modified(MdBlockDiff::Paragraph { inlines: Some(inlines.clone()) }),
-                    ),
-                    _ => MdDiff::default(),
-                }
-            }
+            MdMutation::ReplaceBlock { path, index, block } => diff_at_path(path, *index, MdBlocksLeafDiff::Modified(MdBlockDiff::Replace { block: block.clone() })),
+            MdMutation::SetInlines { path, index, inlines } => match navigate_container(&base.blocks, path).and_then(|c| c.get(*index)) {
+                Some(MdBlock::Heading { .. }) => diff_at_path(path, *index, MdBlocksLeafDiff::Modified(MdBlockDiff::Heading { level: None, inlines: Some(inlines.clone()) })),
+                Some(MdBlock::Paragraph { .. }) => diff_at_path(path, *index, MdBlocksLeafDiff::Modified(MdBlockDiff::Paragraph { inlines: Some(inlines.clone()) })),
+                _ => MdDiff::default(),
+            },
         }
     }
 
@@ -110,18 +98,14 @@ impl Mutation<MdSnapshot> for MdMutation {
             MdMutation::NoMutation => vec![MdMutation::NoMutation],
             MdMutation::SetSnapshot { .. } => vec![MdMutation::SetSnapshot { snapshot: base.clone() }],
             MdMutation::InsertBlock { path, index, .. } => vec![MdMutation::RemoveBlock { path: path.clone(), index: *index }],
-            MdMutation::RemoveBlock { path, index } => {
-                match navigate_container(&base.blocks, path).and_then(|c| c.get(*index)).cloned() {
-                    Some(block) => vec![MdMutation::InsertBlock { path: path.clone(), index: *index, block }],
-                    None => vec![MdMutation::NoMutation],
-                }
-            }
-            MdMutation::ReplaceBlock { path, index, .. } => {
-                match navigate_container(&base.blocks, path).and_then(|c| c.get(*index)).cloned() {
-                    Some(block) => vec![MdMutation::ReplaceBlock { path: path.clone(), index: *index, block }],
-                    None => vec![MdMutation::NoMutation],
-                }
-            }
+            MdMutation::RemoveBlock { path, index } => match navigate_container(&base.blocks, path).and_then(|c| c.get(*index)).cloned() {
+                Some(block) => vec![MdMutation::InsertBlock { path: path.clone(), index: *index, block }],
+                None => vec![MdMutation::NoMutation],
+            },
+            MdMutation::ReplaceBlock { path, index, .. } => match navigate_container(&base.blocks, path).and_then(|c| c.get(*index)).cloned() {
+                Some(block) => vec![MdMutation::ReplaceBlock { path: path.clone(), index: *index, block }],
+                None => vec![MdMutation::NoMutation],
+            },
             MdMutation::SetInlines { path, index, .. } => {
                 let original = match navigate_container(&base.blocks, path).and_then(|c| c.get(*index)) {
                     Some(MdBlock::Heading { inlines, .. }) => Some(inlines.clone()),
@@ -196,13 +180,7 @@ fn parse_md_mutation(line: &str) -> Result<MdMutation, String> {
         return Ok(MdMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("md mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("md mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("md mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
@@ -368,19 +346,8 @@ impl protocol::OpBinary for MdMutation {
 /// conformance tests, so a new variant only needs adding here once.
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<MdMutation> {
-    let base = MdSnapshot {
-        schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(),
-        blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "hi".into() }] }],
-    };
-    let list_block = MdBlock::List {
-        ordered: true,
-        start: Some(2),
-        tight: false,
-        items: vec![
-            vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "one".into() }] }],
-            vec![MdBlock::BlockQuote { blocks: vec![MdBlock::ThematicBreak] }],
-        ],
-    };
+    let base = MdSnapshot { schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "hi".into() }] }] };
+    let list_block = MdBlock::List { ordered: true, start: Some(2), tight: false, items: vec![vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "one".into() }] }], vec![MdBlock::BlockQuote { blocks: vec![MdBlock::ThematicBreak] }]] };
     vec![
         MdMutation::NoMutation,
         MdMutation::SetSnapshot { snapshot: base },

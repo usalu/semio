@@ -1,7 +1,14 @@
 # 🧬️ Ifc2x3Snapshot
+enum Part21ValueKind { REF STR ENUM INT REAL LIST TYPED UNSET DERIVED }
+type Part21Decimal { negative: Boolean! coefficient: String! scale: Int! exponent: Int }
+type Part21Value { kind: Part21ValueKind! refValue: Float stringValue: String intValue: Float realValue: Part21Decimal values: [Part21Value!] typeName: String }
+type Part21Entity { typeName: String! arguments: [Part21Value!]! }
+type Part21Instance { id: Float! entities: [Part21Entity!]! }
+type Part21Header { fileDescription: [Part21Value!]! fileName: [Part21Value!]! fileSchema: [Part21Value!]! }
+type Part21Document { header: Part21Header! instances: [Part21Instance!]! }
 type Ifc2x3EdmPreamble { producer: String! module: String! creationDate: String! host: String! database: String! databaseVersion: String! databaseCreationDate: String! schema: String! model: String! modelCreationDate: String! headerModel: String! headerModelCreationDate: String! user: String! group: String! license: String! options: String! }
 type Ifc2x3Snapshot {
   schema: String! @state(class: ARTIFACT)
-  document: Bytes! @state(class: ARTIFACT)
+  document: Part21Document! @state(class: ARTIFACT)
   edmPreamble: Ifc2x3EdmPreamble @state(class: ARTIFACT)
 }

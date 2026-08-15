@@ -1,7 +1,7 @@
 //! 🧬️ SemioMeshArtifact schema — full artifact state, mirrors `SemioMeshSnapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioMesh, SemioMaterial, SemioTexture};
+use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioTexture};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -23,25 +23,17 @@ pub struct SemioMeshArtifact {
 }
 
 impl Default for SemioMeshArtifact {
-    fn default() -> Self { Self::from_snapshot(SemioMeshSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(SemioMeshSnapshot::default())
+    }
 }
 
 impl SemioMeshArtifact {
     pub fn to_snapshot(&self) -> SemioMeshSnapshot {
-        SemioMeshSnapshot {
-            schema: self.schema.clone(),
-            meshes: self.meshes.clone(),
-            materials: self.materials.clone(),
-            textures: self.textures.clone(),
-        }
+        SemioMeshSnapshot { schema: self.schema.clone(), meshes: self.meshes.clone(), materials: self.materials.clone(), textures: self.textures.clone() }
     }
     pub fn from_snapshot(snapshot: SemioMeshSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            meshes: snapshot.meshes,
-            materials: snapshot.materials,
-            textures: snapshot.textures,
-        }
+        Self { schema: snapshot.schema, meshes: snapshot.meshes, materials: snapshot.materials, textures: snapshot.textures }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioMeshSnapshot) {
         self.schema = snapshot.schema;
@@ -86,20 +78,26 @@ pub fn semio_mesh_artifact_schema_descriptor() -> schema::ArtifactSchemaDescript
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioMeshBuilderConstruction { snapshot: SemioMeshSnapshot }
+    pub struct SemioMeshBuilderConstruction {
+        snapshot: SemioMeshSnapshot,
+    }
 
     impl ArtifactBuilder for SemioMeshBuilderConstruction {
         type Snapshot = SemioMeshSnapshot;
         type Mutation = SemioMeshMutation;
         type Diff = SemioMeshDiff;
-        fn empty() -> Self { Self { snapshot: SemioMeshSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: SemioMeshSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -115,7 +113,9 @@ pub mod derived_construction {
             self.snapshot = <SemioMeshDiff as protocol::MutationDiff<SemioMeshSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 }
 pub use derived_construction::*;
@@ -123,11 +123,13 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioMeshParts { pub snapshot: Option<SemioMeshSnapshot> }
+    pub struct SemioMeshParts {
+        pub snapshot: Option<SemioMeshSnapshot>,
+    }
 
     pub struct SemioMeshAnalyzerAnalysis;
 
@@ -139,10 +141,18 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOMESH_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
-                    if text.contains(STDIO_SEMIOMESH_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                    if text.contains(STDIO_SEMIOMESH_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }

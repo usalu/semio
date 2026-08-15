@@ -71,12 +71,7 @@ impl store::InferredField<SemioTableSnapshot> for ColumnMoments {
     }
 
     fn plan(snapshot: &SemioTableSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
-        snapshot
-            .columns
-            .iter()
-            .filter(|c| matches!(c.kind, SemioTableCellKind::Int | SemioTableCellKind::Float))
-            .map(|c| store::InferenceStep { key: c.name.clone(), parents: Vec::new() })
-            .collect()
+        snapshot.columns.iter().filter(|c| matches!(c.kind, SemioTableCellKind::Int | SemioTableCellKind::Float)).map(|c| store::InferenceStep { key: c.name.clone(), parents: Vec::new() }).collect()
     }
 
     /// 🔑 Canonical dependency-input bytes — EXACTLY this column's own numeric cell values, nothing
@@ -107,11 +102,7 @@ mod tests {
     fn two_numeric_column_snapshot() -> SemioTableSnapshot {
         SemioTableSnapshot {
             schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
-            columns: vec![
-                SemioTableColumn { name: "score".into(), kind: SemioTableCellKind::Float },
-                SemioTableColumn { name: "count".into(), kind: SemioTableCellKind::Int },
-                SemioTableColumn { name: "label".into(), kind: SemioTableCellKind::Str },
-            ],
+            columns: vec![SemioTableColumn { name: "score".into(), kind: SemioTableCellKind::Float }, SemioTableColumn { name: "count".into(), kind: SemioTableCellKind::Int }, SemioTableColumn { name: "label".into(), kind: SemioTableCellKind::Str }],
             rows: vec![
                 SemioTableRow { cells: vec![SemioValue::Float { lexeme: "1.0".into() }, SemioValue::Int { lexeme: "10".into() }, SemioValue::Str { value: "a".into() }] },
                 SemioTableRow { cells: vec![SemioValue::Float { lexeme: "2.0".into() }, SemioValue::Int { lexeme: "20".into() }, SemioValue::Str { value: "b".into() }] },

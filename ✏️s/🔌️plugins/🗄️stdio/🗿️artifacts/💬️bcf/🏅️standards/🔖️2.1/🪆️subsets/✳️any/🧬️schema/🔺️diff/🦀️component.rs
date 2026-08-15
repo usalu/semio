@@ -35,7 +35,9 @@ pub struct NamedTripleDiff<K, D, T> {
 }
 
 impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
-    fn default() -> Self { Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() } }
+    fn default() -> Self {
+        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -71,7 +73,11 @@ where
             added.push(o.clone());
         }
     }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(NamedTripleDiff { removed, modified, added }) }
+    if removed.is_empty() && modified.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(NamedTripleDiff { removed, modified, added })
+    }
 }
 
 fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
@@ -114,13 +120,7 @@ where
 /// 🧮️ Name-keyed absorb — identity is the KEY (not position): a `d2`-removal of a `d1`-added key
 /// annihilates the add; a `d2`-modify of a `d1`-added key patches into the carried payload;
 /// everything else composes directly on the shared key space.
-fn absorb_named<K, T, D>(
-    d1: NamedTripleDiff<K, D, T>,
-    d2: NamedTripleDiff<K, D, T>,
-    key_of: impl Fn(&T) -> K,
-    absorb_item: impl Fn(D, D) -> D,
-    apply_item: impl Fn(&mut T, &D),
-) -> NamedTripleDiff<K, D, T>
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -266,27 +266,17 @@ pub struct BcfPartDiff {
 /// docx's `wrap_body_diff`, specialized to this artifact's fixed two-level guid nesting instead of
 /// a generic path — bcf's tree never grows deeper than topic -> {comment,viewpoint}).
 pub fn wrap_topic_diff(guid: &str, diff: BcfTopicDiff) -> BcfDiff {
-    BcfDiff {
-        version: None,
-        topics: Some(BcfTopicsDiff { removed: Vec::new(), modified: vec![NamedModified { key: guid.to_string(), diff }], added: Vec::new() }),
-        parts: None,
-    }
+    BcfDiff { version: None, topics: Some(BcfTopicsDiff { removed: Vec::new(), modified: vec![NamedModified { key: guid.to_string(), diff }], added: Vec::new() }), parts: None }
 }
 
 /// 🧭️ Lowers a per-comment leaf diff (inside topic `topic_guid`) into a full `BcfDiff`.
 pub fn wrap_comment_diff(topic_guid: &str, comment_guid: &str, diff: BcfCommentDiff) -> BcfDiff {
-    wrap_topic_diff(topic_guid, BcfTopicDiff {
-        comments: Some(BcfCommentsDiff { removed: Vec::new(), modified: vec![NamedModified { key: comment_guid.to_string(), diff }], added: Vec::new() }),
-        ..Default::default()
-    })
+    wrap_topic_diff(topic_guid, BcfTopicDiff { comments: Some(BcfCommentsDiff { removed: Vec::new(), modified: vec![NamedModified { key: comment_guid.to_string(), diff }], added: Vec::new() }), ..Default::default() })
 }
 
 /// 🧭️ Lowers a per-viewpoint leaf diff (inside topic `topic_guid`) into a full `BcfDiff`.
 pub fn wrap_viewpoint_diff(topic_guid: &str, viewpoint_guid: &str, diff: BcfViewpointDiff) -> BcfDiff {
-    wrap_topic_diff(topic_guid, BcfTopicDiff {
-        viewpoints: Some(BcfViewpointsDiff { removed: Vec::new(), modified: vec![NamedModified { key: viewpoint_guid.to_string(), diff }], added: Vec::new() }),
-        ..Default::default()
-    })
+    wrap_topic_diff(topic_guid, BcfTopicDiff { viewpoints: Some(BcfViewpointsDiff { removed: Vec::new(), modified: vec![NamedModified { key: viewpoint_guid.to_string(), diff }], added: Vec::new() }), ..Default::default() })
 }
 //#endregion 🔖️WrapHelpers
 
@@ -324,13 +314,27 @@ impl MutationDiff<BcfSnapshot> for BcfDiff {
 }
 
 fn apply_topic(topic: &mut BcfTopic, diff: &BcfTopicDiff) {
-    if let Some(v) = &diff.title { topic.title = v.clone(); }
-    if let Some(v) = &diff.description { topic.description = v.clone(); }
-    if let Some(v) = &diff.status { topic.status = v.clone(); }
-    if let Some(v) = &diff.priority { topic.priority = v.clone(); }
-    if let Some(v) = &diff.labels { topic.labels = v.clone(); }
-    if let Some(v) = &diff.creation_date { topic.creation_date = v.clone(); }
-    if let Some(v) = &diff.creation_author { topic.creation_author = v.clone(); }
+    if let Some(v) = &diff.title {
+        topic.title = v.clone();
+    }
+    if let Some(v) = &diff.description {
+        topic.description = v.clone();
+    }
+    if let Some(v) = &diff.status {
+        topic.status = v.clone();
+    }
+    if let Some(v) = &diff.priority {
+        topic.priority = v.clone();
+    }
+    if let Some(v) = &diff.labels {
+        topic.labels = v.clone();
+    }
+    if let Some(v) = &diff.creation_date {
+        topic.creation_date = v.clone();
+    }
+    if let Some(v) = &diff.creation_author {
+        topic.creation_author = v.clone();
+    }
     if let Some(cd) = &diff.comments {
         apply_named(&mut topic.comments, cd, |c| c.guid.clone(), apply_comment);
     }
@@ -340,20 +344,36 @@ fn apply_topic(topic: &mut BcfTopic, diff: &BcfTopicDiff) {
 }
 
 fn apply_comment(comment: &mut BcfComment, diff: &BcfCommentDiff) {
-    if let Some(v) = &diff.date { comment.date = v.clone(); }
-    if let Some(v) = &diff.author { comment.author = v.clone(); }
-    if let Some(v) = &diff.text { comment.text = v.clone(); }
-    if let Some(v) = &diff.viewpoint_ref { comment.viewpoint_ref = v.clone(); }
+    if let Some(v) = &diff.date {
+        comment.date = v.clone();
+    }
+    if let Some(v) = &diff.author {
+        comment.author = v.clone();
+    }
+    if let Some(v) = &diff.text {
+        comment.text = v.clone();
+    }
+    if let Some(v) = &diff.viewpoint_ref {
+        comment.viewpoint_ref = v.clone();
+    }
 }
 
 fn apply_viewpoint(vp: &mut BcfViewpoint, diff: &BcfViewpointDiff) {
-    if let Some(v) = &diff.camera { vp.camera = v.clone(); }
-    if let Some(v) = &diff.components { vp.components = v.clone(); }
-    if let Some(v) = &diff.snapshot { vp.snapshot = v.clone(); }
+    if let Some(v) = &diff.camera {
+        vp.camera = v.clone();
+    }
+    if let Some(v) = &diff.components {
+        vp.components = v.clone();
+    }
+    if let Some(v) = &diff.snapshot {
+        vp.snapshot = v.clone();
+    }
 }
 
 fn apply_part(part: &mut BcfRawPart, diff: &BcfPartDiff) {
-    if let Some(v) = &diff.data { part.data = v.clone(); }
+    if let Some(v) = &diff.data {
+        part.data = v.clone();
+    }
 }
 //#endregion 🔖️Apply
 
@@ -404,11 +424,7 @@ fn inverse_comment(base: &BcfComment, diff: &BcfCommentDiff) -> BcfCommentDiff {
 }
 
 fn inverse_viewpoint(base: &BcfViewpoint, diff: &BcfViewpointDiff) -> BcfViewpointDiff {
-    BcfViewpointDiff {
-        camera: diff.camera.as_ref().map(|_| base.camera.clone()),
-        components: diff.components.as_ref().map(|_| base.components.clone()),
-        snapshot: diff.snapshot.as_ref().map(|_| base.snapshot.clone()),
-    }
+    BcfViewpointDiff { camera: diff.camera.as_ref().map(|_| base.camera.clone()), components: diff.components.as_ref().map(|_| base.components.clone()), snapshot: diff.snapshot.as_ref().map(|_| base.snapshot.clone()) }
 }
 
 fn inverse_part(base: &BcfRawPart, diff: &BcfPartDiff) -> BcfPartDiff {
@@ -425,9 +441,7 @@ fn between_topic(base: &BcfTopic, other: &BcfTopic) -> Option<BcfTopicDiff> {
     let creation_author = if base.creation_author != other.creation_author { Some(other.creation_author.clone()) } else { None };
     let comments = between_named(&base.comments, &other.comments, |c| c.guid.clone(), between_comment);
     let viewpoints = between_named(&base.viewpoints, &other.viewpoints, |v| v.guid.clone(), between_viewpoint);
-    if title.is_none() && description.is_none() && status.is_none() && priority.is_none() && labels.is_none()
-        && creation_date.is_none() && creation_author.is_none() && comments.is_none() && viewpoints.is_none()
-    {
+    if title.is_none() && description.is_none() && status.is_none() && priority.is_none() && labels.is_none() && creation_date.is_none() && creation_author.is_none() && comments.is_none() && viewpoints.is_none() {
         None
     } else {
         Some(BcfTopicDiff { title, description, status, priority, labels, creation_date, creation_author, comments, viewpoints })
@@ -458,17 +472,35 @@ fn between_viewpoint(base: &BcfViewpoint, other: &BcfViewpoint) -> Option<BcfVie
 }
 
 fn between_part(base: &BcfRawPart, other: &BcfRawPart) -> Option<BcfPartDiff> {
-    if base.data != other.data { Some(BcfPartDiff { data: Some(other.data.clone()) }) } else { None }
+    if base.data != other.data {
+        Some(BcfPartDiff { data: Some(other.data.clone()) })
+    } else {
+        None
+    }
 }
 
 fn absorb_topic_diff(mut a: BcfTopicDiff, b: BcfTopicDiff) -> BcfTopicDiff {
-    if b.title.is_some() { a.title = b.title; }
-    if b.description.is_some() { a.description = b.description; }
-    if b.status.is_some() { a.status = b.status; }
-    if b.priority.is_some() { a.priority = b.priority; }
-    if b.labels.is_some() { a.labels = b.labels; }
-    if b.creation_date.is_some() { a.creation_date = b.creation_date; }
-    if b.creation_author.is_some() { a.creation_author = b.creation_author; }
+    if b.title.is_some() {
+        a.title = b.title;
+    }
+    if b.description.is_some() {
+        a.description = b.description;
+    }
+    if b.status.is_some() {
+        a.status = b.status;
+    }
+    if b.priority.is_some() {
+        a.priority = b.priority;
+    }
+    if b.labels.is_some() {
+        a.labels = b.labels;
+    }
+    if b.creation_date.is_some() {
+        a.creation_date = b.creation_date;
+    }
+    if b.creation_author.is_some() {
+        a.creation_author = b.creation_author;
+    }
     a.comments = match (a.comments.take(), b.comments) {
         (None, x) => x,
         (x, None) => x,
@@ -483,22 +515,38 @@ fn absorb_topic_diff(mut a: BcfTopicDiff, b: BcfTopicDiff) -> BcfTopicDiff {
 }
 
 fn absorb_comment_diff(mut a: BcfCommentDiff, b: BcfCommentDiff) -> BcfCommentDiff {
-    if b.date.is_some() { a.date = b.date; }
-    if b.author.is_some() { a.author = b.author; }
-    if b.text.is_some() { a.text = b.text; }
-    if b.viewpoint_ref.is_some() { a.viewpoint_ref = b.viewpoint_ref; }
+    if b.date.is_some() {
+        a.date = b.date;
+    }
+    if b.author.is_some() {
+        a.author = b.author;
+    }
+    if b.text.is_some() {
+        a.text = b.text;
+    }
+    if b.viewpoint_ref.is_some() {
+        a.viewpoint_ref = b.viewpoint_ref;
+    }
     a
 }
 
 fn absorb_viewpoint_diff(mut a: BcfViewpointDiff, b: BcfViewpointDiff) -> BcfViewpointDiff {
-    if b.camera.is_some() { a.camera = b.camera; }
-    if b.components.is_some() { a.components = b.components; }
-    if b.snapshot.is_some() { a.snapshot = b.snapshot; }
+    if b.camera.is_some() {
+        a.camera = b.camera;
+    }
+    if b.components.is_some() {
+        a.components = b.components;
+    }
+    if b.snapshot.is_some() {
+        a.snapshot = b.snapshot;
+    }
     a
 }
 
 fn absorb_part_diff(mut a: BcfPartDiff, b: BcfPartDiff) -> BcfPartDiff {
-    if b.data.is_some() { a.data = b.data; }
+    if b.data.is_some() {
+        a.data = b.data;
+    }
     a
 }
 //#endregion 🔖️DiffAlgebra
@@ -604,30 +652,24 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 /// list; `modified` entries are `key:diff` (colon-separated, unambiguous because every key here is
 /// hex-encoded and hex never contains `:`). Written once, generically, and instantiated per
 /// collection (`topics`/`comments`/`viewpoints`/`parts`) below.
-pub(crate) fn enc_named_triple<K, D, T>(
-    triple: &NamedTripleDiff<K, D, T>,
-    enc_k: impl Fn(&K) -> String,
-    enc_d: impl Fn(&D) -> String,
-    enc_t: impl Fn(&T) -> String,
-) -> String {
+pub(crate) fn enc_named_triple<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K) -> String, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
     let removed = triple.removed.iter().map(|k| enc_k(k)).collect::<Vec<_>>().join(",");
     let modified = triple.modified.iter().map(|m| format!("{}:{}", enc_k(&m.key), enc_d(&m.diff))).collect::<Vec<_>>().join(",");
     let added = triple.added.iter().map(|t| enc_t(t)).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-pub(crate) fn dec_named_triple<K, D, T>(
-    s: &str,
-    dec_k: impl Fn(&str) -> Result<K, String>,
-    dec_d: impl Fn(&str) -> Result<D, String>,
-    dec_t: impl Fn(&str) -> Result<T, String>,
-) -> Result<NamedTripleDiff<K, D, T>, String> {
+pub(crate) fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
     let three = split_top_level(s, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_k(e)).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (k, rest) = entry.split_once(':').ok_or_else(|| format!("named triple modified: bad entry {entry:?}"))?;
-        Ok(NamedModified { key: dec_k(k)?, diff: dec_d(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (k, rest) = entry.split_once(':').ok_or_else(|| format!("named triple modified: bad entry {entry:?}"))?;
+            Ok(NamedModified { key: dec_k(k)?, diff: dec_d(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_t(e)).collect::<Result<Vec<_>, String>>()?;
     Ok(NamedTripleDiff { removed, modified, added })
 }
@@ -696,11 +738,7 @@ pub(crate) fn dec_components(s: &str) -> Result<BcfComponents, String> {
 }
 
 pub(crate) fn enc_comment(c: &BcfComment) -> String {
-    format!(
-        "[{},{},{},{},{}]",
-        enc_str(&c.guid), enc_str(&c.date), enc_str(&c.author), enc_str(&c.text),
-        encode_option(&c.viewpoint_ref, |v: &String| enc_str(v)),
-    )
+    format!("[{},{},{},{},{}]", enc_str(&c.guid), enc_str(&c.date), enc_str(&c.author), enc_str(&c.text), encode_option(&c.viewpoint_ref, |v: &String| enc_str(v)),)
 }
 pub(crate) fn dec_comment(s: &str) -> Result<BcfComment, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -709,13 +747,7 @@ pub(crate) fn dec_comment(s: &str) -> Result<BcfComment, String> {
 }
 
 pub(crate) fn enc_viewpoint(v: &BcfViewpoint) -> String {
-    format!(
-        "[{},{},{},{}]",
-        enc_str(&v.guid),
-        encode_option(&v.camera, enc_camera),
-        encode_option(&v.components, enc_components),
-        encode_option(&v.snapshot, |b: &Vec<u8>| enc_bytes(b)),
-    )
+    format!("[{},{},{},{}]", enc_str(&v.guid), encode_option(&v.camera, enc_camera), encode_option(&v.components, enc_components), encode_option(&v.snapshot, |b: &Vec<u8>| enc_bytes(b)),)
 }
 pub(crate) fn dec_viewpoint(s: &str) -> Result<BcfViewpoint, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -726,9 +758,16 @@ pub(crate) fn dec_viewpoint(s: &str) -> Result<BcfViewpoint, String> {
 pub(crate) fn enc_topic(t: &BcfTopic) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{}]",
-        enc_str(&t.guid), enc_str(&t.title), enc_str(&t.description), enc_str(&t.status), enc_str(&t.priority),
-        enc_list(&t.labels, |s: &String| enc_str(s)), enc_str(&t.creation_date), enc_str(&t.creation_author),
-        enc_list(&t.comments, enc_comment), enc_list(&t.viewpoints, enc_viewpoint),
+        enc_str(&t.guid),
+        enc_str(&t.title),
+        enc_str(&t.description),
+        enc_str(&t.status),
+        enc_str(&t.priority),
+        enc_list(&t.labels, |s: &String| enc_str(s)),
+        enc_str(&t.creation_date),
+        enc_str(&t.creation_author),
+        enc_list(&t.comments, enc_comment),
+        enc_list(&t.viewpoints, enc_viewpoint),
     )
 }
 pub(crate) fn dec_topic(s: &str) -> Result<BcfTopic, String> {
@@ -737,9 +776,16 @@ pub(crate) fn dec_topic(s: &str) -> Result<BcfTopic, String> {
         return Err(format!("topic: expected 10 fields, got {}", parts.len()));
     };
     Ok(BcfTopic {
-        guid: dec_str(guid)?, title: dec_str(title)?, description: dec_str(description)?, status: dec_str(status)?, priority: dec_str(priority)?,
-        labels: dec_list(labels, dec_str)?, creation_date: dec_str(creation_date)?, creation_author: dec_str(creation_author)?,
-        comments: dec_list(comments, dec_comment)?, viewpoints: dec_list(viewpoints, dec_viewpoint)?,
+        guid: dec_str(guid)?,
+        title: dec_str(title)?,
+        description: dec_str(description)?,
+        status: dec_str(status)?,
+        priority: dec_str(priority)?,
+        labels: dec_list(labels, dec_str)?,
+        creation_date: dec_str(creation_date)?,
+        creation_author: dec_str(creation_author)?,
+        comments: dec_list(comments, dec_comment)?,
+        viewpoints: dec_list(viewpoints, dec_viewpoint)?,
     })
 }
 
@@ -766,12 +812,7 @@ pub(crate) fn enc_comment_diff(d: &BcfCommentDiff) -> String {
 pub(crate) fn dec_comment_diff(s: &str) -> Result<BcfCommentDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [date, author, text, viewpoint_ref] = parts.as_slice() else { return Err(format!("comment diff: expected 4 fields, got {}", parts.len())) };
-    Ok(BcfCommentDiff {
-        date: decode_option(date, dec_str)?,
-        author: decode_option(author, dec_str)?,
-        text: decode_option(text, dec_str)?,
-        viewpoint_ref: decode_option(viewpoint_ref, |s| decode_option(s, dec_str))?,
-    })
+    Ok(BcfCommentDiff { date: decode_option(date, dec_str)?, author: decode_option(author, dec_str)?, text: decode_option(text, dec_str)?, viewpoint_ref: decode_option(viewpoint_ref, |s| decode_option(s, dec_str))? })
 }
 
 pub(crate) fn enc_viewpoint_diff(d: &BcfViewpointDiff) -> String {
@@ -785,11 +826,7 @@ pub(crate) fn enc_viewpoint_diff(d: &BcfViewpointDiff) -> String {
 pub(crate) fn dec_viewpoint_diff(s: &str) -> Result<BcfViewpointDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [camera, components, snapshot] = parts.as_slice() else { return Err(format!("viewpoint diff: expected 3 fields, got {}", parts.len())) };
-    Ok(BcfViewpointDiff {
-        camera: decode_option(camera, |s| decode_option(s, dec_camera))?,
-        components: decode_option(components, |s| decode_option(s, dec_components))?,
-        snapshot: decode_option(snapshot, |s| decode_option(s, dec_bytes))?,
-    })
+    Ok(BcfViewpointDiff { camera: decode_option(camera, |s| decode_option(s, dec_camera))?, components: decode_option(components, |s| decode_option(s, dec_components))?, snapshot: decode_option(snapshot, |s| decode_option(s, dec_bytes))? })
 }
 
 pub(crate) fn enc_part_diff(d: &BcfPartDiff) -> String {
@@ -860,7 +897,9 @@ pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, 
 }
 fn write_opt_str(out: &mut Vec<u8>, opt: &Option<String>) {
     out.push(if opt.is_some() { 1 } else { 0 });
-    if let Some(v) = opt { write_str_lp(out, v); }
+    if let Some(v) = opt {
+        write_str_lp(out, v);
+    }
 }
 fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
     Ok(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None })
@@ -904,18 +943,8 @@ pub(crate) fn enc_camera_bin(c: &BcfCamera, out: &mut Vec<u8>) {
 }
 pub(crate) fn dec_camera_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCamera, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
-        0 => Ok(BcfCamera::Perspective {
-            view_point: dec_point3_bin(reader)?,
-            direction: dec_point3_bin(reader)?,
-            up_vector: dec_point3_bin(reader)?,
-            field_of_view: reader.read_f64_le().map_err(|e| e.to_string())?,
-        }),
-        1 => Ok(BcfCamera::Orthogonal {
-            view_point: dec_point3_bin(reader)?,
-            direction: dec_point3_bin(reader)?,
-            up_vector: dec_point3_bin(reader)?,
-            view_to_world_scale: reader.read_f64_le().map_err(|e| e.to_string())?,
-        }),
+        0 => Ok(BcfCamera::Perspective { view_point: dec_point3_bin(reader)?, direction: dec_point3_bin(reader)?, up_vector: dec_point3_bin(reader)?, field_of_view: reader.read_f64_le().map_err(|e| e.to_string())? }),
+        1 => Ok(BcfCamera::Orthogonal { view_point: dec_point3_bin(reader)?, direction: dec_point3_bin(reader)?, up_vector: dec_point3_bin(reader)?, view_to_world_scale: reader.read_f64_le().map_err(|e| e.to_string())? }),
         other => Err(format!("camera binary: unknown tag {other}")),
     }
 }
@@ -993,11 +1022,17 @@ pub(crate) fn dec_comment_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfC
 pub(crate) fn enc_viewpoint_bin(v: &BcfViewpoint, out: &mut Vec<u8>) {
     write_str_lp(out, &v.guid);
     out.push(if v.camera.is_some() { 1 } else { 0 });
-    if let Some(camera) = &v.camera { enc_camera_bin(camera, out); }
+    if let Some(camera) = &v.camera {
+        enc_camera_bin(camera, out);
+    }
     out.push(if v.components.is_some() { 1 } else { 0 });
-    if let Some(components) = &v.components { enc_components_bin(components, out); }
+    if let Some(components) = &v.components {
+        enc_components_bin(components, out);
+    }
     out.push(if v.snapshot.is_some() { 1 } else { 0 });
-    if let Some(snapshot) = &v.snapshot { write_bytes_lp(out, snapshot); }
+    if let Some(snapshot) = &v.snapshot {
+        write_bytes_lp(out, snapshot);
+    }
 }
 pub(crate) fn dec_viewpoint_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpoint, String> {
     let guid = read_str_lp(reader)?;
@@ -1091,13 +1126,7 @@ pub(crate) fn dec_bcf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result
 //#region 🔖️GenericNamedTripleBinaryCodecs
 /// 🏷️ Binary twin of `enc_named_triple`/`dec_named_triple` -- three varint-counted sections
 /// (removed keys / modified key+diff pairs / added whole items), generic over `K`/`D`/`T`.
-fn enc_named_triple_bin<K, D, T>(
-    triple: &NamedTripleDiff<K, D, T>,
-    enc_k: impl Fn(&K, &mut Vec<u8>),
-    enc_d: impl Fn(&D, &mut Vec<u8>),
-    enc_t: impl Fn(&T, &mut Vec<u8>),
-    out: &mut Vec<u8>,
-) {
+fn enc_named_triple_bin<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K, &mut Vec<u8>), enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, triple.removed.len() as u64);
     for k in &triple.removed {
         enc_k(k, out);
@@ -1145,7 +1174,9 @@ pub(crate) fn enc_comment_diff_bin(d: &BcfCommentDiff, out: &mut Vec<u8>) {
     write_opt_str(out, &d.author);
     write_opt_str(out, &d.text);
     out.push(if d.viewpoint_ref.is_some() { 1 } else { 0 });
-    if let Some(inner) = &d.viewpoint_ref { write_opt_str(out, inner); }
+    if let Some(inner) = &d.viewpoint_ref {
+        write_opt_str(out, inner);
+    }
 }
 pub(crate) fn dec_comment_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCommentDiff, String> {
     let date = read_opt_str(reader)?;
@@ -1159,41 +1190,37 @@ pub(crate) fn enc_viewpoint_diff_bin(d: &BcfViewpointDiff, out: &mut Vec<u8>) {
     out.push(if d.camera.is_some() { 1 } else { 0 });
     if let Some(inner) = &d.camera {
         out.push(if inner.is_some() { 1 } else { 0 });
-        if let Some(camera) = inner { enc_camera_bin(camera, out); }
+        if let Some(camera) = inner {
+            enc_camera_bin(camera, out);
+        }
     }
     out.push(if d.components.is_some() { 1 } else { 0 });
     if let Some(inner) = &d.components {
         out.push(if inner.is_some() { 1 } else { 0 });
-        if let Some(components) = inner { enc_components_bin(components, out); }
+        if let Some(components) = inner {
+            enc_components_bin(components, out);
+        }
     }
     out.push(if d.snapshot.is_some() { 1 } else { 0 });
     if let Some(inner) = &d.snapshot {
         out.push(if inner.is_some() { 1 } else { 0 });
-        if let Some(snapshot) = inner { write_bytes_lp(out, snapshot); }
+        if let Some(snapshot) = inner {
+            write_bytes_lp(out, snapshot);
+        }
     }
 }
 pub(crate) fn dec_viewpoint_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpointDiff, String> {
-    let camera = if reader.read_u8().map_err(|e| e.to_string())? != 0 {
-        Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_camera_bin(reader)?) } else { None })
-    } else {
-        None
-    };
-    let components = if reader.read_u8().map_err(|e| e.to_string())? != 0 {
-        Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_components_bin(reader)?) } else { None })
-    } else {
-        None
-    };
-    let snapshot = if reader.read_u8().map_err(|e| e.to_string())? != 0 {
-        Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None })
-    } else {
-        None
-    };
+    let camera = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_camera_bin(reader)?) } else { None }) } else { None };
+    let components = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_components_bin(reader)?) } else { None }) } else { None };
+    let snapshot = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None }) } else { None };
     Ok(BcfViewpointDiff { camera, components, snapshot })
 }
 
 pub(crate) fn enc_part_diff_bin(d: &BcfPartDiff, out: &mut Vec<u8>) {
     out.push(if d.data.is_some() { 1 } else { 0 });
-    if let Some(v) = &d.data { write_bytes_lp(out, v); }
+    if let Some(v) = &d.data {
+        write_bytes_lp(out, v);
+    }
 }
 pub(crate) fn dec_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPartDiff, String> {
     let data = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
@@ -1220,13 +1247,19 @@ pub(crate) fn enc_topic_diff_bin(d: &BcfTopicDiff, out: &mut Vec<u8>) {
     write_opt_str(out, &d.status);
     write_opt_str(out, &d.priority);
     out.push(if d.labels.is_some() { 1 } else { 0 });
-    if let Some(v) = &d.labels { enc_str_list_bin(v, out); }
+    if let Some(v) = &d.labels {
+        enc_str_list_bin(v, out);
+    }
     write_opt_str(out, &d.creation_date);
     write_opt_str(out, &d.creation_author);
     out.push(if d.comments.is_some() { 1 } else { 0 });
-    if let Some(v) = &d.comments { enc_comments_diff_bin(v, out); }
+    if let Some(v) = &d.comments {
+        enc_comments_diff_bin(v, out);
+    }
     out.push(if d.viewpoints.is_some() { 1 } else { 0 });
-    if let Some(v) = &d.viewpoints { enc_viewpoints_diff_bin(v, out); }
+    if let Some(v) = &d.viewpoints {
+        enc_viewpoints_diff_bin(v, out);
+    }
 }
 pub(crate) fn dec_topic_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTopicDiff, String> {
     let title = read_opt_str(reader)?;
@@ -1260,9 +1293,15 @@ pub(crate) fn dec_parts_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<B
 //#region 🔖️TopLevel
 fn print_bcf_diff(d: &BcfDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.version { tokens.push(format!("version={}", enc_str(v))); }
-    if let Some(t) = &d.topics { tokens.push(format!("topics={}", enc_named_triple(t, |k: &String| enc_str(k), enc_topic_diff, enc_topic))); }
-    if let Some(p) = &d.parts { tokens.push(format!("parts={}", enc_named_triple(p, |k: &String| enc_str(k), enc_part_diff, enc_part))); }
+    if let Some(v) = &d.version {
+        tokens.push(format!("version={}", enc_str(v)));
+    }
+    if let Some(t) = &d.topics {
+        tokens.push(format!("topics={}", enc_named_triple(t, |k: &String| enc_str(k), enc_topic_diff, enc_topic)));
+    }
+    if let Some(p) = &d.parts {
+        tokens.push(format!("parts={}", enc_named_triple(p, |k: &String| enc_str(k), enc_part_diff, enc_part)));
+    }
     tokens.join(" ")
 }
 fn parse_bcf_diff(line: &str) -> Result<BcfDiff, String> {
@@ -1271,10 +1310,15 @@ fn parse_bcf_diff(line: &str) -> Result<BcfDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("version=") { d.version = Some(dec_str(rest)?); }
-        else if let Some(rest) = token.strip_prefix("topics=") { d.topics = Some(dec_named_triple(rest, dec_str, dec_topic_diff, dec_topic)?); }
-        else if let Some(rest) = token.strip_prefix("parts=") { d.parts = Some(dec_named_triple(rest, dec_str, dec_part_diff, dec_part)?); }
-        else { return Err(format!("bcf diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("version=") {
+            d.version = Some(dec_str(rest)?);
+        } else if let Some(rest) = token.strip_prefix("topics=") {
+            d.topics = Some(dec_named_triple(rest, dec_str, dec_topic_diff, dec_topic)?);
+        } else if let Some(rest) = token.strip_prefix("parts=") {
+            d.parts = Some(dec_named_triple(rest, dec_str, dec_part_diff, dec_part)?);
+        } else {
+            return Err(format!("bcf diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -1295,9 +1339,15 @@ impl protocol::DiffCodec for BcfDiff {
     /// that fixed order (see `🔖️BinaryCodecs` above).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u8 = 0;
-        if self.version.is_some() { flags |= 0b001; }
-        if self.topics.is_some() { flags |= 0b010; }
-        if self.parts.is_some() { flags |= 0b100; }
+        if self.version.is_some() {
+            flags |= 0b001;
+        }
+        if self.topics.is_some() {
+            flags |= 0b010;
+        }
+        if self.parts.is_some() {
+            flags |= 0b100;
+        }
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
         if let Some(v) = &self.version {
             write_str_lp(&mut out, v);
@@ -1353,12 +1403,7 @@ pub(crate) fn demo_snapshot_a() -> BcfSnapshot {
                 viewpoints: vec![
                     BcfViewpoint {
                         guid: "vp-keep".into(),
-                        camera: Some(BcfCamera::Perspective {
-                            view_point: BcfPoint3 { x: 1.0, y: 2.0, z: 3.0 },
-                            direction: BcfPoint3 { x: 0.0, y: 0.0, z: -1.0 },
-                            up_vector: BcfPoint3 { x: 0.0, y: 1.0, z: 0.0 },
-                            field_of_view: 60.0,
-                        }),
+                        camera: Some(BcfCamera::Perspective { view_point: BcfPoint3 { x: 1.0, y: 2.0, z: 3.0 }, direction: BcfPoint3 { x: 0.0, y: 0.0, z: -1.0 }, up_vector: BcfPoint3 { x: 0.0, y: 1.0, z: 0.0 }, field_of_view: 60.0 }),
                         components: Some(BcfComponents {
                             selection: vec!["2O2Fr$t4X7Zf8NOew3FLOH".into()],
                             visibility: BcfVisibility { default_visibility: false, exceptions: vec!["1yQBoo7d5EEBLiyMxGgTLc".into()] },
@@ -1369,12 +1414,20 @@ pub(crate) fn demo_snapshot_a() -> BcfSnapshot {
                     BcfViewpoint { guid: "vp-remove".into(), camera: None, components: None, snapshot: Some(vec![1]) },
                 ],
             },
-            BcfTopic { guid: "topic-remove".into(), title: "Will be removed".into(), description: String::new(), status: "Open".into(), priority: String::new(), labels: Vec::new(), creation_date: String::new(), creation_author: String::new(), comments: Vec::new(), viewpoints: Vec::new() },
+            BcfTopic {
+                guid: "topic-remove".into(),
+                title: "Will be removed".into(),
+                description: String::new(),
+                status: "Open".into(),
+                priority: String::new(),
+                labels: Vec::new(),
+                creation_date: String::new(),
+                creation_author: String::new(),
+                comments: Vec::new(),
+                viewpoints: Vec::new(),
+            },
         ],
-        parts: vec![
-            BcfRawPart { name: "part-keep.txt".into(), data: b"before".to_vec() },
-            BcfRawPart { name: "part-remove.txt".into(), data: b"gone".to_vec() },
-        ],
+        parts: vec![BcfRawPart { name: "part-keep.txt".into(), data: b"before".to_vec() }, BcfRawPart { name: "part-remove.txt".into(), data: b"gone".to_vec() }],
     }
 }
 
@@ -1399,24 +1452,27 @@ pub(crate) fn demo_snapshot_b() -> BcfSnapshot {
                 viewpoints: vec![
                     BcfViewpoint {
                         guid: "vp-keep".into(),
-                        camera: Some(BcfCamera::Orthogonal {
-                            view_point: BcfPoint3 { x: 4.0, y: 5.0, z: 6.0 },
-                            direction: BcfPoint3 { x: 1.0, y: 0.0, z: 0.0 },
-                            up_vector: BcfPoint3 { x: 0.0, y: 0.0, z: 1.0 },
-                            view_to_world_scale: 2.5,
-                        }),
+                        camera: Some(BcfCamera::Orthogonal { view_point: BcfPoint3 { x: 4.0, y: 5.0, z: 6.0 }, direction: BcfPoint3 { x: 1.0, y: 0.0, z: 0.0 }, up_vector: BcfPoint3 { x: 0.0, y: 0.0, z: 1.0 }, view_to_world_scale: 2.5 }),
                         components: None,
                         snapshot: None,
                     },
                     BcfViewpoint { guid: "vp-add".into(), camera: None, components: Some(BcfComponents::default()), snapshot: Some(vec![9]) },
                 ],
             },
-            BcfTopic { guid: "topic-add".into(), title: "Freshly added".into(), description: "added desc".into(), status: "Open".into(), priority: "Medium".into(), labels: vec!["fresh".into()], creation_date: "2024-03-03T00:00:00+00:00".into(), creation_author: "c@example.com".into(), comments: Vec::new(), viewpoints: Vec::new() },
+            BcfTopic {
+                guid: "topic-add".into(),
+                title: "Freshly added".into(),
+                description: "added desc".into(),
+                status: "Open".into(),
+                priority: "Medium".into(),
+                labels: vec!["fresh".into()],
+                creation_date: "2024-03-03T00:00:00+00:00".into(),
+                creation_author: "c@example.com".into(),
+                comments: Vec::new(),
+                viewpoints: Vec::new(),
+            },
         ],
-        parts: vec![
-            BcfRawPart { name: "part-keep.txt".into(), data: b"after".to_vec() },
-            BcfRawPart { name: "part-add.txt".into(), data: b"new".to_vec() },
-        ],
+        parts: vec![BcfRawPart { name: "part-keep.txt".into(), data: b"after".to_vec() }, BcfRawPart { name: "part-add.txt".into(), data: b"new".to_vec() }],
     }
 }
 

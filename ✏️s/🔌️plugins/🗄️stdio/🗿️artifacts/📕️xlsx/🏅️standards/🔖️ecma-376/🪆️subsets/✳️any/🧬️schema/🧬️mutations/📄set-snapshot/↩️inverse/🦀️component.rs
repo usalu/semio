@@ -1,5 +1,5 @@
-use crate::artifacts::xlsx::{XlsxSnapshot};
 use crate::artifacts::xlsx::schema::mutations::XlsxMutation;
+use crate::artifacts::xlsx::XlsxSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

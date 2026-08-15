@@ -23,7 +23,9 @@ pub struct TiffArtifact {
 }
 
 impl Default for TiffArtifact {
-    fn default() -> Self { Self::from_snapshot(TiffSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(TiffSnapshot::default())
+    }
 }
 
 impl TiffArtifact {
@@ -73,8 +75,8 @@ pub fn tiff_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::tiff::{TiffDiff, TiffMutation, TiffSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.tiff` snapshot.
@@ -109,7 +111,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -119,8 +125,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::tiff::TiffSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.tiff` parts.
@@ -167,7 +173,11 @@ pub mod derived_analysis {
                             Err(_) => return IoConfidence::Low,
                         }
                     }
-                    if decoded == SIG_LE || decoded == SIG_BE { IoConfidence::High } else { IoConfidence::Low }
+                    if decoded == SIG_LE || decoded == SIG_BE {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }
@@ -182,22 +192,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <TiffSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -252,8 +254,8 @@ pub fn empty_tiff_snapshot() -> crate::artifacts::tiff::TiffSnapshot {
 pub fn demo_tiff_snapshot() -> crate::artifacts::tiff::TiffSnapshot {
     use crate::artifacts::tiff::standards::v6_0::subsets::any::io::{decode_tiff, encode_tiff};
     use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
-    use crate::artifacts::tiff::TiffSnapshot;
     use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::{TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH};
+    use crate::artifacts::tiff::TiffSnapshot;
     use crate::artifacts::tiff::STDIO_TIFF_DOCUMENT_SCHEMA;
     let (w, h) = (3u32, 2u32);
     let mut pixels = Vec::with_capacity((w * h * 4) as usize);

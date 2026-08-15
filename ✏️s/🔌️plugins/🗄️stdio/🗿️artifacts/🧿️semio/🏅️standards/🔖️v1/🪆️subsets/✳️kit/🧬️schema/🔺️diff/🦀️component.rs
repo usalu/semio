@@ -19,19 +19,29 @@ use serde::{Deserialize, Serialize};
 /// ordered `values` vec from `base` and wraps it here (`✳️text`'s own `SemioTextRunList` shape).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-pub struct SemioKitTypeList { pub values: Vec<SemioKitType> }
+pub struct SemioKitTypeList {
+    pub values: Vec<SemioKitType>,
+}
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-pub struct SemioKitDesignList { pub values: Vec<SemioKitDesign> }
+pub struct SemioKitDesignList {
+    pub values: Vec<SemioKitDesign>,
+}
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-pub struct SemioKitObjectChildList { pub values: Vec<store::ArtifactChild<SemioObjectSnapshot>> }
+pub struct SemioKitObjectChildList {
+    pub values: Vec<store::ArtifactChild<SemioObjectSnapshot>>,
+}
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-pub struct SemioKitModelChildList { pub values: Vec<store::ArtifactChild<SemioModelSnapshot>> }
+pub struct SemioKitModelChildList {
+    pub values: Vec<store::ArtifactChild<SemioModelSnapshot>>,
+}
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-pub struct SemioKitLinkList { pub values: Vec<store::ArtifactLink> }
+pub struct SemioKitLinkList {
+    pub values: Vec<store::ArtifactLink>,
+}
 //#endregion 🔖️ListWrappers
 
 //#region 🔖️Diff
@@ -68,22 +78,46 @@ impl SemioKitDiff {
 impl MutationDiff<SemioKitSnapshot> for SemioKitDiff {
     fn apply(&self, base: &SemioKitSnapshot) -> SemioKitSnapshot {
         let mut next = base.clone();
-        if let Some(t) = &self.types { next.types = t.values.clone(); }
-        if let Some(d) = &self.designs { next.designs = d.values.clone(); }
-        if let Some(o) = &self.objects { next.objects = o.values.clone(); }
-        if let Some(m) = &self.models { next.models = m.values.clone(); }
-        if let Some(p) = &self.properties { next.properties = p.clone(); }
-        if let Some(r) = &self.representations { next.representations = r.values.clone(); }
+        if let Some(t) = &self.types {
+            next.types = t.values.clone();
+        }
+        if let Some(d) = &self.designs {
+            next.designs = d.values.clone();
+        }
+        if let Some(o) = &self.objects {
+            next.objects = o.values.clone();
+        }
+        if let Some(m) = &self.models {
+            next.models = m.values.clone();
+        }
+        if let Some(p) = &self.properties {
+            next.properties = p.clone();
+        }
+        if let Some(r) = &self.representations {
+            next.representations = r.values.clone();
+        }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.types.is_some() { self.types = other.types; }
-        if other.designs.is_some() { self.designs = other.designs; }
-        if other.objects.is_some() { self.objects = other.objects; }
-        if other.models.is_some() { self.models = other.models; }
-        if other.properties.is_some() { self.properties = other.properties; }
-        if other.representations.is_some() { self.representations = other.representations; }
+        if other.types.is_some() {
+            self.types = other.types;
+        }
+        if other.designs.is_some() {
+            self.designs = other.designs;
+        }
+        if other.objects.is_some() {
+            self.objects = other.objects;
+        }
+        if other.models.is_some() {
+            self.models = other.models;
+        }
+        if other.properties.is_some() {
+            self.properties = other.properties;
+        }
+        if other.representations.is_some() {
+            self.representations = other.representations;
+        }
     }
 }
 
@@ -109,29 +143,42 @@ impl protocol::command::DiffAlgebra<SemioKitSnapshot> for SemioKitDiff {
             representations: self.representations.as_ref().map(|_| SemioKitLinkList { values: base.representations.clone() }),
         }
     }
-    fn is_empty(&self) -> bool { self.is_empty_diff() }
+    fn is_empty(&self) -> bool {
+        self.is_empty_diff()
+    }
 }
 //#endregion 🔖️Diff
 
 //#region 🔖️HandcraftedDiffCodec
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{
-    enc_type_list, dec_type_list, enc_design_list, dec_design_list,
-    enc_child_list, dec_child_list, enc_child_opt, dec_child_opt, enc_link_list, dec_link_list,
-};
+use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{dec_child_list, dec_child_opt, dec_design_list, dec_link_list, dec_type_list, enc_child_list, enc_child_opt, enc_design_list, enc_link_list, enc_type_list};
 
 fn print_kit_diff(d: &SemioKitDiff) -> String {
     let mut fields = Vec::new();
-    if let Some(t) = &d.types { fields.push(format!("t={}", enc_type_list(&t.values))); }
-    if let Some(dd) = &d.designs { fields.push(format!("d={}", enc_design_list(&dd.values))); }
-    if let Some(o) = &d.objects { fields.push(format!("o={}", enc_child_list(&o.values))); }
-    if let Some(m) = &d.models { fields.push(format!("m={}", enc_child_list(&m.values))); }
-    if let Some(p) = &d.properties { fields.push(format!("p={}", enc_child_opt(p))); }
-    if let Some(r) = &d.representations { fields.push(format!("r={}", enc_link_list(&r.values))); }
+    if let Some(t) = &d.types {
+        fields.push(format!("t={}", enc_type_list(&t.values)));
+    }
+    if let Some(dd) = &d.designs {
+        fields.push(format!("d={}", enc_design_list(&dd.values)));
+    }
+    if let Some(o) = &d.objects {
+        fields.push(format!("o={}", enc_child_list(&o.values)));
+    }
+    if let Some(m) = &d.models {
+        fields.push(format!("m={}", enc_child_list(&m.values)));
+    }
+    if let Some(p) = &d.properties {
+        fields.push(format!("p={}", enc_child_opt(p)));
+    }
+    if let Some(r) = &d.representations {
+        fields.push(format!("r={}", enc_link_list(&r.values)));
+    }
     fields.join(";")
 }
 fn parse_kit_diff(line: &str) -> Result<SemioKitDiff, String> {
     let mut d = SemioKitDiff::default();
-    if line.is_empty() { return Ok(d); }
+    if line.is_empty() {
+        return Ok(d);
+    }
     for field in line.split(';') {
         let (tag, rest) = field.split_once('=').ok_or_else(|| format!("kit diff: missing '=' in {field:?}"))?;
         match tag {
@@ -148,7 +195,9 @@ fn parse_kit_diff(line: &str) -> Result<SemioKitDiff, String> {
 }
 
 impl protocol::DiffCodec for SemioKitDiff {
-    fn print_diff(&self) -> String { print_kit_diff(self) }
+    fn print_diff(&self) -> String {
+        print_kit_diff(self)
+    }
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_kit_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
@@ -157,26 +206,50 @@ impl protocol::DiffCodec for SemioKitDiff {
     /// bit2=objects, bit3=models, bit4=properties, bit5=representations), then each present
     /// field's own real encoding in bit order.
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{write_type_list, write_design_list, write_child_list, write_child_opt, write_link_list};
+        use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{write_child_list, write_child_opt, write_design_list, write_link_list, write_type_list};
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence: u8 = 0;
-        if self.types.is_some() { presence |= 0b0000_0001; }
-        if self.designs.is_some() { presence |= 0b0000_0010; }
-        if self.objects.is_some() { presence |= 0b0000_0100; }
-        if self.models.is_some() { presence |= 0b0000_1000; }
-        if self.properties.is_some() { presence |= 0b0001_0000; }
-        if self.representations.is_some() { presence |= 0b0010_0000; }
+        if self.types.is_some() {
+            presence |= 0b0000_0001;
+        }
+        if self.designs.is_some() {
+            presence |= 0b0000_0010;
+        }
+        if self.objects.is_some() {
+            presence |= 0b0000_0100;
+        }
+        if self.models.is_some() {
+            presence |= 0b0000_1000;
+        }
+        if self.properties.is_some() {
+            presence |= 0b0001_0000;
+        }
+        if self.representations.is_some() {
+            presence |= 0b0010_0000;
+        }
         let mut out = vec![DIFF_BINARY_FORMAT, presence];
-        if let Some(t) = &self.types { write_type_list(&mut out, &t.values); }
-        if let Some(d) = &self.designs { write_design_list(&mut out, &d.values); }
-        if let Some(o) = &self.objects { write_child_list(&mut out, &o.values); }
-        if let Some(m) = &self.models { write_child_list(&mut out, &m.values); }
-        if let Some(p) = &self.properties { write_child_opt(&mut out, p); }
-        if let Some(r) = &self.representations { write_link_list(&mut out, &r.values); }
+        if let Some(t) = &self.types {
+            write_type_list(&mut out, &t.values);
+        }
+        if let Some(d) = &self.designs {
+            write_design_list(&mut out, &d.values);
+        }
+        if let Some(o) = &self.objects {
+            write_child_list(&mut out, &o.values);
+        }
+        if let Some(m) = &self.models {
+            write_child_list(&mut out, &m.values);
+        }
+        if let Some(p) = &self.properties {
+            write_child_opt(&mut out, p);
+        }
+        if let Some(r) = &self.representations {
+            write_link_list(&mut out, &r.values);
+        }
         Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{read_type_list, read_design_list, read_child_list, read_child_opt, read_link_list};
+        use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{read_child_list, read_child_opt, read_design_list, read_link_list, read_type_list};
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated".to_string() });
@@ -217,8 +290,8 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioKitDiff> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::DiffCodec;
     use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::demo_kit_snapshot;
+    use protocol::DiffCodec;
 
     #[test]
     fn apply_replaces_touched_fields_only() {

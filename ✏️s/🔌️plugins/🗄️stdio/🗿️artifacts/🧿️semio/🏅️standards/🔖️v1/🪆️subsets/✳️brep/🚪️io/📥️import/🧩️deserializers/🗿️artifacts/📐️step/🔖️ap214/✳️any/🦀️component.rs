@@ -41,8 +41,7 @@ use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
-    BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex,
-    SemioBrepSnapshot, STDIO_SEMIOBREP_DOCUMENT_SCHEMA,
+    BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot, STDIO_SEMIOBREP_DOCUMENT_SCHEMA,
 };
 use crate::artifacts::step::schema::snapshot::{StepEntity, StepSnapshot, StepValue};
 
@@ -74,10 +73,18 @@ fn as_int(v: &StepValue) -> Option<i64> {
     }
 }
 fn as_ref_id(v: &StepValue) -> Option<u64> {
-    if let StepValue::Reference(id) = v { Some(*id) } else { None }
+    if let StepValue::Reference(id) = v {
+        Some(*id)
+    } else {
+        None
+    }
 }
 fn as_agg(v: &StepValue) -> Option<&Vec<StepValue>> {
-    if let StepValue::Aggregate(items) = v { Some(items) } else { None }
+    if let StepValue::Aggregate(items) = v {
+        Some(items)
+    } else {
+        None
+    }
 }
 /// 🔁️ `(multiplicities, distinct_knots)` -> a flat knot vector, per ISO 10303-42's
 /// `b_spline_curve_with_knots`/`b_spline_surface_with_knots` convention (each distinct knot value
@@ -188,9 +195,7 @@ impl<'a> Resolver<'a> {
             let weights = match args_for_type(e, "RATIONAL_B_SPLINE_CURVE") {
                 Some(wargs) => {
                     let wagg = wargs.first().and_then(as_agg).ok_or_else(|| format!("RATIONAL_B_SPLINE_CURVE #{id}: weights_data not a list"))?;
-                    wagg.iter()
-                        .map(|w| as_real(w).ok_or_else(|| format!("RATIONAL_B_SPLINE_CURVE #{id}: weight not numeric")))
-                        .collect::<Result<Vec<_>, _>>()?
+                    wagg.iter().map(|w| as_real(w).ok_or_else(|| format!("RATIONAL_B_SPLINE_CURVE #{id}: weight not numeric"))).collect::<Result<Vec<_>, _>>()?
                 }
                 None => vec![1.0; control_points.len()],
             };
@@ -307,10 +312,7 @@ impl ArtifactDeserializer for SemioBrepFromStep {
         for e in &from.entities {
             if has_type(e, "VERTEX_POINT") {
                 let args = args_for_type(e, "VERTEX_POINT").expect("has_type just confirmed VERTEX_POINT");
-                let point_ref = args
-                    .get(1)
-                    .and_then(as_ref_id)
-                    .ok_or_else(|| step_err(format!("VERTEX_POINT #{}: vertex_geometry not a reference", e.id)))?;
+                let point_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| step_err(format!("VERTEX_POINT #{}: vertex_geometry not a reference", e.id)))?;
                 let point = resolver.point(point_ref).map_err(step_err)?;
                 vertices.push(BrepVertex { id: format!("v{}", e.id), point });
             }
@@ -329,8 +331,7 @@ impl ArtifactDeserializer for SemioBrepFromStep {
                 for oe in edge_refs {
                     let oe_id = as_ref_id(oe).ok_or_else(|| step_err(format!("EDGE_LOOP #{}: edge_list entry not a reference", e.id)))?;
                     let oe_entity = resolver.get(oe_id).ok_or_else(|| step_err(format!("EDGE_LOOP #{}: dangling ORIENTED_EDGE #{oe_id}", e.id)))?;
-                    let oe_args = args_for_type(oe_entity, "ORIENTED_EDGE")
-                        .ok_or_else(|| step_err(format!("EDGE_LOOP #{}: #{oe_id} is not an ORIENTED_EDGE", e.id)))?;
+                    let oe_args = args_for_type(oe_entity, "ORIENTED_EDGE").ok_or_else(|| step_err(format!("EDGE_LOOP #{}: #{oe_id} is not an ORIENTED_EDGE", e.id)))?;
                     let edge_ref = oe_args.get(3).and_then(as_ref_id).ok_or_else(|| step_err(format!("ORIENTED_EDGE #{oe_id}: edge_element not a reference")))?;
                     let orientation = matches!(oe_args.get(4), Some(StepValue::Enum(s)) if s == "T");
                     members.push(BrepLoopEdge { edge: format!("e{edge_ref}"), orientation });
@@ -346,9 +347,8 @@ impl ArtifactDeserializer for SemioBrepFromStep {
                     let bound_id = as_ref_id(bound).ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: bound entry not a reference", e.id)))?;
                     let bound_entity = resolver.get(bound_id).ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: dangling bound #{bound_id}", e.id)))?;
                     let is_outer = has_type(bound_entity, "FACE_OUTER_BOUND");
-                    let bound_args = args_for_type(bound_entity, "FACE_OUTER_BOUND")
-                        .or_else(|| args_for_type(bound_entity, "FACE_BOUND"))
-                        .ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: #{bound_id} is neither FACE_BOUND nor FACE_OUTER_BOUND", e.id)))?;
+                    let bound_args =
+                        args_for_type(bound_entity, "FACE_OUTER_BOUND").or_else(|| args_for_type(bound_entity, "FACE_BOUND")).ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: #{bound_id} is neither FACE_BOUND nor FACE_OUTER_BOUND", e.id)))?;
                     let loop_ref = bound_args.get(1).and_then(as_ref_id).ok_or_else(|| step_err(format!("bound #{bound_id}: bound not a reference")))?;
                     let loop_id = format!("l{loop_ref}");
                     if is_outer || outer_loop.is_none() {
@@ -456,10 +456,7 @@ mod tests {
     #[test]
     fn unsupported_surface_kind_errors_rather_than_fabricating() {
         // Swap PLANE for a surface kind outside this leaf's supported vocabulary.
-        let bad = FIXTURE.replace(
-            "#16=PLANE('',#40);",
-            "#16=SURFACE_OF_REVOLUTION('',#20,#40);",
-        );
+        let bad = FIXTURE.replace("#16=PLANE('',#40);", "#16=SURFACE_OF_REVOLUTION('',#20,#40);");
         let doc = crate::artifacts::step::engine::part21::parse_part21(&bad).expect("parse");
         let step = StepSnapshot::from_part21_document(doc);
         let result = SemioBrepFromStep::deserialize(&step);

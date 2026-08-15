@@ -10,7 +10,11 @@ pub fn diff(payload: &ChangeStrokeColor, base: &SemioDrawingSnapshot) -> SemioDr
     match base.styles.iter().find(|s| s.name == payload.style_name) {
         Some(old) if old.stroke != payload.new_color => SemioDrawingDiff {
             canvas: None,
-            styles: Some(NamedTripleDiff { removed: Vec::new(), modified: vec![NamedModified { key: payload.style_name.clone(), diff: DrawStyleDiff { fill: None, stroke: Some(payload.new_color), stroke_width: None, opacity: None } }], added: Vec::new() }),
+            styles: Some(NamedTripleDiff {
+                removed: Vec::new(),
+                modified: vec![NamedModified { key: payload.style_name.clone(), diff: DrawStyleDiff { fill: None, stroke: Some(payload.new_color), stroke_width: None, opacity: None } }],
+                added: Vec::new(),
+            }),
             layers: None,
         },
         _ => SemioDrawingDiff::default(),

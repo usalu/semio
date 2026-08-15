@@ -238,18 +238,8 @@ fn build_part21(snapshot: &SemioBrepSnapshot) -> Result<crate::artifacts::step::
         let outer = so.shells.iter().find(|m| !m.is_void).ok_or_else(|| format!("solid {:?}: has no non-void outer shell", so.id))?;
         let &outer_ref = shell_ids.get(outer.shell.as_str()).ok_or_else(|| format!("solid {:?}: dangling outer shell {:?}", so.id, outer.shell))?;
         b.alloc("MANIFOLD_SOLID_BREP", vec![s(""), Part21Value::Ref(outer_ref)]);
-        let void_refs: Vec<Part21Value> = so
-            .shells
-            .iter()
-            .filter(|m| m.is_void)
-            .map(|m| {
-                shell_ids
-                    .get(m.shell.as_str())
-                    .copied()
-                    .map(Part21Value::Ref)
-                    .ok_or_else(|| format!("solid {:?}: dangling void shell {:?}", so.id, m.shell))
-            })
-            .collect::<Result<Vec<_>, _>>()?;
+        let void_refs: Vec<Part21Value> =
+            so.shells.iter().filter(|m| m.is_void).map(|m| shell_ids.get(m.shell.as_str()).copied().map(Part21Value::Ref).ok_or_else(|| format!("solid {:?}: dangling void shell {:?}", so.id, m.shell))).collect::<Result<Vec<_>, _>>()?;
         if !void_refs.is_empty() {
             b.instances.last_mut().expect("just allocated MANIFOLD_SOLID_BREP above").entities.push(("BREP_WITH_VOIDS".to_string(), vec![Part21Value::List(void_refs)]));
         }
@@ -289,10 +279,8 @@ impl ArtifactSerializer for SemioBrepToStep {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
-        BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepVertex,
-    };
     use crate::artifacts::semio::standards::v1::subsets::brep::io::import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepVertex};
     use semio_framework_plugin::ArtifactDeserializer;
 
     /// 🧱️ Exercises every `BrepCurve`/`BrepSurface` variant (Line/Circle/Ellipse/Nurbs curves;
@@ -308,28 +296,13 @@ mod tests {
             BrepVertex { id: "v4".into(), point: SemioPoint3 { x: 0.0, y: 3.0, z: 0.0 } },
         ];
         snap.edges = vec![
-            BrepEdge {
-                id: "e1".into(),
-                start_vertex: "v1".into(),
-                end_vertex: "v2".into(),
-                curve: BrepCurve::Line { origin: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } },
-            },
-            BrepEdge {
-                id: "e2".into(),
-                start_vertex: "v2".into(),
-                end_vertex: "v3".into(),
-                curve: BrepCurve::Circle { center: SemioPoint3 { x: 4.0, y: 1.5, z: 0.0 }, axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 1.5 },
-            },
+            BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v2".into(), curve: BrepCurve::Line { origin: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } },
+            BrepEdge { id: "e2".into(), start_vertex: "v2".into(), end_vertex: "v3".into(), curve: BrepCurve::Circle { center: SemioPoint3 { x: 4.0, y: 1.5, z: 0.0 }, axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 1.5 } },
             BrepEdge {
                 id: "e3".into(),
                 start_vertex: "v3".into(),
                 end_vertex: "v4".into(),
-                curve: BrepCurve::Ellipse {
-                    center: SemioPoint3 { x: 2.0, y: 3.0, z: 0.0 },
-                    axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 },
-                    radius_major: 2.0,
-                    radius_minor: 1.0,
-                },
+                curve: BrepCurve::Ellipse { center: SemioPoint3 { x: 2.0, y: 3.0, z: 0.0 }, axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius_major: 2.0, radius_minor: 1.0 },
             },
             BrepEdge {
                 id: "e4".into(),
@@ -346,44 +319,15 @@ mod tests {
         snap.loops = vec![
             BrepLoop {
                 id: "l1".into(),
-                edges: vec![
-                    BrepLoopEdge { edge: "e1".into(), orientation: true },
-                    BrepLoopEdge { edge: "e2".into(), orientation: true },
-                    BrepLoopEdge { edge: "e3".into(), orientation: true },
-                    BrepLoopEdge { edge: "e4".into(), orientation: true },
-                ],
+                edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }, BrepLoopEdge { edge: "e2".into(), orientation: true }, BrepLoopEdge { edge: "e3".into(), orientation: true }, BrepLoopEdge { edge: "e4".into(), orientation: true }],
             },
             BrepLoop { id: "l2".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: false }] },
         ];
         snap.faces = vec![
-            BrepFace {
-                id: "f1".into(),
-                outer_loop: "l1".into(),
-                inner_loops: vec!["l2".into()],
-                surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } },
-                orientation: true,
-            },
-            BrepFace {
-                id: "f2".into(),
-                outer_loop: "l1".into(),
-                inner_loops: vec![],
-                surface: BrepSurface::Cylinder { origin: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 2.0 },
-                orientation: true,
-            },
-            BrepFace {
-                id: "f3".into(),
-                outer_loop: "l1".into(),
-                inner_loops: vec![],
-                surface: BrepSurface::Cone { origin: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 2.0, half_angle: 0.4 },
-                orientation: false,
-            },
-            BrepFace {
-                id: "f4".into(),
-                outer_loop: "l1".into(),
-                inner_loops: vec![],
-                surface: BrepSurface::Sphere { center: SemioPoint3 { x: 1.0, y: 1.0, z: 0.0 }, radius: 3.0 },
-                orientation: true,
-            },
+            BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec!["l2".into()], surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } }, orientation: true },
+            BrepFace { id: "f2".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Cylinder { origin: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 2.0 }, orientation: true },
+            BrepFace { id: "f3".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Cone { origin: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 2.0, half_angle: 0.4 }, orientation: false },
+            BrepFace { id: "f4".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Sphere { center: SemioPoint3 { x: 1.0, y: 1.0, z: 0.0 }, radius: 3.0 }, orientation: true },
             BrepFace {
                 id: "f5".into(),
                 outer_loop: "l1".into(),
@@ -396,12 +340,7 @@ mod tests {
                 outer_loop: "l1".into(),
                 inner_loops: vec![],
                 surface: BrepSurface::Nurbs {
-                    control_points: vec![
-                        SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 },
-                        SemioPoint3 { x: 1.0, y: 0.0, z: 1.0 },
-                        SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 },
-                        SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 },
-                    ],
+                    control_points: vec![SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 0.0, z: 1.0 }, SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 }],
                     weights: vec![1.0, 0.5, 1.0, 0.5],
                     u_count: 2,
                     v_count: 2,
@@ -427,10 +366,7 @@ mod tests {
             },
             BrepShell { id: "sh2".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: true }] },
         ];
-        snap.solids = vec![BrepSolid {
-            id: "so1".into(),
-            shells: vec![BrepSolidShell { shell: "sh1".into(), is_void: false }, BrepSolidShell { shell: "sh2".into(), is_void: true }],
-        }];
+        snap.solids = vec![BrepSolid { id: "so1".into(), shells: vec![BrepSolidShell { shell: "sh1".into(), is_void: false }, BrepSolidShell { shell: "sh2".into(), is_void: true }] }];
         snap
     }
 
@@ -445,19 +381,13 @@ mod tests {
                 assert_eq!(oa, ra);
                 assert_eq!(or_, rr);
             }
-            (
-                BrepCurve::Ellipse { center: oc, axis: oa, radius_major: oma, radius_minor: omi },
-                BrepCurve::Ellipse { center: rc, axis: ra, radius_major: rma, radius_minor: rmi },
-            ) => {
+            (BrepCurve::Ellipse { center: oc, axis: oa, radius_major: oma, radius_minor: omi }, BrepCurve::Ellipse { center: rc, axis: ra, radius_major: rma, radius_minor: rmi }) => {
                 assert_eq!(oc, rc);
                 assert_eq!(oa, ra);
                 assert_eq!(oma, rma);
                 assert_eq!(omi, rmi);
             }
-            (
-                BrepCurve::Nurbs { control_points: ocp, weights: ow, degree: od, knots: ok },
-                BrepCurve::Nurbs { control_points: rcp, weights: rw, degree: rd, knots: rk },
-            ) => {
+            (BrepCurve::Nurbs { control_points: ocp, weights: ow, degree: od, knots: ok }, BrepCurve::Nurbs { control_points: rcp, weights: rw, degree: rd, knots: rk }) => {
                 assert_eq!(ocp, rcp);
                 assert_eq!(ow, rw);
                 assert_eq!(od, rd);
@@ -473,18 +403,12 @@ mod tests {
                 assert_eq!(oo, ro);
                 assert_eq!(on, rn);
             }
-            (
-                BrepSurface::Cylinder { origin: oo, axis: oa, radius: or_ },
-                BrepSurface::Cylinder { origin: ro, axis: ra, radius: rr },
-            ) => {
+            (BrepSurface::Cylinder { origin: oo, axis: oa, radius: or_ }, BrepSurface::Cylinder { origin: ro, axis: ra, radius: rr }) => {
                 assert_eq!(oo, ro);
                 assert_eq!(oa, ra);
                 assert_eq!(or_, rr);
             }
-            (
-                BrepSurface::Cone { origin: oo, axis: oa, radius: or_, half_angle: oh },
-                BrepSurface::Cone { origin: ro, axis: ra, radius: rr, half_angle: rh },
-            ) => {
+            (BrepSurface::Cone { origin: oo, axis: oa, radius: or_, half_angle: oh }, BrepSurface::Cone { origin: ro, axis: ra, radius: rr, half_angle: rh }) => {
                 assert_eq!(oo, ro);
                 assert_eq!(oa, ra);
                 assert_eq!(or_, rr);
@@ -494,10 +418,7 @@ mod tests {
                 assert_eq!(oc, rc);
                 assert_eq!(or_, rr);
             }
-            (
-                BrepSurface::Torus { center: oc, axis: oa, major_radius: oma, minor_radius: omi },
-                BrepSurface::Torus { center: rc, axis: ra, major_radius: rma, minor_radius: rmi },
-            ) => {
+            (BrepSurface::Torus { center: oc, axis: oa, major_radius: oma, minor_radius: omi }, BrepSurface::Torus { center: rc, axis: ra, major_radius: rma, minor_radius: rmi }) => {
                 assert_eq!(oc, rc);
                 assert_eq!(oa, ra);
                 assert_eq!(oma, rma);
@@ -553,12 +474,7 @@ mod tests {
     #[test]
     fn dangling_reference_errors_rather_than_fabricating() {
         let mut snap = SemioBrepSnapshot::default();
-        snap.edges = vec![BrepEdge {
-            id: "e1".into(),
-            start_vertex: "nonexistent".into(),
-            end_vertex: "also-nonexistent".into(),
-            curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } },
-        }];
+        snap.edges = vec![BrepEdge { id: "e1".into(), start_vertex: "nonexistent".into(), end_vertex: "also-nonexistent".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } }];
         let result = SemioBrepToStep::serialize(&snap);
         assert!(result.is_err(), "an edge referencing a nonexistent vertex must error, not silently drop the edge");
     }

@@ -11,8 +11,8 @@ use protocol::MutationDiff;
 // trait but the facade wasn't updated — see s1-spine-report.md) so it's reached via the
 // still-public `os_spr::command` path instead of touching that framework facade file.
 use protocol::os_spr::command::DiffAlgebra;
-use serde::{Deserialize, Serialize};
 use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️CollectionDiffs
@@ -93,12 +93,24 @@ pub struct JsonObjectAdded {
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum JsonValueDiff {
     /// 🔁️ Whole-node replace — the node's KIND changed, or a mutation explicitly overwrites it.
-    Replace { value: JsonValue },
-    Bool { value: bool },
-    Number { lexeme: String },
-    String { value: String },
-    Array { diff: JsonArrayDiff },
-    Object { diff: JsonObjectDiff },
+    Replace {
+        value: JsonValue,
+    },
+    Bool {
+        value: bool,
+    },
+    Number {
+        lexeme: String,
+    },
+    String {
+        value: String,
+    },
+    Array {
+        diff: JsonArrayDiff,
+    },
+    Object {
+        diff: JsonObjectDiff,
+    },
 }
 //#endregion 🔖️JsonValueDiff
 
@@ -133,7 +145,11 @@ impl MutationDiff<JsonSnapshot> for JsonDiff {
             (None, Some(d2)) => Some(d2),
             (Some(d1), Some(d2)) => {
                 let combined = absorb_value_diff(d1, d2);
-                if is_value_diff_effectively_empty(&combined) { None } else { Some(combined) }
+                if is_value_diff_effectively_empty(&combined) {
+                    None
+                } else {
+                    Some(combined)
+                }
             }
         };
     }
@@ -173,11 +189,17 @@ pub fn apply_value_diff(diff: &JsonValueDiff, base: &JsonValue) -> JsonValue {
         JsonValueDiff::Number { lexeme } => JsonValue::Number { lexeme: lexeme.clone() },
         JsonValueDiff::String { value } => JsonValue::String { value: value.clone() },
         JsonValueDiff::Array { diff } => {
-            let items: &[JsonValue] = match base { JsonValue::Array { items } => items.as_slice(), _ => &[] };
+            let items: &[JsonValue] = match base {
+                JsonValue::Array { items } => items.as_slice(),
+                _ => &[],
+            };
             JsonValue::Array { items: apply_array_diff(diff, items) }
         }
         JsonValueDiff::Object { diff } => {
-            let members: &[JsonMember] = match base { JsonValue::Object { members } => members.as_slice(), _ => &[] };
+            let members: &[JsonMember] = match base {
+                JsonValue::Object { members } => members.as_slice(),
+                _ => &[],
+            };
             JsonValue::Object { members: apply_object_diff(diff, members) }
         }
     }
@@ -249,11 +271,19 @@ pub fn value_diff_between(a: &JsonValue, b: &JsonValue) -> Option<JsonValueDiff>
         (JsonValue::String { value: _ }, JsonValue::String { value: next }) => Some(JsonValueDiff::String { value: next.clone() }),
         (JsonValue::Array { items: av }, JsonValue::Array { items: bv }) => {
             let diff = array_diff_between(av, bv);
-            if is_array_diff_empty(&diff) { None } else { Some(JsonValueDiff::Array { diff }) }
+            if is_array_diff_empty(&diff) {
+                None
+            } else {
+                Some(JsonValueDiff::Array { diff })
+            }
         }
         (JsonValue::Object { members: am }, JsonValue::Object { members: bm }) => {
             let diff = object_diff_between(am, bm);
-            if is_object_diff_empty(&diff) { None } else { Some(JsonValueDiff::Object { diff }) }
+            if is_object_diff_empty(&diff) {
+                None
+            } else {
+                Some(JsonValueDiff::Object { diff })
+            }
         }
         _ => Some(JsonValueDiff::Replace { value: b.clone() }),
     }
@@ -270,11 +300,7 @@ fn array_diff_between(a: &[JsonValue], b: &[JsonValue]) -> JsonArrayDiff {
         }
     }
     let removed: Vec<usize> = if a.len() > b.len() { (b.len()..a.len()).collect() } else { Vec::new() };
-    let added: Vec<JsonArrayAdded> = if b.len() > a.len() {
-        (a.len()..b.len()).map(|i| JsonArrayAdded { index: i, item: b[i].clone() }).collect()
-    } else {
-        Vec::new()
-    };
+    let added: Vec<JsonArrayAdded> = if b.len() > a.len() { (a.len()..b.len()).map(|i| JsonArrayAdded { index: i, item: b[i].clone() }).collect() } else { Vec::new() };
     JsonArrayDiff { removed, modified, added }
 }
 
@@ -375,13 +401,17 @@ fn absorb_array_diff(d1: JsonArrayDiff, d2: JsonArrayDiff) -> JsonArrayDiff {
         D2Added(JsonValue),
     }
 
-    let max_ref = d1.removed.iter().copied()
+    let max_ref = d1
+        .removed
+        .iter()
+        .copied()
         .chain(d1.modified.iter().map(|m| m.index))
         .chain(d1.added.iter().map(|a| a.index))
         .chain(d2.removed.iter().copied())
         .chain(d2.modified.iter().map(|m| m.index))
         .chain(d2.added.iter().map(|a| a.index))
-        .max().unwrap_or(0);
+        .max()
+        .unwrap_or(0);
     let n = max_ref + d1.removed.len() + d2.removed.len() + 64;
 
     // Step A: base -> mid.
@@ -403,10 +433,13 @@ fn absorb_array_diff(d1: JsonArrayDiff, d2: JsonArrayDiff) -> JsonArrayDiff {
     let d1_modified: HashMap<usize, JsonValueDiff> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
 
     // Step B: mid -> after.
-    let mut after: Vec<AfterSlot> = mid.iter().map(|origin| match origin {
-        Origin::Base(orig) => AfterSlot::Base { orig: *orig, diff: d1_modified.get(orig).cloned() },
-        Origin::D1Added(tag) => AfterSlot::D1Added { tag: *tag, patch: None },
-    }).collect();
+    let mut after: Vec<AfterSlot> = mid
+        .iter()
+        .map(|origin| match origin {
+            Origin::Base(orig) => AfterSlot::Base { orig: *orig, diff: d1_modified.get(orig).cloned() },
+            Origin::D1Added(tag) => AfterSlot::D1Added { tag: *tag, patch: None },
+        })
+        .collect();
 
     let mut final_removed: Vec<usize> = d1.removed.clone();
     let mut d2_removed_sorted = d2.removed.clone();
@@ -601,10 +634,7 @@ pub(crate) fn enc_json_value(v: &JsonValue) -> String {
         JsonValue::Number { lexeme } => format!("N[{}]", enc_str(lexeme)),
         JsonValue::String { value } => format!("S[{}]", enc_str(value)),
         JsonValue::Array { items } => format!("A[{}]", items.iter().map(enc_json_value).collect::<Vec<_>>().join(",")),
-        JsonValue::Object { members } => format!(
-            "O[{}]",
-            members.iter().map(|m| format!("{}:{}", enc_str(&m.key), enc_json_value(&m.value))).collect::<Vec<_>>().join(",")
-        ),
+        JsonValue::Object { members } => format!("O[{}]", members.iter().map(|m| format!("{}:{}", enc_str(&m.key), enc_json_value(&m.value))).collect::<Vec<_>>().join(",")),
     }
 }
 pub(crate) fn dec_json_value(s: &str) -> Result<JsonValue, String> {
@@ -617,9 +647,7 @@ pub(crate) fn dec_json_value(s: &str) -> Result<JsonValue, String> {
         "B" => Ok(JsonValue::Bool { value: inner == "1" }),
         "N" => Ok(JsonValue::Number { lexeme: dec_str(inner)? }),
         "S" => Ok(JsonValue::String { value: dec_str(inner)? }),
-        "A" => Ok(JsonValue::Array {
-            items: split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_json_value).collect::<Result<Vec<_>, String>>()?,
-        }),
+        "A" => Ok(JsonValue::Array { items: split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_json_value).collect::<Result<Vec<_>, String>>()? }),
         "O" => {
             let members = split_top_level(inner, ',')
                 .into_iter()
@@ -744,14 +772,22 @@ fn dec_array_diff(body: &str) -> Result<JsonArrayDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("array diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("array modified: bad entry {entry:?}"))?;
-        Ok(JsonArrayModified { index: parse_usize(idx)?, diff: dec_value_diff(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("array added: bad entry {entry:?}"))?;
-        Ok(JsonArrayAdded { index: parse_usize(idx)?, item: dec_json_value(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("array modified: bad entry {entry:?}"))?;
+            Ok(JsonArrayModified { index: parse_usize(idx)?, diff: dec_value_diff(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("array added: bad entry {entry:?}"))?;
+            Ok(JsonArrayAdded { index: parse_usize(idx)?, item: dec_json_value(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok(JsonArrayDiff { removed, modified, added })
 }
 
@@ -765,15 +801,23 @@ fn dec_object_diff(body: &str) -> Result<JsonObjectDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("object diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (key, rest) = entry.split_once(':').ok_or_else(|| format!("object modified: bad entry {entry:?}"))?;
-        Ok(JsonObjectModified { key: dec_str(key)?, diff: dec_value_diff(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("object added: bad entry {entry:?}"))?;
-        let (key, item) = rest.split_once(':').ok_or_else(|| format!("object added: bad entry {entry:?}"))?;
-        Ok(JsonObjectAdded { index: parse_usize(idx)?, key: dec_str(key)?, item: dec_json_value(item)? })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (key, rest) = entry.split_once(':').ok_or_else(|| format!("object modified: bad entry {entry:?}"))?;
+            Ok(JsonObjectModified { key: dec_str(key)?, diff: dec_value_diff(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("object added: bad entry {entry:?}"))?;
+            let (key, item) = rest.split_once(':').ok_or_else(|| format!("object added: bad entry {entry:?}"))?;
+            Ok(JsonObjectAdded { index: parse_usize(idx)?, key: dec_str(key)?, item: dec_json_value(item)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok(JsonObjectDiff { removed, modified, added })
 }
 
@@ -954,11 +998,7 @@ impl protocol::DiffCodec for JsonDiff {
         let mut reader = store::ByteReader::new(bytes);
         let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
         let has_value = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_value", offset: 1, detail: e.to_string() })?;
-        let value = if has_value != 0 {
-            Some(dec_value_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff value", offset: reader.position() as u64, detail: e })?)
-        } else {
-            None
-        };
+        let value = if has_value != 0 { Some(dec_value_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff value", offset: reader.position() as u64, detail: e })?) } else { None };
         Ok(JsonDiff { value })
     }
 }
@@ -1036,13 +1076,7 @@ mod tests {
     //#region between_roundtrip_law
     #[test]
     fn between_roundtrip_law_scalars_and_kind_change() {
-        let cases = [
-            (JsonValue::Null, JsonValue::Bool { value: true }),
-            (JsonValue::Bool { value: true }, JsonValue::Bool { value: false }),
-            (num("1"), num("2.5e10")),
-            (str_("a"), str_("b")),
-            (num("1"), str_("1")),
-        ];
+        let cases = [(JsonValue::Null, JsonValue::Bool { value: true }), (JsonValue::Bool { value: true }, JsonValue::Bool { value: false }), (num("1"), num("2.5e10")), (str_("a"), str_("b")), (num("1"), str_("1"))];
         for (a, b) in cases {
             let (sa, sb) = (snap(a.clone()), snap(b.clone()));
             assert_eq!(JsonDiff::between(&sa, &sb).apply(&sa), sb, "a={a:?} b={b:?}");
@@ -1153,10 +1187,7 @@ mod tests {
         let base = snap(arr(vec![]));
         let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 0, item: objv(vec![("x", num("1"))]) }], ..Default::default() });
         let d2 = array_diff(JsonArrayDiff {
-            modified: vec![JsonArrayModified {
-                index: 0,
-                diff: JsonValueDiff::Object { diff: JsonObjectDiff { added: vec![JsonObjectAdded { index: 1, key: "y".into(), item: num("2") }], ..Default::default() } },
-            }],
+            modified: vec![JsonArrayModified { index: 0, diff: JsonValueDiff::Object { diff: JsonObjectDiff { added: vec![JsonObjectAdded { index: 1, key: "y".into(), item: num("2") }], ..Default::default() } } }],
             ..Default::default()
         });
         let sequential = d2.apply(&d1.apply(&base));

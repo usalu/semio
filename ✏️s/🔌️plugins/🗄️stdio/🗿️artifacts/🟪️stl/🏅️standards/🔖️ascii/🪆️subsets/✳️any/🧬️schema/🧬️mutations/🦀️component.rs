@@ -152,28 +152,15 @@ impl Mutation<StlSnapshot> for StlMutation {
 /// `enc_vertices`, `enc_triangle`) plus this file's own `enc_snapshot` (the one type `🔺️diff`
 /// doesn't need — only `SetSnapshot`'s payload does).
 fn enc_snapshot(s: &StlSnapshot) -> String {
-    format!(
-        "[{},{},[{}]]",
-        diff::hex_encode_str(&s.schema),
-        diff::hex_encode_str(&s.solid_name),
-        s.triangles.iter().map(diff::enc_triangle).collect::<Vec<_>>().join(","),
-    )
+    format!("[{},{},[{}]]", diff::hex_encode_str(&s.schema), diff::hex_encode_str(&s.solid_name), s.triangles.iter().map(diff::enc_triangle).collect::<Vec<_>>().join(","),)
 }
 fn dec_snapshot(s: &str) -> Result<StlSnapshot, String> {
     let parts = diff::split_top_level(diff::strip_brackets(s)?, ',');
     let [schema, solid_name, triangles] = parts.as_slice() else {
         return Err(format!("snapshot: expected 3 fields, got {}", parts.len()));
     };
-    let triangles = diff::split_top_level(diff::strip_brackets(triangles)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(diff::dec_triangle)
-        .collect::<Result<Vec<_>, String>>()?;
-    Ok(StlSnapshot {
-        schema: diff::hex_decode_str(schema)?,
-        solid_name: diff::hex_decode_str(solid_name)?,
-        triangles,
-    })
+    let triangles = diff::split_top_level(diff::strip_brackets(triangles)?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_triangle).collect::<Result<Vec<_>, String>>()?;
+    Ok(StlSnapshot { schema: diff::hex_decode_str(schema)?, solid_name: diff::hex_decode_str(solid_name)?, triangles })
 }
 
 fn print_stl_op(m: &StlMutation) -> String {
@@ -259,8 +246,14 @@ impl protocol::OpBinary for StlMutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, 0u8];
         let tag: u8 = match self {
             StlMutation::NoMutation => 0,
-            StlMutation::SetSnapshot { snapshot } => { enc_snapshot_bin(snapshot, &mut out); 1 }
-            StlMutation::SetSolidName { name } => { diff::write_str_bin(&mut out, name); 2 }
+            StlMutation::SetSnapshot { snapshot } => {
+                enc_snapshot_bin(snapshot, &mut out);
+                1
+            }
+            StlMutation::SetSolidName { name } => {
+                diff::write_str_bin(&mut out, name);
+                2
+            }
             StlMutation::InsertTriangle { index, triangle } => {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 diff::enc_triangle_bin(triangle, &mut out);
@@ -332,19 +325,12 @@ impl protocol::OpBinary for StlMutation {
 /// conformance_law`/`protocol_walk_law` (same reuse pattern `binary`'s own `demo_mutation_cases`
 /// establishes).
 pub(crate) fn demo_mutation_cases() -> Vec<StlMutation> {
-    let base = StlSnapshot {
-        schema: crate::artifacts::stl::STDIO_STL_DOCUMENT_SCHEMA.into(),
-        solid_name: "mesh".into(),
-        triangles: vec![StlTriangle { normal: [0.0, 0.0, 1.0], vertices: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] }],
-    };
+    let base = StlSnapshot { schema: crate::artifacts::stl::STDIO_STL_DOCUMENT_SCHEMA.into(), solid_name: "mesh".into(), triangles: vec![StlTriangle { normal: [0.0, 0.0, 1.0], vertices: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] }] };
     vec![
         StlMutation::NoMutation,
         StlMutation::SetSnapshot { snapshot: StlSnapshot { solid_name: "renamed".into(), ..base } },
         StlMutation::SetSolidName { name: "renamed".into() },
-        StlMutation::InsertTriangle {
-            index: 1,
-            triangle: StlTriangle { normal: [1.0, 0.0, 0.0], vertices: [[99.0, 0.0, 0.0], [100.0, 0.0, 0.0], [99.0, 1.0, 0.0]] },
-        },
+        StlMutation::InsertTriangle { index: 1, triangle: StlTriangle { normal: [1.0, 0.0, 0.0], vertices: [[99.0, 0.0, 0.0], [100.0, 0.0, 0.0], [99.0, 1.0, 0.0]] } },
         StlMutation::RemoveTriangle { index: 1 },
         StlMutation::SetTriangleNormal { index: 0, normal: [1.0, 0.0, 0.0] },
         StlMutation::SetTriangleVertices { index: 0, vertices: [[9.0, 9.0, 9.0], [8.0, 8.0, 8.0], [7.0, 7.0, 7.0]] },
@@ -362,18 +348,11 @@ mod tests {
 
     //#region Fixtures
     fn tri(nx: f64, ny: f64, nz: f64, seed: f64) -> StlTriangle {
-        StlTriangle {
-            normal: [nx, ny, nz],
-            vertices: [[seed, 0.0, 0.0], [seed + 1.0, 0.0, 0.0], [seed, 1.0, 0.0]],
-        }
+        StlTriangle { normal: [nx, ny, nz], vertices: [[seed, 0.0, 0.0], [seed + 1.0, 0.0, 0.0], [seed, 1.0, 0.0]] }
     }
 
     fn base_snapshot() -> StlSnapshot {
-        StlSnapshot {
-            schema: "stdio.stl".into(),
-            solid_name: "mesh".into(),
-            triangles: vec![tri(0.0, 0.0, 1.0, 0.0), tri(0.0, 0.0, 1.0, 10.0), tri(0.0, 0.0, 1.0, 20.0)],
-        }
+        StlSnapshot { schema: "stdio.stl".into(), solid_name: "mesh".into(), triangles: vec![tri(0.0, 0.0, 1.0, 0.0), tri(0.0, 0.0, 1.0, 10.0), tri(0.0, 0.0, 1.0, 20.0)] }
     }
     //#endregion Fixtures
 
@@ -520,10 +499,7 @@ mod tests {
     //#region 🔖️codec_retention_law
     #[test]
     fn codec_retention_law() {
-        let bytes = std::fs::read(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../🗿️artifacts/🟪️stl/📚️examples/🎬️demo/🖼️assets/🟪️example.stl"
-        ));
+        let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/🟪️stl/📚️examples/🎬️demo/🖼️assets/🟪️example.stl"));
         let decoded = bytes
             .ok()
             .and_then(|b| String::from_utf8(b).ok())
@@ -547,14 +523,7 @@ mod tests {
     /// directions is the correct way to exercise every triple-kind, matching `txt`'s field_sweep
     /// fix for the identical structural issue).
     fn sweep_a() -> StlSnapshot {
-        StlSnapshot {
-            schema: "stdio.stl".into(),
-            solid_name: "before".into(),
-            triangles: vec![
-                tri(1.0, 0.0, 0.0, 0.0),
-                tri(0.0, 1.0, 0.0, 10.0),
-            ],
-        }
+        StlSnapshot { schema: "stdio.stl".into(), solid_name: "before".into(), triangles: vec![tri(1.0, 0.0, 0.0, 0.0), tri(0.0, 1.0, 0.0, 10.0)] }
     }
 
     fn sweep_b() -> StlSnapshot {
@@ -562,9 +531,9 @@ mod tests {
             schema: "stdio.stl".into(),
             solid_name: "after".into(),
             triangles: vec![
-                tri(0.0, 0.0, 1.0, 5.0),         // index 0: modified from sweep_a's index 0 (normal AND vertices differ — different seed)
-                tri(0.0, 1.0, 0.0, 10.0),        // index 1: unchanged
-                tri(-1.0, 0.0, 0.0, 20.0),       // index 2: added (b longer than a)
+                tri(0.0, 0.0, 1.0, 5.0),   // index 0: modified from sweep_a's index 0 (normal AND vertices differ — different seed)
+                tri(0.0, 1.0, 0.0, 10.0),  // index 1: unchanged
+                tri(-1.0, 0.0, 0.0, 20.0), // index 2: added (b longer than a)
             ],
         }
     }
@@ -621,7 +590,10 @@ mod tests {
         assert!(td.modified.is_empty());
 
         let base = base_snapshot();
-        let sequential = { let mid = d1.apply(&base); d2.apply(&mid) };
+        let sequential = {
+            let mid = d1.apply(&base);
+            d2.apply(&mid)
+        };
         assert_eq!(merged.apply(&base), sequential);
     }
 
@@ -632,7 +604,10 @@ mod tests {
         let mut merged = d1.clone();
         merged.absorb(d2.clone());
         let base = base_snapshot();
-        let sequential = { let mid = d1.apply(&base); d2.apply(&mid) };
+        let sequential = {
+            let mid = d1.apply(&base);
+            d2.apply(&mid)
+        };
         assert_eq!(merged.apply(&base), sequential);
         assert_eq!(sequential.triangles.len(), base.triangles.len() + 2);
     }
@@ -649,7 +624,10 @@ mod tests {
         assert_eq!(td.added[0].triangle.normal, [0.0, 1.0, 0.0]);
 
         let base = base_snapshot();
-        let sequential = { let mid = d1.apply(&base); d2.apply(&mid) };
+        let sequential = {
+            let mid = d1.apply(&base);
+            d2.apply(&mid)
+        };
         assert_eq!(merged.apply(&base), sequential);
     }
     //#endregion 🔖️CanonicalCases

@@ -1,7 +1,7 @@
 //! 📥️ Deserialize `stdio.obj` from stdio.txt.
 
-use crate::artifacts::txt::TxtSnapshot;
 use crate::artifacts::obj::ObjSnapshot;
+use crate::artifacts::txt::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register deserializer hooks.
@@ -9,8 +9,7 @@ pub fn register() {}
 
 /// 📥 Parse obj text into a ObjSnapshot.
 pub fn deserialize(from: &TxtSnapshot) -> Result<ObjSnapshot, store::TextError> {
-    crate::artifacts::obj::engine::decode_obj(&from.to_body())
-        .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    crate::artifacts::obj::engine::decode_obj(&from.to_body()).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
 }
 
 /// 📥 Parse DSL/text bytes via txt then obj.

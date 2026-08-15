@@ -18,26 +18,71 @@
 //! reusing `🔺️diff`'s `pub(crate)` grammar primitives rather than duplicating them a second time.
 
 use crate::artifacts::dxf::schema::diff::{
-    block_diff_between, dec_block, dec_dxf_entity, dec_dxf_snapshot, dec_header_var, dec_layer,
-    dec_linetype, dec_str, dec_style, diff_insert_block, diff_insert_entity, diff_insert_layer,
-    diff_insert_linetype, diff_insert_style, diff_remove_block, diff_remove_entity,
-    diff_remove_header_var, diff_remove_layer, diff_remove_linetype, diff_remove_style,
-    diff_set_block, diff_set_entity, diff_set_header_var, diff_set_layer, diff_set_linetype,
-    diff_set_snapshot, diff_set_style, enc_block, enc_dxf_entity, enc_dxf_snapshot,
-    enc_header_var, enc_layer, enc_linetype, enc_str, enc_style, entity_diff_between_pub,
-    header_var_diff_between, layer_diff_between, linetype_diff_between, style_diff_between,
+    block_diff_between,
+    dec_block,
     // 🧪️ P2-FG1: real recursive binary twins backing the upgraded `OpBinary` impl below (see
     // `🔺️diff/🦀️component.rs`'s `#region 🔖️ItemBinaryCodecs`/`#region 🔖️BinaryPrimitives`).
-    dec_block_bin, dec_dxf_entity_bin, dec_dxf_snapshot_bin, dec_header_var_bin, dec_layer_bin,
-    dec_linetype_bin, dec_style_bin, enc_block_bin, enc_dxf_entity_bin, enc_dxf_snapshot_bin,
-    enc_header_var_bin, enc_layer_bin, enc_linetype_bin, enc_style_bin, read_str_lp, write_str_lp,
+    dec_block_bin,
+    dec_dxf_entity,
+    dec_dxf_entity_bin,
+    dec_dxf_snapshot,
+    dec_dxf_snapshot_bin,
+    dec_header_var,
+    dec_header_var_bin,
+    dec_layer,
+    dec_layer_bin,
+    dec_linetype,
+    dec_linetype_bin,
+    dec_str,
+    dec_style,
+    dec_style_bin,
+    diff_insert_block,
+    diff_insert_entity,
+    diff_insert_layer,
+    diff_insert_linetype,
+    diff_insert_style,
+    diff_remove_block,
+    diff_remove_entity,
+    diff_remove_header_var,
+    diff_remove_layer,
+    diff_remove_linetype,
+    diff_remove_style,
+    diff_set_block,
+    diff_set_entity,
+    diff_set_header_var,
+    diff_set_layer,
+    diff_set_linetype,
+    diff_set_snapshot,
+    diff_set_style,
+    enc_block,
+    enc_block_bin,
+    enc_dxf_entity,
+    enc_dxf_entity_bin,
+    enc_dxf_snapshot,
+    enc_dxf_snapshot_bin,
+    enc_header_var,
+    enc_header_var_bin,
+    enc_layer,
+    enc_layer_bin,
+    enc_linetype,
+    enc_linetype_bin,
+    enc_str,
+    enc_style,
+    enc_style_bin,
+    entity_diff_between_pub,
+    header_var_diff_between,
+    layer_diff_between,
+    linetype_diff_between,
+    read_str_lp,
+    style_diff_between,
+    write_str_lp,
     DxfDiff,
 };
 use crate::artifacts::dxf::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfStyle};
 use crate::artifacts::dxf::DxfSnapshot;
-use protocol::{Mutation, MutationDiff, OpText};
 #[cfg(test)]
 use protocol::OpBinary;
+use protocol::{Mutation, MutationDiff, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -47,48 +92,95 @@ use serde::{Deserialize, Serialize};
 pub enum DxfMutation {
     #[default]
     NoMutation,
-    SetSnapshot { snapshot: DxfSnapshot },
+    SetSnapshot {
+        snapshot: DxfSnapshot,
+    },
 
     /// 🏷️ Creates or replaces a `$VAR` header entry.
-    SetHeaderVar { name: String, header_var: DxfHeaderVar },
+    SetHeaderVar {
+        name: String,
+        header_var: DxfHeaderVar,
+    },
     /// ➖️ Removes a `$VAR` header entry.
-    RemoveHeaderVar { name: String },
+    RemoveHeaderVar {
+        name: String,
+    },
 
     /// ➕️ Inserts a whole `LAYER` table entry at `index`.
-    InsertLayer { index: usize, layer: DxfLayer },
+    InsertLayer {
+        index: usize,
+        layer: DxfLayer,
+    },
     /// ➖️ Removes a `LAYER` table entry by name.
-    RemoveLayer { name: String },
+    RemoveLayer {
+        name: String,
+    },
     /// ✏️ Replaces the WHOLE `LAYER` entry named `name` (diff is still a sparse per-field patch).
-    SetLayer { name: String, layer: DxfLayer },
+    SetLayer {
+        name: String,
+        layer: DxfLayer,
+    },
 
     /// ➕️ Inserts a whole `STYLE` table entry at `index`.
-    InsertStyle { index: usize, style: DxfStyle },
+    InsertStyle {
+        index: usize,
+        style: DxfStyle,
+    },
     /// ➖️ Removes a `STYLE` table entry by name.
-    RemoveStyle { name: String },
+    RemoveStyle {
+        name: String,
+    },
     /// ✏️ Replaces the WHOLE `STYLE` entry named `name`.
-    SetStyle { name: String, style: DxfStyle },
+    SetStyle {
+        name: String,
+        style: DxfStyle,
+    },
 
     /// ➕️ Inserts a whole `LTYPE` table entry at `index`.
-    InsertLinetype { index: usize, linetype: DxfLinetype },
+    InsertLinetype {
+        index: usize,
+        linetype: DxfLinetype,
+    },
     /// ➖️ Removes an `LTYPE` table entry by name.
-    RemoveLinetype { name: String },
+    RemoveLinetype {
+        name: String,
+    },
     /// ✏️ Replaces the WHOLE `LTYPE` entry named `name`.
-    SetLinetype { name: String, linetype: DxfLinetype },
+    SetLinetype {
+        name: String,
+        linetype: DxfLinetype,
+    },
 
     /// ➕️ Inserts a whole entity at `index` in the top-level `ENTITIES` list.
-    InsertEntity { index: usize, entity: DxfEntity },
+    InsertEntity {
+        index: usize,
+        entity: DxfEntity,
+    },
     /// ➖️ Removes the entity at `index`.
-    RemoveEntity { index: usize },
+    RemoveEntity {
+        index: usize,
+    },
     /// ✏️ Replaces the WHOLE entity at `index` (diff is `Replace` on kind change, else a
     /// sparse kind-specific patch).
-    SetEntity { index: usize, entity: DxfEntity },
+    SetEntity {
+        index: usize,
+        entity: DxfEntity,
+    },
 
     /// ➕️ Inserts a whole `BLOCK` at `index`.
-    InsertBlock { index: usize, block: DxfBlock },
+    InsertBlock {
+        index: usize,
+        block: DxfBlock,
+    },
     /// ➖️ Removes the `BLOCK` at `index`.
-    RemoveBlock { index: usize },
+    RemoveBlock {
+        index: usize,
+    },
     /// ✏️ Replaces the WHOLE `BLOCK` at `index`.
-    SetBlock { index: usize, block: DxfBlock },
+    SetBlock {
+        index: usize,
+        block: DxfBlock,
+    },
 }
 //#endregion 🔖️Mutations
 
@@ -264,13 +356,7 @@ fn parse_dxf_mutation(line: &str) -> Result<DxfMutation, String> {
         return Ok(DxfMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("dxf mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("dxf mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("dxf mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
@@ -346,23 +432,56 @@ impl protocol::OpBinary for DxfMutation {
         match self {
             DxfMutation::NoMutation => {}
             DxfMutation::SetSnapshot { snapshot } => enc_dxf_snapshot_bin(snapshot, &mut out),
-            DxfMutation::SetHeaderVar { name, header_var } => { write_str_lp(&mut out, name); enc_header_var_bin(header_var, &mut out); }
+            DxfMutation::SetHeaderVar { name, header_var } => {
+                write_str_lp(&mut out, name);
+                enc_header_var_bin(header_var, &mut out);
+            }
             DxfMutation::RemoveHeaderVar { name } => write_str_lp(&mut out, name),
-            DxfMutation::InsertLayer { index, layer } => { store::pack_rt::write_varint_u64(&mut out, *index as u64); enc_layer_bin(layer, &mut out); }
+            DxfMutation::InsertLayer { index, layer } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_layer_bin(layer, &mut out);
+            }
             DxfMutation::RemoveLayer { name } => write_str_lp(&mut out, name),
-            DxfMutation::SetLayer { name, layer } => { write_str_lp(&mut out, name); enc_layer_bin(layer, &mut out); }
-            DxfMutation::InsertStyle { index, style } => { store::pack_rt::write_varint_u64(&mut out, *index as u64); enc_style_bin(style, &mut out); }
+            DxfMutation::SetLayer { name, layer } => {
+                write_str_lp(&mut out, name);
+                enc_layer_bin(layer, &mut out);
+            }
+            DxfMutation::InsertStyle { index, style } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_style_bin(style, &mut out);
+            }
             DxfMutation::RemoveStyle { name } => write_str_lp(&mut out, name),
-            DxfMutation::SetStyle { name, style } => { write_str_lp(&mut out, name); enc_style_bin(style, &mut out); }
-            DxfMutation::InsertLinetype { index, linetype } => { store::pack_rt::write_varint_u64(&mut out, *index as u64); enc_linetype_bin(linetype, &mut out); }
+            DxfMutation::SetStyle { name, style } => {
+                write_str_lp(&mut out, name);
+                enc_style_bin(style, &mut out);
+            }
+            DxfMutation::InsertLinetype { index, linetype } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_linetype_bin(linetype, &mut out);
+            }
             DxfMutation::RemoveLinetype { name } => write_str_lp(&mut out, name),
-            DxfMutation::SetLinetype { name, linetype } => { write_str_lp(&mut out, name); enc_linetype_bin(linetype, &mut out); }
-            DxfMutation::InsertEntity { index, entity } => { store::pack_rt::write_varint_u64(&mut out, *index as u64); enc_dxf_entity_bin(entity, &mut out); }
+            DxfMutation::SetLinetype { name, linetype } => {
+                write_str_lp(&mut out, name);
+                enc_linetype_bin(linetype, &mut out);
+            }
+            DxfMutation::InsertEntity { index, entity } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_dxf_entity_bin(entity, &mut out);
+            }
             DxfMutation::RemoveEntity { index } => store::pack_rt::write_varint_u64(&mut out, *index as u64),
-            DxfMutation::SetEntity { index, entity } => { store::pack_rt::write_varint_u64(&mut out, *index as u64); enc_dxf_entity_bin(entity, &mut out); }
-            DxfMutation::InsertBlock { index, block } => { store::pack_rt::write_varint_u64(&mut out, *index as u64); enc_block_bin(block, &mut out); }
+            DxfMutation::SetEntity { index, entity } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_dxf_entity_bin(entity, &mut out);
+            }
+            DxfMutation::InsertBlock { index, block } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_block_bin(block, &mut out);
+            }
             DxfMutation::RemoveBlock { index } => store::pack_rt::write_varint_u64(&mut out, *index as u64),
-            DxfMutation::SetBlock { index, block } => { store::pack_rt::write_varint_u64(&mut out, *index as u64); enc_block_bin(block, &mut out); }
+            DxfMutation::SetBlock { index, block } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_block_bin(block, &mut out);
+            }
         }
         Ok(out)
     }
@@ -458,18 +577,9 @@ pub(crate) fn demo_mutation_cases() -> Vec<DxfMutation> {
         DxfSnapshot {
             schema: "stdio.dxf".into(),
             header_vars: vec![DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1009".into() }, extra_group_codes: vec![] }],
-            tables: DxfTables {
-                layers: vec![DxfLayer { name: "0".into(), color: 7, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] }],
-                styles: vec![],
-                linetypes: vec![],
-            },
+            tables: DxfTables { layers: vec![DxfLayer { name: "0".into(), color: 7, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] }], styles: vec![], linetypes: vec![] },
             other_tables: vec![DxfOtherTable { name: "VPORT".into(), tags: vec![DxfTag { code: 2, value: "*ACTIVE".into() }] }],
-            blocks: vec![DxfBlock {
-                name: "B1".into(),
-                base_point: [0.0, 0.0, 0.0],
-                entities: vec![DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] }],
-                unknown_group_codes: vec![],
-            }],
+            blocks: vec![DxfBlock { name: "B1".into(), base_point: [0.0, 0.0, 0.0], entities: vec![DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] }], unknown_group_codes: vec![] }],
             entities: vec![DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }],
         }
     }
@@ -495,14 +605,14 @@ pub(crate) fn demo_mutation_cases() -> Vec<DxfMutation> {
         DxfMutation::SetEntity { index: 1, entity: DxfEntity::Text { position: [0.0, 0.0, 0.0], height: 1.0, value: "hi".into(), layer: "0".into(), unknown_group_codes: vec![] } },
         DxfMutation::InsertBlock { index: 0, block: DxfBlock { name: "B2".into(), base_point: [1.0, 1.0, 0.0], entities: vec![], unknown_group_codes: vec![] } },
         DxfMutation::RemoveBlock { index: 0 },
-        DxfMutation::SetBlock { index: 0, block: DxfBlock { name: "B1".into(), base_point: [5.0, 5.0, 0.0], entities: vec![DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] }], unknown_group_codes: vec![] } },
+        DxfMutation::SetBlock {
+            index: 0,
+            block: DxfBlock { name: "B1".into(), base_point: [5.0, 5.0, 0.0], entities: vec![DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] }], unknown_group_codes: vec![] },
+        },
         DxfMutation::InsertEntity {
             index: 1,
             entity: DxfEntity::Polyline {
-                vertices: vec![
-                    DxfVertex { x: 0.0, y: 0.0, z: 0.0, bulge: 0.0, unknown_group_codes: vec![] },
-                    DxfVertex { x: 1.0, y: 0.0, z: 0.0, bulge: 0.5, unknown_group_codes: vec![(8, DxfValue::Str { value: "0".into() })] },
-                ],
+                vertices: vec![DxfVertex { x: 0.0, y: 0.0, z: 0.0, bulge: 0.0, unknown_group_codes: vec![] }, DxfVertex { x: 1.0, y: 0.0, z: 0.0, bulge: 0.5, unknown_group_codes: vec![(8, DxfValue::Str { value: "0".into() })] }],
                 closed: true,
                 layer: "0".into(),
                 unknown_group_codes: vec![],
@@ -533,9 +643,7 @@ mod tests {
     fn base_snapshot() -> DxfSnapshot {
         DxfSnapshot {
             schema: "stdio.dxf".into(),
-            header_vars: vec![
-                DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1009".into() }, extra_group_codes: vec![] },
-            ],
+            header_vars: vec![DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1009".into() }, extra_group_codes: vec![] }],
             tables: DxfTables {
                 layers: vec![DxfLayer { name: "0".into(), color: 7, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] }],
                 styles: vec![DxfStyle { name: "STANDARD".into(), flags: 0, font_name: "txt".into(), unknown_group_codes: vec![] }],
@@ -543,10 +651,7 @@ mod tests {
             },
             other_tables: vec![],
             blocks: vec![DxfBlock { name: "B1".into(), base_point: [0.0, 0.0, 0.0], entities: vec![], unknown_group_codes: vec![] }],
-            entities: vec![
-                DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] },
-                DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 5.0, layer: "0".into(), unknown_group_codes: vec![] },
-            ],
+            entities: vec![DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }, DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 5.0, layer: "0".into(), unknown_group_codes: vec![] }],
         }
     }
 
@@ -583,10 +688,7 @@ mod tests {
                 DxfBlock { name: "B0".into(), base_point: [0.0, 0.0, 0.0], entities: vec![], unknown_group_codes: vec![] },
                 DxfBlock { name: "B1".into(), base_point: [1.0, 1.0, 1.0], entities: vec![DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] }], unknown_group_codes: vec![] },
             ],
-            entities: vec![
-                DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 0.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] },
-                DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] },
-            ],
+            entities: vec![DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 0.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }, DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] }],
         }
     }
 
@@ -699,7 +801,10 @@ mod tests {
         let mut composed = d1.clone();
         composed.absorb(d2.clone());
         assert_eq!(composed.apply(&base), after, "Add+SetField absorb mismatch");
-        match &after.entities[1] { DxfEntity::Arc { center, .. } => assert_eq!(*center, [9.0, 9.0, 9.0]), other => panic!("expected Arc, got {other:?}") }
+        match &after.entities[1] {
+            DxfEntity::Arc { center, .. } => assert_eq!(*center, [9.0, 9.0, 9.0]),
+            other => panic!("expected Arc, got {other:?}"),
+        }
 
         // 🧩 Add+SetField ACROSS a kind change: patch-into-Replace (the entity-diff-specific
         // canonical case — SetEntity with a different kind produces `Replace`, which must still

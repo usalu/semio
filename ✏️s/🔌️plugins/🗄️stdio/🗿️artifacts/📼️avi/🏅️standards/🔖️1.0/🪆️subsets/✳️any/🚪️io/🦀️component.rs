@@ -4,11 +4,9 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{
-        ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId,
-    };
     use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
     use crate::artifacts::avi::standards::v1_0::subsets::any::schema::AviAnalyzer;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.avi", standard: StandardId("1.0"), subset: SubsetId("*") };
 
@@ -19,7 +17,9 @@ pub mod derived_composition {
         type Snapshot = AviSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] { &[DIALECT] }
+        fn reads() -> &'static [Dialect] {
+            &[DIALECT]
+        }
 
         fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
@@ -34,10 +34,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "AviComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = AviAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "AviComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "AviComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -49,7 +46,9 @@ pub mod derived_composition {
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::avi::standards::v1_0::subsets::any::schema::avi_artifact_schema_descriptor());
         register_artifact_inferences();
-        store::register_document_codec(store::ArtifactCodec::of::<AviSnapshot, crate::artifacts::avi::standards::v1_0::subsets::any::schema::mutations::AviMutation>(crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA));
+        store::register_document_codec(store::ArtifactCodec::of::<AviSnapshot, crate::artifacts::avi::standards::v1_0::subsets::any::schema::mutations::AviMutation>(
+            crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA,
+        ));
     }
 
     /// 💡️ Registers `s.stdio.avi.inference`'s facet leaves into the OS-wide inference
@@ -66,14 +65,22 @@ pub use derived_composition::*;
 use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk, STDIO_AVI_DOCUMENT_SCHEMA};
 
 //#region 🔖️Riff
-struct RiffEntry<'a> { fourcc: [u8; 4], payload: &'a [u8] }
+struct RiffEntry<'a> {
+    fourcc: [u8; 4],
+    payload: &'a [u8],
+}
 
 fn iter_riff(data: &[u8]) -> impl Iterator<Item = Result<RiffEntry<'_>, String>> {
-    struct It<'a> { data: &'a [u8], pos: usize }
+    struct It<'a> {
+        data: &'a [u8],
+        pos: usize,
+    }
     impl<'a> Iterator for It<'a> {
         type Item = Result<RiffEntry<'a>, String>;
         fn next(&mut self) -> Option<Self::Item> {
-            if self.pos + 8 > self.data.len() { return None; }
+            if self.pos + 8 > self.data.len() {
+                return None;
+            }
             let fourcc: [u8; 4] = self.data[self.pos..self.pos + 4].try_into().unwrap();
             let size = u32::from_le_bytes(self.data[self.pos + 4..self.pos + 8].try_into().unwrap()) as usize;
             let payload_start = self.pos + 8;
@@ -86,14 +93,18 @@ fn iter_riff(data: &[u8]) -> impl Iterator<Item = Result<RiffEntry<'_>, String>>
     It { data, pos: 0 }
 }
 
-fn fourcc_str(f: &[u8; 4]) -> String { String::from_utf8_lossy(f).into_owned() }
+fn fourcc_str(f: &[u8; 4]) -> String {
+    String::from_utf8_lossy(f).into_owned()
+}
 
 fn write_chunk(fourcc: &[u8; 4], payload: &[u8]) -> Vec<u8> {
     let mut out = Vec::with_capacity(8 + payload.len() + 1);
     out.extend_from_slice(fourcc);
     out.extend_from_slice(&(payload.len() as u32).to_le_bytes());
     out.extend_from_slice(payload);
-    if payload.len() % 2 == 1 { out.push(0); }
+    if payload.len() % 2 == 1 {
+        out.push(0);
+    }
     out
 }
 
@@ -105,7 +116,9 @@ fn write_list(list_type: &[u8; 4], children: &[u8]) -> Vec<u8> {
 
 fn fourcc4(s: &str) -> [u8; 4] {
     let mut out = [b' '; 4];
-    for (i, b) in s.as_bytes().iter().take(4).enumerate() { out[i] = *b; }
+    for (i, b) in s.as_bytes().iter().take(4).enumerate() {
+        out[i] = *b;
+    }
     out
 }
 //#endregion 🔖️Riff
@@ -118,7 +131,9 @@ pub fn sniff_real_bytes(bytes: &[u8]) -> bool {
 
 //#region 🔖️Header
 fn parse_avih(payload: &[u8]) -> Result<AviMainHeader, String> {
-    if payload.len() < 56 { return Err("avi: avih shorter than 56 bytes".into()); }
+    if payload.len() < 56 {
+        return Err("avi: avih shorter than 56 bytes".into());
+    }
     let u32le = |o: usize| u32::from_le_bytes(payload[o..o + 4].try_into().unwrap());
     Ok(AviMainHeader {
         micro_sec_per_frame: u32le(0),
@@ -142,12 +157,16 @@ fn write_avih(h: &AviMainHeader) -> Vec<u8> {
     }
     let mut reserved = h.reserved.clone();
     reserved.resize(4, 0);
-    for v in reserved { out.extend_from_slice(&v.to_le_bytes()); }
+    for v in reserved {
+        out.extend_from_slice(&v.to_le_bytes());
+    }
     out
 }
 
 fn parse_strh(payload: &[u8]) -> Result<AviStreamHeader, String> {
-    if payload.len() < 64 { return Err("avi: strh shorter than 64 bytes".into()); }
+    if payload.len() < 64 {
+        return Err("avi: strh shorter than 64 bytes".into());
+    }
     let u32le = |o: usize| u32::from_le_bytes(payload[o..o + 4].try_into().unwrap());
     let i32le = |o: usize| i32::from_le_bytes(payload[o..o + 4].try_into().unwrap());
     let u16le = |o: usize| u16::from_le_bytes(payload[o..o + 2].try_into().unwrap());
@@ -187,7 +206,9 @@ fn write_strh(h: &AviStreamHeader) -> Vec<u8> {
     out.extend_from_slice(&h.suggested_buffer_size.to_le_bytes());
     out.extend_from_slice(&h.quality.to_le_bytes());
     out.extend_from_slice(&h.sample_size.to_le_bytes());
-    for v in [h.rc_frame_left, h.rc_frame_top, h.rc_frame_right, h.rc_frame_bottom] { out.extend_from_slice(&v.to_le_bytes()); }
+    for v in [h.rc_frame_left, h.rc_frame_top, h.rc_frame_right, h.rc_frame_bottom] {
+        out.extend_from_slice(&v.to_le_bytes());
+    }
     out
 }
 
@@ -264,7 +285,9 @@ fn write_strf(f: &AviStreamFormat) -> Vec<u8> {
 /// assigned to its owning stream by the leading 2-digit stream number in its fourcc), `idx1`
 /// (positionally matched to `movi` chunks for the keyframe flag — see module doc comment).
 pub fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
-    if !sniff_real_bytes(bytes) { return Err("avi: missing RIFF/AVI magic".into()); }
+    if !sniff_real_bytes(bytes) {
+        return Err("avi: missing RIFF/AVI magic".into());
+    }
     let body = &bytes[12..bytes.len().min(u32::from_le_bytes(bytes[4..8].try_into().unwrap()) as usize + 8)];
 
     let mut main_header = None;
@@ -291,8 +314,12 @@ pub fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
                             let mut strf_bytes: Option<&[u8]> = None;
                             for sitem in iter_riff(strl_body) {
                                 let s = sitem?;
-                                if &s.fourcc == b"strh" { strh = Some(parse_strh(s.payload)?); }
-                                if &s.fourcc == b"strf" { strf_bytes = Some(s.payload); }
+                                if &s.fourcc == b"strh" {
+                                    strh = Some(parse_strh(s.payload)?);
+                                }
+                                if &s.fourcc == b"strf" {
+                                    strf_bytes = Some(s.payload);
+                                }
                             }
                             let strh = strh.ok_or("avi: strl missing strh")?;
                             let strf = parse_strf(&strh.fcc_type, strf_bytes.ok_or("avi: strl missing strf")?);
@@ -343,11 +370,15 @@ pub fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
 /// generator documents) — byte-identical for the untouched round trip on a single-stream fixture.
 pub fn encode_avi(snapshot: &AviSnapshot) -> Vec<u8> {
     let avih = write_chunk(b"avih", &write_avih(&snapshot.main_header));
-    let strls: Vec<u8> = snapshot.streams.iter().flat_map(|s| {
-        let strh = write_chunk(b"strh", &write_strh(&s.strh));
-        let strf = write_chunk(b"strf", &write_strf(&s.strf));
-        write_list(b"strl", &[strh, strf].concat())
-    }).collect();
+    let strls: Vec<u8> = snapshot
+        .streams
+        .iter()
+        .flat_map(|s| {
+            let strh = write_chunk(b"strh", &write_strh(&s.strh));
+            let strf = write_chunk(b"strf", &write_strf(&s.strf));
+            write_list(b"strl", &[strh, strf].concat())
+        })
+        .collect();
     let hdrl = write_list(b"hdrl", &[avih, strls].concat());
 
     let movi_chunks: Vec<u8> = snapshot.streams.iter().flat_map(|s| s.chunks.iter().flat_map(|c| write_chunk(&fourcc4(&c.fourcc), &c.data))).collect();
@@ -380,7 +411,9 @@ pub fn encode_avi(snapshot: &AviSnapshot) -> Vec<u8> {
     riff_body.extend_from_slice(b"AVI ");
     riff_body.extend(hdrl);
     riff_body.extend(movi);
-    if snapshot.idx1_present { riff_body.extend(write_chunk(b"idx1", &idx1_payload)); }
+    if snapshot.idx1_present {
+        riff_body.extend(write_chunk(b"idx1", &idx1_payload));
+    }
     riff_body.extend(unknown);
 
     let mut out = Vec::new();
@@ -398,14 +431,41 @@ mod codec_tests {
     fn synthetic_snapshot() -> AviSnapshot {
         AviSnapshot {
             schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
-            main_header: AviMainHeader { micro_sec_per_frame: 100_000, max_bytes_per_sec: 1400, padding_granularity: 0, flags: 0x10, total_frames: 2, initial_frames: 0, streams: 1, suggested_buffer_size: 140, width: 16, height: 16, reserved: vec![0, 0, 0, 0] },
+            main_header: AviMainHeader {
+                micro_sec_per_frame: 100_000,
+                max_bytes_per_sec: 1400,
+                padding_granularity: 0,
+                flags: 0x10,
+                total_frames: 2,
+                initial_frames: 0,
+                streams: 1,
+                suggested_buffer_size: 140,
+                width: 16,
+                height: 16,
+                reserved: vec![0, 0, 0, 0],
+            },
             streams: vec![AviStream {
-                strh: AviStreamHeader { fcc_type: "vids".into(), fcc_handler: "MJPG".into(), flags: 0, priority: 0, language: 0, initial_frames: 0, scale: 1, rate: 10, start: 0, length: 2, suggested_buffer_size: 140, quality: -1, sample_size: 0, rc_frame_left: 0, rc_frame_top: 0, rc_frame_right: 16, rc_frame_bottom: 16 },
+                strh: AviStreamHeader {
+                    fcc_type: "vids".into(),
+                    fcc_handler: "MJPG".into(),
+                    flags: 0,
+                    priority: 0,
+                    language: 0,
+                    initial_frames: 0,
+                    scale: 1,
+                    rate: 10,
+                    start: 0,
+                    length: 2,
+                    suggested_buffer_size: 140,
+                    quality: -1,
+                    sample_size: 0,
+                    rc_frame_left: 0,
+                    rc_frame_top: 0,
+                    rc_frame_right: 16,
+                    rc_frame_bottom: 16,
+                },
                 strf: AviStreamFormat::BitmapInfo { size: 40, width: 16, height: 16, planes: 1, bit_count: 24, compression: "MJPG".into(), size_image: 140, x_pels_per_meter: 0, y_pels_per_meter: 0, colors_used: 0, colors_important: 0 },
-                chunks: vec![
-                    AviChunk { fourcc: "00dc".into(), data: vec![1, 2, 3, 4], keyframe: true },
-                    AviChunk { fourcc: "00dc".into(), data: vec![5, 6, 7], keyframe: true },
-                ],
+                chunks: vec![AviChunk { fourcc: "00dc".into(), data: vec![1, 2, 3, 4], keyframe: true }, AviChunk { fourcc: "00dc".into(), data: vec![5, 6, 7], keyframe: true }],
             }],
             idx1_present: true,
             unknown_chunks: vec![],
@@ -435,7 +495,25 @@ mod codec_tests {
     fn audio_stream_round_trips_via_wave_format() {
         let mut snap = synthetic_snapshot();
         snap.streams.push(AviStream {
-            strh: AviStreamHeader { fcc_type: "auds".into(), fcc_handler: "    ".into(), flags: 0, priority: 0, language: 0, initial_frames: 0, scale: 1, rate: 44100, start: 0, length: 4, suggested_buffer_size: 4, quality: 0, sample_size: 2, rc_frame_left: 0, rc_frame_top: 0, rc_frame_right: 0, rc_frame_bottom: 0 },
+            strh: AviStreamHeader {
+                fcc_type: "auds".into(),
+                fcc_handler: "    ".into(),
+                flags: 0,
+                priority: 0,
+                language: 0,
+                initial_frames: 0,
+                scale: 1,
+                rate: 44100,
+                start: 0,
+                length: 4,
+                suggested_buffer_size: 4,
+                quality: 0,
+                sample_size: 2,
+                rc_frame_left: 0,
+                rc_frame_top: 0,
+                rc_frame_right: 0,
+                rc_frame_bottom: 0,
+            },
             strf: AviStreamFormat::WaveFormat { format_tag: 1, channels: 1, samples_per_sec: 44100, avg_bytes_per_sec: 88200, block_align: 2, bits_per_sample: 16, extra: vec![] },
             chunks: vec![AviChunk { fourcc: "01wb".into(), data: vec![9, 9], keyframe: true }],
         });
@@ -496,10 +574,7 @@ mod codec_tests {
         assert_eq!(round_tripped, snap);
 
         for chunk in &snap.streams[0].chunks {
-            assert!(
-                REAL_EXAMPLE_AVI.windows(chunk.data.len().max(1)).any(|w| w == chunk.data.as_slice()),
-                "chunk data must be a verbatim slice of the real source file"
-            );
+            assert!(REAL_EXAMPLE_AVI.windows(chunk.data.len().max(1)).any(|w| w == chunk.data.as_slice()), "chunk data must be a verbatim slice of the real source file");
         }
     }
     //#endregion codec_retention_law
@@ -507,9 +582,9 @@ mod codec_tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::avi::standards::v1_0::subsets::any::schema::AviComposer as AviRawAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 

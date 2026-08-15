@@ -2,14 +2,13 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::las::LasSnapshot;
     use crate::artifacts::las::standards::v1_0::subsets::any::schema::LasAnalyzer;
+    use crate::artifacts::las::LasSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.las", standard: StandardId("1.0"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
-
 
     pub struct LasComposerComposition;
 
@@ -38,10 +37,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "LasComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = LasAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "LasComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "LasComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -78,20 +74,16 @@ fn write_fixed_str(buf: &mut [u8], s: &str) {
 }
 
 fn read_u16(bytes: &[u8], off: usize) -> Result<u16, String> {
-    bytes.get(off..off + 2).and_then(|s| s.try_into().ok()).map(u16::from_le_bytes)
-        .ok_or_else(|| format!("las: truncated u16 at offset {off}"))
+    bytes.get(off..off + 2).and_then(|s| s.try_into().ok()).map(u16::from_le_bytes).ok_or_else(|| format!("las: truncated u16 at offset {off}"))
 }
 fn read_u32(bytes: &[u8], off: usize) -> Result<u32, String> {
-    bytes.get(off..off + 4).and_then(|s| s.try_into().ok()).map(u32::from_le_bytes)
-        .ok_or_else(|| format!("las: truncated u32 at offset {off}"))
+    bytes.get(off..off + 4).and_then(|s| s.try_into().ok()).map(u32::from_le_bytes).ok_or_else(|| format!("las: truncated u32 at offset {off}"))
 }
 fn read_u64(bytes: &[u8], off: usize) -> Result<u64, String> {
-    bytes.get(off..off + 8).and_then(|s| s.try_into().ok()).map(u64::from_le_bytes)
-        .ok_or_else(|| format!("las: truncated u64 at offset {off}"))
+    bytes.get(off..off + 8).and_then(|s| s.try_into().ok()).map(u64::from_le_bytes).ok_or_else(|| format!("las: truncated u64 at offset {off}"))
 }
 fn read_f64(bytes: &[u8], off: usize) -> Result<f64, String> {
-    bytes.get(off..off + 8).and_then(|s| s.try_into().ok()).map(f64::from_le_bytes)
-        .ok_or_else(|| format!("las: truncated f64 at offset {off}"))
+    bytes.get(off..off + 8).and_then(|s| s.try_into().ok()).map(f64::from_le_bytes).ok_or_else(|| format!("las: truncated f64 at offset {off}"))
 }
 //#endregion 🔖️ByteHelpers
 
@@ -99,7 +91,13 @@ fn read_f64(bytes: &[u8], off: usize) -> Result<f64, String> {
 /// 📏 Fixed byte width of point data record formats 0-3 (§LAS 1.2). `0` marks an
 /// unsupported format.
 fn point_record_min_len(fmt: u8) -> usize {
-    match fmt { 0 => 20, 1 => 28, 2 => 26, 3 => 34, _ => 0 }
+    match fmt {
+        0 => 20,
+        1 => 28,
+        2 => 26,
+        3 => 34,
+        _ => 0,
+    }
 }
 //#endregion 🔖️RecordLayout
 
@@ -153,8 +151,12 @@ mod vlr_off {
 /// applying the header's scale/offset to reconstruct real-world `x/y/z`.
 fn decode_point(rec: &[u8], fmt: u8, scale: (f64, f64, f64), offset: (f64, f64, f64)) -> Result<LasPoint, String> {
     let min_len = point_record_min_len(fmt);
-    if min_len == 0 { return Err(format!("las: unsupported point data format {fmt}")); }
-    if rec.len() < min_len { return Err("las: truncated point record".into()); }
+    if min_len == 0 {
+        return Err(format!("las: unsupported point data format {fmt}"));
+    }
+    if rec.len() < min_len {
+        return Err("las: truncated point record".into());
+    }
     let xi = i32::from_le_bytes(rec[0..4].try_into().unwrap());
     let yi = i32::from_le_bytes(rec[4..8].try_into().unwrap());
     let zi = i32::from_le_bytes(rec[8..12].try_into().unwrap());
@@ -167,19 +169,8 @@ fn decode_point(rec: &[u8], fmt: u8, scale: (f64, f64, f64), offset: (f64, f64, 
     let (gps_time, rgb) = match fmt {
         0 => (None, None),
         1 => (Some(f64::from_le_bytes(rec[20..28].try_into().unwrap())), None),
-        2 => (None, Some((
-            u16::from_le_bytes(rec[20..22].try_into().unwrap()),
-            u16::from_le_bytes(rec[22..24].try_into().unwrap()),
-            u16::from_le_bytes(rec[24..26].try_into().unwrap()),
-        ))),
-        3 => (
-            Some(f64::from_le_bytes(rec[20..28].try_into().unwrap())),
-            Some((
-                u16::from_le_bytes(rec[28..30].try_into().unwrap()),
-                u16::from_le_bytes(rec[30..32].try_into().unwrap()),
-                u16::from_le_bytes(rec[32..34].try_into().unwrap()),
-            )),
-        ),
+        2 => (None, Some((u16::from_le_bytes(rec[20..22].try_into().unwrap()), u16::from_le_bytes(rec[22..24].try_into().unwrap()), u16::from_le_bytes(rec[24..26].try_into().unwrap())))),
+        3 => (Some(f64::from_le_bytes(rec[20..28].try_into().unwrap())), Some((u16::from_le_bytes(rec[28..30].try_into().unwrap()), u16::from_le_bytes(rec[30..32].try_into().unwrap()), u16::from_le_bytes(rec[32..34].try_into().unwrap())))),
         _ => unreachable!("validated by point_record_min_len"),
     };
     Ok(LasPoint {
@@ -206,14 +197,24 @@ fn decode_vlrs(bytes: &[u8], header_size: usize, point_offset: usize, number_of_
     let mut vlrs = Vec::with_capacity((number_of_vlrs as usize).min(10_000));
     let mut pos = header_size;
     for _ in 0..number_of_vlrs {
-        if pos + vlr_off::HEADER_LEN > bytes.len() || pos + vlr_off::HEADER_LEN > point_offset { break; }
+        if pos + vlr_off::HEADER_LEN > bytes.len() || pos + vlr_off::HEADER_LEN > point_offset {
+            break;
+        }
         let user_id = read_fixed_str(&bytes[pos + vlr_off::USER_ID.start..pos + vlr_off::USER_ID.end]);
-        let record_id = match read_u16(bytes, pos + vlr_off::RECORD_ID) { Ok(v) => v, Err(_) => break };
-        let data_len = match read_u16(bytes, pos + vlr_off::RECORD_LENGTH) { Ok(v) => v as usize, Err(_) => break };
+        let record_id = match read_u16(bytes, pos + vlr_off::RECORD_ID) {
+            Ok(v) => v,
+            Err(_) => break,
+        };
+        let data_len = match read_u16(bytes, pos + vlr_off::RECORD_LENGTH) {
+            Ok(v) => v as usize,
+            Err(_) => break,
+        };
         let description = read_fixed_str(&bytes[pos + vlr_off::DESCRIPTION.start..pos + vlr_off::DESCRIPTION.end]);
         let data_start = pos + vlr_off::HEADER_LEN;
         let data_end = data_start + data_len;
-        if data_end > bytes.len() || data_end > point_offset { break; }
+        if data_end > bytes.len() || data_end > point_offset {
+            break;
+        }
         let data = bytes[data_start..data_end].to_vec();
         vlrs.push(LasVlr { user_id, record_id, description, data });
         pos = data_end;
@@ -225,8 +226,12 @@ fn decode_vlrs(bytes: &[u8], header_size: usize, point_offset: usize, number_of_
 /// `header_size` rather than a hardcoded 227 constant) + VLRs + all point records for whichever
 /// of formats 0-3 the header declares.
 pub fn decode_las(bytes: &[u8]) -> Result<LasSnapshot, String> {
-    if bytes.len() < 4 || &bytes[0..4] != b"LASF" { return Err("las: signature missing".into()); }
-    if bytes.len() < off::FIXED_HEADER_LEN { return Err("las: header too short".into()); }
+    if bytes.len() < 4 || &bytes[0..4] != b"LASF" {
+        return Err("las: signature missing".into());
+    }
+    if bytes.len() < off::FIXED_HEADER_LEN {
+        return Err("las: header too short".into());
+    }
 
     let version_major = bytes[off::VERSION_MAJOR];
     let version_minor = bytes[off::VERSION_MINOR];
@@ -243,13 +248,17 @@ pub fn decode_las(bytes: &[u8]) -> Result<LasSnapshot, String> {
     let number_of_vlrs = read_u32(bytes, off::NUMBER_OF_VLRS)?;
     let point_format = bytes[off::POINT_DATA_FORMAT_ID] & 0x7F; // top bit flags waveform-packet storage, irrelevant to the record layout itself
     let record_len = read_u16(bytes, off::POINT_DATA_RECORD_LENGTH)? as usize;
-    if record_len == 0 { return Err("las: point data record length is zero".into()); }
+    if record_len == 0 {
+        return Err("las: point data record length is zero".into());
+    }
     let legacy_count = read_u32(bytes, off::NUMBER_OF_POINT_RECORDS)?;
     let mut point_count = legacy_count as u64;
     if point_count == 0 && version_minor >= 4 && bytes.len() >= off::EXTENDED_POINT_COUNT + 8 {
         // 🔖 LAS 1.4: legacy count of 0 means "see the extended 64-bit count".
         let extended = read_u64(bytes, off::EXTENDED_POINT_COUNT)?;
-        if extended != 0 { point_count = extended; }
+        if extended != 0 {
+            point_count = extended;
+        }
     }
     let mut points_by_return = [0u32; 5];
     for (i, slot) in points_by_return.iter_mut().enumerate() {
@@ -269,7 +278,9 @@ pub fn decode_las(bytes: &[u8]) -> Result<LasSnapshot, String> {
     let min_z = read_f64(bytes, off::MIN_Z)?;
 
     let min_len = point_record_min_len(point_format);
-    if min_len == 0 { return Err(format!("las: unsupported point data format {point_format}")); }
+    if min_len == 0 {
+        return Err(format!("las: unsupported point data format {point_format}"));
+    }
     if record_len < min_len {
         return Err(format!("las: record length {record_len} too small for point data format {point_format} (needs >= {min_len})"));
     }
@@ -279,7 +290,9 @@ pub fn decode_las(bytes: &[u8]) -> Result<LasSnapshot, String> {
     let mut points = Vec::with_capacity((point_count as usize).min(1_000_000));
     let mut pos = point_offset;
     for _ in 0..point_count {
-        if pos + record_len > bytes.len() { break; }
+        if pos + record_len > bytes.len() {
+            break;
+        }
         let rec = &bytes[pos..pos + record_len];
         points.push(decode_point(rec, point_format, (x_scale, y_scale, z_scale), (x_offset, y_offset, z_offset))?);
         pos += record_len;
@@ -299,9 +312,18 @@ pub fn decode_las(bytes: &[u8]) -> Result<LasSnapshot, String> {
         point_data_record_length: record_len as u16,
         number_of_point_records: point_count.min(u32::MAX as u64) as u32,
         points_by_return,
-        x_scale, y_scale, z_scale,
-        x_offset, y_offset, z_offset,
-        max_x, min_x, max_y, min_y, max_z, min_z,
+        x_scale,
+        y_scale,
+        z_scale,
+        x_offset,
+        y_offset,
+        z_offset,
+        max_x,
+        min_x,
+        max_y,
+        min_y,
+        max_z,
+        min_z,
     };
 
     Ok(LasSnapshot { schema: STDIO_LAS_DOCUMENT_SCHEMA.into(), header, vlrs, points })
@@ -434,9 +456,9 @@ pub fn encode_las(snap: &LasSnapshot) -> Result<Vec<u8>, String> {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::las::standards::v1_0::subsets::any::schema::LasComposer as LasRawAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
@@ -450,7 +472,7 @@ pub mod io_registry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::las::schema::{empty_las_snapshot, demo_las_snapshot};
+    use crate::artifacts::las::schema::{demo_las_snapshot, empty_las_snapshot};
 
     #[test]
     fn empty_snapshot_matches_schema() {
@@ -473,30 +495,32 @@ mod tests {
     /// 🧪 7 points with varied per-field values (not all zero/default) so a naive stub that
     /// only reads x/y/z would fail these assertions on intensity/classification/flags/etc.
     fn sample_points(fmt: u8) -> Vec<LasPoint> {
-        (0..7).map(|i| {
-            let base = LasPoint {
-                x: 100.0 + i as f64 * 1.23,
-                y: -50.0 + i as f64 * 0.5,
-                z: 10.0 + i as f64 * 0.01,
-                intensity: 100 + i as u16 * 10,
-                return_number: (i % 5) as u8,
-                number_of_returns: ((i + 1) % 5) as u8,
-                scan_direction_flag: i % 2 == 0,
-                edge_of_flight_line: i % 3 == 0,
-                classification: (i * 2) as u8,
-                scan_angle_rank: (i as i8) - 3,
-                user_data: i as u8,
-                point_source_id: 1000 + i as u16,
-                gps_time: None,
-                rgb: None,
-            };
-            match fmt {
-                1 => LasPoint { gps_time: Some(123456.789 + i as f64), ..base },
-                2 => LasPoint { rgb: Some((1000 + i as u16, 2000 + i as u16, 3000 + i as u16)), ..base },
-                3 => LasPoint { gps_time: Some(123456.789 + i as f64), rgb: Some((1000 + i as u16, 2000 + i as u16, 3000 + i as u16)), ..base },
-                _ => base,
-            }
-        }).collect()
+        (0..7)
+            .map(|i| {
+                let base = LasPoint {
+                    x: 100.0 + i as f64 * 1.23,
+                    y: -50.0 + i as f64 * 0.5,
+                    z: 10.0 + i as f64 * 0.01,
+                    intensity: 100 + i as u16 * 10,
+                    return_number: (i % 5) as u8,
+                    number_of_returns: ((i + 1) % 5) as u8,
+                    scan_direction_flag: i % 2 == 0,
+                    edge_of_flight_line: i % 3 == 0,
+                    classification: (i * 2) as u8,
+                    scan_angle_rank: (i as i8) - 3,
+                    user_data: i as u8,
+                    point_source_id: 1000 + i as u16,
+                    gps_time: None,
+                    rgb: None,
+                };
+                match fmt {
+                    1 => LasPoint { gps_time: Some(123456.789 + i as f64), ..base },
+                    2 => LasPoint { rgb: Some((1000 + i as u16, 2000 + i as u16, 3000 + i as u16)), ..base },
+                    3 => LasPoint { gps_time: Some(123456.789 + i as f64), rgb: Some((1000 + i as u16, 2000 + i as u16, 3000 + i as u16)), ..base },
+                    _ => base,
+                }
+            })
+            .collect()
     }
 
     fn sample_vlrs() -> Vec<LasVlr> {
@@ -520,7 +544,12 @@ mod tests {
                 number_of_vlrs: vlrs.len() as u32,
                 number_of_point_records: points.len() as u32,
                 points_by_return: [1, 2, 3, 1, 0],
-                max_x: 900.0, min_x: 0.0, max_y: 900.0, min_y: -900.0, max_z: 100.0, min_z: -100.0,
+                max_x: 900.0,
+                min_x: 0.0,
+                max_y: 900.0,
+                min_y: -900.0,
+                max_z: 100.0,
+                min_z: -100.0,
                 ..LasHeader::default()
             },
             vlrs,
@@ -635,8 +664,7 @@ mod tests {
         let bytes_without = encode_las(&without_vlrs).expect("encode without vlrs");
         let decoded_with = decode_las(&bytes_with).expect("decode with vlrs");
         let decoded_without = decode_las(&bytes_without).expect("decode without vlrs");
-        assert!(decoded_with.header.offset_to_point_data > decoded_without.header.offset_to_point_data,
-            "vlr bytes must push point data further out");
+        assert!(decoded_with.header.offset_to_point_data > decoded_without.header.offset_to_point_data, "vlr bytes must push point data further out");
         assert_eq!(decoded_without.header.offset_to_point_data, 227);
         let expected_vlr_span: u32 = sample_vlrs().iter().map(|v| 54 + v.data.len() as u32).sum();
         assert_eq!(decoded_with.header.offset_to_point_data, 227 + expected_vlr_span);
@@ -667,7 +695,8 @@ mod tests {
         let header_size = 375usize;
         let mut out = vec![0u8; header_size];
         out[0..4].copy_from_slice(b"LASF");
-        out[24] = 1; out[25] = 4; // version 1.4
+        out[24] = 1;
+        out[25] = 4; // version 1.4
         out[94..96].copy_from_slice(&(header_size as u16).to_le_bytes());
         out[96..100].copy_from_slice(&(header_size as u32).to_le_bytes());
         out[104] = 0;
@@ -730,19 +759,11 @@ mod tests {
 
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }

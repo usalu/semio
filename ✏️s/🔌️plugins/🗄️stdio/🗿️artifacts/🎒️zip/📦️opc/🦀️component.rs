@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
-use crate::artifacts::zip::schema::snapshot::{ZipCompressionMethod, ZipEntry};
+use crate::artifacts::zip::schema::snapshot::ZipEntry;
 use crate::artifacts::zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 
 //#region 🔖️Error
@@ -60,6 +60,92 @@ fn xml_attr(name: &str, value: &str) -> XmlAttr {
 
 fn xml_elem(name: &str, attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> XmlNode {
     XmlNode::Element { name: name.into(), attrs, children }
+}
+
+fn opc_escape_text(value: &str) -> String {
+    value.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+}
+
+fn opc_escape_attr(value: &str) -> String {
+    opc_escape_text(value).replace('"', "&quot;").replace('\t', "&#x9;").replace('\n', "&#xA;").replace('\r', "&#xD;")
+}
+
+fn opc_node_to_text(node: &XmlNode, out: &mut String) {
+    match node {
+        XmlNode::Text { text } => out.push_str(&opc_escape_text(text)),
+        XmlNode::CData { text } => {
+            out.push_str("<![CDATA[");
+            out.push_str(text);
+            out.push_str("]]>");
+        }
+        XmlNode::Comment { text } => {
+            out.push_str("<!--");
+            out.push_str(text);
+            out.push_str("-->");
+        }
+        XmlNode::ProcessingInstruction { target, data } => {
+            out.push_str("<?");
+            out.push_str(target);
+            if !data.is_empty() {
+                out.push(' ');
+                out.push_str(data);
+            }
+            out.push_str("?>");
+        }
+        XmlNode::Element { name, attrs, children } => {
+            out.push('<');
+            out.push_str(name);
+            for attr in attrs {
+                out.push(' ');
+                out.push_str(&attr.name);
+                out.push_str("=\"");
+                out.push_str(&opc_escape_attr(&attr.value));
+                out.push('"');
+            }
+            if children.is_empty() {
+                out.push_str("/>");
+            } else {
+                out.push('>');
+                for child in children {
+                    opc_node_to_text(child, out);
+                }
+                out.push_str("</");
+                out.push_str(name);
+                out.push('>');
+            }
+        }
+    }
+}
+
+/// 📝️ Deterministically materializes logical OPC XML using the compact ECMA-376 convention.
+pub fn xml_document_to_opc_text(doc: &XmlDocument) -> String {
+    if doc.doctype.is_some() {
+        return xml_document_to_text(doc);
+    }
+    let mut out = String::new();
+    if let Some(declaration) = &doc.declaration {
+        out.push_str("<?xml version=\"");
+        out.push_str(&declaration.version);
+        out.push('"');
+        if let Some(encoding) = &declaration.encoding {
+            out.push_str(" encoding=\"");
+            out.push_str(encoding);
+            out.push('"');
+        }
+        if let Some(standalone) = declaration.standalone {
+            out.push_str(" standalone=\"");
+            out.push_str(if standalone { "yes" } else { "no" });
+            out.push('"');
+        }
+        out.push_str("?>\r\n");
+    }
+    for node in &doc.prolog {
+        opc_node_to_text(node, &mut out);
+    }
+    if let Some(root) = &doc.root {
+        opc_node_to_text(root, &mut out);
+    }
+    out
 }
 //#endregion 🔖️Constants
 
@@ -128,7 +214,12 @@ impl OpcContentTypes {
         for (part, ct) in &self.overrides {
             children.push(xml_elem("Override", vec![xml_attr("PartName", part), xml_attr("ContentType", ct)], vec![]));
         }
-        XmlDocument { prolog: Vec::new(), root: Some(xml_elem("Types", vec![xml_attr("xmlns", CONTENT_TYPES_NS)], children)), doctype: None, declaration: None }
+        XmlDocument {
+            prolog: Vec::new(),
+            root: Some(xml_elem("Types", vec![xml_attr("xmlns", CONTENT_TYPES_NS)], children)),
+            doctype: None,
+            declaration: Some(crate::artifacts::xml::schema::snapshot::XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
+        }
     }
 
     fn from_xml(doc: &XmlDocument) -> Result<Self, OpcError> {
@@ -249,7 +340,12 @@ fn relationships_to_xml(rels: &[OpcRelationship]) -> XmlDocument {
             xml_elem("Relationship", attrs, vec![])
         })
         .collect();
-    XmlDocument { prolog: Vec::new(), root: Some(xml_elem("Relationships", vec![xml_attr("xmlns", RELATIONSHIPS_NS)], children)), doctype: None, declaration: None }
+    XmlDocument {
+        prolog: Vec::new(),
+        root: Some(xml_elem("Relationships", vec![xml_attr("xmlns", RELATIONSHIPS_NS)], children)),
+        doctype: None,
+        declaration: Some(crate::artifacts::xml::schema::snapshot::XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
+    }
 }
 
 fn relationships_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<OpcRelationship>, OpcError> {
@@ -292,6 +388,8 @@ pub struct OpcPackage {
     /// 🗺️ Owner part path (`""` = package root) -> that owner's relationships.
     #[serde(default)]
     pub relationships: HashMap<String, Vec<OpcRelationship>>,
+    #[serde(default)]
+    pub comment: String,
 }
 
 impl OpcPackage {
@@ -370,20 +468,30 @@ pub fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
         parts.push(OpcPart { path: entry.name.clone(), content_type, bytes: entry.data.clone() });
     }
 
-    Ok(OpcPackage { parts, content_types, relationships })
+    parts.sort_by(|left, right| left.path.cmp(&right.path));
+    Ok(OpcPackage { parts, content_types, relationships, comment: zip.comment })
 }
 
 /// 📦️ Re-encode an `OpcPackage` as OPC container bytes: `[Content_Types].xml` and every owner's
 /// `*.rels` file are regenerated from the typed tables (never carried as stray verbatim parts —
 /// see `decode_opc`), every content part is re-emitted deflated via the zip artifact's real
-/// codec. Semantically equivalent to a conformant reader, matching the zip artifact's own
-/// encode/decode contract (not necessarily byte-identical: XML attribute serialization order and
-/// zip local-header metadata have legitimate freedom).
+/// codec. The generic OPC writer chooses one deterministic, path-sorted logical normal form;
+/// format serializers that define a standard-specific member sequence call the same writer with
+/// their semantic path-order policy.
 pub fn encode_opc(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
-    let mut entries = Vec::with_capacity(pkg.parts.len() + pkg.relationships.len() + 1);
+    encode_opc_with_path_order(pkg, |paths| {
+        paths.sort();
+        if let Some(index) = paths.iter().position(|path| path == CONTENT_TYPES_PART) {
+            let content_types = paths.remove(index);
+            paths.insert(0, content_types);
+        }
+    })
+}
 
-    let ct_text = xml_document_to_text(&pkg.content_types.to_xml());
-    entries.push(ZipEntry { name: CONTENT_TYPES_PART.into(), data: ct_text.into_bytes(), method: ZipCompressionMethod::Deflate, ..Default::default() });
+pub(crate) fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnOnce(&mut Vec<String>)) -> Result<Vec<u8>, OpcError> {
+    let mut payloads = HashMap::<String, Vec<u8>>::new();
+    let ct_text = xml_document_to_opc_text(&pkg.content_types.to_xml());
+    payloads.insert(CONTENT_TYPES_PART.into(), ct_text.into_bytes());
 
     let mut owners: Vec<&String> = pkg.relationships.keys().collect();
     owners.sort();
@@ -393,16 +501,24 @@ pub fn encode_opc(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
             continue;
         }
         let path = rels_part_path_for(owner);
-        let text = xml_document_to_text(&relationships_to_xml(rels));
-        entries.push(ZipEntry { name: path, data: text.into_bytes(), method: ZipCompressionMethod::Deflate, ..Default::default() });
+        let text = xml_document_to_opc_text(&relationships_to_xml(rels));
+        payloads.insert(path, text.into_bytes());
     }
 
     for part in &pkg.parts {
-        entries.push(ZipEntry { name: part.path.clone(), data: part.bytes.clone(), method: ZipCompressionMethod::Deflate, ..Default::default() });
+        payloads.insert(part.path.clone(), part.bytes.clone());
     }
 
-    let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new(), physical: None };
-    crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&snap).map_err(|e| OpcError::Zip(e.to_string()))
+    let mut entries = Vec::with_capacity(payloads.len());
+    let mut new_paths: Vec<String> = payloads.keys().cloned().collect();
+    order(&mut new_paths);
+    for path in &new_paths {
+        let data = payloads.remove(path).expect("known OPC payload");
+        entries.push(ZipEntry { name: path.clone(), data });
+    }
+
+    let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: pkg.comment.clone() };
+    crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip_with_entry_names(&snap, &new_paths).map_err(|e| OpcError::Zip(e.to_string()))
 }
 
 /// 🕵️ Structural sniff of OOXML-shaped bytes: recognizes the zip magic *and* the presence of a
@@ -473,7 +589,7 @@ mod tests {
 
     #[test]
     fn decode_rejects_missing_content_types() {
-        let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "word/document.xml".into(), data: b"<x/>".to_vec(), ..Default::default() }], comment: String::new(), physical: None };
+        let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "word/document.xml".into(), data: b"<x/>".to_vec(), ..Default::default() }], comment: String::new() };
         let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&snap).unwrap();
         let err = decode_opc(&bytes).expect_err("must reject a zip with no [Content_Types].xml");
         assert_eq!(err, OpcError::MissingContentTypes);
@@ -490,7 +606,6 @@ mod tests {
             schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
             entries: vec![ZipEntry { name: "a.txt".into(), data: b"hi".to_vec(), ..Default::default() }],
             comment: String::new(),
-            physical: None,
         })
         .unwrap();
         assert!(!sniff_opc_bytes(&plain_zip), "a plain zip with no [Content_Types].xml must not sniff as OPC");

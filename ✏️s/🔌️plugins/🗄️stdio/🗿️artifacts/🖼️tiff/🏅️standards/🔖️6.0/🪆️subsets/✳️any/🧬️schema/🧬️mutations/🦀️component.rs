@@ -15,15 +15,14 @@
 //! (`hex_encode`/`enc_values`/`split_top_level`/…) rather than duplicating them a second time.
 
 use crate::artifacts::tiff::schema::diff::{
-    self, dec_byte_order, dec_field_type, dec_ifd, dec_ifd_bin, dec_list, dec_str, dec_values, dec_values_bin, enc_byte_order,
-    enc_field_type, enc_ifd, enc_ifd_bin, enc_list, enc_str, enc_values, enc_values_bin, hex_decode, hex_encode, parse_num,
+    self, dec_byte_order, dec_field_type, dec_ifd, dec_ifd_bin, dec_list, dec_str, dec_values, dec_values_bin, enc_byte_order, enc_field_type, enc_ifd, enc_ifd_bin, enc_list, enc_str, enc_values, enc_values_bin, hex_decode, hex_encode, parse_num,
     read_bytes_lp, read_str_lp, split_top_level, strip_brackets, write_bytes_lp, write_str_lp, TiffDiff,
 };
 use crate::artifacts::tiff::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
 use crate::artifacts::tiff::TiffSnapshot;
-use protocol::{Mutation, MutationDiff, OpText};
 #[cfg(test)]
 use protocol::OpBinary;
+use protocol::{Mutation, MutationDiff, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -160,13 +159,7 @@ fn parse_tiff_mutation(line: &str) -> Result<TiffMutation, String> {
         return Ok(TiffMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("tiff mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("tiff mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("tiff mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { parse_num::<usize>(arg(k)?) };
     let u16_arg = |k: &str| -> Result<u16, String> { parse_num::<u16>(arg(k)?) };
@@ -175,12 +168,7 @@ fn parse_tiff_mutation(line: &str) -> Result<TiffMutation, String> {
         "set-byte-order" => Ok(TiffMutation::SetByteOrder { byte_order: dec_byte_order(arg("byte-order")?)? }),
         "insert-ifd" => Ok(TiffMutation::InsertIfd { index: usize_arg("index")?, ifd: dec_ifd(arg("ifd")?)? }),
         "remove-ifd" => Ok(TiffMutation::RemoveIfd { index: usize_arg("index")? }),
-        "set-tag" => Ok(TiffMutation::SetTag {
-            ifd_index: usize_arg("ifd-index")?,
-            tag: u16_arg("tag")?,
-            kind: dec_field_type(arg("kind")?)?,
-            values: dec_values(arg("values")?)?,
-        }),
+        "set-tag" => Ok(TiffMutation::SetTag { ifd_index: usize_arg("ifd-index")?, tag: u16_arg("tag")?, kind: dec_field_type(arg("kind")?)?, values: dec_values(arg("values")?)? }),
         "remove-tag" => Ok(TiffMutation::RemoveTag { ifd_index: usize_arg("ifd-index")?, tag: u16_arg("tag")? }),
         "set-pixels" => Ok(TiffMutation::SetPixels { pixels: hex_decode(arg("pixels")?)? }),
         other => Err(format!("tiff mutation: unknown keyword {other:?}")),
@@ -296,8 +284,7 @@ impl protocol::OpBinary for TiffMutation {
             5 => {
                 let ifd_index = reader.read_varint_u64().map_err(|e| malformed("op ifd_index", reader.position(), e.to_string()))? as usize;
                 let tag = reader.read_u16_le().map_err(|e| malformed("op tag", reader.position(), e.to_string()))?;
-                let kind = TiffFieldType::from_u16(reader.read_u8().map_err(|e| malformed("op kind", reader.position(), e.to_string()))? as u16)
-                    .map_err(|e| malformed("op kind", reader.position(), e))?;
+                let kind = TiffFieldType::from_u16(reader.read_u8().map_err(|e| malformed("op kind", reader.position(), e.to_string()))? as u16).map_err(|e| malformed("op kind", reader.position(), e))?;
                 let values = dec_values_bin(&mut reader).map_err(|e| malformed("op values", reader.position(), e))?;
                 Ok(TiffMutation::SetTag { ifd_index, tag, kind, values })
             }
@@ -358,7 +345,7 @@ mod tests {
                 entries: vec![
                     TiffTag { tag: 256, kind: TiffFieldType::Long, values: TiffValues::Long(vec![4]) }, // ImageWidth
                     TiffTag { tag: 257, kind: TiffFieldType::Long, values: TiffValues::Long(vec![4]) }, // ImageLength
-                    short_tag(296, 2), // ResolutionUnit
+                    short_tag(296, 2),                                                                  // ResolutionUnit
                 ],
             }],
             pixels: vec![0u8; 4 * 4 * 4],
@@ -380,7 +367,7 @@ mod tests {
             schema: "stdio.tiff".into(),
             byte_order: TiffByteOrder::LittleEndian,
             ifds: vec![
-                TiffIfd { entries: vec![short_tag(300, 1), short_tag(301, 9)] }, // tag 300 survives+changes, 301 removed
+                TiffIfd { entries: vec![short_tag(300, 1), short_tag(301, 9)] },                                                       // tag 300 survives+changes, 301 removed
                 TiffIfd { entries: vec![TiffTag { tag: 302, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("gone".into()) }] }, // whole IFD removed in b
             ],
             pixels: vec![0u8, 0, 0, 255, 1, 1, 1, 255],
@@ -409,7 +396,13 @@ mod tests {
     fn all_variants(base: &TiffSnapshot) -> Vec<TiffMutation> {
         vec![
             TiffMutation::NoMutation,
-            TiffMutation::SetSnapshot { snapshot: { let mut s = base.clone(); s.byte_order = TiffByteOrder::BigEndian; s } },
+            TiffMutation::SetSnapshot {
+                snapshot: {
+                    let mut s = base.clone();
+                    s.byte_order = TiffByteOrder::BigEndian;
+                    s
+                },
+            },
             TiffMutation::SetByteOrder { byte_order: TiffByteOrder::BigEndian },
             TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { entries: vec![short_tag(270, 1)] } },
             TiffMutation::RemoveIfd { index: 0 },
@@ -478,11 +471,7 @@ mod tests {
         assert_absorb_law(&base, TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { entries: vec![short_tag(1, 1)] } }, TiffMutation::RemoveIfd { index: 0 });
 
         // IFD-level, Insert+Insert-same-index: both survive.
-        assert_absorb_law(
-            &base,
-            TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { entries: vec![short_tag(2, 2)] } },
-            TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { entries: vec![short_tag(3, 3)] } },
-        );
+        assert_absorb_law(&base, TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { entries: vec![short_tag(2, 2)] } }, TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { entries: vec![short_tag(3, 3)] } });
 
         // Tag-level (id-keyed), Add+SetField: the second mutation patches directly into the
         // still-pending added tag.
@@ -493,18 +482,10 @@ mod tests {
         );
 
         // Tag-level, Modify+Remove: a pending field patch on a since-removed base tag vanishes.
-        assert_absorb_law(
-            &base,
-            TiffMutation::SetTag { ifd_index: 0, tag: 296, kind: TiffFieldType::Short, values: TiffValues::Short(vec![7]) },
-            TiffMutation::RemoveTag { ifd_index: 0, tag: 296 },
-        );
+        assert_absorb_law(&base, TiffMutation::SetTag { ifd_index: 0, tag: 296, kind: TiffFieldType::Short, values: TiffValues::Short(vec![7]) }, TiffMutation::RemoveTag { ifd_index: 0, tag: 296 });
 
         // Tag-level, Add then annihilate the very same add.
-        assert_absorb_law(
-            &base,
-            TiffMutation::SetTag { ifd_index: 0, tag: 317, kind: TiffFieldType::Byte, values: TiffValues::Byte(vec![1]) },
-            TiffMutation::RemoveTag { ifd_index: 0, tag: 317 },
-        );
+        assert_absorb_law(&base, TiffMutation::SetTag { ifd_index: 0, tag: 317, kind: TiffFieldType::Byte, values: TiffValues::Byte(vec![1]) }, TiffMutation::RemoveTag { ifd_index: 0, tag: 317 });
 
         // Two unrelated scalar sets absorb via LWW.
         assert_absorb_law(&base, TiffMutation::SetByteOrder { byte_order: TiffByteOrder::BigEndian }, TiffMutation::SetByteOrder { byte_order: TiffByteOrder::LittleEndian });

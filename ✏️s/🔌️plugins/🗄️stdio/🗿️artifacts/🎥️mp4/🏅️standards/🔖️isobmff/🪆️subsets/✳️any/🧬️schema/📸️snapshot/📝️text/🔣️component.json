@@ -1,9 +1,9 @@
 {
   "$id": "https://semio.tech/schema/stdio.mp4.snapshot.json",
   "title": "Mp4Snapshot",
-  "description": "ISO-BMFF: ftyp typed, decoded per-track sample tables, everything else typed-raw retained.",
+  "description": "Logical ISO-BMFF movie, AVC configuration, track metadata, sample tables, and encoded sample payloads.",
   "type": "object",
-  "required": ["schema", "ftyp", "tracks", "unknownBoxes"],
+  "required": ["schema", "ftyp", "tracks"],
   "properties": {
     "schema": { "type": "string", "x-semio-state": "artifact" },
     "ftyp": {
@@ -17,8 +17,7 @@
         "properties": {
           "trackId": { "type": "integer" }, "timescale": { "type": "integer" },
           "codec": { "oneOf": [
-            { "type": "object", "properties": { "codec": { "const": "avc" }, "sps": { "type": "array" }, "pps": { "type": "array" }, "nalLengthSize": { "type": "integer" } } },
-            { "type": "object", "properties": { "codec": { "const": "other" }, "fourcc": { "type": "string" }, "raw": { "type": "array", "items": { "type": "integer" } } } }
+            { "type": "object", "properties": { "codec": { "const": "avc" }, "sps": { "type": "array" }, "pps": { "type": "array" }, "nalLengthSize": { "type": "integer" } } }
           ] },
           "width": { "type": "integer" }, "height": { "type": "integer" },
           "samples": { "type": "array", "items": {
@@ -27,7 +26,6 @@
           } }
         }
       }
-    },
-    "unknownBoxes": { "type": "array", "x-semio-state": "artifact", "items": { "type": "object", "properties": { "fourcc": { "type": "string" }, "data": { "type": "array", "items": { "type": "integer" } } } } }
+    }
   }
 }

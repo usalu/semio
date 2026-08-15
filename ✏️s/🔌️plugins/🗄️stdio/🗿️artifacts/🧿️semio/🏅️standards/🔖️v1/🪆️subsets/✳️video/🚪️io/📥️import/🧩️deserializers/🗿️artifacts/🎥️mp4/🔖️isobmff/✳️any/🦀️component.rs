@@ -3,23 +3,20 @@
 //! model (master plan: "close to a direct reshape of typed metadata, not a pixel/codec-level
 //! operation"). Every `Mp4Track` decodes to one `SemioVideoStream` of `kind: Video` (this codec
 //! only ever types video-handler tracks — see `Mp4Track`'s own doc comment — audio/other tracks
-//! stay typed-raw in `unknown_boxes` and are honestly left out of this reshape).
+//! are rejected by the native MP4 deserializer before this reshape).
 //!
 //! Honest, documented lossy fields (real, unavoidable — never fabricated):
-//! - `Mp4Codec::Avc{sps,pps,nal_length_size}` collapses to the plain codec name string `"avc1"` —
+//! - `Mp4Codec{sps,pps,nal_length_size}` collapses to the plain codec name string `"avc1"` —
 //!   `SemioVideoStream.codec` has no slot for structured codec-config bytes.
 //! - `Mp4Sample.cts_offset` (composition-time offset) is folded into the derived `pts` (`pts = dts
 //!   + cts_offset`, `dts` = running sum of prior `duration`s) rather than kept as its own field —
 //!   `SemioVideoSample` has no separate decode/presentation timestamp pair.
-//! - `Mp4Snapshot.ftyp`/`unknown_boxes` have no video-subset counterpart at all and are dropped.
+//! - `Mp4Snapshot.ftyp` has no video-subset counterpart and is dropped.
 
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::mp4::Mp4Snapshot;
 use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4Codec;
-use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{
-    SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind,
-    STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA,
-};
+use crate::artifacts::mp4::Mp4Snapshot;
+use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") };
@@ -37,10 +34,7 @@ impl ArtifactDeserializer for SemioVideoFromMp4 {
             .tracks
             .iter()
             .map(|track| {
-                let codec = match &track.codec {
-                    Mp4Codec::Avc { .. } => "avc1".to_string(),
-                    Mp4Codec::Other { fourcc, .. } => fourcc.clone(),
-                };
+                let codec = "avc1".to_string();
                 let mut dts: i64 = 0;
                 let samples = track
                     .samples
@@ -52,14 +46,7 @@ impl ArtifactDeserializer for SemioVideoFromMp4 {
                     })
                     .collect();
                 let den = track.samples.first().map(|s| s.duration as i64).unwrap_or(1).max(1);
-                SemioVideoStream {
-                    kind: SemioVideoStreamKind::Video,
-                    codec,
-                    width: track.width,
-                    height: track.height,
-                    rate: SemioRational { num: track.timescale as i64, den },
-                    samples,
-                }
+                SemioVideoStream { kind: SemioVideoStreamKind::Video, codec, width: track.width, height: track.height, rate: SemioRational { num: track.timescale as i64, den }, samples }
             })
             .collect();
         Ok(SemioVideoSnapshot { schema: STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(), streams })
@@ -80,7 +67,7 @@ mod tests {
             tracks: vec![Mp4Track {
                 track_id: 1,
                 timescale: 30,
-                codec: Mp4Codec::Other { fourcc: "avc1".into(), raw: vec![] },
+                codec: Mp4Codec::default(),
                 width: 1920,
                 height: 1080,
                 metadata: Default::default(),
@@ -91,7 +78,6 @@ mod tests {
                     Mp4Sample { data: vec![0xDD, 0xEE, 0xFF], duration: 1, cts_offset: 0, sync: false },
                 ],
             }],
-            unknown_boxes: vec![],
         }
     }
 

@@ -1,4 +1,4 @@
 module Stdio_mp4_mutations;
 public type Op = unit {
-    json_utf8: bytes &eod;
+    tagged_record: bytes &eod;
 };

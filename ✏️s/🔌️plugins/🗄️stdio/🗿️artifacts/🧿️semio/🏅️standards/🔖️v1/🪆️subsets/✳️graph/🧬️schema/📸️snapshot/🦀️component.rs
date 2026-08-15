@@ -19,7 +19,7 @@
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{enc_semio_value_bin, dec_semio_value_bin, enc_semio_value_entry, dec_semio_value_entry};
+use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value_bin, dec_semio_value_entry, enc_semio_value_bin, enc_semio_value_entry};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -239,29 +239,14 @@ pub(crate) fn dec_property(s: &str) -> Result<SemioValueEntry, String> {
 }
 
 pub(crate) fn enc_node(n: &SemioGraphNode) -> String {
-    format!(
-        "[{},{},{},{},{},{}]",
-        enc_node_id(&n.id),
-        enc_str(&n.kind),
-        enc_str(&n.label),
-        enc_point2_fields(&n.position),
-        enc_list(&n.ports, enc_port),
-        enc_list(&n.properties, enc_property),
-    )
+    format!("[{},{},{},{},{},{}]", enc_node_id(&n.id), enc_str(&n.kind), enc_str(&n.label), enc_point2_fields(&n.position), enc_list(&n.ports, enc_port), enc_list(&n.properties, enc_property),)
 }
 pub(crate) fn dec_node(s: &str) -> Result<SemioGraphNode, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, kind, label, x, y, ports, properties] = parts.as_slice() else {
         return Err(format!("node: expected 7 fields, got {}", parts.len()));
     };
-    Ok(SemioGraphNode {
-        id: dec_node_id(id)?,
-        kind: dec_str(kind)?,
-        label: dec_str(label)?,
-        position: SemioPoint2 { x: dec_f64_hex(x)?, y: dec_f64_hex(y)? },
-        ports: dec_list(ports, dec_port)?,
-        properties: dec_list(properties, dec_property)?,
-    })
+    Ok(SemioGraphNode { id: dec_node_id(id)?, kind: dec_str(kind)?, label: dec_str(label)?, position: SemioPoint2 { x: dec_f64_hex(x)?, y: dec_f64_hex(y)? }, ports: dec_list(ports, dec_port)?, properties: dec_list(properties, dec_property)? })
 }
 
 pub(crate) fn enc_edge(e: &SemioGraphEdge) -> String {
@@ -461,7 +446,9 @@ fn decode_graph_snapshot_binary(bytes: &[u8]) -> Result<SemioGraphSnapshot, Stri
 /// 🎁 Real structured text/binary codecs, wrapped in the repo-wide `store::semio_format` envelope.
 impl store::ArtifactDsl for SemioGraphSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str { STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -473,11 +460,7 @@ impl store::ArtifactDsl for SemioGraphSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_graph_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -486,22 +469,14 @@ impl store::ArtifactPack for SemioGraphSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_graph_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_graph_snapshot_binary(&inner).map_err(store::PackError::Schema)

@@ -3,26 +3,5 @@ protocol stdio.dwg.ac1018.mutations
 version 1
 schema stdio.dwg.op
 start op
-
-# 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG2: `protocol::OpBinary`
-# for `DwgMutation` (ac1018) is CONFIRMED ALREADY REAL (../🦀️component.rs's `OpCodecs` region) —
-# a pure forward to `dsl::variants_binary::encode_op`/`decode_op`, NOT the F6-era
-# `print_op().into_bytes()` text-as-binary shortcut. Same generic layout every `DslVariants`-typed
-# `OpBinary` shares (`stdio.binary`/`stdio.txt`'s own already-real mutations protocols, both
-# byte-for-byte identical in shape to this file): a fixed `format` byte (always `1`), the matched
-# variant's ordinal as a `varint` (declaration order: `NoMutation`=0, `SetSnapshot`=1,
-# `SetVersionInfo`=2, `InsertSectionName`=3, `RemoveSectionName`=4 —
-# `dsl::DslVariants::variants()`'s own emission order), then the variant's own field payload via
-# `os_pack::encode_record_body` — a varint-prefixed string-symbol table followed by a generic,
-# self-describing per-field-id tag+value wire. This inner record-body wire is the FRAMEWORK's own
-# generic encoding (shared verbatim by every `#[derive(dsl::DslRecord)]`/`DslOps`/`DslDiff` type
-# in the whole repo) and is genuinely not expressible by this dialect's `Array`/`Ref`/`repeat`
-# primitives (no dynamic per-field-id tag dispatch, no symbol-table back-reference resolution) —
-# the SAME `txt-opbinary-record-body-wire-is-framework-generic` gap the recipe's own table
-# documents. Modeled honestly: `format`/`ordinal` are genuinely, individually byte-walked; the
-# remaining record-body bytes are one opaque tail.
 framing record
-header fixed 2
-field format u8
-field ordinal varint
 chain body bytes

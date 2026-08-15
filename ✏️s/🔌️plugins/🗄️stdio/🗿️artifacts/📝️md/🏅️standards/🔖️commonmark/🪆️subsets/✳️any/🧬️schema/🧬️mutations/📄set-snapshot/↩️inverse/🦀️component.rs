@@ -1,5 +1,5 @@
-use crate::artifacts::md::{MdSnapshot};
 use crate::artifacts::md::schema::mutations::MdMutation;
+use crate::artifacts::md::MdSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

@@ -18,12 +18,12 @@
 //!   frames only support flat paragraphs of runs, never nested block structure — an honest
 //!   limitation of pptx's own shape, not this mapping's).
 
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::pptx::PptxSnapshot;
 use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform};
+use crate::artifacts::pptx::PptxSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun};
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SemioPresentationSnapshot, SlideFrame, SlideShape};
 use crate::artifacts::zip::opc::OpcPackage;
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
 fn transform_from_frame(f: &SlideFrame) -> PptxTransform {
@@ -85,7 +85,7 @@ impl ArtifactSerializer for SemioPresentationToPptx {
 
     fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let slides = from.slides.iter().map(|slide| PptxSlide { shapes: slide.shapes.iter().filter_map(map_shape).collect() }).collect();
-        Ok(PptxSnapshot::from_parts(OpcPackage::default(), PptxPresentation { slides }))
+        Ok(PptxSnapshot::from_parts(OpcPackage::default(), Vec::new(), PptxPresentation { slides }))
     }
 }
 //#endregion 🔖️Serializer
@@ -96,7 +96,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
     use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::RunStyle;
-    use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA, Slide, SlidePictureImage};
+    use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{Slide, SlidePictureImage, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
 
     fn sample_semio() -> SemioPresentationSnapshot {
         SemioPresentationSnapshot {
@@ -107,7 +107,10 @@ mod tests {
                 id: "slide0".into(),
                 layout_id: None,
                 shapes: vec![
-                    SlideShape::TextBox { frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 100.0, height: 20.0 }, blocks: vec![DocBlock::Paragraph { style_id: None, runs: vec![DocRun { text: "Hi".into(), style: RunStyle { bold: true, ..Default::default() } }] }] },
+                    SlideShape::TextBox {
+                        frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 100.0, height: 20.0 },
+                        blocks: vec![DocBlock::Paragraph { style_id: None, runs: vec![DocRun { text: "Hi".into(), style: RunStyle { bold: true, ..Default::default() } }] }],
+                    },
                     SlideShape::Picture { frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 30.0 }, width: 50.0, height: 50.0 }, image: SlidePictureImage { asset_id: "rId2".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] } },
                     SlideShape::Placeholder { frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 200.0, height: 40.0 }, kind: PlaceholderKind::Title },
                 ],

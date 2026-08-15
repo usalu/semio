@@ -6,15 +6,13 @@
 //! full-replace escape hatch, which never appears anywhere in this file); each modified record's
 //! own 35 columns get a genuinely sparse per-field patch via [`EpwRecordDiff`].
 
-use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{
-    EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot, EPW_RECORD_FIELD_COUNT,
-};
+use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot, EPW_RECORD_FIELD_COUNT};
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
 #[cfg(test)]
 use protocol::DiffCodec;
-use serde::{Deserialize, Serialize};
+use protocol::MutationDiff;
 use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️RecordDiff
@@ -154,19 +152,8 @@ fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec
     slots
 }
 
-fn base_len_hint(
-    removed: &[usize],
-    modified_indices: impl Iterator<Item = usize>,
-    added_indices: impl Iterator<Item = usize>,
-) -> usize {
-    removed
-        .iter()
-        .copied()
-        .chain(modified_indices)
-        .chain(added_indices)
-        .max()
-        .map(|m| m + 1)
-        .unwrap_or(0)
+fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
+    removed.iter().copied().chain(modified_indices).chain(added_indices).max().map(|m| m + 1).unwrap_or(0)
 }
 //#endregion 🔖️IndexTransport
 
@@ -209,14 +196,30 @@ pub struct EpwDiff {
 impl MutationDiff<EpwSnapshot> for EpwDiff {
     fn apply(&self, base: &EpwSnapshot) -> EpwSnapshot {
         let mut next = base.clone();
-        if let Some(v) = &self.location { next.location = v.clone(); }
-        if let Some(v) = &self.design_conditions { next.design_conditions = v.clone(); }
-        if let Some(v) = &self.typical_extreme_periods { next.typical_extreme_periods = v.clone(); }
-        if let Some(v) = &self.ground_temperatures { next.ground_temperatures = v.clone(); }
-        if let Some(v) = &self.holidays_dst { next.holidays_dst = v.clone(); }
-        if let Some(v) = &self.comments_1 { next.comments_1 = v.clone(); }
-        if let Some(v) = &self.comments_2 { next.comments_2 = v.clone(); }
-        if let Some(v) = &self.data_periods { next.data_periods = v.clone(); }
+        if let Some(v) = &self.location {
+            next.location = v.clone();
+        }
+        if let Some(v) = &self.design_conditions {
+            next.design_conditions = v.clone();
+        }
+        if let Some(v) = &self.typical_extreme_periods {
+            next.typical_extreme_periods = v.clone();
+        }
+        if let Some(v) = &self.ground_temperatures {
+            next.ground_temperatures = v.clone();
+        }
+        if let Some(v) = &self.holidays_dst {
+            next.holidays_dst = v.clone();
+        }
+        if let Some(v) = &self.comments_1 {
+            next.comments_1 = v.clone();
+        }
+        if let Some(v) = &self.comments_2 {
+            next.comments_2 = v.clone();
+        }
+        if let Some(v) = &self.data_periods {
+            next.data_periods = v.clone();
+        }
         if let Some(rdiff) = &self.records {
             // 🥇 modified refers to BASE indices — apply before any removal shifts them.
             for m in &rdiff.modified {
@@ -245,14 +248,30 @@ impl MutationDiff<EpwSnapshot> for EpwDiff {
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.location.is_some() { self.location = other.location; }
-        if other.design_conditions.is_some() { self.design_conditions = other.design_conditions; }
-        if other.typical_extreme_periods.is_some() { self.typical_extreme_periods = other.typical_extreme_periods; }
-        if other.ground_temperatures.is_some() { self.ground_temperatures = other.ground_temperatures; }
-        if other.holidays_dst.is_some() { self.holidays_dst = other.holidays_dst; }
-        if other.comments_1.is_some() { self.comments_1 = other.comments_1; }
-        if other.comments_2.is_some() { self.comments_2 = other.comments_2; }
-        if other.data_periods.is_some() { self.data_periods = other.data_periods; }
+        if other.location.is_some() {
+            self.location = other.location;
+        }
+        if other.design_conditions.is_some() {
+            self.design_conditions = other.design_conditions;
+        }
+        if other.typical_extreme_periods.is_some() {
+            self.typical_extreme_periods = other.typical_extreme_periods;
+        }
+        if other.ground_temperatures.is_some() {
+            self.ground_temperatures = other.ground_temperatures;
+        }
+        if other.holidays_dst.is_some() {
+            self.holidays_dst = other.holidays_dst;
+        }
+        if other.comments_1.is_some() {
+            self.comments_1 = other.comments_1;
+        }
+        if other.comments_2.is_some() {
+            self.comments_2 = other.comments_2;
+        }
+        if other.data_periods.is_some() {
+            self.data_periods = other.data_periods;
+        }
         let d2 = match other.records {
             None => return,
             Some(d2) => d2,
@@ -277,21 +296,12 @@ fn absorb_records(d1: EpwRecordsDiff, d2: EpwRecordsDiff) -> EpwRecordsDiff {
         r.dedup();
         r.len()
     };
-    let needed_mid_len = d2
-        .removed
-        .iter()
-        .copied()
-        .chain(d2.modified.iter().map(|m| m.index))
-        .max()
-        .map(|m| m + 1)
-        .unwrap_or(0);
-    let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied())
-        .max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
+    let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0);
+    let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied()).max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
     let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices);
 
     let mut final_removed: Vec<usize> = d1.removed.clone();
-    let mut modified_map: BTreeMap<usize, EpwRecordDiff> =
-        d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
+    let mut modified_map: BTreeMap<usize, EpwRecordDiff> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
     let mut added_alive: Vec<Option<EpwRecordAdded>> = d1.added.into_iter().map(Some).collect();
 
     for mid_idx in &d2.removed {
@@ -325,11 +335,7 @@ fn absorb_records(d1: EpwRecordsDiff, d2: EpwRecordsDiff) -> EpwRecordsDiff {
     for r in &final_removed {
         modified_map.remove(r);
     }
-    let mut final_modified: Vec<EpwRecordModified> = modified_map
-        .into_iter()
-        .filter(|(_, d)| !d.is_empty())
-        .map(|(index, diff)| EpwRecordModified { index, diff })
-        .collect();
+    let mut final_modified: Vec<EpwRecordModified> = modified_map.into_iter().filter(|(_, d)| !d.is_empty()).map(|(index, diff)| EpwRecordModified { index, diff }).collect();
     final_modified.sort_by_key(|m| m.index);
 
     let alive_mid_positions: Vec<usize> = mid_slots
@@ -341,16 +347,7 @@ fn absorb_records(d1: EpwRecordsDiff, d2: EpwRecordsDiff) -> EpwRecordsDiff {
         })
         .collect();
     let d2_added_indices: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
-    let mid_len = d2
-        .removed
-        .iter()
-        .copied()
-        .chain(d2.modified.iter().map(|m| m.index))
-        .chain(alive_mid_positions.iter().copied())
-        .chain(d2_added_indices.iter().copied())
-        .max()
-        .map(|m| m + 1)
-        .unwrap_or(0);
+    let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map(|m| m + 1).unwrap_or(0);
     let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices);
     let mut mid_to_after: HashMap<usize, usize> = HashMap::new();
     for (pos, slot) in after_slots.iter().enumerate() {
@@ -362,10 +359,7 @@ fn absorb_records(d1: EpwRecordsDiff, d2: EpwRecordsDiff) -> EpwRecordsDiff {
     let mut final_added: Vec<EpwRecordAdded> = Vec::new();
     for (ai, alive) in added_alive.into_iter().enumerate() {
         if let Some(added) = alive {
-            let mid_pos = mid_slots
-                .iter()
-                .position(|s| matches!(s, Slot::Added(idx) if *idx == ai))
-                .expect("added_alive index always has a corresponding mid slot");
+            let mid_pos = mid_slots.iter().position(|s| matches!(s, Slot::Added(idx) if *idx == ai)).expect("added_alive index always has a corresponding mid slot");
             if let Some(after_pos) = mid_to_after.get(&mid_pos) {
                 final_added.push(EpwRecordAdded { index: *after_pos, record: added.record });
             }
@@ -417,11 +411,7 @@ impl DiffAlgebra<EpwSnapshot> for EpwDiff {
             added.push(EpwRecordAdded { index: i, record: other.records[i].clone() });
         }
 
-        let records = if removed.is_empty() && modified.is_empty() && added.is_empty() {
-            None
-        } else {
-            Some(EpwRecordsDiff { removed, modified, added })
-        };
+        let records = if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(EpwRecordsDiff { removed, modified, added }) };
         Self { location, design_conditions, typical_extreme_periods, ground_temperatures, holidays_dst, comments_1, comments_2, data_periods, records }
     }
 
@@ -462,7 +452,9 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
 
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only).
 pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
@@ -528,11 +520,7 @@ pub(crate) fn dec_record(s: &str) -> Result<EpwRecord, String> {
     Ok(EpwRecord::from_fields(arr))
 }
 pub(crate) fn enc_location(l: &EpwLocation) -> String {
-    format!(
-        "[{},{},{},{},{},{},{},{},{}]",
-        enc_str(&l.city), enc_str(&l.state_province), enc_str(&l.country), enc_str(&l.source), enc_str(&l.wmo),
-        enc_str(&l.latitude), enc_str(&l.longitude), enc_str(&l.time_zone), enc_str(&l.elevation),
-    )
+    format!("[{},{},{},{},{},{},{},{},{}]", enc_str(&l.city), enc_str(&l.state_province), enc_str(&l.country), enc_str(&l.source), enc_str(&l.wmo), enc_str(&l.latitude), enc_str(&l.longitude), enc_str(&l.time_zone), enc_str(&l.elevation),)
 }
 pub(crate) fn dec_location(s: &str) -> Result<EpwLocation, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -540,15 +528,19 @@ pub(crate) fn dec_location(s: &str) -> Result<EpwLocation, String> {
         return Err(format!("location: expected 9 fields, got {}", parts.len()));
     };
     Ok(EpwLocation {
-        city: dec_str(city)?, state_province: dec_str(state_province)?, country: dec_str(country)?,
-        source: dec_str(source)?, wmo: dec_str(wmo)?, latitude: dec_str(latitude)?, longitude: dec_str(longitude)?,
-        time_zone: dec_str(time_zone)?, elevation: dec_str(elevation)?,
+        city: dec_str(city)?,
+        state_province: dec_str(state_province)?,
+        country: dec_str(country)?,
+        source: dec_str(source)?,
+        wmo: dec_str(wmo)?,
+        latitude: dec_str(latitude)?,
+        longitude: dec_str(longitude)?,
+        time_zone: dec_str(time_zone)?,
+        elevation: dec_str(elevation)?,
     })
 }
 pub(crate) fn enc_data_periods(d: &EpwDataPeriods) -> String {
-    let periods = d.periods.iter().map(|p| {
-        format!("[{},{},{},{}]", enc_str(&p.name), enc_str(&p.start_day_of_week), enc_str(&p.start_date), enc_str(&p.end_date))
-    }).collect::<Vec<_>>().join(",");
+    let periods = d.periods.iter().map(|p| format!("[{},{},{},{}]", enc_str(&p.name), enc_str(&p.start_day_of_week), enc_str(&p.start_date), enc_str(&p.end_date))).collect::<Vec<_>>().join(",");
     format!("[{},[{}]]", d.records_per_hour, periods)
 }
 pub(crate) fn dec_data_periods(s: &str) -> Result<EpwDataPeriods, String> {
@@ -564,10 +556,7 @@ pub(crate) fn dec_data_periods(s: &str) -> Result<EpwDataPeriods, String> {
             let [name, start_day_of_week, start_date, end_date] = fields.as_slice() else {
                 return Err(format!("data_period: expected 4 fields, got {}", fields.len()));
             };
-            Ok(crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwDataPeriod {
-                name: dec_str(name)?, start_day_of_week: dec_str(start_day_of_week)?,
-                start_date: dec_str(start_date)?, end_date: dec_str(end_date)?,
-            })
+            Ok(crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwDataPeriod { name: dec_str(name)?, start_day_of_week: dec_str(start_day_of_week)?, start_date: dec_str(start_date)?, end_date: dec_str(end_date)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
     Ok(EpwDataPeriods { records_per_hour: parse_usize(records_per_hour)? as u32, periods })
@@ -629,15 +618,33 @@ fn dec_records_diff(body: &str) -> Result<EpwRecordsDiff, String> {
 //#region 🔖️TopLevel
 fn print_epw_diff(d: &EpwDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.location { tokens.push(format!("location={}", enc_location(v))); }
-    if let Some(v) = &d.design_conditions { tokens.push(format!("design-conditions={}", enc_str(v))); }
-    if let Some(v) = &d.typical_extreme_periods { tokens.push(format!("typical-extreme-periods={}", enc_str(v))); }
-    if let Some(v) = &d.ground_temperatures { tokens.push(format!("ground-temperatures={}", enc_str(v))); }
-    if let Some(v) = &d.holidays_dst { tokens.push(format!("holidays-dst={}", enc_str(v))); }
-    if let Some(v) = &d.comments_1 { tokens.push(format!("comments-1={}", enc_str(v))); }
-    if let Some(v) = &d.comments_2 { tokens.push(format!("comments-2={}", enc_str(v))); }
-    if let Some(v) = &d.data_periods { tokens.push(format!("data-periods={}", enc_data_periods(v))); }
-    if let Some(v) = &d.records { tokens.push(enc_records_diff(v)); }
+    if let Some(v) = &d.location {
+        tokens.push(format!("location={}", enc_location(v)));
+    }
+    if let Some(v) = &d.design_conditions {
+        tokens.push(format!("design-conditions={}", enc_str(v)));
+    }
+    if let Some(v) = &d.typical_extreme_periods {
+        tokens.push(format!("typical-extreme-periods={}", enc_str(v)));
+    }
+    if let Some(v) = &d.ground_temperatures {
+        tokens.push(format!("ground-temperatures={}", enc_str(v)));
+    }
+    if let Some(v) = &d.holidays_dst {
+        tokens.push(format!("holidays-dst={}", enc_str(v)));
+    }
+    if let Some(v) = &d.comments_1 {
+        tokens.push(format!("comments-1={}", enc_str(v)));
+    }
+    if let Some(v) = &d.comments_2 {
+        tokens.push(format!("comments-2={}", enc_str(v)));
+    }
+    if let Some(v) = &d.data_periods {
+        tokens.push(format!("data-periods={}", enc_data_periods(v)));
+    }
+    if let Some(v) = &d.records {
+        tokens.push(enc_records_diff(v));
+    }
     tokens.join(" ")
 }
 fn parse_epw_diff(line: &str) -> Result<EpwDiff, String> {
@@ -646,16 +653,27 @@ fn parse_epw_diff(line: &str) -> Result<EpwDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("location=") { d.location = Some(dec_location(rest)?); }
-        else if let Some(rest) = token.strip_prefix("design-conditions=") { d.design_conditions = Some(dec_str(rest)?); }
-        else if let Some(rest) = token.strip_prefix("typical-extreme-periods=") { d.typical_extreme_periods = Some(dec_str(rest)?); }
-        else if let Some(rest) = token.strip_prefix("ground-temperatures=") { d.ground_temperatures = Some(dec_str(rest)?); }
-        else if let Some(rest) = token.strip_prefix("holidays-dst=") { d.holidays_dst = Some(dec_str(rest)?); }
-        else if let Some(rest) = token.strip_prefix("comments-1=") { d.comments_1 = Some(dec_str(rest)?); }
-        else if let Some(rest) = token.strip_prefix("comments-2=") { d.comments_2 = Some(dec_str(rest)?); }
-        else if let Some(rest) = token.strip_prefix("data-periods=") { d.data_periods = Some(dec_data_periods(rest)?); }
-        else if let Some(rest) = token.strip_prefix("records{") { d.records = Some(dec_records_diff(rest.strip_suffix('}').ok_or_else(|| "records: missing closing brace".to_string())?)?); }
-        else { return Err(format!("epw diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("location=") {
+            d.location = Some(dec_location(rest)?);
+        } else if let Some(rest) = token.strip_prefix("design-conditions=") {
+            d.design_conditions = Some(dec_str(rest)?);
+        } else if let Some(rest) = token.strip_prefix("typical-extreme-periods=") {
+            d.typical_extreme_periods = Some(dec_str(rest)?);
+        } else if let Some(rest) = token.strip_prefix("ground-temperatures=") {
+            d.ground_temperatures = Some(dec_str(rest)?);
+        } else if let Some(rest) = token.strip_prefix("holidays-dst=") {
+            d.holidays_dst = Some(dec_str(rest)?);
+        } else if let Some(rest) = token.strip_prefix("comments-1=") {
+            d.comments_1 = Some(dec_str(rest)?);
+        } else if let Some(rest) = token.strip_prefix("comments-2=") {
+            d.comments_2 = Some(dec_str(rest)?);
+        } else if let Some(rest) = token.strip_prefix("data-periods=") {
+            d.data_periods = Some(dec_data_periods(rest)?);
+        } else if let Some(rest) = token.strip_prefix("records{") {
+            d.records = Some(dec_records_diff(rest.strip_suffix('}').ok_or_else(|| "records: missing closing brace".to_string())?)?);
+        } else {
+            return Err(format!("epw diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -698,11 +716,7 @@ mod handcrafted_diff_codec_tests {
         r
     }
     fn snapshot(city: &str) -> EpwSnapshot {
-        EpwSnapshot {
-            location: location(city),
-            records: vec![record("1"), record("2"), record("3")],
-            ..EpwSnapshot::default()
-        }
+        EpwSnapshot { location: location(city), records: vec![record("1"), record("2"), record("3")], ..EpwSnapshot::default() }
     }
 
     #[test]
@@ -710,11 +724,7 @@ mod handcrafted_diff_codec_tests {
         let a = snapshot("Hannover");
         let mut b = snapshot("Berlin");
         b.records[1] = record("2-modified, tricky [value]");
-        let cases = vec![
-            EpwDiff::default(),
-            EpwDiff::between(&a, &b),
-            EpwDiff::between(&b, &a),
-        ];
+        let cases = vec![EpwDiff::default(), EpwDiff::between(&a, &b), EpwDiff::between(&b, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

@@ -93,16 +93,7 @@ pub struct SemioImageSnapshot {
 
 impl Default for SemioImageSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
-            width: 0,
-            height: 0,
-            colorspace: SemioColorspace::default(),
-            bit_depth: 0,
-            frames: Vec::new(),
-            icc: None,
-            metadata: Vec::new(),
-        }
+        Self { schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(), width: 0, height: 0, colorspace: SemioColorspace::default(), bit_depth: 0, frames: Vec::new(), icc: None, metadata: Vec::new() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -142,8 +133,12 @@ fn enc_bytes(b: &[u8]) -> String {
 fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
     hex_decode(s)
 }
-fn parse_u8(s: &str) -> Result<u8, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
-fn parse_u32(s: &str) -> Result<u32, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+fn parse_u8(s: &str) -> Result<u8, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+fn parse_u32(s: &str) -> Result<u32, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
 
 fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
@@ -185,13 +180,17 @@ pub(crate) fn dec_colorspace(s: &str) -> Result<SemioColorspace, String> {
         other => Err(format!("bad colorspace {other:?}")),
     }
 }
-pub(crate) fn enc_frame(f: &SemioImageFrame) -> String { format!("[{},{}]", f.delay_ms, hex_encode(&f.rgba8)) }
+pub(crate) fn enc_frame(f: &SemioImageFrame) -> String {
+    format!("[{},{}]", f.delay_ms, hex_encode(&f.rgba8))
+}
 pub(crate) fn dec_frame(s: &str) -> Result<SemioImageFrame, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [delay, rgba] = parts.as_slice() else { return Err(format!("frame: expected 2 fields, got {}", parts.len())) };
     Ok(SemioImageFrame { delay_ms: parse_u32(delay)?, rgba8: hex_decode(rgba)? })
 }
-pub(crate) fn enc_metadata_entry(e: &SemioImageMetadataEntry) -> String { format!("[{},{}]", enc_str(&e.key), enc_str(&e.value)) }
+pub(crate) fn enc_metadata_entry(e: &SemioImageMetadataEntry) -> String {
+    format!("[{},{}]", enc_str(&e.key), enc_str(&e.value))
+}
 pub(crate) fn dec_metadata_entry(s: &str) -> Result<SemioImageMetadataEntry, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [key, value] = parts.as_slice() else { return Err(format!("metadata entry: expected 2 fields, got {}", parts.len())) };
@@ -321,7 +320,10 @@ fn encode_image_snapshot_binary(s: &SemioImageSnapshot) -> Vec<u8> {
     out.push(colorspace_tag(s.colorspace));
     out.push(s.bit_depth);
     match &s.icc {
-        Some(bytes) => { out.push(1); write_bytes_lp(&mut out, bytes); }
+        Some(bytes) => {
+            out.push(1);
+            write_bytes_lp(&mut out, bytes);
+        }
         None => out.push(0),
     }
     store::pack_rt::write_varint_u64(&mut out, s.frames.len() as u64);
@@ -376,7 +378,9 @@ fn decode_image_snapshot_binary(bytes: &[u8]) -> Result<SemioImageSnapshot, Stri
 /// Wrapped in the repo-wide `store::semio_format` envelope, unchanged.
 impl store::ArtifactDsl for SemioImageSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str { STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -388,11 +392,7 @@ impl store::ArtifactDsl for SemioImageSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_image_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -401,22 +401,14 @@ impl store::ArtifactPack for SemioImageSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_image_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_image_snapshot_binary(&inner).map_err(store::PackError::Schema)
@@ -438,10 +430,7 @@ pub(crate) fn demo_image_snapshot() -> SemioImageSnapshot {
         height: 2,
         colorspace: SemioColorspace::Rgba,
         bit_depth: 8,
-        frames: vec![SemioImageFrame {
-            delay_ms: 100,
-            rgba8: vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255],
-        }],
+        frames: vec![SemioImageFrame { delay_ms: 100, rgba8: vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255] }],
         icc: Some(vec![1, 2, 3, 4]),
         metadata: vec![SemioImageMetadataEntry { key: "Title".into(), value: "Demo".into() }],
     }

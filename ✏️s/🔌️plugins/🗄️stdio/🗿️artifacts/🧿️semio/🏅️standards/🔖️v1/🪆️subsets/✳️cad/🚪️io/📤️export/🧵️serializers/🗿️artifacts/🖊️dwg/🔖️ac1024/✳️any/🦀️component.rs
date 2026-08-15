@@ -19,10 +19,7 @@ impl ArtifactSerializer for SemioCadToDwg {
     const INTO: Dialect = INTO_DIALECT;
 
     fn serialize(_from: &Self::From) -> Result<Self::Into, store::PackError> {
-        Err(store::PackError::Schema(
-            "semio/cad→dwg: unsupported until every CAD topology value has a defined logical DWG entity mapping"
-                .into(),
-        ))
+        Err(store::PackError::Schema("semio/cad→dwg: unsupported until every CAD topology value has a defined logical DWG entity mapping".into()))
     }
 }
 //#endregion 🔖️Serializer

@@ -43,11 +43,7 @@ pub fn compute_ifc2x3_bounds(snapshot: &Ifc2x3Snapshot) -> Ifc2x3Bounds {
     for instance in &snapshot.document.instances {
         let Some(args) = instance.entity("IFCCARTESIANPOINT") else { continue };
         let Some(coords) = args.first().and_then(Part21Value::as_list) else { continue };
-        let p = [
-            coords.first().and_then(Part21Value::as_real).unwrap_or(0.0),
-            coords.get(1).and_then(Part21Value::as_real).unwrap_or(0.0),
-            coords.get(2).and_then(Part21Value::as_real).unwrap_or(0.0),
-        ];
+        let p = [coords.first().and_then(Part21Value::as_real).unwrap_or(0.0), coords.get(1).and_then(Part21Value::as_real).unwrap_or(0.0), coords.get(2).and_then(Part21Value::as_real).unwrap_or(0.0)];
         point_count += 1;
         if !seen {
             min = p;
@@ -73,10 +69,7 @@ mod tests {
     use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance};
 
     fn point_instance(id: u64, x: f64, y: f64, z: f64) -> Part21Instance {
-        Part21Instance {
-            id,
-            entities: vec![("IFCCARTESIANPOINT".into(), vec![Part21Value::List(vec![Part21Value::Real(x.into()), Part21Value::Real(y.into()), Part21Value::Real(z.into())])])],
-        }
+        Part21Instance { id, entities: vec![("IFCCARTESIANPOINT".into(), vec![Part21Value::List(vec![Part21Value::Real(x.into()), Part21Value::Real(y.into()), Part21Value::Real(z.into())])])] }
     }
 
     #[test]
@@ -85,12 +78,7 @@ mod tests {
             schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(),
             document: Part21Document {
                 header: Part21Header::default(),
-                instances: vec![
-                    point_instance(1, 0.0, 0.0, 0.0),
-                    point_instance(2, -2.0, 5.0, 10.0),
-                    point_instance(3, 8.0, 1.0, -4.0),
-                    Part21Instance { id: 4, entities: vec![("IFCOWNERHISTORY".into(), vec![Part21Value::Unset])] },
-                ],
+                instances: vec![point_instance(1, 0.0, 0.0, 0.0), point_instance(2, -2.0, 5.0, 10.0), point_instance(3, 8.0, 1.0, -4.0), Part21Instance { id: 4, entities: vec![("IFCOWNERHISTORY".into(), vec![Part21Value::Unset])] }],
             },
             edm_preamble: None,
         };
@@ -102,11 +90,7 @@ mod tests {
 
     #[test]
     fn inference_determinism_law() {
-        let snapshot = Ifc2x3Snapshot {
-            schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(),
-            document: Part21Document { header: Part21Header::default(), instances: vec![point_instance(1, 1.0, 1.0, 1.0)] },
-            edm_preamble: None,
-        };
+        let snapshot = Ifc2x3Snapshot { schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document: Part21Document { header: Part21Header::default(), instances: vec![point_instance(1, 1.0, 1.0, 1.0)] }, edm_preamble: None };
         assert_eq!(compute_ifc2x3_bounds(&snapshot), compute_ifc2x3_bounds(&snapshot));
     }
 

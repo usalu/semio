@@ -32,20 +32,12 @@ impl Default for StlArtifact {
 impl StlArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> StlSnapshot {
-        StlSnapshot {
-            schema: self.schema.clone(),
-            solid_name: self.solid_name.clone(),
-            triangles: self.triangles.clone(),
-        }
+        StlSnapshot { schema: self.schema.clone(), solid_name: self.solid_name.clone(), triangles: self.triangles.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: StlSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            solid_name: snapshot.solid_name,
-            triangles: snapshot.triangles,
-        }
+        Self { schema: snapshot.schema, solid_name: snapshot.solid_name, triangles: snapshot.triangles }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -95,8 +87,8 @@ pub fn stl_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::stl::{StlDiff, StlMutation, StlSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.stl` snapshot.
@@ -131,7 +123,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -141,8 +137,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::stl::StlSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.stl` parts.
@@ -207,22 +203,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <StlSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -292,10 +280,7 @@ pub fn demo_stl_snapshot() -> StlSnapshot {
     StlSnapshot {
         schema: STDIO_STL_DOCUMENT_SCHEMA.into(),
         solid_name: "demo".into(),
-        triangles: vec![
-            StlTriangle { normal: [0.0, 0.0, 1.0], vertices: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] },
-            StlTriangle { normal: [0.0, 0.0, -1.0], vertices: [[0.0, 0.0, 1.0], [1.0, 0.0, 1.0], [0.0, 1.0, 1.0]] },
-        ],
+        triangles: vec![StlTriangle { normal: [0.0, 0.0, 1.0], vertices: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] }, StlTriangle { normal: [0.0, 0.0, -1.0], vertices: [[0.0, 0.0, 1.0], [1.0, 0.0, 1.0], [0.0, 1.0, 1.0]] }],
     }
 }
 //#endregion 🔖️DocumentHelpers

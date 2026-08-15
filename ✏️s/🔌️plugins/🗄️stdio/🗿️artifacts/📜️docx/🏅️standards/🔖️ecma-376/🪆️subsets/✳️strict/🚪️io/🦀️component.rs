@@ -4,15 +4,12 @@
 //! `ComposerEntry` via the standard-level aggregator), not per-leaf `register()`.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use std::sync::OnceLock;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
-    use semio_framework_plugin::{
-        ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
-        register_subset_validator, subset_validator_entry_of,
-    };
     use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::DocxComposer as DocxAnyComposer;
     use crate::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::check_strict_conformance;
     use crate::artifacts::docx::DocxSnapshot;
+    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use std::sync::OnceLock;
 
     const DIALECT_STRICT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("strict") };
     const DIALECT_ANY: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
@@ -37,10 +34,7 @@ pub mod derived_composition {
             if !hard.is_empty() {
                 let mut all = hard.clone();
                 all.extend(soft);
-                return Err(ComposeError {
-                    message: format!("ISO/IEC 29500-1 Strict conformance violated: {} hard issue(s) -- not stamping the strict dialect", hard.len()),
-                    diagnostics: all,
-                });
+                return Err(ComposeError { message: format!("ISO/IEC 29500-1 Strict conformance violated: {} hard issue(s) -- not stamping the strict dialect", hard.len()), diagnostics: all });
             }
             let mut diagnostics = inner.diagnostics;
             diagnostics.extend(soft);
@@ -94,9 +88,9 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::AnalyzeSource;
         use crate::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::CODE_REL_BASE;
-        use crate::artifacts::zip::opc::{OpcPackage, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
+        use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
+        use semio_framework_plugin::AnalyzeSource;
 
         const STRICT_MAIN_NS: &str = "http://purl.oclc.org/ooxml/wordprocessingml/main";
         const STRICT_REL_BASE: &str = "http://purl.oclc.org/ooxml/officeDocument/relationships";
@@ -105,11 +99,7 @@ pub mod derived_composition {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             opc.content_types.set_default("xml", "application/xml");
-            opc.set_part(
-                "word/document.xml",
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
-                format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}" conformance="strict"><w:body/></w:document>"#).into_bytes(),
-            );
+            opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}" conformance="strict"><w:body/></w:document>"#).into_bytes());
             opc.add_relationship("", "rId1", &format!("{STRICT_REL_BASE}/officeDocument"), "word/document.xml");
             DocxSnapshot::from_parts(opc, Default::default())
         }
@@ -125,11 +115,7 @@ pub mod derived_composition {
         /// this test genuinely exercises a document whose main-part XML matches what was set on `opc`.
         fn conforming_pack_bytes(snapshot: &DocxSnapshot) -> Vec<u8> {
             let raw = crate::artifacts::zip::opc::encode_opc(&snapshot.opc).expect("valid opc package encodes");
-            let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-                <DocxSnapshot as store::ArtifactDsl>::envelope_id(),
-                store::semio_format::Component::Pack,
-                1,
-            ).expect("valid envelope_id");
+            let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<DocxSnapshot as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).expect("valid envelope_id");
             store::semio_format::wrap_binary(&envelope, &raw)
         }
 
@@ -146,11 +132,7 @@ pub mod derived_composition {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             opc.content_types.set_default("xml", "application/xml");
-            opc.set_part(
-                "word/document.xml",
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
-                format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}"><w:body/></w:document>"#).into_bytes(),
-            );
+            opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}"><w:body/></w:document>"#).into_bytes());
             opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
             let snapshot = DocxSnapshot::from_parts(opc, Default::default());
             let bytes = <DocxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);

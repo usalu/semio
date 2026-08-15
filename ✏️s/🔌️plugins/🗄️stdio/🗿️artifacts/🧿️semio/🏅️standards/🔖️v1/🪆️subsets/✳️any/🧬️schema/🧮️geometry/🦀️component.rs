@@ -15,21 +15,36 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Point
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-pub struct SemioPoint3 { pub x: f64, pub y: f64, pub z: f64 }
+pub struct SemioPoint3 {
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
+}
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-pub struct SemioPoint2 { pub x: f64, pub y: f64 }
+pub struct SemioPoint2 {
+    pub x: f64,
+    pub y: f64,
+}
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-pub struct SemioUv { pub u: f64, pub v: f64 }
+pub struct SemioUv {
+    pub u: f64,
+    pub v: f64,
+}
 //#endregion 🔖️Point
 
 //#region 🔖️Color
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-pub struct SemioRgba { pub r: f32, pub g: f32, pub b: f32, pub a: f32 }
+pub struct SemioRgba {
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
+    pub a: f32,
+}
 //#endregion 🔖️Color
 
 //#region 🔖️Transform
@@ -37,10 +52,17 @@ pub struct SemioRgba { pub r: f32, pub g: f32, pub b: f32, pub a: f32 }
 /// comment). Defaults to the identity rotation `(0,0,0,1)`.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-pub struct SemioQuaternion { pub x: f64, pub y: f64, pub z: f64, pub w: f64 }
+pub struct SemioQuaternion {
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
+    pub w: f64,
+}
 
 impl Default for SemioQuaternion {
-    fn default() -> Self { Self { x: 0.0, y: 0.0, z: 0.0, w: 1.0 } }
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0, z: 0.0, w: 1.0 }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -52,17 +74,15 @@ pub struct SemioTransform {
 }
 
 impl Default for SemioTransform {
-    fn default() -> Self { Self::identity() }
+    fn default() -> Self {
+        Self::identity()
+    }
 }
 
 impl SemioTransform {
     /// 🧭️ Identity transform: zero translation, identity rotation, unit scale.
     pub fn identity() -> Self {
-        Self {
-            translation: SemioPoint3::default(),
-            rotation: SemioQuaternion::default(),
-            scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 },
-        }
+        Self { translation: SemioPoint3::default(), rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
     }
 }
 //#endregion 🔖️Transform

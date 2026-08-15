@@ -13,16 +13,13 @@
 //! just unreferenced, exactly mirroring what the deserializer harvests independently of material
 //! texture refs. `SemioMeshSnapshot` has no scene graph -- `scenes`/`nodes` are left empty.
 
-use std::collections::HashMap;
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::gltf::GltfSnapshot;
-use crate::artifacts::gltf::schema::snapshot::{
-    GltfAccessor, GltfAlphaMode, GltfBuffer, GltfBufferView, GltfDocument, GltfImage, GltfMaterial,
-    GltfMesh, GltfPbrMetallicRoughness, GltfPrimitive, GltfSourceForm, GltfTexture,
-};
 use crate::artifacts::gltf::engine::{encode_data_uri, GltfAccessorType, GltfComponentType};
+use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfAlphaMode, GltfBuffer, GltfBufferView, GltfDocument, GltfImage, GltfMaterial, GltfMesh, GltfPbrMetallicRoughness, GltfPrimitive, GltfSourceForm, GltfTexture};
+use crate::artifacts::gltf::GltfSnapshot;
 use crate::artifacts::gltf::STDIO_GLTF_DOCUMENT_SCHEMA;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use std::collections::HashMap;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId::ANY };
@@ -190,8 +187,8 @@ impl ArtifactSerializer for SemioMeshToGltf {
 mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
-    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive, SemioTexture};
     use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::gltf::v2_0::any::SemioMeshFromGltf;
+    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive, SemioTexture};
     use semio_framework_plugin::ArtifactDeserializer;
 
     fn sample_semio_mesh() -> SemioMeshSnapshot {
@@ -202,12 +199,7 @@ mod tests {
                 primitives: vec![SemioPrimitive {
                     id: "quad-prim-0".into(),
                     topology: SemioTopology::Triangles,
-                    positions: vec![
-                        SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 },
-                        SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 },
-                        SemioPoint3 { x: 1.0, y: 1.0, z: 0.0 },
-                        SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 },
-                    ],
+                    positions: vec![SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 1.0, z: 0.0 }, SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 }],
                     normals: vec![SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }; 4],
                     uvs: vec![SemioUv { u: 0.0, v: 0.0 }, SemioUv { u: 1.0, v: 0.0 }, SemioUv { u: 1.0, v: 1.0 }, SemioUv { u: 0.0, v: 1.0 }],
                     colors: vec![SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }; 4],

@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::binary::schema::snapshot::BinarySnapshot;
-pub use crate::artifacts::binary::schema::BinaryArtifact;
 pub use crate::artifacts::binary::schema::diff::BinaryDiff;
 pub use crate::artifacts::binary::schema::mutations::BinaryMutation;
+pub use crate::artifacts::binary::schema::snapshot::BinarySnapshot;
+pub use crate::artifacts::binary::schema::BinaryArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_BINARY_DOCUMENT_SCHEMA: &str = "stdio.binary";
@@ -27,16 +27,16 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::binary::standards::v_raw::subsets::any::io::io_registry as v_raw;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -47,10 +47,7 @@ pub mod io_registry {
 
     /// 🎯️ Compose into exactly one target dialect from a set of (possibly foreign-dialect) sources.
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("BinaryComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("BinaryComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 
@@ -63,7 +60,7 @@ pub mod io_registry {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::{StandardId, SubsetId, IoPayload, IoDirection, IoKey, io_resolve};
+        use semio_framework_plugin::{io_resolve, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
 
@@ -80,15 +77,7 @@ pub mod io_registry {
         #[test]
         fn register_then_resolve_through_the_typed_registry_finds_this_composer() {
             register();
-            let key = IoKey {
-                artifact_kind: "s.stdio.binary".into(),
-                standard: "raw".into(),
-                subset: "*".into(),
-                direction: IoDirection::Import,
-                format_kind: "s.stdio.binary".into(),
-                format_standard: "raw".into(),
-                format_subset: "*".into(),
-            };
+            let key = IoKey { artifact_kind: "s.stdio.binary".into(), standard: "raw".into(), subset: "*".into(), direction: IoDirection::Import, format_kind: "s.stdio.binary".into(), format_standard: "raw".into(), format_subset: "*".into() };
             let entry = io_resolve(&key).expect("resolve");
             assert_eq!(entry.writes, DIALECT);
         }

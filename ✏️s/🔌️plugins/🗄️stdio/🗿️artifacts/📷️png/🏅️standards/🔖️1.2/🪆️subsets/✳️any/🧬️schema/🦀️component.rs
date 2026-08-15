@@ -1,10 +1,7 @@
 //! 🧬️ PngArtifact schema — full artifact state (mirrors `PngSnapshot` field-for-field; see
 //! `zip_artifact_schema_descriptor`/`ZipArtifact` for the established repo pattern this follows).
 
-use crate::artifacts::png::schema::snapshot::{
-    PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims,
-    PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency,
-};
+use crate::artifacts::png::schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims, PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency};
 use crate::artifacts::png::PngSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -64,7 +61,9 @@ pub struct PngArtifact {
 }
 
 impl Default for PngArtifact {
-    fn default() -> Self { Self::from_snapshot(PngSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(PngSnapshot::default())
+    }
 }
 
 impl PngArtifact {
@@ -121,7 +120,9 @@ impl PngArtifact {
 /// 🕳️ Relocated verbatim from `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, rule 5: pure helpers over document
 /// types live in `🧬️schema/`).
-pub fn empty_png_snapshot() -> PngSnapshot { PngSnapshot::default() }
+pub fn empty_png_snapshot() -> PngSnapshot {
+    PngSnapshot::default()
+}
 
 /// 📄️ P2-P2: the demo `stdio.png` document — a genuinely non-trivial `PngSnapshot` exercising
 /// PLTE, every typed ancillary chunk (gAMA/cHRM/sRGB/pHYs/tIME/bKGD), one text chunk, and one
@@ -156,35 +157,29 @@ pub fn demo_png_snapshot() -> PngSnapshot {
         bit_depth: 8,
         color_type: PngColorType::Rgba,
         interlace: false,
-        plte: Some(vec![
-            PngRgb { r: 255, g: 0, b: 0 },
-            PngRgb { r: 0, g: 255, b: 0 },
-            PngRgb { r: 0, g: 0, b: 255 },
-        ]),
+        plte: Some(vec![PngRgb { r: 255, g: 0, b: 0 }, PngRgb { r: 0, g: 255, b: 0 }, PngRgb { r: 0, g: 0, b: 255 }]),
         trns: None,
         gama: Some(45455),
-        chrm: Some(PngChromaticities {
-            white_x: 31270, white_y: 32900, red_x: 64000, red_y: 33000,
-            green_x: 30000, green_y: 60000, blue_x: 15000, blue_y: 6000,
-        }),
+        chrm: Some(PngChromaticities { white_x: 31270, white_y: 32900, red_x: 64000, red_y: 33000, green_x: 30000, green_y: 60000, blue_x: 15000, blue_y: 6000 }),
         srgb: Some(PngSrgbIntent::Perceptual),
         phys: Some(PngPhysicalDims { ppu_x: 2835, ppu_y: 2835, unit_is_meter: true }),
         time: Some(PngTimestamp { year: 2024, month: 6, day: 15, hour: 12, minute: 30, second: 0 }),
         bkgd: Some(PngBackground::Rgb { r: 255, g: 255, b: 255 }),
-        text_chunks: vec![PngTextChunk {
-            keyword: "Title".into(),
-            value: "semio demo".into(),
-            compressed: false,
-            kind: PngTextKind::Text,
-            language_tag: String::new(),
-            translated_keyword: String::new(),
-        }],
+        text_chunks: vec![PngTextChunk { keyword: "Title".into(), value: "semio demo".into(), compressed: false, kind: PngTextKind::Text, language_tag: String::new(), translated_keyword: String::new() }],
         pixels,
         chunk_order: vec![
-            PngChunkMarker::Ihdr, PngChunkMarker::Plte, PngChunkMarker::Gama, PngChunkMarker::Chrm,
-            PngChunkMarker::Srgb, PngChunkMarker::Phys, PngChunkMarker::Time, PngChunkMarker::Bkgd,
-            PngChunkMarker::Text { index: 0 }, PngChunkMarker::Unknown { index: 0 },
-            PngChunkMarker::Idat, PngChunkMarker::Iend,
+            PngChunkMarker::Ihdr,
+            PngChunkMarker::Plte,
+            PngChunkMarker::Gama,
+            PngChunkMarker::Chrm,
+            PngChunkMarker::Srgb,
+            PngChunkMarker::Phys,
+            PngChunkMarker::Time,
+            PngChunkMarker::Bkgd,
+            PngChunkMarker::Text { index: 0 },
+            PngChunkMarker::Unknown { index: 0 },
+            PngChunkMarker::Idat,
+            PngChunkMarker::Iend,
         ],
         unknown_chunks: vec![PngChunk { kind: *b"prIV", data: vec![9, 9, 9] }],
     }
@@ -226,8 +221,8 @@ pub fn png_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::png::{PngDiff, PngMutation, PngSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.png` snapshot.
@@ -262,7 +257,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -272,8 +271,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::png::PngSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.png` parts.
@@ -295,7 +294,11 @@ pub mod derived_analysis {
             const SIG: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
             match source {
                 AnalyzeSource::Binary(bytes) => {
-                    if bytes.len() >= 8 && bytes[0..8] == SIG { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.len() >= 8 && bytes[0..8] == SIG {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
                     // 🔍 stdio.png's text envelope is a hex dump of the raw bytes after the
@@ -315,7 +318,11 @@ pub mod derived_analysis {
                             Err(_) => return IoConfidence::Low,
                         }
                     }
-                    if decoded == SIG { IoConfidence::High } else { IoConfidence::Low }
+                    if decoded == SIG {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }
@@ -330,22 +337,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <PngSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }

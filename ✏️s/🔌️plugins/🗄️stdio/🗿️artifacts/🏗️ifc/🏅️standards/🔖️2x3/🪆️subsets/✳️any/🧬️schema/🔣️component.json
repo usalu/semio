@@ -2,10 +2,17 @@
   "$id": "https://semio.tech/schema/s.stdio.ifc.2x3/artifact.json",
   "title": "Ifc2x3Artifact",
   "type": "object",
-  "$defs": { "Ifc2x3EdmPreamble": {"type":"object","properties":{"producer":{"type":"string"},"module":{"type":"string"},"creationDate":{"type":"string"},"host":{"type":"string"},"database":{"type":"string"},"databaseVersion":{"type":"string"},"databaseCreationDate":{"type":"string"},"schema":{"type":"string"},"model":{"type":"string"},"modelCreationDate":{"type":"string"},"headerModel":{"type":"string"},"headerModelCreationDate":{"type":"string"},"user":{"type":"string"},"group":{"type":"string"},"license":{"type":"string"},"options":{"type":"string"}},"required":["producer","module","creationDate","host","database","databaseVersion","databaseCreationDate","schema","model","modelCreationDate","headerModel","headerModelCreationDate","user","group","license","options"]} },
+  "$defs": {
+    "Part21Decimal": {"type":"object","properties":{"negative":{"type":"boolean"},"coefficient":{"type":"string"},"scale":{"type":"integer"},"exponent":{"type":"integer"}},"required":["negative","coefficient","scale"]},
+    "Part21Value": {"type":"object","properties":{"kind":{"type":"string","enum":["ref","str","enum","int","real","list","typed","unset","derived"]},"value":{},"values":{"type":"array","items":{"$ref":"#/$defs/Part21Value"}},"typeName":{"type":"string"}},"required":["kind"]},
+    "Part21Entity": {"type":"object","properties":{"typeName":{"type":"string"},"arguments":{"type":"array","items":{"$ref":"#/$defs/Part21Value"}}},"required":["typeName","arguments"]},
+    "Part21Instance": {"type":"object","properties":{"id":{"type":"integer"},"entities":{"type":"array","items":{"$ref":"#/$defs/Part21Entity"}}},"required":["id","entities"]},
+    "Part21Header": {"type":"object","properties":{"fileDescription":{"type":"array","items":{"$ref":"#/$defs/Part21Value"}},"fileName":{"type":"array","items":{"$ref":"#/$defs/Part21Value"}},"fileSchema":{"type":"array","items":{"$ref":"#/$defs/Part21Value"}}},"required":["fileDescription","fileName","fileSchema"]},
+    "Part21Document": {"type":"object","properties":{"header":{"$ref":"#/$defs/Part21Header"},"instances":{"type":"array","items":{"$ref":"#/$defs/Part21Instance"}}},"required":["header","instances"]},
+    "Ifc2x3EdmPreamble": {"type":"object","properties":{"producer":{"type":"string"},"module":{"type":"string"},"creationDate":{"type":"string"},"host":{"type":"string"},"database":{"type":"string"},"databaseVersion":{"type":"string"},"databaseCreationDate":{"type":"string"},"schema":{"type":"string"},"model":{"type":"string"},"modelCreationDate":{"type":"string"},"headerModel":{"type":"string"},"headerModelCreationDate":{"type":"string"},"user":{"type":"string"},"group":{"type":"string"},"license":{"type":"string"},"options":{"type":"string"}},"required":["producer","module","creationDate","host","database","databaseVersion","databaseCreationDate","schema","model","modelCreationDate","headerModel","headerModelCreationDate","user","group","license","options"]} },
   "properties": {
     "schema": {
-      "type": "string",
+      "$ref": "#/$defs/Part21Document",
       "x-semio-state": "artifact"
     },
     "document": {

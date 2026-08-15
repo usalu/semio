@@ -1,30 +1,6 @@
-# 🧬️ ZipSnapshot — complete per APPNOTE (local header + central directory + EOCD fields).
-
-enum ZipCompressionMethod {
-  STORED
-  DEFLATE
-}
-
-type ZipExtraField {
-  id: Int!
-  payload: [Int!]!
-}
-
 type ZipEntry {
   name: String!
   data: [Int!]!
-  method: ZipCompressionMethod!
-  dosDate: Int!
-  dosTime: Int!
-  unixMtime: Int
-  flags: Int!
-  versionMadeBy: Int!
-  versionNeeded: Int!
-  internalAttrs: Int!
-  externalAttrs: Int!
-  localExtra: [ZipExtraField!]!
-  centralExtra: [ZipExtraField!]!
-  comment: String!
 }
 
 type ZipSnapshot {

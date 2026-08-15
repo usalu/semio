@@ -1,7 +1,9 @@
 module Stdio_pdf_1_7_Mutations;
 
-# OpBinary::encode_op is serde_json::to_vec(self) -- the UTF-8 bytes of the SAME JSON text
-# ../📝️text/📖️component.grammar.semio describes (tagged by "mutation").
+# Structural logical mutation frame. The payload is decoded by mutation-tag into varints,
+# length-prefixed semantic values, recursive COS objects, and typed stream-filter records.
 public type Document = unit {
-    utf8_json_text: bytes &eod;
+    format: uint8;
+    mutation_tag: uint8;
+    structural_payload: bytes &eod;
 };

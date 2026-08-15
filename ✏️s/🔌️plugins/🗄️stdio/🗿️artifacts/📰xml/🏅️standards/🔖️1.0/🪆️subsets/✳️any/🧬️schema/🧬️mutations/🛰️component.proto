@@ -31,7 +31,7 @@ message SetDeclaration {
 }
 
 message SetDoctype {
-  optional string doctype = 1;
+  optional XmlDoctype doctype = 1;
 }
 
 // ➕️ Inserts `node` at `index` among the children of the element addressed by `path` (the PARENT).

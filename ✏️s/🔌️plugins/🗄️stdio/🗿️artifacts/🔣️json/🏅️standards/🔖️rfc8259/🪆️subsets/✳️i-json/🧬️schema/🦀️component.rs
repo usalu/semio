@@ -10,13 +10,13 @@
 pub use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use dsl::{Diagnostic, Severity};
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::JsonBuilder as JsonAnyBuilder;
     use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::diff::JsonDiff;
     use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::mutations::JsonMutation;
     use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::JsonSnapshot;
+    use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::JsonBuilder as JsonAnyBuilder;
     use crate::artifacts::json::standards::v_rfc8259::subsets::i_json::schema::check_i_json_conformance;
+    use dsl::{Diagnostic, Severity};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     #[derive(Clone, Debug, Default)]
@@ -97,11 +97,11 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
-    use semio_framework_plugin::{AnalyzeSource, Analysis, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::{JsonSnapshot, JsonValue};
     use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::JsonAnalyzer as JsonAnyAnalyzer;
     pub use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::JsonParts;
-    use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::{JsonSnapshot, JsonValue};
+    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("i-json") };
@@ -278,20 +278,14 @@ pub mod derived_analysis {
 
         #[test]
         fn duplicate_member_name_is_hard() {
-            let value = JsonValue::Object { members: vec![
-                JsonMember { key: "a".into(), value: JsonValue::Number { lexeme: "1".into() } },
-                JsonMember { key: "a".into(), value: JsonValue::Number { lexeme: "2".into() } },
-            ] };
+            let value = JsonValue::Object { members: vec![JsonMember { key: "a".into(), value: JsonValue::Number { lexeme: "1".into() } }, JsonMember { key: "a".into(), value: JsonValue::Number { lexeme: "2".into() } }] };
             let diagnostics = check_i_json_conformance(&snapshot(value));
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_DUPLICATE_MEMBER && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
         fn nested_duplicate_member_name_is_detected_recursively() {
-            let inner = JsonValue::Object { members: vec![
-                JsonMember { key: "x".into(), value: JsonValue::Null },
-                JsonMember { key: "x".into(), value: JsonValue::Null },
-            ] };
+            let inner = JsonValue::Object { members: vec![JsonMember { key: "x".into(), value: JsonValue::Null }, JsonMember { key: "x".into(), value: JsonValue::Null }] };
             let value = obj(vec![("outer", inner)]);
             let diagnostics = check_i_json_conformance(&snapshot(value));
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_DUPLICATE_MEMBER), "got {diagnostics:?}");

@@ -1,7 +1,7 @@
 //! 📥️ Deserialize `stdio.md` from stdio.txt.
 
-use crate::artifacts::txt::TxtSnapshot;
 use crate::artifacts::md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
+use crate::artifacts::txt::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register deserializer hooks.

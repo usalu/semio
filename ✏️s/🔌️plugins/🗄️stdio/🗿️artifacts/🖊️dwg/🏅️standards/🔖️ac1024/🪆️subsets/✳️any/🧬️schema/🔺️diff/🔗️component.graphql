@@ -1,5 +1,167 @@
-type DwgLogicalGeometry { kind: String!, values: [Float!]!, indices: [Int!]!, text: String!, closed: Boolean! }
 type DwgLogicalLayer { name: String!, color: Int! }
-type DwgLogicalEntity { layer: Int!, color: Int!, geometry: DwgLogicalGeometry! }
-type DwgLogicalDrawing { layers: [DwgLogicalLayer!]!, entities: [DwgLogicalEntity!]!, extmin: [Float!]!, extmax: [Float!]! }
-type DwgDiff { version: String, maintenanceVersion: Int, codepage: Int, drawing: DwgLogicalDrawing }
+type DwgEntityColor { kind: String!, index: Int!, rgb: Int! }
+type DwgEntityCommon { mode: String!, color: DwgEntityColor!, linetypeScale: Float!, linetype: String!, plotStyle: String!, material: String!, shadow: Int!, invisible: Int!, lineweight: Int!, layerHandle: Float! }
+type DwgLineEntity { common: DwgEntityCommon!, start: [Float!]!, end: [Float!]!, thickness: Float!, extrusion: [Float!]! }
+type DwgArcEntity { common: DwgEntityCommon!, center: [Float!]!, radius: Float!, thickness: Float!, extrusion: [Float!]!, startAngle: Float!, endAngle: Float! }
+type DwgLwPolylineVertex { point: [Float!]!, bulge: Float!, vertexId: Int, startWidth: Float, endWidth: Float }
+type DwgLwPolylineEntity { common: DwgEntityCommon!, closed: Boolean!, constantWidth: Float, elevation: Float!, thickness: Float!, extrusion: [Float!]!, vertices: [DwgLwPolylineVertex!]! }
+type DwgBlockBeginEntity { common: DwgEntityCommon! }
+type DwgBlockEndEntity { common: DwgEntityCommon! }
+type DwgInsertEntity { common: DwgEntityCommon!, insertion: [Float!]!, scale: [Float!]!, rotation: Float!, extrusion: [Float!]!, blockHeaderHandle: Float!, attributeHandles: [Float!]!, sequenceEndHandle: Float }
+type DwgDimensionStatus { blockReferenceIsExclusive: Boolean!, userPositionedText: Boolean! }
+type DwgDimensionEntityCommon { common: DwgEntityCommon!, extrusion: [Float!]!, textMidpoint: [Float!]!, elevation: Float!, status: DwgDimensionStatus!, userText: String!, textRotation: Float!, horizontalDirection: Float!, insertionScale: [Float!]!, insertionRotation: Float!, attachment: String!, lineSpacingStyle: String!, lineSpacingFactor: Float!, actualMeasurement: Float!, flipArrow1: Boolean!, flipArrow2: Boolean!, cloneInsertionPoint: [Float!]!, dimensionStyleHandle: Float!, dimensionBlockHandle: Float }
+type DwgLinearDimensionEntity { dimension: DwgDimensionEntityCommon!, extensionLine1: [Float!]!, extensionLine2: [Float!]!, definitionPoint: [Float!]!, obliqueAngle: Float!, dimensionRotation: Float! }
+enum DwgViewportStatusFlag { PERSPECTIVE FRONT_CLIPPING BACK_CLIPPING UCS_FOLLOW FRONT_CLIP_NOT_AT_EYE UCS_ICON_VISIBLE UCS_ICON_AT_ORIGIN FAST_ZOOM SNAP GRID ISOMETRIC_SNAP HIDE_PLOT ISO_PAIR_TOP ISO_PAIR_RIGHT ZOOM_LOCK ALWAYS_ENABLED NON_RECTANGULAR_CLIPPING VIEWPORT_OFF GRID_BEYOND_DRAWING_LIMITS ADAPTIVE_GRID ADAPTIVE_SUBDIVISION GRID_FOLLOWS_WORKPLANE }
+enum DwgViewportRenderMode { OPTIMIZED_2D WIREFRAME HIDDEN_LINE FLAT_SHADED GOURAUD_SHADED FLAT_SHADED_WITH_WIREFRAME GOURAUD_SHADED_WITH_WIREFRAME }
+enum DwgOrthographicView { NONE TOP BOTTOM FRONT BACK LEFT RIGHT }
+enum DwgShadePlotMode { AS_DISPLAYED WIREFRAME HIDDEN RENDERED }
+enum DwgDefaultLightingType { ONE_DISTANT_LIGHT TWO_DISTANT_LIGHTS }
+type DwgViewportEntity { common: DwgEntityCommon!, center: [Float!]!, width: Float!, height: Float!, viewTarget: [Float!]!, viewDirection: [Float!]!, twistAngle: Float!, viewHeight: Float!, lensLength: Float!, frontClip: Float!, backClip: Float!, snapAngle: Float!, viewCenter: [Float!]!, snapBase: [Float!]!, snapUnit: [Float!]!, gridUnit: [Float!]!, circleZoomPercent: Int!, gridMajor: Int!, frozenLayerHandles: [Float!]!, status: [DwgViewportStatusFlag!]!, styleSheet: String!, renderMode: DwgViewportRenderMode!, ucsAtOrigin: Boolean!, ucsPerViewport: Boolean!, ucsOrigin: [Float!]!, ucsXAxis: [Float!]!, ucsYAxis: [Float!]!, ucsElevation: Float!, orthographicView: DwgOrthographicView!, shadePlotMode: DwgShadePlotMode!, useDefaultLights: Boolean!, defaultLightingType: DwgDefaultLightingType!, brightness: Float!, contrast: Float!, ambientColor: DwgComplexColor!, clipBoundaryHandle: Float, namedUcsHandle: Float, baseUcsHandle: Float, backgroundHandle: Float, visualStyleHandle: Float, shadePlotHandle: Float, sunHandle: Float }
+enum DwgObjectCategory { ENTITY TABLE_CONTROL TABLE_RECORD DICTIONARY OBJECT CUSTOM }
+type DwgNamedReference { name: String!, handle: Float! }
+type DwgXRecordStringValue { groupCode: Int!, value: String! }
+type DwgXRecordRealValue { groupCode: Int!, value: Float! }
+type DwgXRecordBooleanValue { groupCode: Int!, value: Boolean! }
+type DwgXRecordIntegerValue { groupCode: Int!, value: Float! }
+type DwgXRecordPoint3dValue { groupCode: Int!, value: [Float!]! }
+type DwgXRecordBinaryValue { groupCode: Int!, octets: [Int!]! }
+type DwgXRecordHandleValue { groupCode: Int!, value: Float! }
+type DwgXRecordObjectIdValue { groupCode: Int!, absoluteValue: Float! }
+union DwgXRecordValue = DwgXRecordStringValue | DwgXRecordRealValue | DwgXRecordBooleanValue | DwgXRecordIntegerValue | DwgXRecordPoint3dValue | DwgXRecordBinaryValue | DwgXRecordHandleValue | DwgXRecordObjectIdValue
+type DwgDictionaryBody { entries: [DwgNamedReference!]!, cloningFlag: Int!, hardOwner: Boolean!, defaultEntryHandle: Float }
+type DwgTableControlBody { entryHandles: [Float!]!, modelSpaceHandle: Float, paperSpaceHandle: Float }
+type DwgTableRecordBody { name: String! }
+type DwgXRecordBody { values: [DwgXRecordValue!]!, objectIdHandles: [Float!]!, cloningFlag: Int! }
+type DwgAssociativeDependency { status: String!, isReadDependency: Boolean!, isWriteDependency: Boolean!, isAttachedToObject: Boolean!, isDelegatingToOwningAction: Boolean!, order: Int!, dependentOnObjectHandle: Float!, name: String, readDependencyHandle: Float, dependencyNodeHandle: Float, dependencyBodyHandle: Float, dependencyBodyId: Int! }
+type DwgEvaluationInteger32 { value: Int! }
+union DwgEvaluationVariant = DwgEvaluationInteger32
+type DwgAssociativeValueDependency { dependency: DwgAssociativeDependency!, cachedValue: DwgEvaluationVariant!, valueName: String! }
+type DwgAssociativeGeometryDependency { dependency: DwgAssociativeDependency!, enabled: Boolean!, persistentSubentityClassName: String!, dependentOnCompoundObject: Boolean! }
+type DwgEvaluationExpressionValue { kind: String!, realValue: Float, pointValue: [Float!], textValue: String, integerValue: Int, objectReference: Float }
+type DwgEvaluationExpression { parentId: Int!, majorVersion: Int!, minorVersion: Int!, value: DwgEvaluationExpressionValue!, nodeId: Int! }
+type DwgBlockGripLocationComponent { evaluationExpression: DwgEvaluationExpression!, gripType: Int!, gripExpression: String! }
+type DwgDynamicBlockProxyNode { evaluationExpression: DwgEvaluationExpression! }
+type DwgAssociativeActionDependency { owned: Boolean!, dependencyHandle: Float! }
+type DwgAssociativeAction { status: String!, owningNetworkHandle: Float, actionBodyHandle: Float, actionIndex: Int!, maximumDependencyIndex: Int!, dependencies: [DwgAssociativeActionDependency!]! }
+type DwgAssociativeVariable { action: DwgAssociativeAction!, name: String!, expression: String!, evaluatorId: String!, description: String!, evaluatedValue: DwgEvaluationVariant!, mergeable: Boolean!, mergeableVariableName: String, mustMerge: Boolean!, referencedValueDependencyHandles: [Float!]! }
+type DwgAssociativeDimensionDependencyBody { name: String! }
+type DwgColorNone { present: Boolean! }
+type DwgColorByColor { red: Int!, green: Int!, blue: Int! }
+type DwgColorByIndex { index: Int! }
+union DwgComplexColorValue = DwgColorNone | DwgColorByColor | DwgColorByIndex
+type DwgComplexColor { index: Int!, value: DwgComplexColorValue!, name: String, bookName: String }
+type DwgVisualStyleUIntProperty { value: Int!, operation: String! }
+type DwgVisualStyleFloatProperty { value: Float!, operation: String! }
+type DwgVisualStyleBoolProperty { value: Boolean!, operation: String! }
+type DwgVisualStyleColorProperty { value: DwgComplexColor!, operation: String! }
+type DwgVisualStyleProperties { faceLightingModel: DwgVisualStyleUIntProperty!, faceLightingQuality: DwgVisualStyleUIntProperty!, faceColorMode: DwgVisualStyleUIntProperty!, faceModifiers: DwgVisualStyleUIntProperty!, faceOpacity: DwgVisualStyleFloatProperty!, faceSpecularAmount: DwgVisualStyleFloatProperty!, faceMonochromeColor: DwgVisualStyleColorProperty!, edgeModel: DwgVisualStyleUIntProperty!, edgeStyles: DwgVisualStyleUIntProperty!, edgeIntersectionColor: DwgVisualStyleColorProperty!, edgeObscuredColor: DwgVisualStyleColorProperty!, edgeObscuredLinePattern: DwgVisualStyleUIntProperty!, edgeIntersectionLinePattern: DwgVisualStyleUIntProperty!, edgeCreaseAngle: DwgVisualStyleFloatProperty!, edgeModifiers: DwgVisualStyleUIntProperty!, edgeColor: DwgVisualStyleColorProperty!, edgeOpacity: DwgVisualStyleFloatProperty!, edgeWidth: DwgVisualStyleUIntProperty!, edgeOverhang: DwgVisualStyleUIntProperty!, edgeJitter: DwgVisualStyleUIntProperty!, edgeSilhouetteColor: DwgVisualStyleColorProperty!, edgeSilhouetteWidth: DwgVisualStyleUIntProperty!, edgeHaloGap: DwgVisualStyleUIntProperty!, edgeIsolines: DwgVisualStyleUIntProperty!, hiddenEdgePrecision: DwgVisualStyleBoolProperty!, displaySettings: DwgVisualStyleUIntProperty!, displayBrightness: DwgVisualStyleFloatProperty!, displayShadowType: DwgVisualStyleUIntProperty! }
+type DwgVisualStyle { description: String!, styleType: Int!, extensionLightingModel: Int!, internalOnly: Boolean!, properties: DwgVisualStyleProperties! }
+type DwgBlockParameterDependencyBody { name: String! }
+type DwgBlockRepresentationData { representedBlockHeaderHandle: Float! }
+type DwgDynamicBlockPurgePreventer { protectedBlockHeaderHandle: Float! }
+type DwgEvaluationGraphNode { id: Int!, expressionHandle: Float! }
+type DwgEvaluationGraphEdge { fromNodeId: Int!, toNodeId: Int!, referenceCount: Int!, invertible: Boolean!, suppressed: Boolean! }
+type DwgEvaluationGraph { nodes: [DwgEvaluationGraphNode!]!, edges: [DwgEvaluationGraphEdge!]! }
+type DwgBlockParameterConnection { code: Int!, name: String! }
+type DwgBlockParameterProperty { connections: [DwgBlockParameterConnection!]! }
+enum DwgBlockParameterBaseLocation { START_POINT MIDPOINT }
+type DwgBlockFlipValueSet { baseLabel: String!, flippedLabel: String! }
+type DwgNamedEvaluationNodeReference { nodeId: Int!, expressionName: String! }
+type DwgBlockFlipParameter { evaluationExpression: DwgEvaluationExpression!, name: String!, showProperties: Boolean!, chainActions: Boolean!, definitionBase: [Float!]!, definitionEnd: [Float!]!, properties: [DwgBlockParameterProperty!]!, baseLocation: DwgBlockParameterBaseLocation!, label: String!, description: String!, valueSet: DwgBlockFlipValueSet!, labelPoint: [Float!]!, updatedFlip: DwgNamedEvaluationNodeReference! }
+enum DwgVisibilityEvaluationHistory { STATELESS REQUIRED }
+type DwgVisibilityState { name: String!, visibleEntityHandles: [Float!]!, controlledExpressionHandles: [Float!]! }
+type DwgBlockVisibilityParameter { evaluationExpression: DwgEvaluationExpression!, elementName: String!, showProperties: Boolean!, chainActions: Boolean!, definitionPoint: [Float!]!, properties: [DwgBlockParameterProperty!]!, updatedVisibilityNodeId: Int!, initialized: Boolean!, name: String!, description: String!, evaluationHistory: DwgVisibilityEvaluationHistory!, eligibleEntityHandles: [Float!]!, states: [DwgVisibilityState!]! }
+type DwgPlaceholder { kind: String! }
+type DwgDictionaryVariable { value: String! }
+type DwgAnnotationScale { name: String!, paperUnits: Float!, drawingUnits: Float!, isUnitScale: Boolean! }
+type DwgDrawOrderEntry { entityHandle: Float!, sortHandle: Float! }
+type DwgSortEntitiesTable { blockHeaderHandle: Float!, entries: [DwgDrawOrderEntry!]! }
+type DwgCellContentFormat { propertyOverrideFlags: Int!, propertyFlags: Int!, valueDataType: Int!, valueUnitType: Int!, valueFormatString: String!, rotation: Float!, blockScale: Float!, alignment: Int!, contentColor: DwgComplexColor!, textStyleHandle: Float, textHeight: Float! }
+type DwgCellMargins { vertical: Float!, horizontal: Float!, bottom: Float!, right: Float!, horizontalSpacing: Float!, verticalSpacing: Float! }
+type DwgCellBorder { overrideFlags: Int!, borderType: Int!, color: DwgComplexColor!, lineweight: Int!, linetypeHandle: Float, visible: Int!, doubleLineSpacing: Float! }
+type DwgCellBorders { top: DwgCellBorder, horizontalInside: DwgCellBorder, bottom: DwgCellBorder, left: DwgCellBorder, verticalInside: DwgCellBorder, right: DwgCellBorder }
+type DwgCellStyle { propertyOverrideFlags: Int!, mergeFlags: Int!, backgroundColor: DwgComplexColor!, contentLayout: Int!, contentFormat: DwgCellContentFormat!, margins: DwgCellMargins!, borders: DwgCellBorders! }
+type DwgTableStyle { description: String!, bitFlags: Int!, templateStyleHandle: Float, table: DwgCellStyle!, title: DwgCellStyle!, header: DwgCellStyle!, data: DwgCellStyle! }
+type DwgMlineCaps { square: Boolean!, innerArcs: Boolean!, roundOuterArcs: Boolean! }
+type DwgMlineStyleElement { offset: Float!, color: DwgComplexColor!, linetype: String! }
+type DwgMlineStyle { name: String!, description: String!, fillEnabled: Boolean!, displayMiters: Boolean!, startCaps: DwgMlineCaps!, endCaps: DwgMlineCaps!, fillColor: DwgComplexColor!, startAngle: Float!, endAngle: Float!, elements: [DwgMlineStyleElement!]! }
+type DwgMLeaderStyle { contentType: String!, drawOrder: String!, leaderOrder: String!, maximumSegmentPoints: Int!, firstSegmentAngle: Float!, secondSegmentAngle: Float!, description: String!, overallScale: Float!, propertyOverridesChanged: Boolean!, annotative: Boolean!, breakSize: Float! }
+type DwgMaterialColor { factor: Float!, overrideRgb: Int }
+type DwgMaterialMap { blendFactor: Float!, projection: String!, tiling: String!, scaleToEntity: Boolean!, useCurrentBlockTransform: Boolean!, transform: [Float!]!, source: String! }
+type DwgMaterialChannels { diffuse: Boolean!, specular: Boolean!, reflection: Boolean!, opacity: Boolean!, bump: Boolean!, refraction: Boolean! }
+type DwgMaterial { name: String!, description: String!, ambient: DwgMaterialColor!, diffuse: DwgMaterialColor!, diffuseMap: DwgMaterialMap!, specular: DwgMaterialColor!, specularMap: DwgMaterialMap!, specularGloss: Float!, reflectionMap: DwgMaterialMap!, opacity: Float!, opacityMap: DwgMaterialMap!, bumpMap: DwgMaterialMap!, refractionIndex: Float!, refractionMap: DwgMaterialMap!, translucence: Float!, selfIllumination: Float!, reflectivity: Float!, enabledChannels: DwgMaterialChannels! }
+type DwgBlockActionConnection { nodeId: Int!, name: String! }
+type DwgBlockActionDependency { objectHandle: Float! }
+type DwgBlockAction { evaluationExpression: DwgEvaluationExpression!, name: String!, displayLocation: [Float!]!, dependencies: [DwgBlockActionDependency!]!, actionNodeIds: [Int!]! }
+type DwgBlockMoveAction { action: DwgBlockAction!, xConnection: DwgBlockActionConnection!, yConnection: DwgBlockActionConnection!, distanceMultiplier: Float!, angleOffset: Float!, coordinateMode: String! }
+type DwgAssocNetworkMember { handle: Float!, kind: String! }
+type DwgAssocNetwork { action: DwgAssociativeAction!, networkActionIndex: Int!, actions: [DwgAssocNetworkMember!]! }
+type DwgConstraintNodeCore { id: Int!, connectedNodeIds: [Int!]! }
+type DwgGeometricConstraint { node: DwgConstraintNodeCore!, ownerNodeId: Int!, implied: Boolean!, active: Boolean! }
+type DwgConstraintGeometry { node: DwgConstraintNodeCore!, geometryDependencyHandle: Float, geometryNodeId: Int! }
+type DwgExplicitConstraint { geometric: DwgGeometricConstraint!, valueDependencyHandle: Float!, dimensionDependencyHandle: Float! }
+type DwgConstrainedImplicitPoint { geometry: DwgConstraintGeometry!, point: [Float!], pointKind: Int!, pointIndex: Int!, curveNodeId: Int! }
+type DwgConstrainedBoundedLine { geometry: DwgConstraintGeometry!, origin: [Float!]!, direction: [Float!]!, ray: Boolean!, bounded: Boolean!, startPoint: [Float!]!, endPoint: [Float!]! }
+type DwgDistanceConstraint { explicit: DwgExplicitConstraint!, directionKind: Int!, direction: [Float!] }
+type DwgParallelConstraint { geometric: DwgGeometricConstraint!, datumLineIndex: Int! }
+type DwgConstrainedDatumLine { geometry: DwgConstraintGeometry!, origin: [Float!]!, direction: [Float!]! }
+enum DwgGeometricConstraintKind { POINT_CURVE_CONSTRAINT POINT_COINCIDENCE_CONSTRAINT PERPENDICULAR_CONSTRAINT HORIZONTAL_CONSTRAINT MID_POINT_CONSTRAINT EQUAL_LENGTH_CONSTRAINT COLINEAR_CONSTRAINT FIXED_CONSTRAINT VERTICAL_CONSTRAINT }
+type DwgGeometricConstraintNode { kind: DwgGeometricConstraintKind!, value: DwgGeometricConstraint! }
+union DwgConstraintNode = DwgConstrainedImplicitPoint | DwgGeometricConstraintNode | DwgConstrainedBoundedLine | DwgDistanceConstraint | DwgParallelConstraint | DwgConstrainedDatumLine
+type DwgAssoc2dConstraintGroup { action: DwgAssociativeAction!, doNotCheckNewlyAddedConstraints: Boolean!, workPlane: [[Float!]!]!, memberActionHandles: [Float!]!, nodes: [DwgConstraintNode!]! }
+type DwgBlockElement { evaluationExpression: DwgEvaluationExpression!, name: String! }
+type DwgBlockGrip { element: DwgBlockElement!, location: [Float!]!, insertionCycling: Boolean!, insertionCyclingWeight: Int!, updatedX: DwgNamedEvaluationNodeReference!, updatedY: DwgNamedEvaluationNodeReference! }
+type DwgPropertyExpressionReference { propertyIndex: Int!, nodeId: Int! }
+type DwgBlockTwoPointParameter { element: DwgBlockElement!, showProperties: Boolean!, chainActions: Boolean!, definitionBase: [Float!]!, definitionEnd: [Float!]!, properties: [DwgBlockParameterProperty!]!, propertyExpressionReferences: [DwgPropertyExpressionReference!]!, baseLocation: String! }
+type DwgBlockLinearParameter { parameter: DwgBlockTwoPointParameter!, distanceName: String!, distanceDescription: String!, labelOffset: Float!, allowedValues: [Float!]! }
+type DwgBlockLinearGrip { grip: DwgBlockGrip!, orientation: [Float!]! }
+type DwgBlockFlipGrip { grip: DwgBlockGrip!, updatedFlip: DwgNamedEvaluationNodeReference!, orientation: [Float!]! }
+type DwgBlockVisibilityGrip { grip: DwgBlockGrip! }
+type DwgBlockAlignmentParameter { parameter: DwgBlockTwoPointParameter!, updatedGripNodeId: Int!, alignPerpendicular: Boolean! }
+type DwgBlockAlignmentGrip { grip: DwgBlockGrip!, firstLocationNodeId: Int!, secondLocationNodeId: Int!, orientation: [Float!]! }
+type DwgStretchSelection { objectHandle: Float!, vertexIndices: [Int!]! }
+type DwgStretchSelector { nodeId: Int!, pointIndices: [Int!]! }
+type DwgBlockStretchAction { action: DwgBlockAction!, xConnection: DwgBlockActionConnection!, yConnection: DwgBlockActionConnection!, points: [[Float!]!]!, selections: [DwgStretchSelection!]!, selectors: [DwgStretchSelector!]!, distanceMultiplier: Float!, angleOffset: Float!, coordinateMode: String! }
+type DwgBlockActionWithBasePoint { action: DwgBlockAction!, offset: [Float!]!, xBaseConnection: DwgBlockActionConnection!, yBaseConnection: DwgBlockActionConnection!, dependent: Boolean!, basePoint: [Float!]! }
+type DwgBlockScaleAction { base: DwgBlockActionWithBasePoint!, uniformScaleConnection: DwgBlockActionConnection!, xScaleConnection: DwgBlockActionConnection!, yScaleConnection: DwgBlockActionConnection!, mode: String! }
+type DwgBlockFlipAction { action: DwgBlockAction!, flipConnection: DwgBlockActionConnection!, updatedFlipConnection: DwgBlockActionConnection!, updatedBaseConnection: DwgBlockActionConnection!, updatedEndConnection: DwgBlockActionConnection! }
+type DwgBlockOnePointParameter { element: DwgBlockElement!, showProperties: Boolean!, chainActions: Boolean!, definitionPoint: [Float!]!, properties: [DwgBlockParameterProperty!]! }
+type DwgBlockBasePointParameter { parameter: DwgBlockOnePointParameter!, point: [Float!]!, basePoint: [Float!]! }
+type DwgBlockParameterAllowedValues { values: [Float!]! }
+type DwgBlockLinearConstraintParameter { parameter: DwgBlockTwoPointParameter!, displacementGripNodeId: Int!, dependencyHandle: Float!, expressionName: String!, expressionDescription: String!, value: Float!, allowedValues: DwgBlockParameterAllowedValues! }
+type DwgBlockVerticalConstraintParameter { value: DwgBlockLinearConstraintParameter! }
+type DwgBlockHorizontalConstraintParameter { value: DwgBlockLinearConstraintParameter! }
+type DwgPlotOptions { useStandardScale: Boolean!, plotViewportBorders: Boolean!, plotWithLineweights: Boolean!, drawViewportsFirst: Boolean!, modelType: Boolean!, updatePaper: Boolean!, initializing: Boolean! }
+type DwgLayoutOptions { paperSpaceLinetypeScaling: Boolean! }
+type DwgLayout { pageSetupName: String!, printerConfiguration: String!, canonicalMediaName: String!, stylesheet: String!, name: String!, plotOptions: DwgPlotOptions!, margins: [Float!]!, paperSize: [Float!]!, plotOrigin: [Float!]!, paperUnit: String!, rotation: String!, plotArea: String!, plotWindowLowerLeft: [Float!]!, plotWindowUpperRight: [Float!]!, paperUnits: Float!, drawingUnits: Float!, standardScale: String!, standardScaleFactor: Float!, paperImageOrigin: [Float!]!, shadePlot: String!, shadePlotResolution: String!, shadePlotDpi: Int!, tabOrder: Int!, options: DwgLayoutOptions!, insertionBase: [Float!]!, limitsMinimum: [Float!]!, limitsMaximum: [Float!]!, ucsOrigin: [Float!]!, ucsXAxis: [Float!]!, ucsYAxis: [Float!]!, ucsElevation: Float!, orthographicView: DwgOrthographicView!, extentsMinimum: [Float!]!, extentsMaximum: [Float!]!, plotViewHandle: Float, visualStyleHandle: Float, blockHeaderHandle: Float!, activeViewportHandle: Float, baseUcsHandle: Float, namedUcsHandle: Float, viewportHandles: [Float!]! }
+union DwgLogicalObjectBody = DwgDictionaryBody | DwgTableControlBody | DwgTableRecordBody | DwgXRecordBody | DwgLineEntity | DwgArcEntity | DwgLwPolylineEntity | DwgBlockBeginEntity | DwgBlockEndEntity | DwgInsertEntity | DwgLinearDimensionEntity | DwgViewportEntity | DwgAssociativeDependency | DwgAssociativeValueDependency | DwgAssociativeGeometryDependency | DwgBlockGripLocationComponent | DwgDynamicBlockProxyNode | DwgAssociativeVariable | DwgAssociativeDimensionDependencyBody | DwgVisualStyle | DwgBlockParameterDependencyBody | DwgBlockRepresentationData | DwgDynamicBlockPurgePreventer | DwgEvaluationGraph | DwgBlockFlipParameter | DwgBlockVisibilityParameter | DwgPlaceholder | DwgDictionaryVariable | DwgAnnotationScale | DwgSortEntitiesTable | DwgTableStyle | DwgMlineStyle | DwgMLeaderStyle | DwgMaterial | DwgBlockMoveAction | DwgAssocNetwork | DwgAssoc2dConstraintGroup | DwgBlockLinearParameter | DwgBlockLinearGrip | DwgBlockFlipGrip | DwgBlockVisibilityGrip | DwgBlockAlignmentParameter | DwgBlockAlignmentGrip | DwgBlockStretchAction | DwgBlockScaleAction | DwgBlockFlipAction | DwgBlockBasePointParameter | DwgBlockVerticalConstraintParameter | DwgBlockHorizontalConstraintParameter | DwgLayout
+type DwgExtendedEntityData { applicationHandle: Float!, values: [DwgXRecordValue!]! }
+type DwgLogicalObject { handle: Float!, typeCode: Int!, className: String!, category: DwgObjectCategory!, ownerHandle: Float, reactorHandles: [Float!]!, extensionDictionaryHandle: Float, referencedHandles: [Float!]!, extendedData: [DwgExtendedEntityData!]!, body: DwgLogicalObjectBody }
+type DwgLogicalDrawing { layers: [DwgLogicalLayer!]!, objects: [DwgLogicalObject!]!, extmin: [Float!]!, extmax: [Float!]! }
+type DwgHeaderUnits { unit1Conversion: Float!, unit2Conversion: Float!, unit3Conversion: Float!, unit4Conversion: Float!, unit1Name: String!, unit2Name: String!, unit3Name: String!, unit4Name: String! }
+type DwgHeaderModes { dimensionAssociative: Boolean!, dimensionShow: Boolean!, polylineGeneration: Boolean!, orthographicMode: Boolean!, regenerationMode: Boolean!, fillMode: Boolean!, quickTextMode: Boolean!, paperSpaceLinetypeScale: Boolean!, limitsCheck: Boolean!, userTimer: Boolean!, sketchPolyline: Boolean!, angleDirection: Boolean!, splineFrame: Boolean!, mirrorText: Boolean!, worldView: Boolean!, tileMode: Boolean!, paperLimitsCheck: Boolean!, visualRetain: Boolean!, displaySilhouette: Boolean!, polylineEllipse: Boolean! }
+type DwgHeaderIntegerSettings { proxyGraphics: Int!, treeDepth: Int!, linearUnits: Int!, linearPrecision: Int!, angularUnits: Int!, angularPrecision: Int!, attributeMode: Int!, pointDisplayMode: Int!, userInteger1: Int!, userInteger2: Int!, userInteger3: Int!, userInteger4: Int!, userInteger5: Int!, splineSegments: Int!, surfaceU: Int!, surfaceV: Int!, surfaceType: Int!, surfaceTab1: Int!, surfaceTab2: Int!, splineType: Int!, shadeEdge: Int!, shadeDifference: Int!, unitMode: Int!, maximumActiveViewports: Int!, isolines: Int!, multilineJustification: Int!, textQuality: Int! }
+type DwgHeaderScalars { linetypeScale: Float!, textSize: Float!, traceWidth: Float!, sketchIncrement: Float!, filletRadius: Float!, thickness: Float!, angleBase: Float!, pointDisplaySize: Float!, polylineWidth: Float!, userReal1: Float!, userReal2: Float!, userReal3: Float!, userReal4: Float!, userReal5: Float!, chamferA: Float!, chamferB: Float!, chamferC: Float!, chamferD: Float!, facetResolution: Float!, multilineScale: Float!, currentEntityLinetypeScale: Float!, currentEntityColorIndex: Int!, paperSpaceViewportScale: Float! }
+type DwgHeaderTimeState { createdAt: DwgJulianDate!, updatedAt: DwgJulianDate!, editingDuration: DwgJulianDate!, userTimerDuration: DwgJulianDate! }
+type DwgHeaderSpaceGeometry { insertionBase: [Float!]!, extentsMinimum: [Float!]!, extentsMaximum: [Float!]!, limitsMinimum: [Float!]!, limitsMaximum: [Float!]!, elevation: Float!, ucsOrigin: [Float!]!, ucsXAxis: [Float!]!, ucsYAxis: [Float!]!, ucsOrthographicView: Int!, ucsOriginTop: [Float!]!, ucsOriginBottom: [Float!]!, ucsOriginLeft: [Float!]!, ucsOriginRight: [Float!]!, ucsOriginFront: [Float!]!, ucsOriginBack: [Float!]! }
+type DwgDimensionSettings { scale: Float!, arrowSize: Float!, extensionOffset: Float!, lineIncrement: Float!, extension: Float!, rounding: Float!, lineExtension: Float!, tolerancePlus: Float!, toleranceMinus: Float!, fixedExtensionLength: Float!, jogAngle: Float!, textFill: Int!, textFillColorIndex: Int!, tolerance: Boolean!, limits: Boolean!, textInsideHorizontal: Boolean!, textOutsideHorizontal: Boolean!, suppressExtension1: Boolean!, suppressExtension2: Boolean!, textAbove: Int!, zeroSuppression: Int!, angularZeroSuppression: Int!, arcSymbol: Int!, textHeight: Float!, centerMark: Float!, tickSize: Float!, alternateScale: Float!, linearFactor: Float!, textVerticalPosition: Float!, textFactor: Float!, gap: Float!, alternateRounding: Float!, alternateUnits: Boolean!, alternateDecimalPlaces: Int!, textOutsideForceLine: Boolean!, separateArrows: Boolean!, textInside: Boolean!, suppressOutside: Boolean!, lineColorIndex: Int!, extensionColorIndex: Int!, textColorIndex: Int!, angularDecimalPlaces: Int!, decimalPlaces: Int!, toleranceDecimalPlaces: Int!, alternateUnitsFormat: Int!, alternateToleranceDecimalPlaces: Int!, angularUnitFormat: Int!, fractionalFormat: Int!, linearUnitFormat: Int!, decimalSeparator: Int!, textMovement: Int!, justification: Int!, suppressDimension1: Boolean!, suppressDimension2: Boolean!, toleranceJustification: Int!, toleranceZeroSuppression: Int!, alternateZeroSuppression: Int!, alternateToleranceZeroSuppression: Int!, userPositionedText: Boolean!, fit: Int!, fixedExtensionEnabled: Boolean!, textDirection: Boolean!, alternateMeasurementScale: Float!, measurementScale: Float!, dimensionLineWeight: Int!, extensionLineWeight: Int! }
+type DwgDrawingPolicy { textStackAlignment: Int!, textStackSize: Int!, currentEntityLineweight: Int!, endCaps: Int!, joinStyle: Int!, lineweightDisplay: Boolean!, externalReferenceEditing: Boolean!, extendedNames: Boolean!, plotStyleMode: Boolean!, oleStartup: Boolean!, insertionUnits: Int!, currentPlotStyleType: Int!, sortEntities: Int!, indexControl: Int!, hideText: Int!, xclipFrame: Int!, dimensionAssociation: Int!, haloGap: Int!, obscuredColor: Int!, intersectionColor: Int!, obscuredLinetype: Int!, intersectionDisplay: Int!, cameraDisplay: Boolean!, stepsPerSecond: Float!, stepSize: Float!, dwf_3dPrecision: Float!, lensLength: Float!, cameraHeight: Float!, solidHistory: Int!, showHistory: Int!, polysolidWidth: Float!, polysolidHeight: Float!, loftAngle1: Float!, loftAngle2: Float!, loftMagnitude1: Float!, loftMagnitude2: Float!, loftParameter: Int!, loftNormals: Int!, latitude: Float!, longitude: Float!, northDirection: Float!, timezone: Int!, lightGlyphDisplay: Int!, tileModeLightSync: Int!, dwfFrame: Int!, dgnFrame: Int!, realWorldScale: Boolean!, interfereColorIndex: Int!, shadowMode: Int!, shadowPlaneLocation: Float! }
+type DwgHeaderStrings { menu: String!, dimensionPostfix: String!, dimensionAlternatePostfix: String!, dimensionAlternateMeasurementZeroSuffix: String!, dimensionMeasurementZeroSuffix: String!, hyperlinkBase: String!, stylesheet: String!, fingerprintGuid: String!, versionGuid: String!, projectName: String! }
+type DwgHeaderRelations { handleSeed: Float!, currentLayer: Float!, textStyle: Float!, currentLinetype: Float!, currentMaterial: Float!, dimensionStyle: Float!, multilineStyle: Float!, paperUcsName: Float, paperUcsOrthographicReference: Float, paperUcsBase: Float, modelUcsName: Float, modelUcsOrthographicReference: Float, modelUcsBase: Float, dimensionTextStyle: Float!, dimensionLeaderBlock: Float, dimensionBlock: Float, dimensionBlock1: Float, dimensionBlock2: Float, dimensionLinetype: Float, dimensionExtensionLinetype1: Float, dimensionExtensionLinetype2: Float, blockControl: Float!, layerControl: Float!, styleControl: Float!, linetypeControl: Float!, viewControl: Float!, ucsControl: Float!, viewportControl: Float!, appidControl: Float!, dimensionStyleControl: Float!, groupDictionary: Float!, multilineStyleDictionary: Float!, namedObjectsDictionary: Float!, layoutDictionary: Float!, plotSettingsDictionary: Float!, plotStyleNameDictionary: Float!, materialDictionary: Float!, colorDictionary: Float!, visualStyleDictionary: Float!, paperSpaceBlockRecord: Float!, modelSpaceBlockRecord: Float!, byLayerLinetype: Float!, byBlockLinetype: Float!, continuousLinetype: Float!, interfereObjectVisualStyle: Float, interfereViewportVisualStyle: Float, dragVisualStyle: Float }
+type DwgHeaderVariables { units: Int!, modes: Int!, integers: Int!, scalars: Int!, time: Int!, paperSpace: Int!, modelSpace: Int!, dimensions: Int!, policy: Int!, strings: Int!, relations: Int! }
+type DwgClass { number: Int!, proxyFlags: Int!, applicationName: String!, cppClassName: String!, dxfName: String!, wasZombie: Boolean!, itemClassId: Int!, objectCount: Int!, dwgVersion: Int!, maintenanceVersion: Int!, reservedValues: [Int!]! }
+type DwgDependency { feature: String!, fullPath: String!, relativePath: String!, fingerprint: String!, version: String!, timestamp: Int!, fileSize: Int!, affectsGraphics: Boolean!, referenceCount: Int! }
+type DwgJulianDate { days: Int!, milliseconds: Int! }
+type DwgVersionStamp { version: Int!, maintenance: Int! }
+type DwgAuxiliaryHeader { totalSaves: Int!, savePartitionOne: Int!, savePartitionTwo: Int!, saveGeneration: Int!, legacyStampOne: DwgVersionStamp!, legacyStampTwo: DwgVersionStamp!, compatibilityProfile: String!, createdAt: DwgJulianDate!, updatedAt: DwgJulianDate!, handleSeed: Float!, terminalSaveGeneration: Int! }
+type DwgRevisionHistory { formatMajor: Int!, formatMinor: Int!, revisions: [Int!]! }
+type DwgRgba { red: Int!, green: Int!, blue: Int!, alpha: Int! }
+type DwgIndexedPreview { width: Int!, height: Int!, origin: String!, palette: [DwgRgba!]!, pixelIndices: [Int!]!, backgroundPaletteIndex: Int! }
+type DwgApplicationProperty { id: Int!, kind: String!, value: String! }
+type DwgProductInformation { name: String!, buildVersion: String!, registryVersion: String!, installId: String!, localeId: String! }
+type DwgApplicationHistory { historyIdentifierOne: String!, historyIdentifierTwo: String!, classVersion: Int!, applicationVersionDigest: String!, applicationVersion: String!, trustCommentDigest: String!, trustComment: String!, propertySetDigest: String!, propertyFormatIdentifier: String!, properties: [DwgApplicationProperty!]!, productDigest: String!, product: DwgProductInformation! }
+type DwgCustomProperty { key: String!, value: String! }
+type DwgSummaryInfo { title: String!, subject: String!, author: String!, keywords: String!, comments: String!, lastSavedBy: String!, revisionNumber: String!, hyperlinkBase: String!, totalEditingTime: Float!, createdAt: DwgJulianDate!, modifiedAt: DwgJulianDate!, customProperties: [DwgCustomProperty!]! }
+type DwgApplicationInfo { name: String!, versionChecksum: String!, version: String!, commentChecksum: String!, comment: String!, productChecksum: String!, product: String!, applicationVersion: String! }
+type DwgTemplate { description: String!, measurement: String! }
+type DwgDiff { version: String, maintenanceVersion: Int, codepage: Int, drawing: DwgLogicalDrawing, header: DwgHeaderVariables, classes: [DwgClass!], dependencies: [DwgDependency!], summary: DwgSummaryInfo, application: DwgApplicationInfo, template: DwgTemplate, auxiliaryHeader: DwgAuxiliaryHeader, revisionHistory: DwgRevisionHistory, preview: DwgIndexedPreview, applicationHistory: DwgApplicationHistory }

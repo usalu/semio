@@ -34,23 +34,25 @@ pub struct SemioKitArtifact {
 }
 
 impl Default for SemioKitArtifact {
-    fn default() -> Self { Self::from_snapshot(SemioKitSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(SemioKitSnapshot::default())
+    }
 }
 
 impl SemioKitArtifact {
     pub fn to_snapshot(&self) -> SemioKitSnapshot {
         SemioKitSnapshot {
-            schema: self.schema.clone(), types: self.types.clone(), designs: self.designs.clone(),
-            objects: self.objects.clone(), models: self.models.clone(), properties: self.properties.clone(),
+            schema: self.schema.clone(),
+            types: self.types.clone(),
+            designs: self.designs.clone(),
+            objects: self.objects.clone(),
+            models: self.models.clone(),
+            properties: self.properties.clone(),
             representations: self.representations.clone(),
         }
     }
     pub fn from_snapshot(snapshot: SemioKitSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema, types: snapshot.types, designs: snapshot.designs,
-            objects: snapshot.objects, models: snapshot.models, properties: snapshot.properties,
-            representations: snapshot.representations,
-        }
+        Self { schema: snapshot.schema, types: snapshot.types, designs: snapshot.designs, objects: snapshot.objects, models: snapshot.models, properties: snapshot.properties, representations: snapshot.representations }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioKitSnapshot) {
         self.schema = snapshot.schema;
@@ -99,18 +101,22 @@ pub fn semio_kit_artifact_schema_descriptor() -> schema::ArtifactSchemaDescripto
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
     use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
     use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioKitBuilderConstruction { snapshot: SemioKitSnapshot }
+    pub struct SemioKitBuilderConstruction {
+        snapshot: SemioKitSnapshot,
+    }
 
     //#region 🔖️TypedConstructors
     impl SemioKitBuilderConstruction {
         /// 🏗️ Starts a fresh, empty kit (no types/designs/geometry).
-        pub fn new() -> Self { Self { snapshot: SemioKitSnapshot::default() } }
+        pub fn new() -> Self {
+            Self { snapshot: SemioKitSnapshot::default() }
+        }
         /// 🏷️ Appends one TYPE to the catalog.
         pub fn add_type(mut self, id: impl Into<String>, name: impl Into<String>, category: impl Into<String>) -> Self {
             self.snapshot.types.push(SemioKitType { id: id.into(), name: name.into(), category: category.into() });
@@ -123,8 +129,12 @@ pub mod derived_construction {
         type Snapshot = SemioKitSnapshot;
         type Mutation = SemioKitMutation;
         type Diff = SemioKitDiff;
-        fn empty() -> Self { Self { snapshot: SemioKitSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: SemioKitSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -140,7 +150,9 @@ pub mod derived_construction {
             self.snapshot = <SemioKitDiff as protocol::MutationDiff<SemioKitSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 
     //#region 🔖️Tests
@@ -150,11 +162,7 @@ pub mod derived_construction {
 
         #[test]
         fn typed_constructors_build_a_populated_snapshot() {
-            let snapshot = SemioKitBuilderConstruction::new()
-                .add_type("chair", "Chair", "furniture")
-                .add_type("table", "Table", "furniture")
-                .build()
-                .expect("build");
+            let snapshot = SemioKitBuilderConstruction::new().add_type("chair", "Chair", "furniture").add_type("table", "Table", "furniture").build().expect("build");
             assert_eq!(snapshot.types.len(), 2);
             assert_eq!(snapshot.types[0].id, "chair");
         }
@@ -166,11 +174,13 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, STDIO_SEMIOKIT_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioKitParts { pub snapshot: Option<SemioKitSnapshot> }
+    pub struct SemioKitParts {
+        pub snapshot: Option<SemioKitSnapshot>,
+    }
 
     pub struct SemioKitAnalyzerAnalysis;
 
@@ -182,10 +192,18 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOKIT_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
-                    if text.contains(STDIO_SEMIOKIT_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                    if text.contains(STDIO_SEMIOKIT_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }

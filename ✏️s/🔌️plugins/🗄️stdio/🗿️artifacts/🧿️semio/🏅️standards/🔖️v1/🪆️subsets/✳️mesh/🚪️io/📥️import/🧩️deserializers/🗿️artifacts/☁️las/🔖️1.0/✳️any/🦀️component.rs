@@ -21,10 +21,10 @@
 //!   fabricated values.
 //! - No normals/uvs/materials/textures — LAS has none of these concepts.
 
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 use crate::artifacts::las::LasSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba};
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.las", standard: StandardId("1.0"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
@@ -52,22 +52,8 @@ impl ArtifactDeserializer for SemioMeshFromLas {
             Vec::new()
         };
 
-        let primitive = SemioPrimitive {
-            id: "mesh-0-prim-0".to_string(),
-            topology: SemioTopology::Points,
-            positions,
-            normals: Vec::new(),
-            uvs: Vec::new(),
-            colors,
-            indices: Vec::new(),
-            material_id: None,
-        };
-        Ok(SemioMeshSnapshot {
-            schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(),
-            meshes: vec![SemioMesh { id: "mesh-0".to_string(), primitives: vec![primitive] }],
-            materials: Vec::new(),
-            textures: Vec::new(),
-        })
+        let primitive = SemioPrimitive { id: "mesh-0-prim-0".to_string(), topology: SemioTopology::Points, positions, normals: Vec::new(), uvs: Vec::new(), colors, indices: Vec::new(), material_id: None };
+        Ok(SemioMeshSnapshot { schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(), meshes: vec![SemioMesh { id: "mesh-0".to_string(), primitives: vec![primitive] }], materials: Vec::new(), textures: Vec::new() })
     }
 }
 
@@ -83,8 +69,38 @@ mod tests {
             header: LasHeader::default(),
             vlrs: Vec::new(),
             points: vec![
-                LasPoint { x: 1.23, y: 4.56, z: 7.89, intensity: 100, return_number: 1, number_of_returns: 1, scan_direction_flag: false, edge_of_flight_line: false, classification: 2, scan_angle_rank: 0, user_data: 0, point_source_id: 0, gps_time: None, rgb: Some((65535, 0, 0)) },
-                LasPoint { x: 2.34, y: 5.67, z: 8.90, intensity: 200, return_number: 1, number_of_returns: 1, scan_direction_flag: false, edge_of_flight_line: false, classification: 2, scan_angle_rank: 0, user_data: 0, point_source_id: 0, gps_time: None, rgb: Some((0, 65535, 0)) },
+                LasPoint {
+                    x: 1.23,
+                    y: 4.56,
+                    z: 7.89,
+                    intensity: 100,
+                    return_number: 1,
+                    number_of_returns: 1,
+                    scan_direction_flag: false,
+                    edge_of_flight_line: false,
+                    classification: 2,
+                    scan_angle_rank: 0,
+                    user_data: 0,
+                    point_source_id: 0,
+                    gps_time: None,
+                    rgb: Some((65535, 0, 0)),
+                },
+                LasPoint {
+                    x: 2.34,
+                    y: 5.67,
+                    z: 8.90,
+                    intensity: 200,
+                    return_number: 1,
+                    number_of_returns: 1,
+                    scan_direction_flag: false,
+                    edge_of_flight_line: false,
+                    classification: 2,
+                    scan_angle_rank: 0,
+                    user_data: 0,
+                    point_source_id: 0,
+                    gps_time: None,
+                    rgb: Some((0, 65535, 0)),
+                },
             ],
         }
     }

@@ -1,11 +1,11 @@
-import type { XmlDeclaration, XmlNode } from '../📸️snapshot/🟦️component.ts';
+import type { XmlDeclaration, XmlDoctype, XmlNode } from '../📸️snapshot/🟦️component.ts';
 
 /** 🔺️ Diff for `stdio.xml`. `declaration`/`doctype` are tri-state (`null` = cleared, absent =
  * unchanged, present = set). */
 export interface XmlDiff {
   prolog?: XmlNode[];
   declaration?: XmlDeclaration | null;
-  doctype?: string | null;
+  doctype?: XmlDoctype | null;
   root?: XmlNodeDiff;
 }
 

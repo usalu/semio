@@ -2,33 +2,21 @@ dialect protocol
 protocol stdio.dwg.ac1024.diff
 version 1
 schema stdio.dwg.diff
-start diff
+start frame
+framing magic 0x8953504b0d0a1a0a
 
-# 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG2: `protocol::DiffCodec`
-# for `DwgDiff` (ac1024) is CONFIRMED ALREADY REAL — `#[derive(dsl::DslDiff)]` (../🦀️component.rs)
-# generates `encode_diff`/`decode_diff` that call `store::pack_rt::encode_document`/
-# `decode_document`. `DwgDiff` has zero `Option<Option<T>>` tri-state fields and zero
-# data-carrying enums reachable from it (`sections: Option<DwgSectionsDiff>` is a plain struct of
-# `Vec`s; `DwgDecodeStatus` doesn't even appear in the diff — it's derived, never diffed
-# directly). Same framework-generic `.spk` container as ac1018's own sibling protocol file —
-# copied verbatim per the recipe's own §2.4 worked example.
-framing magic 0x8953504B0D0A1A0A
-header fixed 24
-field version_major u16
-field version_minor u16
-field required_flags u32
-field optional_flags u32
+enum DwgObjectBodyKind { Dictionary=0 TableControl=1 TableRecord=2 XRecord=3 Entity=4 AssociativeDependency=5 AssociativeValueDependency=6 AssociativeGeometryDependency=7 BlockGripLocationComponent=8 DynamicBlockProxyNode=9 AssociativeVariable=10 AssociativeDimensionDependencyBody=11 VisualStyle=12 BlockParameterDependencyBody=13 BlockRepresentationData=14 DynamicBlockPurgePreventer=15 EvaluationGraph=16 BlockFlipParameter=17 BlockVisibilityParameter=18 Placeholder=19 DictionaryVariable=20 AnnotationScale=21 SortEntitiesTable=22 TableStyle=23 MlineStyle=24 MleaderStyle=25 Material=26 BlockMoveAction=27 AssociativeNetwork=28 Associative2dConstraintGroup=29 BlockLinearParameter=30 BlockLinearGrip=31 BlockFlipGrip=32 BlockVisibilityGrip=33 BlockAlignmentParameter=34 BlockAlignmentGrip=35 BlockStretchAction=36 BlockScaleAction=37 BlockFlipAction=38 BlockBasePointParameter=39 BlockVerticalConstraintParameter=40 BlockHorizontalConstraintParameter=41 Layout=42 }
+enum DwgDiffField { Drawing=0 Version=1 MaintenanceVersion=2 Codepage=3 Header=4 Classes=5 Dependencies=6 Summary=7 Application=8 Template=9 }
+struct DwgLogicalObjectDiff { handle u64 type_code u16 body_kind u8 }
+struct DwgAssociative2dConstraintGroupDiff { do_not_check_newly_added_constraints u8 member_action_count varint node_count varint }
+
+header fixed 32
+field format_major u16
+field format_minor u16
+field flags u32
+field domain_tag u32
 field header_crc32 u32
-field reserved fixed 8
-
-repeat segments {
-  tag u8
-  trailer u32
-  until 0
-  arm 3 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
-  arm 4 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
-  arm 1 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
-  arm 0 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
-}
-
-footer fixed 84
+segment payload varint bytes
+footer fixed 64
+field artifact_mark utf8
+field body_crc32 u32

@@ -14,15 +14,15 @@ use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::S
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
+use super::create_brep;
+use super::create_mesh;
+use super::create_properties;
+use super::delete_brep;
+use super::delete_mesh;
+use super::delete_properties;
 use super::move_object;
 use super::rotate_object;
 use super::scale_object;
-use super::create_brep;
-use super::delete_brep;
-use super::create_mesh;
-use super::delete_mesh;
-use super::create_properties;
-use super::delete_properties;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -49,7 +49,9 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::demo_object_snapshot;
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
-    fn fixture() -> SemioObjectSnapshot { demo_object_snapshot() }
+    fn fixture() -> SemioObjectSnapshot {
+        demo_object_snapshot()
+    }
 
     fn ref_of(subset: &str, id: &str) -> store::os_io::ArtifactRef {
         store::os_io::ArtifactRef { artifact_id: id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } }

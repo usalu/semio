@@ -65,19 +65,7 @@ pub struct AviStreamHeader {
 #[serde(tag = "format", rename_all = "camelCase")]
 pub enum AviStreamFormat {
     /// 🖼️ `BITMAPINFOHEADER` (40 bytes; `vids`). <https://learn.microsoft.com/windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader>
-    BitmapInfo {
-        size: u32,
-        width: i32,
-        height: i32,
-        planes: u16,
-        bit_count: u16,
-        compression: String,
-        size_image: u32,
-        x_pels_per_meter: i32,
-        y_pels_per_meter: i32,
-        colors_used: u32,
-        colors_important: u32,
-    },
+    BitmapInfo { size: u32, width: i32, height: i32, planes: u16, bit_count: u16, compression: String, size_image: u32, x_pels_per_meter: i32, y_pels_per_meter: i32, colors_used: u32, colors_important: u32 },
     /// 🔊️ `WAVEFORMATEX`-shaped (`auds`).
     WaveFormat {
         format_tag: u16,
@@ -94,7 +82,9 @@ pub enum AviStreamFormat {
 }
 
 impl Default for AviStreamFormat {
-    fn default() -> Self { Self::Raw { data: Vec::new() } }
+    fn default() -> Self {
+        Self::Raw { data: Vec::new() }
+    }
 }
 //#endregion 🔖️StreamFormat
 
@@ -154,13 +144,17 @@ pub struct AviSnapshot {
     pub unknown_chunks: Vec<RiffChunk>,
 }
 
-fn default_schema() -> String { STDIO_AVI_DOCUMENT_SCHEMA.into() }
+fn default_schema() -> String {
+    STDIO_AVI_DOCUMENT_SCHEMA.into()
+}
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for AviSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str { STDIO_AVI_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_AVI_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -174,8 +168,7 @@ impl store::ArtifactDsl for AviSnapshot {
         let mut bytes = Vec::with_capacity(hex.len() / 2);
         let mut i = 0usize;
         while i < hex.len() {
-            let byte = u8::from_str_radix(&hex[i..i + 2], 16)
-                .map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
+            let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
             bytes.push(byte);
             i += 2;
         }
@@ -185,11 +178,7 @@ impl store::ArtifactDsl for AviSnapshot {
     fn print_dsl(&self) -> String {
         let bytes = engine::encode_avi(self);
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -198,22 +187,14 @@ impl store::ArtifactPack for AviSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = engine::encode_avi(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         engine::decode_avi(&inner).map_err(store::PackError::Schema)
@@ -229,14 +210,41 @@ mod tests {
     fn sample_snapshot() -> AviSnapshot {
         AviSnapshot {
             schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
-            main_header: AviMainHeader { micro_sec_per_frame: 100_000, max_bytes_per_sec: 1400, padding_granularity: 0, flags: 0x10, total_frames: 2, initial_frames: 0, streams: 1, suggested_buffer_size: 140, width: 16, height: 16, reserved: vec![0, 0, 0, 0] },
+            main_header: AviMainHeader {
+                micro_sec_per_frame: 100_000,
+                max_bytes_per_sec: 1400,
+                padding_granularity: 0,
+                flags: 0x10,
+                total_frames: 2,
+                initial_frames: 0,
+                streams: 1,
+                suggested_buffer_size: 140,
+                width: 16,
+                height: 16,
+                reserved: vec![0, 0, 0, 0],
+            },
             streams: vec![AviStream {
-                strh: AviStreamHeader { fcc_type: "vids".into(), fcc_handler: "MJPG".into(), flags: 0, priority: 0, language: 0, initial_frames: 0, scale: 1, rate: 10, start: 0, length: 2, suggested_buffer_size: 140, quality: -1, sample_size: 0, rc_frame_left: 0, rc_frame_top: 0, rc_frame_right: 16, rc_frame_bottom: 16 },
+                strh: AviStreamHeader {
+                    fcc_type: "vids".into(),
+                    fcc_handler: "MJPG".into(),
+                    flags: 0,
+                    priority: 0,
+                    language: 0,
+                    initial_frames: 0,
+                    scale: 1,
+                    rate: 10,
+                    start: 0,
+                    length: 2,
+                    suggested_buffer_size: 140,
+                    quality: -1,
+                    sample_size: 0,
+                    rc_frame_left: 0,
+                    rc_frame_top: 0,
+                    rc_frame_right: 16,
+                    rc_frame_bottom: 16,
+                },
                 strf: AviStreamFormat::BitmapInfo { size: 40, width: 16, height: 16, planes: 1, bit_count: 24, compression: "MJPG".into(), size_image: 140, x_pels_per_meter: 0, y_pels_per_meter: 0, colors_used: 0, colors_important: 0 },
-                chunks: vec![
-                    AviChunk { fourcc: "00dc".into(), data: vec![1, 2, 3, 4], keyframe: true },
-                    AviChunk { fourcc: "00dc".into(), data: vec![5, 6, 7, 8], keyframe: true },
-                ],
+                chunks: vec![AviChunk { fourcc: "00dc".into(), data: vec![1, 2, 3, 4], keyframe: true }, AviChunk { fourcc: "00dc".into(), data: vec![5, 6, 7, 8], keyframe: true }],
             }],
             idx1_present: true,
             unknown_chunks: vec![],
@@ -266,12 +274,7 @@ mod tests {
         // `STDIO_AVI_DOCUMENT_SCHEMA` and `avih`'s `dwReserved[4]` is always 4 real DWORDs on the
         // wire, so a snapshot claiming to round-trip through the real codec must start in that
         // codec's own normal form, not the bare struct-derive default.
-        let snap = AviSnapshot {
-            schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
-            main_header: AviMainHeader { reserved: vec![0; 4], ..AviMainHeader::default() },
-            idx1_present: false,
-            ..AviSnapshot::default()
-        };
+        let snap = AviSnapshot { schema: STDIO_AVI_DOCUMENT_SCHEMA.into(), main_header: AviMainHeader { reserved: vec![0; 4], ..AviMainHeader::default() }, idx1_present: false, ..AviSnapshot::default() };
         let bytes = <AviSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <AviSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);

@@ -5,7 +5,7 @@
  *  reuses `PdfDictDiff` verbatim (trailer is itself a Dict-shaped structure). No
  *  `snapshot?: PdfSnapshot` full-replace slot anywhere. */
 
-import type { ObjRef, PdfDecimal, PdfDictEntry, PdfInfo, PdfObject, PdfPage } from '../📸️snapshot/🟦️component.ts';
+import type { ObjRef, PdfDecimal, PdfDictEntry, PdfInfo, PdfObject, PdfPage, PdfStreamFilter } from '../📸️snapshot/🟦️component.ts';
 
 /** 📄️ Sparse per-field patch for one `PdfPage` (weak entity -- flat fields only). `cropBox` is
  *  tri-state: absent = unchanged, `null` = cleared, a box = set. */
@@ -63,10 +63,7 @@ export interface PdfArrayDiff {
   added?: PdfArrayAdded[];
 }
 
-/** 🔺️ Recursive diff mirroring `PdfObject`'s shape. `replace` is the fallback for a node-KIND
- *  change; the other variants are direct/structural diffs for a stable kind. `stream`'s
- *  `data`/`rawFilter` are each independently sparse (`rawFilter` tri-state: absent = unchanged,
- *  `null` = cleared, a string = set). */
+/** 🔺️ Recursive logical diff mirroring `PdfObject`'s shape. */
 export type PdfValueDiff =
   | { kind: 'replace'; value: PdfObject }
   | { kind: 'bool'; value: boolean }
@@ -77,7 +74,7 @@ export type PdfValueDiff =
   | { kind: 'ref'; value: ObjRef }
   | { kind: 'array'; diff: PdfArrayDiff }
   | { kind: 'dict'; diff: PdfDictDiff }
-  | { kind: 'stream'; dict?: PdfDictDiff; data?: number[]; rawFilter?: string | null };
+  | { kind: 'stream'; dict?: PdfDictDiff; data?: number[]; filters?: PdfStreamFilter[] };
 
 export interface PdfObjectModified {
   id: ObjRef;

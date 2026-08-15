@@ -14,8 +14,8 @@
 //!   re-encoded bytes).
 
 use crate::artifacts::png::{
-    PngSnapshot,
     schema::snapshot::{PngChunkMarker, PngColorType, PngTextChunk, PngTextKind},
+    PngSnapshot,
 };
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
@@ -48,11 +48,7 @@ impl ArtifactSerializer for SemioImageToPng {
             return Err(store::PackError::Schema("semio/image→png: frame pixel length does not match width*height*4".into()));
         }
         let mut chunk_order = vec![PngChunkMarker::Ihdr];
-        let text_chunks: Vec<PngTextChunk> = from
-            .metadata
-            .iter()
-            .map(|m| PngTextChunk { keyword: m.key.clone(), value: m.value.clone(), kind: PngTextKind::Text, ..Default::default() })
-            .collect();
+        let text_chunks: Vec<PngTextChunk> = from.metadata.iter().map(|m| PngTextChunk { keyword: m.key.clone(), value: m.value.clone(), kind: PngTextKind::Text, ..Default::default() }).collect();
         for i in 0..text_chunks.len() {
             chunk_order.push(PngChunkMarker::Text { index: i });
         }

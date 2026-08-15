@@ -1,5 +1,5 @@
-use crate::artifacts::xml::{XmlSnapshot};
-use crate::artifacts::xml::schema::mutations::{XmlMutation, apply_xml_mutation};
+use crate::artifacts::xml::schema::mutations::{apply_xml_mutation, XmlMutation};
+use crate::artifacts::xml::XmlSnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
 pub fn apply(projection: &mut XmlSnapshot, mutation: &XmlMutation) {

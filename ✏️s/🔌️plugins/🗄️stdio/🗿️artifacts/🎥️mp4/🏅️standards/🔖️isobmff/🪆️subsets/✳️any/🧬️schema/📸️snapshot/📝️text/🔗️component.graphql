@@ -1,14 +1,11 @@
-# stdio.mp4 snapshot text facet — same shape as the schema-level Mp4Snapshot (../🔗️component.graphql); the DSL wire form is a hex dump, not a distinct text grammar.
+# stdio.mp4 snapshot text facet — structured logical records matching the schema-level model.
 type Mp4Ftyp { majorBrand: String! minorVersion: Int! compatibleBrands: [String!]! }
-union Mp4Codec = Mp4CodecAvc | Mp4CodecOther
+union Mp4Codec = Mp4CodecAvc
 type Mp4CodecAvc { sps: [[Int!]!]! pps: [[Int!]!]! nalLengthSize: Int! }
-type Mp4CodecOther { fourcc: String! raw: [Int!]! }
 type Mp4Sample { data: [Int!]! duration: Int! ctsOffset: Int! sync: Boolean! }
 type Mp4Track { trackId: Int! timescale: Int! codec: Mp4Codec! width: Int! height: Int! chunkSampleCounts: [Int!]! samples: [Mp4Sample!]! }
-type Mp4Box { fourcc: String! data: [Int!]! }
 type Mp4Snapshot {
   schema: String! @state(class: ARTIFACT)
   ftyp: Mp4Ftyp! @state(class: ARTIFACT)
   tracks: [Mp4Track!]! @state(class: ARTIFACT)
-  unknownBoxes: [Mp4Box!]! @state(class: ARTIFACT)
 }

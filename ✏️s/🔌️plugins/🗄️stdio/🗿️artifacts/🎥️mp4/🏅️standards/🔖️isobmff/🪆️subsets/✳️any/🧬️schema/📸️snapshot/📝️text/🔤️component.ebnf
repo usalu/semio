@@ -1,6 +1,14 @@
-(* stdio.mp4 snapshot text form — whitespace-tolerant ASCII hex dump of the real ISO-BMFF bytes;
-   MP4 has no textual syntax of its own (see ../💾️binary/🥋️component.ksy for the real grammar). *)
-document = hex_byte , { ws , hex_byte } ;
-hex_byte = hex_digit , hex_digit ;
-hex_digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" | "A" | "B" | "C" | "D" | "E" | "F" ;
-ws = { " " | "\t" | "\r" | "\n" } ;
+(* Structured logical MP4 snapshot records emitted by dsl::DslRecord. *)
+document = record ;
+record = identifier , "{" , { field } , "}" ;
+field = identifier , "=" , value ;
+value = scalar | record | list | object ;
+list = "[" , { value } , "]" ;
+object = "{" , { field } , "}" ;
+scalar = identifier | string | integer | boolean ;
+identifier = letter , { letter | digit | "-" | "_" } ;
+string = '"' , { ? escaped UTF-8 character ? } , '"' ;
+integer = [ "-" ] , digit , { digit } ;
+boolean = "true" | "false" ;
+letter = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" ;
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;

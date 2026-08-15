@@ -30,15 +30,12 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::artifacts::obj::schema::snapshot::{
-    ObjFace, ObjFaceVertex, ObjGroup, ObjNormal, ObjObject, ObjSmoothingRange, ObjTexCoord,
-    ObjUnknownStatement, ObjUsemtlRange, ObjVertex,
-};
+use crate::artifacts::obj::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjNormal, ObjObject, ObjSmoothingRange, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange, ObjVertex};
 use crate::artifacts::obj::ObjSnapshot;
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
 #[cfg(test)]
 use protocol::DiffCodec;
+use protocol::MutationDiff;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -92,11 +89,7 @@ fn generic_between<T: ObjIndexElem>(base: &[T], other: &[T]) -> (Vec<usize>, Vec
         }
     }
     let removed: Vec<usize> = if base.len() > other.len() { (other.len()..base.len()).collect() } else { Vec::new() };
-    let added: Vec<(usize, T)> = if other.len() > base.len() {
-        (base.len()..other.len()).map(|i| (i, other[i].clone())).collect()
-    } else {
-        Vec::new()
-    };
+    let added: Vec<(usize, T)> = if other.len() > base.len() { (base.len()..other.len()).map(|i| (i, other[i].clone())).collect() } else { Vec::new() };
     (removed, modified, added)
 }
 
@@ -127,16 +120,15 @@ fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) 
 /// algorithm, generic over `T: ObjIndexElem` instead of `String`.
 #[allow(clippy::type_complexity)]
 fn generic_absorb_pair<T: ObjIndexElem>(
-    d1_removed: &[usize], d1_modified: &[(usize, T::Diff)], d1_added: &[(usize, T)],
-    d2_removed: &[usize], d2_modified: &[(usize, T::Diff)], d2_added: &[(usize, T)],
+    d1_removed: &[usize],
+    d1_modified: &[(usize, T::Diff)],
+    d1_added: &[(usize, T)],
+    d2_removed: &[usize],
+    d2_modified: &[(usize, T::Diff)],
+    d2_added: &[(usize, T)],
 ) -> (Vec<usize>, Vec<(usize, T::Diff)>, Vec<(usize, T)>) {
-    let max_ref = d1_removed.iter().copied()
-        .chain(d1_modified.iter().map(|(i, _)| *i))
-        .chain(d1_added.iter().map(|(i, _)| *i))
-        .chain(d2_removed.iter().copied())
-        .chain(d2_modified.iter().map(|(i, _)| *i))
-        .chain(d2_added.iter().map(|(i, _)| *i))
-        .max();
+    let max_ref =
+        d1_removed.iter().copied().chain(d1_modified.iter().map(|(i, _)| *i)).chain(d1_added.iter().map(|(i, _)| *i)).chain(d2_removed.iter().copied()).chain(d2_modified.iter().map(|(i, _)| *i)).chain(d2_added.iter().map(|(i, _)| *i)).max();
     let l1 = max_ref.map(|m| m + 2).unwrap_or(0);
 
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
@@ -147,8 +139,12 @@ fn generic_absorb_pair<T: ObjIndexElem>(
     let mut mid_pos_of_added1: HashMap<usize, usize> = HashMap::new();
     for (pos, l) in mid_labels.iter().enumerate() {
         match l {
-            Lbl::Base(i) => { mid_pos_of_base.insert(*i, pos); }
-            Lbl::Added1(j) => { mid_pos_of_added1.insert(*j, pos); }
+            Lbl::Base(i) => {
+                mid_pos_of_base.insert(*i, pos);
+            }
+            Lbl::Added1(j) => {
+                mid_pos_of_added1.insert(*j, pos);
+            }
             Lbl::Added2(_) => {}
         }
     }
@@ -177,7 +173,10 @@ fn generic_absorb_pair<T: ObjIndexElem>(
                     (None, None) => None,
                     (Some(a), None) => Some(a),
                     (None, Some(b)) => Some(b),
-                    (Some(mut a), Some(b)) => { T::diff_absorb(&mut a, b); Some(a) }
+                    (Some(mut a), Some(b)) => {
+                        T::diff_absorb(&mut a, b);
+                        Some(a)
+                    }
                 };
                 if let Some(d) = combined {
                     if !T::diff_is_empty(&d) {
@@ -226,26 +225,39 @@ pub struct ObjVertexDiff {
 
 impl ObjIndexElem for ObjVertex {
     type Diff = ObjVertexDiff;
-    fn diff_is_empty(d: &ObjVertexDiff) -> bool { d == &ObjVertexDiff::default() }
+    fn diff_is_empty(d: &ObjVertexDiff) -> bool {
+        d == &ObjVertexDiff::default()
+    }
     fn diff_between(a: &ObjVertex, b: &ObjVertex) -> ObjVertexDiff {
-        ObjVertexDiff {
-            x: (a.x != b.x).then_some(b.x),
-            y: (a.y != b.y).then_some(b.y),
-            z: (a.z != b.z).then_some(b.z),
-            w: (a.w != b.w).then_some(b.w),
-        }
+        ObjVertexDiff { x: (a.x != b.x).then_some(b.x), y: (a.y != b.y).then_some(b.y), z: (a.z != b.z).then_some(b.z), w: (a.w != b.w).then_some(b.w) }
     }
     fn diff_apply(d: &ObjVertexDiff, item: &mut ObjVertex) {
-        if let Some(v) = d.x { item.x = v; }
-        if let Some(v) = d.y { item.y = v; }
-        if let Some(v) = d.z { item.z = v; }
-        if let Some(v) = d.w { item.w = v; }
+        if let Some(v) = d.x {
+            item.x = v;
+        }
+        if let Some(v) = d.y {
+            item.y = v;
+        }
+        if let Some(v) = d.z {
+            item.z = v;
+        }
+        if let Some(v) = d.w {
+            item.w = v;
+        }
     }
     fn diff_absorb(base: &mut ObjVertexDiff, other: ObjVertexDiff) {
-        if other.x.is_some() { base.x = other.x; }
-        if other.y.is_some() { base.y = other.y; }
-        if other.z.is_some() { base.z = other.z; }
-        if other.w.is_some() { base.w = other.w; }
+        if other.x.is_some() {
+            base.x = other.x;
+        }
+        if other.y.is_some() {
+            base.y = other.y;
+        }
+        if other.z.is_some() {
+            base.z = other.z;
+        }
+        if other.w.is_some() {
+            base.w = other.w;
+        }
     }
 }
 
@@ -273,7 +285,9 @@ pub struct ObjVerticesDiff {
     pub added: Vec<ObjVertexAdded>,
 }
 impl ObjVerticesDiff {
-    pub fn is_empty(&self) -> bool { self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty() }
+    pub fn is_empty(&self) -> bool {
+        self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
+    }
     fn apply(&self, base: &[ObjVertex]) -> Vec<ObjVertex> {
         let modified: Vec<(usize, ObjVertexDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
         let added: Vec<(usize, ObjVertex)> = self.added.iter().map(|a| (a.index, a.vertex.clone())).collect();
@@ -281,12 +295,12 @@ impl ObjVerticesDiff {
     }
     fn between(base: &[ObjVertex], other: &[ObjVertex]) -> Option<Self> {
         let (removed, modified, added) = generic_between(base, other);
-        let d = Self {
-            removed,
-            modified: modified.into_iter().map(|(index, diff)| ObjVertexModified { index, diff }).collect(),
-            added: added.into_iter().map(|(index, vertex)| ObjVertexAdded { index, vertex }).collect(),
-        };
-        if d.is_empty() { None } else { Some(d) }
+        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjVertexModified { index, diff }).collect(), added: added.into_iter().map(|(index, vertex)| ObjVertexAdded { index, vertex }).collect() };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
     }
     fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(usize, ObjVertexDiff)> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
@@ -294,12 +308,12 @@ impl ObjVerticesDiff {
         let d2m: Vec<(usize, ObjVertexDiff)> = d2.modified.into_iter().map(|m| (m.index, m.diff)).collect();
         let d2a: Vec<(usize, ObjVertex)> = d2.added.into_iter().map(|a| (a.index, a.vertex)).collect();
         let (removed, modified, added) = generic_absorb_pair::<ObjVertex>(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a);
-        let d = Self {
-            removed,
-            modified: modified.into_iter().map(|(index, diff)| ObjVertexModified { index, diff }).collect(),
-            added: added.into_iter().map(|(index, vertex)| ObjVertexAdded { index, vertex }).collect(),
-        };
-        if d.is_empty() { None } else { Some(d) }
+        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjVertexModified { index, diff }).collect(), added: added.into_iter().map(|(index, vertex)| ObjVertexAdded { index, vertex }).collect() };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
     }
 }
 //#endregion 🔖️VertexDiff
@@ -317,23 +331,33 @@ pub struct ObjTexCoordDiff {
 }
 impl ObjIndexElem for ObjTexCoord {
     type Diff = ObjTexCoordDiff;
-    fn diff_is_empty(d: &ObjTexCoordDiff) -> bool { d == &ObjTexCoordDiff::default() }
+    fn diff_is_empty(d: &ObjTexCoordDiff) -> bool {
+        d == &ObjTexCoordDiff::default()
+    }
     fn diff_between(a: &ObjTexCoord, b: &ObjTexCoord) -> ObjTexCoordDiff {
-        ObjTexCoordDiff {
-            u: (a.u != b.u).then_some(b.u),
-            v: (a.v != b.v).then_some(b.v),
-            w: (a.w != b.w).then_some(b.w),
-        }
+        ObjTexCoordDiff { u: (a.u != b.u).then_some(b.u), v: (a.v != b.v).then_some(b.v), w: (a.w != b.w).then_some(b.w) }
     }
     fn diff_apply(d: &ObjTexCoordDiff, item: &mut ObjTexCoord) {
-        if let Some(v) = d.u { item.u = v; }
-        if let Some(v) = d.v { item.v = v; }
-        if let Some(v) = d.w { item.w = v; }
+        if let Some(v) = d.u {
+            item.u = v;
+        }
+        if let Some(v) = d.v {
+            item.v = v;
+        }
+        if let Some(v) = d.w {
+            item.w = v;
+        }
     }
     fn diff_absorb(base: &mut ObjTexCoordDiff, other: ObjTexCoordDiff) {
-        if other.u.is_some() { base.u = other.u; }
-        if other.v.is_some() { base.v = other.v; }
-        if other.w.is_some() { base.w = other.w; }
+        if other.u.is_some() {
+            base.u = other.u;
+        }
+        if other.v.is_some() {
+            base.v = other.v;
+        }
+        if other.w.is_some() {
+            base.w = other.w;
+        }
     }
 }
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -359,7 +383,9 @@ pub struct ObjTexCoordsDiff {
     pub added: Vec<ObjTexCoordAdded>,
 }
 impl ObjTexCoordsDiff {
-    pub fn is_empty(&self) -> bool { self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty() }
+    pub fn is_empty(&self) -> bool {
+        self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
+    }
     fn apply(&self, base: &[ObjTexCoord]) -> Vec<ObjTexCoord> {
         let modified: Vec<(usize, ObjTexCoordDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
         let added: Vec<(usize, ObjTexCoord)> = self.added.iter().map(|a| (a.index, a.texcoord.clone())).collect();
@@ -367,12 +393,12 @@ impl ObjTexCoordsDiff {
     }
     fn between(base: &[ObjTexCoord], other: &[ObjTexCoord]) -> Option<Self> {
         let (removed, modified, added) = generic_between(base, other);
-        let d = Self {
-            removed,
-            modified: modified.into_iter().map(|(index, diff)| ObjTexCoordModified { index, diff }).collect(),
-            added: added.into_iter().map(|(index, texcoord)| ObjTexCoordAdded { index, texcoord }).collect(),
-        };
-        if d.is_empty() { None } else { Some(d) }
+        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjTexCoordModified { index, diff }).collect(), added: added.into_iter().map(|(index, texcoord)| ObjTexCoordAdded { index, texcoord }).collect() };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
     }
     fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(usize, ObjTexCoordDiff)> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
@@ -380,12 +406,12 @@ impl ObjTexCoordsDiff {
         let d2m: Vec<(usize, ObjTexCoordDiff)> = d2.modified.into_iter().map(|m| (m.index, m.diff)).collect();
         let d2a: Vec<(usize, ObjTexCoord)> = d2.added.into_iter().map(|a| (a.index, a.texcoord)).collect();
         let (removed, modified, added) = generic_absorb_pair::<ObjTexCoord>(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a);
-        let d = Self {
-            removed,
-            modified: modified.into_iter().map(|(index, diff)| ObjTexCoordModified { index, diff }).collect(),
-            added: added.into_iter().map(|(index, texcoord)| ObjTexCoordAdded { index, texcoord }).collect(),
-        };
-        if d.is_empty() { None } else { Some(d) }
+        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjTexCoordModified { index, diff }).collect(), added: added.into_iter().map(|(index, texcoord)| ObjTexCoordAdded { index, texcoord }).collect() };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
     }
 }
 //#endregion 🔖️TexCoordDiff
@@ -403,23 +429,33 @@ pub struct ObjNormalDiff {
 }
 impl ObjIndexElem for ObjNormal {
     type Diff = ObjNormalDiff;
-    fn diff_is_empty(d: &ObjNormalDiff) -> bool { d == &ObjNormalDiff::default() }
+    fn diff_is_empty(d: &ObjNormalDiff) -> bool {
+        d == &ObjNormalDiff::default()
+    }
     fn diff_between(a: &ObjNormal, b: &ObjNormal) -> ObjNormalDiff {
-        ObjNormalDiff {
-            x: (a.x != b.x).then_some(b.x),
-            y: (a.y != b.y).then_some(b.y),
-            z: (a.z != b.z).then_some(b.z),
-        }
+        ObjNormalDiff { x: (a.x != b.x).then_some(b.x), y: (a.y != b.y).then_some(b.y), z: (a.z != b.z).then_some(b.z) }
     }
     fn diff_apply(d: &ObjNormalDiff, item: &mut ObjNormal) {
-        if let Some(v) = d.x { item.x = v; }
-        if let Some(v) = d.y { item.y = v; }
-        if let Some(v) = d.z { item.z = v; }
+        if let Some(v) = d.x {
+            item.x = v;
+        }
+        if let Some(v) = d.y {
+            item.y = v;
+        }
+        if let Some(v) = d.z {
+            item.z = v;
+        }
     }
     fn diff_absorb(base: &mut ObjNormalDiff, other: ObjNormalDiff) {
-        if other.x.is_some() { base.x = other.x; }
-        if other.y.is_some() { base.y = other.y; }
-        if other.z.is_some() { base.z = other.z; }
+        if other.x.is_some() {
+            base.x = other.x;
+        }
+        if other.y.is_some() {
+            base.y = other.y;
+        }
+        if other.z.is_some() {
+            base.z = other.z;
+        }
     }
 }
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -445,7 +481,9 @@ pub struct ObjNormalsDiff {
     pub added: Vec<ObjNormalAdded>,
 }
 impl ObjNormalsDiff {
-    pub fn is_empty(&self) -> bool { self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty() }
+    pub fn is_empty(&self) -> bool {
+        self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
+    }
     fn apply(&self, base: &[ObjNormal]) -> Vec<ObjNormal> {
         let modified: Vec<(usize, ObjNormalDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
         let added: Vec<(usize, ObjNormal)> = self.added.iter().map(|a| (a.index, a.normal.clone())).collect();
@@ -453,12 +491,12 @@ impl ObjNormalsDiff {
     }
     fn between(base: &[ObjNormal], other: &[ObjNormal]) -> Option<Self> {
         let (removed, modified, added) = generic_between(base, other);
-        let d = Self {
-            removed,
-            modified: modified.into_iter().map(|(index, diff)| ObjNormalModified { index, diff }).collect(),
-            added: added.into_iter().map(|(index, normal)| ObjNormalAdded { index, normal }).collect(),
-        };
-        if d.is_empty() { None } else { Some(d) }
+        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjNormalModified { index, diff }).collect(), added: added.into_iter().map(|(index, normal)| ObjNormalAdded { index, normal }).collect() };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
     }
     fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(usize, ObjNormalDiff)> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
@@ -466,12 +504,12 @@ impl ObjNormalsDiff {
         let d2m: Vec<(usize, ObjNormalDiff)> = d2.modified.into_iter().map(|m| (m.index, m.diff)).collect();
         let d2a: Vec<(usize, ObjNormal)> = d2.added.into_iter().map(|a| (a.index, a.normal)).collect();
         let (removed, modified, added) = generic_absorb_pair::<ObjNormal>(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a);
-        let d = Self {
-            removed,
-            modified: modified.into_iter().map(|(index, diff)| ObjNormalModified { index, diff }).collect(),
-            added: added.into_iter().map(|(index, normal)| ObjNormalAdded { index, normal }).collect(),
-        };
-        if d.is_empty() { None } else { Some(d) }
+        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjNormalModified { index, diff }).collect(), added: added.into_iter().map(|(index, normal)| ObjNormalAdded { index, normal }).collect() };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
     }
 }
 //#endregion 🔖️NormalDiff
@@ -488,15 +526,21 @@ pub struct ObjFaceDiff {
 }
 impl ObjIndexElem for ObjFace {
     type Diff = ObjFaceDiff;
-    fn diff_is_empty(d: &ObjFaceDiff) -> bool { d == &ObjFaceDiff::default() }
+    fn diff_is_empty(d: &ObjFaceDiff) -> bool {
+        d == &ObjFaceDiff::default()
+    }
     fn diff_between(a: &ObjFace, b: &ObjFace) -> ObjFaceDiff {
         ObjFaceDiff { vertices: (a.vertices != b.vertices).then(|| b.vertices.clone()) }
     }
     fn diff_apply(d: &ObjFaceDiff, item: &mut ObjFace) {
-        if let Some(v) = &d.vertices { item.vertices = v.clone(); }
+        if let Some(v) = &d.vertices {
+            item.vertices = v.clone();
+        }
     }
     fn diff_absorb(base: &mut ObjFaceDiff, other: ObjFaceDiff) {
-        if other.vertices.is_some() { base.vertices = other.vertices; }
+        if other.vertices.is_some() {
+            base.vertices = other.vertices;
+        }
     }
 }
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -522,7 +566,9 @@ pub struct ObjFacesDiff {
     pub added: Vec<ObjFaceAdded>,
 }
 impl ObjFacesDiff {
-    pub fn is_empty(&self) -> bool { self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty() }
+    pub fn is_empty(&self) -> bool {
+        self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
+    }
     fn apply(&self, base: &[ObjFace]) -> Vec<ObjFace> {
         let modified: Vec<(usize, ObjFaceDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
         let added: Vec<(usize, ObjFace)> = self.added.iter().map(|a| (a.index, a.face.clone())).collect();
@@ -530,12 +576,12 @@ impl ObjFacesDiff {
     }
     fn between(base: &[ObjFace], other: &[ObjFace]) -> Option<Self> {
         let (removed, modified, added) = generic_between(base, other);
-        let d = Self {
-            removed,
-            modified: modified.into_iter().map(|(index, diff)| ObjFaceModified { index, diff }).collect(),
-            added: added.into_iter().map(|(index, face)| ObjFaceAdded { index, face }).collect(),
-        };
-        if d.is_empty() { None } else { Some(d) }
+        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjFaceModified { index, diff }).collect(), added: added.into_iter().map(|(index, face)| ObjFaceAdded { index, face }).collect() };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
     }
     fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(usize, ObjFaceDiff)> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
@@ -543,12 +589,12 @@ impl ObjFacesDiff {
         let d2m: Vec<(usize, ObjFaceDiff)> = d2.modified.into_iter().map(|m| (m.index, m.diff)).collect();
         let d2a: Vec<(usize, ObjFace)> = d2.added.into_iter().map(|a| (a.index, a.face)).collect();
         let (removed, modified, added) = generic_absorb_pair::<ObjFace>(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a);
-        let d = Self {
-            removed,
-            modified: modified.into_iter().map(|(index, diff)| ObjFaceModified { index, diff }).collect(),
-            added: added.into_iter().map(|(index, face)| ObjFaceAdded { index, face }).collect(),
-        };
-        if d.is_empty() { None } else { Some(d) }
+        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjFaceModified { index, diff }).collect(), added: added.into_iter().map(|(index, face)| ObjFaceAdded { index, face }).collect() };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
     }
 }
 //#endregion 🔖️FaceDiff
@@ -562,7 +608,9 @@ pub struct ObjGroupDiff {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub faces: Option<Vec<usize>>,
 }
-fn group_diff_is_empty(d: &ObjGroupDiff) -> bool { d == &ObjGroupDiff::default() }
+fn group_diff_is_empty(d: &ObjGroupDiff) -> bool {
+    d == &ObjGroupDiff::default()
+}
 
 /// 🧮 `ObjGroup` and `ObjObject` are structurally identical (`name`/`faces`) but distinct named
 /// types per the recipe — this tiny local trait lets `apply_group_diff`/membership helpers work
@@ -571,20 +619,28 @@ trait HasFaces {
     fn faces_mut(&mut self) -> &mut Vec<usize>;
 }
 impl HasFaces for ObjGroup {
-    fn faces_mut(&mut self) -> &mut Vec<usize> { &mut self.faces }
+    fn faces_mut(&mut self) -> &mut Vec<usize> {
+        &mut self.faces
+    }
 }
 impl HasFaces for ObjObject {
-    fn faces_mut(&mut self) -> &mut Vec<usize> { &mut self.faces }
+    fn faces_mut(&mut self) -> &mut Vec<usize> {
+        &mut self.faces
+    }
 }
 
 fn group_between(a_faces: &[usize], b_faces: &[usize]) -> ObjGroupDiff {
     ObjGroupDiff { faces: (a_faces != b_faces).then(|| b_faces.to_vec()) }
 }
 fn apply_group_diff<T: HasFaces>(item: &mut T, d: &ObjGroupDiff) {
-    if let Some(f) = &d.faces { *item.faces_mut() = f.clone(); }
+    if let Some(f) = &d.faces {
+        *item.faces_mut() = f.clone();
+    }
 }
 fn absorb_group_diff(base: &mut ObjGroupDiff, other: ObjGroupDiff) {
-    if other.faces.is_some() { base.faces = other.faces; }
+    if other.faces.is_some() {
+        base.faces = other.faces;
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -613,16 +669,15 @@ pub struct ObjGroupsDiff {
     pub added: Vec<ObjGroupAdded>,
 }
 impl ObjGroupsDiff {
-    pub fn is_empty(&self) -> bool { self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty() }
+    pub fn is_empty(&self) -> bool {
+        self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
+    }
 }
 
 /// ▶️ Applies a name-keyed groups/objects triple in place (shared shape; parameterized over the
 /// `name`/`faces` accessor pair since `ObjGroup`/`ObjObject` are structurally identical but
 /// distinct named types per the recipe).
-fn apply_named_membership<T: Clone>(
-    base: &[T], removed: &[String], modified: &[(String, ObjGroupDiff)], added: &[(usize, T)],
-    name_of: impl Fn(&T) -> &str, patch: impl Fn(&mut T, &ObjGroupDiff),
-) -> Vec<T> {
+fn apply_named_membership<T: Clone>(base: &[T], removed: &[String], modified: &[(String, ObjGroupDiff)], added: &[(usize, T)], name_of: impl Fn(&T) -> &str, patch: impl Fn(&mut T, &ObjGroupDiff)) -> Vec<T> {
     let mut items = base.to_vec();
     for (name, d) in modified {
         if let Some(it) = items.iter_mut().find(|it| name_of(it) == name) {
@@ -644,8 +699,12 @@ fn apply_named_membership<T: Clone>(
 /// algorithm as `stdio.zip`'s `absorb_entries` minus rename tracking (φ is the identity on
 /// names here since nothing renames a group/object in place).
 fn absorb_named_membership<T: Clone>(
-    d1: ObjGroupsDiff, d2: ObjGroupsDiff, name_of: impl Fn(&T) -> &str, patch: impl Fn(&mut T, &ObjGroupDiff),
-    added_item: impl Fn(&ObjGroupAdded) -> T, wrap_added: impl Fn(usize, T) -> ObjGroupAdded,
+    d1: ObjGroupsDiff,
+    d2: ObjGroupsDiff,
+    name_of: impl Fn(&T) -> &str,
+    patch: impl Fn(&mut T, &ObjGroupDiff),
+    added_item: impl Fn(&ObjGroupAdded) -> T,
+    wrap_added: impl Fn(usize, T) -> ObjGroupAdded,
 ) -> Option<ObjGroupsDiff> {
     let added_names: HashSet<String> = d1.added.iter().map(|a| name_of(&added_item(a)).to_string()).collect();
 
@@ -666,14 +725,18 @@ fn absorb_named_membership<T: Clone>(
 
     for dm in &d2.modified {
         if added_names.contains(&dm.name) {
-            if annihilated.contains(&dm.name) { continue; }
+            if annihilated.contains(&dm.name) {
+                continue;
+            }
             if let Some(a) = merged_added.iter_mut().find(|a| name_of(&added_item(a)) == dm.name) {
                 let mut item = added_item(a);
                 patch(&mut item, &dm.diff);
                 *a = wrap_added(a.index, item);
             }
         } else {
-            if merged_removed.contains(&dm.name) { continue; }
+            if merged_removed.contains(&dm.name) {
+                continue;
+            }
             if let Some(existing) = merged_modified.iter_mut().find(|m| m.name == dm.name) {
                 absorb_group_diff(&mut existing.diff, dm.diff.clone());
             } else {
@@ -684,7 +747,11 @@ fn absorb_named_membership<T: Clone>(
 
     merged_added.extend(d2.added);
     let merged = ObjGroupsDiff { removed: merged_removed, modified: merged_modified, added: merged_added };
-    if merged.is_empty() { None } else { Some(merged) }
+    if merged.is_empty() {
+        None
+    } else {
+        Some(merged)
+    }
 }
 //#endregion 🔖️GroupDiff
 
@@ -706,7 +773,9 @@ pub struct ObjObjectsDiff {
     pub added: Vec<ObjObjectAdded>,
 }
 impl ObjObjectsDiff {
-    pub fn is_empty(&self) -> bool { self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty() }
+    pub fn is_empty(&self) -> bool {
+        self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
+    }
 }
 //#endregion 🔖️ObjectsDiff
 
@@ -752,10 +821,22 @@ impl MutationDiff<ObjSnapshot> for ObjDiff {
     fn apply(&self, base: &ObjSnapshot) -> ObjSnapshot {
         ObjSnapshot {
             schema: base.schema.clone(),
-            vertices: match &self.vertices { Some(d) => d.apply(&base.vertices), None => base.vertices.clone() },
-            texcoords: match &self.texcoords { Some(d) => d.apply(&base.texcoords), None => base.texcoords.clone() },
-            normals: match &self.normals { Some(d) => d.apply(&base.normals), None => base.normals.clone() },
-            faces: match &self.faces { Some(d) => d.apply(&base.faces), None => base.faces.clone() },
+            vertices: match &self.vertices {
+                Some(d) => d.apply(&base.vertices),
+                None => base.vertices.clone(),
+            },
+            texcoords: match &self.texcoords {
+                Some(d) => d.apply(&base.texcoords),
+                None => base.texcoords.clone(),
+            },
+            normals: match &self.normals {
+                Some(d) => d.apply(&base.normals),
+                None => base.normals.clone(),
+            },
+            faces: match &self.faces {
+                Some(d) => d.apply(&base.faces),
+                None => base.faces.clone(),
+            },
             groups: match &self.groups {
                 Some(d) => {
                     let modified: Vec<(String, ObjGroupDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
@@ -784,47 +865,61 @@ impl MutationDiff<ObjSnapshot> for ObjDiff {
     /// collections use `absorb_named_membership`; every other field is LWW.
     fn absorb(&mut self, other: Self) {
         self.vertices = match (self.vertices.take(), other.vertices) {
-            (None, None) => None, (Some(a), None) => Some(a), (None, Some(b)) => Some(b),
+            (None, None) => None,
+            (Some(a), None) => Some(a),
+            (None, Some(b)) => Some(b),
             (Some(a), Some(b)) => ObjVerticesDiff::absorb(a, b),
         };
         self.texcoords = match (self.texcoords.take(), other.texcoords) {
-            (None, None) => None, (Some(a), None) => Some(a), (None, Some(b)) => Some(b),
+            (None, None) => None,
+            (Some(a), None) => Some(a),
+            (None, Some(b)) => Some(b),
             (Some(a), Some(b)) => ObjTexCoordsDiff::absorb(a, b),
         };
         self.normals = match (self.normals.take(), other.normals) {
-            (None, None) => None, (Some(a), None) => Some(a), (None, Some(b)) => Some(b),
+            (None, None) => None,
+            (Some(a), None) => Some(a),
+            (None, Some(b)) => Some(b),
             (Some(a), Some(b)) => ObjNormalsDiff::absorb(a, b),
         };
         self.faces = match (self.faces.take(), other.faces) {
-            (None, None) => None, (Some(a), None) => Some(a), (None, Some(b)) => Some(b),
+            (None, None) => None,
+            (Some(a), None) => Some(a),
+            (None, Some(b)) => Some(b),
             (Some(a), Some(b)) => ObjFacesDiff::absorb(a, b),
         };
         self.groups = match (self.groups.take(), other.groups) {
-            (None, None) => None, (Some(a), None) => Some(a), (None, Some(b)) => Some(b),
-            (Some(a), Some(b)) => absorb_named_membership(
-                a, b, |g: &ObjGroup| g.name.as_str(), apply_group_diff,
-                |added: &ObjGroupAdded| added.group.clone(), |index, group| ObjGroupAdded { index, group },
-            ),
+            (None, None) => None,
+            (Some(a), None) => Some(a),
+            (None, Some(b)) => Some(b),
+            (Some(a), Some(b)) => absorb_named_membership(a, b, |g: &ObjGroup| g.name.as_str(), apply_group_diff, |added: &ObjGroupAdded| added.group.clone(), |index, group| ObjGroupAdded { index, group }),
         };
         self.objects = match (self.objects.take(), other.objects) {
-            (None, None) => None, (Some(a), None) => Some(a), (None, Some(b)) => Some(b),
+            (None, None) => None,
+            (Some(a), None) => Some(a),
+            (None, Some(b)) => Some(b),
             (Some(a), Some(b)) => {
                 let a2 = ObjGroupsDiff { removed: a.removed, modified: a.modified, added: a.added.into_iter().map(|x| ObjGroupAdded { index: x.index, group: ObjGroup { name: x.object.name, faces: x.object.faces } }).collect() };
                 let b2 = ObjGroupsDiff { removed: b.removed, modified: b.modified, added: b.added.into_iter().map(|x| ObjGroupAdded { index: x.index, group: ObjGroup { name: x.object.name, faces: x.object.faces } }).collect() };
-                absorb_named_membership(
-                    a2, b2, |g: &ObjGroup| g.name.as_str(), apply_group_diff,
-                    |added: &ObjGroupAdded| added.group.clone(), |index, group| ObjGroupAdded { index, group },
-                ).map(|merged| ObjObjectsDiff {
+                absorb_named_membership(a2, b2, |g: &ObjGroup| g.name.as_str(), apply_group_diff, |added: &ObjGroupAdded| added.group.clone(), |index, group| ObjGroupAdded { index, group }).map(|merged| ObjObjectsDiff {
                     removed: merged.removed,
                     modified: merged.modified,
                     added: merged.added.into_iter().map(|x| ObjObjectAdded { index: x.index, object: ObjObject { name: x.group.name, faces: x.group.faces } }).collect(),
                 })
             }
         };
-        if other.mtllib.is_some() { self.mtllib = other.mtllib; }
-        if other.usemtl.is_some() { self.usemtl = other.usemtl; }
-        if other.smoothing_groups.is_some() { self.smoothing_groups = other.smoothing_groups; }
-        if other.unknown_statements.is_some() { self.unknown_statements = other.unknown_statements; }
+        if other.mtllib.is_some() {
+            self.mtllib = other.mtllib;
+        }
+        if other.usemtl.is_some() {
+            self.usemtl = other.usemtl;
+        }
+        if other.smoothing_groups.is_some() {
+            self.smoothing_groups = other.smoothing_groups;
+        }
+        if other.unknown_statements.is_some() {
+            self.unknown_statements = other.unknown_statements;
+        }
     }
 }
 
@@ -849,12 +944,18 @@ impl DiffAlgebra<ObjSnapshot> for ObjDiff {
             for bg in &base.groups {
                 if let Some(og) = other.groups.iter().find(|o| o.name == bg.name) {
                     let d = group_between(&bg.faces, &og.faces);
-                    if !group_diff_is_empty(&d) { modified.push(ObjGroupModified { name: bg.name.clone(), diff: d }); }
+                    if !group_diff_is_empty(&d) {
+                        modified.push(ObjGroupModified { name: bg.name.clone(), diff: d });
+                    }
                 }
             }
             let added: Vec<ObjGroupAdded> = other.groups.iter().enumerate().filter(|(_, g)| !base_names.contains(g.name.as_str())).map(|(index, g)| ObjGroupAdded { index, group: g.clone() }).collect();
             let d = ObjGroupsDiff { removed, modified, added };
-            if d.is_empty() { None } else { Some(d) }
+            if d.is_empty() {
+                None
+            } else {
+                Some(d)
+            }
         };
 
         let objects = {
@@ -865,12 +966,18 @@ impl DiffAlgebra<ObjSnapshot> for ObjDiff {
             for bo in &base.objects {
                 if let Some(oo) = other.objects.iter().find(|o| o.name == bo.name) {
                     let d = group_between(&bo.faces, &oo.faces);
-                    if !group_diff_is_empty(&d) { modified.push(ObjGroupModified { name: bo.name.clone(), diff: d }); }
+                    if !group_diff_is_empty(&d) {
+                        modified.push(ObjGroupModified { name: bo.name.clone(), diff: d });
+                    }
                 }
             }
             let added: Vec<ObjObjectAdded> = other.objects.iter().enumerate().filter(|(_, o)| !base_names.contains(o.name.as_str())).map(|(index, o)| ObjObjectAdded { index, object: o.clone() }).collect();
             let d = ObjObjectsDiff { removed, modified, added };
-            if d.is_empty() { None } else { Some(d) }
+            if d.is_empty() {
+                None
+            } else {
+                Some(d)
+            }
         };
 
         ObjDiff {
@@ -933,12 +1040,24 @@ fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn hex_encode_str(s: &str) -> String { hex_encode(s.as_bytes()) }
-fn hex_decode_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
-fn fmt_f64(v: f64) -> String { v.to_string() }
-fn parse_f64(s: &str) -> Result<f64, String> { s.parse().map_err(|e: std::num::ParseFloatError| e.to_string()) }
-fn parse_u32(s: &str) -> Result<u32, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
-fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+fn hex_encode_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+fn hex_decode_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+fn fmt_f64(v: f64) -> String {
+    v.to_string()
+}
+fn parse_f64(s: &str) -> Result<f64, String> {
+    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
+}
+fn parse_u32(s: &str) -> Result<u32, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+fn parse_usize(s: &str) -> Result<usize, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
 
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only): a top-level `sep` inside nested brackets is
 /// never mistaken for a field separator — the whole hand-rolled grammar's parsing primitive.
@@ -1070,17 +1189,27 @@ fn dec_unknown(s: &str) -> Result<ObjUnknownStatement, String> {
 //#region 🔖️DiffValueCodecs
 fn enc_vertex_diff(d: &ObjVertexDiff) -> String {
     let mut parts = Vec::new();
-    if let Some(v) = d.x { parts.push(format!("X:{}", fmt_f64(v))); }
-    if let Some(v) = d.y { parts.push(format!("Y:{}", fmt_f64(v))); }
-    if let Some(v) = d.z { parts.push(format!("Z:{}", fmt_f64(v))); }
-    if let Some(v) = d.w { parts.push(format!("W:{}", encode_option(&v, |w| fmt_f64(*w)))); }
+    if let Some(v) = d.x {
+        parts.push(format!("X:{}", fmt_f64(v)));
+    }
+    if let Some(v) = d.y {
+        parts.push(format!("Y:{}", fmt_f64(v)));
+    }
+    if let Some(v) = d.z {
+        parts.push(format!("Z:{}", fmt_f64(v)));
+    }
+    if let Some(v) = d.w {
+        parts.push(format!("W:{}", encode_option(&v, |w| fmt_f64(*w))));
+    }
     format!("[{}]", parts.join(","))
 }
 fn dec_vertex_diff(s: &str) -> Result<ObjVertexDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = ObjVertexDiff::default();
     for entry in split_top_level(inner, ',') {
-        if entry.is_empty() { continue; }
+        if entry.is_empty() {
+            continue;
+        }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("vertex diff: bad entry {entry:?}"))?;
         match tag {
             "X" => d.x = Some(parse_f64(val)?),
@@ -1094,16 +1223,24 @@ fn dec_vertex_diff(s: &str) -> Result<ObjVertexDiff, String> {
 }
 fn enc_texcoord_diff(d: &ObjTexCoordDiff) -> String {
     let mut parts = Vec::new();
-    if let Some(v) = d.u { parts.push(format!("U:{}", fmt_f64(v))); }
-    if let Some(v) = d.v { parts.push(format!("V:{}", fmt_f64(v))); }
-    if let Some(v) = d.w { parts.push(format!("W:{}", encode_option(&v, |w| fmt_f64(*w)))); }
+    if let Some(v) = d.u {
+        parts.push(format!("U:{}", fmt_f64(v)));
+    }
+    if let Some(v) = d.v {
+        parts.push(format!("V:{}", fmt_f64(v)));
+    }
+    if let Some(v) = d.w {
+        parts.push(format!("W:{}", encode_option(&v, |w| fmt_f64(*w))));
+    }
     format!("[{}]", parts.join(","))
 }
 fn dec_texcoord_diff(s: &str) -> Result<ObjTexCoordDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = ObjTexCoordDiff::default();
     for entry in split_top_level(inner, ',') {
-        if entry.is_empty() { continue; }
+        if entry.is_empty() {
+            continue;
+        }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("texcoord diff: bad entry {entry:?}"))?;
         match tag {
             "U" => d.u = Some(parse_f64(val)?),
@@ -1116,16 +1253,24 @@ fn dec_texcoord_diff(s: &str) -> Result<ObjTexCoordDiff, String> {
 }
 fn enc_normal_diff(d: &ObjNormalDiff) -> String {
     let mut parts = Vec::new();
-    if let Some(v) = d.x { parts.push(format!("X:{}", fmt_f64(v))); }
-    if let Some(v) = d.y { parts.push(format!("Y:{}", fmt_f64(v))); }
-    if let Some(v) = d.z { parts.push(format!("Z:{}", fmt_f64(v))); }
+    if let Some(v) = d.x {
+        parts.push(format!("X:{}", fmt_f64(v)));
+    }
+    if let Some(v) = d.y {
+        parts.push(format!("Y:{}", fmt_f64(v)));
+    }
+    if let Some(v) = d.z {
+        parts.push(format!("Z:{}", fmt_f64(v)));
+    }
     format!("[{}]", parts.join(","))
 }
 fn dec_normal_diff(s: &str) -> Result<ObjNormalDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = ObjNormalDiff::default();
     for entry in split_top_level(inner, ',') {
-        if entry.is_empty() { continue; }
+        if entry.is_empty() {
+            continue;
+        }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("normal diff: bad entry {entry:?}"))?;
         match tag {
             "X" => d.x = Some(parse_f64(val)?),
@@ -1147,7 +1292,9 @@ fn dec_face_diff(s: &str) -> Result<ObjFaceDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = ObjFaceDiff::default();
     for entry in split_top_level(inner, ',') {
-        if entry.is_empty() { continue; }
+        if entry.is_empty() {
+            continue;
+        }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("face diff: bad entry {entry:?}"))?;
         match tag {
             "V" => {
@@ -1170,7 +1317,9 @@ fn dec_group_diff(s: &str) -> Result<ObjGroupDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = ObjGroupDiff::default();
     for entry in split_top_level(inner, ',') {
-        if entry.is_empty() { continue; }
+        if entry.is_empty() {
+            continue;
+        }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("group diff: bad entry {entry:?}"))?;
         match tag {
             "F" => {
@@ -1199,10 +1348,14 @@ fn dec_index_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
     let parse_entries = |s: &str| -> Result<Vec<(usize, String)>, String> {
-        split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("collection entry: bad entry {entry:?}"))?;
-            Ok((parse_usize(idx)?, rest.to_string()))
-        }).collect()
+        split_top_level(strip_brackets(s)?, ',')
+            .into_iter()
+            .filter(|s| !s.is_empty())
+            .map(|entry| {
+                let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("collection entry: bad entry {entry:?}"))?;
+                Ok((parse_usize(idx)?, rest.to_string()))
+            })
+            .collect()
     };
     Ok((removed, parse_entries(modified_s)?, parse_entries(added_s)?))
 }
@@ -1218,21 +1371,27 @@ fn dec_named_triple(body: &str) -> Result<(Vec<String>, Vec<(String, String)>, V
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named collection: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(hex_decode_str).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (name_hex, rest) = entry.split_once(':').ok_or_else(|| format!("named collection modified: bad entry {entry:?}"))?;
-        Ok((hex_decode_str(name_hex)?, rest.to_string()))
-    }).collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("named collection added: bad entry {entry:?}"))?;
-        Ok((parse_usize(idx)?, rest.to_string()))
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (name_hex, rest) = entry.split_once(':').ok_or_else(|| format!("named collection modified: bad entry {entry:?}"))?;
+            Ok((hex_decode_str(name_hex)?, rest.to_string()))
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("named collection added: bad entry {entry:?}"))?;
+            Ok((parse_usize(idx)?, rest.to_string()))
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok((removed, modified, added))
 }
 
 fn enc_vertices_diff(d: &ObjVerticesDiff) -> String {
-    enc_index_triple("vertices", &d.removed,
-        &d.modified.iter().map(|m| (m.index, enc_vertex_diff(&m.diff))).collect::<Vec<_>>(),
-        &d.added.iter().map(|a| (a.index, enc_vertex(&a.vertex))).collect::<Vec<_>>())
+    enc_index_triple("vertices", &d.removed, &d.modified.iter().map(|m| (m.index, enc_vertex_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_vertex(&a.vertex))).collect::<Vec<_>>())
 }
 fn dec_vertices_diff(body: &str) -> Result<ObjVerticesDiff, String> {
     let (removed, modified, added) = dec_index_triple(body)?;
@@ -1243,9 +1402,7 @@ fn dec_vertices_diff(body: &str) -> Result<ObjVerticesDiff, String> {
     })
 }
 fn enc_texcoords_diff(d: &ObjTexCoordsDiff) -> String {
-    enc_index_triple("texcoords", &d.removed,
-        &d.modified.iter().map(|m| (m.index, enc_texcoord_diff(&m.diff))).collect::<Vec<_>>(),
-        &d.added.iter().map(|a| (a.index, enc_texcoord(&a.texcoord))).collect::<Vec<_>>())
+    enc_index_triple("texcoords", &d.removed, &d.modified.iter().map(|m| (m.index, enc_texcoord_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_texcoord(&a.texcoord))).collect::<Vec<_>>())
 }
 fn dec_texcoords_diff(body: &str) -> Result<ObjTexCoordsDiff, String> {
     let (removed, modified, added) = dec_index_triple(body)?;
@@ -1256,9 +1413,7 @@ fn dec_texcoords_diff(body: &str) -> Result<ObjTexCoordsDiff, String> {
     })
 }
 fn enc_normals_diff(d: &ObjNormalsDiff) -> String {
-    enc_index_triple("normals", &d.removed,
-        &d.modified.iter().map(|m| (m.index, enc_normal_diff(&m.diff))).collect::<Vec<_>>(),
-        &d.added.iter().map(|a| (a.index, enc_normal(&a.normal))).collect::<Vec<_>>())
+    enc_index_triple("normals", &d.removed, &d.modified.iter().map(|m| (m.index, enc_normal_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_normal(&a.normal))).collect::<Vec<_>>())
 }
 fn dec_normals_diff(body: &str) -> Result<ObjNormalsDiff, String> {
     let (removed, modified, added) = dec_index_triple(body)?;
@@ -1269,9 +1424,7 @@ fn dec_normals_diff(body: &str) -> Result<ObjNormalsDiff, String> {
     })
 }
 fn enc_faces_diff(d: &ObjFacesDiff) -> String {
-    enc_index_triple("faces", &d.removed,
-        &d.modified.iter().map(|m| (m.index, enc_face_diff(&m.diff))).collect::<Vec<_>>(),
-        &d.added.iter().map(|a| (a.index, enc_face(&a.face))).collect::<Vec<_>>())
+    enc_index_triple("faces", &d.removed, &d.modified.iter().map(|m| (m.index, enc_face_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_face(&a.face))).collect::<Vec<_>>())
 }
 fn dec_faces_diff(body: &str) -> Result<ObjFacesDiff, String> {
     let (removed, modified, added) = dec_index_triple(body)?;
@@ -1282,9 +1435,7 @@ fn dec_faces_diff(body: &str) -> Result<ObjFacesDiff, String> {
     })
 }
 fn enc_groups_diff(d: &ObjGroupsDiff) -> String {
-    enc_named_triple("groups", &d.removed,
-        &d.modified.iter().map(|m| (m.name.clone(), enc_group_diff(&m.diff))).collect::<Vec<_>>(),
-        &d.added.iter().map(|a| (a.index, enc_group(&a.group))).collect::<Vec<_>>())
+    enc_named_triple("groups", &d.removed, &d.modified.iter().map(|m| (m.name.clone(), enc_group_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_group(&a.group))).collect::<Vec<_>>())
 }
 fn dec_groups_diff(body: &str) -> Result<ObjGroupsDiff, String> {
     let (removed, modified, added) = dec_named_triple(body)?;
@@ -1295,9 +1446,7 @@ fn dec_groups_diff(body: &str) -> Result<ObjGroupsDiff, String> {
     })
 }
 fn enc_objects_diff(d: &ObjObjectsDiff) -> String {
-    enc_named_triple("objects", &d.removed,
-        &d.modified.iter().map(|m| (m.name.clone(), enc_group_diff(&m.diff))).collect::<Vec<_>>(),
-        &d.added.iter().map(|a| (a.index, enc_object(&a.object))).collect::<Vec<_>>())
+    enc_named_triple("objects", &d.removed, &d.modified.iter().map(|m| (m.name.clone(), enc_group_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_object(&a.object))).collect::<Vec<_>>())
 }
 fn dec_objects_diff(body: &str) -> Result<ObjObjectsDiff, String> {
     let (removed, modified, added) = dec_named_triple(body)?;
@@ -1348,7 +1497,10 @@ fn read_usize_bin(reader: &mut store::ByteReader<'_>) -> Result<usize, String> {
 fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl Fn(&T, &mut Vec<u8>)) {
     match opt {
         None => out.push(0),
-        Some(v) => { out.push(1); enc(v, out); }
+        Some(v) => {
+            out.push(1);
+            enc(v, out);
+        }
     }
 }
 fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
@@ -1367,7 +1519,10 @@ fn write_tristate_bin<T>(out: &mut Vec<u8>, opt: &Option<Option<T>>, enc: impl F
     match opt {
         None => out.push(0),
         Some(None) => out.push(1),
-        Some(Some(v)) => { out.push(2); enc(v, out); }
+        Some(Some(v)) => {
+            out.push(2);
+            enc(v, out);
+        }
     }
 }
 fn read_tristate_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<Option<T>>, String> {
@@ -1380,12 +1535,16 @@ fn read_tristate_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut st
 }
 fn write_vec_bin<T>(out: &mut Vec<u8>, items: &[T], enc: impl Fn(&T, &mut Vec<u8>)) {
     store::pack_rt::write_varint_u64(out, items.len() as u64);
-    for item in items { enc(item, out); }
+    for item in items {
+        enc(item, out);
+    }
 }
 fn read_vec_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Vec<T>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
-    for _ in 0..count { out.push(dec(reader)?); }
+    for _ in 0..count {
+        out.push(dec(reader)?);
+    }
     Ok(out)
 }
 //#endregion 🔖️BinaryPrimitives
@@ -1555,35 +1714,71 @@ fn dec_group_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjGroupDiff
 fn enc_index_triple_bin<T, D>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], out: &mut Vec<u8>, enc_diff: impl Fn(&D, &mut Vec<u8>), enc_item: impl Fn(&T, &mut Vec<u8>)) {
     write_vec_bin(out, removed, |idx, o| write_usize_bin(o, *idx));
     store::pack_rt::write_varint_u64(out, modified.len() as u64);
-    for (idx, d) in modified { write_usize_bin(out, *idx); enc_diff(d, out); }
+    for (idx, d) in modified {
+        write_usize_bin(out, *idx);
+        enc_diff(d, out);
+    }
     store::pack_rt::write_varint_u64(out, added.len() as u64);
-    for (idx, item) in added { write_usize_bin(out, *idx); enc_item(item, out); }
+    for (idx, item) in added {
+        write_usize_bin(out, *idx);
+        enc_item(item, out);
+    }
 }
-fn dec_index_triple_bin<T, D>(reader: &mut store::ByteReader<'_>, dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>, dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<(Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>), String> {
+fn dec_index_triple_bin<T, D>(
+    reader: &mut store::ByteReader<'_>,
+    dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
+    dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
+) -> Result<(Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>), String> {
     let removed = read_vec_bin(reader, read_usize_bin)?;
     let mc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(mc as usize);
-    for _ in 0..mc { let idx = read_usize_bin(reader)?; let d = dec_diff(reader)?; modified.push((idx, d)); }
+    for _ in 0..mc {
+        let idx = read_usize_bin(reader)?;
+        let d = dec_diff(reader)?;
+        modified.push((idx, d));
+    }
     let ac = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(ac as usize);
-    for _ in 0..ac { let idx = read_usize_bin(reader)?; let item = dec_item(reader)?; added.push((idx, item)); }
+    for _ in 0..ac {
+        let idx = read_usize_bin(reader)?;
+        let item = dec_item(reader)?;
+        added.push((idx, item));
+    }
     Ok((removed, modified, added))
 }
 fn enc_named_triple_bin<T, D>(removed: &[String], modified: &[(String, D)], added: &[(usize, T)], out: &mut Vec<u8>, enc_diff: impl Fn(&D, &mut Vec<u8>), enc_item: impl Fn(&T, &mut Vec<u8>)) {
     write_vec_bin(out, removed, |name, o| write_str_bin(o, name));
     store::pack_rt::write_varint_u64(out, modified.len() as u64);
-    for (name, d) in modified { write_str_bin(out, name); enc_diff(d, out); }
+    for (name, d) in modified {
+        write_str_bin(out, name);
+        enc_diff(d, out);
+    }
     store::pack_rt::write_varint_u64(out, added.len() as u64);
-    for (idx, item) in added { write_usize_bin(out, *idx); enc_item(item, out); }
+    for (idx, item) in added {
+        write_usize_bin(out, *idx);
+        enc_item(item, out);
+    }
 }
-fn dec_named_triple_bin<T, D>(reader: &mut store::ByteReader<'_>, dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>, dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<(Vec<String>, Vec<(String, D)>, Vec<(usize, T)>), String> {
+fn dec_named_triple_bin<T, D>(
+    reader: &mut store::ByteReader<'_>,
+    dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
+    dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
+) -> Result<(Vec<String>, Vec<(String, D)>, Vec<(usize, T)>), String> {
     let removed = read_vec_bin(reader, read_str_bin)?;
     let mc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(mc as usize);
-    for _ in 0..mc { let name = read_str_bin(reader)?; let d = dec_diff(reader)?; modified.push((name, d)); }
+    for _ in 0..mc {
+        let name = read_str_bin(reader)?;
+        let d = dec_diff(reader)?;
+        modified.push((name, d));
+    }
     let ac = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(ac as usize);
-    for _ in 0..ac { let idx = read_usize_bin(reader)?; let item = dec_item(reader)?; added.push((idx, item)); }
+    for _ in 0..ac {
+        let idx = read_usize_bin(reader)?;
+        let item = dec_item(reader)?;
+        added.push((idx, item));
+    }
     Ok((removed, modified, added))
 }
 
@@ -1594,11 +1789,7 @@ fn enc_vertices_diff_bin(d: &ObjVerticesDiff, out: &mut Vec<u8>) {
 }
 fn dec_vertices_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjVerticesDiff, String> {
     let (removed, modified, added) = dec_index_triple_bin(reader, dec_vertex_diff_bin, dec_vertex_bin)?;
-    Ok(ObjVerticesDiff {
-        removed,
-        modified: modified.into_iter().map(|(index, diff)| ObjVertexModified { index, diff }).collect(),
-        added: added.into_iter().map(|(index, vertex)| ObjVertexAdded { index, vertex }).collect(),
-    })
+    Ok(ObjVerticesDiff { removed, modified: modified.into_iter().map(|(index, diff)| ObjVertexModified { index, diff }).collect(), added: added.into_iter().map(|(index, vertex)| ObjVertexAdded { index, vertex }).collect() })
 }
 fn enc_texcoords_diff_bin(d: &ObjTexCoordsDiff, out: &mut Vec<u8>) {
     let modified: Vec<(usize, ObjTexCoordDiff)> = d.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
@@ -1607,11 +1798,7 @@ fn enc_texcoords_diff_bin(d: &ObjTexCoordsDiff, out: &mut Vec<u8>) {
 }
 fn dec_texcoords_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjTexCoordsDiff, String> {
     let (removed, modified, added) = dec_index_triple_bin(reader, dec_texcoord_diff_bin, dec_texcoord_bin)?;
-    Ok(ObjTexCoordsDiff {
-        removed,
-        modified: modified.into_iter().map(|(index, diff)| ObjTexCoordModified { index, diff }).collect(),
-        added: added.into_iter().map(|(index, texcoord)| ObjTexCoordAdded { index, texcoord }).collect(),
-    })
+    Ok(ObjTexCoordsDiff { removed, modified: modified.into_iter().map(|(index, diff)| ObjTexCoordModified { index, diff }).collect(), added: added.into_iter().map(|(index, texcoord)| ObjTexCoordAdded { index, texcoord }).collect() })
 }
 fn enc_normals_diff_bin(d: &ObjNormalsDiff, out: &mut Vec<u8>) {
     let modified: Vec<(usize, ObjNormalDiff)> = d.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
@@ -1620,11 +1807,7 @@ fn enc_normals_diff_bin(d: &ObjNormalsDiff, out: &mut Vec<u8>) {
 }
 fn dec_normals_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjNormalsDiff, String> {
     let (removed, modified, added) = dec_index_triple_bin(reader, dec_normal_diff_bin, dec_normal_bin)?;
-    Ok(ObjNormalsDiff {
-        removed,
-        modified: modified.into_iter().map(|(index, diff)| ObjNormalModified { index, diff }).collect(),
-        added: added.into_iter().map(|(index, normal)| ObjNormalAdded { index, normal }).collect(),
-    })
+    Ok(ObjNormalsDiff { removed, modified: modified.into_iter().map(|(index, diff)| ObjNormalModified { index, diff }).collect(), added: added.into_iter().map(|(index, normal)| ObjNormalAdded { index, normal }).collect() })
 }
 fn enc_faces_diff_bin(d: &ObjFacesDiff, out: &mut Vec<u8>) {
     let modified: Vec<(usize, ObjFaceDiff)> = d.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
@@ -1633,11 +1816,7 @@ fn enc_faces_diff_bin(d: &ObjFacesDiff, out: &mut Vec<u8>) {
 }
 fn dec_faces_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjFacesDiff, String> {
     let (removed, modified, added) = dec_index_triple_bin(reader, dec_face_diff_bin, dec_face_bin)?;
-    Ok(ObjFacesDiff {
-        removed,
-        modified: modified.into_iter().map(|(index, diff)| ObjFaceModified { index, diff }).collect(),
-        added: added.into_iter().map(|(index, face)| ObjFaceAdded { index, face }).collect(),
-    })
+    Ok(ObjFacesDiff { removed, modified: modified.into_iter().map(|(index, diff)| ObjFaceModified { index, diff }).collect(), added: added.into_iter().map(|(index, face)| ObjFaceAdded { index, face }).collect() })
 }
 fn enc_groups_diff_bin(d: &ObjGroupsDiff, out: &mut Vec<u8>) {
     let modified: Vec<(String, ObjGroupDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
@@ -1646,11 +1825,7 @@ fn enc_groups_diff_bin(d: &ObjGroupsDiff, out: &mut Vec<u8>) {
 }
 fn dec_groups_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjGroupsDiff, String> {
     let (removed, modified, added) = dec_named_triple_bin(reader, dec_group_diff_bin, dec_group_bin)?;
-    Ok(ObjGroupsDiff {
-        removed,
-        modified: modified.into_iter().map(|(name, diff)| ObjGroupModified { name, diff }).collect(),
-        added: added.into_iter().map(|(index, group)| ObjGroupAdded { index, group }).collect(),
-    })
+    Ok(ObjGroupsDiff { removed, modified: modified.into_iter().map(|(name, diff)| ObjGroupModified { name, diff }).collect(), added: added.into_iter().map(|(index, group)| ObjGroupAdded { index, group }).collect() })
 }
 fn enc_objects_diff_bin(d: &ObjObjectsDiff, out: &mut Vec<u8>) {
     let modified: Vec<(String, ObjGroupDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
@@ -1659,27 +1834,43 @@ fn enc_objects_diff_bin(d: &ObjObjectsDiff, out: &mut Vec<u8>) {
 }
 fn dec_objects_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjObjectsDiff, String> {
     let (removed, modified, added) = dec_named_triple_bin(reader, dec_group_diff_bin, dec_object_bin)?;
-    Ok(ObjObjectsDiff {
-        removed,
-        modified: modified.into_iter().map(|(name, diff)| ObjGroupModified { name, diff }).collect(),
-        added: added.into_iter().map(|(index, object)| ObjObjectAdded { index, object }).collect(),
-    })
+    Ok(ObjObjectsDiff { removed, modified: modified.into_iter().map(|(name, diff)| ObjGroupModified { name, diff }).collect(), added: added.into_iter().map(|(index, object)| ObjObjectAdded { index, object }).collect() })
 }
 //#endregion 🔖️CollectionBinaryCodecs
 
 //#region 🔖️TopLevel
 fn print_obj_diff(d: &ObjDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.vertices { tokens.push(enc_vertices_diff(v)); }
-    if let Some(v) = &d.texcoords { tokens.push(enc_texcoords_diff(v)); }
-    if let Some(v) = &d.normals { tokens.push(enc_normals_diff(v)); }
-    if let Some(v) = &d.faces { tokens.push(enc_faces_diff(v)); }
-    if let Some(v) = &d.groups { tokens.push(enc_groups_diff(v)); }
-    if let Some(v) = &d.objects { tokens.push(enc_objects_diff(v)); }
-    if let Some(v) = &d.mtllib { tokens.push(format!("mtllib={}", encode_option(v, |s| hex_encode_str(s)))); }
-    if let Some(v) = &d.usemtl { tokens.push(format!("usemtl=[{}]", v.iter().map(enc_usemtl).collect::<Vec<_>>().join(","))); }
-    if let Some(v) = &d.smoothing_groups { tokens.push(format!("smoothing=[{}]", v.iter().map(enc_smoothing).collect::<Vec<_>>().join(","))); }
-    if let Some(v) = &d.unknown_statements { tokens.push(format!("unknown=[{}]", v.iter().map(enc_unknown).collect::<Vec<_>>().join(","))); }
+    if let Some(v) = &d.vertices {
+        tokens.push(enc_vertices_diff(v));
+    }
+    if let Some(v) = &d.texcoords {
+        tokens.push(enc_texcoords_diff(v));
+    }
+    if let Some(v) = &d.normals {
+        tokens.push(enc_normals_diff(v));
+    }
+    if let Some(v) = &d.faces {
+        tokens.push(enc_faces_diff(v));
+    }
+    if let Some(v) = &d.groups {
+        tokens.push(enc_groups_diff(v));
+    }
+    if let Some(v) = &d.objects {
+        tokens.push(enc_objects_diff(v));
+    }
+    if let Some(v) = &d.mtllib {
+        tokens.push(format!("mtllib={}", encode_option(v, |s| hex_encode_str(s))));
+    }
+    if let Some(v) = &d.usemtl {
+        tokens.push(format!("usemtl=[{}]", v.iter().map(enc_usemtl).collect::<Vec<_>>().join(",")));
+    }
+    if let Some(v) = &d.smoothing_groups {
+        tokens.push(format!("smoothing=[{}]", v.iter().map(enc_smoothing).collect::<Vec<_>>().join(",")));
+    }
+    if let Some(v) = &d.unknown_statements {
+        tokens.push(format!("unknown=[{}]", v.iter().map(enc_unknown).collect::<Vec<_>>().join(",")));
+    }
     tokens.join(" ")
 }
 fn parse_obj_diff(line: &str) -> Result<ObjDiff, String> {
@@ -1688,17 +1879,29 @@ fn parse_obj_diff(line: &str) -> Result<ObjDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("vertices{") { d.vertices = Some(dec_vertices_diff(rest.strip_suffix('}').ok_or_else(|| "vertices: missing closing brace".to_string())?)?); }
-        else if let Some(rest) = token.strip_prefix("texcoords{") { d.texcoords = Some(dec_texcoords_diff(rest.strip_suffix('}').ok_or_else(|| "texcoords: missing closing brace".to_string())?)?); }
-        else if let Some(rest) = token.strip_prefix("normals{") { d.normals = Some(dec_normals_diff(rest.strip_suffix('}').ok_or_else(|| "normals: missing closing brace".to_string())?)?); }
-        else if let Some(rest) = token.strip_prefix("faces{") { d.faces = Some(dec_faces_diff(rest.strip_suffix('}').ok_or_else(|| "faces: missing closing brace".to_string())?)?); }
-        else if let Some(rest) = token.strip_prefix("groups{") { d.groups = Some(dec_groups_diff(rest.strip_suffix('}').ok_or_else(|| "groups: missing closing brace".to_string())?)?); }
-        else if let Some(rest) = token.strip_prefix("objects{") { d.objects = Some(dec_objects_diff(rest.strip_suffix('}').ok_or_else(|| "objects: missing closing brace".to_string())?)?); }
-        else if let Some(rest) = token.strip_prefix("mtllib=") { d.mtllib = Some(decode_option(rest, hex_decode_str)?); }
-        else if let Some(rest) = token.strip_prefix("usemtl=") { d.usemtl = Some(split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_usemtl).collect::<Result<Vec<_>, String>>()?); }
-        else if let Some(rest) = token.strip_prefix("smoothing=") { d.smoothing_groups = Some(split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_smoothing).collect::<Result<Vec<_>, String>>()?); }
-        else if let Some(rest) = token.strip_prefix("unknown=") { d.unknown_statements = Some(split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_unknown).collect::<Result<Vec<_>, String>>()?); }
-        else { return Err(format!("obj diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("vertices{") {
+            d.vertices = Some(dec_vertices_diff(rest.strip_suffix('}').ok_or_else(|| "vertices: missing closing brace".to_string())?)?);
+        } else if let Some(rest) = token.strip_prefix("texcoords{") {
+            d.texcoords = Some(dec_texcoords_diff(rest.strip_suffix('}').ok_or_else(|| "texcoords: missing closing brace".to_string())?)?);
+        } else if let Some(rest) = token.strip_prefix("normals{") {
+            d.normals = Some(dec_normals_diff(rest.strip_suffix('}').ok_or_else(|| "normals: missing closing brace".to_string())?)?);
+        } else if let Some(rest) = token.strip_prefix("faces{") {
+            d.faces = Some(dec_faces_diff(rest.strip_suffix('}').ok_or_else(|| "faces: missing closing brace".to_string())?)?);
+        } else if let Some(rest) = token.strip_prefix("groups{") {
+            d.groups = Some(dec_groups_diff(rest.strip_suffix('}').ok_or_else(|| "groups: missing closing brace".to_string())?)?);
+        } else if let Some(rest) = token.strip_prefix("objects{") {
+            d.objects = Some(dec_objects_diff(rest.strip_suffix('}').ok_or_else(|| "objects: missing closing brace".to_string())?)?);
+        } else if let Some(rest) = token.strip_prefix("mtllib=") {
+            d.mtllib = Some(decode_option(rest, hex_decode_str)?);
+        } else if let Some(rest) = token.strip_prefix("usemtl=") {
+            d.usemtl = Some(split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_usemtl).collect::<Result<Vec<_>, String>>()?);
+        } else if let Some(rest) = token.strip_prefix("smoothing=") {
+            d.smoothing_groups = Some(split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_smoothing).collect::<Result<Vec<_>, String>>()?);
+        } else if let Some(rest) = token.strip_prefix("unknown=") {
+            d.unknown_statements = Some(split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_unknown).collect::<Result<Vec<_>, String>>()?);
+        } else {
+            return Err(format!("obj diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -1732,27 +1935,67 @@ impl protocol::DiffCodec for ObjDiff {
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags_lo: u8 = 0;
         let mut flags_hi: u8 = 0;
-        if self.vertices.is_some() { flags_lo |= 0b0000_0001; }
-        if self.texcoords.is_some() { flags_lo |= 0b0000_0010; }
-        if self.normals.is_some() { flags_lo |= 0b0000_0100; }
-        if self.faces.is_some() { flags_lo |= 0b0000_1000; }
-        if self.groups.is_some() { flags_lo |= 0b0001_0000; }
-        if self.objects.is_some() { flags_lo |= 0b0010_0000; }
-        if self.mtllib.is_some() { flags_lo |= 0b0100_0000; }
-        if self.usemtl.is_some() { flags_lo |= 0b1000_0000; }
-        if self.smoothing_groups.is_some() { flags_hi |= 0b0000_0001; }
-        if self.unknown_statements.is_some() { flags_hi |= 0b0000_0010; }
+        if self.vertices.is_some() {
+            flags_lo |= 0b0000_0001;
+        }
+        if self.texcoords.is_some() {
+            flags_lo |= 0b0000_0010;
+        }
+        if self.normals.is_some() {
+            flags_lo |= 0b0000_0100;
+        }
+        if self.faces.is_some() {
+            flags_lo |= 0b0000_1000;
+        }
+        if self.groups.is_some() {
+            flags_lo |= 0b0001_0000;
+        }
+        if self.objects.is_some() {
+            flags_lo |= 0b0010_0000;
+        }
+        if self.mtllib.is_some() {
+            flags_lo |= 0b0100_0000;
+        }
+        if self.usemtl.is_some() {
+            flags_lo |= 0b1000_0000;
+        }
+        if self.smoothing_groups.is_some() {
+            flags_hi |= 0b0000_0001;
+        }
+        if self.unknown_statements.is_some() {
+            flags_hi |= 0b0000_0010;
+        }
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags_lo, flags_hi];
-        if let Some(v) = &self.vertices { enc_vertices_diff_bin(v, &mut out); }
-        if let Some(v) = &self.texcoords { enc_texcoords_diff_bin(v, &mut out); }
-        if let Some(v) = &self.normals { enc_normals_diff_bin(v, &mut out); }
-        if let Some(v) = &self.faces { enc_faces_diff_bin(v, &mut out); }
-        if let Some(v) = &self.groups { enc_groups_diff_bin(v, &mut out); }
-        if let Some(v) = &self.objects { enc_objects_diff_bin(v, &mut out); }
-        if let Some(v) = &self.mtllib { write_option_bin(&mut out, v, |s, o| write_str_bin(o, s)); }
-        if let Some(v) = &self.usemtl { write_vec_bin(&mut out, v, enc_usemtl_bin); }
-        if let Some(v) = &self.smoothing_groups { write_vec_bin(&mut out, v, enc_smoothing_bin); }
-        if let Some(v) = &self.unknown_statements { write_vec_bin(&mut out, v, enc_unknown_bin); }
+        if let Some(v) = &self.vertices {
+            enc_vertices_diff_bin(v, &mut out);
+        }
+        if let Some(v) = &self.texcoords {
+            enc_texcoords_diff_bin(v, &mut out);
+        }
+        if let Some(v) = &self.normals {
+            enc_normals_diff_bin(v, &mut out);
+        }
+        if let Some(v) = &self.faces {
+            enc_faces_diff_bin(v, &mut out);
+        }
+        if let Some(v) = &self.groups {
+            enc_groups_diff_bin(v, &mut out);
+        }
+        if let Some(v) = &self.objects {
+            enc_objects_diff_bin(v, &mut out);
+        }
+        if let Some(v) = &self.mtllib {
+            write_option_bin(&mut out, v, |s, o| write_str_bin(o, s));
+        }
+        if let Some(v) = &self.usemtl {
+            write_vec_bin(&mut out, v, enc_usemtl_bin);
+        }
+        if let Some(v) = &self.smoothing_groups {
+            write_vec_bin(&mut out, v, enc_smoothing_bin);
+        }
+        if let Some(v) = &self.unknown_statements {
+            write_vec_bin(&mut out, v, enc_unknown_bin);
+        }
         Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -1781,10 +2024,18 @@ impl protocol::DiffCodec for ObjDiff {
 // 🧮 Item-level `between` wrappers, exposed to `🧬️mutations` so `SetVertex`/`SetTexCoord`/
 // `SetNormal`/`SetFace`'s `diff()` can compute a sparse per-field patch without the private
 // `ObjIndexElem` trait itself leaving this module.
-pub fn vertex_diff_between(a: &ObjVertex, b: &ObjVertex) -> ObjVertexDiff { <ObjVertex as ObjIndexElem>::diff_between(a, b) }
-pub fn texcoord_diff_between(a: &ObjTexCoord, b: &ObjTexCoord) -> ObjTexCoordDiff { <ObjTexCoord as ObjIndexElem>::diff_between(a, b) }
-pub fn normal_diff_between(a: &ObjNormal, b: &ObjNormal) -> ObjNormalDiff { <ObjNormal as ObjIndexElem>::diff_between(a, b) }
-pub fn face_diff_between(a: &ObjFace, b: &ObjFace) -> ObjFaceDiff { <ObjFace as ObjIndexElem>::diff_between(a, b) }
+pub fn vertex_diff_between(a: &ObjVertex, b: &ObjVertex) -> ObjVertexDiff {
+    <ObjVertex as ObjIndexElem>::diff_between(a, b)
+}
+pub fn texcoord_diff_between(a: &ObjTexCoord, b: &ObjTexCoord) -> ObjTexCoordDiff {
+    <ObjTexCoord as ObjIndexElem>::diff_between(a, b)
+}
+pub fn normal_diff_between(a: &ObjNormal, b: &ObjNormal) -> ObjNormalDiff {
+    <ObjNormal as ObjIndexElem>::diff_between(a, b)
+}
+pub fn face_diff_between(a: &ObjFace, b: &ObjFace) -> ObjFaceDiff {
+    <ObjFace as ObjIndexElem>::diff_between(a, b)
+}
 
 pub fn diff_insert_vertex(index: usize, vertex: ObjVertex) -> ObjDiff {
     ObjDiff { vertices: Some(ObjVerticesDiff { removed: vec![], modified: vec![], added: vec![ObjVertexAdded { index, vertex }] }), ..Default::default() }
@@ -1866,30 +2117,12 @@ pub fn diff_set_unknown_statements(unknown_statements: Vec<ObjUnknownStatement>)
 pub(crate) fn sweep_a() -> ObjSnapshot {
     ObjSnapshot {
         schema: "stdio.obj".into(),
-        vertices: vec![
-            ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None },
-            ObjVertex { x: 1.0, y: 1.0, z: 1.0, w: None },
-        ],
-        texcoords: vec![
-            ObjTexCoord { u: 0.0, v: 0.0, w: None },
-            ObjTexCoord { u: 1.0, v: 1.0, w: Some(5.0) },
-        ],
-        normals: vec![
-            ObjNormal { x: 0.0, y: 0.0, z: 1.0 },
-            ObjNormal { x: 1.0, y: 1.0, z: 1.0 },
-        ],
-        faces: vec![
-            ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] },
-            ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] },
-        ],
-        groups: vec![
-            ObjGroup { name: "G1".into(), faces: vec![0] },
-            ObjGroup { name: "G2".into(), faces: vec![1] },
-        ],
-        objects: vec![
-            ObjObject { name: "O1".into(), faces: vec![0] },
-            ObjObject { name: "O2".into(), faces: vec![1] },
-        ],
+        vertices: vec![ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 1.0, y: 1.0, z: 1.0, w: None }],
+        texcoords: vec![ObjTexCoord { u: 0.0, v: 0.0, w: None }, ObjTexCoord { u: 1.0, v: 1.0, w: Some(5.0) }],
+        normals: vec![ObjNormal { x: 0.0, y: 0.0, z: 1.0 }, ObjNormal { x: 1.0, y: 1.0, z: 1.0 }],
+        faces: vec![ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] }, ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] }],
+        groups: vec![ObjGroup { name: "G1".into(), faces: vec![0] }, ObjGroup { name: "G2".into(), faces: vec![1] }],
+        objects: vec![ObjObject { name: "O1".into(), faces: vec![0] }, ObjObject { name: "O2".into(), faces: vec![1] }],
         mtllib: Some("a.mtl".into()),
         usemtl: vec![ObjUsemtlRange { face_index_from: 0, material: "Red".into() }],
         smoothing_groups: vec![ObjSmoothingRange { face_index_from: 0, group: Some(1) }],
@@ -1905,44 +2138,20 @@ pub(crate) fn sweep_a() -> ObjSnapshot {
 pub(crate) fn sweep_b() -> ObjSnapshot {
     ObjSnapshot {
         schema: "stdio.obj".into(),
-        vertices: vec![
-            ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None },
-            ObjVertex { x: 9.0, y: 9.0, z: 9.0, w: Some(0.5) },
-            ObjVertex { x: 5.0, y: 5.0, z: 5.0, w: Some(1.0) },
-        ],
-        texcoords: vec![
-            ObjTexCoord { u: 0.0, v: 0.0, w: None },
-            ObjTexCoord { u: 2.0, v: 2.0, w: None },
-            ObjTexCoord { u: 5.0, v: 5.0, w: None },
-        ],
-        normals: vec![
-            ObjNormal { x: 0.0, y: 0.0, z: 1.0 },
-            ObjNormal { x: -1.0, y: -1.0, z: -1.0 },
-            ObjNormal { x: 0.0, y: 1.0, z: 0.0 },
-        ],
+        vertices: vec![ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 9.0, y: 9.0, z: 9.0, w: Some(0.5) }, ObjVertex { x: 5.0, y: 5.0, z: 5.0, w: Some(1.0) }],
+        texcoords: vec![ObjTexCoord { u: 0.0, v: 0.0, w: None }, ObjTexCoord { u: 2.0, v: 2.0, w: None }, ObjTexCoord { u: 5.0, v: 5.0, w: None }],
+        normals: vec![ObjNormal { x: 0.0, y: 0.0, z: 1.0 }, ObjNormal { x: -1.0, y: -1.0, z: -1.0 }, ObjNormal { x: 0.0, y: 1.0, z: 0.0 }],
         faces: vec![
             ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] },
             ObjFace { vertices: vec![ObjFaceVertex { vertex: 1, texcoord: Some(0), normal: Some(0) }] },
             ObjFace { vertices: vec![ObjFaceVertex { vertex: 2, texcoord: None, normal: None }] },
         ],
-        groups: vec![
-            ObjGroup { name: "G2".into(), faces: vec![1, 2] },
-            ObjGroup { name: "G3".into(), faces: vec![3] },
-        ],
-        objects: vec![
-            ObjObject { name: "O2".into(), faces: vec![1, 2] },
-            ObjObject { name: "O3".into(), faces: vec![3] },
-        ],
+        groups: vec![ObjGroup { name: "G2".into(), faces: vec![1, 2] }, ObjGroup { name: "G3".into(), faces: vec![3] }],
+        objects: vec![ObjObject { name: "O2".into(), faces: vec![1, 2] }, ObjObject { name: "O3".into(), faces: vec![3] }],
         mtllib: None,
-        usemtl: vec![
-            ObjUsemtlRange { face_index_from: 0, material: "Blue".into() },
-            ObjUsemtlRange { face_index_from: 2, material: "Green".into() },
-        ],
+        usemtl: vec![ObjUsemtlRange { face_index_from: 0, material: "Blue".into() }, ObjUsemtlRange { face_index_from: 2, material: "Green".into() }],
         smoothing_groups: vec![ObjSmoothingRange { face_index_from: 0, group: None }],
-        unknown_statements: vec![
-            ObjUnknownStatement { line_index: 5, raw: "# b".into() },
-            ObjUnknownStatement { line_index: 6, raw: "weird".into() },
-        ],
+        unknown_statements: vec![ObjUnknownStatement { line_index: 5, raw: "# b".into() }, ObjUnknownStatement { line_index: 6, raw: "weird".into() }],
     }
 }
 
@@ -1957,11 +2166,7 @@ pub(crate) fn sweep_b() -> ObjSnapshot {
 pub(crate) fn demo_diff_cases() -> Vec<ObjDiff> {
     let a = sweep_a();
     let b = sweep_b();
-    vec![
-        ObjDiff::default(),
-        <ObjDiff as DiffAlgebra<ObjSnapshot>>::between(&a, &b),
-        <ObjDiff as DiffAlgebra<ObjSnapshot>>::between(&b, &a),
-    ]
+    vec![ObjDiff::default(), <ObjDiff as DiffAlgebra<ObjSnapshot>>::between(&a, &b), <ObjDiff as DiffAlgebra<ObjSnapshot>>::between(&b, &a)]
 }
 //#endregion 🔖️DemoCases
 

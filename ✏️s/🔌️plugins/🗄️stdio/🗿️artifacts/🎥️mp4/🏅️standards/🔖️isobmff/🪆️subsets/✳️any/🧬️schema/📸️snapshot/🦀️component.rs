@@ -13,7 +13,7 @@ pub const STDIO_MP4_DOCUMENT_SCHEMA: &str = "stdio.mp4";
 
 //#region 🔖️Ftyp
 /// 🏷️ File-type box: brand + compatible-brand list. <https://www.iso.org/standard/74428.html> §4.3
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Mp4Ftyp {
     pub major_brand: String,
@@ -24,7 +24,7 @@ pub struct Mp4Ftyp {
 //#endregion 🔖️Ftyp
 
 //#region 🔖️Codec
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Mp4AvcExtension {
     pub chroma_format: u8,
@@ -34,30 +34,23 @@ pub struct Mp4AvcExtension {
     pub sps_ext: Vec<Vec<u8>>,
 }
 
-/// 🎥️ A track's sample-description codec: AVC typed (SPS/PPS NAL lists + AVCC length-field
-/// width), anything else typed-raw (the full first sample-description entry box, verbatim —
-/// honest boundary, never a fabricated decode of a codec this engine doesn't understand).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "codec", rename_all = "camelCase")]
-pub enum Mp4Codec {
-    Avc {
-        #[serde(default)]
-        sps: Vec<Vec<u8>>,
-        #[serde(default)]
-        pps: Vec<Vec<u8>>,
-        nal_length_size: u8,
-        #[serde(default)]
-        extension: Option<Mp4AvcExtension>,
-    },
-    Other {
-        fourcc: String,
-        #[serde(default)]
-        raw: Vec<u8>,
-    },
+/// 🎥️ A track's typed AVC sample description. Unsupported codecs are rejected on import.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Mp4Codec {
+    #[serde(default)]
+    pub sps: Vec<Vec<u8>>,
+    #[serde(default)]
+    pub pps: Vec<Vec<u8>>,
+    pub nal_length_size: u8,
+    #[serde(default)]
+    pub extension: Option<Mp4AvcExtension>,
 }
 
 impl Default for Mp4Codec {
-    fn default() -> Self { Self::Other { fourcc: String::new(), raw: Vec::new() } }
+    fn default() -> Self {
+        Self { sps: Vec::new(), pps: Vec::new(), nal_length_size: 4, extension: None }
+    }
 }
 //#endregion 🔖️Codec
 
@@ -66,10 +59,11 @@ impl Default for Mp4Codec {
 /// payload-opaque, matching the master plan's "video is container-typed, payload-opaque" call),
 /// its `stts` duration in the track's timescale, its `ctts` composition-time offset, and whether
 /// `stss` marks it a sync (random-access) sample (absent `stss` ⇒ every sample is sync, per spec).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Mp4Sample {
     #[serde(default)]
+    #[dsl(base64)]
     pub data: Vec<u8>,
     pub duration: u32,
     #[serde(default)]
@@ -79,7 +73,7 @@ pub struct Mp4Sample {
 //#endregion 🔖️Sample
 
 //#region 🎬️Movie
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Mp4Movie {
     pub creation_time: u64,
@@ -98,22 +92,11 @@ pub struct Mp4Movie {
 
 impl Default for Mp4Movie {
     fn default() -> Self {
-        Self {
-            creation_time: 0,
-            modification_time: 0,
-            timescale: 1000,
-            duration: 0,
-            rate: 0x0001_0000,
-            volume: 0x0100,
-            matrix: [0x0001_0000, 0, 0, 0, 0x0001_0000, 0, 0, 0, 0x4000_0000],
-            next_track_id: 1,
-            title: None,
-            encoder: None,
-        }
+        Self { creation_time: 0, modification_time: 0, timescale: 1000, duration: 0, rate: 0x0001_0000, volume: 0x0100, matrix: [0x0001_0000, 0, 0, 0, 0x0001_0000, 0, 0, 0, 0x4000_0000], next_track_id: 1, title: None, encoder: None }
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Mp4Edit {
     pub segment_duration: u64,
@@ -122,7 +105,7 @@ pub struct Mp4Edit {
     pub media_rate_fraction: i16,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Mp4VisualSampleEntry {
     pub data_reference_index: u16,
@@ -158,7 +141,7 @@ impl Default for Mp4VisualSampleEntry {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Mp4Color {
     pub color_type: String,
@@ -169,14 +152,14 @@ pub struct Mp4Color {
     pub full_range: Option<bool>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Mp4PixelAspectRatio {
     pub horizontal_spacing: u32,
     pub vertical_spacing: u32,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Mp4Bitrate {
     pub buffer_size: u32,
@@ -184,7 +167,7 @@ pub struct Mp4Bitrate {
     pub average: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Mp4TrackMetadata {
     pub creation_time: u64,
@@ -240,9 +223,8 @@ impl Default for Mp4TrackMetadata {
 //#endregion 🎬️Movie
 
 //#region 🔖️Track
-/// 🛤️ One `trak` (this codec decodes video-handler tracks only — a non-`vide` `trak` is retained
-/// whole in `unknown_boxes` under fourcc `"trak"`, never silently dropped).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+/// 🛤️ One typed video `trak`; unsupported handler types are rejected on import.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Mp4Track {
     pub track_id: u32,
@@ -259,21 +241,8 @@ pub struct Mp4Track {
 }
 //#endregion 🔖️Track
 
-//#region 🔖️RawBox
-/// 📦️ Typed-raw retention for any top-level box this codec doesn't otherwise type (`free`,
-/// `uuid`, `skip`, a non-video `trak`, …) — verbatim fourcc + payload bytes, replayed at the same
-/// relative position (right after `ftyp`, before `mdat`) on encode.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Mp4Box {
-    pub fourcc: String,
-    #[serde(default)]
-    pub data: Vec<u8>,
-}
-//#endregion 🔖️RawBox
-
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.mp4")]
 pub struct Mp4Snapshot {
@@ -287,19 +256,18 @@ pub struct Mp4Snapshot {
     #[state(artifact)]
     #[serde(default)]
     pub tracks: Vec<Mp4Track>,
-    #[state(artifact)]
-    #[serde(default)]
-    pub unknown_boxes: Vec<Mp4Box>,
 }
 
-fn default_schema() -> String { STDIO_MP4_DOCUMENT_SCHEMA.into() }
+fn default_schema() -> String {
+    STDIO_MP4_DOCUMENT_SCHEMA.into()
+}
 
 impl Default for Mp4Snapshot {
     /// 🌱️ A minimal but real, 4-byte-brand `ftyp` — `major_brand` MUST be exactly 4 ASCII bytes
     /// for a genuinely valid box (unlike an empty string, which `⚙️engine::encode_mp4` would have
     /// to pad, breaking the empty-snapshot round trip below).
     fn default() -> Self {
-        Self { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: Vec::new() }, movie: Mp4Movie::default(), tracks: Vec::new(), unknown_boxes: Vec::new() }
+        Self { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: Vec::new() }, movie: Mp4Movie::default(), tracks: Vec::new() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -308,50 +276,44 @@ impl Default for Mp4Snapshot {
 /// 🎙️ Snapshot-model codecs serialize only the logical ISO-BMFF model.
 impl store::ArtifactDsl for Mp4Snapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str { STDIO_MP4_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_MP4_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        serde_json::from_str(body).map_err(|e| store::TextError::new(format!("mp4 snapshot decode: {e}"), dsl::TextSpan::at(1, 1)))
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 32 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Document })?;
+        Self::__dsl_from_record(&record)
     }
 
     fn print_dsl(&self) -> String {
-        let body = serde_json::to_string(self).expect("Mp4Snapshot JSON serialization");
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 impl store::ArtifactPack for Mp4Snapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = serde_json::to_vec(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
-        let _ = options;
-        serde_json::from_slice(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+    }
+
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -369,17 +331,13 @@ mod tests {
             tracks: vec![Mp4Track {
                 track_id: 1,
                 timescale: 1000,
-                codec: Mp4Codec::Avc { sps: vec![vec![0x67, 0x42, 0x00, 0x1E, 0x8C, 0x8D, 0x40]], pps: vec![vec![0x68, 0xCE, 0x3C, 0x80]], nal_length_size: 4, extension: None },
+                codec: Mp4Codec { sps: vec![vec![0x67, 0x42, 0x00, 0x1E, 0x8C, 0x8D, 0x40]], pps: vec![vec![0x68, 0xCE, 0x3C, 0x80]], nal_length_size: 4, extension: None },
                 width: 64,
                 height: 64,
                 metadata: Mp4TrackMetadata::default(),
                 chunk_sample_counts: vec![2],
-                samples: vec![
-                    Mp4Sample { data: vec![0, 0, 0, 4, 0x65, 1, 2, 3], duration: 33, cts_offset: 0, sync: true },
-                    Mp4Sample { data: vec![0, 0, 0, 3, 0x61, 4, 5], duration: 33, cts_offset: 33, sync: false },
-                ],
+                samples: vec![Mp4Sample { data: vec![0, 0, 0, 4, 0x65, 1, 2, 3], duration: 33, cts_offset: 0, sync: true }, Mp4Sample { data: vec![0, 0, 0, 3, 0x61, 4, 5], duration: 33, cts_offset: 33, sync: false }],
             }],
-            unknown_boxes: vec![Mp4Box { fourcc: "free".into(), data: vec![0, 0, 0, 0] }],
         }
     }
 
@@ -405,6 +363,41 @@ mod tests {
         let bytes = <Mp4Snapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
+    }
+
+    #[test]
+    fn logical_snapshot_and_facets_have_no_shadow_state() {
+        let model = format!("{:?}", sample_snapshot());
+        for forbidden in ["unknownBoxes", "physical", "sourceBytes", "nativeArchive", "\"raw\""] {
+            assert!(!model.contains(forbidden), "snapshot contains forbidden shadow field {forbidden}");
+        }
+        for facet in [
+            include_str!("🟦️component.ts"),
+            include_str!("🔗️component.graphql"),
+            include_str!("🔣️component.json"),
+            include_str!("🛰️component.proto"),
+            include_str!("../🔺️diff/🦀️component.rs"),
+            include_str!("../🔺️diff/🟦️component.ts"),
+            include_str!("../🔺️diff/🔗️component.graphql"),
+            include_str!("../🔺️diff/🔣️component.json"),
+            include_str!("../🔺️diff/🛰️component.proto"),
+            include_str!("../🧬️mutations/🦀️component.rs"),
+            include_str!("../🧬️mutations/🟦️component.ts"),
+            include_str!("../🧬️mutations/🔗️component.graphql"),
+            include_str!("../🧬️mutations/🔣️component.json"),
+            include_str!("../🧬️mutations/🛰️component.proto"),
+            include_str!("💾️binary/🔠️component.abnf"),
+            include_str!("💾️binary/📡️component.protocol.semio"),
+            include_str!("../🧬️mutations/📝️text/📖️component.grammar.semio"),
+            include_str!("../🧬️mutations/📝️text/🔤️component.ebnf"),
+            include_str!("../🧬️mutations/📝️text/🅰️component.g4"),
+            include_str!("../🧬️mutations/💾️binary/📡️component.protocol.semio"),
+            include_str!("../🧬️mutations/💾️binary/🌶️component.spicy"),
+        ] {
+            for forbidden in ["unknownBoxes", "unknown_boxes", "Mp4CodecOther", "ADD_UNKNOWN_BOX", "addUnknownBox", "nativeArchive", "sourceBytes", "serde_json::", "json_line", "jsonLine", "json_utf8", "JSON bytes", "iso-bmff-box-stream"] {
+                assert!(!facet.contains(forbidden), "facet contains forbidden shadow concept {forbidden}");
+            }
+        }
     }
 
     #[test]

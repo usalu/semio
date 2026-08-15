@@ -10,8 +10,8 @@
 //! polyface-mesh field to round-trip through and are dropped (DWG entities carry vertex
 //! positions + face indices only).
 
-use crate::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgSnapshot};
 use crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing;
+use crate::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
@@ -91,12 +91,7 @@ mod tests {
                 primitives: vec![SemioPrimitive {
                     id: "box-prim-0".into(),
                     topology: SemioTopology::Triangles,
-                    positions: vec![
-                        SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 },
-                        SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 },
-                        SemioPoint3 { x: 1.0, y: 1.0, z: 0.0 },
-                        SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 },
-                    ],
+                    positions: vec![SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 1.0, z: 0.0 }, SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 }],
                     indices: vec![0, 1, 2, 0, 2, 3],
                     ..SemioPrimitive::default()
                 }],

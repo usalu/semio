@@ -31,31 +31,17 @@ pub struct GifArtifact {
 }
 
 impl Default for GifArtifact {
-    fn default() -> Self { Self::from_snapshot(GifSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(GifSnapshot::default())
+    }
 }
 
 impl GifArtifact {
     pub fn to_snapshot(&self) -> GifSnapshot {
-        GifSnapshot {
-            schema: self.schema.clone(),
-            width: self.width,
-            height: self.height,
-            gct: self.gct.clone(),
-            background_color_index: self.background_color_index,
-            pixel_aspect_ratio: self.pixel_aspect_ratio,
-            images: self.images.clone(),
-        }
+        GifSnapshot { schema: self.schema.clone(), width: self.width, height: self.height, gct: self.gct.clone(), background_color_index: self.background_color_index, pixel_aspect_ratio: self.pixel_aspect_ratio, images: self.images.clone() }
     }
     pub fn from_snapshot(snapshot: GifSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            width: snapshot.width,
-            height: snapshot.height,
-            gct: snapshot.gct,
-            background_color_index: snapshot.background_color_index,
-            pixel_aspect_ratio: snapshot.pixel_aspect_ratio,
-            images: snapshot.images,
-        }
+        Self { schema: snapshot.schema, width: snapshot.width, height: snapshot.height, gct: snapshot.gct, background_color_index: snapshot.background_color_index, pixel_aspect_ratio: snapshot.pixel_aspect_ratio, images: snapshot.images }
     }
     pub fn set_snapshot(&mut self, snapshot: GifSnapshot) {
         self.schema = snapshot.schema;
@@ -103,8 +89,8 @@ pub fn gif_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::gif::standards::v87a::subsets::any::schema::{diff::GifDiff, mutations::GifMutation, snapshot::GifSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.gif` snapshot.
@@ -139,7 +125,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -149,8 +139,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.gif` parts.
@@ -182,22 +172,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <GifSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -232,7 +214,9 @@ semio_framework_plugin::derive_artifact_facets!(
 // cluster (`crate::artifacts::gif::engine::register()` is one of stdio's 10 deliberate imperative
 // plugin-root calls — untouched, reached via this standard's own inline `engine` barrel) +
 // `io_registry` all moved to `../🚪️io`; tests moved beside what they now test.
-pub fn empty_gif_snapshot() -> GifSnapshot { GifSnapshot::default() }
+pub fn empty_gif_snapshot() -> GifSnapshot {
+    GifSnapshot::default()
+}
 
 /// 🧪️ P2-FG2: real, deterministic demo `GifSnapshot` — a real GCT plus two real images (one
 /// with its own LCT, exercising every field a genuine encode/decode round-trip touches) — used
@@ -241,31 +225,9 @@ pub fn empty_gif_snapshot() -> GifSnapshot { GifSnapshot::default() }
 /// `demo_png_snapshot()` precedent.
 pub fn demo_gif_snapshot() -> GifSnapshot {
     use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifRgb;
-    let gct = GifColorTable { sorted: false, colors: vec![
-        GifRgb { r: 0, g: 0, b: 0 }, GifRgb { r: 255, g: 255, b: 255 },
-    ] };
-    let image_a = GifImage {
-        left: 0, top: 0, width: 2, height: 2,
-        interlace: false,
-        lct: None,
-        indices: vec![0, 1, 1, 0],
-    };
-    let image_b = GifImage {
-        left: 0, top: 0, width: 2, height: 2,
-        interlace: false,
-        lct: Some(GifColorTable { sorted: true, colors: vec![
-            GifRgb { r: 10, g: 20, b: 30 }, GifRgb { r: 200, g: 100, b: 50 },
-        ] }),
-        indices: vec![1, 0, 0, 1],
-    };
-    GifSnapshot {
-        schema: crate::artifacts::gif::STDIO_GIF_DOCUMENT_SCHEMA.into(),
-        width: 2,
-        height: 2,
-        gct: Some(gct),
-        background_color_index: 0,
-        pixel_aspect_ratio: 0,
-        images: vec![image_a, image_b],
-    }
+    let gct = GifColorTable { sorted: false, colors: vec![GifRgb { r: 0, g: 0, b: 0 }, GifRgb { r: 255, g: 255, b: 255 }] };
+    let image_a = GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: None, indices: vec![0, 1, 1, 0] };
+    let image_b = GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: Some(GifColorTable { sorted: true, colors: vec![GifRgb { r: 10, g: 20, b: 30 }, GifRgb { r: 200, g: 100, b: 50 }] }), indices: vec![1, 0, 0, 1] };
+    GifSnapshot { schema: crate::artifacts::gif::STDIO_GIF_DOCUMENT_SCHEMA.into(), width: 2, height: 2, gct: Some(gct), background_color_index: 0, pixel_aspect_ratio: 0, images: vec![image_a, image_b] }
 }
 //#endregion 🔖️DocumentHelpers

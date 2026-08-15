@@ -86,9 +86,9 @@ pub fn binary_artifact_inference_descriptor() -> schema::ArtifactInferenceDescri
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use protocol::Inference;
-    use crate::artifacts::binary::standards::v_raw::subsets::any::schema::{empty_binary_snapshot, demo_binary_snapshot};
+    use crate::artifacts::binary::standards::v_raw::subsets::any::schema::{demo_binary_snapshot, empty_binary_snapshot};
     use crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA;
+    use protocol::Inference;
 
     #[test]
     fn inference_determinism_law() {
@@ -127,11 +127,7 @@ mod tests {
     /// text, so this is a real test of the hex codec, not just the binary-pack envelope).
     #[test]
     fn codec_retention_law() {
-        for bytes in [
-            vec![],
-            vec![0x00, 0x01, 0xFF, 0xFE],
-            (0u8..=255).collect::<Vec<u8>>(),
-        ] {
+        for bytes in [vec![], vec![0x00, 0x01, 0xFF, 0xFE], (0u8..=255).collect::<Vec<u8>>()] {
             let snap = BinarySnapshot { bytes: bytes.clone(), ..Default::default() };
             let dsl_text = store::ArtifactDsl::print_dsl(&snap);
             let parsed = <BinarySnapshot as store::ArtifactDsl>::parse_dsl(&dsl_text).expect("parse");
@@ -161,9 +157,9 @@ mod tests {
     /// is empty.
     #[test]
     fn field_sweep_covers_every_byte_level_change() {
+        use crate::artifacts::binary::standards::v_raw::subsets::any::schema::diff::BinaryDiff;
         use protocol::os_spr::command::DiffAlgebra;
         use protocol::MutationDiff;
-        use crate::artifacts::binary::standards::v_raw::subsets::any::schema::diff::BinaryDiff;
         let a = sweep_a();
         let b = sweep_b();
 
@@ -213,19 +209,11 @@ mod tests {
         /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }

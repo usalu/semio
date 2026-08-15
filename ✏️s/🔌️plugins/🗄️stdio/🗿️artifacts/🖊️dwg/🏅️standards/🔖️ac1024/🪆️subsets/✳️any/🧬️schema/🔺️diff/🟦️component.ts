@@ -1,11 +1,19 @@
-/** 🧬️ DwgDiff schema. */
-export interface DwgLogicalGeometry { kind: string; values: number[]; indices: number[]; text: string; closed: boolean; }
-export interface DwgLogicalLayer { name: string; color: number; }
-export interface DwgLogicalEntity { layer: number; color: number; geometry: DwgLogicalGeometry; }
-export interface DwgLogicalDrawing { layers: DwgLogicalLayer[]; entities: DwgLogicalEntity[]; extmin: number[]; extmax: number[]; }
+export * from '../../🟦️component.ts';
+import type { DwgApplicationHistory, DwgApplicationInfo, DwgAuxiliaryHeader, DwgClass, DwgDependency, DwgHeaderVariables, DwgIndexedPreview, DwgLogicalDrawing, DwgRevisionHistory, DwgSummaryInfo, DwgTemplate } from '../../🟦️component.ts';
+
 export interface DwgDiff {
   version?: string;
   maintenanceVersion?: number;
   codepage?: number;
   drawing?: DwgLogicalDrawing;
+  header?: DwgHeaderVariables;
+  classes?: DwgClass[];
+  dependencies?: DwgDependency[];
+  summary?: DwgSummaryInfo;
+  application?: DwgApplicationInfo;
+  template?: DwgTemplate;
+  auxiliaryHeader?: DwgAuxiliaryHeader;
+  revisionHistory?: DwgRevisionHistory;
+  preview?: DwgIndexedPreview;
+  applicationHistory?: DwgApplicationHistory;
 }

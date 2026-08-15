@@ -17,12 +17,10 @@
 //!   guessed `Heading` (guessing heading level from a style NAME string would be fabrication, not
 //!   honest extraction).
 
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::docx::DocxSnapshot;
 use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxTable};
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{
-    DocBlock, DocRun, DocStyle, DocTableCell, DocTableRow, RunStyle, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA,
-};
+use crate::artifacts::docx::DocxSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, DocStyle, DocTableCell, DocTableRow, RunStyle, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
 /// ✍️ `DocxRun` -> `DocRun`: text + the 3 boolean flags both models share. `size`/`font`/`color`/
@@ -37,9 +35,7 @@ fn map_paragraph(p: &DocxParagraph) -> DocBlock {
 }
 
 fn map_table(t: &DocxTable) -> DocBlock {
-    DocBlock::Table {
-        rows: t.rows.iter().map(|row| DocTableRow { cells: row.cells.iter().map(|cell| DocTableCell { blocks: cell.blocks.iter().map(map_block).collect() }).collect() }).collect(),
-    }
+    DocBlock::Table { rows: t.rows.iter().map(|row| DocTableRow { cells: row.cells.iter().map(|cell| DocTableCell { blocks: cell.blocks.iter().map(map_block).collect() }).collect() }).collect() }
 }
 
 fn map_block(block: &DocxBlock) -> DocBlock {
@@ -81,10 +77,7 @@ mod tests {
         DocxSnapshot::from_parts(
             OpcPackage::default(),
             DocxDocument {
-                styles: vec![
-                    DocxStyle { id: "Heading1".into(), name: "Heading 1".into(), based_on: None },
-                    DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: Some("Heading1".into()) },
-                ],
+                styles: vec![DocxStyle { id: "Heading1".into(), name: "Heading 1".into(), based_on: None }, DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: Some("Heading1".into()) }],
                 body: vec![
                     DocxBlock::Paragraph(DocxParagraph {
                         runs: vec![DocxRun { text: "Title".into(), bold: true, italic: false, underline: false, extra_run_properties: Vec::new() }],

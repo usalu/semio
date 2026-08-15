@@ -1,11 +1,10 @@
 {
   "$id": "https://semio.tech/schema/stdio.mp4.diff.json",
   "title": "Mp4Diff",
-  "description": "Sparse per-field diff: ftyp whole-replace, tracks/unknownBoxes index-keyed collection triples.",
+  "description": "Sparse per-field diff over logical movie and tracks.",
   "type": "object",
   "properties": {
     "ftyp": { "type": "object" },
-    "tracks": { "type": "object", "properties": { "removed": { "type": "array", "items": { "type": "integer" } }, "modified": { "type": "array" }, "added": { "type": "array" } } },
-    "unknownBoxes": { "type": "object", "properties": { "removed": { "type": "array", "items": { "type": "integer" } }, "modified": { "type": "array" }, "added": { "type": "array" } } }
+    "tracks": { "type": "object", "properties": { "removed": { "type": "array", "items": { "type": "integer" } }, "modified": { "type": "array" }, "added": { "type": "array" } } }
   }
 }

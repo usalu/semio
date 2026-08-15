@@ -3,12 +3,16 @@
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "demo";
-pub fn label() -> LocalizedLabel { LocalizedLabel::native("Demo", "Demo") }
+pub fn label() -> LocalizedLabel {
+    LocalizedLabel::native("Demo", "Demo")
+}
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.semio");
 /// 📄️ Genuine RFC 4180 bytes for the demo snapshot (`encode_csv(demo_csv_snapshot())`).
 pub const NATIVE_BYTES: &[u8] = include_str!("🖼️assets/📊️example.csv").as_bytes();
-pub fn source() -> ExampleSource { ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON) }
+pub fn source() -> ExampleSource {
+    ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
+}
 
 //#region 🔖️P2P1BinaryFixtures
 /// 🎒️ Genuine `encode_pack` bytes of the demo snapshot (P2-P1 `fixture_honesty_law`).
@@ -41,11 +45,7 @@ mod tests {
         type Inference = CsvInference;
 
         fn dialect() -> store::os_io::ArtifactDialect {
-            store::os_io::ArtifactDialect {
-                artifact_kind: "s.stdio.csv".into(),
-                standard: "rfc4180".into(),
-                subset: "*".into(),
-            }
+            store::os_io::ArtifactDialect { artifact_kind: "s.stdio.csv".into(), standard: "rfc4180".into(), subset: "*".into() }
         }
 
         fn fidelity() -> IoFidelityClass {
@@ -75,17 +75,11 @@ mod tests {
         }
 
         fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
-            vec![CsvMutation::InsertRecord {
-                index: snapshot.records.len(),
-                record: CsvRecord { fields: vec![CsvField { value: "roundtrip".into(), quoted: false }] },
-            }]
+            vec![CsvMutation::InsertRecord { index: snapshot.records.len(), record: CsvRecord { fields: vec![CsvField { value: "roundtrip".into(), quoted: false }] } }]
         }
 
         fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
-            std::str::from_utf8(bytes)
-                .map_err(|e| vec![e.to_string()])
-                .and_then(|text| crate::artifacts::csv::schema::snapshot::decode_csv(text).map_err(|e| vec![e]))
-                .map(|_| ())
+            std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()]).and_then(|text| crate::artifacts::csv::schema::snapshot::decode_csv(text).map_err(|e| vec![e])).map(|_| ())
         }
 
         fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {
@@ -95,11 +89,7 @@ mod tests {
 
     #[test]
     fn demo_subset_integrated_roundtrip() {
-        let asset = ExampleAsset {
-            bytes: NATIVE_BYTES,
-            text: Some(std::str::from_utf8(NATIVE_BYTES).expect("utf-8 csv")),
-            provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/📊️example.csv",
-        };
+        let asset = ExampleAsset { bytes: NATIVE_BYTES, text: Some(std::str::from_utf8(NATIVE_BYTES).expect("utf-8 csv")), provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/📊️example.csv" };
         test_support::assert_subset_roundtrip::<CsvAnyRoundtrip>(&asset, None);
     }
 }

@@ -23,25 +23,17 @@ pub struct SemioPresentationArtifact {
 }
 
 impl Default for SemioPresentationArtifact {
-    fn default() -> Self { Self::from_snapshot(SemioPresentationSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(SemioPresentationSnapshot::default())
+    }
 }
 
 impl SemioPresentationArtifact {
     pub fn to_snapshot(&self) -> SemioPresentationSnapshot {
-        SemioPresentationSnapshot {
-            schema: self.schema.clone(),
-            masters: self.masters.clone(),
-            layouts: self.layouts.clone(),
-            slides: self.slides.clone(),
-        }
+        SemioPresentationSnapshot { schema: self.schema.clone(), masters: self.masters.clone(), layouts: self.layouts.clone(), slides: self.slides.clone() }
     }
     pub fn from_snapshot(snapshot: SemioPresentationSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            masters: snapshot.masters,
-            layouts: snapshot.layouts,
-            slides: snapshot.slides,
-        }
+        Self { schema: snapshot.schema, masters: snapshot.masters, layouts: snapshot.layouts, slides: snapshot.slides }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioPresentationSnapshot) {
         self.schema = snapshot.schema;
@@ -86,20 +78,26 @@ pub fn semio_presentation_artifact_schema_descriptor() -> schema::ArtifactSchema
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::SemioPresentationDiff;
-    use crate::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::{SemioPresentationMutation, apply_semio_presentation_mutation};
+    use crate::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::{apply_semio_presentation_mutation, SemioPresentationMutation};
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioPresentationBuilderConstruction { snapshot: SemioPresentationSnapshot }
+    pub struct SemioPresentationBuilderConstruction {
+        snapshot: SemioPresentationSnapshot,
+    }
 
     impl ArtifactBuilder for SemioPresentationBuilderConstruction {
         type Snapshot = SemioPresentationSnapshot;
         type Mutation = SemioPresentationMutation;
         type Diff = SemioPresentationDiff;
-        fn empty() -> Self { Self { snapshot: SemioPresentationSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: SemioPresentationSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -114,7 +112,9 @@ pub mod derived_construction {
             self.snapshot = <SemioPresentationDiff as protocol::MutationDiff<SemioPresentationSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 
     //#region 🧪️Tests
@@ -168,11 +168,13 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioPresentationParts { pub snapshot: Option<SemioPresentationSnapshot> }
+    pub struct SemioPresentationParts {
+        pub snapshot: Option<SemioPresentationSnapshot>,
+    }
 
     pub struct SemioPresentationAnalyzerAnalysis;
 
@@ -184,10 +186,18 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
-                    if text.contains(STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                    if text.contains(STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }

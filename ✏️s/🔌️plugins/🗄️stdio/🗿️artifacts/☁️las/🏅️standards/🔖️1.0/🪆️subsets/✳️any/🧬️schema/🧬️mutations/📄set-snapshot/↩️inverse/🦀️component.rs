@@ -1,5 +1,5 @@
-use crate::artifacts::las::{LasSnapshot};
 use crate::artifacts::las::schema::mutations::LasMutation;
+use crate::artifacts::las::LasSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

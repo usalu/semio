@@ -1,8 +1,8 @@
 //! 🧬️ AviMutation — named-variant vocabulary (imperative verbs, gif/svg precedent). Every
 //! variant's `diff()` is handcrafted; `inverse()` is handcrafted per variant, index-aware.
 
-use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk};
 use crate::artifacts::avi::standards::v1_0::subsets::any::schema::diff::{AviChunkDiff, AviDiff, AviStreamDiff, IndexedAdded, IndexedDiff, IndexedModified};
+use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk};
 use protocol::Mutation;
 #[cfg(test)]
 use protocol::{OpBinary, OpText};
@@ -14,18 +14,51 @@ use serde::{Deserialize, Serialize};
 pub enum AviMutation {
     #[default]
     NoMutation,
-    SetSnapshot { snapshot: AviSnapshot },
-    SetMainHeader { main_header: AviMainHeader },
-    SetIdx1Present { idx1_present: bool },
-    InsertStream { index: usize, stream: AviStream },
-    RemoveStream { index: usize },
-    SetStreamHeader { stream_index: usize, strh: AviStreamHeader },
-    SetStreamFormat { stream_index: usize, strf: AviStreamFormat },
-    InsertChunk { stream_index: usize, index: usize, chunk: AviChunk },
-    RemoveChunk { stream_index: usize, index: usize },
-    SetChunkKeyframe { stream_index: usize, index: usize, keyframe: bool },
-    AddUnknownChunk { index: usize, item: RiffChunk },
-    RemoveUnknownChunk { index: usize },
+    SetSnapshot {
+        snapshot: AviSnapshot,
+    },
+    SetMainHeader {
+        main_header: AviMainHeader,
+    },
+    SetIdx1Present {
+        idx1_present: bool,
+    },
+    InsertStream {
+        index: usize,
+        stream: AviStream,
+    },
+    RemoveStream {
+        index: usize,
+    },
+    SetStreamHeader {
+        stream_index: usize,
+        strh: AviStreamHeader,
+    },
+    SetStreamFormat {
+        stream_index: usize,
+        strf: AviStreamFormat,
+    },
+    InsertChunk {
+        stream_index: usize,
+        index: usize,
+        chunk: AviChunk,
+    },
+    RemoveChunk {
+        stream_index: usize,
+        index: usize,
+    },
+    SetChunkKeyframe {
+        stream_index: usize,
+        index: usize,
+        keyframe: bool,
+    },
+    AddUnknownChunk {
+        index: usize,
+        item: RiffChunk,
+    },
+    RemoveUnknownChunk {
+        index: usize,
+    },
 }
 
 fn stream_diff_for(stream_index: usize, inner: AviStreamDiff) -> AviDiff {
@@ -111,7 +144,9 @@ impl protocol::OpText for AviMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
-    fn print_op(&self) -> String { serde_json::to_string(self).unwrap_or_default() }
+    fn print_op(&self) -> String {
+        serde_json::to_string(self).unwrap_or_default()
+    }
 }
 
 impl protocol::OpBinary for AviMutation {
@@ -129,15 +164,45 @@ impl protocol::OpBinary for AviMutation {
 mod tests {
     use super::*;
     use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA;
-    use protocol::MutationDiff;
     use protocol::command::DiffAlgebra;
+    use protocol::MutationDiff;
 
     fn base_snapshot() -> AviSnapshot {
         AviSnapshot {
             schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
-            main_header: AviMainHeader { micro_sec_per_frame: 100_000, max_bytes_per_sec: 1400, padding_granularity: 0, flags: 0x10, total_frames: 1, initial_frames: 0, streams: 1, suggested_buffer_size: 140, width: 16, height: 16, reserved: vec![0, 0, 0, 0] },
+            main_header: AviMainHeader {
+                micro_sec_per_frame: 100_000,
+                max_bytes_per_sec: 1400,
+                padding_granularity: 0,
+                flags: 0x10,
+                total_frames: 1,
+                initial_frames: 0,
+                streams: 1,
+                suggested_buffer_size: 140,
+                width: 16,
+                height: 16,
+                reserved: vec![0, 0, 0, 0],
+            },
             streams: vec![AviStream {
-                strh: AviStreamHeader { fcc_type: "vids".into(), fcc_handler: "MJPG".into(), flags: 0, priority: 0, language: 0, initial_frames: 0, scale: 1, rate: 10, start: 0, length: 1, suggested_buffer_size: 140, quality: -1, sample_size: 0, rc_frame_left: 0, rc_frame_top: 0, rc_frame_right: 16, rc_frame_bottom: 16 },
+                strh: AviStreamHeader {
+                    fcc_type: "vids".into(),
+                    fcc_handler: "MJPG".into(),
+                    flags: 0,
+                    priority: 0,
+                    language: 0,
+                    initial_frames: 0,
+                    scale: 1,
+                    rate: 10,
+                    start: 0,
+                    length: 1,
+                    suggested_buffer_size: 140,
+                    quality: -1,
+                    sample_size: 0,
+                    rc_frame_left: 0,
+                    rc_frame_top: 0,
+                    rc_frame_right: 16,
+                    rc_frame_bottom: 16,
+                },
                 strf: AviStreamFormat::BitmapInfo { size: 40, width: 16, height: 16, planes: 1, bit_count: 24, compression: "MJPG".into(), size_image: 140, x_pels_per_meter: 0, y_pels_per_meter: 0, colors_used: 0, colors_important: 0 },
                 chunks: vec![AviChunk { fourcc: "00dc".into(), data: vec![1, 2, 3], keyframe: true }],
             }],

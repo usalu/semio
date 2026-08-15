@@ -4,10 +4,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::SemioSnapshot;
-pub use crate::artifacts::semio::standards::v1::subsets::any::schema::SemioArtifact;
 pub use crate::artifacts::semio::standards::v1::subsets::any::schema::diff::SemioDiff;
 pub use crate::artifacts::semio::standards::v1::subsets::any::schema::mutations::SemioMutation;
+pub use crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::SemioSnapshot;
+pub use crate::artifacts::semio::standards::v1::subsets::any::schema::SemioArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_SEMIO_DOCUMENT_SCHEMA: &str = "stdio.semio";
@@ -117,7 +117,7 @@ pub fn composable_subsets() -> Vec<&'static str> {
 
 impl crate::dsl::ChildStoreFactory for SemioChildStoreFactory {
     fn create(&self, id: &str, dialect: &crate::dsl::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Box<dyn crate::dsl::SpaceMember>, crate::dsl::VcsError> {
-        use crate::artifacts::semio::standards::v1::subsets as subsets;
+        use crate::artifacts::semio::standards::v1::subsets;
         macro_rules! create_arm {
             ($($name:ident => $module:ident, $snapshot:ident, $mutation:ident);* $(;)?) => {
                 match dialect.subset.as_str() {
@@ -130,7 +130,7 @@ impl crate::dsl::ChildStoreFactory for SemioChildStoreFactory {
     }
 
     fn open(&self, envelope_pack: &[u8]) -> Result<Box<dyn crate::dsl::SpaceMember>, crate::dsl::VcsError> {
-        use crate::artifacts::semio::standards::v1::subsets as subsets;
+        use crate::artifacts::semio::standards::v1::subsets;
         let subset = subset_of_persisted_envelope(envelope_pack)?;
         macro_rules! open_arm {
             ($($name:ident => $module:ident, $snapshot:ident, $mutation:ident);* $(;)?) => {
@@ -150,10 +150,7 @@ impl crate::dsl::ChildStoreFactory for SemioChildStoreFactory {
 fn subset_of_persisted_envelope(envelope_pack: &[u8]) -> Result<String, crate::dsl::VcsError> {
     let (_, spr) = crate::dsl::decode_document_pack_bytes(envelope_pack)?;
     let log = crate::dsl::decode_history(&spr, &crate::dsl::os_spr::DecodeOptions::default()).map_err(|error| crate::dsl::VcsError::Deserialize(error.to_string()))?;
-    log.composition
-        .and_then(|composition| composition.dialect)
-        .map(|(_, _, subset)| subset)
-        .ok_or_else(|| crate::dsl::VcsError::Deserialize("semio child store: persisted child carries no dialect, so its subset is unknowable".to_string()))
+    log.composition.and_then(|composition| composition.dialect).map(|(_, _, subset)| subset).ok_or_else(|| crate::dsl::VcsError::Deserialize("semio child store: persisted child carries no dialect, so its subset is unknowable".to_string()))
 }
 
 /// 🧸️ Registers the `semio` child-store factory so any plugin declaring
@@ -172,9 +169,9 @@ pub fn register_child_store_factories() {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::semio::standards::v1::subsets::any::io::io_registry as v1;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -183,10 +180,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("SemioComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("SemioComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 
@@ -200,8 +194,12 @@ pub mod io_registry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dsl::{child_store_factory, os_io::{ArtifactDialect, ArtifactKindId}, ArtifactPack};
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+    use crate::dsl::{
+        child_store_factory,
+        os_io::{ArtifactDialect, ArtifactKindId},
+        ArtifactPack,
+    };
 
     fn subset_dialect(subset: &str) -> ArtifactDialect {
         ArtifactDialect { artifact_kind: SEMIO_ARTIFACT_SCHEMA_ID.into(), standard: "v1".into(), subset: subset.into() }
@@ -226,10 +224,16 @@ mod tests {
         for subset in composable_subsets() {
             // An empty pack is rejected by the production factory, so this asserts the DISPATCH
             // reached a real typed factory rather than falling through to "no composable subset".
-            let error = match factory.create("probe", &subset_dialect(subset), &[]) { Ok(_) => panic!("empty genesis pack must be rejected"), Err(error) => error };
+            let error = match factory.create("probe", &subset_dialect(subset), &[]) {
+                Ok(_) => panic!("empty genesis pack must be rejected"),
+                Err(error) => error,
+            };
             assert!(!error.to_string().contains("no composable subset"), "subset {subset} is not wired into the child-store dispatch");
         }
-        let unknown = match factory.create("probe", &subset_dialect("not-a-subset"), &[]) { Ok(_) => panic!("unknown subset must be rejected"), Err(error) => error };
+        let unknown = match factory.create("probe", &subset_dialect("not-a-subset"), &[]) {
+            Ok(_) => panic!("unknown subset must be rejected"),
+            Err(error) => error,
+        };
         assert!(unknown.to_string().contains("no composable subset"));
     }
 

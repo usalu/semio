@@ -1,5 +1,5 @@
-use crate::artifacts::pptx::{PptxSnapshot};
 use crate::artifacts::pptx::schema::mutations::PptxMutation;
+use crate::artifacts::pptx::PptxSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

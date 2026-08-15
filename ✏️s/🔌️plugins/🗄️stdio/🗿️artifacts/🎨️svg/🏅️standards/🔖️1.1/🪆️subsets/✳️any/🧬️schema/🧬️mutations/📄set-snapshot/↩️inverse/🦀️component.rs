@@ -1,5 +1,5 @@
-use crate::artifacts::svg::{SvgSnapshot};
 use crate::artifacts::svg::schema::mutations::SvgMutation;
+use crate::artifacts::svg::SvgSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

@@ -1,5 +1,5 @@
-use crate::artifacts::png::{PngSnapshot};
 use crate::artifacts::png::schema::mutations::PngMutation;
+use crate::artifacts::png::PngSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

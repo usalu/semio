@@ -74,7 +74,9 @@ pub enum ElementClass {
     Roof,
     Stair,
     Furniture,
-    Other { name: String },
+    Other {
+        name: String,
+    },
 }
 
 /// 📐️ Owned by `model`: geometry reference resolved BY ID into a sibling subset's own snapshot
@@ -85,8 +87,12 @@ pub enum ElementClass {
 pub enum GeometryRef {
     #[default]
     None,
-    Brep { brep_id: String },
-    Mesh { mesh_id: String },
+    Brep {
+        brep_id: String,
+    },
+    Mesh {
+        mesh_id: String,
+    },
 }
 
 /// 🏷️ IFC property-set value — weak value type, whole-value replaced in diffs, never sub-diffed
@@ -150,7 +156,9 @@ pub enum RelationKind {
     ConnectsTo,
     FillsVoid,
     VoidsElement,
-    Other { label: String },
+    Other {
+        label: String,
+    },
 }
 
 /// 🔗️ Owned by `model`: the master plan's "relations{kind enum, from, to}" — `id` is this
@@ -188,12 +196,7 @@ pub struct SemioModelSnapshot {
 
 impl Default for SemioModelSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(),
-            spatial: Vec::new(),
-            elements: Vec::new(),
-            relations: Vec::new(),
-        }
+        Self { schema: STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(), spatial: Vec::new(), elements: Vec::new(), relations: Vec::new() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -247,19 +250,25 @@ fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 
-fn enc_point3(p: &SemioPoint3) -> String { format!("[{},{},{}]", enc_f64(p.x), enc_f64(p.y), enc_f64(p.z)) }
+fn enc_point3(p: &SemioPoint3) -> String {
+    format!("[{},{},{}]", enc_f64(p.x), enc_f64(p.y), enc_f64(p.z))
+}
 fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, z] = parts.as_slice() else { return Err(format!("point3: expected 3 fields, got {}", parts.len())) };
     Ok(SemioPoint3 { x: dec_f64(x)?, y: dec_f64(y)?, z: dec_f64(z)? })
 }
-fn enc_quat(q: &SemioQuaternion) -> String { format!("[{},{},{},{}]", enc_f64(q.x), enc_f64(q.y), enc_f64(q.z), enc_f64(q.w)) }
+fn enc_quat(q: &SemioQuaternion) -> String {
+    format!("[{},{},{},{}]", enc_f64(q.x), enc_f64(q.y), enc_f64(q.z), enc_f64(q.w))
+}
 fn dec_quat(s: &str) -> Result<SemioQuaternion, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, z, w] = parts.as_slice() else { return Err(format!("quaternion: expected 4 fields, got {}", parts.len())) };
     Ok(SemioQuaternion { x: dec_f64(x)?, y: dec_f64(y)?, z: dec_f64(z)?, w: dec_f64(w)? })
 }
-fn enc_transform(t: &SemioTransform) -> String { format!("[{},{},{}]", enc_point3(&t.translation), enc_quat(&t.rotation), enc_point3(&t.scale)) }
+fn enc_transform(t: &SemioTransform) -> String {
+    format!("[{},{},{}]", enc_point3(&t.translation), enc_quat(&t.rotation), enc_point3(&t.scale))
+}
 fn dec_transform(s: &str) -> Result<SemioTransform, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [translation, rotation, scale] = parts.as_slice() else { return Err(format!("transform: expected 3 fields, got {}", parts.len())) };
@@ -267,10 +276,21 @@ fn dec_transform(s: &str) -> Result<SemioTransform, String> {
 }
 
 fn enc_spatial_kind(k: &SpatialKind) -> &'static str {
-    match k { SpatialKind::Site => "S", SpatialKind::Building => "B", SpatialKind::Storey => "T", SpatialKind::Space => "P" }
+    match k {
+        SpatialKind::Site => "S",
+        SpatialKind::Building => "B",
+        SpatialKind::Storey => "T",
+        SpatialKind::Space => "P",
+    }
 }
 fn dec_spatial_kind(s: &str) -> Result<SpatialKind, String> {
-    match s { "S" => Ok(SpatialKind::Site), "B" => Ok(SpatialKind::Building), "T" => Ok(SpatialKind::Storey), "P" => Ok(SpatialKind::Space), other => Err(format!("spatial kind: unknown tag {other:?}")) }
+    match s {
+        "S" => Ok(SpatialKind::Site),
+        "B" => Ok(SpatialKind::Building),
+        "T" => Ok(SpatialKind::Storey),
+        "P" => Ok(SpatialKind::Space),
+        other => Err(format!("spatial kind: unknown tag {other:?}")),
+    }
 }
 
 fn enc_element_class(c: &ElementClass) -> String {
@@ -289,9 +309,15 @@ fn enc_element_class(c: &ElementClass) -> String {
 }
 fn dec_element_class(s: &str) -> Result<ElementClass, String> {
     match s {
-        "WA" => Ok(ElementClass::Wall), "SL" => Ok(ElementClass::Slab), "CO" => Ok(ElementClass::Column),
-        "BE" => Ok(ElementClass::Beam), "DO" => Ok(ElementClass::Door), "WI" => Ok(ElementClass::Window),
-        "RO" => Ok(ElementClass::Roof), "ST" => Ok(ElementClass::Stair), "FU" => Ok(ElementClass::Furniture),
+        "WA" => Ok(ElementClass::Wall),
+        "SL" => Ok(ElementClass::Slab),
+        "CO" => Ok(ElementClass::Column),
+        "BE" => Ok(ElementClass::Beam),
+        "DO" => Ok(ElementClass::Door),
+        "WI" => Ok(ElementClass::Window),
+        "RO" => Ok(ElementClass::Roof),
+        "ST" => Ok(ElementClass::Stair),
+        "FU" => Ok(ElementClass::Furniture),
         other if other.starts_with("OT[") => Ok(ElementClass::Other { name: dec_str(strip_brackets(&other[2..])?)? }),
         other => Err(format!("element class: unknown tag {other:?}")),
     }
@@ -305,7 +331,9 @@ fn enc_geometry_ref(g: &GeometryRef) -> String {
     }
 }
 fn dec_geometry_ref(s: &str) -> Result<GeometryRef, String> {
-    if s == "N" { return Ok(GeometryRef::None); }
+    if s == "N" {
+        return Ok(GeometryRef::None);
+    }
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -333,14 +361,18 @@ fn dec_pset_value(s: &str) -> Result<PsetValue, String> {
     }
 }
 
-fn enc_property(p: &Property) -> String { format!("[{},{}]", enc_str(&p.key), enc_pset_value(&p.value)) }
+fn enc_property(p: &Property) -> String {
+    format!("[{},{}]", enc_str(&p.key), enc_pset_value(&p.value))
+}
 fn dec_property(s: &str) -> Result<Property, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [key, value] = parts.as_slice() else { return Err(format!("property: expected 2 fields, got {}", parts.len())) };
     Ok(Property { key: dec_str(key)?, value: dec_pset_value(value)? })
 }
 
-fn enc_property_set(ps: &PropertySet) -> String { format!("[{},{}]", enc_str(&ps.name), enc_list(&ps.properties, enc_property)) }
+fn enc_property_set(ps: &PropertySet) -> String {
+    format!("[{},{}]", enc_str(&ps.name), enc_list(&ps.properties, enc_property))
+}
 fn dec_property_set(s: &str) -> Result<PropertySet, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, properties] = parts.as_slice() else { return Err(format!("property set: expected 2 fields, got {}", parts.len())) };
@@ -357,19 +389,12 @@ fn dec_spatial_node(s: &str) -> Result<SpatialNode, String> {
 }
 
 fn enc_element(e: &SemioModelElement) -> String {
-    format!(
-        "[{},{},{},{},{},{}]",
-        enc_str(&e.id), enc_element_class(&e.class), enc_transform(&e.placement), enc_geometry_ref(&e.geometry),
-        encode_option(&e.spatial_id, |v: &String| enc_str(v)), enc_list(&e.psets, enc_property_set),
-    )
+    format!("[{},{},{},{},{},{}]", enc_str(&e.id), enc_element_class(&e.class), enc_transform(&e.placement), enc_geometry_ref(&e.geometry), encode_option(&e.spatial_id, |v: &String| enc_str(v)), enc_list(&e.psets, enc_property_set),)
 }
 fn dec_element(s: &str) -> Result<SemioModelElement, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, class, placement, geometry, spatial_id, psets] = parts.as_slice() else { return Err(format!("element: expected 6 fields, got {}", parts.len())) };
-    Ok(SemioModelElement {
-        id: dec_str(id)?, class: dec_element_class(class)?, placement: dec_transform(placement)?, geometry: dec_geometry_ref(geometry)?,
-        spatial_id: decode_option(spatial_id, dec_str)?, psets: dec_list(psets, dec_property_set)?,
-    })
+    Ok(SemioModelElement { id: dec_str(id)?, class: dec_element_class(class)?, placement: dec_transform(placement)?, geometry: dec_geometry_ref(geometry)?, spatial_id: decode_option(spatial_id, dec_str)?, psets: dec_list(psets, dec_property_set)? })
 }
 
 fn enc_relation_kind(k: &RelationKind) -> String {
@@ -384,14 +409,19 @@ fn enc_relation_kind(k: &RelationKind) -> String {
 }
 fn dec_relation_kind(s: &str) -> Result<RelationKind, String> {
     match s {
-        "AG" => Ok(RelationKind::Aggregates), "CI" => Ok(RelationKind::ContainedIn), "CN" => Ok(RelationKind::ConnectsTo),
-        "FV" => Ok(RelationKind::FillsVoid), "VE" => Ok(RelationKind::VoidsElement),
+        "AG" => Ok(RelationKind::Aggregates),
+        "CI" => Ok(RelationKind::ContainedIn),
+        "CN" => Ok(RelationKind::ConnectsTo),
+        "FV" => Ok(RelationKind::FillsVoid),
+        "VE" => Ok(RelationKind::VoidsElement),
         other if other.starts_with("OT[") => Ok(RelationKind::Other { label: dec_str(strip_brackets(&other[2..])?)? }),
         other => Err(format!("relation kind: unknown tag {other:?}")),
     }
 }
 
-fn enc_relation(r: &ModelRelation) -> String { format!("[{},{},{},{}]", enc_str(&r.id), enc_relation_kind(&r.kind), enc_str(&r.from), enc_str(&r.to)) }
+fn enc_relation(r: &ModelRelation) -> String {
+    format!("[{},{},{},{}]", enc_str(&r.id), enc_relation_kind(&r.kind), enc_str(&r.from), enc_str(&r.to))
+}
 fn dec_relation(s: &str) -> Result<ModelRelation, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, kind, from, to] = parts.as_slice() else { return Err(format!("relation: expected 4 fields, got {}", parts.len())) };
@@ -464,7 +494,10 @@ fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
 fn write_option_str(out: &mut Vec<u8>, opt: &Option<String>) {
     match opt {
         None => out.push(0),
-        Some(v) => { out.push(1); write_str_lp(out, v); }
+        Some(v) => {
+            out.push(1);
+            write_str_lp(out, v);
+        }
     }
 }
 fn read_option_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
@@ -496,11 +529,19 @@ fn read_transform(reader: &mut store::ByteReader<'_>) -> Result<SemioTransform, 
 }
 
 fn write_spatial_kind(out: &mut Vec<u8>, k: &SpatialKind) {
-    out.push(match k { SpatialKind::Site => 0, SpatialKind::Building => 1, SpatialKind::Storey => 2, SpatialKind::Space => 3 });
+    out.push(match k {
+        SpatialKind::Site => 0,
+        SpatialKind::Building => 1,
+        SpatialKind::Storey => 2,
+        SpatialKind::Space => 3,
+    });
 }
 fn read_spatial_kind(reader: &mut store::ByteReader<'_>) -> Result<SpatialKind, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
-        0 => Ok(SpatialKind::Site), 1 => Ok(SpatialKind::Building), 2 => Ok(SpatialKind::Storey), 3 => Ok(SpatialKind::Space),
+        0 => Ok(SpatialKind::Site),
+        1 => Ok(SpatialKind::Building),
+        2 => Ok(SpatialKind::Storey),
+        3 => Ok(SpatialKind::Space),
         other => Err(format!("spatial kind: unknown tag {other}")),
     }
 }
@@ -516,14 +557,24 @@ fn write_element_class(out: &mut Vec<u8>, c: &ElementClass) {
         ElementClass::Roof => out.push(6),
         ElementClass::Stair => out.push(7),
         ElementClass::Furniture => out.push(8),
-        ElementClass::Other { name } => { out.push(9); write_str_lp(out, name); }
+        ElementClass::Other { name } => {
+            out.push(9);
+            write_str_lp(out, name);
+        }
     }
 }
 fn read_element_class(reader: &mut store::ByteReader<'_>) -> Result<ElementClass, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
-        0 => Ok(ElementClass::Wall), 1 => Ok(ElementClass::Slab), 2 => Ok(ElementClass::Column), 3 => Ok(ElementClass::Beam),
-        4 => Ok(ElementClass::Door), 5 => Ok(ElementClass::Window), 6 => Ok(ElementClass::Roof), 7 => Ok(ElementClass::Stair),
-        8 => Ok(ElementClass::Furniture), 9 => Ok(ElementClass::Other { name: read_str_lp(reader)? }),
+        0 => Ok(ElementClass::Wall),
+        1 => Ok(ElementClass::Slab),
+        2 => Ok(ElementClass::Column),
+        3 => Ok(ElementClass::Beam),
+        4 => Ok(ElementClass::Door),
+        5 => Ok(ElementClass::Window),
+        6 => Ok(ElementClass::Roof),
+        7 => Ok(ElementClass::Stair),
+        8 => Ok(ElementClass::Furniture),
+        9 => Ok(ElementClass::Other { name: read_str_lp(reader)? }),
         other => Err(format!("element class: unknown tag {other}")),
     }
 }
@@ -531,8 +582,14 @@ fn read_element_class(reader: &mut store::ByteReader<'_>) -> Result<ElementClass
 fn write_geometry_ref(out: &mut Vec<u8>, g: &GeometryRef) {
     match g {
         GeometryRef::None => out.push(0),
-        GeometryRef::Brep { brep_id } => { out.push(1); write_str_lp(out, brep_id); }
-        GeometryRef::Mesh { mesh_id } => { out.push(2); write_str_lp(out, mesh_id); }
+        GeometryRef::Brep { brep_id } => {
+            out.push(1);
+            write_str_lp(out, brep_id);
+        }
+        GeometryRef::Mesh { mesh_id } => {
+            out.push(2);
+            write_str_lp(out, mesh_id);
+        }
     }
 }
 fn read_geometry_ref(reader: &mut store::ByteReader<'_>) -> Result<GeometryRef, String> {
@@ -546,9 +603,18 @@ fn read_geometry_ref(reader: &mut store::ByteReader<'_>) -> Result<GeometryRef, 
 
 fn write_pset_value(out: &mut Vec<u8>, v: &PsetValue) {
     match v {
-        PsetValue::Text { value } => { out.push(0); write_str_lp(out, value); }
-        PsetValue::Number { value } => { out.push(1); out.extend_from_slice(&value.to_le_bytes()); }
-        PsetValue::Boolean { value } => { out.push(2); out.push(if *value { 1 } else { 0 }); }
+        PsetValue::Text { value } => {
+            out.push(0);
+            write_str_lp(out, value);
+        }
+        PsetValue::Number { value } => {
+            out.push(1);
+            out.extend_from_slice(&value.to_le_bytes());
+        }
+        PsetValue::Boolean { value } => {
+            out.push(2);
+            out.push(if *value { 1 } else { 0 });
+        }
     }
 }
 fn read_pset_value(reader: &mut store::ByteReader<'_>) -> Result<PsetValue, String> {
@@ -635,13 +701,20 @@ fn write_relation_kind(out: &mut Vec<u8>, k: &RelationKind) {
         RelationKind::ConnectsTo => out.push(2),
         RelationKind::FillsVoid => out.push(3),
         RelationKind::VoidsElement => out.push(4),
-        RelationKind::Other { label } => { out.push(5); write_str_lp(out, label); }
+        RelationKind::Other { label } => {
+            out.push(5);
+            write_str_lp(out, label);
+        }
     }
 }
 fn read_relation_kind(reader: &mut store::ByteReader<'_>) -> Result<RelationKind, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
-        0 => Ok(RelationKind::Aggregates), 1 => Ok(RelationKind::ContainedIn), 2 => Ok(RelationKind::ConnectsTo),
-        3 => Ok(RelationKind::FillsVoid), 4 => Ok(RelationKind::VoidsElement), 5 => Ok(RelationKind::Other { label: read_str_lp(reader)? }),
+        0 => Ok(RelationKind::Aggregates),
+        1 => Ok(RelationKind::ContainedIn),
+        2 => Ok(RelationKind::ConnectsTo),
+        3 => Ok(RelationKind::FillsVoid),
+        4 => Ok(RelationKind::VoidsElement),
+        5 => Ok(RelationKind::Other { label: read_str_lp(reader)? }),
         other => Err(format!("relation kind: unknown tag {other}")),
     }
 }
@@ -712,7 +785,9 @@ fn decode_model_snapshot_binary(bytes: &[u8]) -> Result<SemioModelSnapshot, Stri
 /// in the repo-wide `store::semio_format` envelope, unchanged.
 impl store::ArtifactDsl for SemioModelSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str { STDIO_SEMIOMODEL_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_SEMIOMODEL_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -724,11 +799,7 @@ impl store::ArtifactDsl for SemioModelSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_semio_model_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -737,22 +808,14 @@ impl store::ArtifactPack for SemioModelSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_model_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_model_snapshot_binary(&inner).map_err(store::PackError::Schema)

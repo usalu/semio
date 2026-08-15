@@ -9,7 +9,7 @@
 //!   matching header fields); any other key is dropped (no other textual field exists on
 //!   `BmpSnapshot`).
 
-use crate::artifacts::bmp::{BmpSnapshot, schema::snapshot::BmpRowOrder};
+use crate::artifacts::bmp::{schema::snapshot::BmpRowOrder, BmpSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 

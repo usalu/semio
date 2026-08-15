@@ -109,14 +109,11 @@ fn check_depth(max_depth: u16, depth: u16) -> Result<(), PackError> {
     Ok(())
 }
 
-/// @emoji 🔢️ Canonical `f64` normalization: `-0.0` → `0.0`, any `NaN` → the single canonical
-/// quiet-NaN bit pattern `0x7ff8_0000_0000_0000` — matches `dsl_core`'s printable canonical form
-/// closely enough that `decode_pack(encode_pack(p)) == parse_dsl(print_dsl(p))` holds.
+/// @emoji 🔢️ Canonical `f64` normalization preserves signed zero and maps any `NaN` to the
+/// single quiet-NaN bit pattern `0x7ff8_0000_0000_0000`.
 fn normalize_f64(value: f64) -> f64 {
     if value.is_nan() {
         f64::from_bits(0x7ff8_0000_0000_0000)
-    } else if value == 0.0 {
-        0.0
     } else {
         value
     }
@@ -1592,8 +1589,8 @@ mod tests {
             Some(FieldValue::Float(f)) => assert!(f.is_nan()),
             other => panic!("expected NaN float, got {other:?}"),
         }
-        assert_eq!(decoded.get(3), Some(&FieldValue::Float(0.0)));
-        assert!(matches!(decoded.get(3), Some(FieldValue::Float(f)) if f.is_sign_positive()));
+        assert_eq!(decoded.get(3), Some(&FieldValue::Float(-0.0)));
+        assert!(matches!(decoded.get(3), Some(FieldValue::Float(f)) if f.is_sign_negative()));
         assert_eq!(decoded.get(4), Some(&FieldValue::Int(i64::MIN)));
         assert_eq!(decoded.get(5), Some(&FieldValue::UInt(u64::MAX)));
         assert_eq!(decoded.get(6), Some(&FieldValue::Text("héllo wörld 🔖️ 日本語".to_string())));

@@ -14,10 +14,10 @@
 //!   is reused verbatim as the emitted URL (round-trips through THIS pair's own deserializer,
 //!   which reads `MdInline::Image::url` back into `image_id`) so no data is silently invented.
 
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::md::MdSnapshot;
 use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
+use crate::artifacts::md::MdSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
 /// ✍️ One run -> its inline sequence, wrapping in `Strong`/`Emphasis`/`Link` per the run's own
@@ -48,12 +48,7 @@ pub(crate) fn map_semio_block(block: &DocBlock) -> Vec<MdBlock> {
     match block {
         DocBlock::Paragraph { runs, .. } => vec![MdBlock::Paragraph { inlines: runs_to_inlines(runs) }],
         DocBlock::Heading { level, runs, .. } => vec![MdBlock::Heading { level: *level, inlines: runs_to_inlines(runs) }],
-        DocBlock::List { ordered, items } => vec![MdBlock::List {
-            ordered: *ordered,
-            start: None,
-            tight: true,
-            items: items.iter().map(|item| item.blocks.iter().flat_map(map_semio_block).collect()).collect(),
-        }],
+        DocBlock::List { ordered, items } => vec![MdBlock::List { ordered: *ordered, start: None, tight: true, items: items.iter().map(|item| item.blocks.iter().flat_map(map_semio_block).collect()).collect() }],
         DocBlock::Table { rows } => rows.iter().flat_map(|row| row.cells.iter().flat_map(|cell| cell.blocks.iter().flat_map(map_semio_block))).collect(),
         DocBlock::Code { language, text } => vec![MdBlock::CodeBlock { info: language.clone(), literal: text.clone() }],
         DocBlock::Quote { blocks } => vec![MdBlock::BlockQuote { blocks: blocks.iter().flat_map(map_semio_block).collect() }],

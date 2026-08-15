@@ -208,8 +208,7 @@ fn absorb_ifds(d1: TiffIfdsDiff, d2: TiffIfdsDiff) -> TiffIfdsDiff {
         r.len()
     };
     let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0);
-    let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied())
-        .max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
+    let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied()).max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
     let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices);
 
     let mut final_removed: Vec<usize> = d1.removed;
@@ -248,8 +247,7 @@ fn absorb_ifds(d1: TiffIfdsDiff, d2: TiffIfdsDiff) -> TiffIfdsDiff {
     for r in &final_removed {
         modified_map.remove(r);
     }
-    let mut final_modified: Vec<TiffIfdModified> =
-        modified_map.into_iter().filter(|(_, d)| !d.is_empty()).map(|(index, diff)| TiffIfdModified { index, diff }).collect();
+    let mut final_modified: Vec<TiffIfdModified> = modified_map.into_iter().filter(|(_, d)| !d.is_empty()).map(|(index, diff)| TiffIfdModified { index, diff }).collect();
     final_modified.sort_by_key(|m| m.index);
 
     let alive_mid_positions: Vec<usize> = mid_slots
@@ -261,16 +259,7 @@ fn absorb_ifds(d1: TiffIfdsDiff, d2: TiffIfdsDiff) -> TiffIfdsDiff {
         })
         .collect();
     let d2_added_indices: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
-    let mid_len = d2
-        .removed
-        .iter()
-        .copied()
-        .chain(d2.modified.iter().map(|m| m.index))
-        .chain(alive_mid_positions.iter().copied())
-        .chain(d2_added_indices.iter().copied())
-        .max()
-        .map(|m| m + 1)
-        .unwrap_or(0);
+    let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map(|m| m + 1).unwrap_or(0);
     let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices);
     let mut mid_to_after: HashMap<usize, usize> = HashMap::new();
     for (pos, slot) in after_slots.iter().enumerate() {
@@ -331,7 +320,11 @@ fn between_ifds(a: &[TiffIfd], b: &[TiffIfd]) -> Option<TiffIfdsDiff> {
     }
     let removed: Vec<usize> = (min..a.len()).collect();
     let added: Vec<TiffIfdAdded> = (min..b.len()).map(|i| TiffIfdAdded { index: i, ifd: b[i].clone() }).collect();
-    if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(TiffIfdsDiff { removed, modified, added }) }
+    if removed.is_empty() && modified.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(TiffIfdsDiff { removed, modified, added })
+    }
 }
 
 fn absorb_ifds_opt(base: &mut Option<TiffIfdsDiff>, other: Option<TiffIfdsDiff>) {
@@ -411,11 +404,7 @@ impl DiffAlgebra<TiffSnapshot> for TiffDiff {
     /// 🧭️ State delta (compose `GetXDiff`): index-keyed pairwise `0..min(len)` matching for
     /// `ifds`, recursive tag-id-keyed matching within each surviving IFD pair.
     fn between(base: &TiffSnapshot, other: &TiffSnapshot) -> Self {
-        Self {
-            byte_order: (base.byte_order != other.byte_order).then_some(other.byte_order),
-            ifds: between_ifds(&base.ifds, &other.ifds),
-            pixels: (base.pixels != other.pixels).then(|| other.pixels.clone()),
-        }
+        Self { byte_order: (base.byte_order != other.byte_order).then_some(other.byte_order), ifds: between_ifds(&base.ifds, &other.ifds), pixels: (base.pixels != other.pixels).then(|| other.pixels.clone()) }
     }
 
     fn is_empty(&self) -> bool {
@@ -457,20 +446,12 @@ pub fn diff_set_tag(base: &TiffSnapshot, ifd_index: usize, tag: u16, kind: TiffF
             return TiffDiff::default();
         }
         TiffDiff {
-            ifds: Some(TiffIfdsDiff {
-                removed: vec![],
-                modified: vec![TiffIfdModified { index: ifd_index, diff: TiffTagsDiff { removed: vec![], modified: vec![TiffTagModified { tag, kind, values }], added: vec![] } }],
-                added: vec![],
-            }),
+            ifds: Some(TiffIfdsDiff { removed: vec![], modified: vec![TiffIfdModified { index: ifd_index, diff: TiffTagsDiff { removed: vec![], modified: vec![TiffTagModified { tag, kind, values }], added: vec![] } }], added: vec![] }),
             ..Default::default()
         }
     } else {
         TiffDiff {
-            ifds: Some(TiffIfdsDiff {
-                removed: vec![],
-                modified: vec![TiffIfdModified { index: ifd_index, diff: TiffTagsDiff { removed: vec![], modified: vec![], added: vec![TiffTagAdded { tag, kind, values }] } }],
-                added: vec![],
-            }),
+            ifds: Some(TiffIfdsDiff { removed: vec![], modified: vec![TiffIfdModified { index: ifd_index, diff: TiffTagsDiff { removed: vec![], modified: vec![], added: vec![TiffTagAdded { tag, kind, values }] } }], added: vec![] }),
             ..Default::default()
         }
     }
@@ -481,14 +462,7 @@ pub fn diff_remove_tag(base: &TiffSnapshot, ifd_index: usize, tag: u16) -> TiffD
     if !ifd.entries.iter().any(|t| t.tag == tag) {
         return TiffDiff::default();
     }
-    TiffDiff {
-        ifds: Some(TiffIfdsDiff {
-            removed: vec![],
-            modified: vec![TiffIfdModified { index: ifd_index, diff: TiffTagsDiff { removed: vec![tag], modified: vec![], added: vec![] } }],
-            added: vec![],
-        }),
-        ..Default::default()
-    }
+    TiffDiff { ifds: Some(TiffIfdsDiff { removed: vec![], modified: vec![TiffIfdModified { index: ifd_index, diff: TiffTagsDiff { removed: vec![tag], modified: vec![], added: vec![] } }], added: vec![] }), ..Default::default() }
 }
 
 pub fn diff_set_pixels(base: &TiffSnapshot, pixels: Vec<u8>) -> TiffDiff {
@@ -802,10 +776,7 @@ pub(crate) fn dec_values_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffV
         }
         10 => {
             let n = count(reader)?;
-            (0..n)
-                .map(|_| reader.read_bytes(4).map_err(|e| e.to_string()).map(|b| f32::from_le_bytes(b.try_into().expect("4 bytes"))))
-                .collect::<Result<Vec<_>, _>>()
-                .map(TiffValues::Float)
+            (0..n).map(|_| reader.read_bytes(4).map_err(|e| e.to_string()).map(|b| f32::from_le_bytes(b.try_into().expect("4 bytes")))).collect::<Result<Vec<_>, _>>().map(TiffValues::Float)
         }
         11 => {
             let n = count(reader)?;
@@ -857,16 +828,24 @@ fn dec_tags_diff(body: &str) -> Result<TiffTagsDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("tags diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_num::<u16>).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (tag_s, rest) = entry.split_once(':').ok_or_else(|| format!("tag modified: bad entry {entry:?}"))?;
-        let (kind_s, values_s) = rest.split_once(':').ok_or_else(|| format!("tag modified: bad entry {entry:?}"))?;
-        Ok(TiffTagModified { tag: parse_num::<u16>(tag_s)?, kind: dec_field_type(kind_s)?, values: dec_values(values_s)? })
-    }).collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (tag_s, rest) = entry.split_once(':').ok_or_else(|| format!("tag added: bad entry {entry:?}"))?;
-        let (kind_s, values_s) = rest.split_once(':').ok_or_else(|| format!("tag added: bad entry {entry:?}"))?;
-        Ok(TiffTagAdded { tag: parse_num::<u16>(tag_s)?, kind: dec_field_type(kind_s)?, values: dec_values(values_s)? })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (tag_s, rest) = entry.split_once(':').ok_or_else(|| format!("tag modified: bad entry {entry:?}"))?;
+            let (kind_s, values_s) = rest.split_once(':').ok_or_else(|| format!("tag modified: bad entry {entry:?}"))?;
+            Ok(TiffTagModified { tag: parse_num::<u16>(tag_s)?, kind: dec_field_type(kind_s)?, values: dec_values(values_s)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (tag_s, rest) = entry.split_once(':').ok_or_else(|| format!("tag added: bad entry {entry:?}"))?;
+            let (kind_s, values_s) = rest.split_once(':').ok_or_else(|| format!("tag added: bad entry {entry:?}"))?;
+            Ok(TiffTagAdded { tag: parse_num::<u16>(tag_s)?, kind: dec_field_type(kind_s)?, values: dec_values(values_s)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok(TiffTagsDiff { removed, modified, added })
 }
 
@@ -882,14 +861,22 @@ pub(crate) fn dec_ifds_diff(body: &str) -> Result<TiffIfdsDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("ifds diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_num::<usize>).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("ifd modified: bad entry {entry:?}"))?;
-        Ok(TiffIfdModified { index: parse_num::<usize>(idx)?, diff: dec_tags_diff(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("ifd added: bad entry {entry:?}"))?;
-        Ok(TiffIfdAdded { index: parse_num::<usize>(idx)?, ifd: dec_ifd(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("ifd modified: bad entry {entry:?}"))?;
+            Ok(TiffIfdModified { index: parse_num::<usize>(idx)?, diff: dec_tags_diff(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("ifd added: bad entry {entry:?}"))?;
+            Ok(TiffIfdAdded { index: parse_num::<usize>(idx)?, ifd: dec_ifd(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok(TiffIfdsDiff { removed, modified, added })
 }
 //#endregion 🔖️DiffValueCodecs
@@ -1154,13 +1141,7 @@ mod handcrafted_diff_codec_tests {
         b.pixels = vec![9u8; 16];
         let c = TiffSnapshot { schema: "stdio.tiff".into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![], pixels: vec![] };
 
-        let cases = vec![
-            TiffDiff::default(),
-            TiffDiff::between(&a, &b),
-            TiffDiff::between(&b, &a),
-            TiffDiff::between(&a, &c),
-            TiffDiff::between(&c, &a),
-        ];
+        let cases = vec![TiffDiff::default(), TiffDiff::between(&a, &b), TiffDiff::between(&b, &a), TiffDiff::between(&a, &c), TiffDiff::between(&c, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

@@ -29,18 +29,12 @@ impl Default for MdArtifact {
 impl MdArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> MdSnapshot {
-        MdSnapshot {
-            schema: self.schema.clone(),
-            blocks: self.blocks.clone(),
-        }
+        MdSnapshot { schema: self.schema.clone(), blocks: self.blocks.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: MdSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            blocks: snapshot.blocks,
-        }
+        Self { schema: snapshot.schema, blocks: snapshot.blocks }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -89,8 +83,8 @@ pub fn md_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::md::{MdDiff, MdMutation, MdSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.md` snapshot.
@@ -125,7 +119,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -135,8 +133,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::md::MdSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.md` parts.
@@ -167,7 +165,11 @@ pub mod derived_analysis {
                     if inlines.iter().all(|n| matches!(n, crate::artifacts::md::schema::snapshot::MdInline::Text { .. }))
             )
         });
-        if has_structure { IoConfidence::High } else { IoConfidence::Medium }
+        if has_structure {
+            IoConfidence::High
+        } else {
+            IoConfidence::Medium
+        }
     }
 
     impl ArtifactAnalysis for MdAnalyzerAnalysis {
@@ -206,22 +208,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <MdSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -294,11 +288,7 @@ pub fn demo_md_snapshot() -> MdSnapshot {
     use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
     let blocks = vec![
         MdBlock::Heading { level: 1, inlines: vec![MdInline::Text { text: "Title".into() }] },
-        MdBlock::BlockQuote {
-            blocks: vec![MdBlock::BlockQuote {
-                blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "Deeply quoted.".into() }] }],
-            }],
-        },
+        MdBlock::BlockQuote { blocks: vec![MdBlock::BlockQuote { blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "Deeply quoted.".into() }] }] }] },
         MdBlock::Paragraph {
             inlines: vec![
                 MdInline::Text { text: "Lossless ".into() },
@@ -334,10 +324,7 @@ semio_framework_plugin::derive_artifact_facets!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::md::schema::diff::{
-        diff_at_path, MdBlockAdded, MdBlockDiff, MdBlockModified, MdBlocksDiff, MdListItemAdded, MdListItemModified,
-        MdListItemsDiff,
-    };
+    use crate::artifacts::md::schema::diff::{diff_at_path, MdBlockAdded, MdBlockDiff, MdBlockModified, MdBlocksDiff, MdListItemAdded, MdListItemModified, MdListItemsDiff};
     use crate::artifacts::md::schema::mutations::MdPathStep;
     use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
     use crate::artifacts::md::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks;
@@ -392,19 +379,11 @@ mod tests {
         /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }
@@ -615,22 +594,26 @@ mod tests {
 
     #[test]
     fn emphasis_strong_links_images_and_html_in_inline() {
-        let inline = parse_inline(
-            "plain **strong** and *em* and [a link](https://example.com \"title\") and ![alt](img.png) and <br/>",
-        );
+        let inline = parse_inline("plain **strong** and *em* and [a link](https://example.com \"title\") and ![alt](img.png) and <br/>");
         assert!(inline.iter().any(|n| matches!(n, MdInline::Strong { inlines } if inlines == &vec![MdInline::Text { text: "strong".into() }])));
         assert!(inline.iter().any(|n| matches!(n, MdInline::Emphasis { inlines } if inlines == &vec![MdInline::Text { text: "em".into() }])));
-        let link = inline.iter().find_map(|n| match n {
-            MdInline::Link { text, url, title } => Some((text.clone(), url.clone(), title.clone())),
-            _ => None,
-        }).expect("link present");
+        let link = inline
+            .iter()
+            .find_map(|n| match n {
+                MdInline::Link { text, url, title } => Some((text.clone(), url.clone(), title.clone())),
+                _ => None,
+            })
+            .expect("link present");
         assert_eq!(link.0, vec![MdInline::Text { text: "a link".into() }]);
         assert_eq!(link.1, "https://example.com");
         assert_eq!(link.2.as_deref(), Some("title"));
-        let image = inline.iter().find_map(|n| match n {
-            MdInline::Image { alt, url, .. } => Some((alt.clone(), url.clone())),
-            _ => None,
-        }).expect("image present");
+        let image = inline
+            .iter()
+            .find_map(|n| match n {
+                MdInline::Image { alt, url, .. } => Some((alt.clone(), url.clone())),
+                _ => None,
+            })
+            .expect("image present");
         assert_eq!(image, ("alt".into(), "img.png".into()));
         assert!(inline.iter().any(|n| matches!(n, MdInline::HtmlInline { raw } if raw == "<br/>")));
     }
@@ -666,13 +649,7 @@ mod tests {
 
     //#region 🔖️Fixtures
     fn sample_snapshot() -> MdSnapshot {
-        MdSnapshot {
-            schema: STDIO_MD_DOCUMENT_SCHEMA.into(),
-            blocks: vec![
-                MdBlock::Heading { level: 1, inlines: vec![MdInline::Text { text: "Title".into() }] },
-                MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "hello".into() }] },
-            ],
-        }
+        MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::Heading { level: 1, inlines: vec![MdInline::Text { text: "Title".into() }] }, MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "hello".into() }] }] }
     }
 
     /// 🌱 `sweep_a`/`sweep_b`: differ in EVERY mutable field. Top-level `blocks` DIFFER IN LENGTH
@@ -693,10 +670,7 @@ mod tests {
                     ordered: false,
                     start: None,
                     tight: true,
-                    items: vec![
-                        vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item keep+modify".into() }] }],
-                        vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item drop".into() }] }],
-                    ],
+                    items: vec![vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item keep+modify".into() }] }], vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item drop".into() }] }]],
                 },
                 MdBlock::CodeBlock { info: Some("rust".into()), literal: "fn a() {}".into() },
                 MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "to remove".into() }] },
@@ -708,12 +682,7 @@ mod tests {
         MdSnapshot {
             schema: STDIO_MD_DOCUMENT_SCHEMA.into(),
             blocks: vec![
-                MdBlock::List {
-                    ordered: true,
-                    start: Some(3),
-                    tight: false,
-                    items: vec![vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item keep+modify CHANGED".into() }] }]],
-                },
+                MdBlock::List { ordered: true, start: Some(3), tight: false, items: vec![vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item keep+modify CHANGED".into() }] }]] },
                 MdBlock::CodeBlock { info: None, literal: "fn b() {}".into() },
             ],
         }
@@ -772,13 +741,7 @@ mod tests {
 
     //#region 🔖️AbsorbLaw
     fn two_para_root(a: &str, b: &str) -> MdSnapshot {
-        MdSnapshot {
-            schema: STDIO_MD_DOCUMENT_SCHEMA.into(),
-            blocks: vec![
-                MdBlock::Paragraph { inlines: vec![MdInline::Text { text: a.into() }] },
-                MdBlock::Paragraph { inlines: vec![MdInline::Text { text: b.into() }] },
-            ],
-        }
+        MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: a.into() }] }, MdBlock::Paragraph { inlines: vec![MdInline::Text { text: b.into() }] }] }
     }
 
     fn assert_absorb_matches_sequential(base: &MdSnapshot, d1: &MdDiff, d2: &MdDiff) -> MdDiff {
@@ -814,10 +777,7 @@ mod tests {
             let base = two_para_root("a", "b");
             let d1 = Mutation::diff(&MdMutation::InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }, &base);
             let mid = MutationDiff::apply(&d1, &base);
-            let d2 = Mutation::diff(
-                &MdMutation::InsertBlock { path: vec![], index: 2, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } },
-                &mid,
-            );
+            let d2 = Mutation::diff(&MdMutation::InsertBlock { path: vec![], index: 2, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } }, &mid);
             let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
             let triple = root_blocks_diff(&absorbed);
             assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
@@ -826,15 +786,9 @@ mod tests {
         // Canonical: Insert(1,f)+SetField(1,v) -> patch into the added payload.
         {
             let base = two_para_root("a", "b");
-            let d1 = Mutation::diff(
-                &MdMutation::InsertBlock { path: vec![], index: 1, block: MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "f".into() }] } },
-                &base,
-            );
+            let d1 = Mutation::diff(&MdMutation::InsertBlock { path: vec![], index: 1, block: MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "f".into() }] } }, &base);
             let mid = MutationDiff::apply(&d1, &base);
-            let d2 = Mutation::diff(
-                &MdMutation::SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "v".into() }] },
-                &mid,
-            );
+            let d2 = Mutation::diff(&MdMutation::SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "v".into() }] }, &mid);
             let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
             let triple = root_blocks_diff(&absorbed);
             assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
@@ -884,12 +838,7 @@ mod tests {
         {
             let base = MdSnapshot {
                 schema: STDIO_MD_DOCUMENT_SCHEMA.into(),
-                blocks: vec![MdBlock::BlockQuote {
-                    blocks: vec![
-                        MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "qa".into() }] },
-                        MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "qb".into() }] },
-                    ],
-                }],
+                blocks: vec![MdBlock::BlockQuote { blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "qa".into() }] }, MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "qb".into() }] }] }],
             };
             let path = [MdPathStep::BlockQuote { index: 0 }];
             let d1 = Mutation::diff(&MdMutation::InsertBlock { path: path.to_vec(), index: 2, block: MdBlock::ThematicBreak }, &base);
@@ -921,10 +870,7 @@ mod tests {
         let fixture_blocks = parse_markdown_blocks(fixture_text);
         let fixture = MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: fixture_blocks };
         let mut mutated = fixture.clone();
-        crate::artifacts::md::schema::mutations::apply_md_mutation(
-            &mut mutated,
-            &MdMutation::InsertBlock { path: vec![], index: 0, block: MdBlock::ThematicBreak },
-        );
+        crate::artifacts::md::schema::mutations::apply_md_mutation(&mut mutated, &MdMutation::InsertBlock { path: vec![], index: 0, block: MdBlock::ThematicBreak });
         assert_ne!(fixture, mutated);
         assert_eq!(MutationDiff::apply(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&fixture, &mutated), &fixture), mutated);
         assert_eq!(MutationDiff::apply(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&mutated, &fixture), &mutated), fixture);
@@ -971,8 +917,7 @@ mod tests {
         let blocks_ab = diff_ab.blocks.as_ref().expect("blocks diff present (a->b)");
         assert!(!blocks_ab.removed.is_empty(), "top-level: removed not exercised (a->b)");
         assert_eq!(blocks_ab.modified.len(), 2, "expected the List AND the CodeBlock entries modified");
-        let list_entry = blocks_ab.modified.iter().find(|m| matches!(m.diff, MdBlockDiff::List { .. }))
-            .expect("a List-shaped modified entry must be present");
+        let list_entry = blocks_ab.modified.iter().find(|m| matches!(m.diff, MdBlockDiff::List { .. })).expect("a List-shaped modified entry must be present");
         let MdBlockDiff::List { ordered, start, tight, items } = &list_entry.diff else { unreachable!() };
         assert!(ordered.is_some(), "List.ordered not exercised");
         assert_eq!(*start, Some(Some(3)), "List.start tri-state (None -> Some(3)) not exercised");
@@ -981,8 +926,7 @@ mod tests {
         assert!(!items_diff.removed.is_empty(), "List.items: removed not exercised");
         assert_eq!(items_diff.modified.len(), 1, "expected exactly one modified item");
         assert!(!items_diff.modified[0].diff.modified.is_empty(), "modified item's own content not exercised");
-        let code_entry = blocks_ab.modified.iter().find(|m| matches!(m.diff, MdBlockDiff::CodeBlock { .. }))
-            .expect("a CodeBlock-shaped modified entry must be present");
+        let code_entry = blocks_ab.modified.iter().find(|m| matches!(m.diff, MdBlockDiff::CodeBlock { .. })).expect("a CodeBlock-shaped modified entry must be present");
         let MdBlockDiff::CodeBlock { info, literal } = &code_entry.diff else { unreachable!() };
         assert_eq!(*info, Some(None), "CodeBlock.info tri-state (Some -> None) not exercised");
         assert!(literal.is_some(), "CodeBlock.literal not exercised");
@@ -994,11 +938,7 @@ mod tests {
         // Sanity: nested list-item content diff and top-level block-kind Replace both exist as
         // reachable shapes (exercised directly, not just via sweep, since the naive between()
         // can't surface every shape from one pair -- same rationale as xml's F1 precedent).
-        let leaf = diff_at_path(
-            &[],
-            0,
-            crate::artifacts::md::schema::diff::MdBlocksLeafDiff::Modified(MdBlockDiff::Replace { block: MdBlock::ThematicBreak }),
-        );
+        let leaf = diff_at_path(&[], 0, crate::artifacts::md::schema::diff::MdBlocksLeafDiff::Modified(MdBlockDiff::Replace { block: MdBlock::ThematicBreak }));
         assert!(leaf.blocks.is_some());
         let nested = MdListItemsDiff {
             removed: vec![0],

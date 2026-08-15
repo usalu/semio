@@ -1,4 +1,4 @@
-use crate::artifacts::semio::standards::v1::subsets::document::schema::diff::{SemioDocumentDiff, diff_set_snapshot};
+use crate::artifacts::semio::standards::v1::subsets::document::schema::diff::{diff_set_snapshot, SemioDocumentDiff};
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot.

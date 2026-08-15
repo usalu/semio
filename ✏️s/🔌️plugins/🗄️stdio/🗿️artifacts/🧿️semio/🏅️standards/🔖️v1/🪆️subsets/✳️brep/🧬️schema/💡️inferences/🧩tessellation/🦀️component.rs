@@ -11,15 +11,15 @@
 
 use std::collections::HashMap;
 
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::Wire;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, SolidId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-use semio_framework_3d::engine::{FaceGroup, MeshTransfer};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::Wire;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
+use semio_framework_3d::engine::{FaceGroup, MeshTransfer};
 
 // #region 🔖️Constants
 
@@ -48,7 +48,6 @@ pub fn tessellate_solid(body: &Body, solid: SolidId, deflection: f64) -> Result<
     transfer.edges = pack_edge_segments(body, solid, &edge_cache);
     Ok(transfer)
 }
-
 
 /// 🧵 Tessellates a wire into edge polylines only (no shaded triangles).
 pub fn tessellate_wire(body: &Body, wire: &Wire, deflection: f64) -> Result<MeshTransfer, KernelError> {
@@ -150,12 +149,7 @@ fn sample_uniform(curve: &Curve3, t0: f64, t1: f64, count: usize) -> Vec<Pnt3> {
 fn sample_nurbs_adaptive(curve: &Curve3, t0: f64, t1: f64, deflection: f64) -> Vec<Pnt3> {
     let coarse_n = 16usize;
     let max_dev = measure_max_chord_deviation(curve, t0, t1, coarse_n);
-    let n = if max_dev <= deflection {
-        coarse_n
-    } else {
-        ((coarse_n as f64) * (max_dev / deflection).sqrt()).ceil() as usize
-    }
-    .clamp(8, 4096);
+    let n = if max_dev <= deflection { coarse_n } else { ((coarse_n as f64) * (max_dev / deflection).sqrt()).ceil() as usize }.clamp(8, 4096);
     sample_uniform(curve, t0, t1, n + 1)
 }
 
@@ -216,13 +210,7 @@ fn push_polyline_segments(out: &mut Vec<f32>, points: &[Pnt3]) {
 
 // #region 🧊FaceTessellate
 
-fn append_face_mesh(
-    transfer: &mut MeshTransfer,
-    body: &Body,
-    face_id: FaceId,
-    deflection: f64,
-    edge_cache: &HashMap<EdgeId, Vec<Pnt3>>,
-) -> Result<(), KernelError> {
+fn append_face_mesh(transfer: &mut MeshTransfer, body: &Body, face_id: FaceId, deflection: f64, edge_cache: &HashMap<EdgeId, Vec<Pnt3>>) -> Result<(), KernelError> {
     let face = body.faces.get(face_id).ok_or_else(|| KernelError::MissingEntity(face_id.to_string()))?;
     let surface = body.surfaces.get(face.surface).ok_or_else(|| KernelError::MissingEntity(face.surface.to_string()))?;
     let Some(outer_id) = face.outer else {
@@ -255,11 +243,7 @@ fn append_face_mesh(
     for idx in &indices {
         transfer.index.push(base + *idx);
     }
-    transfer.face_groups.push(FaceGroup {
-        start: tri_start,
-        count: indices.len() as u32,
-        entity_id: face_id.raw_index().to_string(),
-    });
+    transfer.face_groups.push(FaceGroup { start: tri_start, count: indices.len() as u32, entity_id: face_id.raw_index().to_string() });
     Ok(())
 }
 
@@ -268,11 +252,7 @@ fn collect_loop_polyline(body: &Body, loop_id: crate::artifacts::semio::standard
     for coedge_id in body.loop_coedges(loop_id) {
         let coedge = body.coedges.get(coedge_id).ok_or_else(|| KernelError::MissingEntity(coedge_id.to_string()))?;
         let samples = edge_cache.get(&coedge.edge).ok_or_else(|| KernelError::Operation(format!("missing edge sample for {}", coedge.edge)))?;
-        let oriented: Vec<Pnt3> = if coedge.forward {
-            samples.clone()
-        } else {
-            samples.iter().rev().copied().collect()
-        };
+        let oriented: Vec<Pnt3> = if coedge.forward { samples.clone() } else { samples.iter().rev().copied().collect() };
         for (i, pt) in oriented.into_iter().enumerate() {
             if i == 0 {
                 if let Some(last) = points.last() {
@@ -359,10 +339,12 @@ fn refine_interior_if_needed(surface: &Surface, boundary: &[Pnt3], holes: &[Vec<
             let u = u0 + (u1 - u0) * (i as f64) / (nu as f64);
             let v = v0 + (v1 - v0) * (j as f64) / (nv as f64);
             let p = surface.eval(u, v);
-            if point_in_outer_uv(&uvs[..boundary.len()], u, v) && holes.iter().all(|hole| {
-                let hole_uv: Vec<(f64, f64)> = hole.iter().map(|&q| project_to_uv(surface, q)).collect();
-                !point_in_outer_uv(&hole_uv, u, v)
-            }) {
+            if point_in_outer_uv(&uvs[..boundary.len()], u, v)
+                && holes.iter().all(|hole| {
+                    let hole_uv: Vec<(f64, f64)> = hole.iter().map(|&q| project_to_uv(surface, q)).collect();
+                    !point_in_outer_uv(&hole_uv, u, v)
+                })
+            {
                 positions.push(p);
                 uvs.push((u, v));
             }
@@ -605,58 +587,26 @@ fn ensure_winding(positions: &[Pnt3], indices: &mut [u32], desired: Vec3) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 
     fn build_unit_box(body: &mut Body, rec: &mut OpRecorder) -> SolidId {
-        let positions = [
-            Pnt3::new(0.0, 0.0, 0.0),
-            Pnt3::new(1.0, 0.0, 0.0),
-            Pnt3::new(1.0, 1.0, 0.0),
-            Pnt3::new(0.0, 1.0, 0.0),
-            Pnt3::new(0.0, 0.0, 1.0),
-            Pnt3::new(1.0, 0.0, 1.0),
-            Pnt3::new(1.0, 1.0, 1.0),
-            Pnt3::new(0.0, 1.0, 1.0),
-        ];
+        let positions = [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Pnt3::new(0.0, 0.0, 1.0), Pnt3::new(1.0, 0.0, 1.0), Pnt3::new(1.0, 1.0, 1.0), Pnt3::new(0.0, 1.0, 1.0)];
         let vertices: Vec<_> = positions.iter().map(|&p| make_vertex(body, p, Tol::DEFAULT, rec)).collect();
-        let edge_pairs = [
-            (0, 1),
-            (1, 2),
-            (2, 3),
-            (3, 0),
-            (4, 5),
-            (5, 6),
-            (6, 7),
-            (7, 4),
-            (0, 4),
-            (1, 5),
-            (2, 6),
-            (3, 7),
-        ];
+        let edge_pairs = [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)];
         let mut edges = HashMap::new();
         for &(a, b) in &edge_pairs {
-            let curve = body.curves3.insert(Curve3::Line {
-                origin: positions[a],
-                dir: positions[b] - positions[a],
-            });
+            let curve = body.curves3.insert(Curve3::Line { origin: positions[a], dir: positions[b] - positions[a] });
             let edge = make_edge(body, curve, (0.0, 1.0), vertices[a], vertices[b], Tol::DEFAULT, rec);
             edges.insert((a, b), edge);
             edges.insert((b, a), edge);
         }
-        let face_defs: [([usize; 4], Vec3); 6] = [
-            ([0, 3, 2, 1], -Vec3::Z),
-            ([4, 5, 6, 7], Vec3::Z),
-            ([0, 1, 5, 4], -Vec3::Y),
-            ([3, 7, 6, 2], Vec3::Y),
-            ([0, 4, 7, 3], -Vec3::X),
-            ([1, 2, 6, 5], Vec3::X),
-        ];
+        let face_defs: [([usize; 4], Vec3); 6] = [([0, 3, 2, 1], -Vec3::Z), ([4, 5, 6, 7], Vec3::Z), ([0, 1, 5, 4], -Vec3::Y), ([3, 7, 6, 2], Vec3::Y), ([0, 4, 7, 3], -Vec3::X), ([1, 2, 6, 5], Vec3::X)];
         let mut faces = Vec::new();
         for (corners, normal) in face_defs {
             let frame = Frame3::from_normal(positions[corners[0]], normal).unwrap();
@@ -718,10 +668,7 @@ mod tests {
         let mut rec = OpRecorder::new();
         let v0 = make_vertex(&mut body, Pnt3::new(0.0, 0.0, 0.0), Tol::DEFAULT, &mut rec);
         let v1 = make_vertex(&mut body, Pnt3::new(2.0, 0.0, 0.0), Tol::DEFAULT, &mut rec);
-        let curve = body.curves3.insert(Curve3::Line {
-            origin: Pnt3::new(0.0, 0.0, 0.0),
-            dir: Vec3::X * 2.0,
-        });
+        let curve = body.curves3.insert(Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::X * 2.0 });
         let edge = make_edge(&mut body, curve, (0.0, 1.0), v0, v1, Tol::DEFAULT, &mut rec);
         let poly = sample_edge_polyline(&body, edge, 0.1);
         assert_eq!(poly.len(), 6);
@@ -735,11 +682,7 @@ mod tests {
         let mut rec = OpRecorder::new();
         let solid = build_unit_box(&mut body, &mut rec);
         let faces = body.solid_faces(solid);
-        let edge = body.face_coedges(faces[0])
-            .into_iter()
-            .map(|c| body.coedges.get(c).unwrap().edge)
-            .next()
-            .unwrap();
+        let edge = body.face_coedges(faces[0]).into_iter().map(|c| body.coedges.get(c).unwrap().edge).next().unwrap();
         let a = sample_edge_polyline(&body, edge, 0.05);
         let b = sample_edge_polyline(&body, edge, 0.05);
         assert_eq!(a, b);

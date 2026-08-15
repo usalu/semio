@@ -15,7 +15,7 @@
 //! - `nodes` always decodes empty — CSV has no graph/reference concept.
 
 use crate::artifacts::csv::CsvSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValueEntry, SemioValueSnapshot, SemioValue, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️Deserializer
@@ -42,21 +42,13 @@ pub fn semio_value_from_csv(snapshot: &CsvSnapshot) -> SemioValue {
         let header: Vec<String> = records.next().map(|r| r.fields.iter().map(|f| f.value.clone()).collect()).unwrap_or_default();
         let items = records
             .map(|record| {
-                let entries = header
-                    .iter()
-                    .zip(record.fields.iter())
-                    .map(|(key, field)| SemioValueEntry { key: key.clone(), value: SemioValue::Str { value: field.value.clone() } })
-                    .collect();
+                let entries = header.iter().zip(record.fields.iter()).map(|(key, field)| SemioValueEntry { key: key.clone(), value: SemioValue::Str { value: field.value.clone() } }).collect();
                 SemioValue::Map { entries }
             })
             .collect();
         SemioValue::List { items }
     } else {
-        let items = snapshot
-            .records
-            .iter()
-            .map(|record| SemioValue::List { items: record.fields.iter().map(|f| SemioValue::Str { value: f.value.clone() }).collect() })
-            .collect();
+        let items = snapshot.records.iter().map(|record| SemioValue::List { items: record.fields.iter().map(|f| SemioValue::Str { value: f.value.clone() }).collect() }).collect();
         SemioValue::List { items }
     }
 }
@@ -77,11 +69,7 @@ mod tests {
         let snapshot = CsvSnapshot {
             schema: crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA.into(),
             has_header: true,
-            records: vec![
-                CsvRecord { fields: vec![field("name"), field("age")] },
-                CsvRecord { fields: vec![field("Ada"), field("36")] },
-                CsvRecord { fields: vec![field("Grace"), field("85")] },
-            ],
+            records: vec![CsvRecord { fields: vec![field("name"), field("age")] }, CsvRecord { fields: vec![field("Ada"), field("36")] }, CsvRecord { fields: vec![field("Grace"), field("85")] }],
         };
         let value = semio_value_from_csv(&snapshot);
         match value {
@@ -95,11 +83,7 @@ mod tests {
 
     #[test]
     fn ragged_short_record_omits_missing_trailing_keys() {
-        let snapshot = CsvSnapshot {
-            schema: crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA.into(),
-            has_header: true,
-            records: vec![CsvRecord { fields: vec![field("a"), field("b"), field("c")] }, CsvRecord { fields: vec![field("1")] }],
-        };
+        let snapshot = CsvSnapshot { schema: crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records: vec![CsvRecord { fields: vec![field("a"), field("b"), field("c")] }, CsvRecord { fields: vec![field("1")] }] };
         let value = semio_value_from_csv(&snapshot);
         match value {
             SemioValue::List { items } => match &items[0] {
@@ -112,11 +96,7 @@ mod tests {
 
     #[test]
     fn headerless_csv_becomes_a_list_of_lists() {
-        let snapshot = CsvSnapshot {
-            schema: crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA.into(),
-            has_header: false,
-            records: vec![CsvRecord { fields: vec![field("x"), field("y")] }],
-        };
+        let snapshot = CsvSnapshot { schema: crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: false, records: vec![CsvRecord { fields: vec![field("x"), field("y")] }] };
         let value = semio_value_from_csv(&snapshot);
         match value {
             SemioValue::List { items } => match &items[0] {

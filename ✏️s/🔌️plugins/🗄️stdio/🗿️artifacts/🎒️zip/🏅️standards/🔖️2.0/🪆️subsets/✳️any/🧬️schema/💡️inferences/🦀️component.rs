@@ -83,8 +83,8 @@ pub fn zip_artifact_inference_descriptor() -> schema::ArtifactInferenceDescripto
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use protocol::Inference;
     use crate::artifacts::zip::standards::v2_0::subsets::any::schema::demo_zip_snapshot;
+    use protocol::Inference;
 
     #[test]
     fn inference_determinism_law() {
@@ -113,19 +113,11 @@ mod tests {
         /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }
@@ -148,7 +140,7 @@ mod tests {
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every representative `ZipMutation` variant (`mutations::demo_mutation_cases()`),
         /// including the three genuinely-recursive-payload variants (`SetSnapshot`/`AddEntry`/
-        /// `SetEntryExtra`), which the grammar honestly models via `REST` (see that file's own doc
+        /// structured operation payloads, which the grammar honestly models via `REST` (see that file's own doc
         /// comment) — this law proves `REST` genuinely swallows their real nested-block/list output,
         /// not just that the simple scalar-only variants parse.
         #[test]

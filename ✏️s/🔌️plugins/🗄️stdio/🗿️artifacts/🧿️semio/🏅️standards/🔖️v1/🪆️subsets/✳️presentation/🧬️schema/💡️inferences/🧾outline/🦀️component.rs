@@ -167,13 +167,7 @@ mod tests {
             }],
         };
         let outline = compute_semio_presentation_outline(&snapshot);
-        assert_eq!(
-            outline.section_outline,
-            vec![
-                SemioPresentationHeadingEntry { level: 1, text: "Title Master".into() },
-                SemioPresentationHeadingEntry { level: 2, text: "Slide Heading".into() },
-            ]
-        );
+        assert_eq!(outline.section_outline, vec![SemioPresentationHeadingEntry { level: 1, text: "Title Master".into() }, SemioPresentationHeadingEntry { level: 2, text: "Slide Heading".into() },]);
         assert_eq!(outline.slide_count, 1);
         assert_eq!(outline.shape_count, 4); // 1 master TextBox + 1 layout Placeholder + 1 slide TextBox + 1 slide Table
         assert_eq!(outline.block_count, 5); // Title Master heading + Slide Heading + paragraph + table-cell paragraph + notes paragraph

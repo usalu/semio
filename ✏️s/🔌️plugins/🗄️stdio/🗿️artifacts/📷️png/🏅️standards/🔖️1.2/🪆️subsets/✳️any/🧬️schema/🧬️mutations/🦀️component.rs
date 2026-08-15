@@ -5,21 +5,15 @@
 //! `let d = mutation.diff(&*snapshot); *snapshot = d.apply(snapshot); d`.
 
 use crate::artifacts::png::schema::diff::{
-    self, dec_background, dec_chromaticities, dec_chunk, dec_chunk_marker, dec_color_type,
-    dec_list, dec_physical_dims, dec_rgb, dec_srgb_intent, dec_str, dec_text_chunk, dec_timestamp,
-    dec_transparency, decode_option, enc_background, enc_chromaticities, enc_chunk,
-    enc_chunk_marker, enc_color_type, enc_list, enc_physical_dims, enc_rgb, enc_srgb_intent,
-    enc_str, enc_text_chunk, enc_timestamp, enc_transparency, encode_option, hex_decode,
-    hex_encode, parse_u32, parse_u8, split_top_level, strip_brackets, PngDiff,
+    self, dec_background, dec_chromaticities, dec_chunk, dec_chunk_marker, dec_color_type, dec_list, dec_physical_dims, dec_rgb, dec_srgb_intent, dec_str, dec_text_chunk, dec_timestamp, dec_transparency, decode_option, enc_background,
+    enc_chromaticities, enc_chunk, enc_chunk_marker, enc_color_type, enc_list, enc_physical_dims, enc_rgb, enc_srgb_intent, enc_str, enc_text_chunk, enc_timestamp, enc_transparency, encode_option, hex_decode, hex_encode, parse_u32, parse_u8,
+    split_top_level, strip_brackets, PngDiff,
 };
-use crate::artifacts::png::schema::snapshot::{
-    PngBackground, PngChromaticities, PngChunk, PngColorType, PngPhysicalDims, PngRgb,
-    PngSrgbIntent, PngTextChunk, PngTimestamp, PngTransparency,
-};
+use crate::artifacts::png::schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngColorType, PngPhysicalDims, PngRgb, PngSrgbIntent, PngTextChunk, PngTimestamp, PngTransparency};
 use crate::artifacts::png::PngSnapshot;
-use protocol::{Mutation, MutationDiff, OpText};
 #[cfg(test)]
 use protocol::OpBinary;
+use protocol::{Mutation, MutationDiff, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -121,9 +115,7 @@ impl Mutation<PngSnapshot> for PngMutation {
         match self {
             PngMutation::NoMutation => PngDiff::default(),
             PngMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
-            PngMutation::SetHeader { width, height, bit_depth, color_type, interlace } => {
-                diff::diff_set_header(base, *width, *height, *bit_depth, *color_type, *interlace)
-            }
+            PngMutation::SetHeader { width, height, bit_depth, color_type, interlace } => diff::diff_set_header(base, *width, *height, *bit_depth, *color_type, *interlace),
             PngMutation::SetPalette { plte } => diff::diff_set_palette(base, plte),
             PngMutation::SetTransparency { trns } => diff::diff_set_transparency(base, trns),
             PngMutation::SetGamma { gama } => diff::diff_set_gamma(base, *gama),
@@ -147,13 +139,7 @@ impl Mutation<PngSnapshot> for PngMutation {
         match self {
             PngMutation::NoMutation => vec![PngMutation::NoMutation],
             PngMutation::SetSnapshot { .. } => vec![PngMutation::SetSnapshot { snapshot: base.clone() }],
-            PngMutation::SetHeader { .. } => vec![PngMutation::SetHeader {
-                width: base.width,
-                height: base.height,
-                bit_depth: base.bit_depth,
-                color_type: base.color_type,
-                interlace: base.interlace,
-            }],
+            PngMutation::SetHeader { .. } => vec![PngMutation::SetHeader { width: base.width, height: base.height, bit_depth: base.bit_depth, color_type: base.color_type, interlace: base.interlace }],
             PngMutation::SetPalette { .. } => vec![PngMutation::SetPalette { plte: base.plte.clone() }],
             PngMutation::SetTransparency { .. } => vec![PngMutation::SetTransparency { trns: base.trns.clone() }],
             PngMutation::SetGamma { .. } => vec![PngMutation::SetGamma { gama: base.gama }],
@@ -250,11 +236,7 @@ fn print_png_mutation(m: &PngMutation) -> String {
     match m {
         PngMutation::NoMutation => "no-mutation".to_string(),
         PngMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_png_snapshot(snapshot)),
-        PngMutation::SetHeader { width, height, bit_depth, color_type, interlace } => format!(
-            "set-header width={width} height={height} bit-depth={bit_depth} color-type={} interlace={}",
-            enc_color_type(*color_type),
-            if *interlace { 1 } else { 0 },
-        ),
+        PngMutation::SetHeader { width, height, bit_depth, color_type, interlace } => format!("set-header width={width} height={height} bit-depth={bit_depth} color-type={} interlace={}", enc_color_type(*color_type), if *interlace { 1 } else { 0 },),
         PngMutation::SetPalette { plte } => format!("set-palette plte={}", encode_option(plte, |v: &Vec<PngRgb>| enc_list(v, enc_rgb))),
         PngMutation::SetTransparency { trns } => format!("set-transparency trns={}", encode_option(trns, enc_transparency)),
         PngMutation::SetGamma { gama } => format!("set-gamma gama={}", encode_option(gama, |x: &u32| x.to_string())),
@@ -276,24 +258,14 @@ fn parse_png_mutation(line: &str) -> Result<PngMutation, String> {
         return Ok(PngMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("png mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("png mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("png mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
         "set-snapshot" => Ok(PngMutation::SetSnapshot { snapshot: dec_png_snapshot(arg("snapshot")?)? }),
-        "set-header" => Ok(PngMutation::SetHeader {
-            width: parse_u32(arg("width")?)?,
-            height: parse_u32(arg("height")?)?,
-            bit_depth: parse_u8(arg("bit-depth")?)?,
-            color_type: dec_color_type(arg("color-type")?)?,
-            interlace: arg("interlace")? == "1",
-        }),
+        "set-header" => {
+            Ok(PngMutation::SetHeader { width: parse_u32(arg("width")?)?, height: parse_u32(arg("height")?)?, bit_depth: parse_u8(arg("bit-depth")?)?, color_type: dec_color_type(arg("color-type")?)?, interlace: arg("interlace")? == "1" })
+        }
         "set-palette" => Ok(PngMutation::SetPalette { plte: decode_option(arg("plte")?, |s| dec_list(s, dec_rgb))? }),
         "set-transparency" => Ok(PngMutation::SetTransparency { trns: decode_option(arg("trns")?, dec_transparency)? }),
         "set-gamma" => Ok(PngMutation::SetGamma { gama: decode_option(arg("gama")?, parse_u32)? }),
@@ -436,9 +408,7 @@ impl protocol::OpBinary for PngMutation {
             4 => PngMutation::SetTransparency { trns: diff::read_bin_option(&mut r, diff::read_bin_transparency).map_err(op_pack_err)? },
             5 => PngMutation::SetGamma { gama: diff::read_bin_option(&mut r, |r| r.read_u32_le()).map_err(op_pack_err)? },
             6 => PngMutation::SetChromaticities { chrm: diff::read_bin_option(&mut r, diff::read_bin_chromaticities).map_err(op_pack_err)? },
-            7 => PngMutation::SetSrgbIntent {
-                srgb: diff::read_bin_option(&mut r, |r| PngSrgbIntent::from_u8(r.read_u8()?).map_err(|e| dsl::PackError::Malformed { what: "png op srgb intent", offset: 0, detail: e })).map_err(op_pack_err)?,
-            },
+            7 => PngMutation::SetSrgbIntent { srgb: diff::read_bin_option(&mut r, |r| PngSrgbIntent::from_u8(r.read_u8()?).map_err(|e| dsl::PackError::Malformed { what: "png op srgb intent", offset: 0, detail: e })).map_err(op_pack_err)? },
             8 => PngMutation::SetPhysicalDims { phys: diff::read_bin_option(&mut r, diff::read_bin_physical_dims).map_err(op_pack_err)? },
             9 => PngMutation::SetTimestamp { time: diff::read_bin_option(&mut r, diff::read_bin_timestamp).map_err(op_pack_err)? },
             10 => PngMutation::SetBackground { bkgd: diff::read_bin_option(&mut r, diff::read_bin_background).map_err(op_pack_err)? },
@@ -478,14 +448,7 @@ impl protocol::OpBinary for PngMutation {
 /// only the `pub(crate)`/`#[cfg(test)]` visibility changed).
 #[cfg(test)]
 fn demo_text_chunk(keyword: &str, value: &str) -> PngTextChunk {
-    PngTextChunk {
-        keyword: keyword.into(),
-        value: value.into(),
-        compressed: false,
-        kind: crate::artifacts::png::schema::snapshot::PngTextKind::Text,
-        language_tag: String::new(),
-        translated_keyword: String::new(),
-    }
+    PngTextChunk { keyword: keyword.into(), value: value.into(), compressed: false, kind: crate::artifacts::png::schema::snapshot::PngTextKind::Text, language_tag: String::new(), translated_keyword: String::new() }
 }
 
 #[cfg(test)]
@@ -522,7 +485,13 @@ pub(crate) fn demo_mutation_cases() -> Vec<PngMutation> {
     let base = demo_base_snapshot();
     vec![
         PngMutation::NoMutation,
-        PngMutation::SetSnapshot { snapshot: { let mut s = base.clone(); s.width = 99; s } },
+        PngMutation::SetSnapshot {
+            snapshot: {
+                let mut s = base.clone();
+                s.width = 99;
+                s
+            },
+        },
         PngMutation::SetHeader { width: 8, height: 8, bit_depth: 16, color_type: PngColorType::Grayscale, interlace: true },
         PngMutation::SetPalette { plte: Some(vec![PngRgb { r: 1, g: 2, b: 3 }]) },
         PngMutation::SetTransparency { trns: Some(PngTransparency::Grayscale { gray: 7 }) },
@@ -612,14 +581,7 @@ mod tests {
             phys: None,
             time: None,
             bkgd: None,
-            text_chunks: vec![PngTextChunk {
-                keyword: "Creator".into(),
-                value: "changed".into(),
-                compressed: true,
-                kind: PngTextKind::IText,
-                language_tag: "en".into(),
-                translated_keyword: "Auteur".into(),
-            }],
+            text_chunks: vec![PngTextChunk { keyword: "Creator".into(), value: "changed".into(), compressed: true, kind: PngTextKind::IText, language_tag: "en".into(), translated_keyword: "Auteur".into() }],
             pixels: vec![1u8, 1, 1, 255],
             chunk_order: vec![PngChunkMarker::Srgb],
             unknown_chunks: vec![PngChunk { kind: *b"prIV", data: vec![4, 5, 6] }],
@@ -765,10 +727,7 @@ mod tests {
     //#region 🔖️codec_retention_law
     #[test]
     fn codec_retention_law() {
-        let bytes = std::fs::read(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../🗿️artifacts/📷️png/📚️examples/🎬️demo/🖼️assets/📷️example.png"
-        ));
+        let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/📷️png/📚️examples/🎬️demo/🖼️assets/📷️example.png"));
         let bytes = match bytes {
             Ok(b) if !b.is_empty() => b,
             // No usable fixture on disk at test time (or a different workspace layout) — fall

@@ -1,31 +1,9 @@
 syntax = "proto3";
 package semio.s_stdio_zip.mutation;
 
-enum ZipCompressionMethod {
-  STORED = 0;
-  DEFLATE = 1;
-}
-
-message ZipExtraField {
-  uint32 id = 1;
-  bytes payload = 2;
-}
-
 message ZipEntry {
   string name = 1;
   bytes data = 2;
-  ZipCompressionMethod method = 3;
-  uint32 dos_date = 4;
-  uint32 dos_time = 5;
-  optional int64 unix_mtime = 6;
-  uint32 flags = 7;
-  uint32 version_made_by = 8;
-  uint32 version_needed = 9;
-  uint32 internal_attrs = 10;
-  uint32 external_attrs = 11;
-  repeated ZipExtraField local_extra = 12;
-  repeated ZipExtraField central_extra = 13;
-  string comment = 14;
 }
 
 message ZipSnapshot {
@@ -37,17 +15,10 @@ message ZipSnapshot {
 message NoMutation {}
 message SetSnapshot { ZipSnapshot snapshot = 1; }
 message SetArchiveComment { string comment = 1; }
-message AddEntry { uint64 index = 1; ZipEntry entry = 2; }
+message AddEntry { ZipEntry entry = 1; }
 message RemoveEntry { string name = 1; }
 message RenameEntry { string name = 1; string new_name = 2; }
 message SetEntryData { string name = 1; bytes data = 2; }
-message SetEntryMethod { string name = 1; ZipCompressionMethod method = 2; }
-message SetEntryTimestamps { string name = 1; uint32 dos_date = 2; uint32 dos_time = 3; optional int64 unix_mtime = 4; }
-message SetEntryFlags { string name = 1; uint32 flags = 2; }
-message SetEntryVersions { string name = 1; uint32 version_made_by = 2; uint32 version_needed = 3; }
-message SetEntryAttributes { string name = 1; uint32 internal_attrs = 2; uint32 external_attrs = 3; }
-message SetEntryExtra { string name = 1; repeated ZipExtraField local_extra = 2; repeated ZipExtraField central_extra = 3; }
-message SetEntryComment { string name = 1; string comment = 2; }
 
 message ZipMutation {
   oneof op {
@@ -58,12 +29,5 @@ message ZipMutation {
     RemoveEntry remove_entry = 5;
     RenameEntry rename_entry = 6;
     SetEntryData set_entry_data = 7;
-    SetEntryMethod set_entry_method = 8;
-    SetEntryTimestamps set_entry_timestamps = 9;
-    SetEntryFlags set_entry_flags = 10;
-    SetEntryVersions set_entry_versions = 11;
-    SetEntryAttributes set_entry_attributes = 12;
-    SetEntryExtra set_entry_extra = 13;
-    SetEntryComment set_entry_comment = 14;
   }
 }

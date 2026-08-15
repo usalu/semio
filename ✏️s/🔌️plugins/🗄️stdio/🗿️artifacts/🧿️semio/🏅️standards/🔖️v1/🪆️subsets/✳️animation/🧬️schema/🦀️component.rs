@@ -3,7 +3,7 @@
 //! shape (channels/keyframes/target/value) grew richer in W2b; this artifact struct itself needs
 //! no changes since it just carries the top-level `timelines: Vec<AnimTimeline>` field through.
 
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{SemioAnimationSnapshot, AnimTimeline};
+use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimTimeline, SemioAnimationSnapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -19,21 +19,17 @@ pub struct SemioAnimationArtifact {
 }
 
 impl Default for SemioAnimationArtifact {
-    fn default() -> Self { Self::from_snapshot(SemioAnimationSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(SemioAnimationSnapshot::default())
+    }
 }
 
 impl SemioAnimationArtifact {
     pub fn to_snapshot(&self) -> SemioAnimationSnapshot {
-        SemioAnimationSnapshot {
-            schema: self.schema.clone(),
-            timelines: self.timelines.clone(),
-        }
+        SemioAnimationSnapshot { schema: self.schema.clone(), timelines: self.timelines.clone() }
     }
     pub fn from_snapshot(snapshot: SemioAnimationSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            timelines: snapshot.timelines,
-        }
+        Self { schema: snapshot.schema, timelines: snapshot.timelines }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioAnimationSnapshot) {
         self.schema = snapshot.schema;
@@ -76,20 +72,26 @@ pub fn semio_animation_artifact_schema_descriptor() -> schema::ArtifactSchemaDes
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::SemioAnimationDiff;
-    use crate::artifacts::semio::standards::v1::subsets::animation::schema::mutations::{SemioAnimationMutation, apply_semio_animation_mutation};
+    use crate::artifacts::semio::standards::v1::subsets::animation::schema::mutations::{apply_semio_animation_mutation, SemioAnimationMutation};
     use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioAnimationBuilderConstruction { snapshot: SemioAnimationSnapshot }
+    pub struct SemioAnimationBuilderConstruction {
+        snapshot: SemioAnimationSnapshot,
+    }
 
     impl ArtifactBuilder for SemioAnimationBuilderConstruction {
         type Snapshot = SemioAnimationSnapshot;
         type Mutation = SemioAnimationMutation;
         type Diff = SemioAnimationDiff;
-        fn empty() -> Self { Self { snapshot: SemioAnimationSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: SemioAnimationSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioAnimationSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -104,7 +106,9 @@ pub mod derived_construction {
             self.snapshot = <SemioAnimationDiff as protocol::MutationDiff<SemioAnimationSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 }
 pub use derived_construction::*;
@@ -112,11 +116,13 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{SemioAnimationSnapshot, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioAnimationParts { pub snapshot: Option<SemioAnimationSnapshot> }
+    pub struct SemioAnimationParts {
+        pub snapshot: Option<SemioAnimationSnapshot>,
+    }
 
     pub struct SemioAnimationAnalyzerAnalysis;
 
@@ -128,10 +134,18 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
-                    if text.contains(STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                    if text.contains(STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }

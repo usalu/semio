@@ -1,5 +1,5 @@
-use crate::artifacts::xml::{XmlSnapshot};
 use crate::artifacts::xml::schema::mutations::XmlMutation;
+use crate::artifacts::xml::XmlSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

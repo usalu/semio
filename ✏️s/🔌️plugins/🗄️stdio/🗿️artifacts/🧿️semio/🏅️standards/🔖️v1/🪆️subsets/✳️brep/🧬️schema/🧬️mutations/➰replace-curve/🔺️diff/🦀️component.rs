@@ -13,11 +13,7 @@ pub fn diff(payload: &ReplaceCurve, base: &SemioBrepSnapshot) -> SemioBrepDiff {
         return SemioBrepDiff::default();
     }
     SemioBrepDiff {
-        edges: Some(NamedTripleDiff {
-            removed: vec![],
-            modified: vec![NamedModified { key: payload.edge_id.clone(), diff: BrepEdgeDiff { start_vertex: None, end_vertex: None, curve: Some(payload.new_curve.clone()) } }],
-            added: vec![],
-        }),
+        edges: Some(NamedTripleDiff { removed: vec![], modified: vec![NamedModified { key: payload.edge_id.clone(), diff: BrepEdgeDiff { start_vertex: None, end_vertex: None, curve: Some(payload.new_curve.clone()) } }], added: vec![] }),
         ..Default::default()
     }
 }

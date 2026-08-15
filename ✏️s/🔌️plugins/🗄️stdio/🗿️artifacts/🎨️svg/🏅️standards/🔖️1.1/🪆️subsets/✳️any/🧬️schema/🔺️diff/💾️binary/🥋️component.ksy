@@ -2,7 +2,11 @@ meta:
   id: stdio_svg_diff
   endian: le
 doc: |
-  UTF-8 JSON encoding of SvgDiff (see the sibling ../🔣️component.json shape), not raw octets.
+  Binary SvgDiff with a format byte, presence flags, and recursively structured payload.
 seq:
-  - id: json_payload
+  - id: format
+    type: u1
+  - id: flags
+    type: u1
+  - id: payload
     size-eos: true

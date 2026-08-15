@@ -1,6 +1,6 @@
 //! 🧩 set_snapshot diff leaf.
 
-use crate::artifacts::stl::schema::diff::{StlDiff, diff_set_snapshot};
+use crate::artifacts::stl::schema::diff::{diff_set_snapshot, StlDiff};
 use crate::artifacts::stl::StlSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot — sparse field-by-field `between(base, snapshot)`, matching

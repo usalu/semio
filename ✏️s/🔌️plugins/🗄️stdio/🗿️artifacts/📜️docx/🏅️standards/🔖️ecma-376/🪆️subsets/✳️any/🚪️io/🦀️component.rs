@@ -33,7 +33,9 @@ impl std::fmt::Display for DocxError {
 impl std::error::Error for DocxError {}
 
 impl From<crate::artifacts::zip::opc::OpcError> for DocxError {
-    fn from(e: crate::artifacts::zip::opc::OpcError) -> Self { Self::Opc(e) }
+    fn from(e: crate::artifacts::zip::opc::OpcError) -> Self {
+        Self::Opc(e)
+    }
 }
 //#endregion 🔖️Error
 
@@ -59,15 +61,14 @@ pub const REL_TYPE_STYLES: &str = "http://schemas.openxmlformats.org/officeDocum
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::docx::DocxSnapshot;
     use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::DocxAnalyzer;
+    use crate::artifacts::docx::DocxSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
     const DEP_ZIP: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
     const DEP_XML: Dialect = Dialect { artifact_kind: "s.stdio.xml", standard: StandardId("1.0"), subset: SubsetId("*") };
-
 
     pub struct DocxComposerComposition;
 
@@ -96,10 +97,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "DocxComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = DocxAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "DocxComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "DocxComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -109,24 +107,16 @@ pub use derived_composition::*;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::DocxComposer as DocxRawAnyComposer;
     use crate::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::DocxStrictComposer;
     use crate::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::DocxTransitionalComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES
-            .get_or_init(|| {
-                vec![
-                    composer_entry_of::<DocxRawAnyComposer>(),
-                    composer_entry_of::<DocxStrictComposer>(),
-                    composer_entry_of::<DocxTransitionalComposer>(),
-                ]
-            })
-            .as_slice()
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<DocxRawAnyComposer>(), composer_entry_of::<DocxStrictComposer>(), composer_entry_of::<DocxTransitionalComposer>()]).as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry

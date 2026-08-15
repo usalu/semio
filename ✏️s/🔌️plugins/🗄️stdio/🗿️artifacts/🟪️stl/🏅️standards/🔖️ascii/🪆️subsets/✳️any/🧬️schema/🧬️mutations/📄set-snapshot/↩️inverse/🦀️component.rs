@@ -1,5 +1,5 @@
-use crate::artifacts::stl::{StlSnapshot};
 use crate::artifacts::stl::schema::mutations::StlMutation;
+use crate::artifacts::stl::StlSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

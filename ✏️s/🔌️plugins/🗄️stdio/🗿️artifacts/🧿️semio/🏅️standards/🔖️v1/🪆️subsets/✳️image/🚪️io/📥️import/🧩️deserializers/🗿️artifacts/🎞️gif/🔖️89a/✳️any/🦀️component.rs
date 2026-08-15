@@ -13,9 +13,7 @@
 //!   `plain_text` blocks have no textual home on `SemioImageMetadataEntry` and are dropped.
 
 use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{
-    SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA,
-};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("89a"), subset: SubsetId::ANY };
@@ -34,26 +32,12 @@ impl ArtifactDeserializer for SemioImageFromGif {
         if from.frames.is_empty() {
             return Err(store::PackError::Schema("gif→semio/image: at least one frame is required".into()));
         }
-        let frames = from
-            .frames
-            .iter()
-            .map(|f| SemioImageFrame { delay_ms: (f.delay_cs as u32) * 10, rgba8: f.rgba(from.gct.as_ref()) })
-            .collect();
-        let mut metadata: Vec<SemioImageMetadataEntry> =
-            from.comments.iter().map(|c| SemioImageMetadataEntry { key: "comment".into(), value: c.clone() }).collect();
+        let frames = from.frames.iter().map(|f| SemioImageFrame { delay_ms: (f.delay_cs as u32) * 10, rgba8: f.rgba(from.gct.as_ref()) }).collect();
+        let mut metadata: Vec<SemioImageMetadataEntry> = from.comments.iter().map(|c| SemioImageMetadataEntry { key: "comment".into(), value: c.clone() }).collect();
         if let Some(n) = from.loop_count {
             metadata.push(SemioImageMetadataEntry { key: "loopCount".into(), value: n.to_string() });
         }
-        Ok(SemioImageSnapshot {
-            schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
-            width: from.width,
-            height: from.height,
-            colorspace: SemioColorspace::Indexed,
-            bit_depth: 8,
-            frames,
-            icc: None,
-            metadata,
-        })
+        Ok(SemioImageSnapshot { schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(), width: from.width, height: from.height, colorspace: SemioColorspace::Indexed, bit_depth: 8, frames, icc: None, metadata })
     }
 }
 //#endregion 🔖️Deserializer

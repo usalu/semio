@@ -1,2 +1,7 @@
-(* ebnf stdio.svg diff -- JSON per the sibling JSON Schema facet, no custom textual grammar *)
-document = jsonValue ;
+(* 🧬️ Structured stdio.svg diff text; canonical productions live in component.grammar.semio. *)
+document = [ declaration ], [ doctype ], [ root ], [ prolog ] ;
+declaration = "declaration=", structuredValue ;
+doctype = "doctype=", structuredValue ;
+root = "root=", structuredValue ;
+prolog = "prolog=", structuredValue ;
+structuredValue = ? bracketed tagged XML/diff value defined by component.grammar.semio ? ;

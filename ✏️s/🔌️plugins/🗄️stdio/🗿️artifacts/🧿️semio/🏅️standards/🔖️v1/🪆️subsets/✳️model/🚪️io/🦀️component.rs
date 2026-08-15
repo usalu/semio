@@ -4,12 +4,12 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{
-        ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, IoPayload, StandardId, SubsetId,
-        SubsetValidator, SubsetValidatorEntry, register_composer_entries, register_subset_validator, subset_validator_entry_of, deserializer_entry_of, serializer_entry_of,
-    };
     use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
     use crate::artifacts::semio::standards::v1::subsets::model::schema::SemioModelAnalyzer;
+    use semio_framework_plugin::{
+        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition,
+        Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
+    };
     use std::collections::HashSet;
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("model") };
@@ -21,7 +21,9 @@ pub mod derived_composition {
         type Snapshot = SemioModelSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] { &[DIALECT] }
+        fn reads() -> &'static [Dialect] {
+            &[DIALECT]
+        }
 
         fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
@@ -36,10 +38,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "SemioModelComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = SemioModelAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "SemioModelComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "SemioModelComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -65,17 +64,9 @@ pub mod derived_composition {
         for node in &snapshot.spatial {
             if let Some(parent) = &node.parent_id {
                 if parent == &node.id {
-                    diagnostics.push(dsl::Diagnostic::error(
-                        "stdio.semio_model.validate-self-parent",
-                        dsl::TextSpan::at(1, 1),
-                        format!("spatial node {:?} is its own parent", node.id),
-                    ));
+                    diagnostics.push(dsl::Diagnostic::error("stdio.semio_model.validate-self-parent", dsl::TextSpan::at(1, 1), format!("spatial node {:?} is its own parent", node.id)));
                 } else if !spatial_ids.contains(parent.as_str()) {
-                    diagnostics.push(dsl::Diagnostic::error(
-                        "stdio.semio_model.validate-dangling-parent",
-                        dsl::TextSpan::at(1, 1),
-                        format!("spatial node {:?} references missing parent {:?}", node.id, parent),
-                    ));
+                    diagnostics.push(dsl::Diagnostic::error("stdio.semio_model.validate-dangling-parent", dsl::TextSpan::at(1, 1), format!("spatial node {:?} references missing parent {:?}", node.id, parent)));
                 }
             }
         }
@@ -83,11 +74,7 @@ pub mod derived_composition {
         for element in &snapshot.elements {
             if let Some(spatial_id) = &element.spatial_id {
                 if !spatial_ids.contains(spatial_id.as_str()) {
-                    diagnostics.push(dsl::Diagnostic::error(
-                        "stdio.semio_model.validate-dangling-spatial-ref",
-                        dsl::TextSpan::at(1, 1),
-                        format!("element {:?} references missing spatial node {:?}", element.id, spatial_id),
-                    ));
+                    diagnostics.push(dsl::Diagnostic::error("stdio.semio_model.validate-dangling-spatial-ref", dsl::TextSpan::at(1, 1), format!("element {:?} references missing spatial node {:?}", element.id, spatial_id)));
                 }
             }
         }
@@ -95,18 +82,10 @@ pub mod derived_composition {
         for relation in &snapshot.relations {
             let endpoint_known = |id: &str| element_ids.contains(id) || spatial_ids.contains(id);
             if !endpoint_known(&relation.from) {
-                diagnostics.push(dsl::Diagnostic::error(
-                    "stdio.semio_model.validate-dangling-relation-from",
-                    dsl::TextSpan::at(1, 1),
-                    format!("relation {:?} references missing from-id {:?}", relation.id, relation.from),
-                ));
+                diagnostics.push(dsl::Diagnostic::error("stdio.semio_model.validate-dangling-relation-from", dsl::TextSpan::at(1, 1), format!("relation {:?} references missing from-id {:?}", relation.id, relation.from)));
             }
             if !endpoint_known(&relation.to) {
-                diagnostics.push(dsl::Diagnostic::error(
-                    "stdio.semio_model.validate-dangling-relation-to",
-                    dsl::TextSpan::at(1, 1),
-                    format!("relation {:?} references missing to-id {:?}", relation.id, relation.to),
-                ));
+                diagnostics.push(dsl::Diagnostic::error("stdio.semio_model.validate-dangling-relation-to", dsl::TextSpan::at(1, 1), format!("relation {:?} references missing to-id {:?}", relation.id, relation.to)));
             }
         }
 
@@ -122,17 +101,15 @@ pub mod derived_composition {
             };
             match decoded {
                 Some(snapshot) => semio_model_referential_diagnostics(&snapshot),
-                None => vec![dsl::Diagnostic::error(
-                    "stdio.semio_model.validate-decode-failed",
-                    dsl::TextSpan::at(1, 1),
-                    "SemioModelValidator: payload did not decode as a SemioModelSnapshot".to_string(),
-                )],
+                None => vec![dsl::Diagnostic::error("stdio.semio_model.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioModelValidator: payload did not decode as a SemioModelSnapshot".to_string())],
             }
         }
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    fn validator_entry() -> &'static SubsetValidatorEntry { VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioModelValidator>) }
+    fn validator_entry() -> &'static SubsetValidatorEntry {
+        VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioModelValidator>)
+    }
     //#endregion 🔖️SubsetValidator
 
     //#region 🔖️Register
@@ -140,7 +117,9 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::model::schema::semio_model_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioModelSnapshot, crate::artifacts::semio::standards::v1::subsets::model::schema::mutations::SemioModelMutation>(crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::STDIO_SEMIOMODEL_DOCUMENT_SCHEMA));
+        store::register_document_codec(store::ArtifactCodec::of::<SemioModelSnapshot, crate::artifacts::semio::standards::v1::subsets::model::schema::mutations::SemioModelMutation>(
+            crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::STDIO_SEMIOMODEL_DOCUMENT_SCHEMA,
+        ));
         register_subset_validator(validator_entry());
         register_composer_entries(io_bridge_entries());
         register_artifact_inferences();
@@ -179,8 +158,8 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, RelationKind, SemioModelElement, SpatialKind, SpatialNode};
         use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
+        use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, RelationKind, SemioModelElement, SpatialKind, SpatialNode};
 
         fn clean_snapshot() -> SemioModelSnapshot {
             SemioModelSnapshot {
@@ -230,7 +209,6 @@ pub mod derived_composition {
             assert!(diagnostics.is_empty(), "clean snapshot must validate through the wire boundary too: {diagnostics:?}");
         }
 
-
         //#region 🔖️ConformanceLaws
         /// 🧪️ Per-artifact conformance laws (grammar recipe §4 item 8) for `s.stdio.semio.model`'s
         /// three facets — following `stdio.semio.flow`'s proven P2 pilot pattern. Lives in this
@@ -248,19 +226,11 @@ pub mod derived_composition {
             /// `walk_protocol` laws below.
             #[test]
             fn committed_facet_files_parse() {
-                for (label, text) in [
-                    ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-                ] {
+                for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                     assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
                 }
-                for (label, text) in [
-                    ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-                ] {
+                for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                     dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
                 }
             }

@@ -2,14 +2,13 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::ply::PlySnapshot;
     use crate::artifacts::ply::standards::v1_0::subsets::any::schema::PlyAnalyzer;
+    use crate::artifacts::ply::PlySnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ply", standard: StandardId("1.0"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
-
 
     pub struct PlyComposerComposition;
 
@@ -38,10 +37,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "PlyComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = PlyAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "PlyComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "PlyComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -140,8 +136,12 @@ fn split_header(data: &[u8]) -> Result<(String, &[u8]), String> {
     let idx = data.windows(marker.len()).position(|w| w == marker).ok_or("ply: missing end_header")?;
     let after_marker = idx + marker.len();
     let mut nl = after_marker;
-    while nl < data.len() && data[nl] != b'\n' { nl += 1; }
-    if nl >= data.len() { return Err("ply: truncated header".into()); }
+    while nl < data.len() && data[nl] != b'\n' {
+        nl += 1;
+    }
+    if nl >= data.len() {
+        return Err("ply: truncated header".into());
+    }
     let body_start = nl + 1;
     let header_text = std::str::from_utf8(&data[0..body_start]).map_err(|e| format!("ply: header not utf8: {e}"))?;
     Ok((header_text.to_string(), &data[body_start..]))
@@ -159,19 +159,25 @@ struct PlyHeader {
 fn parse_header_text(text: &str) -> Result<PlyHeader, String> {
     let mut lines = text.lines();
     let first = lines.next().ok_or("ply: empty header")?.trim();
-    if first != "ply" { return Err("ply: expected 'ply' magic line".into()); }
+    if first != "ply" {
+        return Err("ply: expected 'ply' magic line".into());
+    }
     let mut format: Option<PlyFormat> = None;
     let mut comments: Vec<String> = Vec::new();
     let mut elements: Vec<PlyElement> = Vec::new();
     for line in lines {
         let line = line.trim();
-        if line.is_empty() || line == "end_header" { continue; }
+        if line.is_empty() || line == "end_header" {
+            continue;
+        }
         if let Some(rest) = line.strip_prefix("comment") {
             // 💬 `comment` may be followed by a space and text, or stand bare.
             comments.push(rest.strip_prefix(' ').unwrap_or(rest).to_string());
             continue;
         }
-        if line.starts_with("obj_info") { continue; } // 🕳️ not modeled (documented deviation).
+        if line.starts_with("obj_info") {
+            continue;
+        } // 🕳️ not modeled (documented deviation).
         if let Some(rest) = line.strip_prefix("format ") {
             let mut parts = rest.split_whitespace();
             let kind = parts.next().ok_or("ply: missing format kind")?;
@@ -211,7 +217,9 @@ fn parse_header_text(text: &str) -> Result<PlyHeader, String> {
 /// 📥 Reads one scalar of `kind` at `data[*pos..]`, advancing `*pos` by its width.
 fn read_scalar_bin(kind: PlyScalarType, data: &[u8], pos: &mut usize, big: bool) -> Result<PlyValue, String> {
     let size = scalar_type_size(kind);
-    if *pos + size > data.len() { return Err("ply: truncated binary body".into()); }
+    if *pos + size > data.len() {
+        return Err("ply: truncated binary body".into());
+    }
     let b = &data[*pos..*pos + size];
     let v = match kind {
         PlyScalarType::Char => PlyValue::Char(b[0] as i8),
@@ -407,7 +415,9 @@ pub fn encode_ply_with_format(snap: &PlySnapshot, format: PlyFormat) -> Result<V
                             PlyProperty::List { count_kind, .. } => match v {
                                 PlyValue::List(items) => {
                                     push_scalar_bin(&mut out, &count_as_value(*count_kind, items.len()), big);
-                                    for item in items { push_scalar_bin(&mut out, item, big); }
+                                    for item in items {
+                                        push_scalar_bin(&mut out, item, big);
+                                    }
                                 }
                                 _ => return Err("ply: list property row value is not a list".into()),
                             },
@@ -443,9 +453,9 @@ pub fn decode_ply(data: &[u8]) -> Result<PlySnapshot, String> {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::ply::standards::v1_0::subsets::any::schema::PlyComposer as PlyRawAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
@@ -460,7 +470,7 @@ pub mod io_registry {
 mod tests {
     use super::*;
     use crate::artifacts::ply::schema::mutations::apply_ply_mutation;
-    use crate::artifacts::ply::schema::{empty_ply_snapshot, demo_ply_snapshot};
+    use crate::artifacts::ply::schema::{demo_ply_snapshot, empty_ply_snapshot};
     use crate::artifacts::ply::{PlyDiff, PlyMutation};
     use protocol::command::DiffAlgebra;
     use protocol::{Mutation, MutationDiff};
@@ -487,28 +497,15 @@ mod tests {
     /// faces (via a `list uchar int vertex_indices` property) — small enough to hand-check,
     /// non-trivial enough (mixed-sign coords, several list-shaped faces) to catch layout bugs.
     fn tetrahedron() -> PlySnapshot {
-        let vertex_props = vec![
-            PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float },
-            PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float },
-            PlyProperty::Scalar { name: "z".into(), kind: PlyScalarType::Float },
-        ];
+        let vertex_props = vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "z".into(), kind: PlyScalarType::Float }];
         let face_props = vec![PlyProperty::List { name: "vertex_indices".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::Int }];
-        let vertex_rows: Vec<PlyRow> = [(0.0f32, 0.0, 0.0), (1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)]
-            .into_iter()
-            .map(|(x, y, z)| PlyRow { values: vec![PlyValue::Float(x), PlyValue::Float(y), PlyValue::Float(z)] })
-            .collect();
-        let face_rows: Vec<PlyRow> = [[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]]
-            .into_iter()
-            .map(|idx: [i32; 3]| PlyRow { values: vec![PlyValue::List(idx.into_iter().map(PlyValue::Int).collect())] })
-            .collect();
+        let vertex_rows: Vec<PlyRow> = [(0.0f32, 0.0, 0.0), (1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)].into_iter().map(|(x, y, z)| PlyRow { values: vec![PlyValue::Float(x), PlyValue::Float(y), PlyValue::Float(z)] }).collect();
+        let face_rows: Vec<PlyRow> = [[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]].into_iter().map(|idx: [i32; 3]| PlyRow { values: vec![PlyValue::List(idx.into_iter().map(PlyValue::Int).collect())] }).collect();
         PlySnapshot {
             schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
             format: PlyFormat::Ascii,
             comments: Vec::new(),
-            elements: vec![
-                PlyElement { name: "vertex".into(), count: 4, properties: vertex_props, rows: vertex_rows },
-                PlyElement { name: "face".into(), count: 4, properties: face_props, rows: face_rows },
-            ],
+            elements: vec![PlyElement { name: "vertex".into(), count: 4, properties: vertex_props, rows: vertex_rows }, PlyElement { name: "face".into(), count: 4, properties: face_props, rows: face_rows }],
         }
     }
     //#endregion 🔖️MeshFixture
@@ -576,17 +573,9 @@ mod tests {
 
     #[test]
     fn arbitrary_named_element_round_trips() {
-        let props = vec![
-            PlyProperty::Scalar { name: "weight".into(), kind: PlyScalarType::Double },
-            PlyProperty::List { name: "endpoints".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::UShort },
-        ];
+        let props = vec![PlyProperty::Scalar { name: "weight".into(), kind: PlyScalarType::Double }, PlyProperty::List { name: "endpoints".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::UShort }];
         let rows = vec![PlyRow { values: vec![PlyValue::Double(2.5), PlyValue::List(vec![PlyValue::UShort(3), PlyValue::UShort(7)])] }];
-        let snap = PlySnapshot {
-            schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
-            format: PlyFormat::Ascii,
-            comments: vec![],
-            elements: vec![PlyElement { name: "edge".into(), count: 1, properties: props, rows }],
-        };
+        let snap = PlySnapshot { schema: STDIO_PLY_DOCUMENT_SCHEMA.into(), format: PlyFormat::Ascii, comments: vec![], elements: vec![PlyElement { name: "edge".into(), count: 1, properties: props, rows }] };
         let bytes = encode_ply(&snap).expect("encode");
         let decoded = decode_ply(&bytes).expect("decode");
         assert_eq!(decoded.elements, snap.elements);
@@ -611,19 +600,10 @@ mod tests {
             PlyMutation::InsertComment { index: 0, comment: "hello".into() },
             PlyMutation::AddElement {
                 index: 0,
-                element: PlyElement {
-                    name: "material".into(),
-                    count: 1,
-                    properties: vec![PlyProperty::Scalar { name: "shininess".into(), kind: PlyScalarType::Float }],
-                    rows: vec![PlyRow { values: vec![PlyValue::Float(0.5)] }],
-                },
+                element: PlyElement { name: "material".into(), count: 1, properties: vec![PlyProperty::Scalar { name: "shininess".into(), kind: PlyScalarType::Float }], rows: vec![PlyRow { values: vec![PlyValue::Float(0.5)] }] },
             },
             PlyMutation::RemoveElement { name: "face".into() },
-            PlyMutation::InsertRow {
-                element_name: "vertex".into(),
-                index: 1,
-                row: PlyRow { values: vec![PlyValue::Float(9.0), PlyValue::Float(9.0), PlyValue::Float(9.0)] },
-            },
+            PlyMutation::InsertRow { element_name: "vertex".into(), index: 1, row: PlyRow { values: vec![PlyValue::Float(9.0), PlyValue::Float(9.0), PlyValue::Float(9.0)] } },
             PlyMutation::RemoveRow { element_name: "vertex".into(), index: 0 },
             PlyMutation::SetRowProperty { element_name: "vertex".into(), row_index: 0, property_name: "x".into(), value: PlyValue::Float(42.0) },
             PlyMutation::SetSnapshot { snapshot: PlySnapshot::default() },
@@ -647,10 +627,7 @@ mod tests {
         let variants = vec![
             PlyMutation::SetFormat { format: PlyFormat::BinaryBigEndian },
             PlyMutation::InsertComment { index: 0, comment: "note".into() },
-            PlyMutation::AddElement {
-                index: 2,
-                element: PlyElement { name: "edge".into(), count: 0, properties: vec![], rows: vec![] },
-            },
+            PlyMutation::AddElement { index: 2, element: PlyElement { name: "edge".into(), count: 0, properties: vec![], rows: vec![] } },
             PlyMutation::RemoveElement { name: "face".into() },
             PlyMutation::InsertRow { element_name: "vertex".into(), index: 0, row: PlyRow { values: vec![PlyValue::Float(1.0), PlyValue::Float(1.0), PlyValue::Float(1.0)] } },
             PlyMutation::RemoveRow { element_name: "vertex".into(), index: 2 },
@@ -708,12 +685,7 @@ mod tests {
     #[test]
     fn absorb_law_add_element_then_set_row_property_patches_into_added() {
         let base = law_base();
-        let new_element = PlyElement {
-            name: "material".into(),
-            count: 1,
-            properties: vec![PlyProperty::Scalar { name: "shininess".into(), kind: PlyScalarType::Float }],
-            rows: vec![PlyRow { values: vec![PlyValue::Float(0.1)] }],
-        };
+        let new_element = PlyElement { name: "material".into(), count: 1, properties: vec![PlyProperty::Scalar { name: "shininess".into(), kind: PlyScalarType::Float }], rows: vec![PlyRow { values: vec![PlyValue::Float(0.1)] }] };
         let m1 = PlyMutation::AddElement { index: 2, element: new_element };
         let mut mid = base.clone();
         let mut d1 = apply_ply_mutation(&mut mid, &m1);
@@ -831,14 +803,8 @@ mod tests {
                 PlyElement {
                     name: "vertex".into(),
                     count: 2,
-                    properties: vec![
-                        PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float },
-                        PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float },
-                    ],
-                    rows: vec![
-                        PlyRow { values: vec![PlyValue::Float(0.0), PlyValue::Float(0.0)] },
-                        PlyRow { values: vec![PlyValue::Float(1.0), PlyValue::Float(1.0)] },
-                    ],
+                    properties: vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float }],
+                    rows: vec![PlyRow { values: vec![PlyValue::Float(0.0), PlyValue::Float(0.0)] }, PlyRow { values: vec![PlyValue::Float(1.0), PlyValue::Float(1.0)] }],
                 },
                 PlyElement {
                     name: "face".into(),
@@ -859,18 +825,10 @@ mod tests {
                 PlyElement {
                     name: "vertex".into(),
                     count: 1,
-                    properties: vec![
-                        PlyProperty::Scalar { name: "nx".into(), kind: PlyScalarType::Double },
-                        PlyProperty::Scalar { name: "ny".into(), kind: PlyScalarType::Double },
-                    ],
+                    properties: vec![PlyProperty::Scalar { name: "nx".into(), kind: PlyScalarType::Double }, PlyProperty::Scalar { name: "ny".into(), kind: PlyScalarType::Double }],
                     rows: vec![PlyRow { values: vec![PlyValue::Double(9.0), PlyValue::Double(9.0)] }],
                 },
-                PlyElement {
-                    name: "edge".into(),
-                    count: 1,
-                    properties: vec![PlyProperty::Scalar { name: "weight".into(), kind: PlyScalarType::Double }],
-                    rows: vec![PlyRow { values: vec![PlyValue::Double(3.5)] }],
-                },
+                PlyElement { name: "edge".into(), count: 1, properties: vec![PlyProperty::Scalar { name: "weight".into(), kind: PlyScalarType::Double }], rows: vec![PlyRow { values: vec![PlyValue::Double(3.5)] }] },
             ],
         }
     }
@@ -910,23 +868,13 @@ mod tests {
             schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
             format: PlyFormat::Ascii,
             comments: vec![],
-            elements: vec![PlyElement {
-                name: "point".into(),
-                count: 2,
-                properties: common_props.clone(),
-                rows: vec![PlyRow { values: vec![PlyValue::Int(1)] }, PlyRow { values: vec![PlyValue::Int(2)] }],
-            }],
+            elements: vec![PlyElement { name: "point".into(), count: 2, properties: common_props.clone(), rows: vec![PlyRow { values: vec![PlyValue::Int(1)] }, PlyRow { values: vec![PlyValue::Int(2)] }] }],
         };
         let b = PlySnapshot {
             schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
             format: PlyFormat::Ascii,
             comments: vec![],
-            elements: vec![PlyElement {
-                name: "point".into(),
-                count: 3,
-                properties: common_props,
-                rows: vec![PlyRow { values: vec![PlyValue::Int(99)] }, PlyRow { values: vec![PlyValue::Int(2)] }, PlyRow { values: vec![PlyValue::Int(3)] }],
-            }],
+            elements: vec![PlyElement { name: "point".into(), count: 3, properties: common_props, rows: vec![PlyRow { values: vec![PlyValue::Int(99)] }, PlyRow { values: vec![PlyValue::Int(2)] }, PlyRow { values: vec![PlyValue::Int(3)] }] }],
         };
         let ab = PlyDiff::between(&a, &b);
         let ab_rows = ab.elements.as_ref().unwrap().modified[0].diff.rows.as_ref().expect("rows diff");
@@ -953,19 +901,11 @@ mod tests {
 
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }

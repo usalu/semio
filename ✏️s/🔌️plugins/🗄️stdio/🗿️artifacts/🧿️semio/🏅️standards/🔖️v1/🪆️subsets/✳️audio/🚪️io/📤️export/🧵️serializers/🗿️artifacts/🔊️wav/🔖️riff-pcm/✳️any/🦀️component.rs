@@ -11,10 +11,10 @@
 //! chunk) -- `other_chunks` is always empty on export, so tags do not survive an
 //! `audio→wav→audio` round trip; every numeric/sample field does.
 
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::wav::WavSnapshot;
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavFmt};
 use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
+use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavFmt};
+use crate::artifacts::wav::WavSnapshot;
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.wav", standard: StandardId("riff-pcm"), subset: SubsetId("*") };
@@ -46,8 +46,8 @@ impl ArtifactSerializer for SemioAudioToWav {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioTag, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
     use crate::artifacts::semio::standards::v1::subsets::audio::io::wav_deserializer::SemioAudioFromWav;
+    use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioTag, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
     use semio_framework_plugin::ArtifactDeserializer;
 
     fn real_world_audio_no_tags() -> SemioAudioSnapshot {
@@ -88,10 +88,7 @@ mod tests {
 
     #[test]
     fn mismatched_channel_lengths_pad_shorter_channel_with_silence_not_panic() {
-        let snap = SemioAudioSnapshot {
-            channels: vec![SemioAudioChannel { samples: vec![1.0, 2.0, 3.0] }, SemioAudioChannel { samples: vec![1.0] }],
-            ..real_world_audio_no_tags()
-        };
+        let snap = SemioAudioSnapshot { channels: vec![SemioAudioChannel { samples: vec![1.0, 2.0, 3.0] }, SemioAudioChannel { samples: vec![1.0] }], ..real_world_audio_no_tags() };
         let wav = SemioAudioToWav::serialize(&snap).expect("serialize");
         match &wav.data {
             WavData::Float32(v) => assert_eq!(v.len(), 6),

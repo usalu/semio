@@ -1,9 +1,13 @@
-// 🅰️ ANTLR grammar for stdio.mp4's diff text form — mirrors ../../📸️snapshot/📝️text/🅰️component.g4:
-// a whitespace-tolerant hex dump, this time of the JSON-serialized Mp4Diff (op codecs are the
-// handcrafted `OpText`/`OpBinary` JSON round-trip in 🧬️mutations/🦀️component.rs, not a bespoke
-// diff-text grammar — the mutation vocabulary IS the diff's textual protocol).
+// 🅰️ Structured sparse MP4 diff records emitted by dsl::DslDiff.
 grammar Stdio_mp4_diff;
-document : hexByte (WS? hexByte)* EOF ;
-hexByte  : HEXDIGIT HEXDIGIT ;
-HEXDIGIT : [0-9a-fA-F] ;
-WS       : [ \t\r\n]+ ;
+document : record EOF ;
+record : IDENT LBRACE field* RBRACE ;
+field : IDENT EQUAL value ;
+value : IDENT | STRING | INT | record | list | object ;
+list : LBRACK value* RBRACK ;
+object : LBRACE field* RBRACE ;
+IDENT : [A-Za-z_][A-Za-z0-9_-]* ;
+STRING : '"' ('\\' . | ~["\\])* '"' ;
+INT : '-'? [0-9]+ ;
+LBRACE : '{' ; RBRACE : '}' ; LBRACK : '[' ; RBRACK : ']' ; EQUAL : '=' ;
+WS : [ \t\r\n]+ -> skip ;

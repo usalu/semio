@@ -1,3 +1,2 @@
-/** 💾️ Binary representation for `stdio.svg` (diff) -- UTF-8 JSON bytes of the SvgDiff shape
- * (see `../🟦️component.ts`), not raw octets. */
+/** 💾️ Binary SvgDiff: format byte, presence flags, recursively structured payload. */
 export type SvgDiffBinary = Uint8Array;

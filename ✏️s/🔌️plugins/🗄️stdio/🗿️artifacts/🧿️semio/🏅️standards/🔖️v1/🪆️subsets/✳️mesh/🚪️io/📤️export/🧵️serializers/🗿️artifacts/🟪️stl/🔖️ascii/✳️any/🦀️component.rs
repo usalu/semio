@@ -14,11 +14,11 @@
 //! - Multiple `SemioMesh`es flatten into ONE `solid` (STL is single-solid); `solid_name` is the
 //!   FIRST mesh's id — later meshes' id boundaries are not preserved in the STL output.
 
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::stl::StlSnapshot;
-use crate::artifacts::stl::schema::snapshot::StlTriangle;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
+use crate::artifacts::stl::schema::snapshot::StlTriangle;
+use crate::artifacts::stl::StlSnapshot;
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId::ANY };
@@ -37,7 +37,11 @@ fn average_normal(n0: SemioPoint3, n1: SemioPoint3, n2: SemioPoint3) -> [f64; 3]
 
 fn normalize(v: [f64; 3]) -> [f64; 3] {
     let len = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt();
-    if len > 1e-12 { [v[0] / len, v[1] / len, v[2] / len] } else { [0.0, 0.0, 0.0] }
+    if len > 1e-12 {
+        [v[0] / len, v[1] / len, v[2] / len]
+    } else {
+        [0.0, 0.0, 0.0]
+    }
 }
 //#endregion 🔖️NormalMath
 
@@ -56,10 +60,7 @@ impl ArtifactSerializer for SemioMeshToStl {
         for mesh in &from.meshes {
             for prim in &mesh.primitives {
                 if prim.topology != SemioTopology::Triangles {
-                    return Err(store::PackError::Schema(format!(
-                        "SemioMeshToStl: primitive {:?} has topology {:?}; STL can only represent Triangles",
-                        prim.id, prim.topology
-                    )));
+                    return Err(store::PackError::Schema(format!("SemioMeshToStl: primitive {:?} has topology {:?}; STL can only represent Triangles", prim.id, prim.topology)));
                 }
                 let corner_indices: Vec<u32> = if !prim.indices.is_empty() {
                     if prim.indices.len() % 3 != 0 {
@@ -74,9 +75,7 @@ impl ArtifactSerializer for SemioMeshToStl {
                 };
 
                 for face in corner_indices.chunks(3) {
-                    let get = |i: u32| -> Result<SemioPoint3, store::PackError> {
-                        prim.positions.get(i as usize).copied().ok_or_else(|| store::PackError::Schema(format!("SemioMeshToStl: primitive {:?} index {i} out of bounds", prim.id)))
-                    };
+                    let get = |i: u32| -> Result<SemioPoint3, store::PackError> { prim.positions.get(i as usize).copied().ok_or_else(|| store::PackError::Schema(format!("SemioMeshToStl: primitive {:?} index {i} out of bounds", prim.id))) };
                     let (i0, i1, i2) = (face[0], face[1], face[2]);
                     let (v0, v1, v2) = (get(i0)?, get(i1)?, get(i2)?);
                     let normal = if !prim.normals.is_empty() {
@@ -102,8 +101,8 @@ impl ArtifactSerializer for SemioMeshToStl {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
     use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::stl::v_ascii::any::SemioMeshFromStl;
+    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
     use semio_framework_plugin::ArtifactDeserializer;
 
     fn sample_semio_mesh() -> SemioMeshSnapshot {
@@ -115,12 +114,20 @@ mod tests {
                     id: "pyramid-prim-0".into(),
                     topology: SemioTopology::Triangles,
                     positions: vec![
-                        SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 },
-                        SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 },
+                        SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 },
+                        SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 },
+                        SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 },
+                        SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 },
+                        SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 },
+                        SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 },
                     ],
                     normals: vec![
-                        SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 },
-                        SemioPoint3 { x: 0.0, y: -1.0, z: 0.0 }, SemioPoint3 { x: 0.0, y: -1.0, z: 0.0 }, SemioPoint3 { x: 0.0, y: -1.0, z: 0.0 },
+                        SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 },
+                        SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 },
+                        SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 },
+                        SemioPoint3 { x: 0.0, y: -1.0, z: 0.0 },
+                        SemioPoint3 { x: 0.0, y: -1.0, z: 0.0 },
+                        SemioPoint3 { x: 0.0, y: -1.0, z: 0.0 },
                     ],
                     uvs: Vec::new(),
                     colors: Vec::new(),
@@ -155,9 +162,7 @@ mod tests {
     #[test]
     fn indexed_triangles_export_correctly() {
         let mut semio = sample_semio_mesh();
-        semio.meshes[0].primitives[0].positions = vec![
-            SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 },
-        ];
+        semio.meshes[0].primitives[0].positions = vec![SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 }];
         semio.meshes[0].primitives[0].normals = vec![SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }; 3];
         semio.meshes[0].primitives[0].indices = vec![0, 1, 2];
         let stl = SemioMeshToStl::serialize(&semio).expect("serialize");

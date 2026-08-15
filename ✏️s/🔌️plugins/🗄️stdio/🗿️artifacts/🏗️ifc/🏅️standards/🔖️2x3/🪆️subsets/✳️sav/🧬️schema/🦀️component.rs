@@ -4,20 +4,17 @@
 pub use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use dsl::{Diagnostic, Severity};
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::ifc::standards::v2x3::subsets::sav::schema::check_sav_conformance;
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::Ifc2x3Diff;
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
+    use crate::artifacts::ifc::standards::v2x3::subsets::sav::schema::check_sav_conformance;
     use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
+    use dsl::{Diagnostic, Severity};
+    use semio_framework_plugin::ArtifactBuilder;
 
     fn seeded_document() -> Part21Document {
         let header = Part21Header {
-            file_description: vec![
-                Part21Value::List(vec![Part21Value::Str("ViewDefinition [StructuralAnalysisView]".into())]),
-                Part21Value::Str("2;1".into()),
-            ],
+            file_description: vec![Part21Value::List(vec![Part21Value::Str("ViewDefinition [StructuralAnalysisView]".into())]), Part21Value::Str("2;1".into())],
             file_name: vec![],
             file_schema: vec![Part21Value::List(vec![Part21Value::Str("IFC2X3".into())])],
         };
@@ -76,7 +73,11 @@ pub mod derived_construction {
         }
         fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let hard: Vec<Diagnostic> = check_sav_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
-            if hard.is_empty() { Ok(self.snapshot) } else { Err(hard) }
+            if hard.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(hard)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -105,10 +106,10 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
-    use semio_framework_plugin::{AnalyzeSource, Analysis, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
-    use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::{Ifc2x3Analyzer as Ifc2x3AnyAnalyzer, Ifc2x3Parts};
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
+    use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::{Ifc2x3Analyzer as Ifc2x3AnyAnalyzer, Ifc2x3Parts};
+    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("sav") };
 
@@ -131,14 +132,7 @@ pub mod derived_analysis {
         snapshot.document.header.file_schema.iter().any(|v| v.as_list().map(|items| items.iter().any(|item| item.as_str() == Some(name))).unwrap_or(false))
     }
     fn view_definition_names(snapshot: &Ifc2x3Snapshot, view: &str) -> bool {
-        snapshot
-            .document
-            .header
-            .file_description
-            .first()
-            .and_then(|v| v.as_list())
-            .map(|items| items.iter().any(|item| item.as_str().map(|s| s.contains(view)).unwrap_or(false)))
-            .unwrap_or(false)
+        snapshot.document.header.file_description.first().and_then(|v| v.as_list()).map(|items| items.iter().any(|item| item.as_str().map(|s| s.contains(view)).unwrap_or(false))).unwrap_or(false)
     }
 
     //#region 🔖️Conformance
@@ -210,11 +204,7 @@ pub mod derived_analysis {
             let model = Part21Instance { id: 1, entities: vec![("IFCSTRUCTURALANALYSISMODEL".into(), vec![])] };
             let group = Part21Instance { id: 2, entities: vec![("IFCRELASSIGNSTOGROUP".into(), vec![])] };
             let loads = Part21Instance { id: 3, entities: vec![("IFCSTRUCTURALLOADGROUP".into(), vec![])] };
-            Ifc2x3Snapshot {
-                schema: "stdio.ifc.2x3".into(),
-                document: Part21Document { header: header("StructuralAnalysisView"), instances: vec![model, group, loads] },
-                edm_preamble: None,
-            }
+            Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: Part21Document { header: header("StructuralAnalysisView"), instances: vec![model, group, loads] }, edm_preamble: None }
         }
 
         #[test]

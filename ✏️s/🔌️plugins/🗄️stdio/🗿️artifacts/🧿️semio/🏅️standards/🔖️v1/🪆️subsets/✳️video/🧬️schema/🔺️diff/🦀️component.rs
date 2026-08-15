@@ -16,12 +16,8 @@
 //! `Vec<T>`-of-struct field (streams→samples) plus this file's own generic collection-triple
 //! wrapper both individually block the derive macro.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{
-    dec_indexed_triple, enc_indexed_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff,
-};
-use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{
-    SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind,
-};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{dec_indexed_triple, enc_indexed_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
@@ -94,7 +90,11 @@ where
     }
     let removed: Vec<usize> = (other.len()..base.len()).collect();
     let added: Vec<IndexAdded<T>> = (min_len..other.len()).map(|i| IndexAdded { index: i, item: other[i].clone() }).collect();
-    if modified.is_empty() && removed.is_empty() && added.is_empty() { None } else { Some(IndexedTripleDiff { removed, modified, added }) }
+    if modified.is_empty() && removed.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(IndexedTripleDiff { removed, modified, added })
+    }
 }
 
 fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
@@ -182,12 +182,7 @@ fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdd
 /// absorbs two per-field diffs of the SAME item; `apply_item` patches a `D` onto a `T` (needed
 /// when `d2` modifies an item `d1` just added).
 #[allow(clippy::too_many_arguments)]
-fn absorb_indexed<T, D>(
-    d1: IndexedTripleDiff<D, T>,
-    d2: IndexedTripleDiff<D, T>,
-    absorb_item: impl Fn(D, D) -> D,
-    apply_item: impl Fn(&T, &D) -> T,
-) -> IndexedTripleDiff<D, T>
+fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
 where
     T: Clone,
     D: Clone,
@@ -270,11 +265,7 @@ fn diff_sample(old: &SemioVideoSample, new: &SemioVideoSample) -> Option<SemioVi
     if old == new {
         return None;
     }
-    Some(SemioVideoSampleDiff {
-        pts: (old.pts != new.pts).then_some(new.pts),
-        key: (old.key != new.key).then_some(new.key),
-        data: (old.data != new.data).then(|| new.data.clone()),
-    })
+    Some(SemioVideoSampleDiff { pts: (old.pts != new.pts).then_some(new.pts), key: (old.key != new.key).then_some(new.key), data: (old.data != new.data).then(|| new.data.clone()) })
 }
 
 fn diff_stream(old: &SemioVideoStream, new: &SemioVideoStream) -> Option<SemioVideoStreamDiff> {
@@ -297,18 +288,36 @@ fn diff_video(base: &SemioVideoSnapshot, other: &SemioVideoSnapshot) -> SemioVid
 }
 
 fn apply_sample(sample: &mut SemioVideoSample, diff: &SemioVideoSampleDiff) {
-    if let Some(v) = diff.pts { sample.pts = v; }
-    if let Some(v) = diff.key { sample.key = v; }
-    if let Some(v) = &diff.data { sample.data = v.clone(); }
+    if let Some(v) = diff.pts {
+        sample.pts = v;
+    }
+    if let Some(v) = diff.key {
+        sample.key = v;
+    }
+    if let Some(v) = &diff.data {
+        sample.data = v.clone();
+    }
 }
 
 fn apply_stream(stream: &mut SemioVideoStream, diff: &SemioVideoStreamDiff) {
-    if let Some(v) = diff.kind { stream.kind = v; }
-    if let Some(v) = &diff.codec { stream.codec = v.clone(); }
-    if let Some(v) = diff.width { stream.width = v; }
-    if let Some(v) = diff.height { stream.height = v; }
-    if let Some(v) = diff.rate { stream.rate = v; }
-    if let Some(sd) = &diff.samples { apply_indexed(&mut stream.samples, sd, apply_sample); }
+    if let Some(v) = diff.kind {
+        stream.kind = v;
+    }
+    if let Some(v) = &diff.codec {
+        stream.codec = v.clone();
+    }
+    if let Some(v) = diff.width {
+        stream.width = v;
+    }
+    if let Some(v) = diff.height {
+        stream.height = v;
+    }
+    if let Some(v) = diff.rate {
+        stream.rate = v;
+    }
+    if let Some(sd) = &diff.samples {
+        apply_indexed(&mut stream.samples, sd, apply_sample);
+    }
 }
 
 fn sample_with_diff_applied(sample: &SemioVideoSample, diff: &SemioVideoSampleDiff) -> SemioVideoSample {
@@ -324,11 +333,7 @@ fn stream_with_diff_applied(stream: &SemioVideoStream, diff: &SemioVideoStreamDi
 }
 
 fn inverse_sample(base: &SemioVideoSample, diff: &SemioVideoSampleDiff) -> SemioVideoSampleDiff {
-    SemioVideoSampleDiff {
-        pts: diff.pts.map(|_| base.pts),
-        key: diff.key.map(|_| base.key),
-        data: diff.data.as_ref().map(|_| base.data.clone()),
-    }
+    SemioVideoSampleDiff { pts: diff.pts.map(|_| base.pts), key: diff.key.map(|_| base.key), data: diff.data.as_ref().map(|_| base.data.clone()) }
 }
 
 fn inverse_stream(base: &SemioVideoStream, diff: &SemioVideoStreamDiff) -> SemioVideoStreamDiff {
@@ -343,18 +348,34 @@ fn inverse_stream(base: &SemioVideoStream, diff: &SemioVideoStreamDiff) -> Semio
 }
 
 fn absorb_sample_diff(mut a: SemioVideoSampleDiff, b: SemioVideoSampleDiff) -> SemioVideoSampleDiff {
-    if b.pts.is_some() { a.pts = b.pts; }
-    if b.key.is_some() { a.key = b.key; }
-    if b.data.is_some() { a.data = b.data; }
+    if b.pts.is_some() {
+        a.pts = b.pts;
+    }
+    if b.key.is_some() {
+        a.key = b.key;
+    }
+    if b.data.is_some() {
+        a.data = b.data;
+    }
     a
 }
 
 fn absorb_stream_diff(mut a: SemioVideoStreamDiff, b: SemioVideoStreamDiff) -> SemioVideoStreamDiff {
-    if b.kind.is_some() { a.kind = b.kind; }
-    if b.codec.is_some() { a.codec = b.codec; }
-    if b.width.is_some() { a.width = b.width; }
-    if b.height.is_some() { a.height = b.height; }
-    if b.rate.is_some() { a.rate = b.rate; }
+    if b.kind.is_some() {
+        a.kind = b.kind;
+    }
+    if b.codec.is_some() {
+        a.codec = b.codec;
+    }
+    if b.width.is_some() {
+        a.width = b.width;
+    }
+    if b.height.is_some() {
+        a.height = b.height;
+    }
+    if b.rate.is_some() {
+        a.rate = b.rate;
+    }
     a.samples = match (a.samples.take(), b.samples) {
         (None, x) => x,
         (x, None) => x,
@@ -458,11 +479,7 @@ pub fn diff_set_sample_data(old: &SemioVideoSample, stream_index: usize, index: 
 
 /// 🧩 Builds the diff for setting a sample's `pts`/`key` flags.
 pub fn diff_set_sample_flags(old: &SemioVideoSample, stream_index: usize, index: usize, pts: u64, key: bool) -> SemioVideoDiff {
-    let sample_diff = SemioVideoSampleDiff {
-        pts: (old.pts != pts).then_some(pts),
-        key: (old.key != key).then_some(key),
-        data: None,
-    };
+    let sample_diff = SemioVideoSampleDiff { pts: (old.pts != pts).then_some(pts), key: (old.key != key).then_some(key), data: None };
     if sample_diff.pts.is_none() && sample_diff.key.is_none() {
         return SemioVideoDiff::default();
     }
@@ -501,7 +518,11 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 pub(crate) fn enc_bool(b: &bool) -> String {
-    if *b { "1".to_string() } else { "0".to_string() }
+    if *b {
+        "1".to_string()
+    } else {
+        "0".to_string()
+    }
 }
 pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
     match s {
@@ -537,7 +558,12 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 
 //#region 🔖️ValueCodecs
 pub(crate) fn enc_kind(k: &SemioVideoStreamKind) -> String {
-    match k { SemioVideoStreamKind::Video => "V", SemioVideoStreamKind::Audio => "A", SemioVideoStreamKind::Subtitle => "S" }.to_string()
+    match k {
+        SemioVideoStreamKind::Video => "V",
+        SemioVideoStreamKind::Audio => "A",
+        SemioVideoStreamKind::Subtitle => "S",
+    }
+    .to_string()
 }
 pub(crate) fn dec_kind(s: &str) -> Result<SemioVideoStreamKind, String> {
     match s {
@@ -555,10 +581,7 @@ pub(crate) fn dec_rational(s: &str) -> Result<SemioRational, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [num, den] = parts.as_slice() else { return Err(format!("rational: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioRational {
-        num: num.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-        den: den.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-    })
+    Ok(SemioRational { num: num.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, den: den.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })
 }
 
 pub(crate) fn enc_sample(s: &SemioVideoSample) -> String {
@@ -597,15 +620,15 @@ fn dec_sample_diff(s: &str) -> Result<SemioVideoSampleDiff, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [pts, key, data] = parts.as_slice() else { return Err(format!("sample diff: expected 3 fields, got {}", parts.len())) };
-    Ok(SemioVideoSampleDiff {
-        pts: decode_option(pts, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?,
-        key: decode_option(key, dec_bool)?,
-        data: decode_option(data, hex_decode)?,
-    })
+    Ok(SemioVideoSampleDiff { pts: decode_option(pts, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?, key: decode_option(key, dec_bool)?, data: decode_option(data, hex_decode)? })
 }
 
-pub(crate) fn enc_samples_diff(d: &SemioVideoSamplesDiff) -> String { enc_indexed_triple(d, enc_sample_diff, enc_sample) }
-pub(crate) fn dec_samples_diff(s: &str) -> Result<SemioVideoSamplesDiff, String> { dec_indexed_triple(s, dec_sample_diff, dec_sample) }
+pub(crate) fn enc_samples_diff(d: &SemioVideoSamplesDiff) -> String {
+    enc_indexed_triple(d, enc_sample_diff, enc_sample)
+}
+pub(crate) fn dec_samples_diff(s: &str) -> Result<SemioVideoSamplesDiff, String> {
+    dec_indexed_triple(s, dec_sample_diff, dec_sample)
+}
 
 fn enc_stream_diff(d: &SemioVideoStreamDiff) -> String {
     format!(
@@ -632,8 +655,12 @@ fn dec_stream_diff(s: &str) -> Result<SemioVideoStreamDiff, String> {
     })
 }
 
-pub(crate) fn enc_streams_diff(d: &SemioVideoStreamsDiff) -> String { enc_indexed_triple(d, enc_stream_diff, enc_stream) }
-pub(crate) fn dec_streams_diff(s: &str) -> Result<SemioVideoStreamsDiff, String> { dec_indexed_triple(s, dec_stream_diff, dec_stream) }
+pub(crate) fn enc_streams_diff(d: &SemioVideoStreamsDiff) -> String {
+    enc_indexed_triple(d, enc_stream_diff, enc_stream)
+}
+pub(crate) fn dec_streams_diff(s: &str) -> Result<SemioVideoStreamsDiff, String> {
+    dec_indexed_triple(s, dec_stream_diff, dec_stream)
+}
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
@@ -739,11 +766,7 @@ mod handcrafted_diff_codec_tests {
                     width: 640,
                     height: 480,
                     rate: SemioRational { num: 24, den: 1 },
-                    samples: vec![
-                        SemioVideoSample { pts: 0, key: true, data: vec![9] },
-                        SemioVideoSample { pts: 1, key: false, data: vec![8] },
-                        SemioVideoSample { pts: 2, key: true, data: vec![7] },
-                    ],
+                    samples: vec![SemioVideoSample { pts: 0, key: true, data: vec![9] }, SemioVideoSample { pts: 1, key: false, data: vec![8] }, SemioVideoSample { pts: 2, key: true, data: vec![7] }],
                 },
                 SemioVideoStream { kind: SemioVideoStreamKind::Audio, codec: "aac".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() },
                 SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "srt".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() },
@@ -761,10 +784,7 @@ mod handcrafted_diff_codec_tests {
                     width: 1280,
                     height: 720,
                     rate: SemioRational { num: 30, den: 1 },
-                    samples: vec![
-                        SemioVideoSample { pts: 0, key: true, data: vec![9] },
-                        SemioVideoSample { pts: 22, key: true, data: vec![80] },
-                    ],
+                    samples: vec![SemioVideoSample { pts: 0, key: true, data: vec![9] }, SemioVideoSample { pts: 22, key: true, data: vec![80] }],
                 },
                 SemioVideoStream { kind: SemioVideoStreamKind::Audio, codec: "aac".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() },
             ],
@@ -780,12 +800,7 @@ mod handcrafted_diff_codec_tests {
     fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot_a();
         let b = snapshot_b();
-        let cases = vec![
-            SemioVideoDiff::default(),
-            SemioVideoDiff::between(&a, &b),
-            SemioVideoDiff::between(&b, &a),
-            SemioVideoDiff::between(&a, &a),
-        ];
+        let cases = vec![SemioVideoDiff::default(), SemioVideoDiff::between(&a, &b), SemioVideoDiff::between(&b, &a), SemioVideoDiff::between(&a, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

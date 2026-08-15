@@ -2,44 +2,22 @@ dialect protocol
 protocol stdio.dwg.ac1024.snapshot
 version 1
 schema stdio.dwg
-start file
+start frame
+framing magic 0x8953504b0d0a1a0a
 
-# 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG2: `stdio.dwg`
-# (ac1024, R2004+) is BINARY-NATIVE. This file describes the PACK CONTAINER's post-unwrap
-# PAYLOAD — the native `.dwg` document deterministically materialized from `DwgSnapshot` by
-# `encode_dwg`; the SEMIO envelope is described once framework-side.
-#
-# AC1024 decryption, page lookup, decompression, checksums, and compression-token selection are
-# native codec materialization concerns. They are deliberately absent from the persisted logical
-# snapshot schema.
-#
-# What this codec DOES read cleanly, declaratively, WITHOUT any decrypt/decompress step first —
-# verified by direct read of `../🦀️component.rs`'s `dwg_version_sentinel`/
-# `parse_version_header_fields` (byte-for-byte identical offsets to ac1018's own sibling facet,
-# since both standards share the same plain, unencrypted AC1015+ preamble layout per LibreDWG's
-# `header.spec`):
-#   - the 6-byte `AC10xx` version sentinel at offset 0x00 (GENERIC across every AC10xx version —
-#     not hardcoded to literally "AC1024")
-#   - `maintenance_version` (RC, one byte at 0x12) and `codepage` (RS, little-endian u16 at
-#     0x13-0x14)
-# Byte-checked against the real `architectural.dwg` fixture (F5's own conformance fixture,
-# `📚️examples/🏛️architectural/🖼️assets/📄️architectural.dwg`): offset 0x12 == 0x02
-# (`maintenance_version`), offset 0x13 == 0x1E (30 decimal, ANSI_1252 codepage) — both confirmed
-# by `⚙️engine/🦀️component.rs`'s own doc comments AND independently re-verified here (`xxd`).
-#
-# Everything past `codepage` is walked as native wire data by this protocol facet; the Rust
-# decoder converts it into logical typed state and the writer reconstructs it deterministically.
-#
-# `framing record` (NOT `framing magic ...`) — same `protocol-framing-magic-fixed-8-bytes` gap
-# ac1018's own sibling protocol file documents (`Framing::Magic` unconditionally reads/compares
-# EXACTLY 8 raw bytes regardless of a shorter declared literal's own width; confirmed live by a
-# real `walk_protocol` run against this exact 6-byte "AC1024" magic). `field magic fixed 6` is
-# genuinely walked but not byte-validated at the protocol layer (the real Rust
-# `dwg_version_sentinel` already validates the `AC` + 4-digit shape).
-framing record
-header fixed 21
-field magic fixed 6
-field reserved fixed 12
-field maintenance_version u8
-field codepage u16
-chain remainder bytes
+enum DwgObjectBodyKind { Dictionary=0 TableControl=1 TableRecord=2 XRecord=3 Entity=4 AssociativeDependency=5 AssociativeValueDependency=6 AssociativeGeometryDependency=7 BlockGripLocationComponent=8 DynamicBlockProxyNode=9 AssociativeVariable=10 AssociativeDimensionDependencyBody=11 VisualStyle=12 BlockParameterDependencyBody=13 BlockRepresentationData=14 DynamicBlockPurgePreventer=15 EvaluationGraph=16 BlockFlipParameter=17 BlockVisibilityParameter=18 Placeholder=19 DictionaryVariable=20 AnnotationScale=21 SortEntitiesTable=22 TableStyle=23 MlineStyle=24 MleaderStyle=25 Material=26 BlockMoveAction=27 AssociativeNetwork=28 Associative2dConstraintGroup=29 BlockLinearParameter=30 BlockLinearGrip=31 BlockFlipGrip=32 BlockVisibilityGrip=33 BlockAlignmentParameter=34 BlockAlignmentGrip=35 BlockStretchAction=36 BlockScaleAction=37 BlockFlipAction=38 BlockBasePointParameter=39 BlockVerticalConstraintParameter=40 BlockHorizontalConstraintParameter=41 Layout=42 }
+enum DwgConstraintNodeKind { ConstrainedImplicitPoint=0 Coincident=1 ConstrainedBoundedLine=2 Horizontal=3 Distance=4 Vertical=5 EqualLength=6 Parallel=7 Perpendicular=8 PointOnLine=9 Symmetric=10 ConstrainedDatumLine=11 Fix=12 Colinear=13 }
+struct DwgLogicalObject { handle u64 type_code u16 owner_handle u64 body_kind u8 }
+struct DwgAssociative2dConstraintGroup { do_not_check_newly_added_constraints u8 member_action_count varint node_count varint }
+struct DwgConstraintNode { kind u8 node_id i32 connection_count varint }
+
+header fixed 32
+field format_major u16
+field format_minor u16
+field flags u32
+field domain_tag u32
+field header_crc32 u32
+segment payload varint bytes
+footer fixed 64
+field artifact_mark utf8
+field body_crc32 u32

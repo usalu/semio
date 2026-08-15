@@ -9,14 +9,7 @@ use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{S
 pub fn diff(payload: &CreateNode, base: &SemioGraphSnapshot) -> SemioGraphDiff {
     let mut nodes = base.nodes.clone();
     if !nodes.iter().any(|n| n.id == payload.id) {
-        nodes.push(SemioGraphNode {
-            id: payload.id.clone(),
-            kind: payload.kind.clone(),
-            label: payload.label.clone(),
-            position: payload.position.clone(),
-            ports: payload.ports.clone(),
-            properties: payload.properties.clone(),
-        });
+        nodes.push(SemioGraphNode { id: payload.id.clone(), kind: payload.kind.clone(), label: payload.label.clone(), position: payload.position.clone(), ports: payload.ports.clone(), properties: payload.properties.clone() });
     }
     SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: nodes }), edges: None }
 }

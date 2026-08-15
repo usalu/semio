@@ -50,11 +50,7 @@ pub fn compute_epw_climate_summary(snapshot: &EpwSnapshot) -> EpwClimateSummary 
         }
     }
 
-    let (min_dry_bulb_c, max_dry_bulb_c, avg_dry_bulb_c) = if parsed_temp_count == 0 {
-        (0.0, 0.0, 0.0)
-    } else {
-        (min, max, sum / parsed_temp_count as f64)
-    };
+    let (min_dry_bulb_c, max_dry_bulb_c, avg_dry_bulb_c) = if parsed_temp_count == 0 { (0.0, 0.0, 0.0) } else { (min, max, sum / parsed_temp_count as f64) };
 
     EpwClimateSummary { record_count: snapshot.records.len() as u32, parsed_temp_count, min_dry_bulb_c, max_dry_bulb_c, avg_dry_bulb_c }
 }
@@ -72,11 +68,7 @@ mod tests {
 
     #[test]
     fn folds_parseable_temps_and_skips_malformed_ones() {
-        let snapshot = EpwSnapshot {
-            schema: STDIO_EPW_DOCUMENT_SCHEMA.into(),
-            records: vec![record("10.0"), record("not-a-number"), record("30.0"), record("20.0")],
-            ..Default::default()
-        };
+        let snapshot = EpwSnapshot { schema: STDIO_EPW_DOCUMENT_SCHEMA.into(), records: vec![record("10.0"), record("not-a-number"), record("30.0"), record("20.0")], ..Default::default() };
         let climate = compute_epw_climate_summary(&snapshot);
         assert_eq!(climate.record_count, 4);
         assert_eq!(climate.parsed_temp_count, 3);

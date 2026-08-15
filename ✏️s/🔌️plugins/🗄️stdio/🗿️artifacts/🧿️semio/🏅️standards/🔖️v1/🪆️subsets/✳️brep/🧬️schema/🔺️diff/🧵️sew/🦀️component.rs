@@ -7,19 +7,19 @@
 //! `🧰️framework/🔨️modules/🧊️3d/📐️brep/{🧵️sew,🩹️heal}` in ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL.
 
-use std::collections::HashSet;
 use std::collections::HashMap;
+use std::collections::HashSet;
 
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve3Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 // #region 🔖️SewApi
@@ -29,11 +29,7 @@ pub fn sew_faces(body: &mut Body, faces: &[FaceId], tolerance: f64, rec: &mut Op
     if faces.len() < 2 {
         return Err(KernelError::InvalidInput("sewing requires at least 2 faces".into()));
     }
-    let tol = if tolerance > 0.0 && tolerance.is_finite() {
-        Tol::new(tolerance)
-    } else {
-        Tol::DEFAULT
-    };
+    let tol = if tolerance > 0.0 && tolerance.is_finite() { Tol::new(tolerance) } else { Tol::DEFAULT };
     let linear = tol.value();
     let snapshots = snapshot_faces(body, faces)?;
     let resolution = 1.0 / linear;
@@ -79,54 +75,28 @@ struct FaceSnapshot {
 fn snapshot_faces(body: &Body, faces: &[FaceId]) -> Result<Vec<FaceSnapshot>, KernelError> {
     let mut out = Vec::with_capacity(faces.len());
     for &fid in faces {
-        let face = body
-            .faces
-            .get(fid)
-            .ok_or_else(|| KernelError::MissingEntity(format!("face {fid}")))?;
+        let face = body.faces.get(fid).ok_or_else(|| KernelError::MissingEntity(format!("face {fid}")))?;
         let outer = face.outer.ok_or_else(|| KernelError::Operation(format!("face {fid} has no outer loop")))?;
         let mut edge_endpoints = Vec::new();
         for coedge_id in body.loop_coedges(outer) {
-            let coedge = body
-                .coedges
-                .get(coedge_id)
-                .ok_or_else(|| KernelError::MissingEntity(format!("coedge {coedge_id}")))?;
-            let edge = body
-                .edges
-                .get(coedge.edge)
-                .ok_or_else(|| KernelError::MissingEntity(format!("edge {}", coedge.edge)))?;
+            let coedge = body.coedges.get(coedge_id).ok_or_else(|| KernelError::MissingEntity(format!("coedge {coedge_id}")))?;
+            let edge = body.edges.get(coedge.edge).ok_or_else(|| KernelError::MissingEntity(format!("edge {}", coedge.edge)))?;
             let p0 = body.vertices.get(edge.v0).expect("v0").position;
             let p1 = body.vertices.get(edge.v1).expect("v1").position;
             let (start_pt, end_pt) = if coedge.forward { (p0, p1) } else { (p1, p0) };
             edge_endpoints.push((start_pt, end_pt));
         }
-        out.push(FaceSnapshot {
-            surface: face.surface,
-            flipped: face.flipped,
-            tol: face.tol,
-            edge_endpoints,
-        });
+        out.push(FaceSnapshot { surface: face.surface, flipped: face.flipped, tol: face.tol, edge_endpoints });
     }
     Ok(out)
 }
 
-fn get_or_create_vertex(
-    body: &mut Body,
-    p: Pnt3,
-    resolution: f64,
-    tol: Tol,
-    map: &mut HashMap<(i64, i64, i64), VertexId>,
-    rec: &mut OpRecorder,
-) -> VertexId {
-    let key = (
-        (p.x * resolution).round() as i64,
-        (p.y * resolution).round() as i64,
-        (p.z * resolution).round() as i64,
-    );
+fn get_or_create_vertex(body: &mut Body, p: Pnt3, resolution: f64, tol: Tol, map: &mut HashMap<(i64, i64, i64), VertexId>, rec: &mut OpRecorder) -> VertexId {
+    let key = ((p.x * resolution).round() as i64, (p.y * resolution).round() as i64, (p.z * resolution).round() as i64);
     *map.entry(key).or_insert_with(|| make_vertex(body, p, tol, rec))
 }
 
 // #endregion 🔖️SewSnapshot
-
 
 // #region 🔖️HealApi
 
@@ -143,12 +113,7 @@ pub struct HealingReport {
 
 impl HealingReport {
     pub fn total_repairs(&self) -> usize {
-        self.vertices_merged
-            + self.degenerate_edges_removed
-            + self.orientations_fixed
-            + self.wire_gaps_closed
-            + self.small_faces_removed
-            + self.duplicate_faces_removed
+        self.vertices_merged + self.degenerate_edges_removed + self.orientations_fixed + self.wire_gaps_closed + self.small_faces_removed + self.duplicate_faces_removed
     }
 }
 
@@ -193,10 +158,7 @@ pub fn heal_solid(body: &mut Body, solid: SolidId, tolerance: f64, rec: &mut OpR
     }
     let issues = validate_body(body);
     if !issues.is_empty() {
-        return Err(KernelError::Operation(format!(
-            "heal_solid left {} validation issue(s)",
-            issues.len()
-        )));
+        return Err(KernelError::Operation(format!("heal_solid left {} validation issue(s)", issues.len())));
     }
     let _ = solid;
     Ok(report)
@@ -207,35 +169,20 @@ pub fn defeature(body: &mut Body, solid: SolidId, faces_to_remove: &[FaceId], re
     if faces_to_remove.is_empty() {
         return Err(KernelError::InvalidInput("must select at least one face to remove".into()));
     }
-    let solid_data = body
-        .solids
-        .get(solid)
-        .ok_or_else(|| KernelError::MissingEntity(format!("solid {solid}")))?
-        .clone();
+    let solid_data = body.solids.get(solid).ok_or_else(|| KernelError::MissingEntity(format!("solid {solid}")))?.clone();
     let shell_id = solid_data.outer;
-    let shell = body
-        .shells
-        .get(shell_id)
-        .ok_or_else(|| KernelError::MissingEntity(format!("shell {shell_id}")))?;
+    let shell = body.shells.get(shell_id).ok_or_else(|| KernelError::MissingEntity(format!("shell {shell_id}")))?;
     let remove_set: HashSet<FaceId> = faces_to_remove.iter().copied().collect();
     let kept_faces: Vec<FaceId> = shell.faces.iter().filter(|f| !remove_set.contains(f)).copied().collect();
     if kept_faces.len() < 4 {
-        return Err(KernelError::InvalidInput(format!(
-            "removing {} face(s) would leave only {} face(s) (minimum 4 for a solid shell)",
-            faces_to_remove.len(),
-            kept_faces.len()
-        )));
+        return Err(KernelError::InvalidInput(format!("removing {} face(s) would leave only {} face(s) (minimum 4 for a solid shell)", faces_to_remove.len(), kept_faces.len())));
     }
     for fid in faces_to_remove {
         if !shell.faces.contains(fid) {
             return Err(KernelError::InvalidInput(format!("face {fid} is not on solid {solid}")));
         }
     }
-    let tol = faces_to_remove
-        .iter()
-        .filter_map(|fid| body.faces.get(*fid))
-        .map(|f| f.tol.value())
-        .fold(f64::INFINITY, f64::min);
+    let tol = faces_to_remove.iter().filter_map(|fid| body.faces.get(*fid)).map(|f| f.tol.value()).fold(f64::INFINITY, f64::min);
     let sew_tol = if tol.is_finite() && tol > 0.0 { tol } else { Tol::DEFAULT.value() };
     for fid in faces_to_remove {
         let neighbors = adjacent_faces(body, *fid);
@@ -291,11 +238,7 @@ pub fn convert_to_nurbs(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -
         }
         let range = body.edges.get(edge_id).expect("edge").range;
         let nurbs = curve.to_nurbs(range);
-        let new_curve = body.curves3.insert(Curve3::Nurbs {
-            knots: nurbs.knots,
-            controls: nurbs.controls,
-            weights: nurbs.weights,
-        });
+        let new_curve = body.curves3.insert(Curve3::Nurbs { knots: nurbs.knots, controls: nurbs.controls, weights: nurbs.weights });
         let edge = body.edges.get_mut(edge_id).expect("edge");
         edge.curve = new_curve;
         rec.record_modified(edge.label);
@@ -340,26 +283,16 @@ fn coplanar_face_pair(body: &Body, a: FaceId, b: FaceId) -> bool {
     let Some(Surface::Plane { frame: fb }) = body.surfaces.get(sb) else {
         return false;
     };
-    fa.z.dot(fb.z).abs() > 1.0 - 1e-9
-        && (fa.origin - fb.origin).dot(fa.z).abs() < 1e-6
-        && (fb.origin - fa.origin).dot(fb.z).abs() < 1e-6
+    fa.z.dot(fb.z).abs() > 1.0 - 1e-9 && (fa.origin - fb.origin).dot(fa.z).abs() < 1e-6 && (fb.origin - fa.origin).dot(fb.z).abs() < 1e-6
 }
 
 fn analytic_surface_to_nurbs(surface: &Surface) -> Option<Surface> {
     match surface {
         Surface::Plane { frame } => {
             let o = frame.origin;
-            let controls = vec![
-                vec![o, o + frame.x],
-                vec![o + frame.y, o + frame.x + frame.y],
-            ];
+            let controls = vec![vec![o, o + frame.x], vec![o + frame.y, o + frame.x + frame.y]];
             let weights = vec![vec![1.0, 1.0], vec![1.0, 1.0]];
-            Some(Surface::Nurbs {
-                u_knots: KnotVector::clamped_uniform(2, 1),
-                v_knots: KnotVector::clamped_uniform(2, 1),
-                controls,
-                weights,
-            })
+            Some(Surface::Nurbs { u_knots: KnotVector::clamped_uniform(2, 1), v_knots: KnotVector::clamped_uniform(2, 1), controls, weights })
         }
         Surface::Nurbs { .. } => None,
         Surface::Cylinder { .. } | Surface::Cone { .. } | Surface::Sphere { .. } | Surface::Torus { .. } => None,
@@ -367,7 +300,6 @@ fn analytic_surface_to_nurbs(surface: &Surface) -> Option<Surface> {
 }
 
 // #endregion 🔖️HealHelpers
-
 
 // #region 🧪️SewTests
 
@@ -414,22 +346,8 @@ mod tests {
     #[test]
     fn sew_two_adjacent_quads_shares_one_edge() {
         let mut body = Body::new();
-        let f0 = make_loose_quad(
-            &mut body,
-            Pnt3::new(0.0, 0.0, 0.0),
-            Pnt3::new(1.0, 0.0, 0.0),
-            Pnt3::new(1.0, 1.0, 0.0),
-            Pnt3::new(0.0, 1.0, 0.0),
-            Vec3::Z,
-        );
-        let f1 = make_loose_quad(
-            &mut body,
-            Pnt3::new(1.0, 0.0, 0.0),
-            Pnt3::new(2.0, 0.0, 0.0),
-            Pnt3::new(2.0, 1.0, 0.0),
-            Pnt3::new(1.0, 1.0, 0.0),
-            Vec3::Z,
-        );
+        let f0 = make_loose_quad(&mut body, Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Vec3::Z);
+        let f1 = make_loose_quad(&mut body, Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(2.0, 0.0, 0.0), Pnt3::new(2.0, 1.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Vec3::Z);
         let mut rec = OpRecorder::new();
         let solid = sew_faces(&mut body, &[f0, f1], 1e-6, &mut rec).unwrap();
         assert_eq!(body.solid_faces(solid).len(), 2);
@@ -439,54 +357,12 @@ mod tests {
     #[test]
     fn sew_six_box_faces_into_solid() {
         let mut body = Body::new();
-        let bottom = make_loose_quad(
-            &mut body,
-            Pnt3::new(0.0, 0.0, 0.0),
-            Pnt3::new(1.0, 0.0, 0.0),
-            Pnt3::new(1.0, 1.0, 0.0),
-            Pnt3::new(0.0, 1.0, 0.0),
-            -Vec3::Z,
-        );
-        let top = make_loose_quad(
-            &mut body,
-            Pnt3::new(0.0, 0.0, 1.0),
-            Pnt3::new(1.0, 0.0, 1.0),
-            Pnt3::new(1.0, 1.0, 1.0),
-            Pnt3::new(0.0, 1.0, 1.0),
-            Vec3::Z,
-        );
-        let front = make_loose_quad(
-            &mut body,
-            Pnt3::new(0.0, 0.0, 0.0),
-            Pnt3::new(1.0, 0.0, 0.0),
-            Pnt3::new(1.0, 0.0, 1.0),
-            Pnt3::new(0.0, 0.0, 1.0),
-            -Vec3::Y,
-        );
-        let back = make_loose_quad(
-            &mut body,
-            Pnt3::new(0.0, 1.0, 0.0),
-            Pnt3::new(1.0, 1.0, 0.0),
-            Pnt3::new(1.0, 1.0, 1.0),
-            Pnt3::new(0.0, 1.0, 1.0),
-            Vec3::Y,
-        );
-        let left = make_loose_quad(
-            &mut body,
-            Pnt3::new(0.0, 0.0, 0.0),
-            Pnt3::new(0.0, 1.0, 0.0),
-            Pnt3::new(0.0, 1.0, 1.0),
-            Pnt3::new(0.0, 0.0, 1.0),
-            -Vec3::X,
-        );
-        let right = make_loose_quad(
-            &mut body,
-            Pnt3::new(1.0, 0.0, 0.0),
-            Pnt3::new(1.0, 1.0, 0.0),
-            Pnt3::new(1.0, 1.0, 1.0),
-            Pnt3::new(1.0, 0.0, 1.0),
-            Vec3::X,
-        );
+        let bottom = make_loose_quad(&mut body, Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), -Vec3::Z);
+        let top = make_loose_quad(&mut body, Pnt3::new(0.0, 0.0, 1.0), Pnt3::new(1.0, 0.0, 1.0), Pnt3::new(1.0, 1.0, 1.0), Pnt3::new(0.0, 1.0, 1.0), Vec3::Z);
+        let front = make_loose_quad(&mut body, Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 1.0), Pnt3::new(0.0, 0.0, 1.0), -Vec3::Y);
+        let back = make_loose_quad(&mut body, Pnt3::new(0.0, 1.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(1.0, 1.0, 1.0), Pnt3::new(0.0, 1.0, 1.0), Vec3::Y);
+        let left = make_loose_quad(&mut body, Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 1.0), Pnt3::new(0.0, 0.0, 1.0), -Vec3::X);
+        let right = make_loose_quad(&mut body, Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(1.0, 1.0, 1.0), Pnt3::new(1.0, 0.0, 1.0), Vec3::X);
         let mut rec = OpRecorder::new();
         let solid = sew_faces(&mut body, &[bottom, top, front, back, left, right], 1e-6, &mut rec).unwrap();
         assert_eq!(body.solid_faces(solid).len(), 6);
@@ -496,14 +372,7 @@ mod tests {
     #[test]
     fn sew_single_face_rejects() {
         let mut body = Body::new();
-        let f = make_loose_quad(
-            &mut body,
-            Pnt3::new(0.0, 0.0, 0.0),
-            Pnt3::new(1.0, 0.0, 0.0),
-            Pnt3::new(1.0, 1.0, 0.0),
-            Pnt3::new(0.0, 1.0, 0.0),
-            Vec3::Z,
-        );
+        let f = make_loose_quad(&mut body, Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Vec3::Z);
         let mut rec = OpRecorder::new();
         assert!(sew_faces(&mut body, &[f], 1e-6, &mut rec).is_err());
     }
@@ -516,8 +385,8 @@ mod tests {
 #[cfg(test)]
 mod heal_tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
 
     #[test]
     fn heal_solid_noop_on_valid_box() {

@@ -48,7 +48,9 @@ pub enum GltfJson {
 }
 
 impl Default for GltfJson {
-    fn default() -> Self { GltfJson::Null }
+    fn default() -> Self {
+        GltfJson::Null
+    }
 }
 
 impl Serialize for GltfJson {
@@ -82,22 +84,44 @@ impl<'de> Visitor<'de> for GltfJsonVisitor {
     fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("a JSON value (glTF extras/extensions)")
     }
-    fn visit_unit<E>(self) -> Result<Self::Value, E> { Ok(GltfJson::Null) }
-    fn visit_none<E>(self) -> Result<Self::Value, E> { Ok(GltfJson::Null) }
-    fn visit_bool<E>(self, v: bool) -> Result<Self::Value, E> { Ok(GltfJson::Bool(v)) }
-    fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E> { Ok(GltfJson::Number(v as f64)) }
-    fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E> { Ok(GltfJson::Number(v as f64)) }
-    fn visit_f64<E>(self, v: f64) -> Result<Self::Value, E> { Ok(GltfJson::Number(v)) }
-    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E> { Ok(GltfJson::String(v.to_string())) }
-    fn visit_string<E>(self, v: String) -> Result<Self::Value, E> { Ok(GltfJson::String(v)) }
-    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error> where A: SeqAccess<'de> {
+    fn visit_unit<E>(self) -> Result<Self::Value, E> {
+        Ok(GltfJson::Null)
+    }
+    fn visit_none<E>(self) -> Result<Self::Value, E> {
+        Ok(GltfJson::Null)
+    }
+    fn visit_bool<E>(self, v: bool) -> Result<Self::Value, E> {
+        Ok(GltfJson::Bool(v))
+    }
+    fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E> {
+        Ok(GltfJson::Number(v as f64))
+    }
+    fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E> {
+        Ok(GltfJson::Number(v as f64))
+    }
+    fn visit_f64<E>(self, v: f64) -> Result<Self::Value, E> {
+        Ok(GltfJson::Number(v))
+    }
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E> {
+        Ok(GltfJson::String(v.to_string()))
+    }
+    fn visit_string<E>(self, v: String) -> Result<Self::Value, E> {
+        Ok(GltfJson::String(v))
+    }
+    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+    where
+        A: SeqAccess<'de>,
+    {
         let mut items = Vec::new();
         while let Some(v) = seq.next_element()? {
             items.push(v);
         }
         Ok(GltfJson::Array(items))
     }
-    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error> where A: MapAccess<'de> {
+    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+    where
+        A: MapAccess<'de>,
+    {
         let mut members = Vec::new();
         while let Some((k, v)) = map.next_entry::<String, GltfJson>()? {
             members.push((k, v));
@@ -155,21 +179,51 @@ mod ordered_attr_map {
 /// omitted on write when the in-memory value still equals the default -- a documented (and, for
 /// this fixture set, byte-exact) normal form: a field is either genuinely absent or explicitly
 /// non-default in every real document this codec has seen.
-fn default_one_f64() -> f64 { 1.0 }
-fn is_one_f64(v: &f64) -> bool { *v == 1.0 }
-fn default_zero_u64() -> u64 { 0 }
-fn is_zero_u64(v: &u64) -> bool { *v == 0 }
-fn default_zero_usize() -> usize { 0 }
-fn is_zero_usize(v: &usize) -> bool { *v == 0 }
-fn default_wrap() -> u64 { 10497 }
-fn is_default_wrap(v: &u64) -> bool { *v == 10497 }
-fn default_alpha_cutoff() -> f64 { 0.5 }
-fn is_default_alpha_cutoff(v: &f64) -> bool { *v == 0.5 }
-fn default_vec3_zero() -> [f64; 3] { [0.0, 0.0, 0.0] }
-fn is_vec3_zero(v: &[f64; 3]) -> bool { *v == [0.0, 0.0, 0.0] }
-fn default_vec4_one() -> [f64; 4] { [1.0, 1.0, 1.0, 1.0] }
-fn is_vec4_one(v: &[f64; 4]) -> bool { *v == [1.0, 1.0, 1.0, 1.0] }
-fn is_false(v: &bool) -> bool { !*v }
+fn default_one_f64() -> f64 {
+    1.0
+}
+fn is_one_f64(v: &f64) -> bool {
+    *v == 1.0
+}
+fn default_zero_u64() -> u64 {
+    0
+}
+fn is_zero_u64(v: &u64) -> bool {
+    *v == 0
+}
+fn default_zero_usize() -> usize {
+    0
+}
+fn is_zero_usize(v: &usize) -> bool {
+    *v == 0
+}
+fn default_wrap() -> u64 {
+    10497
+}
+fn is_default_wrap(v: &u64) -> bool {
+    *v == 10497
+}
+fn default_alpha_cutoff() -> f64 {
+    0.5
+}
+fn is_default_alpha_cutoff(v: &f64) -> bool {
+    *v == 0.5
+}
+fn default_vec3_zero() -> [f64; 3] {
+    [0.0, 0.0, 0.0]
+}
+fn is_vec3_zero(v: &[f64; 3]) -> bool {
+    *v == [0.0, 0.0, 0.0]
+}
+fn default_vec4_one() -> [f64; 4] {
+    [1.0, 1.0, 1.0, 1.0]
+}
+fn is_vec4_one(v: &[f64; 4]) -> bool {
+    *v == [1.0, 1.0, 1.0, 1.0]
+}
+fn is_false(v: &bool) -> bool {
+    !*v
+}
 //#endregion 🔖️SpecDefaults
 
 //#region 🔖️Asset
@@ -468,7 +522,9 @@ pub enum GltfAlphaMode {
     Blend,
 }
 
-fn is_opaque(v: &GltfAlphaMode) -> bool { matches!(v, GltfAlphaMode::Opaque) }
+fn is_opaque(v: &GltfAlphaMode) -> bool {
+    matches!(v, GltfAlphaMode::Opaque)
+}
 
 /// 🎨️ `materials[i]` (§5.23).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -501,9 +557,17 @@ pub struct GltfMaterial {
 impl Default for GltfMaterial {
     fn default() -> Self {
         Self {
-            name: None, pbr_metallic_roughness: None, normal_texture: None, occlusion_texture: None,
-            emissive_texture: None, emissive_factor: default_vec3_zero(), alpha_mode: GltfAlphaMode::Opaque,
-            alpha_cutoff: 0.5, double_sided: false, extensions: None, extras: None,
+            name: None,
+            pbr_metallic_roughness: None,
+            normal_texture: None,
+            occlusion_texture: None,
+            emissive_texture: None,
+            emissive_factor: default_vec3_zero(),
+            alpha_mode: GltfAlphaMode::Opaque,
+            alpha_cutoff: 0.5,
+            double_sided: false,
+            extensions: None,
+            extras: None,
         }
     }
 }
@@ -644,7 +708,9 @@ pub enum GltfInterpolation {
     CubicSpline,
 }
 
-fn is_linear(v: &GltfInterpolation) -> bool { matches!(v, GltfInterpolation::Linear) }
+fn is_linear(v: &GltfInterpolation) -> bool {
+    matches!(v, GltfInterpolation::Linear)
+}
 
 /// 📈️ `animations[i].samplers[j]` (§5.5.3).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -828,10 +894,25 @@ pub struct GltfDocument {
 impl Default for GltfDocument {
     fn default() -> Self {
         Self {
-            asset: GltfAsset::default(), scene: None, scenes: Vec::new(), nodes: Vec::new(), meshes: Vec::new(),
-            accessors: Vec::new(), buffer_views: Vec::new(), buffers: Vec::new(), materials: Vec::new(),
-            textures: Vec::new(), images: Vec::new(), samplers: Vec::new(), skins: Vec::new(), animations: Vec::new(),
-            cameras: Vec::new(), extensions_used: Vec::new(), extensions_required: Vec::new(), extensions: None, extras: None,
+            asset: GltfAsset::default(),
+            scene: None,
+            scenes: Vec::new(),
+            nodes: Vec::new(),
+            meshes: Vec::new(),
+            accessors: Vec::new(),
+            buffer_views: Vec::new(),
+            buffers: Vec::new(),
+            materials: Vec::new(),
+            textures: Vec::new(),
+            images: Vec::new(),
+            samplers: Vec::new(),
+            skins: Vec::new(),
+            animations: Vec::new(),
+            cameras: Vec::new(),
+            extensions_used: Vec::new(),
+            extensions_required: Vec::new(),
+            extensions: None,
+            extras: None,
         }
     }
 }
@@ -860,12 +941,7 @@ pub struct GltfSnapshot {
 
 impl Default for GltfSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(),
-            document: GltfDocument::default(),
-            buffers: Vec::new(),
-            source_form: GltfSourceForm::Json,
-        }
+        Self { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document: GltfDocument::default(), buffers: Vec::new(), source_form: GltfSourceForm::Json }
     }
 }
 //#endregion 🔖️Snapshot
@@ -873,24 +949,21 @@ impl Default for GltfSnapshot {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for GltfSnapshot {
     const EXTENSION: &'static str = "gltf";
-    fn envelope_id() -> &'static str { "stdio.gltf" }
+    fn envelope_id() -> &'static str {
+        "stdio.gltf"
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        crate::artifacts::gltf::engine::parse_gltf_document(body.trim().as_bytes())
-            .map_err(|e| store::TextError::new(format!("gltf json: {e}"), dsl::TextSpan::at(1, 1)))
+        crate::artifacts::gltf::engine::parse_gltf_document(body.trim().as_bytes()).map_err(|e| store::TextError::new(format!("gltf json: {e}"), dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
         let body_bytes = crate::artifacts::gltf::engine::serialize_gltf_document(self);
         let body = String::from_utf8(body_bytes).unwrap_or_else(|_| "{}".into());
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -907,22 +980,13 @@ impl store::ArtifactPack for GltfSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::gltf::engine::encode_glb(self).map_err(store::PackError::Schema)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         crate::artifacts::gltf::engine::decode_glb(&inner).map_err(store::PackError::Schema)

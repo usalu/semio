@@ -5,12 +5,9 @@ start document
 
 # P2-FG3: real `store::ArtifactDsl::print_dsl`/`parse_dsl` shape for `stdio.pdf.1.7`
 # (../../../../../📸️snapshot/🦀️component.rs's `impl store::ArtifactDsl for PdfSnapshot`):
-# `print_dsl` hex-encodes the REAL `encode_pdf(self)` byte output (the actual `%PDF-1.7...` file
-# bytes, incl. the binary-marker comment line `%\xE2\xE3\xCF\xD3\n`), verbatim -- no COS-text
-# reserialization at the DSL-text layer, same design choice `stdio.pdf` (1.4) and binary/raw make.
-# Confirmed by direct read AND a real `[DEBUG]` dump of `print_dsl`, not assumed: preamble `semio
-# stdio.pdf.1.7.dsl v1`, body a CONTINUOUS run of lowercase hex digit pairs starting
-# `255044462d312e370a25e2e3cfd30a...` (= `%PDF-1.7\n%\xE2\xE3\xCF\xD3\n...` in hex).
+# `print_dsl` hex-encodes the logical snapshot codec (schema/version, resolved pages, info,
+# ordered COS graph, typed decoded stream filters, and trailer). Native PDF syntax is only
+# materialized by `decode_pdf`/`encode_pdf` and never appears in this DSL snapshot payload.
 document = artifact-mark hex-body
 artifact-mark = "stdio.pdf.1.7"
 

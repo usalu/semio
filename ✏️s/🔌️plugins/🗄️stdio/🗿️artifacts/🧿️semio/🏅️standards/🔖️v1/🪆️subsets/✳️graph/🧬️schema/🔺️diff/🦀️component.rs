@@ -79,16 +79,10 @@ impl MutationDiff<SemioGraphSnapshot> for SemioGraphDiff {
 /// shape every mutation triad's own `🔺️diff` leaf already produces.
 impl protocol::command::DiffAlgebra<SemioGraphSnapshot> for SemioGraphDiff {
     fn between(base: &SemioGraphSnapshot, other: &SemioGraphSnapshot) -> Self {
-        SemioGraphDiff {
-            nodes: (base.nodes != other.nodes).then(|| SemioGraphNodeList { values: other.nodes.clone() }),
-            edges: (base.edges != other.edges).then(|| SemioGraphEdgeList { values: other.edges.clone() }),
-        }
+        SemioGraphDiff { nodes: (base.nodes != other.nodes).then(|| SemioGraphNodeList { values: other.nodes.clone() }), edges: (base.edges != other.edges).then(|| SemioGraphEdgeList { values: other.edges.clone() }) }
     }
     fn inverse(&self, base: &SemioGraphSnapshot) -> Self {
-        SemioGraphDiff {
-            nodes: self.nodes.as_ref().map(|_| SemioGraphNodeList { values: base.nodes.clone() }),
-            edges: self.edges.as_ref().map(|_| SemioGraphEdgeList { values: base.edges.clone() }),
-        }
+        SemioGraphDiff { nodes: self.nodes.as_ref().map(|_| SemioGraphNodeList { values: base.nodes.clone() }), edges: self.edges.as_ref().map(|_| SemioGraphEdgeList { values: base.edges.clone() }) }
     }
     fn is_empty(&self) -> bool {
         self.is_empty_diff()
@@ -102,27 +96,47 @@ impl protocol::command::DiffAlgebra<SemioGraphSnapshot> for SemioGraphDiff {
 /// snapshot facet's own real hex/bracket node/edge encoders (duplicated locally, same convention
 /// every sibling subset's `🔺️diff` facet already establishes — see that facet's own doc comment
 /// for why).
-fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|b| format!("{b:02x}")).collect() }
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 { return Err(format!("odd hex length: {s:?}")); }
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
-fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
+fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphPort, SemioGraphPortKind};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{enc_semio_value_entry, dec_semio_value_entry};
+use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value_entry, enc_semio_value_entry};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
 
-fn enc_node_id(id: &GraphNodeId) -> String { enc_str(&id.value) }
-fn dec_node_id(s: &str) -> Result<GraphNodeId, String> { Ok(GraphNodeId::new(dec_str(s)?)) }
-fn enc_edge_id(id: &GraphEdgeId) -> String { enc_str(&id.value) }
-fn dec_edge_id(s: &str) -> Result<GraphEdgeId, String> { Ok(GraphEdgeId::new(dec_str(s)?)) }
+fn enc_node_id(id: &GraphNodeId) -> String {
+    enc_str(&id.value)
+}
+fn dec_node_id(s: &str) -> Result<GraphNodeId, String> {
+    Ok(GraphNodeId::new(dec_str(s)?))
+}
+fn enc_edge_id(id: &GraphEdgeId) -> String {
+    enc_str(&id.value)
+}
+fn dec_edge_id(s: &str) -> Result<GraphEdgeId, String> {
+    Ok(GraphEdgeId::new(dec_str(s)?))
+}
 
-fn enc_point2_fields(p: &SemioPoint2) -> String { format!("{},{}", enc_str(&p.x.to_string()), enc_str(&p.y.to_string())) }
-fn dec_f64_hex(s: &str) -> Result<f64, String> { dec_str(s)?.parse::<f64>().map_err(|e| e.to_string()) }
+fn enc_point2_fields(p: &SemioPoint2) -> String {
+    format!("{},{}", enc_str(&p.x.to_string()), enc_str(&p.y.to_string()))
+}
+fn dec_f64_hex(s: &str) -> Result<f64, String> {
+    dec_str(s)?.parse::<f64>().map_err(|e| e.to_string())
+}
 
 fn enc_port_kind(k: SemioGraphPortKind) -> char {
     crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::enc_port_kind(k)
@@ -130,14 +144,20 @@ fn enc_port_kind(k: SemioGraphPortKind) -> char {
 fn dec_port_kind(s: &str) -> Result<SemioGraphPortKind, String> {
     crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::dec_port_kind(s)
 }
-fn enc_port(p: &SemioGraphPort) -> String { format!("[{},{}]", enc_str(&p.name), enc_port_kind(p.kind)) }
+fn enc_port(p: &SemioGraphPort) -> String {
+    format!("[{},{}]", enc_str(&p.name), enc_port_kind(p.kind))
+}
 fn dec_port(s: &str) -> Result<SemioGraphPort, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, kind] = parts.as_slice() else { return Err(format!("port: expected 2 fields, got {}", parts.len())) };
     Ok(SemioGraphPort { name: dec_str(name)?, kind: dec_port_kind(kind)? })
 }
-fn enc_property(p: &SemioValueEntry) -> String { enc_semio_value_entry(p) }
-fn dec_property(s: &str) -> Result<SemioValueEntry, String> { dec_semio_value_entry(s) }
+fn enc_property(p: &SemioValueEntry) -> String {
+    enc_semio_value_entry(p)
+}
+fn dec_property(s: &str) -> Result<SemioValueEntry, String> {
+    dec_semio_value_entry(s)
+}
 
 fn enc_node(n: &SemioGraphNode) -> String {
     let ports = n.ports.iter().map(enc_port).collect::<Vec<_>>().join(",");
@@ -208,7 +228,9 @@ fn parse_graph_diff(line: &str) -> Result<SemioGraphDiff, String> {
 }
 
 impl protocol::DiffCodec for SemioGraphDiff {
-    fn print_diff(&self) -> String { print_graph_diff(self) }
+    fn print_diff(&self) -> String {
+        print_graph_diff(self)
+    }
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_graph_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
@@ -292,20 +314,13 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioGraphDiff> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::DiffCodec;
     use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
+    use protocol::DiffCodec;
 
     #[test]
     fn apply_replaces_nodes_and_edges_wholesale() {
-        let base = SemioGraphSnapshot {
-            schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(),
-            nodes: vec![SemioGraphNode { id: GraphNodeId::new("a"), ..Default::default() }],
-            edges: vec![],
-        };
-        let diff = SemioGraphDiff {
-            nodes: Some(SemioGraphNodeList { values: vec![SemioGraphNode { id: GraphNodeId::new("b"), ..Default::default() }] }),
-            edges: None,
-        };
+        let base = SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: vec![SemioGraphNode { id: GraphNodeId::new("a"), ..Default::default() }], edges: vec![] };
+        let diff = SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: vec![SemioGraphNode { id: GraphNodeId::new("b"), ..Default::default() }] }), edges: None };
         let next = diff.apply(&base);
         assert_eq!(next.nodes[0].id, GraphNodeId::new("b"));
     }

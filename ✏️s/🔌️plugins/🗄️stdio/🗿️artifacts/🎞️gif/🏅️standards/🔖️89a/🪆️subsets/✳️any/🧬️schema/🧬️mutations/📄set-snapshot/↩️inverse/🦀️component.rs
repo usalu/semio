@@ -1,5 +1,5 @@
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
 use crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::GifMutation;
+use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

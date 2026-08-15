@@ -4,15 +4,14 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{
-        ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId,
-        SubsetValidator, SubsetValidatorEntry, register_subset_validator, subset_validator_entry_of,
-        ComposerEntry, ArtifactDeserializer as _, ArtifactSerializer as _, deserializer_entry_of, serializer_entry_of, register_composer_entries,
-    };
+    use super::super::export::serializers::artifacts::json::v_rfc8259::any::SemioFlowToJson;
+    use super::super::import::deserializers::artifacts::json::v_rfc8259::any::SemioFlowFromJson;
     use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
     use crate::artifacts::semio::standards::v1::subsets::flow::schema::SemioFlowAnalyzer;
-    use super::super::import::deserializers::artifacts::json::v_rfc8259::any::SemioFlowFromJson;
-    use super::super::export::serializers::artifacts::json::v_rfc8259::any::SemioFlowToJson;
+    use semio_framework_plugin::{
+        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ArtifactDeserializer as _, ArtifactSerializer as _,
+        ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
+    };
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("flow") };
 
@@ -23,7 +22,9 @@ pub mod derived_composition {
         type Snapshot = SemioFlowSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] { &[DIALECT] }
+        fn reads() -> &'static [Dialect] {
+            &[DIALECT]
+        }
 
         fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
@@ -38,10 +39,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "SemioFlowComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = SemioFlowAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "SemioFlowComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "SemioFlowComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -61,35 +59,19 @@ pub mod derived_composition {
         let mut seen_node_ids = std::collections::HashSet::new();
         for node in &snapshot.nodes {
             if !seen_node_ids.insert(node.id.as_str()) {
-                diagnostics.push(dsl::Diagnostic::error(
-                    "stdio.semio_flow.duplicate-node-id",
-                    dsl::TextSpan::at(1, 1),
-                    format!("SemioFlowValidator: duplicate node id {:?}", node.id),
-                ));
+                diagnostics.push(dsl::Diagnostic::error("stdio.semio_flow.duplicate-node-id", dsl::TextSpan::at(1, 1), format!("SemioFlowValidator: duplicate node id {:?}", node.id)));
             }
         }
         let mut seen_edge_ids = std::collections::HashSet::new();
         for edge in &snapshot.edges {
             if !seen_edge_ids.insert(edge.id.as_str()) {
-                diagnostics.push(dsl::Diagnostic::error(
-                    "stdio.semio_flow.duplicate-edge-id",
-                    dsl::TextSpan::at(1, 1),
-                    format!("SemioFlowValidator: duplicate edge id {:?}", edge.id),
-                ));
+                diagnostics.push(dsl::Diagnostic::error("stdio.semio_flow.duplicate-edge-id", dsl::TextSpan::at(1, 1), format!("SemioFlowValidator: duplicate edge id {:?}", edge.id)));
             }
             if !seen_node_ids.contains(edge.from.node.as_str()) {
-                diagnostics.push(dsl::Diagnostic::error(
-                    "stdio.semio_flow.dangling-edge-endpoint",
-                    dsl::TextSpan::at(1, 1),
-                    format!("SemioFlowValidator: edge {:?}'s from.node {:?} references a node that does not exist", edge.id, edge.from.node),
-                ));
+                diagnostics.push(dsl::Diagnostic::error("stdio.semio_flow.dangling-edge-endpoint", dsl::TextSpan::at(1, 1), format!("SemioFlowValidator: edge {:?}'s from.node {:?} references a node that does not exist", edge.id, edge.from.node)));
             }
             if !seen_node_ids.contains(edge.to.node.as_str()) {
-                diagnostics.push(dsl::Diagnostic::error(
-                    "stdio.semio_flow.dangling-edge-endpoint",
-                    dsl::TextSpan::at(1, 1),
-                    format!("SemioFlowValidator: edge {:?}'s to.node {:?} references a node that does not exist", edge.id, edge.to.node),
-                ));
+                diagnostics.push(dsl::Diagnostic::error("stdio.semio_flow.dangling-edge-endpoint", dsl::TextSpan::at(1, 1), format!("SemioFlowValidator: edge {:?}'s to.node {:?} references a node that does not exist", edge.id, edge.to.node)));
             }
         }
         diagnostics
@@ -104,17 +86,15 @@ pub mod derived_composition {
             };
             match decoded {
                 Some(snapshot) => check_flow_referential_invariants(&snapshot),
-                None => vec![dsl::Diagnostic::error(
-                    "stdio.semio_flow.validate-decode-failed",
-                    dsl::TextSpan::at(1, 1),
-                    "SemioFlowValidator: payload did not decode as a SemioFlowSnapshot".to_string(),
-                )],
+                None => vec![dsl::Diagnostic::error("stdio.semio_flow.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioFlowValidator: payload did not decode as a SemioFlowSnapshot".to_string())],
             }
         }
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    fn validator_entry() -> &'static SubsetValidatorEntry { VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioFlowValidator>) }
+    fn validator_entry() -> &'static SubsetValidatorEntry {
+        VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioFlowValidator>)
+    }
     //#endregion 🔖️SubsetValidator
 
     //#region 🔖️IoEntries
@@ -132,7 +112,9 @@ pub mod derived_composition {
     /// flow<->json io bridge row. Called from this artifact's standard-level `engine::register()`.
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::flow::schema::semio_flow_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioFlowSnapshot, crate::artifacts::semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation>(crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA));
+        store::register_document_codec(store::ArtifactCodec::of::<SemioFlowSnapshot, crate::artifacts::semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation>(
+            crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,
+        ));
         register_subset_validator(validator_entry());
         register_composer_entries(io_entries());
         register_artifact_inferences();
@@ -151,7 +133,7 @@ pub mod derived_composition {
     mod tests {
         use super::*;
         use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
-        use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{PortRef, FlowEdge, FlowNode};
+        use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef};
 
         fn node(id: &str) -> FlowNode {
             FlowNode { id: id.into(), kind: "k".into(), label: "L".into(), params: Vec::new(), position: SemioPoint2::default() }
@@ -194,11 +176,7 @@ pub mod derived_composition {
         /// has a direct JSON member), so the round trip is exact, not just "modulo documented losses".
         #[test]
         fn json_round_trip_is_stable() {
-            let semio1 = SemioFlowSnapshot {
-                schema: crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
-                nodes: vec![node("a"), node("b")],
-                edges: vec![edge("e1", "a", "b")],
-            };
+            let semio1 = SemioFlowSnapshot { schema: crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes: vec![node("a"), node("b")], edges: vec![edge("e1", "a", "b")] };
             let json1 = SemioFlowToJson::serialize(&semio1).expect("serialize");
             let semio2 = SemioFlowFromJson::deserialize(&json1).expect("deserialize");
             assert_eq!(semio1, semio2);
@@ -222,19 +200,11 @@ pub mod derived_composition {
             /// `walk_protocol` laws below.
             #[test]
             fn committed_facet_files_parse() {
-                for (label, text) in [
-                    ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-                ] {
+                for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                     assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
                 }
-                for (label, text) in [
-                    ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-                ] {
+                for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                     dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
                 }
             }

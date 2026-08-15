@@ -51,9 +51,7 @@ impl From<serde_json::Value> for JsonValue {
             serde_json::Value::Number(n) => JsonValue::Number { lexeme: n.to_string() },
             serde_json::Value::String(s) => JsonValue::String { value: s },
             serde_json::Value::Array(arr) => JsonValue::Array { items: arr.into_iter().map(JsonValue::from).collect() },
-            serde_json::Value::Object(map) => JsonValue::Object {
-                members: map.into_iter().map(|(k, v)| JsonMember { key: k, value: JsonValue::from(v) }).collect(),
-            },
+            serde_json::Value::Object(map) => JsonValue::Object { members: map.into_iter().map(|(k, v)| JsonMember { key: k, value: JsonValue::from(v) }).collect() },
         }
     }
 }
@@ -66,9 +64,7 @@ impl From<&serde_json::Value> for JsonValue {
             serde_json::Value::Number(n) => JsonValue::Number { lexeme: n.to_string() },
             serde_json::Value::String(s) => JsonValue::String { value: s.clone() },
             serde_json::Value::Array(arr) => JsonValue::Array { items: arr.iter().map(JsonValue::from).collect() },
-            serde_json::Value::Object(map) => JsonValue::Object {
-                members: map.iter().map(|(k, v)| JsonMember { key: k.clone(), value: JsonValue::from(v) }).collect(),
-            },
+            serde_json::Value::Object(map) => JsonValue::Object { members: map.iter().map(|(k, v)| JsonMember { key: k.clone(), value: JsonValue::from(v) }).collect() },
         }
     }
 }
@@ -297,7 +293,13 @@ impl<'a> Parser<'a> {
                 Some(b) if b < 0x20 => return Err(self.err("unescaped control character in string literal")),
                 Some(b) if b < 0x80 => out.push(b as char),
                 Some(lead) => {
-                    let extra = if lead >= 0xF0 { 3 } else if lead >= 0xE0 { 2 } else { 1 };
+                    let extra = if lead >= 0xF0 {
+                        3
+                    } else if lead >= 0xE0 {
+                        2
+                    } else {
+                        1
+                    };
                     let mut buf = vec![lead];
                     for _ in 0..extra {
                         match self.advance() {
@@ -530,19 +532,13 @@ pub struct JsonSnapshot {
 
 impl Default for JsonSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_JSON_DOCUMENT_SCHEMA.into(),
-            value: JsonValue::Null,
-        }
+        Self { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: JsonValue::Null }
     }
 }
 
 impl JsonSnapshot {
     pub fn from_value(value: impl Into<JsonValue>) -> Self {
-        Self {
-            schema: STDIO_JSON_DOCUMENT_SCHEMA.into(),
-            value: value.into(),
-        }
+        Self { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: value.into() }
     }
 
     pub fn to_serde_value(&self) -> serde_json::Value {
@@ -554,7 +550,9 @@ impl JsonSnapshot {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for JsonSnapshot {
     const EXTENSION: &'static str = "json";
-    fn envelope_id() -> &'static str { "stdio.json" }
+    fn envelope_id() -> &'static str {
+        "stdio.json"
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -566,11 +564,7 @@ impl store::ArtifactDsl for JsonSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = write_json_pretty(&self.value);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -579,22 +573,13 @@ impl store::ArtifactPack for JsonSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = write_json_text(&self.value).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         let text = std::str::from_utf8(&inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -626,19 +611,17 @@ pub fn demo_json_snapshot() -> JsonSnapshot {
             JsonMember { key: "ratio".into(), value: JsonValue::Number { lexeme: "3.5".into() } },
             JsonMember { key: "active".into(), value: JsonValue::Bool { value: true } },
             JsonMember { key: "missing".into(), value: JsonValue::Null },
-            JsonMember {
-                key: "tags".into(),
-                value: JsonValue::Array { items: vec![JsonValue::String { value: "a".into() }, JsonValue::String { value: "b".into() }, JsonValue::String { value: "c".into() }] },
-            },
+            JsonMember { key: "tags".into(), value: JsonValue::Array { items: vec![JsonValue::String { value: "a".into() }, JsonValue::String { value: "b".into() }, JsonValue::String { value: "c".into() }] } },
             JsonMember {
                 key: "nested".into(),
-                value: JsonValue::Object { members: vec![JsonMember {
-                    key: "deep".into(),
-                    value: JsonValue::Object { members: vec![JsonMember {
-                        key: "deeper".into(),
-                        value: JsonValue::Array { items: vec![JsonValue::Number { lexeme: "1".into() }, JsonValue::Number { lexeme: "2".into() }, JsonValue::Number { lexeme: "3".into() }] },
-                    }] },
-                }] },
+                value: JsonValue::Object {
+                    members: vec![JsonMember {
+                        key: "deep".into(),
+                        value: JsonValue::Object {
+                            members: vec![JsonMember { key: "deeper".into(), value: JsonValue::Array { items: vec![JsonValue::Number { lexeme: "1".into() }, JsonValue::Number { lexeme: "2".into() }, JsonValue::Number { lexeme: "3".into() }] } }],
+                        },
+                    }],
+                },
             },
         ],
     };
@@ -716,10 +699,7 @@ mod tests {
 
     #[test]
     fn snapshot_dsl_and_pack_round_trip() {
-        let snapshot = JsonSnapshot {
-            schema: STDIO_JSON_DOCUMENT_SCHEMA.into(),
-            value: obj(vec![("a", JsonValue::Number { lexeme: "1".into() }), ("b", JsonValue::Array { items: vec![JsonValue::Bool { value: true }, JsonValue::Null] })]),
-        };
+        let snapshot = JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: obj(vec![("a", JsonValue::Number { lexeme: "1".into() }), ("b", JsonValue::Array { items: vec![JsonValue::Bool { value: true }, JsonValue::Null] })]) };
         let text = store::ArtifactDsl::print_dsl(&snapshot);
         let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(parsed, snapshot);

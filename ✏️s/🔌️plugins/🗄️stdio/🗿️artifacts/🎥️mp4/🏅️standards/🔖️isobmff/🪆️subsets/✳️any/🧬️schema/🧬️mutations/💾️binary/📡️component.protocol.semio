@@ -1,2 +1,2 @@
 dialect protocol stdio.mp4.mutations
-document = json:UTF8(*)
+document = tagged-record:BYTES(*)

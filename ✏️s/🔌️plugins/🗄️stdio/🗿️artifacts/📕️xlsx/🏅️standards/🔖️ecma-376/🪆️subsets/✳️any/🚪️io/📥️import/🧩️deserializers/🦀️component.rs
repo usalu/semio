@@ -3,10 +3,13 @@
 //! magic-shape sniff. Zip/OPC/XML byte-level work is never reimplemented here: it is reused from
 //! the shared `crate::artifacts::zip::opc` layer.
 
-use crate::artifacts::xlsx::{schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook}, XlsxSnapshot};
+use super::super::super::{attr_val, column_index, column_letters_of, XlsxError, REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SHARED_STRINGS, REL_TYPE_SHARED_STRINGS_STRICT};
+use crate::artifacts::xlsx::{
+    schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook},
+    XlsxSnapshot,
+};
 use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlDocument, XmlNode};
 use crate::artifacts::zip::opc::{self, REL_TYPE_OFFICE_DOCUMENT};
-use super::super::super::{attr_val, column_index, column_letters_of, REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SHARED_STRINGS, REL_TYPE_SHARED_STRINGS_STRICT, XlsxError};
 
 //#region 🔖️SharedStringsXml
 fn collect_text(node: &XmlNode, out: &mut String) {
@@ -61,7 +64,10 @@ fn workbook_sheets_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<SheetRe
     }
     let sheets_el = children
         .iter()
-        .find_map(|c| match c { XmlNode::Element { name, children, .. } if name == "sheets" => Some(children), _ => None })
+        .find_map(|c| match c {
+            XmlNode::Element { name, children, .. } if name == "sheets" => Some(children),
+            _ => None,
+        })
         .ok_or_else(|| bad("missing <sheets>".into()))?;
     let mut out = Vec::new();
     for s in sheets_el {
@@ -126,7 +132,10 @@ fn extract_typed_value(children: &[XmlNode], t: Option<&str>, sst_len: usize, pa
         }
         Some("str") => Ok(XlsxCellValue::InlineString(find_v_text(children).unwrap_or_default())),
         Some("inlineStr") => {
-            let is_children = children.iter().find_map(|c| match c { XmlNode::Element { name, children, .. } if name == "is" => Some(children), _ => None });
+            let is_children = children.iter().find_map(|c| match c {
+                XmlNode::Element { name, children, .. } if name == "is" => Some(children),
+                _ => None,
+            });
             let mut text = String::new();
             if let Some(is_children) = is_children {
                 for c in is_children {
@@ -152,11 +161,7 @@ fn extract_typed_value(children: &[XmlNode], t: Option<&str>, sst_len: usize, pa
 /// `extract_typed_value` (absent `<v>` = uncalculated, `cached: None`).
 fn extract_cell_value(children: &[XmlNode], t: Option<&str>, sst_len: usize, part: &str) -> Result<XlsxCellValue, XlsxError> {
     if let Some(expr) = find_f_text(children) {
-        let cached = if find_v_text(children).is_some() {
-            Some(Box::new(extract_typed_value(children, t, sst_len, part)?))
-        } else {
-            None
-        };
+        let cached = if find_v_text(children).is_some() { Some(Box::new(extract_typed_value(children, t, sst_len, part)?)) } else { None };
         return Ok(XlsxCellValue::Formula { expr, cached });
     }
     extract_typed_value(children, t, sst_len, part)
@@ -175,7 +180,10 @@ fn worksheet_cells_from_xml(doc: &XmlDocument, sst_len: usize, part: &str) -> Re
     }
     let sheet_data = children
         .iter()
-        .find_map(|c| match c { XmlNode::Element { name, children, .. } if name == "sheetData" => Some(children), _ => None })
+        .find_map(|c| match c {
+            XmlNode::Element { name, children, .. } if name == "sheetData" => Some(children),
+            _ => None,
+        })
         .ok_or_else(|| bad("missing <sheetData>".into()))?;
     let mut cells = Vec::new();
     for row_node in sheet_data {
@@ -183,10 +191,7 @@ fn worksheet_cells_from_xml(doc: &XmlDocument, sst_len: usize, part: &str) -> Re
         if name != "row" {
             continue;
         }
-        let row = attr_val(attrs, "r")
-            .ok_or_else(|| bad("<row> missing r".into()))?
-            .parse::<u32>()
-            .map_err(|_| bad("<row> r attribute is not a valid integer".into()))?;
+        let row = attr_val(attrs, "r").ok_or_else(|| bad("<row> missing r".into()))?.parse::<u32>().map_err(|_| bad("<row> r attribute is not a valid integer".into()))?;
         for c_node in row_children {
             let XmlNode::Element { name, attrs, children: c_children } = c_node else { continue };
             if name != "c" {
@@ -209,10 +214,7 @@ pub fn decode_xlsx(data: &[u8]) -> Result<XlsxSnapshot, XlsxError> {
     // 🏅️ Recognizes either the Transitional or Strict officeDocument relationship TYPE (see the
     // `REL_TYPE_OFFICE_DOCUMENT_STRICT` doc comment above) -- additive, doesn't change decode for
     // any existing Transitional package.
-    let workbook_path = opc
-        .resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT)
-        .or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT))
-        .ok_or(XlsxError::MissingWorkbookRelationship)?;
+    let workbook_path = opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT)).ok_or(XlsxError::MissingWorkbookRelationship)?;
     let workbook_bytes = opc.part_bytes(&workbook_path).ok_or_else(|| XlsxError::MissingPart(workbook_path.clone()))?;
     let workbook_text = String::from_utf8(workbook_bytes.to_vec()).map_err(|_| XlsxError::Xml { part: workbook_path.clone(), detail: "not valid utf-8".into() })?;
     let workbook_xml = xml_document_from_text(&workbook_text).map_err(|e| XlsxError::Xml { part: workbook_path.clone(), detail: e })?;
@@ -233,10 +235,7 @@ pub fn decode_xlsx(data: &[u8]) -> Result<XlsxSnapshot, XlsxError> {
     let sst_len = shared_strings.len();
     let mut sheets = Vec::with_capacity(sheet_refs.len());
     for sheet_ref in &sheet_refs {
-        let rel = workbook_rels
-            .iter()
-            .find(|r| r.id == sheet_ref.r_id)
-            .ok_or_else(|| XlsxError::Malformed(format!("sheet {:?} references unknown relationship id {}", sheet_ref.name, sheet_ref.r_id)))?;
+        let rel = workbook_rels.iter().find(|r| r.id == sheet_ref.r_id).ok_or_else(|| XlsxError::Malformed(format!("sheet {:?} references unknown relationship id {}", sheet_ref.name, sheet_ref.r_id)))?;
         let path = opc::resolve_relationship_target(&workbook_path, &rel.target);
         let bytes = opc.part_bytes(&path).ok_or_else(|| XlsxError::MissingPart(path.clone()))?;
         let text = String::from_utf8(bytes.to_vec()).map_err(|_| XlsxError::Xml { part: path.clone(), detail: "not valid utf-8".into() })?;
@@ -254,9 +253,7 @@ pub fn decode_xlsx(data: &[u8]) -> Result<XlsxSnapshot, XlsxError> {
 /// `xl/` — disambiguates from docx/pptx sharing the same zip magic and OPC shape.
 pub fn sniff_xlsx_bytes(data: &[u8]) -> bool {
     let Ok(opc) = opc::decode_opc(data) else { return false };
-    let path = opc
-        .resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT)
-        .or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT));
+    let path = opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT));
     match path {
         Some(path) => path.starts_with("xl/"),
         None => false,

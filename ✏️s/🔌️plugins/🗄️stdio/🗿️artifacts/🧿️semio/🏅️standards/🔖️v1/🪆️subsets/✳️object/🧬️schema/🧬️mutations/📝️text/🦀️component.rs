@@ -6,8 +6,7 @@ pub use crate::artifacts::semio::standards::v1::subsets::object::schema::mutatio
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
 use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::{
-    create_brep::mutation::CreateBrep, create_mesh::mutation::CreateMesh, create_properties::mutation::CreateProperties,
-    delete_brep::mutation::DeleteBrep, delete_mesh::mutation::DeleteMesh, delete_properties::mutation::DeleteProperties,
+    create_brep::mutation::CreateBrep, create_mesh::mutation::CreateMesh, create_properties::mutation::CreateProperties, delete_brep::mutation::DeleteBrep, delete_mesh::mutation::DeleteMesh, delete_properties::mutation::DeleteProperties,
     move_object::mutation::MoveObject, rotate_object::mutation::RotateObject, scale_object::mutation::ScaleObject,
 };
 
@@ -17,17 +16,31 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Primitives
-fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|b| format!("{b:02x}")).collect() }
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 { return Err(format!("odd hex length: {s:?}")); }
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
-fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
-fn parse_f64(s: &str) -> Result<f64, String> { s.trim().parse::<f64>().map_err(|e| e.to_string()) }
+fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+fn parse_f64(s: &str) -> Result<f64, String> {
+    s.trim().parse::<f64>().map_err(|e| e.to_string())
+}
 
-fn enc_ref(r: &store::os_io::ArtifactRef) -> String { enc_str(&r.to_uri()) }
-fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&dec_str(s)?) }
+fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+    enc_str(&r.to_uri())
+}
+fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
+    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
+}
 //#endregion 🔖️Primitives
 
 //#region 🔖️OpText
@@ -46,9 +59,15 @@ fn print_object_mutation(m: &SemioObjectMutation) -> String {
 }
 
 fn parse_object_mutation(line: &str) -> Result<SemioObjectMutation, String> {
-    if line == "deleteBrep" { return Ok(SemioObjectMutation::DeleteBrep(DeleteBrep {})); }
-    if line == "deleteMesh" { return Ok(SemioObjectMutation::DeleteMesh(DeleteMesh {})); }
-    if line == "deleteProperties" { return Ok(SemioObjectMutation::DeleteProperties(DeleteProperties {})); }
+    if line == "deleteBrep" {
+        return Ok(SemioObjectMutation::DeleteBrep(DeleteBrep {}));
+    }
+    if line == "deleteMesh" {
+        return Ok(SemioObjectMutation::DeleteMesh(DeleteMesh {}));
+    }
+    if line == "deleteProperties" {
+        return Ok(SemioObjectMutation::DeleteProperties(DeleteProperties {}));
+    }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("object mutation: missing ':' in {line:?}"))?;
     match tag {
         "moveObject" => {
@@ -83,7 +102,9 @@ fn parse_object_mutation(line: &str) -> Result<SemioObjectMutation, String> {
 }
 
 impl protocol::OpText for SemioObjectMutation {
-    fn print_op(&self) -> String { print_object_mutation(self) }
+    fn print_op(&self) -> String {
+        print_object_mutation(self)
+    }
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_object_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }

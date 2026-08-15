@@ -9,17 +9,17 @@
 
 use std::collections::HashSet;
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{FaceId, SolidId, VertexId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::classification::point_in_solid;
-use semio_framework_3d::engine::{MeshTransfer, PointClassification};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::{BooleanError, KernelError};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{solid_bounding_box, solid_volume, AxisAlignedBox};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::classification::point_in_solid;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{solid_bounding_box, solid_volume, AxisAlignedBox};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{FaceId, SolidId, VertexId};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::{BooleanError, KernelError};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
+use semio_framework_3d::engine::{MeshTransfer, PointClassification};
 
 // #region 🔖️Api
 
@@ -34,14 +34,7 @@ pub enum BooleanOp {
 /// 🔀 Combines solids `a` and `b` under `op`, preferring AABB fast paths then classified triangle-soup stitch.
 /// `rec` accumulates the whole operation's [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpDelta`] — every helper below
 /// threads it through instead of building its own and discarding it at a private function boundary.
-pub fn boolean_solid(
-    body: &mut Body,
-    a: SolidId,
-    b: SolidId,
-    op: BooleanOp,
-    tol: f64,
-    rec: &mut OpRecorder,
-) -> Result<SolidId, KernelError> {
+pub fn boolean_solid(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_tol(tol)?;
     require_solid(body, a)?;
     require_solid(body, b)?;
@@ -60,13 +53,7 @@ pub fn boolean_solid(
 }
 
 /// 🔀 Successively cuts `tools` from `target` (folded [`BooleanOp::Cut`]).
-pub fn compound_cut(
-    body: &mut Body,
-    target: SolidId,
-    tools: &[SolidId],
-    tol: f64,
-    rec: &mut OpRecorder,
-) -> Result<SolidId, KernelError> {
+pub fn compound_cut(body: &mut Body, target: SolidId, tools: &[SolidId], tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_tol(tol)?;
     require_solid(body, target)?;
     if tools.is_empty() {
@@ -82,14 +69,7 @@ pub fn compound_cut(
 /// 🔀 Planar section of `solid` by the plane `(origin, normal)`.
 ///
 /// Collects in-plane vertices and edge/plane hits, then builds one planar face from those points.
-pub fn section_solid_by_plane(
-    body: &mut Body,
-    solid: SolidId,
-    origin: Pnt3,
-    normal: Vec3,
-    tol: f64,
-    rec: &mut OpRecorder,
-) -> Result<Vec<FaceId>, KernelError> {
+pub fn section_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, normal: Vec3, tol: f64, rec: &mut OpRecorder) -> Result<Vec<FaceId>, KernelError> {
     require_tol(tol)?;
     require_solid(body, solid)?;
     let n = plane_normal(normal)?;
@@ -136,14 +116,7 @@ pub fn section_solid_by_plane(
 }
 
 /// 🔀 Splits `solid` by the plane `(origin, normal)` into two solids (classified triangle soups; hull fallback).
-pub fn split_solid_by_plane(
-    body: &mut Body,
-    solid: SolidId,
-    origin: Pnt3,
-    normal: Vec3,
-    tol: f64,
-    rec: &mut OpRecorder,
-) -> Result<(SolidId, SolidId), KernelError> {
+pub fn split_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, normal: Vec3, tol: f64, rec: &mut OpRecorder) -> Result<(SolidId, SolidId), KernelError> {
     require_tol(tol)?;
     require_solid(body, solid)?;
     let n = plane_normal(normal)?;
@@ -192,9 +165,7 @@ pub fn split_solid_by_plane(
             }
         }
         if pos.len() < 4 || neg.len() < 4 {
-            return Err(KernelError::Boolean(BooleanError::InvalidResult(
-                "split_solid_by_plane: one side has too few points".into(),
-            )));
+            return Err(KernelError::Boolean(BooleanError::InvalidResult("split_solid_by_plane: one side has too few points".into())));
         }
         return Ok((make_convex_hull(body, &pos, rec)?, make_convex_hull(body, &neg, rec)?));
     }
@@ -213,29 +184,16 @@ pub fn split_solid_by_plane(
 
 // #region 🔖️AabbFastPath
 
-fn aabb_fast_path(
-    body: &mut Body,
-    a: SolidId,
-    b: SolidId,
-    bb_a: &AxisAlignedBox,
-    bb_b: &AxisAlignedBox,
-    op: BooleanOp,
-    tol: f64,
-    rec: &mut OpRecorder,
-) -> Result<Option<SolidId>, KernelError> {
+fn aabb_fast_path(body: &mut Body, a: SolidId, b: SolidId, bb_a: &AxisAlignedBox, bb_b: &AxisAlignedBox, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<Option<SolidId>, KernelError> {
     let gap = aabb_gap(bb_a, bb_b);
     match op {
         BooleanOp::Intersect => {
             let Some(inter) = aabb_intersection(bb_a, bb_b) else {
-                return Err(KernelError::Boolean(BooleanError::InvalidResult(
-                    "boolean intersect is empty".into(),
-                )));
+                return Err(KernelError::Boolean(BooleanError::InvalidResult("boolean intersect is empty".into())));
             };
             let (w, d, h) = aabb_dims(&inter);
             if w <= tol || d <= tol || h <= tol {
-                return Err(KernelError::Boolean(BooleanError::InvalidResult(
-                    "boolean intersect is empty within tolerance".into(),
-                )));
+                return Err(KernelError::Boolean(BooleanError::InvalidResult("boolean intersect is empty within tolerance".into())));
             }
             Ok(Some(make_box(body, w, d, h, rec)?))
         }
@@ -254,9 +212,7 @@ fn aabb_fast_path(
         }
         BooleanOp::Cut => {
             if aabb_contains(bb_b, bb_a, tol) {
-                return Err(KernelError::Boolean(BooleanError::InvalidResult(
-                    "boolean cut is empty (tool contains target)".into(),
-                )));
+                return Err(KernelError::Boolean(BooleanError::InvalidResult("boolean cut is empty (tool contains target)".into())));
             }
             if gap >= tol {
                 return Ok(Some(clone_solid_shells(body, a, rec)?));
@@ -288,14 +244,7 @@ fn is_aabb_box_solid(body: &Body, solid: SolidId, bb: &AxisAlignedBox) -> Result
 
 // #region 🔖️MeshFallback
 
-fn mesh_boolean(
-    body: &mut Body,
-    a: SolidId,
-    b: SolidId,
-    op: BooleanOp,
-    tol: f64,
-    rec: &mut OpRecorder,
-) -> Result<SolidId, KernelError> {
+fn mesh_boolean(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     let deflection = tol.max(1e-3);
     let mesh_a = tessellate_solid(body, a, deflection)?;
     let mesh_b = tessellate_solid(body, b, deflection)?;
@@ -304,9 +253,7 @@ fn mesh_boolean(
     append_kept_triangles(body, &mesh_a, b, op, true, tol, &mut points, &mut triangles)?;
     append_kept_triangles(body, &mesh_b, a, op, false, tol, &mut points, &mut triangles)?;
     if triangles.is_empty() {
-        return Err(KernelError::Boolean(BooleanError::InvalidResult(
-            "mesh boolean produced no triangles".into(),
-        )));
+        return Err(KernelError::Boolean(BooleanError::InvalidResult("mesh boolean produced no triangles".into())));
     }
     // Prefer the classified triangle soup (non-convex cuts/fuses) over a convex hull of the kept
     // vertices — hull was collapsing C-shaped and holed results into the wrong solid.
@@ -319,16 +266,7 @@ fn mesh_boolean(
     }
 }
 
-fn append_kept_triangles(
-    body: &Body,
-    mesh: &MeshTransfer,
-    other: SolidId,
-    op: BooleanOp,
-    from_a: bool,
-    tol: f64,
-    out_points: &mut Vec<Pnt3>,
-    out_tris: &mut Vec<[Pnt3; 3]>,
-) -> Result<(), KernelError> {
+fn append_kept_triangles(body: &Body, mesh: &MeshTransfer, other: SolidId, op: BooleanOp, from_a: bool, tol: f64, out_points: &mut Vec<Pnt3>, out_tris: &mut Vec<[Pnt3; 3]>) -> Result<(), KernelError> {
     let npos = mesh.position.len() / 3;
     if mesh.index.len() % 3 != 0 {
         return Err(KernelError::InvalidInput("mesh index length must be a multiple of 3".into()));
@@ -343,11 +281,7 @@ fn append_kept_triangles(
         let p0 = mesh_position(mesh, i0);
         let p1 = mesh_position(mesh, i1);
         let p2 = mesh_position(mesh, i2);
-        let centroid = Pnt3::new(
-            (p0.x + p1.x + p2.x) / 3.0,
-            (p0.y + p1.y + p2.y) / 3.0,
-            (p0.z + p1.z + p2.z) / 3.0,
-        );
+        let centroid = Pnt3::new((p0.x + p1.x + p2.x) / 3.0, (p0.y + p1.y + p2.y) / 3.0, (p0.z + p1.z + p2.z) / 3.0);
         let class = point_in_solid(body, other, centroid, tol)?;
         if keep_triangle(op, from_a, class) {
             out_points.push(p0);
@@ -359,23 +293,13 @@ fn append_kept_triangles(
     Ok(())
 }
 
-
 fn keep_triangle(op: BooleanOp, from_a: bool, class: PointClassification) -> bool {
     match op {
-        BooleanOp::Unite => matches!(
-            class,
-            PointClassification::Outside | PointClassification::OnBoundary
-        ),
-        BooleanOp::Intersect => matches!(
-            class,
-            PointClassification::Inside | PointClassification::OnBoundary
-        ),
+        BooleanOp::Unite => matches!(class, PointClassification::Outside | PointClassification::OnBoundary),
+        BooleanOp::Intersect => matches!(class, PointClassification::Inside | PointClassification::OnBoundary),
         BooleanOp::Cut => {
             if from_a {
-                matches!(
-                    class,
-                    PointClassification::Outside | PointClassification::OnBoundary
-                )
+                matches!(class, PointClassification::Outside | PointClassification::OnBoundary)
             } else {
                 matches!(class, PointClassification::Inside)
             }
@@ -392,12 +316,7 @@ fn mesh_position(mesh: &MeshTransfer, i: usize) -> Pnt3 {
 
 // #region 🔖️ShellHelpers
 
-fn solid_from_outer_faces(
-    body: &mut Body,
-    outer_faces: Vec<FaceId>,
-    inner_face_sets: Vec<Vec<FaceId>>,
-    rec: &mut OpRecorder,
-) -> Result<SolidId, KernelError> {
+fn solid_from_outer_faces(body: &mut Body, outer_faces: Vec<FaceId>, inner_face_sets: Vec<Vec<FaceId>>, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if outer_faces.is_empty() {
         return Err(KernelError::InvalidInput("outer shell requires at least one face".into()));
     }
@@ -413,34 +332,19 @@ fn solid_from_outer_faces(
 }
 
 fn clone_solid_shells(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    let data = body
-        .solids
-        .get(solid)
-        .ok_or_else(|| KernelError::MissingEntity(format!("solid {solid}")))?
-        .clone();
+    let data = body.solids.get(solid).ok_or_else(|| KernelError::MissingEntity(format!("solid {solid}")))?.clone();
     let outer = outer_faces(body, solid)?;
     let mut inners = Vec::new();
     for shell_id in data.inners {
-        let faces = body
-            .shells
-            .get(shell_id)
-            .ok_or_else(|| KernelError::MissingEntity(format!("shell {shell_id}")))?
-            .faces
-            .clone();
+        let faces = body.shells.get(shell_id).ok_or_else(|| KernelError::MissingEntity(format!("shell {shell_id}")))?.faces.clone();
         inners.push(faces);
     }
     solid_from_outer_faces(body, outer, inners, rec)
 }
 
 fn outer_faces(body: &Body, solid: SolidId) -> Result<Vec<FaceId>, KernelError> {
-    let data = body
-        .solids
-        .get(solid)
-        .ok_or_else(|| KernelError::MissingEntity(format!("solid {solid}")))?;
-    let shell = body
-        .shells
-        .get(data.outer)
-        .ok_or_else(|| KernelError::MissingEntity(format!("shell {}", data.outer)))?;
+    let data = body.solids.get(solid).ok_or_else(|| KernelError::MissingEntity(format!("solid {solid}")))?;
+    let shell = body.shells.get(data.outer).ok_or_else(|| KernelError::MissingEntity(format!("shell {}", data.outer)))?;
     Ok(shell.faces.clone())
 }
 
@@ -488,12 +392,7 @@ fn solid_vertex_positions(body: &Body, solid: SolidId) -> Result<Vec<Pnt3>, Kern
 // #region 🔖️AabbMath
 
 fn aabb_finite(bb: &AxisAlignedBox) -> bool {
-    bb.min.x.is_finite()
-        && bb.min.y.is_finite()
-        && bb.min.z.is_finite()
-        && bb.max.x.is_finite()
-        && bb.max.y.is_finite()
-        && bb.max.z.is_finite()
+    bb.min.x.is_finite() && bb.min.y.is_finite() && bb.min.z.is_finite() && bb.max.x.is_finite() && bb.max.y.is_finite() && bb.max.z.is_finite()
 }
 
 fn aabb_dims(bb: &AxisAlignedBox) -> (f64, f64, f64) {
@@ -533,19 +432,11 @@ fn aabb_intersection(a: &AxisAlignedBox, b: &AxisAlignedBox) -> Option<AxisAlign
 }
 
 fn aabb_union(a: &AxisAlignedBox, b: &AxisAlignedBox) -> AxisAlignedBox {
-    AxisAlignedBox {
-        min: Pnt3::new(a.min.x.min(b.min.x), a.min.y.min(b.min.y), a.min.z.min(b.min.z)),
-        max: Pnt3::new(a.max.x.max(b.max.x), a.max.y.max(b.max.y), a.max.z.max(b.max.z)),
-    }
+    AxisAlignedBox { min: Pnt3::new(a.min.x.min(b.min.x), a.min.y.min(b.min.y), a.min.z.min(b.min.z)), max: Pnt3::new(a.max.x.max(b.max.x), a.max.y.max(b.max.y), a.max.z.max(b.max.z)) }
 }
 
 fn aabb_contains(outer: &AxisAlignedBox, inner: &AxisAlignedBox, tol: f64) -> bool {
-    outer.min.x <= inner.min.x + tol
-        && outer.min.y <= inner.min.y + tol
-        && outer.min.z <= inner.min.z + tol
-        && outer.max.x + tol >= inner.max.x
-        && outer.max.y + tol >= inner.max.y
-        && outer.max.z + tol >= inner.max.z
+    outer.min.x <= inner.min.x + tol && outer.min.y <= inner.min.y + tol && outer.min.z <= inner.min.z + tol && outer.max.x + tol >= inner.max.x && outer.max.y + tol >= inner.max.y && outer.max.z + tol >= inner.max.z
 }
 
 // #endregion 🔖️AabbMath
@@ -684,21 +575,12 @@ mod tests {
             let ox = (seed % 20) as f64 * 0.25;
             let a = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
             let o = Pnt3::new(ox, ox * 0.5, 0.0);
-            let corners = [
-                o,
-                Pnt3::new(o.x + w, o.y, o.z),
-                Pnt3::new(o.x + w, o.y + w, o.z),
-                Pnt3::new(o.x, o.y + w, o.z),
-                Pnt3::new(o.x, o.y, o.z + w),
-                Pnt3::new(o.x + w, o.y, o.z + w),
-                Pnt3::new(o.x + w, o.y + w, o.z + w),
-                Pnt3::new(o.x, o.y + w, o.z + w),
-            ];
+            let corners =
+                [o, Pnt3::new(o.x + w, o.y, o.z), Pnt3::new(o.x + w, o.y + w, o.z), Pnt3::new(o.x, o.y + w, o.z), Pnt3::new(o.x, o.y, o.z + w), Pnt3::new(o.x + w, o.y, o.z + w), Pnt3::new(o.x + w, o.y + w, o.z + w), Pnt3::new(o.x, o.y + w, o.z + w)];
             let b = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_convex_hull(&mut body, &corners, &mut rec).unwrap();
             if let Ok(inter) = boolean_solid(&mut body, a, b, BooleanOp::Intersect, 1e-6, &mut rec) {
                 assert!(solid_volume(&body, inter, 1e-3).unwrap() >= -1e-9);
             }
         }
     }
-
 }

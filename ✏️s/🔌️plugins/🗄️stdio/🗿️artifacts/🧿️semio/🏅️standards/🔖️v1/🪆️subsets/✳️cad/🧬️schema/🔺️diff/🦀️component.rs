@@ -11,12 +11,8 @@
 //! `CadEntityRecordDiff.entity` is a plain `Option<CadEntity>`, not a nested diff type.
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{
-    dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff,
-};
-use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{
-    CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot,
-};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
@@ -118,7 +114,11 @@ where
             added.push(o.clone());
         }
     }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(NamedTripleDiff { removed, modified, added }) }
+    if removed.is_empty() && modified.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(NamedTripleDiff { removed, modified, added })
+    }
 }
 
 fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
@@ -145,13 +145,7 @@ where
 /// 🧮️ Key-identity absorb (not position) — a `d2`-removal of a `d1`-added key annihilates the add;
 /// a `d2`-modify of a `d1`-added key patches into the carried payload; everything else composes on
 /// the shared key space. Mirrors bcf's `absorb_named` (same canonical cases, B-R7).
-fn absorb_named<K, T, D>(
-    d1: NamedTripleDiff<K, D, T>,
-    d2: NamedTripleDiff<K, D, T>,
-    key_of: impl Fn(&T) -> K,
-    absorb_item: impl Fn(D, D) -> D,
-    apply_item: impl Fn(&mut T, &D),
-) -> NamedTripleDiff<K, D, T>
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -196,37 +190,22 @@ where
 //#region 🔖️WrapHelpers
 /// 🧭️ Lowers a per-layer leaf diff into a full `SemioCadDiff` (mirrors bcf's `wrap_topic_diff`).
 pub fn wrap_layer_diff(name: &str, diff: CadLayerDiff) -> SemioCadDiff {
-    SemioCadDiff {
-        layers: Some(CadLayersDiff { removed: Vec::new(), modified: vec![NamedModified { key: name.to_string(), diff }], added: Vec::new() }),
-        blocks: None,
-        entities: None,
-    }
+    SemioCadDiff { layers: Some(CadLayersDiff { removed: Vec::new(), modified: vec![NamedModified { key: name.to_string(), diff }], added: Vec::new() }), blocks: None, entities: None }
 }
 
 /// 🧭️ Lowers a per-block leaf diff into a full `SemioCadDiff`.
 pub fn wrap_block_diff(name: &str, diff: CadBlockDiff) -> SemioCadDiff {
-    SemioCadDiff {
-        layers: None,
-        blocks: Some(CadBlocksDiff { removed: Vec::new(), modified: vec![NamedModified { key: name.to_string(), diff }], added: Vec::new() }),
-        entities: None,
-    }
+    SemioCadDiff { layers: None, blocks: Some(CadBlocksDiff { removed: Vec::new(), modified: vec![NamedModified { key: name.to_string(), diff }], added: Vec::new() }), entities: None }
 }
 
 /// 🧭️ Lowers a per-top-level-entity leaf diff into a full `SemioCadDiff`.
 pub fn wrap_entity_diff(handle: &str, diff: CadEntityRecordDiff) -> SemioCadDiff {
-    SemioCadDiff {
-        layers: None,
-        blocks: None,
-        entities: Some(CadEntitiesDiff { removed: Vec::new(), modified: vec![NamedModified { key: handle.to_string(), diff }], added: Vec::new() }),
-    }
+    SemioCadDiff { layers: None, blocks: None, entities: Some(CadEntitiesDiff { removed: Vec::new(), modified: vec![NamedModified { key: handle.to_string(), diff }], added: Vec::new() }) }
 }
 
 /// 🧭️ Lowers a per-block-entity leaf diff (inside block `block_name`) into a full `SemioCadDiff`.
 pub fn wrap_block_entity_diff(block_name: &str, handle: &str, diff: CadEntityRecordDiff) -> SemioCadDiff {
-    wrap_block_diff(block_name, CadBlockDiff {
-        base_point: None,
-        entities: Some(CadEntitiesDiff { removed: Vec::new(), modified: vec![NamedModified { key: handle.to_string(), diff }], added: Vec::new() }),
-    })
+    wrap_block_diff(block_name, CadBlockDiff { base_point: None, entities: Some(CadEntitiesDiff { removed: Vec::new(), modified: vec![NamedModified { key: handle.to_string(), diff }], added: Vec::new() }) })
 }
 //#endregion 🔖️WrapHelpers
 
@@ -266,32 +245,52 @@ impl MutationDiff<SemioCadSnapshot> for SemioCadDiff {
 }
 
 fn apply_layer(layer: &mut CadLayer, diff: &CadLayerDiff) {
-    if let Some(v) = &diff.color_index { layer.color_index = *v; }
-    if let Some(v) = &diff.line_type { layer.line_type = v.clone(); }
-    if let Some(v) = &diff.visible { layer.visible = *v; }
+    if let Some(v) = &diff.color_index {
+        layer.color_index = *v;
+    }
+    if let Some(v) = &diff.line_type {
+        layer.line_type = v.clone();
+    }
+    if let Some(v) = &diff.visible {
+        layer.visible = *v;
+    }
 }
 
 fn apply_block(block: &mut CadBlock, diff: &CadBlockDiff) {
-    if let Some(v) = &diff.base_point { block.base_point = *v; }
+    if let Some(v) = &diff.base_point {
+        block.base_point = *v;
+    }
     if let Some(ed) = &diff.entities {
         apply_named(&mut block.entities, ed, |e| e.handle.clone(), apply_entity_record);
     }
 }
 
 fn apply_entity_record(rec: &mut CadEntityRecord, diff: &CadEntityRecordDiff) {
-    if let Some(v) = &diff.layer { rec.layer = v.clone(); }
-    if let Some(v) = &diff.entity { rec.entity = v.clone(); }
+    if let Some(v) = &diff.layer {
+        rec.layer = v.clone();
+    }
+    if let Some(v) = &diff.entity {
+        rec.entity = v.clone();
+    }
 }
 
 fn absorb_layer_diff(mut a: CadLayerDiff, b: CadLayerDiff) -> CadLayerDiff {
-    if b.color_index.is_some() { a.color_index = b.color_index; }
-    if b.line_type.is_some() { a.line_type = b.line_type; }
-    if b.visible.is_some() { a.visible = b.visible; }
+    if b.color_index.is_some() {
+        a.color_index = b.color_index;
+    }
+    if b.line_type.is_some() {
+        a.line_type = b.line_type;
+    }
+    if b.visible.is_some() {
+        a.visible = b.visible;
+    }
     a
 }
 
 fn absorb_block_diff(mut a: CadBlockDiff, b: CadBlockDiff) -> CadBlockDiff {
-    if b.base_point.is_some() { a.base_point = b.base_point; }
+    if b.base_point.is_some() {
+        a.base_point = b.base_point;
+    }
     a.entities = match (a.entities.take(), b.entities) {
         (None, x) => x,
         (x, None) => x,
@@ -301,8 +300,12 @@ fn absorb_block_diff(mut a: CadBlockDiff, b: CadBlockDiff) -> CadBlockDiff {
 }
 
 fn absorb_entity_record_diff(mut a: CadEntityRecordDiff, b: CadEntityRecordDiff) -> CadEntityRecordDiff {
-    if b.layer.is_some() { a.layer = b.layer; }
-    if b.entity.is_some() { a.entity = b.entity; }
+    if b.layer.is_some() {
+        a.layer = b.layer;
+    }
+    if b.entity.is_some() {
+        a.entity = b.entity;
+    }
     a
 }
 //#endregion 🔖️Apply
@@ -331,44 +334,46 @@ impl DiffAlgebra<SemioCadSnapshot> for SemioCadDiff {
 }
 
 fn inverse_layer(base: &CadLayer, diff: &CadLayerDiff) -> CadLayerDiff {
-    CadLayerDiff {
-        color_index: diff.color_index.as_ref().map(|_| base.color_index),
-        line_type: diff.line_type.as_ref().map(|_| base.line_type.clone()),
-        visible: diff.visible.as_ref().map(|_| base.visible),
-    }
+    CadLayerDiff { color_index: diff.color_index.as_ref().map(|_| base.color_index), line_type: diff.line_type.as_ref().map(|_| base.line_type.clone()), visible: diff.visible.as_ref().map(|_| base.visible) }
 }
 
 fn inverse_block(base: &CadBlock, diff: &CadBlockDiff) -> CadBlockDiff {
-    CadBlockDiff {
-        base_point: diff.base_point.as_ref().map(|_| base.base_point),
-        entities: diff.entities.as_ref().map(|d| inverse_named(&base.entities, d, |e| e.handle.clone(), inverse_entity_record)),
-    }
+    CadBlockDiff { base_point: diff.base_point.as_ref().map(|_| base.base_point), entities: diff.entities.as_ref().map(|d| inverse_named(&base.entities, d, |e| e.handle.clone(), inverse_entity_record)) }
 }
 
 fn inverse_entity_record(base: &CadEntityRecord, diff: &CadEntityRecordDiff) -> CadEntityRecordDiff {
-    CadEntityRecordDiff {
-        layer: diff.layer.as_ref().map(|_| base.layer.clone()),
-        entity: diff.entity.as_ref().map(|_| base.entity.clone()),
-    }
+    CadEntityRecordDiff { layer: diff.layer.as_ref().map(|_| base.layer.clone()), entity: diff.entity.as_ref().map(|_| base.entity.clone()) }
 }
 
 fn between_layer(base: &CadLayer, other: &CadLayer) -> Option<CadLayerDiff> {
     let color_index = if base.color_index != other.color_index { Some(other.color_index) } else { None };
     let line_type = if base.line_type != other.line_type { Some(other.line_type.clone()) } else { None };
     let visible = if base.visible != other.visible { Some(other.visible) } else { None };
-    if color_index.is_none() && line_type.is_none() && visible.is_none() { None } else { Some(CadLayerDiff { color_index, line_type, visible }) }
+    if color_index.is_none() && line_type.is_none() && visible.is_none() {
+        None
+    } else {
+        Some(CadLayerDiff { color_index, line_type, visible })
+    }
 }
 
 fn between_block(base: &CadBlock, other: &CadBlock) -> Option<CadBlockDiff> {
     let base_point = if base.base_point != other.base_point { Some(other.base_point) } else { None };
     let entities = between_named(&base.entities, &other.entities, |e| e.handle.clone(), between_entity_record);
-    if base_point.is_none() && entities.is_none() { None } else { Some(CadBlockDiff { base_point, entities }) }
+    if base_point.is_none() && entities.is_none() {
+        None
+    } else {
+        Some(CadBlockDiff { base_point, entities })
+    }
 }
 
 fn between_entity_record(base: &CadEntityRecord, other: &CadEntityRecord) -> Option<CadEntityRecordDiff> {
     let layer = if base.layer != other.layer { Some(other.layer.clone()) } else { None };
     let entity = if base.entity != other.entity { Some(other.entity.clone()) } else { None };
-    if layer.is_none() && entity.is_none() { None } else { Some(CadEntityRecordDiff { layer, entity }) }
+    if layer.is_none() && entity.is_none() {
+        None
+    } else {
+        Some(CadEntityRecordDiff { layer, entity })
+    }
 }
 //#endregion 🔖️DiffAlgebra
 
@@ -398,10 +403,18 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
-fn parse_f64(s: &str) -> Result<f64, String> { s.parse().map_err(|e: std::num::ParseFloatError| e.to_string()) }
-fn parse_i32(s: &str) -> Result<i32, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+fn parse_f64(s: &str) -> Result<f64, String> {
+    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
+}
+fn parse_i32(s: &str) -> Result<i32, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
 
 pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
@@ -426,7 +439,9 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-pub(crate) fn enc_point2(p: &SemioPoint2) -> String { format!("[{},{}]", p.x, p.y) }
+pub(crate) fn enc_point2(p: &SemioPoint2) -> String {
+    format!("[{},{}]", p.x, p.y)
+}
 pub(crate) fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y] = parts.as_slice() else { return Err(format!("point2: expected 2 fields, got {}", parts.len())) };
@@ -526,21 +541,12 @@ pub(crate) fn dec_block(s: &str) -> Result<CadBlock, String> {
 
 //#region 🔖️DiffValueCodecs
 pub(crate) fn enc_layer_diff(d: &CadLayerDiff) -> String {
-    format!(
-        "[{},{},{}]",
-        encode_option(&d.color_index, |v: &i32| v.to_string()),
-        encode_option(&d.line_type, |v: &String| enc_str(v)),
-        encode_option(&d.visible, |v: &bool| if *v { "1".to_string() } else { "0".to_string() }),
-    )
+    format!("[{},{},{}]", encode_option(&d.color_index, |v: &i32| v.to_string()), encode_option(&d.line_type, |v: &String| enc_str(v)), encode_option(&d.visible, |v: &bool| if *v { "1".to_string() } else { "0".to_string() }),)
 }
 pub(crate) fn dec_layer_diff(s: &str) -> Result<CadLayerDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [color_index, line_type, visible] = parts.as_slice() else { return Err(format!("layer diff: expected 3 fields, got {}", parts.len())) };
-    Ok(CadLayerDiff {
-        color_index: decode_option(color_index, parse_i32)?,
-        line_type: decode_option(line_type, dec_str)?,
-        visible: decode_option(visible, |v| Ok(v == "1"))?,
-    })
+    Ok(CadLayerDiff { color_index: decode_option(color_index, parse_i32)?, line_type: decode_option(line_type, dec_str)?, visible: decode_option(visible, |v| Ok(v == "1"))? })
 }
 
 pub(crate) fn enc_entity_record_diff(d: &CadEntityRecordDiff) -> String {
@@ -553,28 +559,27 @@ pub(crate) fn dec_entity_record_diff(s: &str) -> Result<CadEntityRecordDiff, Str
 }
 
 pub(crate) fn enc_block_diff(d: &CadBlockDiff) -> String {
-    format!(
-        "[{},{}]",
-        encode_option(&d.base_point, |p: &SemioPoint2| enc_point2(p)),
-        encode_option(&d.entities, |v: &CadEntitiesDiff| enc_named_triple(v, |k: &String| enc_str(k), enc_entity_record_diff, enc_entity_record)),
-    )
+    format!("[{},{}]", encode_option(&d.base_point, |p: &SemioPoint2| enc_point2(p)), encode_option(&d.entities, |v: &CadEntitiesDiff| enc_named_triple(v, |k: &String| enc_str(k), enc_entity_record_diff, enc_entity_record)),)
 }
 pub(crate) fn dec_block_diff(s: &str) -> Result<CadBlockDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [base_point, entities] = parts.as_slice() else { return Err(format!("block diff: expected 2 fields, got {}", parts.len())) };
-    Ok(CadBlockDiff {
-        base_point: decode_option(base_point, dec_point2)?,
-        entities: decode_option(entities, |v| dec_named_triple(v, dec_str, dec_entity_record_diff, dec_entity_record))?,
-    })
+    Ok(CadBlockDiff { base_point: decode_option(base_point, dec_point2)?, entities: decode_option(entities, |v| dec_named_triple(v, dec_str, dec_entity_record_diff, dec_entity_record))? })
 }
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
 fn print_cad_diff(d: &SemioCadDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(l) = &d.layers { tokens.push(format!("layers={}", enc_named_triple(l, |k: &String| enc_str(k), enc_layer_diff, enc_layer))); }
-    if let Some(b) = &d.blocks { tokens.push(format!("blocks={}", enc_named_triple(b, |k: &String| enc_str(k), enc_block_diff, enc_block))); }
-    if let Some(e) = &d.entities { tokens.push(format!("entities={}", enc_named_triple(e, |k: &String| enc_str(k), enc_entity_record_diff, enc_entity_record))); }
+    if let Some(l) = &d.layers {
+        tokens.push(format!("layers={}", enc_named_triple(l, |k: &String| enc_str(k), enc_layer_diff, enc_layer)));
+    }
+    if let Some(b) = &d.blocks {
+        tokens.push(format!("blocks={}", enc_named_triple(b, |k: &String| enc_str(k), enc_block_diff, enc_block)));
+    }
+    if let Some(e) = &d.entities {
+        tokens.push(format!("entities={}", enc_named_triple(e, |k: &String| enc_str(k), enc_entity_record_diff, enc_entity_record)));
+    }
     tokens.join(" ")
 }
 fn parse_cad_diff(line: &str) -> Result<SemioCadDiff, String> {
@@ -583,10 +588,15 @@ fn parse_cad_diff(line: &str) -> Result<SemioCadDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("layers=") { d.layers = Some(dec_named_triple(rest, dec_str, dec_layer_diff, dec_layer)?); }
-        else if let Some(rest) = token.strip_prefix("blocks=") { d.blocks = Some(dec_named_triple(rest, dec_str, dec_block_diff, dec_block)?); }
-        else if let Some(rest) = token.strip_prefix("entities=") { d.entities = Some(dec_named_triple(rest, dec_str, dec_entity_record_diff, dec_entity_record)?); }
-        else { return Err(format!("cad diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("layers=") {
+            d.layers = Some(dec_named_triple(rest, dec_str, dec_layer_diff, dec_layer)?);
+        } else if let Some(rest) = token.strip_prefix("blocks=") {
+            d.blocks = Some(dec_named_triple(rest, dec_str, dec_block_diff, dec_block)?);
+        } else if let Some(rest) = token.strip_prefix("entities=") {
+            d.entities = Some(dec_named_triple(rest, dec_str, dec_entity_record_diff, dec_entity_record)?);
+        } else {
+            return Err(format!("cad diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -610,7 +620,9 @@ fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
 }
 
 impl protocol::DiffCodec for SemioCadDiff {
-    fn print_diff(&self) -> String { print_cad_diff(self) }
+    fn print_diff(&self) -> String {
+        print_cad_diff(self)
+    }
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_cad_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
@@ -625,13 +637,25 @@ impl protocol::DiffCodec for SemioCadDiff {
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;
-        if self.layers.is_some() { presence |= 0b0000_0001; }
-        if self.blocks.is_some() { presence |= 0b0000_0010; }
-        if self.entities.is_some() { presence |= 0b0000_0100; }
+        if self.layers.is_some() {
+            presence |= 0b0000_0001;
+        }
+        if self.blocks.is_some() {
+            presence |= 0b0000_0010;
+        }
+        if self.entities.is_some() {
+            presence |= 0b0000_0100;
+        }
         let mut out = vec![DIFF_BINARY_FORMAT, presence];
-        if let Some(v) = &self.layers { write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_layer_diff, enc_layer)); }
-        if let Some(v) = &self.blocks { write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_block_diff, enc_block)); }
-        if let Some(v) = &self.entities { write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_entity_record_diff, enc_entity_record)); }
+        if let Some(v) = &self.layers {
+            write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_layer_diff, enc_layer));
+        }
+        if let Some(v) = &self.blocks {
+            write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_block_diff, enc_block));
+        }
+        if let Some(v) = &self.entities {
+            write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_entity_record_diff, enc_entity_record));
+        }
         Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -644,18 +668,22 @@ impl protocol::DiffCodec for SemioCadDiff {
         }
         let presence = bytes[1];
         let mut reader = store::ByteReader::new(&bytes[2..]);
-        let mut next_blob = |what: &'static str| -> Result<String, protocol::ProtocolError> {
-            read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what, offset: 2, detail: e })
-        };
+        let mut next_blob = |what: &'static str| -> Result<String, protocol::ProtocolError> { read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what, offset: 2, detail: e }) };
         let layers = if presence & 0b0000_0001 != 0 {
             Some(dec_named_triple(&next_blob("diff layers blob")?, dec_str, dec_layer_diff, dec_layer).map_err(|e| protocol::ProtocolError::Malformed { what: "diff layers text", offset: 2, detail: e })?)
-        } else { None };
+        } else {
+            None
+        };
         let blocks = if presence & 0b0000_0010 != 0 {
             Some(dec_named_triple(&next_blob("diff blocks blob")?, dec_str, dec_block_diff, dec_block).map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks text", offset: 2, detail: e })?)
-        } else { None };
+        } else {
+            None
+        };
         let entities = if presence & 0b0000_0100 != 0 {
             Some(dec_named_triple(&next_blob("diff entities blob")?, dec_str, dec_entity_record_diff, dec_entity_record).map_err(|e| protocol::ProtocolError::Malformed { what: "diff entities text", offset: 2, detail: e })?)
-        } else { None };
+        } else {
+            None
+        };
         Ok(SemioCadDiff { layers, blocks, entities })
     }
 }
@@ -673,10 +701,7 @@ impl protocol::DiffCodec for SemioCadDiff {
 pub(crate) fn demo_diff_cases() -> Vec<SemioCadDiff> {
     let a = SemioCadSnapshot {
         schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
-        layers: vec![
-            CadLayer { name: "keep".into(), color_index: 1, line_type: "CONTINUOUS".into(), visible: true },
-            CadLayer { name: "layer-removed".into(), color_index: 2, line_type: "DASHED".into(), visible: false },
-        ],
+        layers: vec![CadLayer { name: "keep".into(), color_index: 1, line_type: "CONTINUOUS".into(), visible: true }, CadLayer { name: "layer-removed".into(), color_index: 2, line_type: "DASHED".into(), visible: false }],
         blocks: vec![CadBlock {
             name: "keep-block".into(),
             base_point: SemioPoint2 { x: 0.0, y: 0.0 },
@@ -689,10 +714,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioCadDiff> {
     };
     let b = SemioCadSnapshot {
         schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
-        layers: vec![
-            CadLayer { name: "keep".into(), color_index: 9, line_type: "DASHDOT".into(), visible: false },
-            CadLayer { name: "layer-added".into(), color_index: 4, line_type: "HIDDEN".into(), visible: true },
-        ],
+        layers: vec![CadLayer { name: "keep".into(), color_index: 9, line_type: "DASHDOT".into(), visible: false }, CadLayer { name: "layer-added".into(), color_index: 4, line_type: "HIDDEN".into(), visible: true }],
         blocks: vec![CadBlock {
             name: "keep-block".into(),
             base_point: SemioPoint2 { x: 5.0, y: 5.0 },
@@ -707,11 +729,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioCadDiff> {
         ],
     };
 
-    vec![
-        SemioCadDiff::default(),
-        <SemioCadDiff as DiffAlgebra<SemioCadSnapshot>>::between(&a, &b),
-        <SemioCadDiff as DiffAlgebra<SemioCadSnapshot>>::between(&b, &a),
-    ]
+    vec![SemioCadDiff::default(), <SemioCadDiff as DiffAlgebra<SemioCadSnapshot>>::between(&a, &b), <SemioCadDiff as DiffAlgebra<SemioCadSnapshot>>::between(&b, &a)]
 }
 //#endregion 🔖️Demo
 
@@ -727,10 +745,7 @@ mod tests {
     fn sweep_a() -> SemioCadSnapshot {
         SemioCadSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
-            layers: vec![
-                CadLayer { name: "keep".into(), color_index: 1, line_type: "CONTINUOUS".into(), visible: true },
-                CadLayer { name: "layer-remove".into(), color_index: 2, line_type: "DASHED".into(), visible: false },
-            ],
+            layers: vec![CadLayer { name: "keep".into(), color_index: 1, line_type: "CONTINUOUS".into(), visible: true }, CadLayer { name: "layer-remove".into(), color_index: 2, line_type: "DASHED".into(), visible: false }],
             blocks: vec![
                 CadBlock {
                     name: "keep-block".into(),
@@ -752,10 +767,7 @@ mod tests {
     fn sweep_b() -> SemioCadSnapshot {
         SemioCadSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
-            layers: vec![
-                CadLayer { name: "keep".into(), color_index: 9, line_type: "DASHDOT".into(), visible: false },
-                CadLayer { name: "layer-add".into(), color_index: 4, line_type: "HIDDEN".into(), visible: true },
-            ],
+            layers: vec![CadLayer { name: "keep".into(), color_index: 9, line_type: "DASHDOT".into(), visible: false }, CadLayer { name: "layer-add".into(), color_index: 4, line_type: "HIDDEN".into(), visible: true }],
             blocks: vec![
                 CadBlock {
                     name: "keep-block".into(),
@@ -768,7 +780,11 @@ mod tests {
                 CadBlock { name: "block-add".into(), base_point: SemioPoint2 { x: 7.0, y: 7.0 }, entities: Vec::new() },
             ],
             entities: vec![
-                CadEntityRecord { handle: "e-keep".into(), layer: "layer-add".into(), entity: CadEntity::Ellipse { center: SemioPoint2 { x: 0.0, y: 0.0 }, major_axis_end: SemioPoint2 { x: 1.0, y: 0.0 }, ratio: 0.5, start_param: 0.0, end_param: 6.28 } },
+                CadEntityRecord {
+                    handle: "e-keep".into(),
+                    layer: "layer-add".into(),
+                    entity: CadEntity::Ellipse { center: SemioPoint2 { x: 0.0, y: 0.0 }, major_axis_end: SemioPoint2 { x: 1.0, y: 0.0 }, ratio: 0.5, start_param: 0.0, end_param: 6.28 },
+                },
                 CadEntityRecord { handle: "e-add".into(), layer: "keep".into(), entity: CadEntity::Insert { block_name: "keep-block".into(), insertion_point: SemioPoint2 { x: 0.0, y: 0.0 }, scale: SemioPoint2 { x: 1.0, y: 1.0 }, rotation: 0.0 } },
             ],
         }
@@ -905,7 +921,10 @@ mod tests {
         let mut cases = vec![SemioCadDiff::default(), SemioCadDiff::between(&a, &b), SemioCadDiff::between(&b, &a), SemioCadDiff::between(&a, &a)];
         // Exercise every remaining CadEntity variant not already covered by sweep_a/sweep_b.
         cases.push(wrap_entity_diff("h", CadEntityRecordDiff { layer: None, entity: Some(CadEntity::Polyline { vertices: vec![SemioPoint2 { x: 0.0, y: 0.0 }, SemioPoint2 { x: 1.0, y: 1.0 }], closed: true }) }));
-        cases.push(wrap_entity_diff("h", CadEntityRecordDiff { layer: None, entity: Some(CadEntity::Solid { p1: SemioPoint2 { x: 0.0, y: 0.0 }, p2: SemioPoint2 { x: 1.0, y: 0.0 }, p3: SemioPoint2 { x: 1.0, y: 1.0 }, p4: SemioPoint2 { x: 0.0, y: 1.0 } }) }));
+        cases.push(wrap_entity_diff(
+            "h",
+            CadEntityRecordDiff { layer: None, entity: Some(CadEntity::Solid { p1: SemioPoint2 { x: 0.0, y: 0.0 }, p2: SemioPoint2 { x: 1.0, y: 0.0 }, p3: SemioPoint2 { x: 1.0, y: 1.0 }, p4: SemioPoint2 { x: 0.0, y: 1.0 } }) },
+        ));
         cases.push(wrap_entity_diff("h", CadEntityRecordDiff { layer: None, entity: Some(CadEntity::Dimension { def_point: SemioPoint2 { x: 0.0, y: 0.0 }, text_position: SemioPoint2 { x: 1.0, y: 1.0 }, measurement: 4.2, text: "4.2m".into() }) }));
 
         for d in cases {

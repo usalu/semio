@@ -3,18 +3,18 @@
 //! import/export leaves under 📥️import/🧩️deserializers and 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{
-        ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, IoPayload, StandardId, SubsetId,
-        SubsetValidator, SubsetValidatorEntry, register_subset_validator, subset_validator_entry_of, register_composer_entries, deserializer_entry_of, serializer_entry_of,
-    };
+    use crate::artifacts::semio::standards::v1::subsets::cad::io::export::serializers::artifacts::dwg::v_ac1024::any::SemioCadToDwg;
+    use crate::artifacts::semio::standards::v1::subsets::cad::io::export::serializers::artifacts::dxf::v_r12::any::SemioCadToDxf;
+    use crate::artifacts::semio::standards::v1::subsets::cad::io::export::serializers::artifacts::step::v_ap214::any::SemioCadToStep;
+    use crate::artifacts::semio::standards::v1::subsets::cad::io::import::deserializers::artifacts::dwg::v_ac1024::any::SemioCadFromDwg;
+    use crate::artifacts::semio::standards::v1::subsets::cad::io::import::deserializers::artifacts::dxf::v_r12::any::SemioCadFromDxf;
+    use crate::artifacts::semio::standards::v1::subsets::cad::io::import::deserializers::artifacts::step::v_ap214::any::SemioCadFromStep;
     use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadEntity, SemioCadSnapshot};
     use crate::artifacts::semio::standards::v1::subsets::cad::schema::SemioCadAnalyzer;
-    use crate::artifacts::semio::standards::v1::subsets::cad::io::import::deserializers::artifacts::dxf::v_r12::any::SemioCadFromDxf;
-    use crate::artifacts::semio::standards::v1::subsets::cad::io::export::serializers::artifacts::dxf::v_r12::any::SemioCadToDxf;
-    use crate::artifacts::semio::standards::v1::subsets::cad::io::import::deserializers::artifacts::dwg::v_ac1024::any::SemioCadFromDwg;
-    use crate::artifacts::semio::standards::v1::subsets::cad::io::export::serializers::artifacts::dwg::v_ac1024::any::SemioCadToDwg;
-    use crate::artifacts::semio::standards::v1::subsets::cad::io::import::deserializers::artifacts::step::v_ap214::any::SemioCadFromStep;
-    use crate::artifacts::semio::standards::v1::subsets::cad::io::export::serializers::artifacts::step::v_ap214::any::SemioCadToStep;
+    use semio_framework_plugin::{
+        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition,
+        Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
+    };
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("cad") };
 
@@ -25,7 +25,9 @@ pub mod derived_composition {
         type Snapshot = SemioCadSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] { &[DIALECT] }
+        fn reads() -> &'static [Dialect] {
+            &[DIALECT]
+        }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
@@ -40,10 +42,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "SemioCadComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = SemioCadAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "SemioCadComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "SemioCadComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -61,26 +60,14 @@ pub mod derived_composition {
 
         let check_record = |diagnostics: &mut Vec<dsl::Diagnostic>, owning_block: Option<&str>, rec: &crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::CadEntityRecord| {
             if !layer_names.contains(rec.layer.as_str()) {
-                diagnostics.push(dsl::Diagnostic::error(
-                    "stdio.semio_cad.dangling-layer",
-                    dsl::TextSpan::at(1, 1),
-                    format!("entity {:?} (handle {:?}) references undefined layer {:?}", owning_block.unwrap_or("<top-level>"), rec.handle, rec.layer),
-                ));
+                diagnostics.push(dsl::Diagnostic::error("stdio.semio_cad.dangling-layer", dsl::TextSpan::at(1, 1), format!("entity {:?} (handle {:?}) references undefined layer {:?}", owning_block.unwrap_or("<top-level>"), rec.handle, rec.layer)));
             }
             if let CadEntity::Insert { block_name, .. } = &rec.entity {
                 if !block_names.contains(block_name.as_str()) {
-                    diagnostics.push(dsl::Diagnostic::error(
-                        "stdio.semio_cad.dangling-block-insert",
-                        dsl::TextSpan::at(1, 1),
-                        format!("entity handle {:?} inserts undefined block {:?}", rec.handle, block_name),
-                    ));
+                    diagnostics.push(dsl::Diagnostic::error("stdio.semio_cad.dangling-block-insert", dsl::TextSpan::at(1, 1), format!("entity handle {:?} inserts undefined block {:?}", rec.handle, block_name)));
                 }
                 if owning_block == Some(block_name.as_str()) {
-                    diagnostics.push(dsl::Diagnostic::error(
-                        "stdio.semio_cad.self-referential-insert",
-                        dsl::TextSpan::at(1, 1),
-                        format!("block {:?} contains an Insert of itself (handle {:?}) -- infinite recursion", block_name, rec.handle),
-                    ));
+                    diagnostics.push(dsl::Diagnostic::error("stdio.semio_cad.self-referential-insert", dsl::TextSpan::at(1, 1), format!("block {:?} contains an Insert of itself (handle {:?}) -- infinite recursion", block_name, rec.handle)));
                 }
             }
         };
@@ -107,17 +94,15 @@ pub mod derived_composition {
             };
             match decoded {
                 Some(snapshot) => cad_referential_diagnostics(&snapshot),
-                None => vec![dsl::Diagnostic::error(
-                    "stdio.semio_cad.validate-decode-failed",
-                    dsl::TextSpan::at(1, 1),
-                    "SemioCadValidator: payload did not decode as a SemioCadSnapshot".to_string(),
-                )],
+                None => vec![dsl::Diagnostic::error("stdio.semio_cad.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioCadValidator: payload did not decode as a SemioCadSnapshot".to_string())],
             }
         }
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    fn validator_entry() -> &'static SubsetValidatorEntry { VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioCadValidator>) }
+    fn validator_entry() -> &'static SubsetValidatorEntry {
+        VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioCadValidator>)
+    }
     //#endregion 🔖️SubsetValidator
 
     //#region 🔖️IoEntries
@@ -128,11 +113,18 @@ pub mod derived_composition {
     /// equivalent — see each pair's own leaf doc comment for the full rationale.
     static IO_ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
     fn io_entries() -> &'static [ComposerEntry] {
-        IO_ENTRIES.get_or_init(|| vec![
-            deserializer_entry_of::<SemioCadFromDxf>(), serializer_entry_of::<SemioCadToDxf>(),
-            deserializer_entry_of::<SemioCadFromDwg>(), serializer_entry_of::<SemioCadToDwg>(),
-            deserializer_entry_of::<SemioCadFromStep>(), serializer_entry_of::<SemioCadToStep>(),
-        ]).as_slice()
+        IO_ENTRIES
+            .get_or_init(|| {
+                vec![
+                    deserializer_entry_of::<SemioCadFromDxf>(),
+                    serializer_entry_of::<SemioCadToDxf>(),
+                    deserializer_entry_of::<SemioCadFromDwg>(),
+                    serializer_entry_of::<SemioCadToDwg>(),
+                    deserializer_entry_of::<SemioCadFromStep>(),
+                    serializer_entry_of::<SemioCadToStep>(),
+                ]
+            })
+            .as_slice()
     }
     //#endregion 🔖️IoEntries
 
@@ -141,7 +133,9 @@ pub mod derived_composition {
     /// semio↔format io bridges. Called from this artifact's standard-level `engine::register()`.
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::cad::schema::semio_cad_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioCadSnapshot, crate::artifacts::semio::standards::v1::subsets::cad::schema::mutations::SemioCadMutation>(crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA));
+        store::register_document_codec(store::ArtifactCodec::of::<SemioCadSnapshot, crate::artifacts::semio::standards::v1::subsets::cad::schema::mutations::SemioCadMutation>(
+            crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA,
+        ));
         register_subset_validator(validator_entry());
         register_composer_entries(io_entries());
         register_artifact_inferences();
@@ -179,7 +173,11 @@ pub mod derived_composition {
                 schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
                 layers: Vec::new(),
                 blocks: Vec::new(),
-                entities: vec![CadEntityRecord { handle: "h1".into(), layer: "missing".into(), entity: CadEntity::Insert { block_name: "missing-block".into(), insertion_point: SemioPoint2::default(), scale: SemioPoint2 { x: 1.0, y: 1.0 }, rotation: 0.0 } }],
+                entities: vec![CadEntityRecord {
+                    handle: "h1".into(),
+                    layer: "missing".into(),
+                    entity: CadEntity::Insert { block_name: "missing-block".into(), insertion_point: SemioPoint2::default(), scale: SemioPoint2 { x: 1.0, y: 1.0 }, rotation: 0.0 },
+                }],
             };
             let diagnostics = cad_referential_diagnostics(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_cad.dangling-layer"));
@@ -220,19 +218,11 @@ pub mod derived_composition {
             /// `walk_protocol` laws below.
             #[test]
             fn committed_facet_files_parse() {
-                for (label, text) in [
-                    ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-                ] {
+                for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                     assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
                 }
-                for (label, text) in [
-                    ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-                ] {
+                for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                     dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
                 }
             }

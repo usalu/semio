@@ -1,8 +1,8 @@
 //! 🏗️ `create-solid` — brings a new id-keyed solid into existence with its full initial `shells` membership list (each flagged void/non-void, referencing already-existing shells). A duplicate `id` already present in `base` is a no-op.
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepSolidShell;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload

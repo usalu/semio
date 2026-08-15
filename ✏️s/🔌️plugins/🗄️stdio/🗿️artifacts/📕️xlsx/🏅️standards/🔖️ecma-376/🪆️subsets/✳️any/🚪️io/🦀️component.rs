@@ -35,7 +35,9 @@ impl std::fmt::Display for XlsxError {
 impl std::error::Error for XlsxError {}
 
 impl From<crate::artifacts::zip::opc::OpcError> for XlsxError {
-    fn from(e: crate::artifacts::zip::opc::OpcError) -> Self { Self::Opc(e) }
+    fn from(e: crate::artifacts::zip::opc::OpcError) -> Self {
+        Self::Opc(e)
+    }
 }
 //#endregion 🔖️Error
 
@@ -77,7 +79,9 @@ pub fn column_letter(mut index: u32) -> String {
     let mut letters = Vec::new();
     loop {
         letters.push((b'A' + (index % 26) as u8) as char);
-        if index < 26 { break; }
+        if index < 26 {
+            break;
+        }
         index = index / 26 - 1;
     }
     letters.iter().rev().collect()
@@ -105,15 +109,14 @@ pub fn column_letters_of(reference: &str) -> &str {
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::xlsx::XlsxSnapshot;
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::XlsxAnalyzer;
+    use crate::artifacts::xlsx::XlsxSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
     const DEP_ZIP: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
     const DEP_XML: Dialect = Dialect { artifact_kind: "s.stdio.xml", standard: StandardId("1.0"), subset: SubsetId("*") };
-
 
     pub struct XlsxComposerComposition;
 
@@ -142,10 +145,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "XlsxComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = XlsxAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "XlsxComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "XlsxComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -155,18 +155,16 @@ pub use derived_composition::*;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::XlsxComposer as XlsxRawAnyComposer;
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::XlsxStrictComposer;
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::XlsxTransitionalComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES
-            .get_or_init(|| vec![composer_entry_of::<XlsxRawAnyComposer>(), composer_entry_of::<XlsxStrictComposer>(), composer_entry_of::<XlsxTransitionalComposer>()])
-            .as_slice()
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<XlsxRawAnyComposer>(), composer_entry_of::<XlsxStrictComposer>(), composer_entry_of::<XlsxTransitionalComposer>()]).as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry

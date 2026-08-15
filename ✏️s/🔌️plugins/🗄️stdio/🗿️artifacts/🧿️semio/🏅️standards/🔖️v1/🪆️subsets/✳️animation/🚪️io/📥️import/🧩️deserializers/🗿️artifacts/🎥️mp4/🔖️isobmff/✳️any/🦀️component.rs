@@ -11,11 +11,9 @@
 //! `dts + cts_offset` pts derivation `video↔mp4` uses, converted to SECONDS via `timescale`
 //! (`pts_ticks / timescale`) so timelines from different tracks/timescales are directly comparable.
 
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 use crate::artifacts::mp4::Mp4Snapshot;
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{
-    AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA,
-};
+use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") };
@@ -46,10 +44,7 @@ impl ArtifactDeserializer for SemioAnimationFromMp4 {
                         AnimKeyframe { t: pts.max(0) as f64 / timescale, value: AnimValue::Scalar { value: i as f64 } }
                     })
                     .collect();
-                AnimTimeline {
-                    name: Some(node.clone()),
-                    channels: vec![AnimChannel { target: AnimTarget { node, property: AnimTargetProperty::Custom { name: "mp4SampleIndex".into() } }, interpolation: AnimInterpolation::Step, keyframes }],
-                }
+                AnimTimeline { name: Some(node.clone()), channels: vec![AnimChannel { target: AnimTarget { node, property: AnimTargetProperty::Custom { name: "mp4SampleIndex".into() } }, interpolation: AnimInterpolation::Step, keyframes }] }
             })
             .collect();
         Ok(SemioAnimationSnapshot { schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(), timelines })
@@ -70,17 +65,13 @@ mod tests {
             tracks: vec![Mp4Track {
                 track_id: 1,
                 timescale: 30,
-                codec: Mp4Codec::Other { fourcc: "avc1".into(), raw: vec![] },
+                codec: Mp4Codec::default(),
                 width: 640,
                 height: 480,
                 metadata: Default::default(),
                 chunk_sample_counts: vec![2],
-                samples: vec![
-                    Mp4Sample { data: vec![1], duration: 30, cts_offset: 0, sync: true },
-                    Mp4Sample { data: vec![2], duration: 30, cts_offset: 0, sync: false },
-                ],
+                samples: vec![Mp4Sample { data: vec![1], duration: 30, cts_offset: 0, sync: true }, Mp4Sample { data: vec![2], duration: 30, cts_offset: 0, sync: false }],
             }],
-            unknown_boxes: vec![],
         }
     }
 

@@ -5,15 +5,12 @@
 //! established by `✳️a/🚪️io` and `✳️any/🚪️io` for this artifact. ISO 15930-7:2010 (PDF/X-4).
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use std::sync::OnceLock;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
-    use semio_framework_plugin::{
-        ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
-        register_subset_validator, subset_validator_entry_of,
-    };
-    use crate::artifacts::pdf::standards::v1_7::subsets::x::schema::check_x_conformance;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfComposer as PdfAnyComposer;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfComposer as PdfAnyComposer;
+    use crate::artifacts::pdf::standards::v1_7::subsets::x::schema::check_x_conformance;
+    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use std::sync::OnceLock;
 
     pub(crate) const DIALECT_X: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("x") };
     const DIALECT_ANY: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
@@ -38,10 +35,7 @@ pub mod derived_composition {
             if !hard.is_empty() {
                 let mut all = hard.clone();
                 all.extend(soft);
-                return Err(ComposeError {
-                    message: format!("PDF/X-4 conformance violated: {} hard issue(s) -- not stamping the x dialect", hard.len()),
-                    diagnostics: all,
-                });
+                return Err(ComposeError { message: format!("PDF/X-4 conformance violated: {} hard issue(s) -- not stamping the x dialect", hard.len()), diagnostics: all });
             }
             let mut diagnostics = inner.diagnostics;
             diagnostics.extend(soft);
@@ -92,8 +86,8 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::AnalyzeSource;
         use crate::artifacts::pdf::standards::v1_7::subsets::x::schema::PdfXBuilderConstruction as PdfXBuilder;
+        use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 
         /// 🩹 A genuinely PDF/X-4-conforming raw fixture: the 1.7 writer (`encode_pdf`) deliberately
@@ -150,10 +144,7 @@ pub mod derived_composition {
 
         #[test]
         fn subset_validator_recheck_runs_the_same_check() {
-            let snapshot = PdfXBuilder::new("sRGB IEC61966-2.1")
-                .add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(50.0, 50.0))
-                .build()
-                .unwrap();
+            let snapshot = PdfXBuilder::new("sRGB IEC61966-2.1").add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(50.0, 50.0)).build().unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let diagnostics = PdfXValidator::validate(&IoPayload::Binary(bytes));
             // The 1.7 writer doesn't re-serialize `objects`, so the wire recheck honestly re-reports

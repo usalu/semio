@@ -3,5 +3,4 @@ type Mp4TrackDiff { trackId: Int timescale: Int codec: Mp4Codec width: Int heigh
 type Mp4Diff {
   ftyp: Mp4Ftyp
   tracksRemoved: [Int!]
-  unknownBoxesRemoved: [Int!]
 }

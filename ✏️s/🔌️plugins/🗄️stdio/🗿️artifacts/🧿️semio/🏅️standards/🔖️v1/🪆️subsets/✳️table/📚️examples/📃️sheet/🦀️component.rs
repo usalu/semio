@@ -13,10 +13,14 @@
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "sheet";
-pub fn label() -> LocalizedLabel { LocalizedLabel::native("Sheet", "Tabelle") }
+pub fn label() -> LocalizedLabel {
+    LocalizedLabel::native("Sheet", "Tabelle")
+}
 pub const ICON: &str = "table";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.semio");
-pub fn source() -> ExampleSource { ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON) }
+pub fn source() -> ExampleSource {
+    ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
+}
 
 #[cfg(test)]
 mod tests {

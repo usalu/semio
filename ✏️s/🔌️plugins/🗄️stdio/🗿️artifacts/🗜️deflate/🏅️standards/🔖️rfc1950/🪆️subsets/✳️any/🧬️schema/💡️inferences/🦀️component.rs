@@ -49,10 +49,7 @@ impl protocol::InferenceSpec<DeflateSnapshot> for DeflateInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec {
-            id: "s.stdio.deflate.inference.window",
-            reads: &["windowBits", "compressionLevelHint", "dictId", "payload"],
-        }]
+        &[protocol::InferenceFieldSpec { id: "s.stdio.deflate.inference.window", reads: &["windowBits", "compressionLevelHint", "dictId", "payload"] }]
     }
 }
 //#endregion 🔖️Inference
@@ -89,8 +86,8 @@ pub fn deflate_artifact_inference_descriptor() -> schema::ArtifactInferenceDescr
 //#region 🧪️Tests
 mod tests {
     use super::*;
+    use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::{demo_deflate_snapshot, empty_deflate_snapshot};
     use protocol::Inference;
-    use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::{empty_deflate_snapshot, demo_deflate_snapshot};
 
     #[test]
     fn inference_determinism_law() {
@@ -119,19 +116,11 @@ mod tests {
         /// `recognize`/`walk_protocol` laws below.
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }

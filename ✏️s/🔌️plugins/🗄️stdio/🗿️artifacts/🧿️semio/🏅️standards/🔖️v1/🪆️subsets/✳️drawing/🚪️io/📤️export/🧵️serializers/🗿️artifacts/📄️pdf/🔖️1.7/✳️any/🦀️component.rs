@@ -6,7 +6,7 @@
 //! own module doc — it has no path-painting operator emission at all) and are dropped, documented,
 //! not fabricated.
 
-use crate::artifacts::pdf::{PdfSnapshot, schema::snapshot::PdfPage};
+use crate::artifacts::pdf::{schema::snapshot::PdfPage, PdfSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
@@ -16,10 +16,16 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: 
 fn collect_text(node: &DrawNode, out: &mut String) {
     match node {
         DrawNode::Text { value, .. } => {
-            if !out.is_empty() { out.push('\n'); }
+            if !out.is_empty() {
+                out.push('\n');
+            }
             out.push_str(value);
         }
-        DrawNode::Group { children, .. } => { for c in children { collect_text(c, out); } }
+        DrawNode::Group { children, .. } => {
+            for c in children {
+                collect_text(c, out);
+            }
+        }
         DrawNode::Path { .. } | DrawNode::Image { .. } => {}
     }
 }

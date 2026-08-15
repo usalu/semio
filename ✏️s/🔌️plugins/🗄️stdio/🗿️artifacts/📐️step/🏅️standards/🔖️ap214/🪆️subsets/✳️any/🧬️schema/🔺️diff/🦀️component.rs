@@ -126,13 +126,7 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
 }
 
 /// ↩️ Diff-level inverse for an index-keyed collection triple, given the ORIGINAL base items.
-fn inverse_indexed_collection<T: Clone, D: Clone>(
-    removed: &[usize],
-    modified: &[(usize, D)],
-    added: &[(usize, T)],
-    base_items: &[T],
-    diff_inverse: impl Fn(&D, &T) -> D,
-) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
+fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
     let mut removed_sorted = removed.to_vec();
     removed_sorted.sort_unstable();
     let mut added_index_sorted: Vec<usize> = added.iter().map(|(i, _)| *i).collect();
@@ -254,11 +248,7 @@ impl StepArgsDiff {
             base_args,
             |_d: &StepValue, item: &StepValue| item.clone(),
         );
-        Self {
-            removed,
-            modified: modified.into_iter().map(|(index, value)| StepArgModified { index, value }).collect(),
-            added: added.into_iter().map(|(index, value)| StepArgAdded { index, value }).collect(),
-        }
+        Self { removed, modified: modified.into_iter().map(|(index, value)| StepArgModified { index, value }).collect(), added: added.into_iter().map(|(index, value)| StepArgAdded { index, value }).collect() }
     }
 }
 //#endregion 🔖️ArgsDiff
@@ -284,11 +274,7 @@ impl StepEntityDiff {
 
     pub fn between(base: &StepEntity, other: &StepEntity) -> Self {
         let args_diff = StepArgsDiff::between(&base.args, &other.args);
-        Self {
-            name: (base.name != other.name).then(|| other.name.clone()),
-            args: (!args_diff.is_empty()).then_some(args_diff),
-            complex: (base.complex != other.complex).then(|| other.complex.clone()),
-        }
+        Self { name: (base.name != other.name).then(|| other.name.clone()), args: (!args_diff.is_empty()).then_some(args_diff), complex: (base.complex != other.complex).then(|| other.complex.clone()) }
     }
 
     pub fn apply(&self, base: &StepEntity) -> StepEntity {
@@ -306,11 +292,7 @@ impl StepEntityDiff {
     }
 
     pub fn inverse(&self, base: &StepEntity) -> Self {
-        Self {
-            name: self.name.as_ref().map(|_| base.name.clone()),
-            args: self.args.as_ref().map(|d| d.inverse(&base.args)),
-            complex: self.complex.as_ref().map(|_| base.complex.clone()),
-        }
+        Self { name: self.name.as_ref().map(|_| base.name.clone()), args: self.args.as_ref().map(|d| d.inverse(&base.args)), complex: self.complex.as_ref().map(|_| base.complex.clone()) }
     }
 
     fn absorb(&mut self, other: Self) {
@@ -380,12 +362,7 @@ impl StepEntitiesDiff {
             }
         }
 
-        let added: Vec<StepEntityAdded> = other
-            .iter()
-            .enumerate()
-            .filter(|(_, e)| !base_ids.contains(&e.id))
-            .map(|(index, e)| StepEntityAdded { index, entity: e.clone() })
-            .collect();
+        let added: Vec<StepEntityAdded> = other.iter().enumerate().filter(|(_, e)| !base_ids.contains(&e.id)).map(|(index, e)| StepEntityAdded { index, entity: e.clone() }).collect();
 
         Self { removed, modified, added }
     }
@@ -482,7 +459,11 @@ fn absorb_entities(d1: Option<StepEntitiesDiff>, d2: Option<StepEntitiesDiff>) -
     merged_added.extend(d2.added);
 
     let merged = StepEntitiesDiff { removed: merged_removed, modified: merged_modified, added: merged_added };
-    if merged.is_empty() { None } else { Some(merged) }
+    if merged.is_empty() {
+        None
+    } else {
+        Some(merged)
+    }
 }
 //#endregion 🔖️EntitiesTriple
 
@@ -510,10 +491,7 @@ pub struct StepDiff {
 
 impl StepDiff {
     pub fn is_empty_diff(&self) -> bool {
-        self.file_description.is_none()
-            && self.file_name.is_none()
-            && self.file_schema.is_none()
-            && self.entities.as_ref().map(StepEntitiesDiff::is_empty).unwrap_or(true)
+        self.file_description.is_none() && self.file_name.is_none() && self.file_schema.is_none() && self.entities.as_ref().map(StepEntitiesDiff::is_empty).unwrap_or(true)
     }
 }
 
@@ -561,8 +539,7 @@ impl DiffAlgebra<StepSnapshot> for StepDiff {
     fn between(base: &StepSnapshot, other: &StepSnapshot) -> Self {
         let entities_diff = StepEntitiesDiff::between(&base.entities, &other.entities);
         Self {
-            file_description: (base.header.file_description != other.header.file_description)
-                .then(|| other.header.file_description.clone()),
+            file_description: (base.header.file_description != other.header.file_description).then(|| other.header.file_description.clone()),
             file_name: (base.header.file_name != other.header.file_name).then(|| other.header.file_name.clone()),
             file_schema: (base.header.file_schema != other.header.file_schema).then(|| other.header.file_schema.clone()),
             entities: (!entities_diff.is_empty()).then_some(entities_diff),
@@ -689,10 +666,7 @@ pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl 
         }
     }
 }
-pub(crate) fn read_option_bin<T>(
-    reader: &mut store::ByteReader<'_>,
-    dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>,
-) -> Result<Option<T>, String> {
+pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(dec(reader)?)),
@@ -766,13 +740,7 @@ fn dec_complex(s: &str) -> Result<StepComplexType, String> {
 }
 
 pub(crate) fn enc_entity(e: &StepEntity) -> String {
-    format!(
-        "[{},{},[{}],[{}]]",
-        e.id,
-        enc_str(&e.name),
-        e.args.iter().map(enc_value).collect::<Vec<_>>().join(","),
-        e.complex.iter().map(enc_complex).collect::<Vec<_>>().join(","),
-    )
+    format!("[{},{},[{}],[{}]]", e.id, enc_str(&e.name), e.args.iter().map(enc_value).collect::<Vec<_>>().join(","), e.complex.iter().map(enc_complex).collect::<Vec<_>>().join(","),)
 }
 pub(crate) fn dec_entity(s: &str) -> Result<StepEntity, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -791,10 +759,7 @@ pub(crate) fn enc_file_description(d: &StepFileDescription) -> String {
 pub(crate) fn dec_file_description(s: &str) -> Result<StepFileDescription, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [description, implementation_level] = parts.as_slice() else { return Err(format!("file description: expected 2 fields, got {}", parts.len())) };
-    Ok(StepFileDescription {
-        description: split_top_level(strip_brackets(description)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?,
-        implementation_level: dec_str(implementation_level)?,
-    })
+    Ok(StepFileDescription { description: split_top_level(strip_brackets(description)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?, implementation_level: dec_str(implementation_level)? })
 }
 
 pub(crate) fn enc_file_name(f: &StepFileName) -> String {
@@ -837,14 +802,7 @@ pub(crate) fn dec_file_schema(s: &str) -> Result<StepFileSchema, String> {
 /// imports this `pub(crate)`), never by `StepDiff` itself (no `snapshot: Option<StepSnapshot>`
 /// full-replace slot exists on the diff).
 pub(crate) fn enc_step_snapshot(s: &StepSnapshot) -> String {
-    format!(
-        "[{},{},{},{},[{}]]",
-        enc_str(&s.schema),
-        enc_file_description(&s.header.file_description),
-        enc_file_name(&s.header.file_name),
-        enc_file_schema(&s.header.file_schema),
-        s.entities.iter().map(enc_entity).collect::<Vec<_>>().join(","),
-    )
+    format!("[{},{},{},{},[{}]]", enc_str(&s.schema), enc_file_description(&s.header.file_description), enc_file_name(&s.header.file_name), enc_file_schema(&s.header.file_schema), s.entities.iter().map(enc_entity).collect::<Vec<_>>().join(","),)
 }
 pub(crate) fn dec_step_snapshot(s: &str) -> Result<StepSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -853,11 +811,7 @@ pub(crate) fn dec_step_snapshot(s: &str) -> Result<StepSnapshot, String> {
     };
     Ok(StepSnapshot {
         schema: dec_str(schema)?,
-        header: crate::artifacts::step::schema::snapshot::StepHeader {
-            file_description: dec_file_description(file_description)?,
-            file_name: dec_file_name(file_name)?,
-            file_schema: dec_file_schema(file_schema)?,
-        },
+        header: crate::artifacts::step::schema::snapshot::StepHeader { file_description: dec_file_description(file_description)?, file_name: dec_file_name(file_name)?, file_schema: dec_file_schema(file_schema)? },
         entities: split_top_level(strip_brackets(entities)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_entity).collect::<Result<Vec<_>, String>>()?,
     })
 }
@@ -1028,11 +982,7 @@ pub(crate) fn dec_step_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Resul
     let file_schema = dec_file_schema_bin(reader)?;
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let entities = (0..count).map(|_| dec_entity_bin(reader)).collect::<Result<Vec<_>, String>>()?;
-    Ok(StepSnapshot {
-        schema,
-        header: crate::artifacts::step::schema::snapshot::StepHeader { file_description, file_name, file_schema },
-        entities,
-    })
+    Ok(StepSnapshot { schema, header: crate::artifacts::step::schema::snapshot::StepHeader { file_description, file_name, file_schema }, entities })
 }
 //#endregion 🔖️ValueBinaryCodecs
 
@@ -1067,12 +1017,7 @@ fn dec_args_diff(body: &str) -> Result<StepArgsDiff, String> {
 }
 
 fn enc_entity_diff(d: &StepEntityDiff) -> String {
-    format!(
-        "[{},{},{}]",
-        encode_option(&d.name, |v| enc_str(v)),
-        encode_option(&d.args, enc_args_diff),
-        encode_option(&d.complex, |v| format!("[{}]", v.iter().map(enc_complex).collect::<Vec<_>>().join(","))),
-    )
+    format!("[{},{},{}]", encode_option(&d.name, |v| enc_str(v)), encode_option(&d.args, enc_args_diff), encode_option(&d.complex, |v| format!("[{}]", v.iter().map(enc_complex).collect::<Vec<_>>().join(","))),)
 }
 fn dec_entity_diff(s: &str) -> Result<StepEntityDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -1080,9 +1025,7 @@ fn dec_entity_diff(s: &str) -> Result<StepEntityDiff, String> {
     Ok(StepEntityDiff {
         name: decode_option(name, dec_str)?,
         args: decode_option(args, dec_args_diff)?,
-        complex: decode_option(complex, |v| {
-            split_top_level(strip_brackets(v)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_complex).collect::<Result<Vec<_>, String>>()
-        })?,
+        complex: decode_option(complex, |v| split_top_level(strip_brackets(v)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_complex).collect::<Result<Vec<_>, String>>())?,
     })
 }
 
@@ -1222,10 +1165,18 @@ pub(crate) fn dec_entities_diff_bin(reader: &mut store::ByteReader<'_>) -> Resul
 //#region 🔖️TopLevel
 fn print_step_diff(d: &StepDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.file_description { tokens.push(format!("file-description={}", enc_file_description(v))); }
-    if let Some(v) = &d.file_name { tokens.push(format!("file-name={}", enc_file_name(v))); }
-    if let Some(v) = &d.file_schema { tokens.push(format!("file-schema={}", enc_file_schema(v))); }
-    if let Some(v) = &d.entities { tokens.push(format!("entities={}", enc_entities_diff(v))); }
+    if let Some(v) = &d.file_description {
+        tokens.push(format!("file-description={}", enc_file_description(v)));
+    }
+    if let Some(v) = &d.file_name {
+        tokens.push(format!("file-name={}", enc_file_name(v)));
+    }
+    if let Some(v) = &d.file_schema {
+        tokens.push(format!("file-schema={}", enc_file_schema(v)));
+    }
+    if let Some(v) = &d.entities {
+        tokens.push(format!("entities={}", enc_entities_diff(v)));
+    }
     tokens.join(" ")
 }
 fn parse_step_diff(line: &str) -> Result<StepDiff, String> {
@@ -1234,11 +1185,17 @@ fn parse_step_diff(line: &str) -> Result<StepDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("file-description=") { d.file_description = Some(dec_file_description(rest)?); }
-        else if let Some(rest) = token.strip_prefix("file-name=") { d.file_name = Some(dec_file_name(rest)?); }
-        else if let Some(rest) = token.strip_prefix("file-schema=") { d.file_schema = Some(dec_file_schema(rest)?); }
-        else if let Some(rest) = token.strip_prefix("entities=") { d.entities = Some(dec_entities_diff(rest)?); }
-        else { return Err(format!("step diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("file-description=") {
+            d.file_description = Some(dec_file_description(rest)?);
+        } else if let Some(rest) = token.strip_prefix("file-name=") {
+            d.file_name = Some(dec_file_name(rest)?);
+        } else if let Some(rest) = token.strip_prefix("file-schema=") {
+            d.file_schema = Some(dec_file_schema(rest)?);
+        } else if let Some(rest) = token.strip_prefix("entities=") {
+            d.entities = Some(dec_entities_diff(rest)?);
+        } else {
+            return Err(format!("step diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -1258,10 +1215,7 @@ impl protocol::DiffCodec for StepDiff {
     /// dxf's own `DxfDiff` (also four) upgraded to this same wave, unlike md/json's single
     /// `has_value` byte.
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let flags: u8 = (self.file_description.is_some() as u8)
-            | ((self.file_name.is_some() as u8) << 1)
-            | ((self.file_schema.is_some() as u8) << 2)
-            | ((self.entities.is_some() as u8) << 3);
+        let flags: u8 = (self.file_description.is_some() as u8) | ((self.file_name.is_some() as u8) << 1) | ((self.file_schema.is_some() as u8) << 2) | ((self.entities.is_some() as u8) << 3);
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
         if let Some(v) = &self.file_description {
             enc_file_description_bin(v, &mut out);
@@ -1282,26 +1236,10 @@ impl protocol::DiffCodec for StepDiff {
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let file_description = if flags & 1 != 0 {
-            Some(dec_file_description_bin(&mut reader).map_err(|e| malformed("diff file_description", reader.position(), e))?)
-        } else {
-            None
-        };
-        let file_name = if flags & 2 != 0 {
-            Some(dec_file_name_bin(&mut reader).map_err(|e| malformed("diff file_name", reader.position(), e))?)
-        } else {
-            None
-        };
-        let file_schema = if flags & 4 != 0 {
-            Some(dec_file_schema_bin(&mut reader).map_err(|e| malformed("diff file_schema", reader.position(), e))?)
-        } else {
-            None
-        };
-        let entities = if flags & 8 != 0 {
-            Some(dec_entities_diff_bin(&mut reader).map_err(|e| malformed("diff entities", reader.position(), e))?)
-        } else {
-            None
-        };
+        let file_description = if flags & 1 != 0 { Some(dec_file_description_bin(&mut reader).map_err(|e| malformed("diff file_description", reader.position(), e))?) } else { None };
+        let file_name = if flags & 2 != 0 { Some(dec_file_name_bin(&mut reader).map_err(|e| malformed("diff file_name", reader.position(), e))?) } else { None };
+        let file_schema = if flags & 4 != 0 { Some(dec_file_schema_bin(&mut reader).map_err(|e| malformed("diff file_schema", reader.position(), e))?) } else { None };
+        let entities = if flags & 8 != 0 { Some(dec_entities_diff_bin(&mut reader).map_err(|e| malformed("diff entities", reader.position(), e))?) } else { None };
         Ok(StepDiff { file_description, file_name, file_schema, entities })
     }
 }
@@ -1405,10 +1343,7 @@ mod tests {
     fn absorb_insert_then_set_field_patches_into_added() {
         let e = entity(50, "A", vec![]);
         let mut d1 = StepEntitiesDiff { added: vec![StepEntityAdded { index: 1, entity: e.clone() }], ..Default::default() };
-        let d2 = StepEntitiesDiff {
-            modified: vec![StepEntityModified { id: 50, diff: StepEntityDiff { name: Some("X".into()), ..Default::default() } }],
-            ..Default::default()
-        };
+        let d2 = StepEntitiesDiff { modified: vec![StepEntityModified { id: 50, diff: StepEntityDiff { name: Some("X".into()), ..Default::default() } }], ..Default::default() };
         d1.absorb(d2);
         assert!(d1.modified.is_empty());
         assert_eq!(d1.added.len(), 1);
@@ -1490,10 +1425,7 @@ mod tests {
                 },
                 file_schema: StepFileSchema { schemas: vec!["AUTOMOTIVE_DESIGN".into()] },
             },
-            entities: vec![
-                entity(1, "CARTESIAN_POINT", vec![StepValue::String("p1".into()), StepValue::Real(1.0)]),
-                entity(2, "TO_REMOVE", vec![StepValue::Unset]),
-            ],
+            entities: vec![entity(1, "CARTESIAN_POINT", vec![StepValue::String("p1".into()), StepValue::Real(1.0)]), entity(2, "TO_REMOVE", vec![StepValue::Unset])],
         };
         let sweep_b = StepSnapshot {
             schema: STDIO_STEP_DOCUMENT_SCHEMA.into(),
@@ -1510,11 +1442,7 @@ mod tests {
                 },
                 file_schema: StepFileSchema { schemas: vec!["CONFIG_CONTROL_DESIGN".into()] },
             },
-            entities: vec![
-                entity(1, "RENAMED_POINT", vec![StepValue::String("p1changed".into()), StepValue::Real(2.0), StepValue::Enum("T".into())]),
-                entity(3, "ADDED_ENTITY", vec![StepValue::Reference(1)]),
-                entity(4, "ANOTHER_ADDED", vec![]),
-            ],
+            entities: vec![entity(1, "RENAMED_POINT", vec![StepValue::String("p1changed".into()), StepValue::Real(2.0), StepValue::Enum("T".into())]), entity(3, "ADDED_ENTITY", vec![StepValue::Reference(1)]), entity(4, "ANOTHER_ADDED", vec![])],
         };
 
         let ab = <StepDiff as DiffAlgebra<StepSnapshot>>::between(&sweep_a, &sweep_b);
@@ -1548,9 +1476,9 @@ mod tests {
 #[cfg(test)]
 mod handcrafted_diff_codec_tests {
     use super::*;
-    use protocol::DiffCodec;
     use crate::artifacts::step::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepHeader};
     use crate::artifacts::step::STDIO_STEP_DOCUMENT_SCHEMA;
+    use protocol::DiffCodec;
 
     fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {
         StepEntity { id, name: name.into(), args, complex: Vec::new() }
@@ -1561,7 +1489,15 @@ mod handcrafted_diff_codec_tests {
             schema: STDIO_STEP_DOCUMENT_SCHEMA.into(),
             header: StepHeader {
                 file_description: StepFileDescription { description: vec!["a".into()], implementation_level: "2;1".into() },
-                file_name: StepFileName { name: "a.step".into(), timestamp: "t".into(), author: vec!["Ueli".into()], organization: vec!["semio".into()], preprocessor_version: "pv".into(), originating_system: "sys".into(), authorization: "auth".into() },
+                file_name: StepFileName {
+                    name: "a.step".into(),
+                    timestamp: "t".into(),
+                    author: vec!["Ueli".into()],
+                    organization: vec!["semio".into()],
+                    preprocessor_version: "pv".into(),
+                    originating_system: "sys".into(),
+                    authorization: "auth".into(),
+                },
                 file_schema: StepFileSchema { schemas: vec!["AUTOMOTIVE_DESIGN".into()] },
             },
             entities: vec![
@@ -1589,12 +1525,7 @@ mod handcrafted_diff_codec_tests {
         b.entities.push(entity(3, "ADDED_WITH_COMPLEX", vec![StepValue::Unset]));
         b.entities[1].complex.push(StepComplexType { name: "ANOTHER_TYPE".into(), args: vec![StepValue::Reference(42)] });
 
-        let cases = vec![
-            StepDiff::default(),
-            StepDiff::between(&a, &b),
-            StepDiff::between(&b, &a),
-            StepDiff::between(&a, &a),
-        ];
+        let cases = vec![StepDiff::default(), StepDiff::between(&a, &b), StepDiff::between(&b, &a), StepDiff::between(&a, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

@@ -7,12 +7,10 @@
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::flow::schema::diff::{
-    dec_edge, dec_node, dec_point2, dec_port_ref, dec_str, diff_insert_edge, diff_insert_node, diff_remove_edge,
-    diff_remove_node, diff_remove_node_param, diff_set_edge_endpoints, diff_set_edge_kind, diff_set_node_kind, diff_set_node_label,
-    diff_set_node_param, diff_set_node_position, diff_set_snapshot, enc_edge, enc_node, enc_point2, enc_port_ref, enc_str,
-    SemioFlowDiff,
+    dec_edge, dec_node, dec_point2, dec_port_ref, dec_str, diff_insert_edge, diff_insert_node, diff_remove_edge, diff_remove_node, diff_remove_node_param, diff_set_edge_endpoints, diff_set_edge_kind, diff_set_node_kind, diff_set_node_label,
+    diff_set_node_param, diff_set_node_position, diff_set_snapshot, enc_edge, enc_node, enc_point2, enc_port_ref, enc_str, SemioFlowDiff,
 };
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{PortRef, SemioFlowSnapshot, FlowEdge, FlowNode};
+use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef, SemioFlowSnapshot};
 use protocol::Mutation;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioFlowMutation` block
 /// below calls `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in
@@ -187,12 +185,7 @@ impl Mutation<SemioFlowSnapshot> for SemioFlowMutation {
 /// payloads). Grammar: `keyword arg=value ...` (space-separated), reusing `schema::diff`'s
 /// `pub(crate)` grammar primitives.
 fn enc_semio_flow_snapshot(s: &SemioFlowSnapshot) -> String {
-    format!(
-        "[{},{},{}]",
-        enc_str(&s.schema),
-        format!("[{}]", s.nodes.iter().map(enc_node).collect::<Vec<_>>().join(",")),
-        format!("[{}]", s.edges.iter().map(enc_edge).collect::<Vec<_>>().join(","))
-    )
+    format!("[{},{},{}]", enc_str(&s.schema), format!("[{}]", s.nodes.iter().map(enc_node).collect::<Vec<_>>().join(",")), format!("[{}]", s.edges.iter().map(enc_edge).collect::<Vec<_>>().join(",")))
 }
 fn dec_semio_flow_snapshot(s: &str) -> Result<SemioFlowSnapshot, String> {
     let inner = strip_brackets(s)?;
@@ -225,13 +218,7 @@ fn parse_flow_mutation(line: &str) -> Result<SemioFlowMutation, String> {
         return Ok(SemioFlowMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("flow mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("flow mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("flow mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
         "set-snapshot" => Ok(SemioFlowMutation::SetSnapshot { snapshot: dec_semio_flow_snapshot(arg("snapshot")?)? }),
@@ -261,21 +248,8 @@ impl protocol::OpText for SemioFlowMutation {
 
 /// 🏷️ Ordinal table, same declaration order as `SemioFlowMutation`'s own enum variants and
 /// `parse_flow_mutation`'s keyword match — the real binary `tag` field's source of truth.
-const OP_KEYWORDS: [&str; 13] = [
-    "no-mutation",
-    "set-snapshot",
-    "insert-node",
-    "remove-node",
-    "set-node-kind",
-    "set-node-label",
-    "set-node-position",
-    "set-node-param",
-    "remove-node-param",
-    "insert-edge",
-    "remove-edge",
-    "set-edge-endpoints",
-    "set-edge-kind",
-];
+const OP_KEYWORDS: [&str; 13] =
+    ["no-mutation", "set-snapshot", "insert-node", "remove-node", "set-node-kind", "set-node-label", "set-node-position", "set-node-param", "remove-node-param", "insert-edge", "remove-edge", "set-edge-endpoints", "set-edge-kind"];
 fn variant_ordinal(m: &SemioFlowMutation) -> u8 {
     match m {
         SemioFlowMutation::NoMutation => 0,
@@ -358,21 +332,21 @@ fn fixture() -> SemioFlowSnapshot {
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<SemioFlowMutation> {
     vec![
-            SemioFlowMutation::NoMutation,
-            SemioFlowMutation::SetSnapshot { snapshot: fixture() },
-            SemioFlowMutation::InsertNode { node: node("n3", "transform", "T", 5.0, 5.0) },
-            SemioFlowMutation::RemoveNode { id: "n2".into() },
-            SemioFlowMutation::SetNodeKind { id: "n1".into(), kind: "changed".into() },
-            SemioFlowMutation::SetNodeLabel { id: "n1".into(), label: "Changed".into() },
-            SemioFlowMutation::SetNodePosition { id: "n1".into(), position: SemioPoint2 { x: 99.0, y: -1.0 } },
-            SemioFlowMutation::SetNodeParam { id: "n1".into(), key: "k".into(), value: "new".into() },
-            SemioFlowMutation::SetNodeParam { id: "n1".into(), key: "fresh".into(), value: "added".into() },
-            SemioFlowMutation::RemoveNodeParam { id: "n1".into(), key: "k".into() },
-            SemioFlowMutation::InsertEdge { edge: edge("e2", "n2", "n1", "back") },
-            SemioFlowMutation::RemoveEdge { id: "e1".into() },
-            SemioFlowMutation::SetEdgeEndpoints { id: "e1".into(), from: PortRef { node: "n2".into(), port: "out".into() }, to: PortRef { node: "n1".into(), port: "in".into() } },
-            SemioFlowMutation::SetEdgeKind { id: "e1".into(), kind: "changed".into() },
-        ]
+        SemioFlowMutation::NoMutation,
+        SemioFlowMutation::SetSnapshot { snapshot: fixture() },
+        SemioFlowMutation::InsertNode { node: node("n3", "transform", "T", 5.0, 5.0) },
+        SemioFlowMutation::RemoveNode { id: "n2".into() },
+        SemioFlowMutation::SetNodeKind { id: "n1".into(), kind: "changed".into() },
+        SemioFlowMutation::SetNodeLabel { id: "n1".into(), label: "Changed".into() },
+        SemioFlowMutation::SetNodePosition { id: "n1".into(), position: SemioPoint2 { x: 99.0, y: -1.0 } },
+        SemioFlowMutation::SetNodeParam { id: "n1".into(), key: "k".into(), value: "new".into() },
+        SemioFlowMutation::SetNodeParam { id: "n1".into(), key: "fresh".into(), value: "added".into() },
+        SemioFlowMutation::RemoveNodeParam { id: "n1".into(), key: "k".into() },
+        SemioFlowMutation::InsertEdge { edge: edge("e2", "n2", "n1", "back") },
+        SemioFlowMutation::RemoveEdge { id: "e1".into() },
+        SemioFlowMutation::SetEdgeEndpoints { id: "e1".into(), from: PortRef { node: "n2".into(), port: "out".into() }, to: PortRef { node: "n1".into(), port: "in".into() } },
+        SemioFlowMutation::SetEdgeKind { id: "e1".into(), kind: "changed".into() },
+    ]
 }
 //#endregion 🔖️Demo
 

@@ -28,18 +28,12 @@ impl Default for XmlArtifact {
 impl XmlArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> XmlSnapshot {
-        XmlSnapshot {
-            schema: self.schema.clone(),
-            doc: self.doc.clone(),
-        }
+        XmlSnapshot { schema: self.schema.clone(), doc: self.doc.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: XmlSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            doc: snapshot.doc,
-        }
+        Self { schema: snapshot.schema, doc: snapshot.doc }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -88,8 +82,8 @@ pub fn xml_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::xml::{XmlDiff, XmlMutation, XmlSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.xml` snapshot.
@@ -124,7 +118,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -134,8 +132,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::xml::XmlSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.xml` parts.
@@ -167,22 +165,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <XmlSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -215,30 +205,18 @@ pub fn demo_xml_snapshot() -> XmlSnapshot {
     use crate::artifacts::xml::STDIO_XML_DOCUMENT_SCHEMA;
     let root = XmlNode::Element {
         name: "catalog".into(),
-        attrs: vec![
-            XmlAttr { name: "xmlns:c".into(), value: "urn:example:catalog".into() },
-            XmlAttr { name: "version".into(), value: "2".into() },
-        ],
+        attrs: vec![XmlAttr { name: "xmlns:c".into(), value: "urn:example:catalog".into() }, XmlAttr { name: "version".into(), value: "2".into() }],
         children: vec![
             XmlNode::Comment { text: " demo catalog ".into() },
             XmlNode::ProcessingInstruction { target: "xml-stylesheet".into(), data: "text".into() },
-            XmlNode::Element {
-                name: "item".into(),
-                attrs: vec![XmlAttr { name: "id".into(), value: "1".into() }],
-                children: vec![XmlNode::Text { text: "Tom & Jerry".into() }],
-            },
+            XmlNode::Element { name: "item".into(), attrs: vec![XmlAttr { name: "id".into(), value: "1".into() }], children: vec![XmlNode::Text { text: "Tom & Jerry".into() }] },
             XmlNode::Element { name: "empty".into(), attrs: vec![XmlAttr { name: "flag".into(), value: "true".into() }], children: vec![] },
             XmlNode::CData { text: "raw markup".into() },
         ],
     };
     XmlSnapshot {
         schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
-        doc: XmlDocument {
-            declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
-            doctype: Some("<!DOCTYPE catalog>".into()),
-            prolog: Vec::new(),
-            root: Some(root),
-        },
+        doc: XmlDocument { declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }), doctype: Some("<!DOCTYPE catalog>".into()), prolog: Vec::new(), root: Some(root) },
     }
 }
 //#endregion 🔖️DocumentHelpers
@@ -268,6 +246,26 @@ mod tests {
     use protocol::{Mutation, MutationDiff};
 
     #[test]
+    fn schema_facets_reject_raw_doctype_and_source_shadow_state() {
+        let facets = [
+            include_str!("📸️snapshot/🦀️component.rs"),
+            include_str!("📸️snapshot/🟦️component.ts"),
+            include_str!("📸️snapshot/🔣️component.json"),
+            include_str!("📸️snapshot/📝️text/🔗️component.graphql"),
+            include_str!("📸️snapshot/📝️text/🛰️component.proto"),
+            include_str!("🔺️diff/📝️text/📖️component.grammar.semio"),
+            include_str!("🔺️diff/💾️binary/📡️component.protocol.semio"),
+            include_str!("🧬️mutations/📝️text/📖️component.grammar.semio"),
+            include_str!("🧬️mutations/💾️binary/📡️component.protocol.semio"),
+        ];
+        for facet in facets {
+            for forbidden in [concat!("pub doctype: Option<", "String>"), concat!("raw ", "doctype"), concat!("source-", "field"), concat!("source-", "tok"), concat!("artifact-", "source"), concat!("semantic-", "blake3")] {
+                assert!(!facet.to_ascii_lowercase().contains(&forbidden.to_ascii_lowercase()), "forbidden XML shadow-state facet: {forbidden}");
+            }
+        }
+    }
+
+    #[test]
     fn empty_snapshot_matches_schema() {
         let snapshot = empty_xml_snapshot();
         assert_eq!(snapshot.schema, STDIO_XML_DOCUMENT_SCHEMA);
@@ -295,10 +293,7 @@ mod tests {
                 root: Some(XmlNode::Element {
                     name: "root".into(),
                     attrs: vec![XmlAttr { name: "a".into(), value: "1".into() }],
-                    children: vec![
-                        XmlNode::Text { text: "hello".into() },
-                        XmlNode::Element { name: "child".into(), attrs: Vec::new(), children: Vec::new() },
-                    ],
+                    children: vec![XmlNode::Text { text: "hello".into() }, XmlNode::Element { name: "child".into(), attrs: Vec::new(), children: Vec::new() }],
                 }),
             },
         }
@@ -321,17 +316,9 @@ mod tests {
                 prolog: Vec::new(),
                 root: Some(XmlNode::Element {
                     name: "root".into(),
-                    attrs: vec![
-                        XmlAttr { name: "keep".into(), value: "k".into() },
-                        XmlAttr { name: "toRemove".into(), value: "r".into() },
-                        XmlAttr { name: "toModify".into(), value: "old".into() },
-                    ],
+                    attrs: vec![XmlAttr { name: "keep".into(), value: "k".into() }, XmlAttr { name: "toRemove".into(), value: "r".into() }, XmlAttr { name: "toModify".into(), value: "old".into() }],
                     children: vec![
-                        XmlNode::Element {
-                            name: "modifyMe".into(),
-                            attrs: vec![XmlAttr { name: "x".into(), value: "1".into() }],
-                            children: vec![XmlNode::Element { name: "inner".into(), attrs: Vec::new(), children: Vec::new() }],
-                        },
+                        XmlNode::Element { name: "modifyMe".into(), attrs: vec![XmlAttr { name: "x".into(), value: "1".into() }], children: vec![XmlNode::Element { name: "inner".into(), attrs: Vec::new(), children: Vec::new() }] },
                         XmlNode::Text { text: "stay".into() },
                         XmlNode::Element { name: "toDrop".into(), attrs: Vec::new(), children: Vec::new() },
                     ],
@@ -349,19 +336,12 @@ mod tests {
                 prolog: Vec::new(),
                 root: Some(XmlNode::Element {
                     name: "rootRenamed".into(),
-                    attrs: vec![
-                        XmlAttr { name: "keep".into(), value: "k".into() },
-                        XmlAttr { name: "toModify".into(), value: "new".into() },
-                        XmlAttr { name: "added".into(), value: "a".into() },
-                    ],
+                    attrs: vec![XmlAttr { name: "keep".into(), value: "k".into() }, XmlAttr { name: "toModify".into(), value: "new".into() }, XmlAttr { name: "added".into(), value: "a".into() }],
                     children: vec![
                         XmlNode::Element {
                             name: "modifiedNow".into(),
                             attrs: vec![XmlAttr { name: "x".into(), value: "2".into() }, XmlAttr { name: "y".into(), value: "3".into() }],
-                            children: vec![
-                                XmlNode::Element { name: "inner".into(), attrs: Vec::new(), children: Vec::new() },
-                                XmlNode::Element { name: "innerNew".into(), attrs: Vec::new(), children: Vec::new() },
-                            ],
+                            children: vec![XmlNode::Element { name: "inner".into(), attrs: Vec::new(), children: Vec::new() }, XmlNode::Element { name: "innerNew".into(), attrs: Vec::new(), children: Vec::new() }],
                         },
                         XmlNode::Text { text: "stay".into() },
                     ],
@@ -439,10 +419,7 @@ mod tests {
                 root: Some(XmlNode::Element {
                     name: "root".into(),
                     attrs: Vec::new(),
-                    children: vec![
-                        XmlNode::Element { name: a_name.into(), attrs: Vec::new(), children: Vec::new() },
-                        XmlNode::Element { name: b_name.into(), attrs: Vec::new(), children: Vec::new() },
-                    ],
+                    children: vec![XmlNode::Element { name: a_name.into(), attrs: Vec::new(), children: Vec::new() }, XmlNode::Element { name: b_name.into(), attrs: Vec::new(), children: Vec::new() }],
                 }),
             },
         }
@@ -489,7 +466,14 @@ mod tests {
             let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
             let triple = root_children_diff(&absorbed);
             assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
-            let names: Vec<&str> = triple.added.iter().map(|a| match &a.item { XmlNode::Element { name, .. } => name.as_str(), _ => "" }).collect();
+            let names: Vec<&str> = triple
+                .added
+                .iter()
+                .map(|a| match &a.item {
+                    XmlNode::Element { name, .. } => name.as_str(),
+                    _ => "",
+                })
+                .collect();
             assert!(names.contains(&"f"));
             assert!(names.contains(&"g"));
         }
@@ -497,10 +481,7 @@ mod tests {
         // Canonical: Insert(1,f)+SetField(1,v) -> patch into the added payload.
         {
             let base = two_child_root("a", "b");
-            let d1 = Mutation::diff(
-                &XmlMutation::InsertElement { path: XmlNodePath::root(), index: 1, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } },
-                &base,
-            );
+            let d1 = Mutation::diff(&XmlMutation::InsertElement { path: XmlNodePath::root(), index: 1, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }, &base);
             let mid = MutationDiff::apply(&d1, &base);
             let d2 = Mutation::diff(&XmlMutation::SetAttribute { path: XmlNodePath(vec![1]), name: "k".into(), value: Some("v".into()) }, &mid);
             let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
@@ -565,10 +546,7 @@ mod tests {
         let fixture_doc = crate::artifacts::xml::schema::snapshot::xml_document_from_text(fixture_text).expect("fixture parses");
         let fixture = XmlSnapshot { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: fixture_doc };
         let mut mutated = fixture.clone();
-        crate::artifacts::xml::schema::mutations::apply_xml_mutation(
-            &mut mutated,
-            &XmlMutation::SetAttribute { path: XmlNodePath::root(), name: "id".into(), value: Some("1".into()) },
-        );
+        crate::artifacts::xml::schema::mutations::apply_xml_mutation(&mut mutated, &XmlMutation::SetAttribute { path: XmlNodePath::root(), name: "id".into(), value: Some("1".into()) });
         assert_ne!(fixture, mutated);
         assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&fixture, &mutated), &fixture), mutated);
         assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&mutated, &fixture), &mutated), fixture);
@@ -628,8 +606,7 @@ mod tests {
         let XmlNodeDiff::Element(modified_element) = &modified_entry.diff else { panic!("expected element diff") };
         assert!(modified_element.name.is_some(), "modified child: name not exercised");
         assert!(modified_element.attributes.is_some(), "modified child: attributes not exercised");
-        let nested_children: &crate::artifacts::xml::schema::diff::XmlChildrenDiff =
-            modified_element.children.as_ref().expect("nested children diff present");
+        let nested_children: &crate::artifacts::xml::schema::diff::XmlChildrenDiff = modified_element.children.as_ref().expect("nested children diff present");
         let nested_added: &Vec<XmlChildAdded> = &nested_children.added;
         assert!(!nested_added.is_empty(), "children: added (nested) not exercised");
     }
@@ -653,19 +630,11 @@ mod tests {
         /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }

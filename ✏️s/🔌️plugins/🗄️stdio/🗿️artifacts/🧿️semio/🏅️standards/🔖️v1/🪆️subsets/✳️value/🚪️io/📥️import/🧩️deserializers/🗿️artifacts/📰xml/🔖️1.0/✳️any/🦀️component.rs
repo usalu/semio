@@ -11,9 +11,9 @@
 //! test). `nodes` always decodes empty — XML has no id-graph/reference concept for `Ref` to come
 //! from.
 
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValueEntry, SemioValueSnapshot, SemioValue, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlDoctype, XmlDocument, XmlDtdDeclaration, XmlExternalId, XmlNode};
 use crate::artifacts::xml::XmlSnapshot;
-use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlDocument, XmlNode};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️Deserializer
@@ -65,12 +65,26 @@ pub fn semio_value_of_node(node: &XmlNode) -> SemioValue {
 
 fn semio_value_of_declaration(d: &XmlDeclaration) -> SemioValue {
     SemioValue::Map {
-        entries: vec![
-            entry("version", str_value(&d.version)),
-            entry("encoding", d.encoding.as_deref().map(str_value).unwrap_or(SemioValue::Null)),
-            entry("standalone", d.standalone.map(|b| SemioValue::Bool { value: b }).unwrap_or(SemioValue::Null)),
-        ],
+        entries: vec![entry("version", str_value(&d.version)), entry("encoding", d.encoding.as_deref().map(str_value).unwrap_or(SemioValue::Null)), entry("standalone", d.standalone.map(|b| SemioValue::Bool { value: b }).unwrap_or(SemioValue::Null))],
     }
+}
+
+fn semio_value_of_doctype(doctype: &XmlDoctype) -> SemioValue {
+    let external_id = match &doctype.external_id {
+        None => SemioValue::Null,
+        Some(XmlExternalId::System { system_id }) => SemioValue::Map { entries: vec![entry("kind", str_value("system")), entry("systemId", str_value(system_id))] },
+        Some(XmlExternalId::Public { public_id, system_id }) => SemioValue::Map { entries: vec![entry("kind", str_value("public")), entry("publicId", str_value(public_id)), entry("systemId", str_value(system_id))] },
+    };
+    let declarations = doctype
+        .declarations
+        .iter()
+        .map(|declaration| match declaration {
+            XmlDtdDeclaration::Entity { parameter, name, value } => {
+                SemioValue::Map { entries: vec![entry("kind", str_value("entity")), entry("parameter", SemioValue::Bool { value: *parameter }), entry("name", str_value(name)), entry("value", str_value(value))] }
+            }
+        })
+        .collect();
+    SemioValue::Map { entries: vec![entry("name", str_value(&doctype.name)), entry("externalId", external_id), entry("declarations", SemioValue::List { items: declarations })] }
 }
 
 pub fn semio_value_from_xml_document(doc: &XmlDocument) -> SemioValue {
@@ -78,7 +92,7 @@ pub fn semio_value_from_xml_document(doc: &XmlDocument) -> SemioValue {
         entries: vec![
             entry("kind", str_value("document")),
             entry("declaration", doc.declaration.as_ref().map(semio_value_of_declaration).unwrap_or(SemioValue::Null)),
-            entry("doctype", doc.doctype.as_deref().map(str_value).unwrap_or(SemioValue::Null)),
+            entry("doctype", doc.doctype.as_ref().map(semio_value_of_doctype).unwrap_or(SemioValue::Null)),
             entry("prolog", SemioValue::List { items: doc.prolog.iter().map(semio_value_of_node).collect() }),
             entry("root", doc.root.as_ref().map(semio_value_of_node).unwrap_or(SemioValue::Null)),
         ],
@@ -95,11 +109,7 @@ mod tests {
     #[test]
     fn element_with_attrs_and_children_maps_to_a_kind_tagged_structure() {
         let doc = XmlDocument {
-            root: Some(XmlNode::Element {
-                name: "svg".into(),
-                attrs: vec![XmlAttr { name: "viewBox".into(), value: "0 0 10 10".into() }],
-                children: vec![XmlNode::Text { text: "hi".into() }, XmlNode::Comment { text: "note".into() }],
-            }),
+            root: Some(XmlNode::Element { name: "svg".into(), attrs: vec![XmlAttr { name: "viewBox".into(), value: "0 0 10 10".into() }], children: vec![XmlNode::Text { text: "hi".into() }, XmlNode::Comment { text: "note".into() }] }),
             doctype: None,
             declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
             prolog: vec![XmlNode::Comment { text: "generated".into() }],

@@ -5,13 +5,13 @@
 //! 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING's inference laws,
 //! exercised against this same real fixture.
 
-use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer, ArtifactBuilder};
 use crate::artifacts::gif::standards::v89a::engine::{decode_gif, encode_gif};
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::GifAnalyzer;
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::GifBuilderConstruction as GifBuilder;
 use crate::artifacts::gif::standards::v89a::subsets::any::schema::inferences::GifInference;
 use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
+use crate::artifacts::gif::standards::v89a::subsets::any::schema::GifAnalyzer;
+use crate::artifacts::gif::standards::v89a::subsets::any::schema::GifBuilderConstruction as GifBuilder;
 use protocol::Inference;
+use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer, ArtifactBuilder};
 
 const DANCING_GIF_BYTES: &[u8] = include_bytes!("../🖼️assets/🖼️dancing.gif");
 
@@ -54,11 +54,8 @@ fn analyzer_builder_round_trip_matches() {
     let analysis_a = GifAnalyzer::analyze(&[AnalyzeSource::Binary(&packed_original)]);
     let parts_a = analysis_a.parts.snapshot.clone().expect("analyzer must report a snapshot for a valid real fixture");
 
-    let mut builder = GifBuilder::new(parts_a.width, parts_a.height)
-        .set_global_color_table(parts_a.gct.clone())
-        .set_background_color_index(parts_a.background_color_index)
-        .set_pixel_aspect_ratio(parts_a.pixel_aspect_ratio)
-        .set_loop_count(parts_a.loop_count);
+    let mut builder =
+        GifBuilder::new(parts_a.width, parts_a.height).set_global_color_table(parts_a.gct.clone()).set_background_color_index(parts_a.background_color_index).set_pixel_aspect_ratio(parts_a.pixel_aspect_ratio).set_loop_count(parts_a.loop_count);
     for frame in &parts_a.frames {
         builder = builder.add_frame(frame.clone());
     }

@@ -62,10 +62,7 @@ fn semio_meshes_from_drawing(drawing: &DwgDrawing) -> Vec<SemioMesh> {
         if positions.is_empty() {
             continue;
         }
-        meshes.push(SemioMesh {
-            id: layer.name.clone(),
-            primitives: vec![SemioPrimitive { id: format!("{}-mesh", layer.name), topology: SemioTopology::Triangles, positions, indices, ..SemioPrimitive::default() }],
-        });
+        meshes.push(SemioMesh { id: layer.name.clone(), primitives: vec![SemioPrimitive { id: format!("{}-mesh", layer.name), topology: SemioTopology::Triangles, positions, indices, ..SemioPrimitive::default() }] });
     }
     meshes
 }
@@ -91,17 +88,13 @@ impl ArtifactDeserializer for SemioMeshFromDwg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::dwg::{DwgColor, DwgEntity};
     use crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing;
+    use crate::artifacts::dwg::{DwgColor, DwgEntity};
 
     fn sample_dwg() -> DwgSnapshot {
         let mut drawing = DwgDrawing::default();
         let layer = drawing.ensure_layer("walls");
-        drawing.entities.push(DwgEntity {
-            layer,
-            color: DwgColor::ByLayer,
-            geometry: DwgGeometry::PolyfaceMesh { vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], faces: vec![[1, 2, 3, 4]] },
-        });
+        drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::PolyfaceMesh { vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], faces: vec![[1, 2, 3, 4]] } });
         DwgSnapshot { version: "AC1015".into(), drawing: DwgLogicalDrawing::from_native(&drawing), ..DwgSnapshot::default() }
     }
 

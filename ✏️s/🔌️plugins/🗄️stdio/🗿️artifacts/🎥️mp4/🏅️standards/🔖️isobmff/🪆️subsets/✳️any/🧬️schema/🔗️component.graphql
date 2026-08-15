@@ -3,5 +3,4 @@ type Mp4Artifact {
   schema: String! @state(class: ARTIFACT)
   ftyp: Mp4Ftyp! @state(class: ARTIFACT)
   tracks: [Mp4Track!]! @state(class: ARTIFACT)
-  unknownBoxes: [Mp4Box!]! @state(class: ARTIFACT)
 }

@@ -1,11 +1,14 @@
-// 🅰️ ANTLR grammar for `stdio.mp4`'s DSL text representation (store::ArtifactDsl::parse_dsl /
-// print_dsl). MP4/ISO-BMFF has no textual syntax of its own — the DSL text IS a whitespace-
-// tolerant ASCII hex dump of the REAL binary ISO-BMFF bytes `⚙️engine::{decode_mp4,encode_mp4}`
-// produce/consume (see ../💾️binary/🥋️component.ksy for that binary's own real box grammar).
+// 🅰️ Structured logical MP4 snapshot records emitted by dsl::DslRecord.
 grammar Stdio_mp4_snapshot;
 
-document : hexByte (WS? hexByte)* EOF ;
-hexByte  : HEXDIGIT HEXDIGIT ;
-
-HEXDIGIT : [0-9a-fA-F] ;
-WS       : [ \t\r\n]+ ;
+document : record EOF ;
+record : IDENT LBRACE field* RBRACE ;
+field : IDENT EQUAL value ;
+value : IDENT | STRING | INT | record | list | object ;
+list : LBRACK value* RBRACK ;
+object : LBRACE field* RBRACE ;
+IDENT : [A-Za-z_][A-Za-z0-9_-]* ;
+STRING : '"' ('\\' . | ~["\\])* '"' ;
+INT : '-'? [0-9]+ ;
+LBRACE : '{' ; RBRACE : '}' ; LBRACK : '[' ; RBRACK : ']' ; EQUAL : '=' ;
+WS : [ \t\r\n]+ -> skip ;

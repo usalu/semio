@@ -1,6 +1,6 @@
 //! 🧩 set_snapshot diff leaf.
 
-use crate::artifacts::obj::schema::diff::{ObjDiff, diff_set_snapshot};
+use crate::artifacts::obj::schema::diff::{diff_set_snapshot, ObjDiff};
 use crate::artifacts::obj::ObjSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot — sparse field-by-field `between(base, snapshot)`, per the

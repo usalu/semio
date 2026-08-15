@@ -31,7 +31,9 @@ pub enum AnimTargetProperty {
 }
 
 impl Default for AnimTargetProperty {
-    fn default() -> Self { AnimTargetProperty::Translation }
+    fn default() -> Self {
+        AnimTargetProperty::Translation
+    }
 }
 
 /// 🎯️ A channel's animated node + which of its properties is driven.
@@ -55,7 +57,9 @@ pub enum AnimInterpolation {
 }
 
 impl Default for AnimInterpolation {
-    fn default() -> Self { AnimInterpolation::Linear }
+    fn default() -> Self {
+        AnimInterpolation::Linear
+    }
 }
 //#endregion 🔖️Interpolation
 
@@ -75,7 +79,9 @@ pub enum AnimValue {
 }
 
 impl Default for AnimValue {
-    fn default() -> Self { AnimValue::Scalar { value: 0.0 } }
+    fn default() -> Self {
+        AnimValue::Scalar { value: 0.0 }
+    }
 }
 //#endregion 🔖️Value
 
@@ -135,10 +141,7 @@ pub struct SemioAnimationSnapshot {
 
 impl Default for SemioAnimationSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(),
-            timelines: Default::default(),
-        }
+        Self { schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(), timelines: Default::default() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -364,11 +367,7 @@ fn write_point3(out: &mut Vec<u8>, p: &SemioPoint3) {
     out.extend_from_slice(&p.z.to_le_bytes());
 }
 fn read_point3(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint3, String> {
-    Ok(SemioPoint3 {
-        x: reader.read_f64_le().map_err(|e| e.to_string())?,
-        y: reader.read_f64_le().map_err(|e| e.to_string())?,
-        z: reader.read_f64_le().map_err(|e| e.to_string())?,
-    })
+    Ok(SemioPoint3 { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())?, z: reader.read_f64_le().map_err(|e| e.to_string())? })
 }
 fn write_quat(out: &mut Vec<u8>, q: &SemioQuaternion) {
     out.extend_from_slice(&q.x.to_le_bytes());
@@ -377,12 +376,7 @@ fn write_quat(out: &mut Vec<u8>, q: &SemioQuaternion) {
     out.extend_from_slice(&q.w.to_le_bytes());
 }
 fn read_quat(reader: &mut store::ByteReader<'_>) -> Result<SemioQuaternion, String> {
-    Ok(SemioQuaternion {
-        x: reader.read_f64_le().map_err(|e| e.to_string())?,
-        y: reader.read_f64_le().map_err(|e| e.to_string())?,
-        z: reader.read_f64_le().map_err(|e| e.to_string())?,
-        w: reader.read_f64_le().map_err(|e| e.to_string())?,
-    })
+    Ok(SemioQuaternion { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())?, z: reader.read_f64_le().map_err(|e| e.to_string())?, w: reader.read_f64_le().map_err(|e| e.to_string())? })
 }
 fn write_f64_vec(out: &mut Vec<u8>, v: &[f64]) {
     store::pack_rt::write_varint_u64(out, v.len() as u64);
@@ -561,7 +555,9 @@ fn decode_animation_snapshot_binary(bytes: &[u8]) -> Result<SemioAnimationSnapsh
 /// `store::semio_format` envelope, unchanged.
 impl store::ArtifactDsl for SemioAnimationSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str { STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -573,11 +569,7 @@ impl store::ArtifactDsl for SemioAnimationSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_animation_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -586,22 +578,14 @@ impl store::ArtifactPack for SemioAnimationSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_animation_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_animation_snapshot_binary(&inner).map_err(store::PackError::Schema)
@@ -624,10 +608,7 @@ pub(crate) fn demo_animation_snapshot() -> SemioAnimationSnapshot {
                 AnimChannel {
                     target: AnimTarget { node: "hip".into(), property: AnimTargetProperty::Translation },
                     interpolation: AnimInterpolation::Linear,
-                    keyframes: vec![
-                        AnimKeyframe { t: 0.0, value: AnimValue::Vec3 { value: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } } },
-                        AnimKeyframe { t: 1.0, value: AnimValue::Vec3 { value: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } },
-                    ],
+                    keyframes: vec![AnimKeyframe { t: 0.0, value: AnimValue::Vec3 { value: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } } }, AnimKeyframe { t: 1.0, value: AnimValue::Vec3 { value: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } }],
                 },
                 AnimChannel {
                     target: AnimTarget { node: "spine".into(), property: AnimTargetProperty::Rotation },

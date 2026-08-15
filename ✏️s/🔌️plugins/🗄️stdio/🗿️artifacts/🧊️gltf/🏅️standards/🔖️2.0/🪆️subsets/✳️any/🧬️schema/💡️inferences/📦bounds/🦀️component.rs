@@ -106,29 +106,11 @@ mod tests {
     fn bounds_matches_hand_built_position_accessor_extent() {
         let mut document = GltfDocument::default();
         document.meshes = vec![
-            GltfMesh {
-                primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), 0)], ..Default::default() }],
-                ..Default::default()
-            },
-            GltfMesh {
-                primitives: vec![
-                    GltfPrimitive { attributes: vec![("POSITION".into(), 1)], ..Default::default() },
-                    GltfPrimitive { attributes: vec![("NORMAL".into(), 2)], ..Default::default() },
-                ],
-                ..Default::default()
-            },
+            GltfMesh { primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), 0)], ..Default::default() }], ..Default::default() },
+            GltfMesh { primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), 1)], ..Default::default() }, GltfPrimitive { attributes: vec![("NORMAL".into(), 2)], ..Default::default() }], ..Default::default() },
         ];
-        document.accessors = vec![
-            accessor([-1.0, 0.0, -2.0], [1.0, 2.0, 2.0], 24),
-            accessor([0.0, -5.0, 0.0], [3.0, -1.0, 4.0], 8),
-            accessor([0.0, 0.0, 0.0], [0.0, 0.0, 0.0], 24),
-        ];
-        let snapshot = GltfSnapshot {
-            schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(),
-            document,
-            buffers: Vec::new(),
-            source_form: GltfSourceForm::Json,
-        };
+        document.accessors = vec![accessor([-1.0, 0.0, -2.0], [1.0, 2.0, 2.0], 24), accessor([0.0, -5.0, 0.0], [3.0, -1.0, 4.0], 8), accessor([0.0, 0.0, 0.0], [0.0, 0.0, 0.0], 24)];
+        let snapshot = GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: Vec::new(), source_form: GltfSourceForm::Json };
 
         let bounds = compute_gltf_bounds(&snapshot);
         assert_eq!(bounds.min, [-1.0, -5.0, -2.0]);
@@ -141,10 +123,7 @@ mod tests {
     #[test]
     fn inference_determinism_law() {
         let mut document = GltfDocument::default();
-        document.meshes = vec![GltfMesh {
-            primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), 0)], ..Default::default() }],
-            ..Default::default()
-        }];
+        document.meshes = vec![GltfMesh { primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), 0)], ..Default::default() }], ..Default::default() }];
         document.accessors = vec![accessor([0.0, 0.0, 0.0], [1.0, 1.0, 1.0], 3)];
         let snapshot = GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: Vec::new(), source_form: GltfSourceForm::Json };
         assert_eq!(compute_gltf_bounds(&snapshot), compute_gltf_bounds(&snapshot));

@@ -9,8 +9,7 @@ pub use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::{
-    add_mark::mutation::AddMark, change_run_language::mutation::ChangeRunLanguage, edit_run::mutation::EditRun,
-    insert_run::mutation::InsertRun, remove_mark::mutation::RemoveMark, remove_run::mutation::RemoveRun, reorder_runs::mutation::ReorderRuns,
+    add_mark::mutation::AddMark, change_run_language::mutation::ChangeRunLanguage, edit_run::mutation::EditRun, insert_run::mutation::InsertRun, remove_mark::mutation::RemoveMark, remove_run::mutation::RemoveRun, reorder_runs::mutation::ReorderRuns,
 };
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun};
 
@@ -21,22 +20,45 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Primitives
-fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|b| format!("{b:02x}")).collect() }
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 { return Err(format!("odd hex length: {s:?}")); }
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
-fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
-fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+fn parse_usize(s: &str) -> Result<usize, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
 
 fn enc_mark_kind(k: SemioTextMarkKind) -> char {
-    match k { SemioTextMarkKind::Bold => 'b', SemioTextMarkKind::Italic => 'i', SemioTextMarkKind::Code => 'c', SemioTextMarkKind::Link => 'l' }
+    match k {
+        SemioTextMarkKind::Bold => 'b',
+        SemioTextMarkKind::Italic => 'i',
+        SemioTextMarkKind::Code => 'c',
+        SemioTextMarkKind::Link => 'l',
+    }
 }
 fn dec_mark_kind(s: &str) -> Result<SemioTextMarkKind, String> {
-    match s { "b" => Ok(SemioTextMarkKind::Bold), "i" => Ok(SemioTextMarkKind::Italic), "c" => Ok(SemioTextMarkKind::Code), "l" => Ok(SemioTextMarkKind::Link), other => Err(format!("bad mark kind {other:?}")) }
+    match s {
+        "b" => Ok(SemioTextMarkKind::Bold),
+        "i" => Ok(SemioTextMarkKind::Italic),
+        "c" => Ok(SemioTextMarkKind::Code),
+        "l" => Ok(SemioTextMarkKind::Link),
+        other => Err(format!("bad mark kind {other:?}")),
+    }
 }
-fn enc_mark(m: &SemioTextMark) -> String { format!("[{},{}]", enc_mark_kind(m.kind), enc_str(&m.href)) }
+fn enc_mark(m: &SemioTextMark) -> String {
+    format!("[{},{}]", enc_mark_kind(m.kind), enc_str(&m.href))
+}
 fn dec_mark(s: &str) -> Result<SemioTextMark, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [kind, href] = parts.as_slice() else { return Err(format!("mark: expected 2 fields, got {}", parts.len())) };
@@ -103,7 +125,9 @@ fn parse_text_mutation(line: &str) -> Result<SemioTextMutation, String> {
 }
 
 impl protocol::OpText for SemioTextMutation {
-    fn print_op(&self) -> String { print_text_mutation(self) }
+    fn print_op(&self) -> String {
+        print_text_mutation(self)
+    }
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_text_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }

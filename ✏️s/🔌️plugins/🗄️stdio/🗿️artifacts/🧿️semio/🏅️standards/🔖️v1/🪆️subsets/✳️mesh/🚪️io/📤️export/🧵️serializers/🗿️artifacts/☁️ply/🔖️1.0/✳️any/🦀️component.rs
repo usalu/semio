@@ -18,10 +18,10 @@
 //! - Colors are written as `uchar` `red`/`green`/`blue`[/`alpha`] (`round(channel * 255)`,
 //!   clamped `[0,255]`) — the near-universal real-world PLY color convention.
 
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::ply::PlySnapshot;
 use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlyValue};
+use crate::artifacts::ply::PlySnapshot;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioTopology};
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ply", standard: StandardId("1.0"), subset: SubsetId::ANY };
@@ -64,11 +64,7 @@ impl ArtifactSerializer for SemioMeshToPly {
     fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let (has_normals, has_uvs, has_colors) = check_uniform_presence(&from.meshes).map_err(|e| store::PackError::Schema(format!("SemioMeshToPly: {e}")))?;
 
-        let mut properties = vec![
-            PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float },
-            PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float },
-            PlyProperty::Scalar { name: "z".into(), kind: PlyScalarType::Float },
-        ];
+        let mut properties = vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "z".into(), kind: PlyScalarType::Float }];
         if has_normals {
             properties.push(PlyProperty::Scalar { name: "nx".into(), kind: PlyScalarType::Float });
             properties.push(PlyProperty::Scalar { name: "ny".into(), kind: PlyScalarType::Float });
@@ -144,12 +140,7 @@ impl ArtifactSerializer for SemioMeshToPly {
         let mut elements = vec![PlyElement { name: "vertex".into(), count: vertex_count, properties, rows: vertex_rows }];
         if !face_rows.is_empty() {
             let face_count = face_rows.len();
-            elements.push(PlyElement {
-                name: "face".into(),
-                count: face_count,
-                properties: vec![PlyProperty::List { name: "vertex_indices".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::Int }],
-                rows: face_rows,
-            });
+            elements.push(PlyElement { name: "face".into(), count: face_count, properties: vec![PlyProperty::List { name: "vertex_indices".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::Int }], rows: face_rows });
         }
 
         Ok(PlySnapshot { schema: "stdio.ply".into(), format: PlyFormat::Ascii, comments: Vec::new(), elements })
@@ -161,8 +152,8 @@ impl ArtifactSerializer for SemioMeshToPly {
 mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba};
-    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioPrimitive;
     use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::ply::v1_0::any::SemioMeshFromPly;
+    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioPrimitive;
     use semio_framework_plugin::ArtifactDeserializer;
 
     fn sample_semio_mesh() -> SemioMeshSnapshot {
@@ -173,16 +164,10 @@ mod tests {
                 primitives: vec![SemioPrimitive {
                     id: "quad-prim-0".into(),
                     topology: SemioTopology::Triangles,
-                    positions: vec![
-                        SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 },
-                        SemioPoint3 { x: 1.0, y: 1.0, z: 0.0 }, SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 },
-                    ],
+                    positions: vec![SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 1.0, z: 0.0 }, SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 }],
                     normals: Vec::new(),
                     uvs: Vec::new(),
-                    colors: vec![
-                        SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }, SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
-                        SemioRgba { r: 0.0, g: 0.0, b: 1.0, a: 1.0 }, SemioRgba { r: 1.0, g: 1.0, b: 0.0, a: 1.0 },
-                    ],
+                    colors: vec![SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }, SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, SemioRgba { r: 0.0, g: 0.0, b: 1.0, a: 1.0 }, SemioRgba { r: 1.0, g: 1.0, b: 0.0, a: 1.0 }],
                     indices: vec![0, 1, 2, 0, 2, 3],
                     material_id: None,
                 }],

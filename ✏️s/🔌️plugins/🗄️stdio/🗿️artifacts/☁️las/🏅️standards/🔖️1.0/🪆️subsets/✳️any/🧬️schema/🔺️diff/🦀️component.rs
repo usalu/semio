@@ -9,9 +9,9 @@ use std::collections::{HashMap, HashSet};
 use crate::artifacts::las::schema::snapshot::{LasHeader, LasPoint, LasVlr};
 use crate::artifacts::las::LasSnapshot;
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
 #[cfg(test)]
 use protocol::DiffCodec;
+use protocol::MutationDiff;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -32,12 +32,7 @@ enum Lbl {
 /// the given base/mid indices, then insert `added` labels ascending at `min(index, current_len)`.
 fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
     let removed_set: HashSet<usize> = removed.iter().copied().collect();
-    let mut survivors: Vec<Lbl> = labels
-        .into_iter()
-        .enumerate()
-        .filter(|(i, _)| !removed_set.contains(i))
-        .map(|(_, l)| l)
-        .collect();
+    let mut survivors: Vec<Lbl> = labels.into_iter().enumerate().filter(|(i, _)| !removed_set.contains(i)).map(|(_, l)| l).collect();
     let mut added_sorted = added.to_vec();
     added_sorted.sort_by_key(|(idx, _)| *idx);
     for (idx, label) in added_sorted {
@@ -61,13 +56,8 @@ fn absorb_indexed_triple<Item: Clone, D: Clone + Default + PartialEq>(
     absorb_field: impl Fn(&mut D, D),
     patch_item: impl Fn(&mut Item, &D),
 ) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, Item)>) {
-    let max_ref = d1_removed.iter().copied()
-        .chain(d1_modified.iter().map(|(i, _)| *i))
-        .chain(d1_added.iter().map(|(i, _)| *i))
-        .chain(d2_removed.iter().copied())
-        .chain(d2_modified.iter().map(|(i, _)| *i))
-        .chain(d2_added.iter().map(|(i, _)| *i))
-        .max();
+    let max_ref =
+        d1_removed.iter().copied().chain(d1_modified.iter().map(|(i, _)| *i)).chain(d1_added.iter().map(|(i, _)| *i)).chain(d2_removed.iter().copied()).chain(d2_modified.iter().map(|(i, _)| *i)).chain(d2_added.iter().map(|(i, _)| *i)).max();
     let l1 = max_ref.map(|m| m + 2).unwrap_or(0);
 
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
@@ -78,8 +68,12 @@ fn absorb_indexed_triple<Item: Clone, D: Clone + Default + PartialEq>(
     let mut mid_pos_of_added1: HashMap<usize, usize> = HashMap::new();
     for (pos, l) in mid_labels.iter().enumerate() {
         match l {
-            Lbl::Base(i) => { mid_pos_of_base.insert(*i, pos); }
-            Lbl::Added1(j) => { mid_pos_of_added1.insert(*j, pos); }
+            Lbl::Base(i) => {
+                mid_pos_of_base.insert(*i, pos);
+            }
+            Lbl::Added1(j) => {
+                mid_pos_of_added1.insert(*j, pos);
+            }
             Lbl::Added2(_) => {}
         }
     }
@@ -108,7 +102,10 @@ fn absorb_indexed_triple<Item: Clone, D: Clone + Default + PartialEq>(
                     (None, None) => None,
                     (Some(a), None) => Some(a),
                     (None, Some(b)) => Some(b),
-                    (Some(mut a), Some(b)) => { absorb_field(&mut a, b); Some(a) }
+                    (Some(mut a), Some(b)) => {
+                        absorb_field(&mut a, b);
+                        Some(a)
+                    }
                 };
                 if let Some(d) = merged {
                     if d != D::default() {
@@ -155,10 +152,18 @@ pub struct LasVlrDiff {
 }
 
 fn apply_vlr_diff(vlr: &mut LasVlr, diff: &LasVlrDiff) {
-    if let Some(v) = &diff.user_id { vlr.user_id = v.clone(); }
-    if let Some(v) = diff.record_id { vlr.record_id = v; }
-    if let Some(v) = &diff.description { vlr.description = v.clone(); }
-    if let Some(v) = &diff.data { vlr.data = v.clone(); }
+    if let Some(v) = &diff.user_id {
+        vlr.user_id = v.clone();
+    }
+    if let Some(v) = diff.record_id {
+        vlr.record_id = v;
+    }
+    if let Some(v) = &diff.description {
+        vlr.description = v.clone();
+    }
+    if let Some(v) = &diff.data {
+        vlr.data = v.clone();
+    }
 }
 
 fn vlr_between(a: &LasVlr, b: &LasVlr) -> LasVlrDiff {
@@ -171,10 +176,18 @@ fn vlr_between(a: &LasVlr, b: &LasVlr) -> LasVlrDiff {
 }
 
 fn absorb_vlr_diff(base: &mut LasVlrDiff, other: LasVlrDiff) {
-    if other.user_id.is_some() { base.user_id = other.user_id; }
-    if other.record_id.is_some() { base.record_id = other.record_id; }
-    if other.description.is_some() { base.description = other.description; }
-    if other.data.is_some() { base.data = other.data; }
+    if other.user_id.is_some() {
+        base.user_id = other.user_id;
+    }
+    if other.record_id.is_some() {
+        base.record_id = other.record_id;
+    }
+    if other.description.is_some() {
+        base.description = other.description;
+    }
+    if other.data.is_some() {
+        base.data = other.data;
+    }
 }
 
 /// 📦️ One `vlrs.modified[]` entity — `index` is the VLR's position in BASE.
@@ -220,12 +233,7 @@ impl LasVlrsDiff {
             }
         }
         let removed: HashSet<usize> = self.removed.iter().copied().collect();
-        let mut survivors: Vec<LasVlr> = items
-            .into_iter()
-            .enumerate()
-            .filter(|(i, _)| !removed.contains(i))
-            .filter_map(|(_, v)| v)
-            .collect();
+        let mut survivors: Vec<LasVlr> = items.into_iter().enumerate().filter(|(i, _)| !removed.contains(i)).filter_map(|(_, v)| v).collect();
         let mut added = self.added.clone();
         added.sort_by_key(|a| a.index);
         for a in added {
@@ -245,9 +253,7 @@ impl LasVlrsDiff {
             }
         }
         let removed: Vec<usize> = (next.len()..base.len()).collect();
-        let added: Vec<LasVlrAdded> = (base.len()..next.len())
-            .map(|i| LasVlrAdded { index: i, vlr: next[i].clone() })
-            .collect();
+        let added: Vec<LasVlrAdded> = (base.len()..next.len()).map(|i| LasVlrAdded { index: i, vlr: next[i].clone() }).collect();
         LasVlrsDiff { removed, modified, added }
     }
 }
@@ -263,18 +269,13 @@ fn absorb_vlrs(d1: Option<LasVlrsDiff>, d2: Option<LasVlrsDiff>) -> Option<LasVl
     let d1a: Vec<(usize, LasVlr)> = d1.added.iter().map(|a| (a.index, a.vlr.clone())).collect();
     let d2m: Vec<(usize, LasVlrDiff)> = d2.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
     let d2a: Vec<(usize, LasVlr)> = d2.added.iter().map(|a| (a.index, a.vlr.clone())).collect();
-    let (removed, modified, added) = absorb_indexed_triple(
-        &d1.removed, &d1m, &d1a,
-        &d2.removed, &d2m, &d2a,
-        absorb_vlr_diff,
-        apply_vlr_diff,
-    );
-    let merged = LasVlrsDiff {
-        removed,
-        modified: modified.into_iter().map(|(index, diff)| LasVlrModified { index, diff }).collect(),
-        added: added.into_iter().map(|(index, vlr)| LasVlrAdded { index, vlr }).collect(),
-    };
-    if merged.is_empty() { None } else { Some(merged) }
+    let (removed, modified, added) = absorb_indexed_triple(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a, absorb_vlr_diff, apply_vlr_diff);
+    let merged = LasVlrsDiff { removed, modified: modified.into_iter().map(|(index, diff)| LasVlrModified { index, diff }).collect(), added: added.into_iter().map(|(index, vlr)| LasVlrAdded { index, vlr }).collect() };
+    if merged.is_empty() {
+        None
+    } else {
+        Some(merged)
+    }
 }
 //#endregion 🔖️VlrDiff
 
@@ -316,20 +317,48 @@ pub struct LasPointDiff {
 }
 
 fn apply_point_diff(p: &mut LasPoint, diff: &LasPointDiff) {
-    if let Some(v) = diff.x { p.x = v; }
-    if let Some(v) = diff.y { p.y = v; }
-    if let Some(v) = diff.z { p.z = v; }
-    if let Some(v) = diff.intensity { p.intensity = v; }
-    if let Some(v) = diff.return_number { p.return_number = v; }
-    if let Some(v) = diff.number_of_returns { p.number_of_returns = v; }
-    if let Some(v) = diff.scan_direction_flag { p.scan_direction_flag = v; }
-    if let Some(v) = diff.edge_of_flight_line { p.edge_of_flight_line = v; }
-    if let Some(v) = diff.classification { p.classification = v; }
-    if let Some(v) = diff.scan_angle_rank { p.scan_angle_rank = v; }
-    if let Some(v) = diff.user_data { p.user_data = v; }
-    if let Some(v) = diff.point_source_id { p.point_source_id = v; }
-    if let Some(v) = diff.gps_time { p.gps_time = v; }
-    if let Some(v) = diff.rgb { p.rgb = v; }
+    if let Some(v) = diff.x {
+        p.x = v;
+    }
+    if let Some(v) = diff.y {
+        p.y = v;
+    }
+    if let Some(v) = diff.z {
+        p.z = v;
+    }
+    if let Some(v) = diff.intensity {
+        p.intensity = v;
+    }
+    if let Some(v) = diff.return_number {
+        p.return_number = v;
+    }
+    if let Some(v) = diff.number_of_returns {
+        p.number_of_returns = v;
+    }
+    if let Some(v) = diff.scan_direction_flag {
+        p.scan_direction_flag = v;
+    }
+    if let Some(v) = diff.edge_of_flight_line {
+        p.edge_of_flight_line = v;
+    }
+    if let Some(v) = diff.classification {
+        p.classification = v;
+    }
+    if let Some(v) = diff.scan_angle_rank {
+        p.scan_angle_rank = v;
+    }
+    if let Some(v) = diff.user_data {
+        p.user_data = v;
+    }
+    if let Some(v) = diff.point_source_id {
+        p.point_source_id = v;
+    }
+    if let Some(v) = diff.gps_time {
+        p.gps_time = v;
+    }
+    if let Some(v) = diff.rgb {
+        p.rgb = v;
+    }
 }
 
 fn point_between(a: &LasPoint, b: &LasPoint) -> LasPointDiff {
@@ -352,20 +381,48 @@ fn point_between(a: &LasPoint, b: &LasPoint) -> LasPointDiff {
 }
 
 fn absorb_point_diff(base: &mut LasPointDiff, other: LasPointDiff) {
-    if other.x.is_some() { base.x = other.x; }
-    if other.y.is_some() { base.y = other.y; }
-    if other.z.is_some() { base.z = other.z; }
-    if other.intensity.is_some() { base.intensity = other.intensity; }
-    if other.return_number.is_some() { base.return_number = other.return_number; }
-    if other.number_of_returns.is_some() { base.number_of_returns = other.number_of_returns; }
-    if other.scan_direction_flag.is_some() { base.scan_direction_flag = other.scan_direction_flag; }
-    if other.edge_of_flight_line.is_some() { base.edge_of_flight_line = other.edge_of_flight_line; }
-    if other.classification.is_some() { base.classification = other.classification; }
-    if other.scan_angle_rank.is_some() { base.scan_angle_rank = other.scan_angle_rank; }
-    if other.user_data.is_some() { base.user_data = other.user_data; }
-    if other.point_source_id.is_some() { base.point_source_id = other.point_source_id; }
-    if other.gps_time.is_some() { base.gps_time = other.gps_time; }
-    if other.rgb.is_some() { base.rgb = other.rgb; }
+    if other.x.is_some() {
+        base.x = other.x;
+    }
+    if other.y.is_some() {
+        base.y = other.y;
+    }
+    if other.z.is_some() {
+        base.z = other.z;
+    }
+    if other.intensity.is_some() {
+        base.intensity = other.intensity;
+    }
+    if other.return_number.is_some() {
+        base.return_number = other.return_number;
+    }
+    if other.number_of_returns.is_some() {
+        base.number_of_returns = other.number_of_returns;
+    }
+    if other.scan_direction_flag.is_some() {
+        base.scan_direction_flag = other.scan_direction_flag;
+    }
+    if other.edge_of_flight_line.is_some() {
+        base.edge_of_flight_line = other.edge_of_flight_line;
+    }
+    if other.classification.is_some() {
+        base.classification = other.classification;
+    }
+    if other.scan_angle_rank.is_some() {
+        base.scan_angle_rank = other.scan_angle_rank;
+    }
+    if other.user_data.is_some() {
+        base.user_data = other.user_data;
+    }
+    if other.point_source_id.is_some() {
+        base.point_source_id = other.point_source_id;
+    }
+    if other.gps_time.is_some() {
+        base.gps_time = other.gps_time;
+    }
+    if other.rgb.is_some() {
+        base.rgb = other.rgb;
+    }
 }
 
 /// 📍️ One `points.modified[]` entity — `index` is the point's position in BASE.
@@ -409,12 +466,7 @@ impl LasPointsDiff {
             }
         }
         let removed: HashSet<usize> = self.removed.iter().copied().collect();
-        let mut survivors: Vec<LasPoint> = items
-            .into_iter()
-            .enumerate()
-            .filter(|(i, _)| !removed.contains(i))
-            .filter_map(|(_, v)| v)
-            .collect();
+        let mut survivors: Vec<LasPoint> = items.into_iter().enumerate().filter(|(i, _)| !removed.contains(i)).filter_map(|(_, v)| v).collect();
         let mut added = self.added.clone();
         added.sort_by_key(|a| a.index);
         for a in added {
@@ -434,9 +486,7 @@ impl LasPointsDiff {
             }
         }
         let removed: Vec<usize> = (next.len()..base.len()).collect();
-        let added: Vec<LasPointAdded> = (base.len()..next.len())
-            .map(|i| LasPointAdded { index: i, point: next[i].clone() })
-            .collect();
+        let added: Vec<LasPointAdded> = (base.len()..next.len()).map(|i| LasPointAdded { index: i, point: next[i].clone() }).collect();
         LasPointsDiff { removed, modified, added }
     }
 }
@@ -452,18 +502,13 @@ fn absorb_points(d1: Option<LasPointsDiff>, d2: Option<LasPointsDiff>) -> Option
     let d1a: Vec<(usize, LasPoint)> = d1.added.iter().map(|a| (a.index, a.point.clone())).collect();
     let d2m: Vec<(usize, LasPointDiff)> = d2.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
     let d2a: Vec<(usize, LasPoint)> = d2.added.iter().map(|a| (a.index, a.point.clone())).collect();
-    let (removed, modified, added) = absorb_indexed_triple(
-        &d1.removed, &d1m, &d1a,
-        &d2.removed, &d2m, &d2a,
-        absorb_point_diff,
-        apply_point_diff,
-    );
-    let merged = LasPointsDiff {
-        removed,
-        modified: modified.into_iter().map(|(index, diff)| LasPointModified { index, diff }).collect(),
-        added: added.into_iter().map(|(index, point)| LasPointAdded { index, point }).collect(),
-    };
-    if merged.is_empty() { None } else { Some(merged) }
+    let (removed, modified, added) = absorb_indexed_triple(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a, absorb_point_diff, apply_point_diff);
+    let merged = LasPointsDiff { removed, modified: modified.into_iter().map(|(index, diff)| LasPointModified { index, diff }).collect(), added: added.into_iter().map(|(index, point)| LasPointAdded { index, point }).collect() };
+    if merged.is_empty() {
+        None
+    } else {
+        Some(merged)
+    }
 }
 //#endregion 🔖️PointDiff
 
@@ -559,31 +604,81 @@ pub struct LasDiff {
 
 /// ▶️ Applies every header scalar patch onto `header` in place.
 fn apply_header_diff(header: &mut LasHeader, d: &LasDiff) {
-    if let Some(v) = d.version_major { header.version_major = v; }
-    if let Some(v) = d.version_minor { header.version_minor = v; }
-    if let Some(v) = &d.system_identifier { header.system_identifier = v.clone(); }
-    if let Some(v) = &d.generating_software { header.generating_software = v.clone(); }
-    if let Some(v) = d.creation_day_of_year { header.creation_day_of_year = v; }
-    if let Some(v) = d.creation_year { header.creation_year = v; }
-    if let Some(v) = d.header_size { header.header_size = v; }
-    if let Some(v) = d.offset_to_point_data { header.offset_to_point_data = v; }
-    if let Some(v) = d.number_of_vlrs { header.number_of_vlrs = v; }
-    if let Some(v) = d.point_data_format_id { header.point_data_format_id = v; }
-    if let Some(v) = d.point_data_record_length { header.point_data_record_length = v; }
-    if let Some(v) = d.number_of_point_records { header.number_of_point_records = v; }
-    if let Some(v) = d.points_by_return { header.points_by_return = v; }
-    if let Some(v) = d.x_scale { header.x_scale = v; }
-    if let Some(v) = d.y_scale { header.y_scale = v; }
-    if let Some(v) = d.z_scale { header.z_scale = v; }
-    if let Some(v) = d.x_offset { header.x_offset = v; }
-    if let Some(v) = d.y_offset { header.y_offset = v; }
-    if let Some(v) = d.z_offset { header.z_offset = v; }
-    if let Some(v) = d.max_x { header.max_x = v; }
-    if let Some(v) = d.min_x { header.min_x = v; }
-    if let Some(v) = d.max_y { header.max_y = v; }
-    if let Some(v) = d.min_y { header.min_y = v; }
-    if let Some(v) = d.max_z { header.max_z = v; }
-    if let Some(v) = d.min_z { header.min_z = v; }
+    if let Some(v) = d.version_major {
+        header.version_major = v;
+    }
+    if let Some(v) = d.version_minor {
+        header.version_minor = v;
+    }
+    if let Some(v) = &d.system_identifier {
+        header.system_identifier = v.clone();
+    }
+    if let Some(v) = &d.generating_software {
+        header.generating_software = v.clone();
+    }
+    if let Some(v) = d.creation_day_of_year {
+        header.creation_day_of_year = v;
+    }
+    if let Some(v) = d.creation_year {
+        header.creation_year = v;
+    }
+    if let Some(v) = d.header_size {
+        header.header_size = v;
+    }
+    if let Some(v) = d.offset_to_point_data {
+        header.offset_to_point_data = v;
+    }
+    if let Some(v) = d.number_of_vlrs {
+        header.number_of_vlrs = v;
+    }
+    if let Some(v) = d.point_data_format_id {
+        header.point_data_format_id = v;
+    }
+    if let Some(v) = d.point_data_record_length {
+        header.point_data_record_length = v;
+    }
+    if let Some(v) = d.number_of_point_records {
+        header.number_of_point_records = v;
+    }
+    if let Some(v) = d.points_by_return {
+        header.points_by_return = v;
+    }
+    if let Some(v) = d.x_scale {
+        header.x_scale = v;
+    }
+    if let Some(v) = d.y_scale {
+        header.y_scale = v;
+    }
+    if let Some(v) = d.z_scale {
+        header.z_scale = v;
+    }
+    if let Some(v) = d.x_offset {
+        header.x_offset = v;
+    }
+    if let Some(v) = d.y_offset {
+        header.y_offset = v;
+    }
+    if let Some(v) = d.z_offset {
+        header.z_offset = v;
+    }
+    if let Some(v) = d.max_x {
+        header.max_x = v;
+    }
+    if let Some(v) = d.min_x {
+        header.min_x = v;
+    }
+    if let Some(v) = d.max_y {
+        header.max_y = v;
+    }
+    if let Some(v) = d.min_y {
+        header.min_y = v;
+    }
+    if let Some(v) = d.max_z {
+        header.max_z = v;
+    }
+    if let Some(v) = d.min_z {
+        header.min_z = v;
+    }
 }
 
 impl MutationDiff<LasSnapshot> for LasDiff {
@@ -604,31 +699,81 @@ impl MutationDiff<LasSnapshot> for LasDiff {
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Header
     /// scalars: LWW. `vlrs`/`points`: index-transport via [`absorb_indexed_triple`].
     fn absorb(&mut self, other: Self) {
-        if other.version_major.is_some() { self.version_major = other.version_major; }
-        if other.version_minor.is_some() { self.version_minor = other.version_minor; }
-        if other.system_identifier.is_some() { self.system_identifier = other.system_identifier; }
-        if other.generating_software.is_some() { self.generating_software = other.generating_software; }
-        if other.creation_day_of_year.is_some() { self.creation_day_of_year = other.creation_day_of_year; }
-        if other.creation_year.is_some() { self.creation_year = other.creation_year; }
-        if other.header_size.is_some() { self.header_size = other.header_size; }
-        if other.offset_to_point_data.is_some() { self.offset_to_point_data = other.offset_to_point_data; }
-        if other.number_of_vlrs.is_some() { self.number_of_vlrs = other.number_of_vlrs; }
-        if other.point_data_format_id.is_some() { self.point_data_format_id = other.point_data_format_id; }
-        if other.point_data_record_length.is_some() { self.point_data_record_length = other.point_data_record_length; }
-        if other.number_of_point_records.is_some() { self.number_of_point_records = other.number_of_point_records; }
-        if other.points_by_return.is_some() { self.points_by_return = other.points_by_return; }
-        if other.x_scale.is_some() { self.x_scale = other.x_scale; }
-        if other.y_scale.is_some() { self.y_scale = other.y_scale; }
-        if other.z_scale.is_some() { self.z_scale = other.z_scale; }
-        if other.x_offset.is_some() { self.x_offset = other.x_offset; }
-        if other.y_offset.is_some() { self.y_offset = other.y_offset; }
-        if other.z_offset.is_some() { self.z_offset = other.z_offset; }
-        if other.max_x.is_some() { self.max_x = other.max_x; }
-        if other.min_x.is_some() { self.min_x = other.min_x; }
-        if other.max_y.is_some() { self.max_y = other.max_y; }
-        if other.min_y.is_some() { self.min_y = other.min_y; }
-        if other.max_z.is_some() { self.max_z = other.max_z; }
-        if other.min_z.is_some() { self.min_z = other.min_z; }
+        if other.version_major.is_some() {
+            self.version_major = other.version_major;
+        }
+        if other.version_minor.is_some() {
+            self.version_minor = other.version_minor;
+        }
+        if other.system_identifier.is_some() {
+            self.system_identifier = other.system_identifier;
+        }
+        if other.generating_software.is_some() {
+            self.generating_software = other.generating_software;
+        }
+        if other.creation_day_of_year.is_some() {
+            self.creation_day_of_year = other.creation_day_of_year;
+        }
+        if other.creation_year.is_some() {
+            self.creation_year = other.creation_year;
+        }
+        if other.header_size.is_some() {
+            self.header_size = other.header_size;
+        }
+        if other.offset_to_point_data.is_some() {
+            self.offset_to_point_data = other.offset_to_point_data;
+        }
+        if other.number_of_vlrs.is_some() {
+            self.number_of_vlrs = other.number_of_vlrs;
+        }
+        if other.point_data_format_id.is_some() {
+            self.point_data_format_id = other.point_data_format_id;
+        }
+        if other.point_data_record_length.is_some() {
+            self.point_data_record_length = other.point_data_record_length;
+        }
+        if other.number_of_point_records.is_some() {
+            self.number_of_point_records = other.number_of_point_records;
+        }
+        if other.points_by_return.is_some() {
+            self.points_by_return = other.points_by_return;
+        }
+        if other.x_scale.is_some() {
+            self.x_scale = other.x_scale;
+        }
+        if other.y_scale.is_some() {
+            self.y_scale = other.y_scale;
+        }
+        if other.z_scale.is_some() {
+            self.z_scale = other.z_scale;
+        }
+        if other.x_offset.is_some() {
+            self.x_offset = other.x_offset;
+        }
+        if other.y_offset.is_some() {
+            self.y_offset = other.y_offset;
+        }
+        if other.z_offset.is_some() {
+            self.z_offset = other.z_offset;
+        }
+        if other.max_x.is_some() {
+            self.max_x = other.max_x;
+        }
+        if other.min_x.is_some() {
+            self.min_x = other.min_x;
+        }
+        if other.max_y.is_some() {
+            self.max_y = other.max_y;
+        }
+        if other.min_y.is_some() {
+            self.min_y = other.min_y;
+        }
+        if other.max_z.is_some() {
+            self.max_z = other.max_z;
+        }
+        if other.min_z.is_some() {
+            self.min_z = other.min_z;
+        }
         self.vlrs = absorb_vlrs(self.vlrs.take(), other.vlrs);
         self.points = absorb_points(self.points.take(), other.points);
     }
@@ -704,18 +849,10 @@ pub fn diff_set_creation_date(day_of_year: u16, year: u16) -> LasDiff {
     LasDiff { creation_day_of_year: Some(day_of_year), creation_year: Some(year), ..Default::default() }
 }
 pub fn diff_set_scale_and_offset(scale: (f64, f64, f64), offset: (f64, f64, f64)) -> LasDiff {
-    LasDiff {
-        x_scale: Some(scale.0), y_scale: Some(scale.1), z_scale: Some(scale.2),
-        x_offset: Some(offset.0), y_offset: Some(offset.1), z_offset: Some(offset.2),
-        ..Default::default()
-    }
+    LasDiff { x_scale: Some(scale.0), y_scale: Some(scale.1), z_scale: Some(scale.2), x_offset: Some(offset.0), y_offset: Some(offset.1), z_offset: Some(offset.2), ..Default::default() }
 }
 pub fn diff_set_bounds(max: (f64, f64, f64), min: (f64, f64, f64)) -> LasDiff {
-    LasDiff {
-        max_x: Some(max.0), max_y: Some(max.1), max_z: Some(max.2),
-        min_x: Some(min.0), min_y: Some(min.1), min_z: Some(min.2),
-        ..Default::default()
-    }
+    LasDiff { max_x: Some(max.0), max_y: Some(max.1), max_z: Some(max.2), min_x: Some(min.0), min_y: Some(min.1), min_z: Some(min.2), ..Default::default() }
 }
 pub fn diff_set_points_by_return(counts: [u32; 5]) -> LasDiff {
     LasDiff { points_by_return: Some(counts), ..Default::default() }
@@ -726,46 +863,27 @@ pub fn diff_insert_vlr(base: &LasSnapshot, index: usize, vlr: LasVlr) -> LasDiff
     // or a directly-constructed test snapshot), and `apply_las_mutation`'s imperative body
     // likewise recomputes from `snapshot.vlrs.len()` post-insert; both sides must agree for
     // `mutation_diff_law` to hold unconditionally, not just on already-synced fixtures.
-    LasDiff {
-        number_of_vlrs: Some((base.vlrs.len() + 1) as u32),
-        vlrs: Some(LasVlrsDiff { removed: vec![], modified: vec![], added: vec![LasVlrAdded { index, vlr }] }),
-        ..Default::default()
-    }
+    LasDiff { number_of_vlrs: Some((base.vlrs.len() + 1) as u32), vlrs: Some(LasVlrsDiff { removed: vec![], modified: vec![], added: vec![LasVlrAdded { index, vlr }] }), ..Default::default() }
 }
 pub fn diff_remove_vlr(base: &LasSnapshot, index: usize) -> LasDiff {
     if index >= base.vlrs.len() {
         return LasDiff::default();
     }
-    LasDiff {
-        number_of_vlrs: Some((base.vlrs.len() - 1) as u32),
-        vlrs: Some(LasVlrsDiff { removed: vec![index], modified: vec![], added: vec![] }),
-        ..Default::default()
-    }
+    LasDiff { number_of_vlrs: Some((base.vlrs.len() - 1) as u32), vlrs: Some(LasVlrsDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
 }
 pub fn diff_set_vlr_data(index: usize, data: Vec<u8>) -> LasDiff {
-    LasDiff {
-        vlrs: Some(LasVlrsDiff { removed: vec![], modified: vec![LasVlrModified { index, diff: LasVlrDiff { data: Some(data), ..Default::default() } }], added: vec![] }),
-        ..Default::default()
-    }
+    LasDiff { vlrs: Some(LasVlrsDiff { removed: vec![], modified: vec![LasVlrModified { index, diff: LasVlrDiff { data: Some(data), ..Default::default() } }], added: vec![] }), ..Default::default() }
 }
 pub fn diff_insert_point(base: &LasSnapshot, index: usize, point: LasPoint) -> LasDiff {
     // 🧭️ See `diff_insert_vlr`'s doc comment — derived from `base.points.len()`, not the
     // (possibly-desynced) `base.header.number_of_point_records`.
-    LasDiff {
-        number_of_point_records: Some((base.points.len() + 1) as u32),
-        points: Some(LasPointsDiff { removed: vec![], modified: vec![], added: vec![LasPointAdded { index, point }] }),
-        ..Default::default()
-    }
+    LasDiff { number_of_point_records: Some((base.points.len() + 1) as u32), points: Some(LasPointsDiff { removed: vec![], modified: vec![], added: vec![LasPointAdded { index, point }] }), ..Default::default() }
 }
 pub fn diff_remove_point(base: &LasSnapshot, index: usize) -> LasDiff {
     if index >= base.points.len() {
         return LasDiff::default();
     }
-    LasDiff {
-        number_of_point_records: Some((base.points.len() - 1) as u32),
-        points: Some(LasPointsDiff { removed: vec![index], modified: vec![], added: vec![] }),
-        ..Default::default()
-    }
+    LasDiff { number_of_point_records: Some((base.points.len() - 1) as u32), points: Some(LasPointsDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
 }
 pub fn diff_set_point(base: &LasSnapshot, index: usize, point: LasPoint) -> LasDiff {
     match base.points.get(index) {
@@ -827,12 +945,24 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn parse_u8(s: &str) -> Result<u8, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
-pub(crate) fn parse_i8(s: &str) -> Result<i8, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
-pub(crate) fn parse_u16(s: &str) -> Result<u16, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
-pub(crate) fn parse_u32(s: &str) -> Result<u32, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
-pub(crate) fn parse_f64(s: &str) -> Result<f64, String> { s.parse().map_err(|e: std::num::ParseFloatError| e.to_string()) }
+pub(crate) fn parse_u8(s: &str) -> Result<u8, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+pub(crate) fn parse_i8(s: &str) -> Result<i8, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+pub(crate) fn parse_u16(s: &str) -> Result<u16, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+pub(crate) fn parse_u32(s: &str) -> Result<u32, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
+    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
+}
 
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only): a top-level `sep` inside nested brackets is
 /// never mistaken for a field separator — the whole hand-rolled grammar's parsing primitive
@@ -902,19 +1032,23 @@ pub(crate) fn dec_vlr(s: &str) -> Result<LasVlr, String> {
     let [user_id, record_id, description, data] = parts.as_slice() else {
         return Err(format!("vlr: expected 4 fields, got {}", parts.len()));
     };
-    Ok(LasVlr {
-        user_id: String::from_utf8(hex_decode(user_id)?).map_err(|e| e.to_string())?,
-        record_id: parse_u16(record_id)?,
-        description: String::from_utf8(hex_decode(description)?).map_err(|e| e.to_string())?,
-        data: hex_decode(data)?,
-    })
+    Ok(LasVlr { user_id: String::from_utf8(hex_decode(user_id)?).map_err(|e| e.to_string())?, record_id: parse_u16(record_id)?, description: String::from_utf8(hex_decode(description)?).map_err(|e| e.to_string())?, data: hex_decode(data)? })
 }
 pub(crate) fn enc_point(p: &LasPoint) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{},{},{}]",
-        p.x, p.y, p.z, p.intensity, p.return_number, p.number_of_returns,
-        if p.scan_direction_flag { 1 } else { 0 }, if p.edge_of_flight_line { 1 } else { 0 },
-        p.classification, p.scan_angle_rank, p.user_data, p.point_source_id,
+        p.x,
+        p.y,
+        p.z,
+        p.intensity,
+        p.return_number,
+        p.number_of_returns,
+        if p.scan_direction_flag { 1 } else { 0 },
+        if p.edge_of_flight_line { 1 } else { 0 },
+        p.classification,
+        p.scan_angle_rank,
+        p.user_data,
+        p.point_source_id,
         encode_option(&p.gps_time, |v| v.to_string()),
         encode_option(&p.rgb, enc_rgb),
     )
@@ -925,7 +1059,9 @@ pub(crate) fn dec_point(s: &str) -> Result<LasPoint, String> {
         return Err(format!("point: expected 14 fields, got {}", parts.len()));
     };
     Ok(LasPoint {
-        x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)?,
+        x: parse_f64(x)?,
+        y: parse_f64(y)?,
+        z: parse_f64(z)?,
         intensity: parse_u16(intensity)?,
         return_number: parse_u8(return_number)?,
         number_of_returns: parse_u8(number_of_returns)?,
@@ -944,17 +1080,27 @@ pub(crate) fn dec_point(s: &str) -> Result<LasPoint, String> {
 //#region 🔖️DiffValueCodecs
 fn enc_vlr_diff(d: &LasVlrDiff) -> String {
     let mut parts = Vec::new();
-    if let Some(v) = &d.user_id { parts.push(format!("U:{}", hex_encode(v.as_bytes()))); }
-    if let Some(v) = d.record_id { parts.push(format!("R:{v}")); }
-    if let Some(v) = &d.description { parts.push(format!("N:{}", hex_encode(v.as_bytes()))); }
-    if let Some(v) = &d.data { parts.push(format!("X:{}", hex_encode(v))); }
+    if let Some(v) = &d.user_id {
+        parts.push(format!("U:{}", hex_encode(v.as_bytes())));
+    }
+    if let Some(v) = d.record_id {
+        parts.push(format!("R:{v}"));
+    }
+    if let Some(v) = &d.description {
+        parts.push(format!("N:{}", hex_encode(v.as_bytes())));
+    }
+    if let Some(v) = &d.data {
+        parts.push(format!("X:{}", hex_encode(v)));
+    }
     format!("[{}]", parts.join(","))
 }
 fn dec_vlr_diff(s: &str) -> Result<LasVlrDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = LasVlrDiff::default();
     for entry in split_top_level(inner, ',') {
-        if entry.is_empty() { continue; }
+        if entry.is_empty() {
+            continue;
+        }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("vlr diff: bad entry {entry:?}"))?;
         match tag {
             "U" => d.user_id = Some(String::from_utf8(hex_decode(val)?).map_err(|e| e.to_string())?),
@@ -969,27 +1115,57 @@ fn dec_vlr_diff(s: &str) -> Result<LasVlrDiff, String> {
 
 fn enc_point_diff(d: &LasPointDiff) -> String {
     let mut parts = Vec::new();
-    if let Some(v) = d.x { parts.push(format!("X:{v}")); }
-    if let Some(v) = d.y { parts.push(format!("Y:{v}")); }
-    if let Some(v) = d.z { parts.push(format!("Z:{v}")); }
-    if let Some(v) = d.intensity { parts.push(format!("I:{v}")); }
-    if let Some(v) = d.return_number { parts.push(format!("R:{v}")); }
-    if let Some(v) = d.number_of_returns { parts.push(format!("N:{v}")); }
-    if let Some(v) = d.scan_direction_flag { parts.push(format!("D:{}", if v { 1 } else { 0 })); }
-    if let Some(v) = d.edge_of_flight_line { parts.push(format!("E:{}", if v { 1 } else { 0 })); }
-    if let Some(v) = d.classification { parts.push(format!("C:{v}")); }
-    if let Some(v) = d.scan_angle_rank { parts.push(format!("A:{v}")); }
-    if let Some(v) = d.user_data { parts.push(format!("U:{v}")); }
-    if let Some(v) = d.point_source_id { parts.push(format!("P:{v}")); }
-    if let Some(v) = d.gps_time { parts.push(format!("G:{}", encode_option(&v, |x| x.to_string()))); }
-    if let Some(v) = d.rgb { parts.push(format!("B:{}", encode_option(&v, enc_rgb))); }
+    if let Some(v) = d.x {
+        parts.push(format!("X:{v}"));
+    }
+    if let Some(v) = d.y {
+        parts.push(format!("Y:{v}"));
+    }
+    if let Some(v) = d.z {
+        parts.push(format!("Z:{v}"));
+    }
+    if let Some(v) = d.intensity {
+        parts.push(format!("I:{v}"));
+    }
+    if let Some(v) = d.return_number {
+        parts.push(format!("R:{v}"));
+    }
+    if let Some(v) = d.number_of_returns {
+        parts.push(format!("N:{v}"));
+    }
+    if let Some(v) = d.scan_direction_flag {
+        parts.push(format!("D:{}", if v { 1 } else { 0 }));
+    }
+    if let Some(v) = d.edge_of_flight_line {
+        parts.push(format!("E:{}", if v { 1 } else { 0 }));
+    }
+    if let Some(v) = d.classification {
+        parts.push(format!("C:{v}"));
+    }
+    if let Some(v) = d.scan_angle_rank {
+        parts.push(format!("A:{v}"));
+    }
+    if let Some(v) = d.user_data {
+        parts.push(format!("U:{v}"));
+    }
+    if let Some(v) = d.point_source_id {
+        parts.push(format!("P:{v}"));
+    }
+    if let Some(v) = d.gps_time {
+        parts.push(format!("G:{}", encode_option(&v, |x| x.to_string())));
+    }
+    if let Some(v) = d.rgb {
+        parts.push(format!("B:{}", encode_option(&v, enc_rgb)));
+    }
     format!("[{}]", parts.join(","))
 }
 fn dec_point_diff(s: &str) -> Result<LasPointDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = LasPointDiff::default();
     for entry in split_top_level(inner, ',') {
-        if entry.is_empty() { continue; }
+        if entry.is_empty() {
+            continue;
+        }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("point diff: bad entry {entry:?}"))?;
         match tag {
             "X" => d.x = Some(parse_f64(val)?),
@@ -1025,21 +1201,20 @@ fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
     let parse_entries = |s: &str| -> Result<Vec<(usize, String)>, String> {
-        split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("collection entry: bad entry {entry:?}"))?;
-            Ok((parse_usize(idx)?, rest.to_string()))
-        }).collect()
+        split_top_level(strip_brackets(s)?, ',')
+            .into_iter()
+            .filter(|s| !s.is_empty())
+            .map(|entry| {
+                let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("collection entry: bad entry {entry:?}"))?;
+                Ok((parse_usize(idx)?, rest.to_string()))
+            })
+            .collect()
     };
     Ok((removed, parse_entries(modified_s)?, parse_entries(added_s)?))
 }
 
 fn enc_vlrs_diff(d: &LasVlrsDiff) -> String {
-    enc_collection_triple(
-        "vlrs",
-        &d.removed,
-        &d.modified.iter().map(|m| (m.index, enc_vlr_diff(&m.diff))).collect::<Vec<_>>(),
-        &d.added.iter().map(|a| (a.index, enc_vlr(&a.vlr))).collect::<Vec<_>>(),
-    )
+    enc_collection_triple("vlrs", &d.removed, &d.modified.iter().map(|m| (m.index, enc_vlr_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_vlr(&a.vlr))).collect::<Vec<_>>())
 }
 fn dec_vlrs_diff(body: &str) -> Result<LasVlrsDiff, String> {
     let (removed, modified, added) = dec_collection_triple(body)?;
@@ -1050,12 +1225,7 @@ fn dec_vlrs_diff(body: &str) -> Result<LasVlrsDiff, String> {
     })
 }
 fn enc_points_diff(d: &LasPointsDiff) -> String {
-    enc_collection_triple(
-        "points",
-        &d.removed,
-        &d.modified.iter().map(|m| (m.index, enc_point_diff(&m.diff))).collect::<Vec<_>>(),
-        &d.added.iter().map(|a| (a.index, enc_point(&a.point))).collect::<Vec<_>>(),
-    )
+    enc_collection_triple("points", &d.removed, &d.modified.iter().map(|m| (m.index, enc_point_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_point(&a.point))).collect::<Vec<_>>())
 }
 fn dec_points_diff(body: &str) -> Result<LasPointsDiff, String> {
     let (removed, modified, added) = dec_collection_triple(body)?;
@@ -1070,33 +1240,87 @@ fn dec_points_diff(body: &str) -> Result<LasPointsDiff, String> {
 //#region 🔖️TopLevel
 fn print_las_diff(d: &LasDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = d.version_major { tokens.push(format!("version-major={v}")); }
-    if let Some(v) = d.version_minor { tokens.push(format!("version-minor={v}")); }
-    if let Some(v) = &d.system_identifier { tokens.push(format!("system-identifier={}", hex_encode(v.as_bytes()))); }
-    if let Some(v) = &d.generating_software { tokens.push(format!("generating-software={}", hex_encode(v.as_bytes()))); }
-    if let Some(v) = d.creation_day_of_year { tokens.push(format!("creation-day-of-year={v}")); }
-    if let Some(v) = d.creation_year { tokens.push(format!("creation-year={v}")); }
-    if let Some(v) = d.header_size { tokens.push(format!("header-size={v}")); }
-    if let Some(v) = d.offset_to_point_data { tokens.push(format!("offset-to-point-data={v}")); }
-    if let Some(v) = d.number_of_vlrs { tokens.push(format!("number-of-vlrs={v}")); }
-    if let Some(v) = d.point_data_format_id { tokens.push(format!("point-data-format-id={v}")); }
-    if let Some(v) = d.point_data_record_length { tokens.push(format!("point-data-record-length={v}")); }
-    if let Some(v) = d.number_of_point_records { tokens.push(format!("number-of-point-records={v}")); }
-    if let Some(v) = d.points_by_return { tokens.push(format!("points-by-return={}", enc_u32x5(&v))); }
-    if let Some(v) = d.x_scale { tokens.push(format!("x-scale={v}")); }
-    if let Some(v) = d.y_scale { tokens.push(format!("y-scale={v}")); }
-    if let Some(v) = d.z_scale { tokens.push(format!("z-scale={v}")); }
-    if let Some(v) = d.x_offset { tokens.push(format!("x-offset={v}")); }
-    if let Some(v) = d.y_offset { tokens.push(format!("y-offset={v}")); }
-    if let Some(v) = d.z_offset { tokens.push(format!("z-offset={v}")); }
-    if let Some(v) = d.max_x { tokens.push(format!("max-x={v}")); }
-    if let Some(v) = d.min_x { tokens.push(format!("min-x={v}")); }
-    if let Some(v) = d.max_y { tokens.push(format!("max-y={v}")); }
-    if let Some(v) = d.min_y { tokens.push(format!("min-y={v}")); }
-    if let Some(v) = d.max_z { tokens.push(format!("max-z={v}")); }
-    if let Some(v) = d.min_z { tokens.push(format!("min-z={v}")); }
-    if let Some(v) = &d.vlrs { tokens.push(enc_vlrs_diff(v)); }
-    if let Some(v) = &d.points { tokens.push(enc_points_diff(v)); }
+    if let Some(v) = d.version_major {
+        tokens.push(format!("version-major={v}"));
+    }
+    if let Some(v) = d.version_minor {
+        tokens.push(format!("version-minor={v}"));
+    }
+    if let Some(v) = &d.system_identifier {
+        tokens.push(format!("system-identifier={}", hex_encode(v.as_bytes())));
+    }
+    if let Some(v) = &d.generating_software {
+        tokens.push(format!("generating-software={}", hex_encode(v.as_bytes())));
+    }
+    if let Some(v) = d.creation_day_of_year {
+        tokens.push(format!("creation-day-of-year={v}"));
+    }
+    if let Some(v) = d.creation_year {
+        tokens.push(format!("creation-year={v}"));
+    }
+    if let Some(v) = d.header_size {
+        tokens.push(format!("header-size={v}"));
+    }
+    if let Some(v) = d.offset_to_point_data {
+        tokens.push(format!("offset-to-point-data={v}"));
+    }
+    if let Some(v) = d.number_of_vlrs {
+        tokens.push(format!("number-of-vlrs={v}"));
+    }
+    if let Some(v) = d.point_data_format_id {
+        tokens.push(format!("point-data-format-id={v}"));
+    }
+    if let Some(v) = d.point_data_record_length {
+        tokens.push(format!("point-data-record-length={v}"));
+    }
+    if let Some(v) = d.number_of_point_records {
+        tokens.push(format!("number-of-point-records={v}"));
+    }
+    if let Some(v) = d.points_by_return {
+        tokens.push(format!("points-by-return={}", enc_u32x5(&v)));
+    }
+    if let Some(v) = d.x_scale {
+        tokens.push(format!("x-scale={v}"));
+    }
+    if let Some(v) = d.y_scale {
+        tokens.push(format!("y-scale={v}"));
+    }
+    if let Some(v) = d.z_scale {
+        tokens.push(format!("z-scale={v}"));
+    }
+    if let Some(v) = d.x_offset {
+        tokens.push(format!("x-offset={v}"));
+    }
+    if let Some(v) = d.y_offset {
+        tokens.push(format!("y-offset={v}"));
+    }
+    if let Some(v) = d.z_offset {
+        tokens.push(format!("z-offset={v}"));
+    }
+    if let Some(v) = d.max_x {
+        tokens.push(format!("max-x={v}"));
+    }
+    if let Some(v) = d.min_x {
+        tokens.push(format!("min-x={v}"));
+    }
+    if let Some(v) = d.max_y {
+        tokens.push(format!("max-y={v}"));
+    }
+    if let Some(v) = d.min_y {
+        tokens.push(format!("min-y={v}"));
+    }
+    if let Some(v) = d.max_z {
+        tokens.push(format!("max-z={v}"));
+    }
+    if let Some(v) = d.min_z {
+        tokens.push(format!("min-z={v}"));
+    }
+    if let Some(v) = &d.vlrs {
+        tokens.push(enc_vlrs_diff(v));
+    }
+    if let Some(v) = &d.points {
+        tokens.push(enc_points_diff(v));
+    }
     tokens.join(" ")
 }
 fn parse_las_diff(line: &str) -> Result<LasDiff, String> {
@@ -1105,34 +1329,63 @@ fn parse_las_diff(line: &str) -> Result<LasDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("version-major=") { d.version_major = Some(parse_u8(rest)?); }
-        else if let Some(rest) = token.strip_prefix("version-minor=") { d.version_minor = Some(parse_u8(rest)?); }
-        else if let Some(rest) = token.strip_prefix("system-identifier=") { d.system_identifier = Some(String::from_utf8(hex_decode(rest)?).map_err(|e| e.to_string())?); }
-        else if let Some(rest) = token.strip_prefix("generating-software=") { d.generating_software = Some(String::from_utf8(hex_decode(rest)?).map_err(|e| e.to_string())?); }
-        else if let Some(rest) = token.strip_prefix("creation-day-of-year=") { d.creation_day_of_year = Some(parse_u16(rest)?); }
-        else if let Some(rest) = token.strip_prefix("creation-year=") { d.creation_year = Some(parse_u16(rest)?); }
-        else if let Some(rest) = token.strip_prefix("header-size=") { d.header_size = Some(parse_u16(rest)?); }
-        else if let Some(rest) = token.strip_prefix("offset-to-point-data=") { d.offset_to_point_data = Some(parse_u32(rest)?); }
-        else if let Some(rest) = token.strip_prefix("number-of-vlrs=") { d.number_of_vlrs = Some(parse_u32(rest)?); }
-        else if let Some(rest) = token.strip_prefix("point-data-format-id=") { d.point_data_format_id = Some(parse_u8(rest)?); }
-        else if let Some(rest) = token.strip_prefix("point-data-record-length=") { d.point_data_record_length = Some(parse_u16(rest)?); }
-        else if let Some(rest) = token.strip_prefix("number-of-point-records=") { d.number_of_point_records = Some(parse_u32(rest)?); }
-        else if let Some(rest) = token.strip_prefix("points-by-return=") { d.points_by_return = Some(dec_u32x5(rest)?); }
-        else if let Some(rest) = token.strip_prefix("x-scale=") { d.x_scale = Some(parse_f64(rest)?); }
-        else if let Some(rest) = token.strip_prefix("y-scale=") { d.y_scale = Some(parse_f64(rest)?); }
-        else if let Some(rest) = token.strip_prefix("z-scale=") { d.z_scale = Some(parse_f64(rest)?); }
-        else if let Some(rest) = token.strip_prefix("x-offset=") { d.x_offset = Some(parse_f64(rest)?); }
-        else if let Some(rest) = token.strip_prefix("y-offset=") { d.y_offset = Some(parse_f64(rest)?); }
-        else if let Some(rest) = token.strip_prefix("z-offset=") { d.z_offset = Some(parse_f64(rest)?); }
-        else if let Some(rest) = token.strip_prefix("max-x=") { d.max_x = Some(parse_f64(rest)?); }
-        else if let Some(rest) = token.strip_prefix("min-x=") { d.min_x = Some(parse_f64(rest)?); }
-        else if let Some(rest) = token.strip_prefix("max-y=") { d.max_y = Some(parse_f64(rest)?); }
-        else if let Some(rest) = token.strip_prefix("min-y=") { d.min_y = Some(parse_f64(rest)?); }
-        else if let Some(rest) = token.strip_prefix("max-z=") { d.max_z = Some(parse_f64(rest)?); }
-        else if let Some(rest) = token.strip_prefix("min-z=") { d.min_z = Some(parse_f64(rest)?); }
-        else if let Some(rest) = token.strip_prefix("vlrs{") { d.vlrs = Some(dec_vlrs_diff(rest.strip_suffix('}').ok_or_else(|| "vlrs: missing closing brace".to_string())?)?); }
-        else if let Some(rest) = token.strip_prefix("points{") { d.points = Some(dec_points_diff(rest.strip_suffix('}').ok_or_else(|| "points: missing closing brace".to_string())?)?); }
-        else { return Err(format!("las diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("version-major=") {
+            d.version_major = Some(parse_u8(rest)?);
+        } else if let Some(rest) = token.strip_prefix("version-minor=") {
+            d.version_minor = Some(parse_u8(rest)?);
+        } else if let Some(rest) = token.strip_prefix("system-identifier=") {
+            d.system_identifier = Some(String::from_utf8(hex_decode(rest)?).map_err(|e| e.to_string())?);
+        } else if let Some(rest) = token.strip_prefix("generating-software=") {
+            d.generating_software = Some(String::from_utf8(hex_decode(rest)?).map_err(|e| e.to_string())?);
+        } else if let Some(rest) = token.strip_prefix("creation-day-of-year=") {
+            d.creation_day_of_year = Some(parse_u16(rest)?);
+        } else if let Some(rest) = token.strip_prefix("creation-year=") {
+            d.creation_year = Some(parse_u16(rest)?);
+        } else if let Some(rest) = token.strip_prefix("header-size=") {
+            d.header_size = Some(parse_u16(rest)?);
+        } else if let Some(rest) = token.strip_prefix("offset-to-point-data=") {
+            d.offset_to_point_data = Some(parse_u32(rest)?);
+        } else if let Some(rest) = token.strip_prefix("number-of-vlrs=") {
+            d.number_of_vlrs = Some(parse_u32(rest)?);
+        } else if let Some(rest) = token.strip_prefix("point-data-format-id=") {
+            d.point_data_format_id = Some(parse_u8(rest)?);
+        } else if let Some(rest) = token.strip_prefix("point-data-record-length=") {
+            d.point_data_record_length = Some(parse_u16(rest)?);
+        } else if let Some(rest) = token.strip_prefix("number-of-point-records=") {
+            d.number_of_point_records = Some(parse_u32(rest)?);
+        } else if let Some(rest) = token.strip_prefix("points-by-return=") {
+            d.points_by_return = Some(dec_u32x5(rest)?);
+        } else if let Some(rest) = token.strip_prefix("x-scale=") {
+            d.x_scale = Some(parse_f64(rest)?);
+        } else if let Some(rest) = token.strip_prefix("y-scale=") {
+            d.y_scale = Some(parse_f64(rest)?);
+        } else if let Some(rest) = token.strip_prefix("z-scale=") {
+            d.z_scale = Some(parse_f64(rest)?);
+        } else if let Some(rest) = token.strip_prefix("x-offset=") {
+            d.x_offset = Some(parse_f64(rest)?);
+        } else if let Some(rest) = token.strip_prefix("y-offset=") {
+            d.y_offset = Some(parse_f64(rest)?);
+        } else if let Some(rest) = token.strip_prefix("z-offset=") {
+            d.z_offset = Some(parse_f64(rest)?);
+        } else if let Some(rest) = token.strip_prefix("max-x=") {
+            d.max_x = Some(parse_f64(rest)?);
+        } else if let Some(rest) = token.strip_prefix("min-x=") {
+            d.min_x = Some(parse_f64(rest)?);
+        } else if let Some(rest) = token.strip_prefix("max-y=") {
+            d.max_y = Some(parse_f64(rest)?);
+        } else if let Some(rest) = token.strip_prefix("min-y=") {
+            d.min_y = Some(parse_f64(rest)?);
+        } else if let Some(rest) = token.strip_prefix("max-z=") {
+            d.max_z = Some(parse_f64(rest)?);
+        } else if let Some(rest) = token.strip_prefix("min-z=") {
+            d.min_z = Some(parse_f64(rest)?);
+        } else if let Some(rest) = token.strip_prefix("vlrs{") {
+            d.vlrs = Some(dec_vlrs_diff(rest.strip_suffix('}').ok_or_else(|| "vlrs: missing closing brace".to_string())?)?);
+        } else if let Some(rest) = token.strip_prefix("points{") {
+            d.points = Some(dec_points_diff(rest.strip_suffix('}').ok_or_else(|| "points: missing closing brace".to_string())?)?);
+        } else {
+            return Err(format!("las diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -1220,10 +1473,31 @@ pub(crate) fn dec_header_bin(reader: &mut store::ByteReader<'_>) -> Result<LasHe
     }
     let [x_scale, y_scale, z_scale, x_offset, y_offset, z_offset, max_x, min_x, max_y, min_y, max_z, min_z] = floats;
     Ok(LasHeader {
-        version_major, version_minor, system_identifier, generating_software,
-        creation_day_of_year, creation_year, header_size, offset_to_point_data, number_of_vlrs,
-        point_data_format_id, point_data_record_length, number_of_point_records, points_by_return,
-        x_scale, y_scale, z_scale, x_offset, y_offset, z_offset, max_x, min_x, max_y, min_y, max_z, min_z,
+        version_major,
+        version_minor,
+        system_identifier,
+        generating_software,
+        creation_day_of_year,
+        creation_year,
+        header_size,
+        offset_to_point_data,
+        number_of_vlrs,
+        point_data_format_id,
+        point_data_record_length,
+        number_of_point_records,
+        points_by_return,
+        x_scale,
+        y_scale,
+        z_scale,
+        x_offset,
+        y_offset,
+        z_offset,
+        max_x,
+        min_x,
+        max_y,
+        min_y,
+        max_z,
+        min_z,
     })
 }
 
@@ -1234,12 +1508,7 @@ pub(crate) fn enc_vlr_bin(v: &LasVlr, out: &mut Vec<u8>) {
     write_bytes_lp(out, &v.data);
 }
 pub(crate) fn dec_vlr_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlr, String> {
-    Ok(LasVlr {
-        user_id: read_str_lp(reader)?,
-        record_id: reader.read_varint_u64().map_err(|e| e.to_string())? as u16,
-        description: read_str_lp(reader)?,
-        data: read_bytes_lp(reader)?,
-    })
+    Ok(LasVlr { user_id: read_str_lp(reader)?, record_id: reader.read_varint_u64().map_err(|e| e.to_string())? as u16, description: read_str_lp(reader)?, data: read_bytes_lp(reader)? })
 }
 
 pub(crate) fn enc_point_bin(p: &LasPoint, out: &mut Vec<u8>) {
@@ -1257,7 +1526,10 @@ pub(crate) fn enc_point_bin(p: &LasPoint, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, p.point_source_id as u64);
     match p.gps_time {
         None => out.push(0),
-        Some(v) => { out.push(1); out.extend_from_slice(&v.to_le_bytes()); }
+        Some(v) => {
+            out.push(1);
+            out.extend_from_slice(&v.to_le_bytes());
+        }
     }
     match p.rgb {
         None => out.push(0),
@@ -1289,17 +1561,10 @@ pub(crate) fn dec_point_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPoi
     };
     let rgb = match reader.read_u8().map_err(|e| e.to_string())? {
         0 => None,
-        1 => Some((
-            reader.read_varint_u64().map_err(|e| e.to_string())? as u16,
-            reader.read_varint_u64().map_err(|e| e.to_string())? as u16,
-            reader.read_varint_u64().map_err(|e| e.to_string())? as u16,
-        )),
+        1 => Some((reader.read_varint_u64().map_err(|e| e.to_string())? as u16, reader.read_varint_u64().map_err(|e| e.to_string())? as u16, reader.read_varint_u64().map_err(|e| e.to_string())? as u16)),
         other => return Err(format!("bad option tag {other}")),
     };
-    Ok(LasPoint {
-        x, y, z, intensity, return_number, number_of_returns, scan_direction_flag,
-        edge_of_flight_line, classification, scan_angle_rank, user_data, point_source_id, gps_time, rgb,
-    })
+    Ok(LasPoint { x, y, z, intensity, return_number, number_of_returns, scan_direction_flag, edge_of_flight_line, classification, scan_angle_rank, user_data, point_source_id, gps_time, rgb })
 }
 //#endregion 🔖️RecordBinaryCodec
 
@@ -1311,23 +1576,47 @@ const VDF_DATA: u8 = 1 << 3;
 
 fn enc_vlr_diff_bin(d: &LasVlrDiff, out: &mut Vec<u8>) {
     let mut mask = 0u8;
-    if d.user_id.is_some() { mask |= VDF_USER_ID; }
-    if d.record_id.is_some() { mask |= VDF_RECORD_ID; }
-    if d.description.is_some() { mask |= VDF_DESCRIPTION; }
-    if d.data.is_some() { mask |= VDF_DATA; }
+    if d.user_id.is_some() {
+        mask |= VDF_USER_ID;
+    }
+    if d.record_id.is_some() {
+        mask |= VDF_RECORD_ID;
+    }
+    if d.description.is_some() {
+        mask |= VDF_DESCRIPTION;
+    }
+    if d.data.is_some() {
+        mask |= VDF_DATA;
+    }
     out.push(mask);
-    if let Some(v) = &d.user_id { write_str_lp(out, v); }
-    if let Some(v) = d.record_id { store::pack_rt::write_varint_u64(out, v as u64); }
-    if let Some(v) = &d.description { write_str_lp(out, v); }
-    if let Some(v) = &d.data { write_bytes_lp(out, v); }
+    if let Some(v) = &d.user_id {
+        write_str_lp(out, v);
+    }
+    if let Some(v) = d.record_id {
+        store::pack_rt::write_varint_u64(out, v as u64);
+    }
+    if let Some(v) = &d.description {
+        write_str_lp(out, v);
+    }
+    if let Some(v) = &d.data {
+        write_bytes_lp(out, v);
+    }
 }
 fn dec_vlr_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrDiff, String> {
     let mask = reader.read_u8().map_err(|e| e.to_string())?;
     let mut d = LasVlrDiff::default();
-    if mask & VDF_USER_ID != 0 { d.user_id = Some(read_str_lp(reader)?); }
-    if mask & VDF_RECORD_ID != 0 { d.record_id = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
-    if mask & VDF_DESCRIPTION != 0 { d.description = Some(read_str_lp(reader)?); }
-    if mask & VDF_DATA != 0 { d.data = Some(read_bytes_lp(reader)?); }
+    if mask & VDF_USER_ID != 0 {
+        d.user_id = Some(read_str_lp(reader)?);
+    }
+    if mask & VDF_RECORD_ID != 0 {
+        d.record_id = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+    }
+    if mask & VDF_DESCRIPTION != 0 {
+        d.description = Some(read_str_lp(reader)?);
+    }
+    if mask & VDF_DATA != 0 {
+        d.data = Some(read_bytes_lp(reader)?);
+    }
     Ok(d)
 }
 
@@ -1348,37 +1637,92 @@ const PDF_RGB: u16 = 1 << 13;
 
 fn enc_point_diff_bin(d: &LasPointDiff, out: &mut Vec<u8>) {
     let mut mask = 0u16;
-    if d.x.is_some() { mask |= PDF_X; }
-    if d.y.is_some() { mask |= PDF_Y; }
-    if d.z.is_some() { mask |= PDF_Z; }
-    if d.intensity.is_some() { mask |= PDF_INTENSITY; }
-    if d.return_number.is_some() { mask |= PDF_RETURN_NUMBER; }
-    if d.number_of_returns.is_some() { mask |= PDF_NUMBER_OF_RETURNS; }
-    if d.scan_direction_flag.is_some() { mask |= PDF_SCAN_DIRECTION_FLAG; }
-    if d.edge_of_flight_line.is_some() { mask |= PDF_EDGE_OF_FLIGHT_LINE; }
-    if d.classification.is_some() { mask |= PDF_CLASSIFICATION; }
-    if d.scan_angle_rank.is_some() { mask |= PDF_SCAN_ANGLE_RANK; }
-    if d.user_data.is_some() { mask |= PDF_USER_DATA; }
-    if d.point_source_id.is_some() { mask |= PDF_POINT_SOURCE_ID; }
-    if d.gps_time.is_some() { mask |= PDF_GPS_TIME; }
-    if d.rgb.is_some() { mask |= PDF_RGB; }
+    if d.x.is_some() {
+        mask |= PDF_X;
+    }
+    if d.y.is_some() {
+        mask |= PDF_Y;
+    }
+    if d.z.is_some() {
+        mask |= PDF_Z;
+    }
+    if d.intensity.is_some() {
+        mask |= PDF_INTENSITY;
+    }
+    if d.return_number.is_some() {
+        mask |= PDF_RETURN_NUMBER;
+    }
+    if d.number_of_returns.is_some() {
+        mask |= PDF_NUMBER_OF_RETURNS;
+    }
+    if d.scan_direction_flag.is_some() {
+        mask |= PDF_SCAN_DIRECTION_FLAG;
+    }
+    if d.edge_of_flight_line.is_some() {
+        mask |= PDF_EDGE_OF_FLIGHT_LINE;
+    }
+    if d.classification.is_some() {
+        mask |= PDF_CLASSIFICATION;
+    }
+    if d.scan_angle_rank.is_some() {
+        mask |= PDF_SCAN_ANGLE_RANK;
+    }
+    if d.user_data.is_some() {
+        mask |= PDF_USER_DATA;
+    }
+    if d.point_source_id.is_some() {
+        mask |= PDF_POINT_SOURCE_ID;
+    }
+    if d.gps_time.is_some() {
+        mask |= PDF_GPS_TIME;
+    }
+    if d.rgb.is_some() {
+        mask |= PDF_RGB;
+    }
     out.extend_from_slice(&mask.to_le_bytes());
-    if let Some(v) = d.x { out.extend_from_slice(&v.to_le_bytes()); }
-    if let Some(v) = d.y { out.extend_from_slice(&v.to_le_bytes()); }
-    if let Some(v) = d.z { out.extend_from_slice(&v.to_le_bytes()); }
-    if let Some(v) = d.intensity { store::pack_rt::write_varint_u64(out, v as u64); }
-    if let Some(v) = d.return_number { out.push(v); }
-    if let Some(v) = d.number_of_returns { out.push(v); }
-    if let Some(v) = d.scan_direction_flag { out.push(v as u8); }
-    if let Some(v) = d.edge_of_flight_line { out.push(v as u8); }
-    if let Some(v) = d.classification { out.push(v); }
-    if let Some(v) = d.scan_angle_rank { out.push(v as u8); }
-    if let Some(v) = d.user_data { out.push(v); }
-    if let Some(v) = d.point_source_id { store::pack_rt::write_varint_u64(out, v as u64); }
+    if let Some(v) = d.x {
+        out.extend_from_slice(&v.to_le_bytes());
+    }
+    if let Some(v) = d.y {
+        out.extend_from_slice(&v.to_le_bytes());
+    }
+    if let Some(v) = d.z {
+        out.extend_from_slice(&v.to_le_bytes());
+    }
+    if let Some(v) = d.intensity {
+        store::pack_rt::write_varint_u64(out, v as u64);
+    }
+    if let Some(v) = d.return_number {
+        out.push(v);
+    }
+    if let Some(v) = d.number_of_returns {
+        out.push(v);
+    }
+    if let Some(v) = d.scan_direction_flag {
+        out.push(v as u8);
+    }
+    if let Some(v) = d.edge_of_flight_line {
+        out.push(v as u8);
+    }
+    if let Some(v) = d.classification {
+        out.push(v);
+    }
+    if let Some(v) = d.scan_angle_rank {
+        out.push(v as u8);
+    }
+    if let Some(v) = d.user_data {
+        out.push(v);
+    }
+    if let Some(v) = d.point_source_id {
+        store::pack_rt::write_varint_u64(out, v as u64);
+    }
     if let Some(v) = d.gps_time {
         match v {
             None => out.push(0),
-            Some(x) => { out.push(1); out.extend_from_slice(&x.to_le_bytes()); }
+            Some(x) => {
+                out.push(1);
+                out.extend_from_slice(&x.to_le_bytes());
+            }
         }
     }
     if let Some(v) = d.rgb {
@@ -1396,18 +1740,42 @@ fn enc_point_diff_bin(d: &LasPointDiff, out: &mut Vec<u8>) {
 fn dec_point_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointDiff, String> {
     let mask = reader.read_u16_le().map_err(|e| e.to_string())?;
     let mut d = LasPointDiff::default();
-    if mask & PDF_X != 0 { d.x = Some(reader.read_f64_le().map_err(|e| e.to_string())?); }
-    if mask & PDF_Y != 0 { d.y = Some(reader.read_f64_le().map_err(|e| e.to_string())?); }
-    if mask & PDF_Z != 0 { d.z = Some(reader.read_f64_le().map_err(|e| e.to_string())?); }
-    if mask & PDF_INTENSITY != 0 { d.intensity = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
-    if mask & PDF_RETURN_NUMBER != 0 { d.return_number = Some(reader.read_u8().map_err(|e| e.to_string())?); }
-    if mask & PDF_NUMBER_OF_RETURNS != 0 { d.number_of_returns = Some(reader.read_u8().map_err(|e| e.to_string())?); }
-    if mask & PDF_SCAN_DIRECTION_FLAG != 0 { d.scan_direction_flag = Some(reader.read_u8().map_err(|e| e.to_string())? != 0); }
-    if mask & PDF_EDGE_OF_FLIGHT_LINE != 0 { d.edge_of_flight_line = Some(reader.read_u8().map_err(|e| e.to_string())? != 0); }
-    if mask & PDF_CLASSIFICATION != 0 { d.classification = Some(reader.read_u8().map_err(|e| e.to_string())?); }
-    if mask & PDF_SCAN_ANGLE_RANK != 0 { d.scan_angle_rank = Some(reader.read_u8().map_err(|e| e.to_string())? as i8); }
-    if mask & PDF_USER_DATA != 0 { d.user_data = Some(reader.read_u8().map_err(|e| e.to_string())?); }
-    if mask & PDF_POINT_SOURCE_ID != 0 { d.point_source_id = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
+    if mask & PDF_X != 0 {
+        d.x = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+    }
+    if mask & PDF_Y != 0 {
+        d.y = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+    }
+    if mask & PDF_Z != 0 {
+        d.z = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+    }
+    if mask & PDF_INTENSITY != 0 {
+        d.intensity = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+    }
+    if mask & PDF_RETURN_NUMBER != 0 {
+        d.return_number = Some(reader.read_u8().map_err(|e| e.to_string())?);
+    }
+    if mask & PDF_NUMBER_OF_RETURNS != 0 {
+        d.number_of_returns = Some(reader.read_u8().map_err(|e| e.to_string())?);
+    }
+    if mask & PDF_SCAN_DIRECTION_FLAG != 0 {
+        d.scan_direction_flag = Some(reader.read_u8().map_err(|e| e.to_string())? != 0);
+    }
+    if mask & PDF_EDGE_OF_FLIGHT_LINE != 0 {
+        d.edge_of_flight_line = Some(reader.read_u8().map_err(|e| e.to_string())? != 0);
+    }
+    if mask & PDF_CLASSIFICATION != 0 {
+        d.classification = Some(reader.read_u8().map_err(|e| e.to_string())?);
+    }
+    if mask & PDF_SCAN_ANGLE_RANK != 0 {
+        d.scan_angle_rank = Some(reader.read_u8().map_err(|e| e.to_string())? as i8);
+    }
+    if mask & PDF_USER_DATA != 0 {
+        d.user_data = Some(reader.read_u8().map_err(|e| e.to_string())?);
+    }
+    if mask & PDF_POINT_SOURCE_ID != 0 {
+        d.point_source_id = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+    }
     if mask & PDF_GPS_TIME != 0 {
         d.gps_time = Some(match reader.read_u8().map_err(|e| e.to_string())? {
             0 => None,
@@ -1418,11 +1786,7 @@ fn dec_point_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointDiff
     if mask & PDF_RGB != 0 {
         d.rgb = Some(match reader.read_u8().map_err(|e| e.to_string())? {
             0 => None,
-            1 => Some((
-                reader.read_varint_u64().map_err(|e| e.to_string())? as u16,
-                reader.read_varint_u64().map_err(|e| e.to_string())? as u16,
-                reader.read_varint_u64().map_err(|e| e.to_string())? as u16,
-            )),
+            1 => Some((reader.read_varint_u64().map_err(|e| e.to_string())? as u16, reader.read_varint_u64().map_err(|e| e.to_string())? as u16, reader.read_varint_u64().map_err(|e| e.to_string())? as u16)),
             other => return Err(format!("bad option tag {other}")),
         });
     }
@@ -1431,7 +1795,9 @@ fn dec_point_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointDiff
 
 fn enc_vlrs_diff_bin(d: &LasVlrsDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
-    for i in &d.removed { store::pack_rt::write_varint_u64(out, *i as u64); }
+    for i in &d.removed {
+        store::pack_rt::write_varint_u64(out, *i as u64);
+    }
     store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
     for m in &d.modified {
         store::pack_rt::write_varint_u64(out, m.index as u64);
@@ -1447,23 +1813,29 @@ fn dec_vlrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrsDiff, 
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let removed = (0..removed_count).map(|_| Ok(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)).collect::<Result<Vec<_>, String>>()?;
     let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let modified = (0..modified_count).map(|_| -> Result<LasVlrModified, String> {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let diff = dec_vlr_diff_bin(reader)?;
-        Ok(LasVlrModified { index, diff })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = (0..modified_count)
+        .map(|_| -> Result<LasVlrModified, String> {
+            let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+            let diff = dec_vlr_diff_bin(reader)?;
+            Ok(LasVlrModified { index, diff })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let added = (0..added_count).map(|_| -> Result<LasVlrAdded, String> {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let vlr = dec_vlr_bin(reader)?;
-        Ok(LasVlrAdded { index, vlr })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let added = (0..added_count)
+        .map(|_| -> Result<LasVlrAdded, String> {
+            let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+            let vlr = dec_vlr_bin(reader)?;
+            Ok(LasVlrAdded { index, vlr })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok(LasVlrsDiff { removed, modified, added })
 }
 
 fn enc_points_diff_bin(d: &LasPointsDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
-    for i in &d.removed { store::pack_rt::write_varint_u64(out, *i as u64); }
+    for i in &d.removed {
+        store::pack_rt::write_varint_u64(out, *i as u64);
+    }
     store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
     for m in &d.modified {
         store::pack_rt::write_varint_u64(out, m.index as u64);
@@ -1479,17 +1851,21 @@ fn dec_points_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointsDi
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let removed = (0..removed_count).map(|_| Ok(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)).collect::<Result<Vec<_>, String>>()?;
     let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let modified = (0..modified_count).map(|_| -> Result<LasPointModified, String> {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let diff = dec_point_diff_bin(reader)?;
-        Ok(LasPointModified { index, diff })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = (0..modified_count)
+        .map(|_| -> Result<LasPointModified, String> {
+            let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+            let diff = dec_point_diff_bin(reader)?;
+            Ok(LasPointModified { index, diff })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let added = (0..added_count).map(|_| -> Result<LasPointAdded, String> {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let point = dec_point_bin(reader)?;
-        Ok(LasPointAdded { index, point })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let added = (0..added_count)
+        .map(|_| -> Result<LasPointAdded, String> {
+            let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+            let point = dec_point_bin(reader)?;
+            Ok(LasPointAdded { index, point })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok(LasPointsDiff { removed, modified, added })
 }
 //#endregion 🔖️SparseDiffBinaryCodec
@@ -1539,63 +1915,173 @@ impl protocol::DiffCodec for LasDiff {
     /// comment for the full rationale).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut mask = 0u32;
-        if self.version_major.is_some() { mask |= HDR_VERSION_MAJOR; }
-        if self.version_minor.is_some() { mask |= HDR_VERSION_MINOR; }
-        if self.system_identifier.is_some() { mask |= HDR_SYSTEM_IDENTIFIER; }
-        if self.generating_software.is_some() { mask |= HDR_GENERATING_SOFTWARE; }
-        if self.creation_day_of_year.is_some() { mask |= HDR_CREATION_DAY_OF_YEAR; }
-        if self.creation_year.is_some() { mask |= HDR_CREATION_YEAR; }
-        if self.header_size.is_some() { mask |= HDR_HEADER_SIZE; }
-        if self.offset_to_point_data.is_some() { mask |= HDR_OFFSET_TO_POINT_DATA; }
-        if self.number_of_vlrs.is_some() { mask |= HDR_NUMBER_OF_VLRS; }
-        if self.point_data_format_id.is_some() { mask |= HDR_POINT_DATA_FORMAT_ID; }
-        if self.point_data_record_length.is_some() { mask |= HDR_POINT_DATA_RECORD_LENGTH; }
-        if self.number_of_point_records.is_some() { mask |= HDR_NUMBER_OF_POINT_RECORDS; }
-        if self.points_by_return.is_some() { mask |= HDR_POINTS_BY_RETURN; }
-        if self.x_scale.is_some() { mask |= HDR_X_SCALE; }
-        if self.y_scale.is_some() { mask |= HDR_Y_SCALE; }
-        if self.z_scale.is_some() { mask |= HDR_Z_SCALE; }
-        if self.x_offset.is_some() { mask |= HDR_X_OFFSET; }
-        if self.y_offset.is_some() { mask |= HDR_Y_OFFSET; }
-        if self.z_offset.is_some() { mask |= HDR_Z_OFFSET; }
-        if self.max_x.is_some() { mask |= HDR_MAX_X; }
-        if self.min_x.is_some() { mask |= HDR_MIN_X; }
-        if self.max_y.is_some() { mask |= HDR_MAX_Y; }
-        if self.min_y.is_some() { mask |= HDR_MIN_Y; }
-        if self.max_z.is_some() { mask |= HDR_MAX_Z; }
-        if self.min_z.is_some() { mask |= HDR_MIN_Z; }
-        if self.vlrs.is_some() { mask |= HDR_VLRS; }
-        if self.points.is_some() { mask |= HDR_POINTS; }
+        if self.version_major.is_some() {
+            mask |= HDR_VERSION_MAJOR;
+        }
+        if self.version_minor.is_some() {
+            mask |= HDR_VERSION_MINOR;
+        }
+        if self.system_identifier.is_some() {
+            mask |= HDR_SYSTEM_IDENTIFIER;
+        }
+        if self.generating_software.is_some() {
+            mask |= HDR_GENERATING_SOFTWARE;
+        }
+        if self.creation_day_of_year.is_some() {
+            mask |= HDR_CREATION_DAY_OF_YEAR;
+        }
+        if self.creation_year.is_some() {
+            mask |= HDR_CREATION_YEAR;
+        }
+        if self.header_size.is_some() {
+            mask |= HDR_HEADER_SIZE;
+        }
+        if self.offset_to_point_data.is_some() {
+            mask |= HDR_OFFSET_TO_POINT_DATA;
+        }
+        if self.number_of_vlrs.is_some() {
+            mask |= HDR_NUMBER_OF_VLRS;
+        }
+        if self.point_data_format_id.is_some() {
+            mask |= HDR_POINT_DATA_FORMAT_ID;
+        }
+        if self.point_data_record_length.is_some() {
+            mask |= HDR_POINT_DATA_RECORD_LENGTH;
+        }
+        if self.number_of_point_records.is_some() {
+            mask |= HDR_NUMBER_OF_POINT_RECORDS;
+        }
+        if self.points_by_return.is_some() {
+            mask |= HDR_POINTS_BY_RETURN;
+        }
+        if self.x_scale.is_some() {
+            mask |= HDR_X_SCALE;
+        }
+        if self.y_scale.is_some() {
+            mask |= HDR_Y_SCALE;
+        }
+        if self.z_scale.is_some() {
+            mask |= HDR_Z_SCALE;
+        }
+        if self.x_offset.is_some() {
+            mask |= HDR_X_OFFSET;
+        }
+        if self.y_offset.is_some() {
+            mask |= HDR_Y_OFFSET;
+        }
+        if self.z_offset.is_some() {
+            mask |= HDR_Z_OFFSET;
+        }
+        if self.max_x.is_some() {
+            mask |= HDR_MAX_X;
+        }
+        if self.min_x.is_some() {
+            mask |= HDR_MIN_X;
+        }
+        if self.max_y.is_some() {
+            mask |= HDR_MAX_Y;
+        }
+        if self.min_y.is_some() {
+            mask |= HDR_MIN_Y;
+        }
+        if self.max_z.is_some() {
+            mask |= HDR_MAX_Z;
+        }
+        if self.min_z.is_some() {
+            mask |= HDR_MIN_Z;
+        }
+        if self.vlrs.is_some() {
+            mask |= HDR_VLRS;
+        }
+        if self.points.is_some() {
+            mask |= HDR_POINTS;
+        }
 
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT];
         out.extend_from_slice(&mask.to_le_bytes());
-        if let Some(v) = self.version_major { out.push(v); }
-        if let Some(v) = self.version_minor { out.push(v); }
-        if let Some(v) = &self.system_identifier { write_str_lp(&mut out, v); }
-        if let Some(v) = &self.generating_software { write_str_lp(&mut out, v); }
-        if let Some(v) = self.creation_day_of_year { store::pack_rt::write_varint_u64(&mut out, v as u64); }
-        if let Some(v) = self.creation_year { store::pack_rt::write_varint_u64(&mut out, v as u64); }
-        if let Some(v) = self.header_size { store::pack_rt::write_varint_u64(&mut out, v as u64); }
-        if let Some(v) = self.offset_to_point_data { store::pack_rt::write_varint_u64(&mut out, v as u64); }
-        if let Some(v) = self.number_of_vlrs { store::pack_rt::write_varint_u64(&mut out, v as u64); }
-        if let Some(v) = self.point_data_format_id { out.push(v); }
-        if let Some(v) = self.point_data_record_length { store::pack_rt::write_varint_u64(&mut out, v as u64); }
-        if let Some(v) = self.number_of_point_records { store::pack_rt::write_varint_u64(&mut out, v as u64); }
-        if let Some(v) = self.points_by_return { for x in v { store::pack_rt::write_varint_u64(&mut out, x as u64); } }
-        if let Some(v) = self.x_scale { out.extend_from_slice(&v.to_le_bytes()); }
-        if let Some(v) = self.y_scale { out.extend_from_slice(&v.to_le_bytes()); }
-        if let Some(v) = self.z_scale { out.extend_from_slice(&v.to_le_bytes()); }
-        if let Some(v) = self.x_offset { out.extend_from_slice(&v.to_le_bytes()); }
-        if let Some(v) = self.y_offset { out.extend_from_slice(&v.to_le_bytes()); }
-        if let Some(v) = self.z_offset { out.extend_from_slice(&v.to_le_bytes()); }
-        if let Some(v) = self.max_x { out.extend_from_slice(&v.to_le_bytes()); }
-        if let Some(v) = self.min_x { out.extend_from_slice(&v.to_le_bytes()); }
-        if let Some(v) = self.max_y { out.extend_from_slice(&v.to_le_bytes()); }
-        if let Some(v) = self.min_y { out.extend_from_slice(&v.to_le_bytes()); }
-        if let Some(v) = self.max_z { out.extend_from_slice(&v.to_le_bytes()); }
-        if let Some(v) = self.min_z { out.extend_from_slice(&v.to_le_bytes()); }
-        if let Some(v) = &self.vlrs { enc_vlrs_diff_bin(v, &mut out); }
-        if let Some(v) = &self.points { enc_points_diff_bin(v, &mut out); }
+        if let Some(v) = self.version_major {
+            out.push(v);
+        }
+        if let Some(v) = self.version_minor {
+            out.push(v);
+        }
+        if let Some(v) = &self.system_identifier {
+            write_str_lp(&mut out, v);
+        }
+        if let Some(v) = &self.generating_software {
+            write_str_lp(&mut out, v);
+        }
+        if let Some(v) = self.creation_day_of_year {
+            store::pack_rt::write_varint_u64(&mut out, v as u64);
+        }
+        if let Some(v) = self.creation_year {
+            store::pack_rt::write_varint_u64(&mut out, v as u64);
+        }
+        if let Some(v) = self.header_size {
+            store::pack_rt::write_varint_u64(&mut out, v as u64);
+        }
+        if let Some(v) = self.offset_to_point_data {
+            store::pack_rt::write_varint_u64(&mut out, v as u64);
+        }
+        if let Some(v) = self.number_of_vlrs {
+            store::pack_rt::write_varint_u64(&mut out, v as u64);
+        }
+        if let Some(v) = self.point_data_format_id {
+            out.push(v);
+        }
+        if let Some(v) = self.point_data_record_length {
+            store::pack_rt::write_varint_u64(&mut out, v as u64);
+        }
+        if let Some(v) = self.number_of_point_records {
+            store::pack_rt::write_varint_u64(&mut out, v as u64);
+        }
+        if let Some(v) = self.points_by_return {
+            for x in v {
+                store::pack_rt::write_varint_u64(&mut out, x as u64);
+            }
+        }
+        if let Some(v) = self.x_scale {
+            out.extend_from_slice(&v.to_le_bytes());
+        }
+        if let Some(v) = self.y_scale {
+            out.extend_from_slice(&v.to_le_bytes());
+        }
+        if let Some(v) = self.z_scale {
+            out.extend_from_slice(&v.to_le_bytes());
+        }
+        if let Some(v) = self.x_offset {
+            out.extend_from_slice(&v.to_le_bytes());
+        }
+        if let Some(v) = self.y_offset {
+            out.extend_from_slice(&v.to_le_bytes());
+        }
+        if let Some(v) = self.z_offset {
+            out.extend_from_slice(&v.to_le_bytes());
+        }
+        if let Some(v) = self.max_x {
+            out.extend_from_slice(&v.to_le_bytes());
+        }
+        if let Some(v) = self.min_x {
+            out.extend_from_slice(&v.to_le_bytes());
+        }
+        if let Some(v) = self.max_y {
+            out.extend_from_slice(&v.to_le_bytes());
+        }
+        if let Some(v) = self.min_y {
+            out.extend_from_slice(&v.to_le_bytes());
+        }
+        if let Some(v) = self.max_z {
+            out.extend_from_slice(&v.to_le_bytes());
+        }
+        if let Some(v) = self.min_z {
+            out.extend_from_slice(&v.to_le_bytes());
+        }
+        if let Some(v) = &self.vlrs {
+            enc_vlrs_diff_bin(v, &mut out);
+        }
+        if let Some(v) = &self.points {
+            enc_points_diff_bin(v, &mut out);
+        }
         Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -1607,37 +2093,91 @@ impl protocol::DiffCodec for LasDiff {
             }
             let mask = reader.read_u32_le().map_err(|e| e.to_string())?;
             let mut d = LasDiff::default();
-            if mask & HDR_VERSION_MAJOR != 0 { d.version_major = Some(reader.read_u8().map_err(|e| e.to_string())?); }
-            if mask & HDR_VERSION_MINOR != 0 { d.version_minor = Some(reader.read_u8().map_err(|e| e.to_string())?); }
-            if mask & HDR_SYSTEM_IDENTIFIER != 0 { d.system_identifier = Some(read_str_lp(&mut reader)?); }
-            if mask & HDR_GENERATING_SOFTWARE != 0 { d.generating_software = Some(read_str_lp(&mut reader)?); }
-            if mask & HDR_CREATION_DAY_OF_YEAR != 0 { d.creation_day_of_year = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
-            if mask & HDR_CREATION_YEAR != 0 { d.creation_year = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
-            if mask & HDR_HEADER_SIZE != 0 { d.header_size = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
-            if mask & HDR_OFFSET_TO_POINT_DATA != 0 { d.offset_to_point_data = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u32); }
-            if mask & HDR_NUMBER_OF_VLRS != 0 { d.number_of_vlrs = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u32); }
-            if mask & HDR_POINT_DATA_FORMAT_ID != 0 { d.point_data_format_id = Some(reader.read_u8().map_err(|e| e.to_string())?); }
-            if mask & HDR_POINT_DATA_RECORD_LENGTH != 0 { d.point_data_record_length = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
-            if mask & HDR_NUMBER_OF_POINT_RECORDS != 0 { d.number_of_point_records = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u32); }
+            if mask & HDR_VERSION_MAJOR != 0 {
+                d.version_major = Some(reader.read_u8().map_err(|e| e.to_string())?);
+            }
+            if mask & HDR_VERSION_MINOR != 0 {
+                d.version_minor = Some(reader.read_u8().map_err(|e| e.to_string())?);
+            }
+            if mask & HDR_SYSTEM_IDENTIFIER != 0 {
+                d.system_identifier = Some(read_str_lp(&mut reader)?);
+            }
+            if mask & HDR_GENERATING_SOFTWARE != 0 {
+                d.generating_software = Some(read_str_lp(&mut reader)?);
+            }
+            if mask & HDR_CREATION_DAY_OF_YEAR != 0 {
+                d.creation_day_of_year = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+            }
+            if mask & HDR_CREATION_YEAR != 0 {
+                d.creation_year = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+            }
+            if mask & HDR_HEADER_SIZE != 0 {
+                d.header_size = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+            }
+            if mask & HDR_OFFSET_TO_POINT_DATA != 0 {
+                d.offset_to_point_data = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u32);
+            }
+            if mask & HDR_NUMBER_OF_VLRS != 0 {
+                d.number_of_vlrs = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u32);
+            }
+            if mask & HDR_POINT_DATA_FORMAT_ID != 0 {
+                d.point_data_format_id = Some(reader.read_u8().map_err(|e| e.to_string())?);
+            }
+            if mask & HDR_POINT_DATA_RECORD_LENGTH != 0 {
+                d.point_data_record_length = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+            }
+            if mask & HDR_NUMBER_OF_POINT_RECORDS != 0 {
+                d.number_of_point_records = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u32);
+            }
             if mask & HDR_POINTS_BY_RETURN != 0 {
                 let mut a = [0u32; 5];
-                for slot in a.iter_mut() { *slot = reader.read_varint_u64().map_err(|e| e.to_string())? as u32; }
+                for slot in a.iter_mut() {
+                    *slot = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+                }
                 d.points_by_return = Some(a);
             }
-            if mask & HDR_X_SCALE != 0 { d.x_scale = Some(reader.read_f64_le().map_err(|e| e.to_string())?); }
-            if mask & HDR_Y_SCALE != 0 { d.y_scale = Some(reader.read_f64_le().map_err(|e| e.to_string())?); }
-            if mask & HDR_Z_SCALE != 0 { d.z_scale = Some(reader.read_f64_le().map_err(|e| e.to_string())?); }
-            if mask & HDR_X_OFFSET != 0 { d.x_offset = Some(reader.read_f64_le().map_err(|e| e.to_string())?); }
-            if mask & HDR_Y_OFFSET != 0 { d.y_offset = Some(reader.read_f64_le().map_err(|e| e.to_string())?); }
-            if mask & HDR_Z_OFFSET != 0 { d.z_offset = Some(reader.read_f64_le().map_err(|e| e.to_string())?); }
-            if mask & HDR_MAX_X != 0 { d.max_x = Some(reader.read_f64_le().map_err(|e| e.to_string())?); }
-            if mask & HDR_MIN_X != 0 { d.min_x = Some(reader.read_f64_le().map_err(|e| e.to_string())?); }
-            if mask & HDR_MAX_Y != 0 { d.max_y = Some(reader.read_f64_le().map_err(|e| e.to_string())?); }
-            if mask & HDR_MIN_Y != 0 { d.min_y = Some(reader.read_f64_le().map_err(|e| e.to_string())?); }
-            if mask & HDR_MAX_Z != 0 { d.max_z = Some(reader.read_f64_le().map_err(|e| e.to_string())?); }
-            if mask & HDR_MIN_Z != 0 { d.min_z = Some(reader.read_f64_le().map_err(|e| e.to_string())?); }
-            if mask & HDR_VLRS != 0 { d.vlrs = Some(dec_vlrs_diff_bin(&mut reader)?); }
-            if mask & HDR_POINTS != 0 { d.points = Some(dec_points_diff_bin(&mut reader)?); }
+            if mask & HDR_X_SCALE != 0 {
+                d.x_scale = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+            }
+            if mask & HDR_Y_SCALE != 0 {
+                d.y_scale = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+            }
+            if mask & HDR_Z_SCALE != 0 {
+                d.z_scale = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+            }
+            if mask & HDR_X_OFFSET != 0 {
+                d.x_offset = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+            }
+            if mask & HDR_Y_OFFSET != 0 {
+                d.y_offset = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+            }
+            if mask & HDR_Z_OFFSET != 0 {
+                d.z_offset = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+            }
+            if mask & HDR_MAX_X != 0 {
+                d.max_x = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+            }
+            if mask & HDR_MIN_X != 0 {
+                d.min_x = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+            }
+            if mask & HDR_MAX_Y != 0 {
+                d.max_y = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+            }
+            if mask & HDR_MIN_Y != 0 {
+                d.min_y = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+            }
+            if mask & HDR_MAX_Z != 0 {
+                d.max_z = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+            }
+            if mask & HDR_MIN_Z != 0 {
+                d.min_z = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+            }
+            if mask & HDR_VLRS != 0 {
+                d.vlrs = Some(dec_vlrs_diff_bin(&mut reader)?);
+            }
+            if mask & HDR_POINTS != 0 {
+                d.points = Some(dec_points_diff_bin(&mut reader)?);
+            }
             Ok(d)
         }
         go(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "las diff binary", offset: 0, detail: e })
@@ -1650,7 +2190,9 @@ impl protocol::DiffCodec for LasDiff {
 #[cfg(test)]
 pub(crate) fn base_point(seed: u8) -> LasPoint {
     LasPoint {
-        x: 100.0 + seed as f64, y: -50.0 + seed as f64 * 0.5, z: 10.0 + seed as f64 * 0.1,
+        x: 100.0 + seed as f64,
+        y: -50.0 + seed as f64 * 0.5,
+        z: 10.0 + seed as f64 * 0.1,
         intensity: 100 + seed as u16,
         return_number: (seed % 5) + 1,
         number_of_returns: ((seed + 1) % 5) + 1,
@@ -1682,16 +2224,31 @@ pub(crate) fn demo_diff_cases() -> Vec<LasDiff> {
     let a = LasSnapshot {
         schema: "stdio.las".into(),
         header: LasHeader {
-            version_major: 1, version_minor: 2,
+            version_major: 1,
+            version_minor: 2,
             system_identifier: "before-system".into(),
             generating_software: "before-software".into(),
-            creation_day_of_year: 10, creation_year: 2020,
-            header_size: 227, offset_to_point_data: 227,
-            number_of_vlrs: 2, point_data_format_id: 1, point_data_record_length: 28,
-            number_of_point_records: 2, points_by_return: [1, 1, 0, 0, 0],
-            x_scale: 0.01, y_scale: 0.01, z_scale: 0.01,
-            x_offset: 0.0, y_offset: 0.0, z_offset: 0.0,
-            max_x: 100.0, min_x: 0.0, max_y: 100.0, min_y: 0.0, max_z: 100.0, min_z: 0.0,
+            creation_day_of_year: 10,
+            creation_year: 2020,
+            header_size: 227,
+            offset_to_point_data: 227,
+            number_of_vlrs: 2,
+            point_data_format_id: 1,
+            point_data_record_length: 28,
+            number_of_point_records: 2,
+            points_by_return: [1, 1, 0, 0, 0],
+            x_scale: 0.01,
+            y_scale: 0.01,
+            z_scale: 0.01,
+            x_offset: 0.0,
+            y_offset: 0.0,
+            z_offset: 0.0,
+            max_x: 100.0,
+            min_x: 0.0,
+            max_y: 100.0,
+            min_y: 0.0,
+            max_z: 100.0,
+            min_z: 0.0,
         },
         vlrs: vec![base_vlr(100), base_vlr(101)],
         points: vec![pa0, base_point(2)],
@@ -1699,29 +2256,36 @@ pub(crate) fn demo_diff_cases() -> Vec<LasDiff> {
     let b = LasSnapshot {
         schema: "stdio.las".into(),
         header: LasHeader {
-            version_major: 2, version_minor: 4,
+            version_major: 2,
+            version_minor: 4,
             system_identifier: "after-system".into(),
             generating_software: "after-software".into(),
-            creation_day_of_year: 250, creation_year: 2026,
-            header_size: 375, offset_to_point_data: 500,
-            number_of_vlrs: 1, point_data_format_id: 3, point_data_record_length: 34,
-            number_of_point_records: 3, points_by_return: [0, 0, 2, 1, 0],
-            x_scale: 0.001, y_scale: 0.001, z_scale: 0.001,
-            x_offset: 500.0, y_offset: 500.0, z_offset: 10.0,
-            max_x: 999.0, min_x: -1.0, max_y: 999.0, min_y: -1.0, max_z: 50.0, min_z: -50.0,
+            creation_day_of_year: 250,
+            creation_year: 2026,
+            header_size: 375,
+            offset_to_point_data: 500,
+            number_of_vlrs: 1,
+            point_data_format_id: 3,
+            point_data_record_length: 34,
+            number_of_point_records: 3,
+            points_by_return: [0, 0, 2, 1, 0],
+            x_scale: 0.001,
+            y_scale: 0.001,
+            z_scale: 0.001,
+            x_offset: 500.0,
+            y_offset: 500.0,
+            z_offset: 10.0,
+            max_x: 999.0,
+            min_x: -1.0,
+            max_y: 999.0,
+            min_y: -1.0,
+            max_z: 50.0,
+            min_z: -50.0,
         },
         vlrs: vec![base_vlr(9)],
-        points: vec![
-            LasPoint { gps_time: None, rgb: Some((10, 20, 30)), ..base_point(9) },
-            base_point(2),
-            base_point(3),
-        ],
+        points: vec![LasPoint { gps_time: None, rgb: Some((10, 20, 30)), ..base_point(9) }, base_point(2), base_point(3)],
     };
-    vec![
-        LasDiff::default(),
-        <LasDiff as DiffAlgebra<LasSnapshot>>::between(&a, &b),
-        <LasDiff as DiffAlgebra<LasSnapshot>>::between(&b, &a),
-    ]
+    vec![LasDiff::default(), <LasDiff as DiffAlgebra<LasSnapshot>>::between(&a, &b), <LasDiff as DiffAlgebra<LasSnapshot>>::between(&b, &a)]
 }
 //#endregion 🔖️HandcraftedDiffCodec
 

@@ -41,7 +41,9 @@ impl From<crate::artifacts::zip::opc::OpcError> for PptxError {
     }
 }
 impl From<crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipError> for PptxError {
-    fn from(e: crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipError) -> Self { Self::Zip(e) }
+    fn from(e: crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipError) -> Self {
+        Self::Zip(e)
+    }
 }
 //#endregion 🔖️Error
 

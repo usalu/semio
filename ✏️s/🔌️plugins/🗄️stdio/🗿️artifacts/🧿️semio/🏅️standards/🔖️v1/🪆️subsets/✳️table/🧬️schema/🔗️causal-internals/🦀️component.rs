@@ -473,7 +473,11 @@ pub fn implied_independencies(dag: &CausalDag) -> Vec<CiStatement> {
 }
 
 /// 🔬️ Tests every implied CI against data — a graph-fit diagnostic ("model criticism").
-pub fn test_implied_independencies(dag: &CausalDag, data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, test: &dyn CiTest) -> Result<Vec<(CiStatement, crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::TestResult)>, CausalError> {
+pub fn test_implied_independencies(
+    dag: &CausalDag,
+    data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table,
+    test: &dyn CiTest,
+) -> Result<Vec<(CiStatement, crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::TestResult)>, CausalError> {
     implied_independencies(dag)
         .into_iter()
         .map(|stmt| {
@@ -487,7 +491,13 @@ pub fn test_implied_independencies(dag: &CausalDag, data: &crate::artifacts::sem
 // #region 🔖️CiTest
 /// 🔬️ A conditional-independence test on tabular data, indexed by table/DAG column.
 pub trait CiTest {
-    fn test(&self, data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, x: usize, y: usize, z: &[usize]) -> Result<crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::TestResult, CausalError>;
+    fn test(
+        &self,
+        data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table,
+        x: usize,
+        y: usize,
+        z: &[usize],
+    ) -> Result<crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::TestResult, CausalError>;
 }
 
 /// 🔬️ Fisher-z partial-correlation test for continuous data, precomputing the correlation matrix
@@ -507,7 +517,13 @@ impl FisherZ {
 }
 
 impl CiTest for FisherZ {
-    fn test(&self, _data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, x: usize, y: usize, z: &[usize]) -> Result<crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::TestResult, CausalError> {
+    fn test(
+        &self,
+        _data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table,
+        x: usize,
+        y: usize,
+        z: &[usize],
+    ) -> Result<crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::TestResult, CausalError> {
         Ok(crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::fisher_z_test(&self.corr, x, y, z, self.n)?)
     }
 }
@@ -516,7 +532,13 @@ impl CiTest for FisherZ {
 pub struct GSquared;
 
 impl CiTest for GSquared {
-    fn test(&self, data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, x: usize, y: usize, z: &[usize]) -> Result<crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::TestResult, CausalError> {
+    fn test(
+        &self,
+        data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table,
+        x: usize,
+        y: usize,
+        z: &[usize],
+    ) -> Result<crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::TestResult, CausalError> {
         let cat_x = data.categorical(x)?;
         let cat_y = data.categorical(y)?;
         let given_cols: Vec<&crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::CategoricalColumn> = z.iter().map(|&zi| data.categorical(zi)).collect::<Result<_, _>>()?;
@@ -1410,7 +1432,11 @@ pub struct EstimationOptions {
     pub bootstrap: Option<BootstrapOptions>,
 }
 
-fn bootstrap_ci(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, opts: &BootstrapOptions, point_fn: &dyn Fn(&crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table) -> Result<f64, CausalError>) -> (f64, f64) {
+fn bootstrap_ci(
+    data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table,
+    opts: &BootstrapOptions,
+    point_fn: &dyn Fn(&crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table) -> Result<f64, CausalError>,
+) -> (f64, f64) {
     let mut rng = semio_framework_geometry::random::Rng::from_seed(opts.seed);
     let n = data.n_rows();
     let mut estimates = Vec::with_capacity(opts.replicates);
@@ -1432,7 +1458,12 @@ fn bootstrap_ci(data: &crate::artifacts::semio::standards::v1::subsets::table::s
     (estimates[lo_idx], estimates[hi_idx])
 }
 
-fn wrap_estimate(point: f64, data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, opts: &EstimationOptions, point_fn: &dyn Fn(&crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table) -> Result<f64, CausalError>) -> EffectEstimate {
+fn wrap_estimate(
+    point: f64,
+    data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table,
+    opts: &EstimationOptions,
+    point_fn: &dyn Fn(&crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table) -> Result<f64, CausalError>,
+) -> EffectEstimate {
     match &opts.bootstrap {
         Some(bootstrap_opts) => {
             let (lo, hi) = bootstrap_ci(data, bootstrap_opts, point_fn);
@@ -1468,7 +1499,12 @@ pub fn naive_difference(data: &crate::artifacts::semio::standards::v1::subsets::
 }
 
 #[allow(clippy::needless_range_loop, reason = "row indexes both the MatD design matrix by (row, col) and a values/t slice — enumerate() would only remove one of the two")]
-fn design_with_treatment(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, covariates: &[usize], treatment_value: Option<f64>) -> Result<crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD, CausalError> {
+fn design_with_treatment(
+    data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table,
+    treatment: usize,
+    covariates: &[usize],
+    treatment_value: Option<f64>,
+) -> Result<crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD, CausalError> {
     let n = data.n_rows();
     let mut design = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n, covariates.len() + 1);
     let t = data.continuous(treatment)?;
@@ -1747,7 +1783,12 @@ mod tests {
         let mut weights = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(3, 3);
         weights.set(1, 0, 2.0);
         weights.set(2, 1, 1.5);
-        LinearGaussianScm { dag, weights, intercepts: crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::from_vec(vec![0.0, 0.0, 0.0]), noise_var: crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::from_vec(vec![1.0, 0.25, 0.25]) }
+        LinearGaussianScm {
+            dag,
+            weights,
+            intercepts: crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::from_vec(vec![0.0, 0.0, 0.0]),
+            noise_var: crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::from_vec(vec![1.0, 0.25, 0.25]),
+        }
     }
 
     #[test]

@@ -1,5 +1,5 @@
 //! 🔺️ Mp4Diff — handcrafted sparse per-field diff (schema-design.md recipe): `ftyp` whole-value
-//! replaced (weak entity), `tracks`/`samples`/`unknown_boxes` index-keyed collection triples
+//! replaced (weak entity), `tracks`/`samples` index-keyed collection triples
 //! (`removed`/`modified`/`added`, strong-like entities). Hand-rolled throughout — NOT
 //! `#[derive(dsl::DslOps)]` (f6-final-summary.md §4.4: generic collection-diff wrappers have no
 //! `DslField` bridge in the derive macros) — `IndexedDiff<T,D>`/`IndexedModified`/`IndexedAdded`
@@ -7,9 +7,9 @@
 //! bcf/docx `enc_indexed_triple` precedent's SHAPE without needing that shared engine (mp4 is a
 //! top-level format artifact, not a semio subset).
 
-use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Box, Mp4Codec, Mp4Ftyp, Mp4Movie, Mp4Sample, Mp4Snapshot, Mp4Track, Mp4TrackMetadata};
-use protocol::MutationDiff;
+use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Movie, Mp4Sample, Mp4Snapshot, Mp4Track, Mp4TrackMetadata};
 use protocol::command::DiffAlgebra;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️IndexedTriple
@@ -28,16 +28,24 @@ pub struct IndexedDiff<T, D> {
 }
 
 impl<T, D> IndexedDiff<T, D> {
-    pub fn is_empty(&self) -> bool { self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty() }
+    pub fn is_empty(&self) -> bool {
+        self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct IndexedModified<D> { pub index: usize, pub diff: D }
+pub struct IndexedModified<D> {
+    pub index: usize,
+    pub diff: D,
+}
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct IndexedAdded<T> { pub index: usize, pub item: T }
+pub struct IndexedAdded<T> {
+    pub index: usize,
+    pub item: T,
+}
 
 /// ▶️ Apply semantics (normative, schema-design.md): `removed`/`modified` index BASE state;
 /// `added` indices are FINAL positions, inserted ascending at `min(index, len)`. Out-of-range
@@ -67,15 +75,13 @@ pub fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], between
     for i in 0..min_len {
         if base[i] != other[i] {
             let d = between_item(&base[i], &other[i]);
-            if !item_is_empty(&d) { modified.push(IndexedModified { index: i, diff: d }); }
+            if !item_is_empty(&d) {
+                modified.push(IndexedModified { index: i, diff: d });
+            }
         }
     }
     let removed: Vec<usize> = if other.len() < base.len() { (other.len()..base.len()).collect() } else { Vec::new() };
-    let added: Vec<IndexedAdded<T>> = if other.len() > base.len() {
-        (base.len()..other.len()).map(|i| IndexedAdded { index: i, item: other[i].clone() }).collect()
-    } else {
-        Vec::new()
-    };
+    let added: Vec<IndexedAdded<T>> = if other.len() > base.len() { (base.len()..other.len()).map(|i| IndexedAdded { index: i, item: other[i].clone() }).collect() } else { Vec::new() };
     IndexedDiff { removed, modified, added }
 }
 
@@ -84,13 +90,19 @@ pub fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], between
 /// `count_le`/`rank_excluding`/`unrank_excluding`/`transport_forward` — chosen over deriving a
 /// position-label array because it needs no base-length parameter, which `MutationDiff::absorb`'s
 /// base-free signature can't supply). `excluded_sorted` must be sorted ascending.
-fn count_le(sorted: &[usize], x: usize) -> usize { sorted.partition_point(|&v| v <= x) }
-fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize { pos - count_le(excluded_sorted, pos) }
+fn count_le(sorted: &[usize], x: usize) -> usize {
+    sorted.partition_point(|&v| v <= x)
+}
+fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
+    pos - count_le(excluded_sorted, pos)
+}
 fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
     let mut candidate = rank;
     loop {
         let next = rank + count_le(excluded_sorted, candidate);
-        if next == candidate { return candidate; }
+        if next == candidate {
+            return candidate;
+        }
         candidate = next;
     }
 }
@@ -131,9 +143,13 @@ pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: Indexe
 
     //#region Modified
     let mut modified_map: std::collections::BTreeMap<usize, D> = std::mem::take(&mut d1.modified).into_iter().map(|m| (m.index, m.diff)).collect();
-    for base_index in &merged_removed_base { modified_map.remove(base_index); }
+    for base_index in &merged_removed_base {
+        modified_map.remove(base_index);
+    }
     for m2 in d2.modified {
-        if annihilated.contains(&m2.index) { continue; }
+        if annihilated.contains(&m2.index) {
+            continue;
+        }
         if added1_index_sorted.binary_search(&m2.index).is_ok() {
             if let Some(entry) = merged_added.iter_mut().find(|a| a.index == m2.index) {
                 apply_item_diff(&mut entry.item, &m2.diff);
@@ -141,10 +157,14 @@ pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: Indexe
         } else {
             let post_remove_rank = rank_excluding(m2.index, &added1_index_sorted);
             let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
-            if merged_removed_base.binary_search(&base_index).is_ok() { continue; }
+            if merged_removed_base.binary_search(&base_index).is_ok() {
+                continue;
+            }
             match modified_map.get_mut(&base_index) {
                 Some(existing) => absorb_item(existing, m2.diff),
-                None => { modified_map.insert(base_index, m2.diff); }
+                None => {
+                    modified_map.insert(base_index, m2.diff);
+                }
             }
         }
     }
@@ -174,10 +194,11 @@ pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: Indexe
 //#endregion 🔖️IndexedTriple
 
 //#region 🔖️Sample
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Mp4SampleDiff {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[dsl(base64)]
     pub data: Option<Vec<u8>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub duration: Option<u32>,
@@ -188,36 +209,79 @@ pub struct Mp4SampleDiff {
 }
 
 fn apply_sample_diff(base: &Mp4Sample, d: &Mp4SampleDiff) -> Mp4Sample {
-    Mp4Sample {
-        data: d.data.clone().unwrap_or_else(|| base.data.clone()),
-        duration: d.duration.unwrap_or(base.duration),
-        cts_offset: d.cts_offset.unwrap_or(base.cts_offset),
-        sync: d.sync.unwrap_or(base.sync),
-    }
+    Mp4Sample { data: d.data.clone().unwrap_or_else(|| base.data.clone()), duration: d.duration.unwrap_or(base.duration), cts_offset: d.cts_offset.unwrap_or(base.cts_offset), sync: d.sync.unwrap_or(base.sync) }
 }
-fn apply_sample_diff_mut(item: &mut Mp4Sample, d: &Mp4SampleDiff) { *item = apply_sample_diff(item, d); }
+fn apply_sample_diff_mut(item: &mut Mp4Sample, d: &Mp4SampleDiff) {
+    *item = apply_sample_diff(item, d);
+}
 
 fn between_sample(a: &Mp4Sample, b: &Mp4Sample) -> Mp4SampleDiff {
-    Mp4SampleDiff {
-        data: (a.data != b.data).then(|| b.data.clone()),
-        duration: (a.duration != b.duration).then_some(b.duration),
-        cts_offset: (a.cts_offset != b.cts_offset).then_some(b.cts_offset),
-        sync: (a.sync != b.sync).then_some(b.sync),
-    }
+    Mp4SampleDiff { data: (a.data != b.data).then(|| b.data.clone()), duration: (a.duration != b.duration).then_some(b.duration), cts_offset: (a.cts_offset != b.cts_offset).then_some(b.cts_offset), sync: (a.sync != b.sync).then_some(b.sync) }
 }
-fn sample_diff_is_empty(d: &Mp4SampleDiff) -> bool { d.data.is_none() && d.duration.is_none() && d.cts_offset.is_none() && d.sync.is_none() }
+fn sample_diff_is_empty(d: &Mp4SampleDiff) -> bool {
+    d.data.is_none() && d.duration.is_none() && d.cts_offset.is_none() && d.sync.is_none()
+}
 fn absorb_sample_diff(a: &mut Mp4SampleDiff, b: Mp4SampleDiff) {
-    if b.data.is_some() { a.data = b.data; }
-    if b.duration.is_some() { a.duration = b.duration; }
-    if b.cts_offset.is_some() { a.cts_offset = b.cts_offset; }
-    if b.sync.is_some() { a.sync = b.sync; }
+    if b.data.is_some() {
+        a.data = b.data;
+    }
+    if b.duration.is_some() {
+        a.duration = b.duration;
+    }
+    if b.cts_offset.is_some() {
+        a.cts_offset = b.cts_offset;
+    }
+    if b.sync.is_some() {
+        a.sync = b.sync;
+    }
 }
 //#endregion 🔖️Sample
 
 //#region 🔖️Track
 pub type Mp4SamplesDiff = IndexedDiff<Mp4Sample, Mp4SampleDiff>;
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct Mp4SampleModifiedRecord {
+    index: usize,
+    diff: Mp4SampleDiff,
+}
+
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct Mp4SampleAddedRecord {
+    index: usize,
+    item: Mp4Sample,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
+struct Mp4SamplesDiffRecord {
+    removed: Vec<usize>,
+    modified: Vec<Mp4SampleModifiedRecord>,
+    added: Vec<Mp4SampleAddedRecord>,
+}
+
+impl dsl::DslField for Mp4SamplesDiff {
+    fn shape() -> dsl::Shape {
+        <Mp4SamplesDiffRecord as dsl::DslField>::shape()
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        Mp4SamplesDiffRecord {
+            removed: self.removed.clone(),
+            modified: self.modified.iter().map(|entry| Mp4SampleModifiedRecord { index: entry.index, diff: entry.diff.clone() }).collect(),
+            added: self.added.iter().map(|entry| Mp4SampleAddedRecord { index: entry.index, item: entry.item.clone() }).collect(),
+        }
+        .to_value()
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        let record = <Mp4SamplesDiffRecord as dsl::DslField>::from_value(value)?;
+        Ok(Self {
+            removed: record.removed,
+            modified: record.modified.into_iter().map(|entry| IndexedModified { index: entry.index, diff: entry.diff }).collect(),
+            added: record.added.into_iter().map(|entry| IndexedAdded { index: entry.index, item: entry.item }).collect(),
+        })
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Mp4TrackDiff {
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -250,7 +314,9 @@ fn apply_track_diff(base: &Mp4Track, d: &Mp4TrackDiff) -> Mp4Track {
         samples: d.samples.as_ref().map_or_else(|| base.samples.clone(), |sd| apply_indexed(&base.samples, sd, apply_sample_diff)),
     }
 }
-fn apply_track_diff_mut(item: &mut Mp4Track, d: &Mp4TrackDiff) { *item = apply_track_diff(item, d); }
+fn apply_track_diff_mut(item: &mut Mp4Track, d: &Mp4TrackDiff) {
+    *item = apply_track_diff(item, d);
+}
 
 fn between_track(a: &Mp4Track, b: &Mp4Track) -> Mp4TrackDiff {
     let samples_diff = between_indexed(&a.samples, &b.samples, between_sample, sample_diff_is_empty);
@@ -269,13 +335,27 @@ fn track_diff_is_empty(d: &Mp4TrackDiff) -> bool {
     d.track_id.is_none() && d.timescale.is_none() && d.codec.is_none() && d.width.is_none() && d.height.is_none() && d.metadata.is_none() && d.chunk_sample_counts.is_none() && d.samples.is_none()
 }
 fn absorb_track_diff(a: &mut Mp4TrackDiff, b: Mp4TrackDiff) {
-    if b.track_id.is_some() { a.track_id = b.track_id; }
-    if b.timescale.is_some() { a.timescale = b.timescale; }
-    if b.codec.is_some() { a.codec = b.codec; }
-    if b.width.is_some() { a.width = b.width; }
-    if b.height.is_some() { a.height = b.height; }
-    if b.metadata.is_some() { a.metadata = b.metadata; }
-    if b.chunk_sample_counts.is_some() { a.chunk_sample_counts = b.chunk_sample_counts; }
+    if b.track_id.is_some() {
+        a.track_id = b.track_id;
+    }
+    if b.timescale.is_some() {
+        a.timescale = b.timescale;
+    }
+    if b.codec.is_some() {
+        a.codec = b.codec;
+    }
+    if b.width.is_some() {
+        a.width = b.width;
+    }
+    if b.height.is_some() {
+        a.height = b.height;
+    }
+    if b.metadata.is_some() {
+        a.metadata = b.metadata;
+    }
+    if b.chunk_sample_counts.is_some() {
+        a.chunk_sample_counts = b.chunk_sample_counts;
+    }
     match (&mut a.samples, b.samples) {
         (Some(existing), Some(other)) => absorb_indexed(existing, other, absorb_sample_diff, apply_sample_diff_mut),
         (a_slot @ None, Some(other)) => *a_slot = Some(other),
@@ -286,9 +366,48 @@ fn absorb_track_diff(a: &mut Mp4TrackDiff, b: Mp4TrackDiff) {
 
 //#region 🔖️Diff
 pub type Mp4TracksDiff = IndexedDiff<Mp4Track, Mp4TrackDiff>;
-pub type Mp4UnknownBoxesDiff = IndexedDiff<Mp4Box, Mp4Box>;
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct Mp4TrackModifiedRecord {
+    index: usize,
+    diff: Mp4TrackDiff,
+}
+
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct Mp4TrackAddedRecord {
+    index: usize,
+    item: Mp4Track,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
+struct Mp4TracksDiffRecord {
+    removed: Vec<usize>,
+    modified: Vec<Mp4TrackModifiedRecord>,
+    added: Vec<Mp4TrackAddedRecord>,
+}
+
+impl dsl::DslField for Mp4TracksDiff {
+    fn shape() -> dsl::Shape {
+        <Mp4TracksDiffRecord as dsl::DslField>::shape()
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        Mp4TracksDiffRecord {
+            removed: self.removed.clone(),
+            modified: self.modified.iter().map(|entry| Mp4TrackModifiedRecord { index: entry.index, diff: entry.diff.clone() }).collect(),
+            added: self.added.iter().map(|entry| Mp4TrackAddedRecord { index: entry.index, item: entry.item.clone() }).collect(),
+        }
+        .to_value()
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        let record = <Mp4TracksDiffRecord as dsl::DslField>::from_value(value)?;
+        Ok(Self {
+            removed: record.removed,
+            modified: record.modified.into_iter().map(|entry| IndexedModified { index: entry.index, diff: entry.diff }).collect(),
+            added: record.added.into_iter().map(|entry| IndexedAdded { index: entry.index, item: entry.item }).collect(),
+        })
+    }
+}
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDiff)]
 #[serde(rename_all = "camelCase")]
 pub struct Mp4Diff {
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -297,14 +416,7 @@ pub struct Mp4Diff {
     pub movie: Option<Mp4Movie>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tracks: Option<Mp4TracksDiff>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub unknown_boxes: Option<Mp4UnknownBoxesDiff>,
 }
-
-fn apply_box_diff(base: &Mp4Box, d: &Mp4Box) -> Mp4Box { let _ = base; d.clone() }
-fn apply_box_diff_mut(item: &mut Mp4Box, d: &Mp4Box) { *item = d.clone(); }
-fn between_box(a: &Mp4Box, b: &Mp4Box) -> Mp4Box { let _ = a; b.clone() }
-fn box_diff_is_empty(_d: &Mp4Box) -> bool { false }
 
 impl MutationDiff<Mp4Snapshot> for Mp4Diff {
     fn apply(&self, base: &Mp4Snapshot) -> Mp4Snapshot {
@@ -313,21 +425,19 @@ impl MutationDiff<Mp4Snapshot> for Mp4Diff {
             ftyp: self.ftyp.clone().unwrap_or_else(|| base.ftyp.clone()),
             movie: self.movie.clone().unwrap_or_else(|| base.movie.clone()),
             tracks: self.tracks.as_ref().map_or_else(|| base.tracks.clone(), |td| apply_indexed(&base.tracks, td, apply_track_diff)),
-            unknown_boxes: self.unknown_boxes.as_ref().map_or_else(|| base.unknown_boxes.clone(), |bd| apply_indexed(&base.unknown_boxes, bd, apply_box_diff)),
         }
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.ftyp.is_some() { self.ftyp = other.ftyp; }
-        if other.movie.is_some() { self.movie = other.movie; }
+        if other.ftyp.is_some() {
+            self.ftyp = other.ftyp;
+        }
+        if other.movie.is_some() {
+            self.movie = other.movie;
+        }
         match (&mut self.tracks, other.tracks) {
             (Some(existing), Some(other_tracks)) => absorb_indexed(existing, other_tracks, absorb_track_diff, apply_track_diff_mut),
             (slot @ None, Some(other_tracks)) => *slot = Some(other_tracks),
-            _ => {}
-        }
-        match (&mut self.unknown_boxes, other.unknown_boxes) {
-            (Some(existing), Some(other_boxes)) => absorb_indexed(existing, other_boxes, |a: &mut Mp4Box, b: Mp4Box| *a = b, apply_box_diff_mut),
-            (slot @ None, Some(other_boxes)) => *slot = Some(other_boxes),
             _ => {}
         }
     }
@@ -336,13 +446,7 @@ impl MutationDiff<Mp4Snapshot> for Mp4Diff {
 impl DiffAlgebra<Mp4Snapshot> for Mp4Diff {
     fn between(base: &Mp4Snapshot, other: &Mp4Snapshot) -> Self {
         let tracks_diff = between_indexed(&base.tracks, &other.tracks, between_track, track_diff_is_empty);
-        let boxes_diff = between_indexed(&base.unknown_boxes, &other.unknown_boxes, between_box, box_diff_is_empty);
-        Self {
-            ftyp: (base.ftyp != other.ftyp).then(|| other.ftyp.clone()),
-            movie: (base.movie != other.movie).then(|| other.movie.clone()),
-            tracks: (!tracks_diff.is_empty()).then_some(tracks_diff),
-            unknown_boxes: (!boxes_diff.is_empty()).then_some(boxes_diff),
-        }
+        Self { ftyp: (base.ftyp != other.ftyp).then(|| other.ftyp.clone()), movie: (base.movie != other.movie).then(|| other.movie.clone()), tracks: (!tracks_diff.is_empty()).then_some(tracks_diff) }
     }
     fn inverse(&self, base: &Mp4Snapshot) -> Self {
         // 🔁️ Correct-by-construction: `between(after, base)` trivially satisfies the inverse law
@@ -352,7 +456,10 @@ impl DiffAlgebra<Mp4Snapshot> for Mp4Diff {
         let after = self.apply(base);
         Self::between(&after, base)
     }
-    fn is_empty(&self) -> bool { self.ftyp.is_none() && self.movie.is_none() && self.tracks.is_none() && self.unknown_boxes.is_none() }
+
+    fn is_empty(&self) -> bool {
+        self.ftyp.is_none() && self.movie.is_none() && self.tracks.is_none()
+    }
 }
 
 /// 🧩 Set-snapshot diff helper — used by the `📸️set-snapshot/🔺️diff` leaf.
@@ -361,38 +468,22 @@ pub fn diff_set_snapshot(base: &Mp4Snapshot, snapshot: &Mp4Snapshot) -> Mp4Diff 
 }
 //#endregion 🔖️Diff
 
-//#region 🔖️DiffCodec
-impl protocol::DiffCodec for Mp4Diff {
-    fn print_diff(&self) -> String { serde_json::to_string(self).unwrap_or_default() }
-
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1)))
-    }
-
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Io(error.to_string()))
-    }
-
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Io(error.to_string()))
-    }
-}
-//#endregion 🔖️DiffCodec
-
 //#region 🔖️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA;
 
-    fn sample(n: u8) -> Mp4Sample { Mp4Sample { data: vec![n], duration: u32::from(n) * 10, cts_offset: 0, sync: n % 2 == 0 } }
+    fn sample(n: u8) -> Mp4Sample {
+        Mp4Sample { data: vec![n], duration: u32::from(n) * 10, cts_offset: 0, sync: n % 2 == 0 }
+    }
 
     fn track(id: u32, samples: Vec<Mp4Sample>) -> Mp4Track {
-        Mp4Track { track_id: id, timescale: 1000, codec: Mp4Codec::Other { fourcc: "mp4v".into(), raw: vec![] }, width: 64, height: 64, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![samples.len() as u32], samples }
+        Mp4Track { track_id: id, timescale: 1000, codec: Mp4Codec::default(), width: 64, height: 64, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![samples.len() as u32], samples }
     }
 
     fn snap(tracks: Vec<Mp4Track>) -> Mp4Snapshot {
-        Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec![], }, movie: Mp4Movie::default(), tracks, unknown_boxes: vec![] }
+        Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec![] }, movie: Mp4Movie::default(), tracks }
     }
 
     //#region field_sweep + between_roundtrip_law
@@ -406,11 +497,9 @@ mod tests {
         b.tracks[0].samples.push(sample(9));
         b.tracks.remove(1);
         b.tracks.push(track(3, vec![sample(5)]));
-        b.unknown_boxes.push(Mp4Box { fourcc: "free".into(), data: vec![0] });
         let d = <Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&a, &b);
         assert!(d.ftyp.is_some(), "ftyp field must be covered by the sweep");
         assert!(d.tracks.is_some(), "tracks field must be covered by the sweep");
-        assert!(d.unknown_boxes.is_some(), "unknown_boxes field must be covered by the sweep");
         assert_eq!(d.apply(&a), b);
         assert_eq!(<Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&b, &a).apply(&b), a);
         assert!(<Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&a, &a).is_empty());
@@ -549,7 +638,6 @@ mod tests {
         let mut absorbed = diff;
         absorbed.absorb(inverse);
         assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&absorbed.apply(&base)), bytes);
-
     }
     //#endregion
 }

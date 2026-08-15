@@ -42,26 +42,12 @@ impl Default for DxfArtifact {
 impl DxfArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> DxfSnapshot {
-        DxfSnapshot {
-            schema: self.schema.clone(),
-            header_vars: self.header_vars.clone(),
-            tables: self.tables.clone(),
-            other_tables: self.other_tables.clone(),
-            blocks: self.blocks.clone(),
-            entities: self.entities.clone(),
-        }
+        DxfSnapshot { schema: self.schema.clone(), header_vars: self.header_vars.clone(), tables: self.tables.clone(), other_tables: self.other_tables.clone(), blocks: self.blocks.clone(), entities: self.entities.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: DxfSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            header_vars: snapshot.header_vars,
-            tables: snapshot.tables,
-            other_tables: snapshot.other_tables,
-            blocks: snapshot.blocks,
-            entities: snapshot.entities,
-        }
+        Self { schema: snapshot.schema, header_vars: snapshot.header_vars, tables: snapshot.tables, other_tables: snapshot.other_tables, blocks: snapshot.blocks, entities: snapshot.entities }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -114,8 +100,8 @@ pub fn dxf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::dxf::{DxfDiff, DxfMutation, DxfSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.dxf` snapshot.
@@ -150,7 +136,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -160,8 +150,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::dxf::DxfSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.dxf` parts.
@@ -198,10 +188,7 @@ pub mod derived_analysis {
             if first.parse::<i32>().is_err() {
                 return IoConfidence::Low;
             }
-            let has_marker = lines.iter().take(64).any(|l| {
-                matches!(*l, "SECTION" | "HEADER" | "ENTITIES" | "EOF")
-                    || (l.len() == 6 && l.starts_with("AC") && l[2..].chars().all(|c| c.is_ascii_digit()))
-            });
+            let has_marker = lines.iter().take(64).any(|l| matches!(*l, "SECTION" | "HEADER" | "ENTITIES" | "EOF") || (l.len() == 6 && l.starts_with("AC") && l[2..].chars().all(|c| c.is_ascii_digit())));
             if has_marker {
                 IoConfidence::High
             } else {
@@ -219,22 +206,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <DxfSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -272,9 +251,7 @@ pub fn empty_dxf_snapshot() -> DxfSnapshot {
 /// the single source of truth for `fixture_honesty_law`'s shipped `🗣️example.dsl.semio`/
 /// `🎒️example.pack.semio` fixtures AND `grammar_conformance_law`/`protocol_walk_law`.
 pub fn demo_dxf_snapshot() -> DxfSnapshot {
-    use crate::artifacts::dxf::schema::snapshot::{
-        DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue,
-    };
+    use crate::artifacts::dxf::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue};
     DxfSnapshot {
         schema: STDIO_DXF_DOCUMENT_SCHEMA.into(),
         header_vars: vec![
@@ -287,12 +264,7 @@ pub fn demo_dxf_snapshot() -> DxfSnapshot {
             linetypes: vec![DxfLinetype { name: "CONTINUOUS".into(), flags: 0, description: "Solid".into(), unknown_group_codes: vec![] }],
         },
         other_tables: vec![DxfOtherTable { name: "VPORT".into(), tags: vec![DxfTag { code: 2, value: "*ACTIVE".into() }] }],
-        blocks: vec![DxfBlock {
-            name: "MYBLOCK".into(),
-            base_point: [0.0, 0.0, 0.0],
-            entities: vec![DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }],
-            unknown_group_codes: vec![],
-        }],
+        blocks: vec![DxfBlock { name: "MYBLOCK".into(), base_point: [0.0, 0.0, 0.0], entities: vec![DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }], unknown_group_codes: vec![] }],
         entities: vec![
             DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] },
             DxfEntity::Circle { center: [1.0, 1.0, 0.0], radius: 2.0, layer: "0".into(), unknown_group_codes: vec![] },
@@ -329,10 +301,7 @@ mod tests {
     /// the SECOND generation onward decode/encode is a true fixed point.
     #[test]
     fn codec_retention_law() {
-        use crate::artifacts::dxf::schema::snapshot::{
-            parse_dxf_document, print_dxf_document, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype,
-            DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue,
-        };
+        use crate::artifacts::dxf::schema::snapshot::{parse_dxf_document, print_dxf_document, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue};
         let snap1 = DxfSnapshot {
             schema: STDIO_DXF_DOCUMENT_SCHEMA.into(),
             header_vars: vec![
@@ -377,19 +346,11 @@ mod tests {
 
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }

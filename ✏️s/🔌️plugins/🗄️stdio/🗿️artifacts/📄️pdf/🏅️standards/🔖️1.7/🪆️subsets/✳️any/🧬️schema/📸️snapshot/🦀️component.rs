@@ -4,9 +4,8 @@
 //! (classic+stream+hybrid+brute-force), filters, page-tree inheritance, ToUnicode-aware content
 //! extraction, and a minimal multi-page writer -- see `standards::v1_7::engine` for the codec.
 //!
-//! Ground rule: byte/token parsing lives in `⚙️engine`; this module is the *typed* model (raw
-//! indirect object graph for lossless retention of everything the writer doesn't regenerate,
-//! plus the resolved page tree the analyzer/builder actually operate on).
+//! Ground rule: byte/token parsing lives in `⚙️engine`; this module is the *typed* logical
+//! model. Native lexical choices and encoded stream representations never enter the snapshot.
 
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -36,6 +35,26 @@ pub struct ObjRef {
 pub struct PdfDictEntry {
     pub key: String,
     pub value: PdfObject,
+}
+
+/// 🎛️ Logical predictor parameters attached to a PDF stream filter.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PdfPredictor {
+    pub predictor: u32,
+    pub colors: u32,
+    pub bits_per_component: u32,
+    pub columns: u32,
+}
+
+/// 🗜️ Supported logical stream-filter pipeline concepts.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum PdfStreamFilter {
+    Flate { predictor: Option<PdfPredictor> },
+    AsciiHex,
+    Ascii85,
+    RunLength,
 }
 
 /// 🔢️ Exact logical PDF real number represented as decimal coefficient and scale.
@@ -110,11 +129,9 @@ impl fmt::Display for PdfDecimal {
     }
 }
 
-/// 🎯 A parsed PDF object -- the full COS object grammar (ISO 32000-1 §7.3), including streams.
-/// `Stream.raw_filter` is `Some(name)` when `data` is still filter-encoded verbatim (an
-/// unsupported filter like `/DCTDecode`/`/CCITTFaxDecode` we deliberately don't decode --
-/// ground rule: retain unmodeled bytes losslessly rather than corrupt/drop them) and `None` when
-/// `data` has already been fully filter-decoded by the engine.
+/// 🎯 A parsed PDF object -- the full COS object grammar (ISO 32000-1 §7.3), including
+/// streams. Stream `data` is the logical byte sequence after applying the stream filter chain;
+/// `/Filter`, `/F`, `/DecodeParms`, and `/DP` are removed during native deserialization.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum PdfObject {
@@ -127,12 +144,7 @@ pub enum PdfObject {
     Array(Vec<PdfObject>),
     Dict(Vec<PdfDictEntry>),
     Ref(ObjRef),
-    Stream {
-        dict: Vec<PdfDictEntry>,
-        data: Vec<u8>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        raw_filter: Option<String>,
-    },
+    Stream { dict: Vec<PdfDictEntry>, data: Vec<u8>, filters: Vec<PdfStreamFilter> },
 }
 
 impl Default for PdfObject {
@@ -244,7 +256,7 @@ pub struct PdfInfo {
 //#endregion 🔖️PageModel
 
 //#region 🔖️Snapshot
-/// 🧬️ `stdio.pdf` (1.7) persistent snapshot. `objects` is the FULL raw indirect-object graph as
+/// 🧬️ `stdio.pdf` (1.7) persistent snapshot. `objects` is the full logical indirect-object graph as
 /// read (fonts, images, outlines, everything -- lossless retention per D2 ground rules); `pages`
 /// is the resolved, editable view the analyzer/builder/mutations actually work with; `trailer` is
 /// the trailer dictionary (`/Root`/`/Info`/`/Size`/… key-value pairs, same shape as a `Dict` --

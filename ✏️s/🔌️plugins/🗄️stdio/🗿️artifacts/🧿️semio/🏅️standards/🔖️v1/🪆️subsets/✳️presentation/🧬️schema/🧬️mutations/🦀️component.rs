@@ -4,10 +4,9 @@
 
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::{
-    dec_layout, dec_master, dec_shape, dec_slide, decode_option, diff_insert_layout, diff_insert_master, diff_insert_shape, diff_insert_slide,
-    diff_remove_layout, diff_remove_master, diff_remove_shape, diff_remove_slide, diff_set_layout_master, diff_set_shape_frame, diff_set_slide_layout,
-    diff_set_slide_notes, diff_set_snapshot, diff_set_textbox_blocks, dec_block, dec_frame, dec_str, enc_layout, enc_master, enc_shape, enc_slide,
-    encode_option, enc_block, enc_frame, enc_list, dec_list, enc_str, frame_of, SemioPresentationDiff,
+    dec_block, dec_frame, dec_layout, dec_list, dec_master, dec_shape, dec_slide, dec_str, decode_option, diff_insert_layout, diff_insert_master, diff_insert_shape, diff_insert_slide, diff_remove_layout, diff_remove_master, diff_remove_shape,
+    diff_remove_slide, diff_set_layout_master, diff_set_shape_frame, diff_set_slide_layout, diff_set_slide_notes, diff_set_snapshot, diff_set_textbox_blocks, enc_block, enc_frame, enc_layout, enc_list, enc_master, enc_shape, enc_slide, enc_str,
+    encode_option, frame_of, SemioPresentationDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideFrame, SlideLayout, SlideMaster, SlideShape};
 /// 🔧️ `OpBinary`/`OpText` both unconditional (not `#[cfg(test)]`-gated): the real
@@ -227,13 +226,8 @@ fn parse_presentation_mutation(line: &str) -> Result<SemioPresentationMutation, 
         return Ok(SemioPresentationMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("presentation mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> =
+        rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("presentation mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("presentation mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
@@ -361,12 +355,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioPresentationMutation> {
         SemioPresentationMutation::SetSnapshot { snapshot: crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::snapshot_b() },
         SemioPresentationMutation::InsertSlide {
             index: 1,
-            slide: Slide {
-                id: "new".into(),
-                layout_id: Some("layout1".into()),
-                shapes: vec![SlideShape::Table { frame, rows: vec![SlideTableRow { cells: vec![SlideTableCell { blocks: vec![DocBlock::paragraph("cell")] }] }] }],
-                notes: Vec::new(),
-            },
+            slide: Slide { id: "new".into(), layout_id: Some("layout1".into()), shapes: vec![SlideShape::Table { frame, rows: vec![SlideTableRow { cells: vec![SlideTableCell { blocks: vec![DocBlock::paragraph("cell")] }] }] }], notes: Vec::new() },
         },
         SemioPresentationMutation::RemoveSlide { index: 0 },
         SemioPresentationMutation::SetSlideLayout { index: 0, layout_id: Some("other".into()) },
@@ -424,10 +413,7 @@ mod tests {
                 SlideMaster { id: "toModify".into(), shapes: Vec::new() },
                 SlideMaster { id: "toRemove".into(), shapes: Vec::new() },
             ],
-            layouts: vec![
-                SlideLayout { id: "keepLayout".into(), master_id: "toRemove".into(), shapes: Vec::new() },
-                SlideLayout { id: "toRemoveLayout".into(), master_id: "keep".into(), shapes: Vec::new() },
-            ],
+            layouts: vec![SlideLayout { id: "keepLayout".into(), master_id: "toRemove".into(), shapes: Vec::new() }, SlideLayout { id: "toRemoveLayout".into(), master_id: "keep".into(), shapes: Vec::new() }],
             slides: vec![
                 Slide { id: "toModifySlide".into(), layout_id: None, shapes: vec![SlideShape::TextBox { frame: frame(0.0, 0.0, 1.0, 1.0), blocks: vec![text_block("old")] }], notes: vec![text_block("oldNote")] },
                 Slide { id: "keepSlide".into(), layout_id: Some("keepLayout".into()), shapes: Vec::new(), notes: Vec::new() },
@@ -444,10 +430,7 @@ mod tests {
                 SlideMaster { id: "toModify".into(), shapes: vec![SlideShape::Placeholder { frame: frame(1.0, 1.0, 2.0, 2.0), kind: PlaceholderKind::Body }] },
                 SlideMaster { id: "addedMaster".into(), shapes: Vec::new() },
             ],
-            layouts: vec![
-                SlideLayout { id: "keepLayout".into(), master_id: "keep".into(), shapes: Vec::new() },
-                SlideLayout { id: "addedLayout".into(), master_id: "toModify".into(), shapes: Vec::new() },
-            ],
+            layouts: vec![SlideLayout { id: "keepLayout".into(), master_id: "keep".into(), shapes: Vec::new() }, SlideLayout { id: "addedLayout".into(), master_id: "toModify".into(), shapes: Vec::new() }],
             // 🎯️ Length 2 vs `sweep_a`'s 3: per docx's own "known structural trap" precedent, a
             // single same-direction `between()` call on an INDEX-keyed collection can never show
             // BOTH a top-level `removed` AND a top-level `added` (only one tail flavor per
@@ -720,7 +703,15 @@ mod tests {
         let mutations = vec![
             SemioPresentationMutation::NoMutation,
             SemioPresentationMutation::SetSnapshot { snapshot: sweep_b() },
-            SemioPresentationMutation::InsertSlide { index: 1, slide: Slide { id: "new".into(), layout_id: Some("layout1".into()), shapes: vec![SlideShape::Table { frame: frame(0.0, 0.0, 1.0, 1.0), rows: vec![SlideTableRow { cells: vec![SlideTableCell { blocks: vec![text_block("cell")] }] }] }], notes: Vec::new() } },
+            SemioPresentationMutation::InsertSlide {
+                index: 1,
+                slide: Slide {
+                    id: "new".into(),
+                    layout_id: Some("layout1".into()),
+                    shapes: vec![SlideShape::Table { frame: frame(0.0, 0.0, 1.0, 1.0), rows: vec![SlideTableRow { cells: vec![SlideTableCell { blocks: vec![text_block("cell")] }] }] }],
+                    notes: Vec::new(),
+                },
+            },
             SemioPresentationMutation::RemoveSlide { index: 0 },
             SemioPresentationMutation::SetSlideLayout { index: 0, layout_id: Some("other".into()) },
             SemioPresentationMutation::SetSlideLayout { index: 0, layout_id: None },
@@ -728,7 +719,11 @@ mod tests {
             SemioPresentationMutation::InsertShape { slide_index: 0, shape_index: 0, shape: SlideShape::Placeholder { frame: frame(0.0, 0.0, 1.0, 1.0), kind: PlaceholderKind::Other { value: "custom".into() } } },
             SemioPresentationMutation::RemoveShape { slide_index: 0, shape_index: 0 },
             SemioPresentationMutation::SetShapeFrame { slide_index: 0, shape_index: 0, frame: frame(1.5, 2.5, 3.5, 4.5) },
-            SemioPresentationMutation::SetTextBoxBlocks { slide_index: 0, shape_index: 0, blocks: vec![text_block("changed"), DocBlock::Heading { level: 1, style_id: Some("s".into()), runs: vec![DocRun { text: "h".into(), style: Default::default() }] }] },
+            SemioPresentationMutation::SetTextBoxBlocks {
+                slide_index: 0,
+                shape_index: 0,
+                blocks: vec![text_block("changed"), DocBlock::Heading { level: 1, style_id: Some("s".into()), runs: vec![DocRun { text: "h".into(), style: Default::default() }] }],
+            },
             SemioPresentationMutation::InsertMaster { master: SlideMaster { id: "m2".into(), shapes: Vec::new() } },
             SemioPresentationMutation::RemoveMaster { id: "master1".into() },
             SemioPresentationMutation::InsertLayout { layout: SlideLayout { id: "l2".into(), master_id: "master1".into(), shapes: Vec::new() } },

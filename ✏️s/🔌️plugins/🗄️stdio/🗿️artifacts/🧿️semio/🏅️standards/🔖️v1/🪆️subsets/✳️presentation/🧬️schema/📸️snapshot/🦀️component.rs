@@ -13,9 +13,7 @@ use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot:
 /// (`enc_master`/`enc_layout`/`enc_slide`, `enc_str`, `enc_list`) — this facet imports them rather
 /// than duplicating a third independent copy (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-
 /// EVOLUTION presentation wave, following `document`'s own snapshot-imports-from-diff convention).
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::{
-    dec_block, dec_layout, dec_master, dec_slide, dec_str, enc_block, enc_layout, enc_master, enc_slide, enc_str,
-};
+use crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::{dec_block, dec_layout, dec_master, dec_slide, dec_str, enc_block, enc_layout, enc_master, enc_slide, enc_str};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -89,11 +87,19 @@ pub struct SlideTableRow {
 pub enum SlideShape {
     /// ✍️ `p:sp` with a text body — `blocks` reuses `document::DocBlock` verbatim (spec-mandated
     /// cross-reuse, see module doc comment).
-    TextBox { frame: SlideFrame, #[serde(default)] blocks: Vec<DocBlock> },
+    TextBox {
+        frame: SlideFrame,
+        #[serde(default)]
+        blocks: Vec<DocBlock>,
+    },
     /// 🖼️ `p:pic`.
     Picture { frame: SlideFrame, image: SlidePictureImage },
     /// 🏛️ `p:graphicFrame` holding `a:tbl`.
-    Table { frame: SlideFrame, #[serde(default)] rows: Vec<SlideTableRow> },
+    Table {
+        frame: SlideFrame,
+        #[serde(default)]
+        rows: Vec<SlideTableRow>,
+    },
     /// 🏷️ `p:sp` with a `p:ph` placeholder reference.
     Placeholder { frame: SlideFrame, kind: PlaceholderKind },
 }
@@ -162,12 +168,7 @@ pub struct SemioPresentationSnapshot {
 
 impl Default for SemioPresentationSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(),
-            masters: Vec::new(),
-            layouts: Vec::new(),
-            slides: Vec::new(),
-        }
+        Self { schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(), masters: Vec::new(), layouts: Vec::new(), slides: Vec::new() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -494,7 +495,9 @@ fn decode_presentation_snapshot_binary(bytes: &[u8]) -> Result<SemioPresentation
 /// matching `🔺️diff`'s already-hand-rolled convention.
 impl store::ArtifactDsl for SemioPresentationSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str { STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -506,11 +509,7 @@ impl store::ArtifactDsl for SemioPresentationSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_presentation_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -519,22 +518,14 @@ impl store::ArtifactPack for SemioPresentationSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_presentation_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_presentation_snapshot_binary(&inner).map_err(store::PackError::Schema)
@@ -553,38 +544,20 @@ pub(crate) fn demo_semio_presentation_snapshot() -> SemioPresentationSnapshot {
     let frame = SlideFrame { origin: SemioPoint2 { x: 1.0, y: 2.0 }, width: 50.0, height: 10.0 };
     SemioPresentationSnapshot {
         schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(),
-        masters: vec![SlideMaster {
-            id: "master1".into(),
-            shapes: vec![SlideShape::Placeholder {
-                frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 100.0, height: 20.0 },
-                kind: PlaceholderKind::Title,
-            }],
-        }],
+        masters: vec![SlideMaster { id: "master1".into(), shapes: vec![SlideShape::Placeholder { frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 100.0, height: 20.0 }, kind: PlaceholderKind::Title }] }],
         layouts: vec![SlideLayout {
             id: "layout1".into(),
             master_id: "master1".into(),
-            shapes: vec![SlideShape::Placeholder {
-                frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 30.0 }, width: 100.0, height: 15.0 },
-                kind: PlaceholderKind::Subtitle,
-            }],
+            shapes: vec![SlideShape::Placeholder { frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 30.0 }, width: 100.0, height: 15.0 }, kind: PlaceholderKind::Subtitle }],
         }],
         slides: vec![Slide {
             id: "slide1".into(),
             layout_id: Some("layout1".into()),
             shapes: vec![
                 SlideShape::TextBox { frame, blocks: vec![DocBlock::paragraph("Hello Slide")] },
-                SlideShape::Picture {
-                    frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 10.0, height: 10.0 },
-                    image: SlidePictureImage { asset_id: "img1".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] },
-                },
-                SlideShape::Table {
-                    frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 30.0, height: 30.0 },
-                    rows: vec![SlideTableRow { cells: vec![SlideTableCell { blocks: vec![DocBlock::paragraph("cell")] }] }],
-                },
-                SlideShape::Placeholder {
-                    frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 40.0 }, width: 100.0, height: 10.0 },
-                    kind: PlaceholderKind::Other { value: "custom".into() },
-                },
+                SlideShape::Picture { frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 10.0, height: 10.0 }, image: SlidePictureImage { asset_id: "img1".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] } },
+                SlideShape::Table { frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 30.0, height: 30.0 }, rows: vec![SlideTableRow { cells: vec![SlideTableCell { blocks: vec![DocBlock::paragraph("cell")] }] }] },
+                SlideShape::Placeholder { frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 40.0 }, width: 100.0, height: 10.0 }, kind: PlaceholderKind::Other { value: "custom".into() } },
             ],
             notes: vec![DocBlock::paragraph("Speaker notes")],
         }],
@@ -631,34 +604,15 @@ mod tests {
     fn pack_round_trips_populated_structure() {
         let snap = SemioPresentationSnapshot {
             schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(),
-            masters: vec![SlideMaster {
-                id: "master1".into(),
-                shapes: vec![SlideShape::Placeholder {
-                    frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 100.0, height: 20.0 },
-                    kind: PlaceholderKind::Title,
-                }],
-            }],
-            layouts: vec![SlideLayout {
-                id: "layout1".into(),
-                master_id: "master1".into(),
-                shapes: Vec::new(),
-            }],
+            masters: vec![SlideMaster { id: "master1".into(), shapes: vec![SlideShape::Placeholder { frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 100.0, height: 20.0 }, kind: PlaceholderKind::Title }] }],
+            layouts: vec![SlideLayout { id: "layout1".into(), master_id: "master1".into(), shapes: Vec::new() }],
             slides: vec![Slide {
                 id: "slide1".into(),
                 layout_id: Some("layout1".into()),
                 shapes: vec![
-                    SlideShape::TextBox {
-                        frame: SlideFrame { origin: SemioPoint2 { x: 1.0, y: 2.0 }, width: 50.0, height: 10.0 },
-                        blocks: vec![DocBlock::paragraph("x")],
-                    },
-                    SlideShape::Picture {
-                        frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 10.0, height: 10.0 },
-                        image: SlidePictureImage { asset_id: "img1".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] },
-                    },
-                    SlideShape::Table {
-                        frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 30.0, height: 30.0 },
-                        rows: vec![SlideTableRow { cells: vec![SlideTableCell { blocks: vec![DocBlock::paragraph("x")] }] }],
-                    },
+                    SlideShape::TextBox { frame: SlideFrame { origin: SemioPoint2 { x: 1.0, y: 2.0 }, width: 50.0, height: 10.0 }, blocks: vec![DocBlock::paragraph("x")] },
+                    SlideShape::Picture { frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 10.0, height: 10.0 }, image: SlidePictureImage { asset_id: "img1".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] } },
+                    SlideShape::Table { frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 30.0, height: 30.0 }, rows: vec![SlideTableRow { cells: vec![SlideTableCell { blocks: vec![DocBlock::paragraph("x")] }] }] },
                 ],
                 notes: vec![DocBlock::paragraph("x")],
             }],

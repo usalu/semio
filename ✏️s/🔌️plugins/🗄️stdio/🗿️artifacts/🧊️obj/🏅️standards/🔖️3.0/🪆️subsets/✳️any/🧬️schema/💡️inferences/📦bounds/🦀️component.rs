@@ -49,13 +49,7 @@ pub fn compute_obj_bounds(snapshot: &ObjSnapshot) -> ObjBounds {
         seen = true;
     }
 
-    ObjBounds {
-        min,
-        max,
-        vertex_count: snapshot.vertices.len() as u32,
-        face_count: snapshot.faces.len() as u32,
-        group_count: snapshot.groups.len() as u32,
-    }
+    ObjBounds { min, max, vertex_count: snapshot.vertices.len() as u32, face_count: snapshot.faces.len() as u32, group_count: snapshot.groups.len() as u32 }
 }
 //#endregion 🔖️Bounds
 

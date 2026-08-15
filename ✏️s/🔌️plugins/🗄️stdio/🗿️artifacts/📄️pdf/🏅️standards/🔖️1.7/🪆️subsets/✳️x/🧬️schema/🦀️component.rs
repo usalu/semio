@@ -8,12 +8,12 @@
 pub use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use dsl::{Diagnostic, Severity};
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::pdf::standards::v1_7::subsets::x::schema::check_x_conformance;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, PdfMutation};
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfInfo, PdfIndirectObject, PdfObject, PdfPage, PdfSnapshot};
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
+    use crate::artifacts::pdf::standards::v1_7::subsets::x::schema::check_x_conformance;
+    use dsl::{Diagnostic, Severity};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Seed
     /// 🌱️ Seeds a fresh snapshot with a real `/Root /OutputIntents` → `OutputIntent` object pair
@@ -22,10 +22,7 @@ pub mod derived_construction {
         let objects = vec![
             PdfIndirectObject {
                 id: ObjRef { num: 1, gen: 0 },
-                value: PdfObject::Dict(vec![
-                    PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Catalog".into()) },
-                    PdfDictEntry { key: "OutputIntents".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 2, gen: 0 })]) },
-                ]),
+                value: PdfObject::Dict(vec![PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Catalog".into()) }, PdfDictEntry { key: "OutputIntents".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 2, gen: 0 })]) }]),
             },
             PdfIndirectObject {
                 id: ObjRef { num: 2, gen: 0 },
@@ -142,11 +139,11 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
-    use semio_framework_plugin::{AnalyzeSource, Analysis, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot};
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfAnalyzer as PdfAnyAnalyzer;
     pub use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfParts;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot};
+    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("x") };
@@ -186,11 +183,7 @@ pub mod derived_analysis {
             .iter()
             .filter(|o| {
                 let Some(d) = o.value.as_dict() else { return false };
-                dict_name(d, "Filter") == Some("Standard")
-                    && d.iter().any(|e| e.key == "V")
-                    && d.iter().any(|e| e.key == "R")
-                    && d.iter().any(|e| e.key == "O")
-                    && d.iter().any(|e| e.key == "U")
+                dict_name(d, "Filter") == Some("Standard") && d.iter().any(|e| e.key == "V") && d.iter().any(|e| e.key == "R") && d.iter().any(|e| e.key == "O") && d.iter().any(|e| e.key == "U")
             })
             .map(|o| o.id)
             .collect()
@@ -203,11 +196,7 @@ pub mod derived_analysis {
 
     /// 📜️ Real scan for a bare `/JS` key not already caught by `/S /JavaScript`.
     pub(crate) fn scan_js_key_only(objects: &[PdfIndirectObject], already: &[ObjRef]) -> Vec<ObjRef> {
-        objects
-            .iter()
-            .filter(|o| !already.contains(&o.id) && o.value.as_dict().map(|d| d.iter().any(|e| e.key == "JS")).unwrap_or(false))
-            .map(|o| o.id)
-            .collect()
+        objects.iter().filter(|o| !already.contains(&o.id) && o.value.as_dict().map(|d| d.iter().any(|e| e.key == "JS")).unwrap_or(false)).map(|o| o.id).collect()
     }
 
     /// 🏳️ Real check: `/Root`'s `/OutputIntents` array contains an intent with `/S /GTS_PDFX` AND a
@@ -215,12 +204,7 @@ pub mod derived_analysis {
     fn has_pdfx_output_intent(objects: &[PdfIndirectObject]) -> bool {
         let Some(catalog) = find_catalog(objects) else { return false };
         let Some(intents) = catalog.dict_get("OutputIntents").and_then(|v| v.as_array()) else { return false };
-        intents.iter().any(|item| {
-            resolve_item(objects, item)
-                .and_then(|o| o.as_dict())
-                .map(|d| dict_name(d, "S") == Some("GTS_PDFX") && d.iter().any(|e| e.key == "DestOutputProfile"))
-                .unwrap_or(false)
-        })
+        intents.iter().any(|item| resolve_item(objects, item).and_then(|o| o.as_dict()).map(|d| dict_name(d, "S") == Some("GTS_PDFX") && d.iter().any(|e| e.key == "DestOutputProfile")).unwrap_or(false))
     }
 
     /// 📄️ Real scan: every `/Type /Page` object carries a `/TrimBox` or `/ArtBox` key. Returns the
@@ -237,10 +221,7 @@ pub mod derived_analysis {
     }
 
     fn descriptor_has_embedded_file(objects: &[PdfIndirectObject], desc_ref: ObjRef) -> bool {
-        resolve_ref(objects, desc_ref)
-            .and_then(|o| o.as_dict())
-            .map(|d| d.iter().any(|e| e.key == "FontFile" || e.key == "FontFile2" || e.key == "FontFile3"))
-            .unwrap_or(false)
+        resolve_ref(objects, desc_ref).and_then(|o| o.as_dict()).map(|d| d.iter().any(|e| e.key == "FontFile" || e.key == "FontFile2" || e.key == "FontFile3")).unwrap_or(false)
     }
 
     /// 🔤️ Real check: every `/Type /Font` object (simple or `/DescendantFonts` composite) resolves
@@ -259,11 +240,7 @@ pub mod derived_analysis {
                 .and_then(|e| e.value.as_array())
                 .map(|arr| {
                     arr.iter().any(|item| {
-                        resolve_item(objects, item)
-                            .and_then(|desc| desc.as_dict())
-                            .and_then(|dd| dd.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref()))
-                            .map(|r| descriptor_has_embedded_file(objects, r))
-                            .unwrap_or(false)
+                        resolve_item(objects, item).and_then(|desc| desc.as_dict()).and_then(|dd| dd.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref())).map(|r| descriptor_has_embedded_file(objects, r)).unwrap_or(false)
                     })
                 })
                 .unwrap_or(false);
@@ -276,11 +253,7 @@ pub mod derived_analysis {
 
     /// 🎬️ Real scan: `/Subtype /Movie` or `/Subtype /Sound` annotation dicts anywhere in the graph.
     fn movie_or_sound_annotations(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
-        objects
-            .iter()
-            .filter(|o| o.value.as_dict().map(|d| matches!(dict_name(d, "Subtype"), Some("Movie") | Some("Sound"))).unwrap_or(false))
-            .map(|o| o.id)
-            .collect()
+        objects.iter().filter(|o| o.value.as_dict().map(|d| matches!(dict_name(d, "Subtype"), Some("Movie") | Some("Sound"))).unwrap_or(false)).map(|o| o.id).collect()
     }
 
     fn hard(code: &'static str, message: String) -> Diagnostic {
@@ -364,10 +337,7 @@ pub mod derived_analysis {
             vec![
                 PdfIndirectObject {
                     id: ObjRef { num: 1, gen: 0 },
-                    value: PdfObject::Dict(vec![
-                        PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Catalog".into()) },
-                        PdfDictEntry { key: "OutputIntents".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 2, gen: 0 })]) },
-                    ]),
+                    value: PdfObject::Dict(vec![PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Catalog".into()) }, PdfDictEntry { key: "OutputIntents".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 2, gen: 0 })]) }]),
                 },
                 PdfIndirectObject {
                     id: ObjRef { num: 2, gen: 0 },
@@ -404,10 +374,7 @@ pub mod derived_analysis {
         #[test]
         fn page_missing_trim_or_art_box_is_hard() {
             let mut objects = conforming_objects();
-            objects.push(PdfIndirectObject {
-                id: ObjRef { num: 4, gen: 0 },
-                value: PdfObject::Dict(vec![PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Page".into()) }]),
-            });
+            objects.push(PdfIndirectObject { id: ObjRef { num: 4, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Page".into()) }]) });
             let snapshot = PdfSnapshot { objects, ..PdfSnapshot::default() };
             let diagnostics = check_x_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_TRIM_OR_ART_BOX && d.severity == Severity::Error), "got {diagnostics:?}");
@@ -436,10 +403,7 @@ pub mod derived_analysis {
             let mut objects = conforming_objects();
             objects.push(PdfIndirectObject {
                 id: ObjRef { num: 6, gen: 0 },
-                value: PdfObject::Dict(vec![
-                    PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Font".into()) },
-                    PdfDictEntry { key: "Subtype".into(), value: PdfObject::Name("Type1".into()) },
-                ]),
+                value: PdfObject::Dict(vec![PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Font".into()) }, PdfDictEntry { key: "Subtype".into(), value: PdfObject::Name("Type1".into()) }]),
             });
             let snapshot = PdfSnapshot { objects, ..PdfSnapshot::default() };
             let diagnostics = check_x_conformance(&snapshot);
@@ -449,10 +413,7 @@ pub mod derived_analysis {
         #[test]
         fn javascript_action_is_soft() {
             let mut objects = conforming_objects();
-            objects.push(PdfIndirectObject {
-                id: ObjRef { num: 7, gen: 0 },
-                value: PdfObject::Dict(vec![PdfDictEntry { key: "S".into(), value: PdfObject::Name("JavaScript".into()) }]),
-            });
+            objects.push(PdfIndirectObject { id: ObjRef { num: 7, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "S".into(), value: PdfObject::Name("JavaScript".into()) }]) });
             let snapshot = PdfSnapshot { objects, ..PdfSnapshot::default() };
             let diagnostics = check_x_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_JAVASCRIPT && d.severity == Severity::Warning), "got {diagnostics:?}");
@@ -461,10 +422,7 @@ pub mod derived_analysis {
         #[test]
         fn movie_annotation_is_soft() {
             let mut objects = conforming_objects();
-            objects.push(PdfIndirectObject {
-                id: ObjRef { num: 8, gen: 0 },
-                value: PdfObject::Dict(vec![PdfDictEntry { key: "Subtype".into(), value: PdfObject::Name("Movie".into()) }]),
-            });
+            objects.push(PdfIndirectObject { id: ObjRef { num: 8, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "Subtype".into(), value: PdfObject::Name("Movie".into()) }]) });
             let snapshot = PdfSnapshot { objects, ..PdfSnapshot::default() };
             let diagnostics = check_x_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_MOVIE_OR_SOUND && d.severity == Severity::Warning), "got {diagnostics:?}");

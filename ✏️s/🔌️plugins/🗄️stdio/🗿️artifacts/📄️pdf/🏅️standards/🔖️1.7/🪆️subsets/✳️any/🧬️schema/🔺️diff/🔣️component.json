@@ -8,6 +8,7 @@
       "properties": { "num": { "type": "integer" }, "gen": { "type": "integer" } }
     },
     "PdfObject": { "type": "object", "required": ["kind"] },
+    "PdfStreamFilter": { "type": "object", "required": ["kind"], "properties": { "kind": { "type": "string", "enum": ["flate", "asciiHex", "ascii85", "runLength"] }, "predictor": { "type": "object" } } },
     "PdfInfo": {
       "type": "object",
       "properties": {
@@ -72,7 +73,7 @@
         "diff": {},
         "dict": { "$ref": "#/$defs/PdfDictDiff" },
         "data": { "type": "array", "items": { "type": "integer" } },
-        "rawFilter": { "type": ["string", "null"] }
+        "filters": { "type": "array", "items": { "$ref": "#/$defs/PdfStreamFilter" } }
       }
     },
     "PdfObjectModified": { "type": "object", "required": ["id", "diff"], "properties": { "id": { "$ref": "#/$defs/ObjRef" }, "diff": { "$ref": "#/$defs/PdfValueDiff" } } },

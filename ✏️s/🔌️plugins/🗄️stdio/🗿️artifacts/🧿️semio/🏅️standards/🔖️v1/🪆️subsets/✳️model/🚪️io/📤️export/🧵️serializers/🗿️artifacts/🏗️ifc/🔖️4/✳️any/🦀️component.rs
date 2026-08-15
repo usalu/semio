@@ -23,9 +23,9 @@
 //!   model and are dropped (`GeometryRef` is never read; `SemioTransform.scale` is ignored).
 
 use crate::artifacts::ifc::IfcSnapshot;
-use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioQuaternion, SemioTransform};
 use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, PsetValue, SemioModelSnapshot, SpatialKind};
+use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use std::collections::HashMap;
 
@@ -77,11 +77,7 @@ fn ifc_type_of_element_class(class: &ElementClass) -> String {
 /// rotation matrix, columns = x/y/z basis vectors (matches `Mat4`'s own layout).
 fn quat_to_rotation_columns(q: &SemioQuaternion) -> [[f64; 3]; 3] {
     let (x, y, z, w) = (q.x, q.y, q.z, q.w);
-    [
-        [1.0 - 2.0 * (y * y + z * z), 2.0 * (x * y - z * w), 2.0 * (x * z + y * w)],
-        [2.0 * (x * y + z * w), 1.0 - 2.0 * (x * x + z * z), 2.0 * (y * z - x * w)],
-        [2.0 * (x * z - y * w), 2.0 * (y * z + x * w), 1.0 - 2.0 * (x * x + y * y)],
-    ]
+    [[1.0 - 2.0 * (y * y + z * z), 2.0 * (x * y - z * w), 2.0 * (x * z + y * w)], [2.0 * (x * y + z * w), 1.0 - 2.0 * (x * x + z * z), 2.0 * (y * z - x * w)], [2.0 * (x * z - y * w), 2.0 * (y * z + x * w), 1.0 - 2.0 * (x * x + y * y)]]
 }
 //#endregion 🔖️Geometry
 
@@ -97,13 +93,7 @@ impl IdAlloc {
 
 //#region 🔖️Builders
 fn owner_history_instance(id: u64) -> Part21Instance {
-    Part21Instance {
-        id,
-        entities: vec![(
-            "IFCOWNERHISTORY".into(),
-            vec![Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Int(0)],
-        )],
-    }
+    Part21Instance { id, entities: vec![("IFCOWNERHISTORY".into(), vec![Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Int(0)])] }
 }
 
 fn project_instance(id: u64, owner_id: u64) -> Part21Instance {
@@ -111,17 +101,7 @@ fn project_instance(id: u64, owner_id: u64) -> Part21Instance {
         id,
         entities: vec![(
             "IFCPROJECT".into(),
-            vec![
-                Part21Value::Str("semio-model".into()),
-                Part21Value::Ref(owner_id),
-                Part21Value::Str("model".into()),
-                Part21Value::Unset,
-                Part21Value::Unset,
-                Part21Value::Unset,
-                Part21Value::Unset,
-                Part21Value::List(vec![]),
-                Part21Value::Unset,
-            ],
+            vec![Part21Value::Str("semio-model".into()), Part21Value::Ref(owner_id), Part21Value::Str("model".into()), Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::List(vec![]), Part21Value::Unset],
         )],
     }
 }
@@ -133,26 +113,14 @@ fn build_placement(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, tra
     let loc_id = alloc.next();
     instances.push(Part21Instance {
         id: loc_id,
-        entities: vec![(
-            "IFCCARTESIANPOINT".into(),
-            vec![Part21Value::List(vec![Part21Value::Real(transform.translation.x.into()), Part21Value::Real(transform.translation.y.into()), Part21Value::Real(transform.translation.z.into())])],
-        )],
+        entities: vec![("IFCCARTESIANPOINT".into(), vec![Part21Value::List(vec![Part21Value::Real(transform.translation.x.into()), Part21Value::Real(transform.translation.y.into()), Part21Value::Real(transform.translation.z.into())])])],
     });
     let axis_id = alloc.next();
-    instances.push(Part21Instance {
-        id: axis_id,
-        entities: vec![("IFCDIRECTION".into(), vec![Part21Value::List(vec![Part21Value::Real(r[0][2].into()), Part21Value::Real(r[1][2].into()), Part21Value::Real(r[2][2].into())])])],
-    });
+    instances.push(Part21Instance { id: axis_id, entities: vec![("IFCDIRECTION".into(), vec![Part21Value::List(vec![Part21Value::Real(r[0][2].into()), Part21Value::Real(r[1][2].into()), Part21Value::Real(r[2][2].into())])])] });
     let refdir_id = alloc.next();
-    instances.push(Part21Instance {
-        id: refdir_id,
-        entities: vec![("IFCDIRECTION".into(), vec![Part21Value::List(vec![Part21Value::Real(r[0][0].into()), Part21Value::Real(r[1][0].into()), Part21Value::Real(r[2][0].into())])])],
-    });
+    instances.push(Part21Instance { id: refdir_id, entities: vec![("IFCDIRECTION".into(), vec![Part21Value::List(vec![Part21Value::Real(r[0][0].into()), Part21Value::Real(r[1][0].into()), Part21Value::Real(r[2][0].into())])])] });
     let placement3d_id = alloc.next();
-    instances.push(Part21Instance {
-        id: placement3d_id,
-        entities: vec![("IFCAXIS2PLACEMENT3D".into(), vec![Part21Value::Ref(loc_id), Part21Value::Ref(axis_id), Part21Value::Ref(refdir_id)])],
-    });
+    instances.push(Part21Instance { id: placement3d_id, entities: vec![("IFCAXIS2PLACEMENT3D".into(), vec![Part21Value::Ref(loc_id), Part21Value::Ref(axis_id), Part21Value::Ref(refdir_id)])] });
     let local_id = alloc.next();
     instances.push(Part21Instance { id: local_id, entities: vec![("IFCLOCALPLACEMENT".into(), vec![Part21Value::Unset, Part21Value::Ref(placement3d_id)])] });
     local_id
@@ -204,14 +172,7 @@ fn rel_aggregates_instance(id: u64, owner_id: u64, parent_id: u64, children: &[u
         id,
         entities: vec![(
             "IFCRELAGGREGATES".into(),
-            vec![
-                Part21Value::Str(format!("agg-{id}")),
-                Part21Value::Ref(owner_id),
-                Part21Value::Unset,
-                Part21Value::Unset,
-                Part21Value::Ref(parent_id),
-                Part21Value::List(children.iter().map(|c| Part21Value::Ref(*c)).collect()),
-            ],
+            vec![Part21Value::Str(format!("agg-{id}")), Part21Value::Ref(owner_id), Part21Value::Unset, Part21Value::Unset, Part21Value::Ref(parent_id), Part21Value::List(children.iter().map(|c| Part21Value::Ref(*c)).collect())],
         )],
     }
 }
@@ -221,14 +182,7 @@ fn rel_contained_instance(id: u64, owner_id: u64, spatial_id: u64, elements: &[u
         id,
         entities: vec![(
             "IFCRELCONTAINEDINSPATIALSTRUCTURE".into(),
-            vec![
-                Part21Value::Str(format!("cont-{id}")),
-                Part21Value::Ref(owner_id),
-                Part21Value::Unset,
-                Part21Value::Unset,
-                Part21Value::List(elements.iter().map(|c| Part21Value::Ref(*c)).collect()),
-                Part21Value::Ref(spatial_id),
-            ],
+            vec![Part21Value::Str(format!("cont-{id}")), Part21Value::Ref(owner_id), Part21Value::Unset, Part21Value::Unset, Part21Value::List(elements.iter().map(|c| Part21Value::Ref(*c)).collect()), Part21Value::Ref(spatial_id)],
         )],
     }
 }
@@ -245,10 +199,7 @@ fn build_pset(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, owner_id
     let mut prop_ids = Vec::new();
     for prop in &pset.properties {
         let pid = alloc.next();
-        instances.push(Part21Instance {
-            id: pid,
-            entities: vec![("IFCPROPERTYSINGLEVALUE".into(), vec![Part21Value::Str(prop.key.clone()), Part21Value::Unset, part21_value_of_pset_value(&prop.value), Part21Value::Unset])],
-        });
+        instances.push(Part21Instance { id: pid, entities: vec![("IFCPROPERTYSINGLEVALUE".into(), vec![Part21Value::Str(prop.key.clone()), Part21Value::Unset, part21_value_of_pset_value(&prop.value), Part21Value::Unset])] });
         prop_ids.push(pid);
     }
     let pset_id = alloc.next();
@@ -256,13 +207,7 @@ fn build_pset(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, owner_id
         id: pset_id,
         entities: vec![(
             "IFCPROPERTYSET".into(),
-            vec![
-                Part21Value::Str(format!("pset-{pset_id}")),
-                Part21Value::Ref(owner_id),
-                Part21Value::Str(pset.name.clone()),
-                Part21Value::Unset,
-                Part21Value::List(prop_ids.iter().map(|p| Part21Value::Ref(*p)).collect()),
-            ],
+            vec![Part21Value::Str(format!("pset-{pset_id}")), Part21Value::Ref(owner_id), Part21Value::Str(pset.name.clone()), Part21Value::Unset, Part21Value::List(prop_ids.iter().map(|p| Part21Value::Ref(*p)).collect())],
         )],
     });
     let rel_id = alloc.next();
@@ -358,8 +303,8 @@ pub fn ifc_from_model(from: &SemioModelSnapshot) -> IfcSnapshot {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{GeometryRef, ModelRelation, Property, PropertySet, RelationKind, SemioModelElement, SpatialNode};
     use crate::artifacts::semio::standards::v1::subsets::model::io::import::deserializers::artifacts::ifc::v4::any::model_from_ifc;
+    use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{GeometryRef, ModelRelation, Property, PropertySet, RelationKind, SemioModelElement, SpatialNode};
 
     fn rich_model() -> SemioModelSnapshot {
         SemioModelSnapshot {
@@ -371,7 +316,11 @@ mod tests {
                     kind: SpatialKind::Storey,
                     name: "Ground Floor".into(),
                     parent_id: Some("site-1".into()),
-                    placement: SemioTransform { translation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 0.0, y: 0.0, z: 3.0 }, rotation: SemioQuaternion::default(), scale: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } },
+                    placement: SemioTransform {
+                        translation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 0.0, y: 0.0, z: 3.0 },
+                        rotation: SemioQuaternion::default(),
+                        scale: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 },
+                    },
                 },
             ],
             elements: vec![SemioModelElement {
@@ -435,7 +384,11 @@ mod tests {
                 kind: SpatialKind::Site,
                 name: "Rotated Site".into(),
                 parent_id: None,
-                placement: SemioTransform { translation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 5.0, y: -2.0, z: 0.0 }, rotation, scale: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } },
+                placement: SemioTransform {
+                    translation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 5.0, y: -2.0, z: 0.0 },
+                    rotation,
+                    scale: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 },
+                },
             }],
             elements: vec![],
             relations: vec![],

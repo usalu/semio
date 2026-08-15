@@ -3,10 +3,13 @@
 //! reimplemented here: it is reused from the shared `crate::artifacts::zip::opc` layer and,
 //! transitively, `crate::artifacts::zip::engine` + `crate::artifacts::xml::schema::snapshot`.
 
-use crate::artifacts::docx::{schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow}, DocxSnapshot};
-use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
-use crate::artifacts::zip::opc::{self, OpcPackage, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
 use super::super::super::{DocxError, MAIN_DOCUMENT_CONTENT_TYPE, MAIN_DOCUMENT_PART, REL_TYPE_STYLES, STRICT_REL_TYPE_OFFICE_DOCUMENT, STYLES_CONTENT_TYPE, STYLES_PART, STYLES_REL_TARGET, W_NS};
+use crate::artifacts::docx::{
+    schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow},
+    DocxSnapshot,
+};
+use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
+use crate::artifacts::zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
 //#region 🔖️XmlHelpers
 fn elem(name: &str, attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> XmlNode {
@@ -97,12 +100,7 @@ fn block_to_xml(b: &DocxBlock) -> XmlNode {
 //#region 🔖️DocumentMapping
 pub fn document_to_xml(doc: &DocxDocument) -> XmlDocument {
     let body_children = doc.body.iter().map(block_to_xml).collect();
-    XmlDocument {
-        root: Some(elem("w:document", vec![attr("xmlns:w", W_NS)], vec![elem("w:body", vec![], body_children)])),
-        doctype: None,
-        declaration: None,
-        prolog: Vec::new(),
-    }
+    XmlDocument { root: Some(elem("w:document", vec![attr("xmlns:w", W_NS)], vec![elem("w:body", vec![], body_children)])), doctype: None, declaration: None, prolog: Vec::new() }
 }
 //#endregion 🔖️DocumentMapping
 
@@ -120,12 +118,7 @@ fn styles_to_xml(styles: &[DocxStyle]) -> XmlDocument {
             elem("w:style", vec![attr("w:styleId", &s.id)], sc)
         })
         .collect();
-    XmlDocument {
-        root: Some(elem("w:styles", vec![attr("xmlns:w", STYLES_NS)], children)),
-        doctype: None,
-        declaration: None,
-        prolog: Vec::new(),
-    }
+    XmlDocument { root: Some(elem("w:styles", vec![attr("xmlns:w", STYLES_NS)], children)), doctype: None, declaration: None, prolog: Vec::new() }
 }
 //#endregion 🔖️StylesMapping
 

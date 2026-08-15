@@ -7,12 +7,12 @@
 //! `io_entries()` below is empty and `reads()` only advertises this subset's own native dialect.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{
-        ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, IoPayload, StandardId, SubsetId,
-        SubsetValidator, SubsetValidatorEntry, register_subset_validator, subset_validator_entry_of, register_composer_entries,
-    };
     use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
     use crate::artifacts::semio::standards::v1::subsets::graph::schema::SemioGraphAnalyzer;
+    use semio_framework_plugin::{
+        register_composer_entries, register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload, StandardId, SubsetId,
+        SubsetValidator, SubsetValidatorEntry,
+    };
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("graph") };
 
@@ -23,7 +23,9 @@ pub mod derived_composition {
         type Snapshot = SemioGraphSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] { &[DIALECT] }
+        fn reads() -> &'static [Dialect] {
+            &[DIALECT]
+        }
 
         fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
@@ -38,10 +40,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "SemioGraphComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = SemioGraphAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "SemioGraphComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "SemioGraphComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -61,22 +60,22 @@ pub mod derived_composition {
             };
             match decoded {
                 Some(_) => Vec::new(),
-                None => vec![dsl::Diagnostic::error(
-                    "stdio.semio_graph.validate-decode-failed",
-                    dsl::TextSpan::at(1, 1),
-                    "SemioGraphValidator: payload did not decode as a SemioGraphSnapshot".to_string(),
-                )],
+                None => vec![dsl::Diagnostic::error("stdio.semio_graph.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioGraphValidator: payload did not decode as a SemioGraphSnapshot".to_string())],
             }
         }
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    fn validator_entry() -> &'static SubsetValidatorEntry { VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioGraphValidator>) }
+    fn validator_entry() -> &'static SubsetValidatorEntry {
+        VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioGraphValidator>)
+    }
     //#endregion 🔖️SubsetValidator
 
     //#region 🔖️IoEntries
     /// 🚪️ Empty — no format bridges in this wave (see module doc comment).
-    fn io_entries() -> &'static [ComposerEntry] { &[] }
+    fn io_entries() -> &'static [ComposerEntry] {
+        &[]
+    }
     //#endregion 🔖️IoEntries
 
     //#region 🔖️Register
@@ -84,7 +83,9 @@ pub mod derived_composition {
     /// from this artifact's standard-level `engine::register()`.
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::graph::schema::semio_graph_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioGraphSnapshot, crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation>(crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA));
+        store::register_document_codec(store::ArtifactCodec::of::<SemioGraphSnapshot, crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation>(
+            crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,
+        ));
         register_subset_validator(validator_entry());
         register_composer_entries(io_entries());
         register_artifact_inferences();
@@ -112,19 +113,11 @@ pub mod derived_composition {
             /// files parse under the real dialect.
             #[test]
             fn committed_facet_files_parse() {
-                for (label, text) in [
-                    ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-                ] {
+                for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                     assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
                 }
-                for (label, text) in [
-                    ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-                ] {
+                for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                     dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
                 }
             }

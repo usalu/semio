@@ -2,14 +2,13 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
     use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
     use crate::artifacts::gif::standards::v89a::subsets::any::schema::GifAnalyzer;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("89a"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
-
 
     pub struct GifComposerComposition;
 
@@ -38,10 +37,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "GifComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = GifAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "GifComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "GifComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -64,9 +60,7 @@ pub use derived_composition::*;
 // `empty_gif_snapshot`/`demo_gif_snapshot` moved to `../🧬️schema`.
 use crate::artifacts::gif::standards::v87a::engine as codec;
 use crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::GifMutation;
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{
-    GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifPlainText, GifRgb, GifSnapshot, STDIO_GIF89A_DOCUMENT_SCHEMA,
-};
+use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifPlainText, GifRgb, GifSnapshot, STDIO_GIF89A_DOCUMENT_SCHEMA};
 
 //#region ColorTableConv
 /// 🔀️ 89a's OWN `GifColorTable`/`GifRgb` <-> the byte-level `Vec<Rgb>` ([u8;3]) shape 87a's
@@ -172,8 +166,7 @@ pub fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
         if frame.left + frame.width > snap.width || frame.top + frame.height > snap.height {
             return Err(format!("gif89a: frame {index} region exceeds the logical screen"));
         }
-        let table = frame.lct.as_ref().or(snap.gct.as_ref())
-            .ok_or_else(|| format!("gif89a: frame {index} has no color table (neither local nor global)"))?;
+        let table = frame.lct.as_ref().or(snap.gct.as_ref()).ok_or_else(|| format!("gif89a: frame {index} has no color table (neither local nor global)"))?;
         if frame.indices.iter().any(|&i| (i as usize) >= table.colors.len()) {
             return Err(format!("gif89a: frame {index} has an index past the end of its color table"));
         }
@@ -200,11 +193,7 @@ pub fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
         if let Some(colors) = &local_bytes {
             codec::write_color_table(&mut out, colors);
         }
-        let on_disk_indices = if frame.interlace {
-            codec::interlace_rows(&frame.indices, frame.width as usize, frame.height as usize)
-        } else {
-            frame.indices.clone()
-        };
+        let on_disk_indices = if frame.interlace { codec::interlace_rows(&frame.indices, frame.width as usize, frame.height as usize) } else { frame.indices.clone() };
         out.push(min_code_size);
         out.extend_from_slice(&codec::pack_sub_blocks(&codec::lzw_encode(&on_disk_indices, min_code_size)));
     }
@@ -309,10 +298,12 @@ pub fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
                             bg_color_index: body[11],
                             text: String::from_utf8_lossy(&body[12..]).into_owned(),
                         };
-                        let (disposal_bits, user_input, transparent_flag, delay_cs, transparent_index) =
-                            pending_gce.take().unwrap_or((0, false, false, 0, 0));
+                        let (disposal_bits, user_input, transparent_flag, delay_cs, transparent_index) = pending_gce.take().unwrap_or((0, false, false, 0, 0));
                         frames.push(GifFrame {
-                            left: 0, top: 0, width: 0, height: 0,
+                            left: 0,
+                            top: 0,
+                            width: 0,
+                            height: 0,
                             interlace: false,
                             lct: None,
                             indices: Vec::new(),
@@ -372,8 +363,7 @@ pub fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
                 if interlaced {
                     indices = codec::deinterlace_rows(&indices, iw as usize, ih as usize);
                 }
-                let (disposal_bits, user_input, transparent_flag, delay_cs, transparent_index) =
-                    pending_gce.take().unwrap_or((0, false, false, 0, 0));
+                let (disposal_bits, user_input, transparent_flag, delay_cs, transparent_index) = pending_gce.take().unwrap_or((0, false, false, 0, 0));
                 frames.push(GifFrame {
                     left,
                     top,
@@ -396,18 +386,7 @@ pub fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
     if frames.is_empty() {
         return Err("gif89a: file has no frames".into());
     }
-    Ok(GifSnapshot {
-        schema: STDIO_GIF89A_DOCUMENT_SCHEMA.into(),
-        width: w,
-        height: h,
-        gct,
-        background_color_index,
-        pixel_aspect_ratio,
-        loop_count,
-        frames,
-        comments,
-        app_extensions,
-    })
+    Ok(GifSnapshot { schema: STDIO_GIF89A_DOCUMENT_SCHEMA.into(), width: w, height: h, gct, background_color_index, pixel_aspect_ratio, loop_count, frames, comments, app_extensions })
 }
 //#endregion Codec89a
 
@@ -444,7 +423,9 @@ pub fn register_artifact_inferences() {
 /// binary form is exercised directly by `protocol_walk_law` below).
 pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
-        id: "stdio.gif.89a", extension: Some("gif"), role: dsl::LanguageRole::Document,
+        id: "stdio.gif.89a",
+        extension: Some("gif"),
+        role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
@@ -452,7 +433,9 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("stdio.gif.89a"),
     });
     dsl::register_language(dsl::LanguageSpec {
-        id: "stdio.gif.89a.op", extension: None, role: dsl::LanguageRole::Ops,
+        id: "stdio.gif.89a.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
         grammar: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
@@ -460,7 +443,9 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("stdio.gif.89a.op"),
     });
     dsl::register_language(dsl::LanguageSpec {
-        id: "stdio.gif.89a.diff", extension: None, role: dsl::LanguageRole::Diff,
+        id: "stdio.gif.89a.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
         grammar: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
@@ -468,15 +453,21 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("stdio.gif.89a.diff"),
     });
     dsl::register_language(dsl::LanguageSpec {
-        id: "stdio.gif.89a.pack", extension: None, role: dsl::LanguageRole::Pack,
-        grammar: None, grammar_path: None,
+        id: "stdio.gif.89a.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
         protocol: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.gif.89a.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
-        id: "stdio.gif.89a.spr", extension: None, role: dsl::LanguageRole::Spr,
-        grammar: None, grammar_path: None,
+        id: "stdio.gif.89a.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
         protocol: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.gif.89a.spr"),
@@ -539,17 +530,7 @@ mod tests {
             }
         }
         let (palette, indices, transparent_index) = codec::quantize_rgba(&rgba).expect("quantize");
-        GifFrame {
-            left, top, width, height,
-            interlace: false,
-            lct: Some(color_table_from_bytes(pad_to_disk_size(palette), false)),
-            indices,
-            delay_cs,
-            disposal,
-            transparent_index,
-            user_input: false,
-            plain_text: None,
-        }
+        GifFrame { left, top, width, height, interlace: false, lct: Some(color_table_from_bytes(pad_to_disk_size(palette), false)), indices, delay_cs, disposal, transparent_index, user_input: false, plain_text: None }
     }
 
     fn sample_snapshot() -> GifSnapshot {
@@ -558,11 +539,7 @@ mod tests {
             width: 12,
             height: 10,
             loop_count: Some(0),
-            frames: vec![
-                frame(0, 0, 12, 10, [200, 20, 20], 50, GifDisposal::DoNotDispose, false),
-                frame(2, 1, 6, 5, [20, 200, 20], 8, GifDisposal::RestoreToBackground, true),
-                frame(0, 0, 12, 10, [20, 20, 200], 8, GifDisposal::Unspecified, false),
-            ],
+            frames: vec![frame(0, 0, 12, 10, [200, 20, 20], 50, GifDisposal::DoNotDispose, false), frame(2, 1, 6, 5, [20, 200, 20], 8, GifDisposal::RestoreToBackground, true), frame(0, 0, 12, 10, [20, 20, 200], 8, GifDisposal::Unspecified, false)],
             ..GifSnapshot::default()
         }
     }
@@ -638,9 +615,17 @@ mod tests {
     fn plain_text_only_frame_round_trips() {
         let mut snap = sample_snapshot();
         snap.frames.push(GifFrame {
-            left: 0, top: 0, width: 0, height: 0,
-            interlace: false, lct: None, indices: Vec::new(),
-            delay_cs: 100, disposal: GifDisposal::DoNotDispose, transparent_index: None, user_input: false,
+            left: 0,
+            top: 0,
+            width: 0,
+            height: 0,
+            interlace: false,
+            lct: None,
+            indices: Vec::new(),
+            delay_cs: 100,
+            disposal: GifDisposal::DoNotDispose,
+            transparent_index: None,
+            user_input: false,
             plain_text: Some(GifPlainText { left: 1, top: 1, width: 8, height: 2, cell_width: 4, cell_height: 8, fg_color_index: 0, bg_color_index: 1, text: "hi gif".into() }),
         });
         let bytes = encode_gif(&snap).expect("encode");
@@ -707,19 +692,11 @@ mod tests {
         /// files parse under the real dialect.
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }
@@ -813,9 +790,9 @@ mod tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::gif::standards::v89a::subsets::any::schema::GifComposer as GifRawAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 

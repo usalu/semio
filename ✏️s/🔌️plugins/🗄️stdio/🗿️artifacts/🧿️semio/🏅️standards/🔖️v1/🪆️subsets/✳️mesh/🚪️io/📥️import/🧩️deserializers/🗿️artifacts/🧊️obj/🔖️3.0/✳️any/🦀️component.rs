@@ -21,11 +21,11 @@
 //!   embedded PBR values or texture bytes to map) — `materials`/`textures` stay empty,
 //!   `material_id` stays `None`.
 
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::obj::ObjSnapshot;
 use crate::artifacts::obj::schema::snapshot::ObjFace;
+use crate::artifacts::obj::ObjSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioUv};
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
@@ -61,8 +61,12 @@ fn append_triangulated_face(from: &ObjSnapshot, face: &ObjFace, positions: &mut 
         for &corner_idx in &[0usize, i, i + 1] {
             let (position, normal, uv) = corner(corner_idx)?;
             positions.push(position);
-            if has_normals { normals.push(normal.expect("checked has_normals")); }
-            if has_uvs { uvs.push(uv.expect("checked has_uvs")); }
+            if has_normals {
+                normals.push(normal.expect("checked has_normals"));
+            }
+            if has_uvs {
+                uvs.push(uv.expect("checked has_uvs"));
+            }
         }
     }
     Ok(())
@@ -114,16 +118,8 @@ mod tests {
     fn sample_obj() -> ObjSnapshot {
         ObjSnapshot {
             schema: "stdio.obj".into(),
-            vertices: vec![
-                ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None },
-                ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None },
-                ObjVertex { x: 1.0, y: 1.0, z: 0.0, w: None },
-                ObjVertex { x: 0.0, y: 1.0, z: 0.0, w: None },
-            ],
-            texcoords: vec![
-                ObjTexCoord { u: 0.0, v: 0.0, w: None }, ObjTexCoord { u: 1.0, v: 0.0, w: None },
-                ObjTexCoord { u: 1.0, v: 1.0, w: None }, ObjTexCoord { u: 0.0, v: 1.0, w: None },
-            ],
+            vertices: vec![ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 1.0, y: 1.0, z: 0.0, w: None }, ObjVertex { x: 0.0, y: 1.0, z: 0.0, w: None }],
+            texcoords: vec![ObjTexCoord { u: 0.0, v: 0.0, w: None }, ObjTexCoord { u: 1.0, v: 0.0, w: None }, ObjTexCoord { u: 1.0, v: 1.0, w: None }, ObjTexCoord { u: 0.0, v: 1.0, w: None }],
             normals: vec![ObjNormal { x: 0.0, y: 0.0, z: 1.0 }],
             faces: vec![ObjFace {
                 vertices: vec![
@@ -160,15 +156,8 @@ mod tests {
     #[test]
     fn objects_partition_into_separate_semio_meshes() {
         let mut obj = sample_obj();
-        obj.faces.push(ObjFace { vertices: vec![
-            ObjFaceVertex { vertex: 0, texcoord: Some(0), normal: Some(0) },
-            ObjFaceVertex { vertex: 1, texcoord: Some(1), normal: Some(0) },
-            ObjFaceVertex { vertex: 2, texcoord: Some(2), normal: Some(0) },
-        ] });
-        obj.objects = vec![
-            crate::artifacts::obj::schema::snapshot::ObjObject { name: "quad".into(), faces: vec![0] },
-            crate::artifacts::obj::schema::snapshot::ObjObject { name: "tri".into(), faces: vec![1] },
-        ];
+        obj.faces.push(ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: Some(0), normal: Some(0) }, ObjFaceVertex { vertex: 1, texcoord: Some(1), normal: Some(0) }, ObjFaceVertex { vertex: 2, texcoord: Some(2), normal: Some(0) }] });
+        obj.objects = vec![crate::artifacts::obj::schema::snapshot::ObjObject { name: "quad".into(), faces: vec![0] }, crate::artifacts::obj::schema::snapshot::ObjObject { name: "tri".into(), faces: vec![1] }];
         let semio = SemioMeshFromObj::deserialize(&obj).expect("deserialize");
         assert_eq!(semio.meshes.len(), 2);
         assert_eq!(semio.meshes[0].id, "quad");

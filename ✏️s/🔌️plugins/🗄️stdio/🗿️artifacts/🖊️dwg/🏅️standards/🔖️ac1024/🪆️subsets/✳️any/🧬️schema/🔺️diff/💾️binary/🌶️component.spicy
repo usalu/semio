@@ -1,4 +1,53 @@
 module Stdio_dwg_diff;
+
+# Container-less semio pack: counted symbol table plus recursively tagged record fields.
+type Varint = unit {
+    octets: uint8[] &until(($$ & 0x80) == 0);
+};
+
+type Symbol = unit {
+    length: Varint;
+    text: bytes;
+};
+
 type Document = unit {
-    payload: bytes &eod;
+    symbol_count: Varint;
+    symbols: Symbol[];
+    root: RecordFields;
+};
+
+type RecordFields = unit {
+    count: Varint;
+    fields: RecordField[];
+};
+
+type RecordField = unit {
+    ordinal: Varint;
+    value: FieldValue;
+};
+
+type FieldValue = unit {
+    tag: uint8;
+    integer: Varint &if=(tag == 0x03 || tag == 0x04 || tag == 0x06 || tag == 0x0a);
+    float64: real<spicy::RealType::IEEE754, spicy::ByteOrder::Little> &if=(tag == 0x05);
+    inline_text: Symbol &if=(tag == 0x07);
+    sequence: ValueSequence &if=(tag == 0x0b || tag == 0x0c);
+    record: RecordFields &if=(tag == 0x0d);
+    packed_float64: PackedFloat64 &if=(tag == 0x15);
+    packed_varint: PackedVarint &if=(tag == 0x16);
+};
+
+type ValueSequence = unit {
+    count: Varint;
+    values: FieldValue[];
+};
+
+type PackedFloat64 = unit {
+    count: Varint;
+    values: real<spicy::RealType::IEEE754, spicy::ByteOrder::Little>[];
+};
+
+type PackedVarint = unit {
+    count: Varint;
+    values: Varint[];
 };

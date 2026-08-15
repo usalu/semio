@@ -101,3 +101,20 @@ The serial final Sequence validation rebuilt the ticket-local target and reached
 - The next warmed run exposed 43 further errors in concurrent shared stdio/schema work: unresolved XML lexical APIs, missing `XmlDocument.prolog`, stale XML/DWG/PDF/SVG `source` access, SVG lexical/prolog shape drift, ZIP `physical` construction and `ZipPhysicalLayout: DslField`, plus one missing `#[artifact_schema]` declaration.
 
 These 43 errors are owned by the active external stdio/schema lane. They block Sequence, DAG, Raster, CAD, GIS, and FEM from compiling their shared dependency and therefore are not recorded as app-suite failures. Full compiler evidence is retained in `🧪️sequence-final.log`; the final app gate resumes only after the shared stdio check is green.
+
+## DWG gate invalidation audit
+
+The requested low-concurrency canonical stdio rerun used `CARGO_BUILD_JOBS=2`, the 60-minute build budget, the 30-minute test budget, and the warmed `🎯️target-app-conformance`. Full output is retained in `🧪️stdio-dwg-gate.log`.
+
+The compiler observed source while the active schema owner was rewriting DWG, XML, and SVG. It ended with 95 errors: 49 locations under SVG, 41 under XML, two under DWG, and three diagnostics without an artifact path. The earlier 69-error DWG export/caller cluster was absent. The two DWG diagnostics were an internally inconsistent intermediate revision: `decode_dwg` referenced `decode_r2004_physical` and initialized `DwgSnapshot.physical` before those definitions were visible to the same compiler invocation. The current files now contain the physical layout types, `DwgSnapshot.physical`, and `decode_r2004_physical`; their final writes landed at 15:28:10–15:28:11, after compilation had begun. Consequently this run establishes source invalidation, not a current DWG failure or pass.
+
+No DWG source edit was made by the app-conformance lane during this audit. Per cross-thread coordination, all stdio editing and validation is paused until the artifact owners report a stable green stdio revision. The six exact app reruns remain pending rather than failed.
+
+## Provisional post-stdio app snapshot
+
+After the first stable-green stdio handoff, the warmed serial app gate produced two exact green snapshots:
+
+- Sequence: 127/127 passed, 0 skipped, exit 0 (`🧪️sequence-exact.log`).
+- DAG: 93/93 passed, 0 skipped, exit 0 (`🧪️dag-exact.log`).
+
+The exclusive stdio owner then reopened shared source for a stricter raw-state audit before Raster began. No downstream gate was left active. These two results are retained as provisional snapshot evidence only; Sequence and DAG must both rerun on the next stable-green handoff before final source-stable totals can be claimed.

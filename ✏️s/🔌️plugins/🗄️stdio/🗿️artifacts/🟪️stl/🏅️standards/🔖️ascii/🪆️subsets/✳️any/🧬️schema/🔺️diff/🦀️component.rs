@@ -43,18 +43,12 @@ pub struct StlTriangleDiff {
 
 /// ▶️ Applies a per-field triangle patch, returning the patched triangle.
 fn apply_triangle_diff(base: &StlTriangle, diff: &StlTriangleDiff) -> StlTriangle {
-    StlTriangle {
-        normal: diff.normal.unwrap_or(base.normal),
-        vertices: diff.vertices.unwrap_or(base.vertices),
-    }
+    StlTriangle { normal: diff.normal.unwrap_or(base.normal), vertices: diff.vertices.unwrap_or(base.vertices) }
 }
 
 /// 🧭️ Field-by-field state delta between two triangles occupying the same index slot.
 fn triangle_between(a: &StlTriangle, b: &StlTriangle) -> StlTriangleDiff {
-    StlTriangleDiff {
-        normal: (a.normal != b.normal).then_some(b.normal),
-        vertices: (a.vertices != b.vertices).then_some(b.vertices),
-    }
+    StlTriangleDiff { normal: (a.normal != b.normal).then_some(b.normal), vertices: (a.vertices != b.vertices).then_some(b.vertices) }
 }
 
 fn triangle_diff_is_empty(d: &StlTriangleDiff) -> bool {
@@ -63,8 +57,12 @@ fn triangle_diff_is_empty(d: &StlTriangleDiff) -> bool {
 
 /// ➕️ LWW field-by-field absorb of one triangle patch into another.
 fn absorb_triangle_diff(base: &mut StlTriangleDiff, other: StlTriangleDiff) {
-    if other.normal.is_some() { base.normal = other.normal; }
-    if other.vertices.is_some() { base.vertices = other.vertices; }
+    if other.normal.is_some() {
+        base.normal = other.normal;
+    }
+    if other.vertices.is_some() {
+        base.vertices = other.vertices;
+    }
 }
 //#endregion 🔖️TriangleDiff
 
@@ -147,9 +145,7 @@ fn triangles_between(a: &[StlTriangle], b: &[StlTriangle]) -> StlTrianglesDiff {
         }
     }
     let removed: Vec<usize> = (min_len..a.len()).collect();
-    let added: Vec<StlTriangleAdded> = (min_len..b.len())
-        .map(|i| StlTriangleAdded { index: i, triangle: b[i] })
-        .collect();
+    let added: Vec<StlTriangleAdded> = (min_len..b.len()).map(|i| StlTriangleAdded { index: i, triangle: b[i] }).collect();
     StlTrianglesDiff { removed, modified, added }
 }
 
@@ -173,12 +169,7 @@ enum Lbl {
 /// triangles, so it can run without any real snapshot.
 fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
     let removed_set: HashSet<usize> = removed.iter().copied().collect();
-    let mut survivors: Vec<Lbl> = labels
-        .into_iter()
-        .enumerate()
-        .filter(|(i, _)| !removed_set.contains(i))
-        .map(|(_, l)| l)
-        .collect();
+    let mut survivors: Vec<Lbl> = labels.into_iter().enumerate().filter(|(i, _)| !removed_set.contains(i)).map(|(_, l)| l).collect();
     let mut added_sorted = added.to_vec();
     added_sorted.sort_by_key(|(idx, _)| *idx);
     for (idx, label) in added_sorted {
@@ -199,13 +190,8 @@ fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) 
 /// simply absent from the walk ("annihilates the add", never re-emitted); one a `d2`-modify
 /// targets gets that patch applied directly into its carried payload ("Add+SetField").
 fn absorb_pair(d1: &StlTrianglesDiff, d2: &StlTrianglesDiff) -> StlTrianglesDiff {
-    let max_ref = d1.removed.iter().copied()
-        .chain(d1.modified.iter().map(|m| m.index))
-        .chain(d1.added.iter().map(|a| a.index))
-        .chain(d2.removed.iter().copied())
-        .chain(d2.modified.iter().map(|m| m.index))
-        .chain(d2.added.iter().map(|a| a.index))
-        .max();
+    let max_ref =
+        d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).chain(d1.added.iter().map(|a| a.index)).chain(d2.removed.iter().copied()).chain(d2.modified.iter().map(|m| m.index)).chain(d2.added.iter().map(|a| a.index)).max();
     let l1 = max_ref.map(|m| m + 2).unwrap_or(0);
 
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
@@ -218,8 +204,12 @@ fn absorb_pair(d1: &StlTrianglesDiff, d2: &StlTrianglesDiff) -> StlTrianglesDiff
     let mut mid_pos_of_added1: HashMap<usize, usize> = HashMap::new();
     for (pos, l) in mid_labels.iter().enumerate() {
         match l {
-            Lbl::Base(i) => { mid_pos_of_base.insert(*i, pos); }
-            Lbl::Added1(j) => { mid_pos_of_added1.insert(*j, pos); }
+            Lbl::Base(i) => {
+                mid_pos_of_base.insert(*i, pos);
+            }
+            Lbl::Added1(j) => {
+                mid_pos_of_added1.insert(*j, pos);
+            }
             Lbl::Added2(_) => {}
         }
     }
@@ -285,7 +275,11 @@ fn absorb_triangles(d1: Option<StlTrianglesDiff>, d2: Option<StlTrianglesDiff>) 
         (None, Some(d2)) => return Some(d2),
         (Some(d1), Some(d2)) => absorb_pair(&d1, &d2),
     };
-    if merged.is_empty() { None } else { Some(merged) }
+    if merged.is_empty() {
+        None
+    } else {
+        Some(merged)
+    }
 }
 //#endregion 🔖️AbsorbLabels
 //#endregion 🔖️TrianglesTriple
@@ -310,11 +304,7 @@ impl MutationDiff<StlSnapshot> for StlDiff {
             Some(td) => apply_triangles_diff(&base.triangles, td),
             None => base.triangles.clone(),
         };
-        StlSnapshot {
-            schema: base.schema.clone(),
-            solid_name: self.solid_name.clone().unwrap_or_else(|| base.solid_name.clone()),
-            triangles,
-        }
+        StlSnapshot { schema: base.schema.clone(), solid_name: self.solid_name.clone().unwrap_or_else(|| base.solid_name.clone()), triangles }
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalar
@@ -362,22 +352,13 @@ pub fn diff_set_solid_name(name: &str) -> StlDiff {
     StlDiff { solid_name: Some(name.to_string()), triangles: None }
 }
 pub fn diff_insert_triangle(index: usize, triangle: StlTriangle) -> StlDiff {
-    StlDiff {
-        solid_name: None,
-        triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![], added: vec![StlTriangleAdded { index, triangle }] }),
-    }
+    StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![], added: vec![StlTriangleAdded { index, triangle }] }) }
 }
 pub fn diff_remove_triangle(index: usize) -> StlDiff {
-    StlDiff {
-        solid_name: None,
-        triangles: Some(StlTrianglesDiff { removed: vec![index], modified: vec![], added: vec![] }),
-    }
+    StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![index], modified: vec![], added: vec![] }) }
 }
 fn diff_triangle_field(index: usize, field: StlTriangleDiff) -> StlDiff {
-    StlDiff {
-        solid_name: None,
-        triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![StlTriangleModified { index, diff: field }], added: vec![] }),
-    }
+    StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![StlTriangleModified { index, diff: field }], added: vec![] }) }
 }
 pub fn diff_set_triangle_normal(index: usize, normal: [f64; 3]) -> StlDiff {
     diff_triangle_field(index, StlTriangleDiff { normal: Some(normal), vertices: None })
@@ -418,8 +399,12 @@ pub(crate) fn hex_encode_str(s: &str) -> String {
 pub(crate) fn hex_decode_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) fn parse_f64(s: &str) -> Result<f64, String> { s.parse().map_err(|e: std::num::ParseFloatError| e.to_string()) }
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
+    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
+}
+pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
 
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only): a top-level `sep` inside nested brackets is
 /// never mistaken for a field separator — the whole hand-rolled grammar's parsing primitive (same
@@ -473,13 +458,13 @@ pub(crate) fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, St
 pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
     match opt {
         None => out.push(0),
-        Some(v) => { out.push(1); enc(v, out); }
+        Some(v) => {
+            out.push(1);
+            enc(v, out);
+        }
     }
 }
-pub(crate) fn read_option_bin<T>(
-    reader: &mut store::ByteReader<'_>,
-    dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>,
-) -> Result<Option<T>, String> {
+pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(dec(reader)?)),
@@ -530,7 +515,9 @@ pub(crate) fn dec_vec3_bin(reader: &mut store::ByteReader<'_>) -> Result<[f64; 3
     Ok([read_f64_bin(reader)?, read_f64_bin(reader)?, read_f64_bin(reader)?])
 }
 pub(crate) fn enc_vertices_bin(vs: &[[f64; 3]; 3], out: &mut Vec<u8>) {
-    for v in vs { enc_vec3_bin(v, out); }
+    for v in vs {
+        enc_vec3_bin(v, out);
+    }
 }
 pub(crate) fn dec_vertices_bin(reader: &mut store::ByteReader<'_>) -> Result<[[f64; 3]; 3], String> {
     Ok([dec_vec3_bin(reader)?, dec_vec3_bin(reader)?, dec_vec3_bin(reader)?])
@@ -547,15 +534,21 @@ pub(crate) fn dec_triangle_bin(reader: &mut store::ByteReader<'_>) -> Result<Stl
 //#region 🔖️DiffValueCodecs
 fn enc_triangle_diff(d: &StlTriangleDiff) -> String {
     let mut parts = Vec::new();
-    if let Some(v) = &d.normal { parts.push(format!("N:{}", enc_vec3(v))); }
-    if let Some(v) = &d.vertices { parts.push(format!("V:{}", enc_vertices(v))); }
+    if let Some(v) = &d.normal {
+        parts.push(format!("N:{}", enc_vec3(v)));
+    }
+    if let Some(v) = &d.vertices {
+        parts.push(format!("V:{}", enc_vertices(v)));
+    }
     format!("[{}]", parts.join(","))
 }
 fn dec_triangle_diff(s: &str) -> Result<StlTriangleDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = StlTriangleDiff::default();
     for entry in split_top_level(inner, ',') {
-        if entry.is_empty() { continue; }
+        if entry.is_empty() {
+            continue;
+        }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("triangle diff: bad entry {entry:?}"))?;
         match tag {
             "N" => d.normal = Some(dec_vec3(val)?),
@@ -579,21 +572,20 @@ pub(crate) fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usiz
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
     let parse_entries = |s: &str| -> Result<Vec<(usize, String)>, String> {
-        split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("collection entry: bad entry {entry:?}"))?;
-            Ok((parse_usize(idx)?, rest.to_string()))
-        }).collect()
+        split_top_level(strip_brackets(s)?, ',')
+            .into_iter()
+            .filter(|s| !s.is_empty())
+            .map(|entry| {
+                let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("collection entry: bad entry {entry:?}"))?;
+                Ok((parse_usize(idx)?, rest.to_string()))
+            })
+            .collect()
     };
     Ok((removed, parse_entries(modified_s)?, parse_entries(added_s)?))
 }
 
 fn enc_triangles_diff(d: &StlTrianglesDiff) -> String {
-    enc_collection_triple(
-        "triangles",
-        &d.removed,
-        &d.modified.iter().map(|m| (m.index, enc_triangle_diff(&m.diff))).collect::<Vec<_>>(),
-        &d.added.iter().map(|a| (a.index, enc_triangle(&a.triangle))).collect::<Vec<_>>(),
-    )
+    enc_collection_triple("triangles", &d.removed, &d.modified.iter().map(|m| (m.index, enc_triangle_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_triangle(&a.triangle))).collect::<Vec<_>>())
 }
 fn dec_triangles_diff(body: &str) -> Result<StlTrianglesDiff, String> {
     let (removed, modified, added) = dec_collection_triple(body)?;
@@ -666,8 +658,12 @@ pub(crate) fn dec_triangles_diff_bin(reader: &mut store::ByteReader<'_>) -> Resu
 //#region 🔖️TopLevel
 fn print_stl_diff(d: &StlDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.solid_name { tokens.push(format!("solid-name={}", hex_encode_str(v))); }
-    if let Some(v) = &d.triangles { tokens.push(enc_triangles_diff(v)); }
+    if let Some(v) = &d.solid_name {
+        tokens.push(format!("solid-name={}", hex_encode_str(v)));
+    }
+    if let Some(v) = &d.triangles {
+        tokens.push(enc_triangles_diff(v));
+    }
     tokens.join(" ")
 }
 fn parse_stl_diff(line: &str) -> Result<StlDiff, String> {
@@ -676,9 +672,13 @@ fn parse_stl_diff(line: &str) -> Result<StlDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("solid-name=") { d.solid_name = Some(hex_decode_str(rest)?); }
-        else if let Some(rest) = token.strip_prefix("triangles{") { d.triangles = Some(dec_triangles_diff(rest.strip_suffix('}').ok_or_else(|| "triangles: missing closing brace".to_string())?)?); }
-        else { return Err(format!("stl diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("solid-name=") {
+            d.solid_name = Some(hex_decode_str(rest)?);
+        } else if let Some(rest) = token.strip_prefix("triangles{") {
+            d.triangles = Some(dec_triangles_diff(rest.strip_suffix('}').ok_or_else(|| "triangles: missing closing brace".to_string())?)?);
+        } else {
+            return Err(format!("stl diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -709,8 +709,12 @@ impl protocol::DiffCodec for StlDiff {
     /// `mechanism_gaps` entry every collection-triple diff hits this wave).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags = 0u8;
-        if self.solid_name.is_some() { flags |= 0b01; }
-        if self.triangles.is_some() { flags |= 0b10; }
+        if self.solid_name.is_some() {
+            flags |= 0b01;
+        }
+        if self.triangles.is_some() {
+            flags |= 0b10;
+        }
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
         if let Some(name) = &self.solid_name {
             write_str_bin(&mut out, name);
@@ -724,16 +728,8 @@ impl protocol::DiffCodec for StlDiff {
         let mut reader = store::ByteReader::new(bytes);
         let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
         let flags = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff flags", offset: 1, detail: e.to_string() })?;
-        let solid_name = if flags & 0b01 != 0 {
-            Some(read_str_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff solid_name", offset: reader.position() as u64, detail: e })?)
-        } else {
-            None
-        };
-        let triangles = if flags & 0b10 != 0 {
-            Some(dec_triangles_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff triangles", offset: reader.position() as u64, detail: e })?)
-        } else {
-            None
-        };
+        let solid_name = if flags & 0b01 != 0 { Some(read_str_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff solid_name", offset: reader.position() as u64, detail: e })?) } else { None };
+        let triangles = if flags & 0b10 != 0 { Some(dec_triangles_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff triangles", offset: reader.position() as u64, detail: e })?) } else { None };
         Ok(StlDiff { solid_name, triangles })
     }
 }
@@ -754,23 +750,13 @@ pub(crate) fn demo_diff_cases() -> Vec<StlDiff> {
             solid_name: Some("after".into()),
             triangles: Some(StlTrianglesDiff {
                 removed: vec![2],
-                modified: vec![StlTriangleModified {
-                    index: 0,
-                    diff: StlTriangleDiff { normal: Some([0.0, 0.0, 1.0]), vertices: Some([[5.0, 0.0, 0.0], [6.0, 0.0, 0.0], [5.0, 1.0, 0.0]]) },
-                }],
-                added: vec![StlTriangleAdded {
-                    index: 1,
-                    triangle: StlTriangle { normal: [-1.0, 0.0, 0.0], vertices: [[20.0, 0.0, 0.0], [21.0, 0.0, 0.0], [20.0, 1.0, 0.0]] },
-                }],
+                modified: vec![StlTriangleModified { index: 0, diff: StlTriangleDiff { normal: Some([0.0, 0.0, 1.0]), vertices: Some([[5.0, 0.0, 0.0], [6.0, 0.0, 0.0], [5.0, 1.0, 0.0]]) } }],
+                added: vec![StlTriangleAdded { index: 1, triangle: StlTriangle { normal: [-1.0, 0.0, 0.0], vertices: [[20.0, 0.0, 0.0], [21.0, 0.0, 0.0], [20.0, 1.0, 0.0]] } }],
             }),
         },
         StlDiff {
             solid_name: None,
-            triangles: Some(StlTrianglesDiff {
-                removed: vec![],
-                modified: vec![StlTriangleModified { index: 0, diff: StlTriangleDiff { normal: None, vertices: Some([[1.0, 1.0, 1.0], [2.0, 2.0, 2.0], [3.0, 3.0, 3.0]]) } }],
-                added: vec![],
-            }),
+            triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![StlTriangleModified { index: 0, diff: StlTriangleDiff { normal: None, vertices: Some([[1.0, 1.0, 1.0], [2.0, 2.0, 2.0], [3.0, 3.0, 3.0]]) } }], added: vec![] }),
         },
     ]
 }

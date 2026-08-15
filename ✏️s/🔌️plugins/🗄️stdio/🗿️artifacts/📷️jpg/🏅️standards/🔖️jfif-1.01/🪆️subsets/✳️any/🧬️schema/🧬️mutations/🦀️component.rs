@@ -115,9 +115,7 @@ impl Mutation<JpgSnapshot> for JpgMutation {
         match self {
             JpgMutation::NoMutation => JpgDiff::default(),
             JpgMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
-            JpgMutation::SetJfifHeader { version, density_units, x_density, y_density, thumbnail } => {
-                diff::diff_set_jfif_header(base, *version, *density_units, *x_density, *y_density, thumbnail.clone())
-            }
+            JpgMutation::SetJfifHeader { version, density_units, x_density, y_density, thumbnail } => diff::diff_set_jfif_header(base, *version, *density_units, *x_density, *y_density, thumbnail.clone()),
             JpgMutation::SetQuantTable { table } => diff::diff_set_quant_table(base, table.clone()),
             JpgMutation::RemoveQuantTable { id } => diff::diff_remove_quant_table(base, *id),
             JpgMutation::SetHuffmanTable { table } => diff::diff_set_huffman_table(base, table.clone()),
@@ -136,13 +134,9 @@ impl Mutation<JpgSnapshot> for JpgMutation {
         match self {
             JpgMutation::NoMutation => vec![JpgMutation::NoMutation],
             JpgMutation::SetSnapshot { .. } => vec![JpgMutation::SetSnapshot { snapshot: base.clone() }],
-            JpgMutation::SetJfifHeader { .. } => vec![JpgMutation::SetJfifHeader {
-                version: base.jfif_version,
-                density_units: base.jfif_density_units,
-                x_density: base.jfif_x_density,
-                y_density: base.jfif_y_density,
-                thumbnail: base.jfif_thumbnail.clone(),
-            }],
+            JpgMutation::SetJfifHeader { .. } => {
+                vec![JpgMutation::SetJfifHeader { version: base.jfif_version, density_units: base.jfif_density_units, x_density: base.jfif_x_density, y_density: base.jfif_y_density, thumbnail: base.jfif_thumbnail.clone() }]
+            }
             JpgMutation::SetQuantTable { table } => match base.quant_tables.iter().find(|t| t.id == table.id) {
                 Some(existing) => vec![JpgMutation::SetQuantTable { table: existing.clone() }],
                 None => vec![JpgMutation::RemoveQuantTable { id: table.id }],
@@ -186,8 +180,12 @@ impl Mutation<JpgSnapshot> for JpgMutation {
 /// (space-separated, same shape the derive's own handcrafted-wrapper convention uses per
 /// `f6-recon-report.md` §2), one match arm per variant (no `DslVariants` scaffolding available
 /// since nothing here derives it).
-fn enc_str_hex(s: &str) -> String { diff::hex_encode(s.as_bytes()) }
-fn dec_str_hex(s: &str) -> Result<String, String> { String::from_utf8(diff::hex_decode(s)?).map_err(|e| e.to_string()) }
+fn enc_str_hex(s: &str) -> String {
+    diff::hex_encode(s.as_bytes())
+}
+fn dec_str_hex(s: &str) -> Result<String, String> {
+    String::from_utf8(diff::hex_decode(s)?).map_err(|e| e.to_string())
+}
 
 /// 🧬️ Positional `[schema,width,height,pixels,re-encode-quality,jfif-version,jfif-density-units,
 /// jfif-x-density,jfif-y-density,jfif-thumbnail,frame,sof-marker,arithmetic,quant-tables,
@@ -249,12 +247,9 @@ fn print_jpg_mutation(m: &JpgMutation) -> String {
     match m {
         JpgMutation::NoMutation => "no-mutation".to_string(),
         JpgMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_jpg_snapshot(snapshot)),
-        JpgMutation::SetJfifHeader { version, density_units, x_density, y_density, thumbnail } => format!(
-            "set-jfif-header version={} density-units={} x-density={x_density} y-density={y_density} thumbnail={}",
-            diff::enc_version(version),
-            diff::enc_density_units(density_units),
-            diff::encode_option(thumbnail, diff::enc_thumbnail),
-        ),
+        JpgMutation::SetJfifHeader { version, density_units, x_density, y_density, thumbnail } => {
+            format!("set-jfif-header version={} density-units={} x-density={x_density} y-density={y_density} thumbnail={}", diff::enc_version(version), diff::enc_density_units(density_units), diff::encode_option(thumbnail, diff::enc_thumbnail),)
+        }
         JpgMutation::SetQuantTable { table } => format!("set-quant-table table={}", diff::enc_quant_table(table)),
         JpgMutation::RemoveQuantTable { id } => format!("remove-quant-table id={id}"),
         JpgMutation::SetHuffmanTable { table } => format!("set-huffman-table table={}", diff::enc_huffman_table(table)),
@@ -271,13 +266,7 @@ fn parse_jpg_mutation(line: &str) -> Result<JpgMutation, String> {
         return Ok(JpgMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("jpg mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("jpg mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("jpg mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
         "set-snapshot" => Ok(JpgMutation::SetSnapshot { snapshot: dec_jpg_snapshot(arg("snapshot")?)? }),
@@ -331,12 +320,18 @@ fn enc_jpg_snapshot_bin(s: &JpgSnapshot, out: &mut Vec<u8>) {
     out.push(s.sof_marker);
     out.push(if s.arithmetic { 1 } else { 0 });
     store::pack_rt::write_varint_u64(out, s.quant_tables.len() as u64);
-    for t in &s.quant_tables { diff::enc_quant_table_bin(t, out); }
+    for t in &s.quant_tables {
+        diff::enc_quant_table_bin(t, out);
+    }
     store::pack_rt::write_varint_u64(out, s.huffman_tables.len() as u64);
-    for t in &s.huffman_tables { diff::enc_huffman_table_bin(t, out); }
+    for t in &s.huffman_tables {
+        diff::enc_huffman_table_bin(t, out);
+    }
     diff::write_opt(out, &s.restart_interval, |v, out| store::pack_rt::write_varint_u64(out, *v as u64));
     store::pack_rt::write_varint_u64(out, s.other_segments.len() as u64);
-    for seg in &s.other_segments { diff::enc_segment_bin(seg, out); }
+    for seg in &s.other_segments {
+        diff::enc_segment_bin(seg, out);
+    }
 }
 fn dec_jpg_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgSnapshot, String> {
     let schema = String::from_utf8(diff::read_bytes_lp(reader)?).map_err(|e| e.to_string())?;
@@ -354,18 +349,21 @@ fn dec_jpg_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgSnapsho
     let arithmetic = reader.read_u8().map_err(|e| e.to_string())? != 0;
     let qc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut quant_tables = Vec::with_capacity(qc as usize);
-    for _ in 0..qc { quant_tables.push(diff::dec_quant_table_bin(reader)?); }
+    for _ in 0..qc {
+        quant_tables.push(diff::dec_quant_table_bin(reader)?);
+    }
     let hc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut huffman_tables = Vec::with_capacity(hc as usize);
-    for _ in 0..hc { huffman_tables.push(diff::dec_huffman_table_bin(reader)?); }
+    for _ in 0..hc {
+        huffman_tables.push(diff::dec_huffman_table_bin(reader)?);
+    }
     let restart_interval = diff::read_opt(reader, |r| Ok(r.read_varint_u64().map_err(|e| e.to_string())? as u16))?;
     let sc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut other_segments = Vec::with_capacity(sc as usize);
-    for _ in 0..sc { other_segments.push(diff::dec_segment_bin(reader)?); }
-    Ok(JpgSnapshot {
-        schema, width, height, pixels, re_encode_quality, jfif_version, jfif_density_units, jfif_x_density, jfif_y_density,
-        jfif_thumbnail, frame, sof_marker, arithmetic, quant_tables, huffman_tables, restart_interval, other_segments,
-    })
+    for _ in 0..sc {
+        other_segments.push(diff::dec_segment_bin(reader)?);
+    }
+    Ok(JpgSnapshot { schema, width, height, pixels, re_encode_quality, jfif_version, jfif_density_units, jfif_x_density, jfif_y_density, jfif_thumbnail, frame, sof_marker, arithmetic, quant_tables, huffman_tables, restart_interval, other_segments })
 }
 //#endregion 🔖️SnapshotBinaryCodec
 
@@ -381,8 +379,13 @@ impl protocol::OpBinary for JpgMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, 0u8];
         match self {
-            JpgMutation::NoMutation => { out[1] = 0; }
-            JpgMutation::SetSnapshot { snapshot } => { out[1] = 1; enc_jpg_snapshot_bin(snapshot, &mut out); }
+            JpgMutation::NoMutation => {
+                out[1] = 0;
+            }
+            JpgMutation::SetSnapshot { snapshot } => {
+                out[1] = 1;
+                enc_jpg_snapshot_bin(snapshot, &mut out);
+            }
             JpgMutation::SetJfifHeader { version, density_units, x_density, y_density, thumbnail } => {
                 out[1] = 2;
                 diff::enc_version_bin(version, &mut out);
@@ -391,10 +394,22 @@ impl protocol::OpBinary for JpgMutation {
                 store::pack_rt::write_varint_u64(&mut out, *y_density as u64);
                 diff::write_opt(&mut out, thumbnail, |t, out| diff::enc_thumbnail_bin(t, out));
             }
-            JpgMutation::SetQuantTable { table } => { out[1] = 3; diff::enc_quant_table_bin(table, &mut out); }
-            JpgMutation::RemoveQuantTable { id } => { out[1] = 4; out.push(*id); }
-            JpgMutation::SetHuffmanTable { table } => { out[1] = 5; diff::enc_huffman_table_bin(table, &mut out); }
-            JpgMutation::RemoveHuffmanTable { key } => { out[1] = 6; diff::enc_huffman_key_bin(key, &mut out); }
+            JpgMutation::SetQuantTable { table } => {
+                out[1] = 3;
+                diff::enc_quant_table_bin(table, &mut out);
+            }
+            JpgMutation::RemoveQuantTable { id } => {
+                out[1] = 4;
+                out.push(*id);
+            }
+            JpgMutation::SetHuffmanTable { table } => {
+                out[1] = 5;
+                diff::enc_huffman_table_bin(table, &mut out);
+            }
+            JpgMutation::RemoveHuffmanTable { key } => {
+                out[1] = 6;
+                diff::enc_huffman_key_bin(key, &mut out);
+            }
             JpgMutation::SetRestartInterval { restart_interval } => {
                 out[1] = 7;
                 diff::write_opt(&mut out, restart_interval, |v, out| store::pack_rt::write_varint_u64(out, *v as u64));
@@ -404,8 +419,14 @@ impl protocol::OpBinary for JpgMutation {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 diff::enc_segment_bin(segment, &mut out);
             }
-            JpgMutation::RemoveOtherSegment { index } => { out[1] = 9; store::pack_rt::write_varint_u64(&mut out, *index as u64); }
-            JpgMutation::SetPixels { pixels } => { out[1] = 10; diff::write_bytes_lp(&mut out, pixels); }
+            JpgMutation::RemoveOtherSegment { index } => {
+                out[1] = 9;
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+            }
+            JpgMutation::SetPixels { pixels } => {
+                out[1] = 10;
+                diff::write_bytes_lp(&mut out, pixels);
+            }
             JpgMutation::SetReEncodeQuality { quality } => {
                 out[1] = 11;
                 diff::write_opt(&mut out, quality, |v, out| out.push(*v));
@@ -456,11 +477,15 @@ impl protocol::OpBinary for JpgMutation {
 /// conformance tests. `pub(crate)` (not `#[cfg(test)]`-gated) so the engine's non-test conformance
 /// module can reuse it, matching png's own `demo_mutation_cases()` visibility.
 pub(crate) fn demo_mutation_cases() -> Vec<JpgMutation> {
-    fn quant(id: u8, seed: u16) -> JpgQuantTable { JpgQuantTable { id, precision: 0, values: [seed; 64] } }
+    fn quant(id: u8, seed: u16) -> JpgQuantTable {
+        JpgQuantTable { id, precision: 0, values: [seed; 64] }
+    }
     fn huffman(class: crate::artifacts::jpg::schema::snapshot::JpgHuffmanClass, id: u8, seed: u8) -> JpgHuffmanTable {
         JpgHuffmanTable { id, class, bits: [seed; 16], values: vec![seed, seed.wrapping_add(1)] }
     }
-    fn segment(marker: u8, data: Vec<u8>) -> JpgSegment { JpgSegment { marker, data } }
+    fn segment(marker: u8, data: Vec<u8>) -> JpgSegment {
+        JpgSegment { marker, data }
+    }
     use crate::artifacts::jpg::schema::snapshot::{JpgFrameComponent, JpgFrameHeader, JpgHuffmanClass};
 
     let base = JpgSnapshot {
@@ -474,15 +499,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<JpgMutation> {
         jfif_x_density: 1,
         jfif_y_density: 1,
         jfif_thumbnail: None,
-        frame: Some(JpgFrameHeader {
-            precision: 8,
-            width: 4,
-            height: 4,
-            components: vec![
-                JpgFrameComponent { id: 1, h_sampling: 2, v_sampling: 2, quant_table_id: 0 },
-                JpgFrameComponent { id: 2, h_sampling: 1, v_sampling: 1, quant_table_id: 1 },
-            ],
-        }),
+        frame: Some(JpgFrameHeader { precision: 8, width: 4, height: 4, components: vec![JpgFrameComponent { id: 1, h_sampling: 2, v_sampling: 2, quant_table_id: 0 }, JpgFrameComponent { id: 2, h_sampling: 1, v_sampling: 1, quant_table_id: 1 }] }),
         sof_marker: 0xC0,
         arithmetic: false,
         quant_tables: vec![quant(0, 10)],
@@ -494,7 +511,14 @@ pub(crate) fn demo_mutation_cases() -> Vec<JpgMutation> {
     vec![
         JpgMutation::NoMutation,
         JpgMutation::SetSnapshot { snapshot: base.clone() },
-        JpgMutation::SetSnapshot { snapshot: { let mut s = base.clone(); s.frame = None; s.jfif_thumbnail = None; s } },
+        JpgMutation::SetSnapshot {
+            snapshot: {
+                let mut s = base.clone();
+                s.frame = None;
+                s.jfif_thumbnail = None;
+                s
+            },
+        },
         JpgMutation::SetJfifHeader { version: (1, 2), density_units: JfifDensityUnits::PixelsPerCm, x_density: 300, y_density: 300, thumbnail: Some(JfifThumbnail { width: 1, height: 1, rgb_data: vec![9, 9, 9] }) },
         JpgMutation::SetJfifHeader { version: (1, 1), density_units: JfifDensityUnits::Aspect, x_density: 1, y_density: 1, thumbnail: None },
         JpgMutation::SetQuantTable { table: quant(0, 77) },
@@ -527,7 +551,9 @@ mod tests {
     fn huffman(class: JpgHuffmanClass, id: u8, seed: u8) -> JpgHuffmanTable {
         JpgHuffmanTable { id, class, bits: [seed; 16], values: vec![seed, seed.wrapping_add(1)] }
     }
-    fn segment(marker: u8, data: Vec<u8>) -> JpgSegment { JpgSegment { marker, data } }
+    fn segment(marker: u8, data: Vec<u8>) -> JpgSegment {
+        JpgSegment { marker, data }
+    }
 
     fn base_snapshot() -> JpgSnapshot {
         JpgSnapshot {
@@ -545,10 +571,7 @@ mod tests {
                 precision: 8,
                 width: 4,
                 height: 4,
-                components: vec![
-                    JpgFrameComponent { id: 1, h_sampling: 2, v_sampling: 2, quant_table_id: 0 },
-                    JpgFrameComponent { id: 2, h_sampling: 1, v_sampling: 1, quant_table_id: 1 },
-                ],
+                components: vec![JpgFrameComponent { id: 1, h_sampling: 2, v_sampling: 2, quant_table_id: 0 }, JpgFrameComponent { id: 2, h_sampling: 1, v_sampling: 1, quant_table_id: 1 }],
             }),
             sof_marker: 0xC0,
             arithmetic: false,
@@ -583,10 +606,7 @@ mod tests {
                 precision: 8,
                 width: 10,
                 height: 20,
-                components: vec![
-                    JpgFrameComponent { id: 1, h_sampling: 2, v_sampling: 2, quant_table_id: 0 },
-                    JpgFrameComponent { id: 9, h_sampling: 1, v_sampling: 1, quant_table_id: 1 },
-                ],
+                components: vec![JpgFrameComponent { id: 1, h_sampling: 2, v_sampling: 2, quant_table_id: 0 }, JpgFrameComponent { id: 9, h_sampling: 1, v_sampling: 1, quant_table_id: 1 }],
             }),
             sof_marker: 0xC0,
             arithmetic: false,
@@ -609,12 +629,7 @@ mod tests {
             jfif_x_density: 1,
             jfif_y_density: 1,
             jfif_thumbnail: None,
-            frame: Some(JpgFrameHeader {
-                precision: 8,
-                width: 11,
-                height: 21,
-                components: vec![JpgFrameComponent { id: 1, h_sampling: 1, v_sampling: 1, quant_table_id: 5 }],
-            }),
+            frame: Some(JpgFrameHeader { precision: 8, width: 11, height: 21, components: vec![JpgFrameComponent { id: 1, h_sampling: 1, v_sampling: 1, quant_table_id: 5 }] }),
             sof_marker: 0xC0,
             arithmetic: false,
             quant_tables: vec![quant(0, 99)],
@@ -637,7 +652,13 @@ mod tests {
     fn all_variants(base: &JpgSnapshot) -> Vec<JpgMutation> {
         vec![
             JpgMutation::NoMutation,
-            JpgMutation::SetSnapshot { snapshot: { let mut s = base.clone(); s.width = 99; s } },
+            JpgMutation::SetSnapshot {
+                snapshot: {
+                    let mut s = base.clone();
+                    s.width = 99;
+                    s
+                },
+            },
             JpgMutation::SetJfifHeader { version: (1, 2), density_units: JfifDensityUnits::PixelsPerCm, x_density: 300, y_density: 300, thumbnail: Some(JfifThumbnail { width: 1, height: 1, rgb_data: vec![9, 9, 9] }) },
             JpgMutation::SetQuantTable { table: quant(0, 77) },
             JpgMutation::SetQuantTable { table: quant(3, 55) },
@@ -776,10 +797,7 @@ mod tests {
     //#region 🔖️codec_retention_law
     #[test]
     fn codec_retention_law() {
-        let bytes = std::fs::read(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../🗿️artifacts/📷️jpg/📚️examples/🎬️demo/🖼️assets/📷️example.jpg"
-        ));
+        let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/📷️jpg/📚️examples/🎬️demo/🖼️assets/📷️example.jpg"));
         let bytes = match bytes {
             Ok(b) if !b.is_empty() => b,
             // No usable fixture on disk at test time (or a different workspace layout) — fall
@@ -789,7 +807,10 @@ mod tests {
                 let h = 16u32;
                 let mut pixels = vec![0u8; (w * h * 4) as usize];
                 for (i, px) in pixels.chunks_mut(4).enumerate() {
-                    px[0] = (i * 7 % 255) as u8; px[1] = (i * 13 % 255) as u8; px[2] = (i * 17 % 255) as u8; px[3] = 255;
+                    px[0] = (i * 7 % 255) as u8;
+                    px[1] = (i * 13 % 255) as u8;
+                    px[2] = (i * 17 % 255) as u8;
+                    px[3] = 255;
                 }
                 let snap = JpgSnapshot { width: w, height: h, pixels, ..JpgSnapshot::default() };
                 crate::artifacts::jpg::engine::encode_jpg(&snap).expect("encode synthetic fallback")
@@ -922,7 +943,14 @@ mod tests {
         let mutations = vec![
             JpgMutation::NoMutation,
             JpgMutation::SetSnapshot { snapshot: base.clone() },
-            JpgMutation::SetSnapshot { snapshot: { let mut s = base.clone(); s.frame = None; s.jfif_thumbnail = None; s } },
+            JpgMutation::SetSnapshot {
+                snapshot: {
+                    let mut s = base.clone();
+                    s.frame = None;
+                    s.jfif_thumbnail = None;
+                    s
+                },
+            },
             JpgMutation::SetJfifHeader { version: (1, 2), density_units: JfifDensityUnits::PixelsPerCm, x_density: 300, y_density: 300, thumbnail: Some(JfifThumbnail { width: 1, height: 1, rgb_data: vec![9, 9, 9] }) },
             JpgMutation::SetJfifHeader { version: (1, 1), density_units: JfifDensityUnits::Aspect, x_density: 1, y_density: 1, thumbnail: None },
             JpgMutation::SetQuantTable { table: quant(0, 77) },

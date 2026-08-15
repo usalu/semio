@@ -8619,7 +8619,13 @@ pub mod transfer {
                     past.push(sym);
                     future.push(symbols[i]);
                 }
-                crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::mutual::mutual_information(&past, &future, crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::estimators::DiscreteMethod::Plugin, LogBase::Nats)?.value
+                crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::mutual::mutual_information(
+                    &past,
+                    &future,
+                    crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::estimators::DiscreteMethod::Plugin,
+                    LogBase::Nats,
+                )?
+                .value
             }
             TeBackend::Knn { k } => {
                 let past = history_matrix(x, k_history, k_history);
@@ -9140,13 +9146,15 @@ pub mod ml {
             let mut mean_member_entropy_nats = 0.0_f64;
             for m in 0..n_members {
                 let member = &sample[m * n_classes..(m + 1) * n_classes];
-                let p = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::counts::validate_probabilities(member, crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::Tolerances::default())?;
+                let p =
+                    crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::counts::validate_probabilities(member, crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::Tolerances::default())?;
                 for c in 0..n_classes {
                     mean_probs[c] += p[c] / n_members as f64;
                 }
                 mean_member_entropy_nats += -p.iter().map(|&v| x_ln_x(v)).sum::<f64>() / n_members as f64;
             }
-            let mean_probs = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::counts::validate_probabilities(&mean_probs, crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::Tolerances::default())?;
+            let mean_probs =
+                crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::counts::validate_probabilities(&mean_probs, crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::Tolerances::default())?;
             let predictive_nats = -mean_probs.iter().map(|&v| x_ln_x(v)).sum::<f64>();
             let bald_nats = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::clamp_near_zero(predictive_nats - mean_member_entropy_nats, 1e-9);
 
@@ -9693,7 +9701,11 @@ pub mod features {
 
     // #region 🔖️StandardFeatures
     fn feature_histogram_entropy(x: &[f64]) -> Result<Estimate, EntropyError> {
-        crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::continuous::entropy_continuous(x, &crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::continuous::ContinuousMethod::Histogram(BinsSpec::Sturges), LogBase::Nats)
+        crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::continuous::entropy_continuous(
+            x,
+            &crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::continuous::ContinuousMethod::Histogram(BinsSpec::Sturges),
+            LogBase::Nats,
+        )
     }
 
     fn feature_sample_entropy(x: &[f64]) -> Result<Estimate, EntropyError> {

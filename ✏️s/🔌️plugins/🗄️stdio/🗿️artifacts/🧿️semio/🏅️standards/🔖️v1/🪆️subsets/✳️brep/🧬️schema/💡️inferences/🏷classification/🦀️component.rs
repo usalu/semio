@@ -9,19 +9,19 @@
 //! queries (named as a future co-tenant of this facet) have not moved yet — still batch2 "queries"
 //! in the peel plan — so this file is classify-only for now.
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{FaceId, LoopId, SolidId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::bounding_volume::{build_face_bvh, FaceBvh};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-use semio_framework_3d::engine::PointClassification;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect::intersect_curve_surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::bounding_volume::{build_face_bvh, FaceBvh};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::closest_point_on_solid;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::predicates::{orient2d, Orient};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{FaceId, LoopId, SolidId};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Iv;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::predicates::{orient2d, Orient};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec3};
+use semio_framework_3d::engine::PointClassification;
 
 // #region 🔖️Api
 
@@ -54,14 +54,7 @@ pub fn point_in_face_uv(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> Result
     Ok(true)
 }
 
-fn point_in_loop_sampled(
-    body: &Body,
-    face: FaceId,
-    loop_id: LoopId,
-    uv: Pnt2,
-    tol: f64,
-    edge_samples: usize,
-) -> Result<bool, KernelError> {
+fn point_in_loop_sampled(body: &Body, face: FaceId, loop_id: LoopId, uv: Pnt2, tol: f64, edge_samples: usize) -> Result<bool, KernelError> {
     let surface = face_surface(body, face)?;
     let poly = loop_uv_polygon_sampled(body, loop_id, surface, edge_samples)?;
     if poly.len() < 3 {
@@ -158,12 +151,7 @@ fn loop_uv_polygon(body: &Body, loop_id: LoopId, surface: &Surface) -> Result<Ve
     loop_uv_polygon_sampled(body, loop_id, surface, 8)
 }
 
-fn loop_uv_polygon_sampled(
-    body: &Body,
-    loop_id: LoopId,
-    surface: &Surface,
-    edge_samples: usize,
-) -> Result<Vec<Pnt2>, KernelError> {
+fn loop_uv_polygon_sampled(body: &Body, loop_id: LoopId, surface: &Surface, edge_samples: usize) -> Result<Vec<Pnt2>, KernelError> {
     let mut poly: Vec<Pnt2> = Vec::new();
     let coedges = body.loop_coedges(loop_id);
     if edge_samples == 0 {
@@ -250,7 +238,7 @@ fn surface_uv(surface: &Surface, p: Pnt3) -> Pnt2 {
         }
         Surface::Nurbs { .. } => {
             let dom = surface.domain();
-            Pnt2::new(dom.0.0, dom.1.0)
+            Pnt2::new(dom.0 .0, dom.1 .0)
         }
     }
 }
@@ -264,13 +252,7 @@ fn face_surface<'a>(body: &'a Body, face: FaceId) -> Result<&'a Surface, KernelE
 
 // #region 🔖️RayCast
 
-fn classify_by_ray_consensus(
-    body: &Body,
-    solid: SolidId,
-    _bvh: &FaceBvh,
-    point: Pnt3,
-    tol: f64,
-) -> Result<PointClassification, KernelError> {
+fn classify_by_ray_consensus(body: &Body, solid: SolidId, _bvh: &FaceBvh, point: Pnt3, tol: f64) -> Result<PointClassification, KernelError> {
     let mut inside_votes = 0u32;
     let mut outside_votes = 0u32;
     for i in 0..RAY_RETRY_DIRS.len() {
@@ -295,13 +277,7 @@ fn classify_by_ray_consensus(
     }
 }
 
-fn count_ray_crossings(
-    body: &Body,
-    solid: SolidId,
-    origin: Pnt3,
-    dir: Vec3,
-    tol: f64,
-) -> Result<u32, KernelError> {
+fn count_ray_crossings(body: &Body, solid: SolidId, origin: Pnt3, dir: Vec3, tol: f64) -> Result<u32, KernelError> {
     let d = dir.normalized().unwrap_or(Vec3::X);
     let ray = Curve3::Line { origin, dir: d };
     let mut hits = 0u32;
@@ -316,14 +292,7 @@ fn count_ray_crossings(
     Ok(hits)
 }
 
-fn face_ray_hits(
-    body: &Body,
-    face: FaceId,
-    ray: &Curve3,
-    origin: Pnt3,
-    dir: Vec3,
-    tol: f64,
-) -> Result<Vec<f64>, KernelError> {
+fn face_ray_hits(body: &Body, face: FaceId, ray: &Curve3, origin: Pnt3, dir: Vec3, tol: f64) -> Result<Vec<f64>, KernelError> {
     let surface = face_surface(body, face)?;
     let flipped = body.faces.get(face).map(|f| f.flipped).unwrap_or(false);
     match surface {
@@ -332,15 +301,7 @@ fn face_ray_hits(
     }
 }
 
-fn plane_face_hits(
-    body: &Body,
-    face: FaceId,
-    frame: &Frame3,
-    flipped: bool,
-    origin: Pnt3,
-    dir: Vec3,
-    tol: f64,
-) -> Result<Vec<f64>, KernelError> {
+fn plane_face_hits(body: &Body, face: FaceId, frame: &Frame3, flipped: bool, origin: Pnt3, dir: Vec3, tol: f64) -> Result<Vec<f64>, KernelError> {
     let mut normal = frame.z;
     if flipped {
         normal = -normal;
@@ -363,13 +324,7 @@ fn plane_face_hits(
     }
 }
 
-fn general_face_hits(
-    body: &Body,
-    face: FaceId,
-    surface: &Surface,
-    ray: &Curve3,
-    tol: f64,
-) -> Result<Vec<f64>, KernelError> {
+fn general_face_hits(body: &Body, face: FaceId, surface: &Surface, ray: &Curve3, tol: f64) -> Result<Vec<f64>, KernelError> {
     let hits = intersect_curve_surface(ray, surface, tol).unwrap_or_default();
     let mut out = Vec::new();
     for h in hits {
@@ -468,12 +423,12 @@ impl Midpoint for f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Trsf;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{classify_point_on_solid, PointSolidClassification};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::oracle::{ClosedFormMass, Sdf};
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_cylinder, make_sphere};
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::oracle::{ClosedFormMass, Sdf};
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{classify_point_on_solid, PointSolidClassification};
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Trsf;
 
     fn assert_classify(body: &Body, solid: SolidId, p: Pnt3, expected: PointClassification) {
         let got = point_in_solid(body, solid, p, Tol::DEFAULT.value()).unwrap();
@@ -538,10 +493,7 @@ mod tests {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
-        let sdf = Sdf::Box {
-            half_extents: Pnt3::new(1.0, 1.0, 1.0),
-            placement: Trsf::IDENTITY,
-        };
+        let sdf = Sdf::Box { half_extents: Pnt3::new(1.0, 1.0, 1.0), placement: Trsf::IDENTITY };
         assert_classify(&body, solid, Pnt3::new(0.5, 0.5, 0.5), PointClassification::Inside);
         assert_classify(&body, solid, Pnt3::new(3.0, 3.0, 3.0), PointClassification::Outside);
         let _ = ClosedFormMass::box_volume(Pnt3::new(1.0, 1.0, 1.0));
@@ -553,21 +505,10 @@ mod tests {
         let r = 1.5;
         let mut rec = OpRecorder::new();
         let solid = make_sphere(&mut body, r, 24, &mut rec).unwrap();
-        let sdf = Sdf::Sphere {
-            radius: r,
-            placement: Trsf::IDENTITY,
-        };
-        let samples = [
-            Pnt3::new(0.3, 0.4, 0.2),
-            Pnt3::new(r + 0.5, 0.0, 0.0),
-            Pnt3::new(-0.9 * r, 0.3, 0.2),
-        ];
+        let sdf = Sdf::Sphere { radius: r, placement: Trsf::IDENTITY };
+        let samples = [Pnt3::new(0.3, 0.4, 0.2), Pnt3::new(r + 0.5, 0.0, 0.0), Pnt3::new(-0.9 * r, 0.3, 0.2)];
         for p in samples {
-            let expected = if oracle_inside(&sdf, p) {
-                PointClassification::Inside
-            } else {
-                PointClassification::Outside
-            };
+            let expected = if oracle_inside(&sdf, p) { PointClassification::Inside } else { PointClassification::Outside };
             if (p.to_vec().norm() - r).abs() < 1e-6 {
                 continue;
             }
@@ -584,11 +525,7 @@ mod tests {
         let height = 3.0;
         let mut rec = OpRecorder::new();
         let solid = make_cylinder(&mut body, radius, height, 32, &mut rec).unwrap();
-        let sdf = Sdf::Cylinder {
-            radius,
-            half_height: height * 0.5,
-            placement: Trsf::IDENTITY,
-        };
+        let sdf = Sdf::Cylinder { radius, half_height: height * 0.5, placement: Trsf::IDENTITY };
         let outside = Pnt3::new(radius + 1.0, 0.0, height * 0.5);
         assert!(!oracle_inside(&sdf, outside));
         assert_classify(&body, solid, outside, PointClassification::Outside);
@@ -611,11 +548,7 @@ mod tests {
             }
         }
         let n = pts.len().max(1) as f64;
-        let center = Pnt3::new(
-            pts.iter().map(|p| p.x).sum::<f64>() / n,
-            pts.iter().map(|p| p.y).sum::<f64>() / n,
-            pts.iter().map(|p| p.z).sum::<f64>() / n,
-        );
+        let center = Pnt3::new(pts.iter().map(|p| p.x).sum::<f64>() / n, pts.iter().map(|p| p.y).sum::<f64>() / n, pts.iter().map(|p| p.z).sum::<f64>() / n);
         let uv = surface_uv(surface, center);
         assert!(point_in_face_uv(&body, face, uv, 1e-6).unwrap());
     }

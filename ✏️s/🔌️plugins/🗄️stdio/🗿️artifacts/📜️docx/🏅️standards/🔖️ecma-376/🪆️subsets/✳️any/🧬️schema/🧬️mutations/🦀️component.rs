@@ -2,21 +2,19 @@
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, key/index-aware.
 
 use crate::artifacts::docx::schema::diff::{
-    diff_insert_block, diff_insert_style, diff_remove_block, diff_remove_part, diff_remove_style, diff_set_block_content,
-    diff_set_part, diff_set_run_formatting, diff_set_run_text, diff_set_snapshot, diff_set_style_based_on, diff_set_style_name,
-    resolve_blocks, DocxBlockPath, DocxDiff, DocxPathSegment,
+    dec_block, dec_bool, dec_ct_entry, dec_opc_part, dec_rel_owner_entry, dec_str, dec_style, decode_option, enc_block, enc_bool, enc_ct_entry, enc_list, enc_opc_part, enc_rel_owner_entry, enc_str, enc_style, encode_option, hex_decode, hex_encode,
+    parse_usize, split_top_level, strip_brackets,
 };
 use crate::artifacts::docx::schema::diff::{
-    dec_block, dec_bool, dec_ct_entry, dec_opc_part, dec_rel_owner_entry, dec_str, dec_style, decode_option, enc_block, enc_bool,
-    enc_ct_entry, enc_list, enc_opc_part, enc_rel_owner_entry, enc_str, enc_style, encode_option, hex_decode, hex_encode,
-    parse_usize, split_top_level, strip_brackets,
+    diff_insert_block, diff_insert_style, diff_remove_block, diff_remove_part, diff_remove_style, diff_set_block_content, diff_set_part, diff_set_run_formatting, diff_set_run_text, diff_set_snapshot, diff_set_style_based_on, diff_set_style_name,
+    resolve_blocks, DocxBlockPath, DocxDiff, DocxPathSegment,
 };
 use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
 use crate::artifacts::docx::DocxSnapshot;
-use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
-use protocol::{Mutation, OpText};
+use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship, OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 #[cfg(test)]
 use protocol::OpBinary;
+use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -144,9 +142,7 @@ impl Mutation<DocxSnapshot> for DocxMutation {
                 None => DocxDiff::default(),
             },
             DocxMutation::SetRunText { path, run_index, text } => diff_set_run_text(&base.document, path, *run_index, text),
-            DocxMutation::SetRunFormatting { path, run_index, bold, italic, underline } => {
-                diff_set_run_formatting(&base.document, path, *run_index, *bold, *italic, *underline)
-            }
+            DocxMutation::SetRunFormatting { path, run_index, bold, italic, underline } => diff_set_run_formatting(&base.document, path, *run_index, *bold, *italic, *underline),
             DocxMutation::InsertStyle { style } => diff_insert_style(style.clone()),
             DocxMutation::RemoveStyle { id } => diff_remove_style(id),
             DocxMutation::SetStyleName { id, name } => diff_set_style_name(id, name),
@@ -172,7 +168,10 @@ impl Mutation<DocxSnapshot> for DocxMutation {
             DocxMutation::SetRunText { path, run_index, .. } => {
                 let old = resolve_blocks(&base.document.body, &path.segments)
                     .and_then(|blocks| blocks.get(path.index))
-                    .and_then(|b| match b { DocxBlock::Paragraph(p) => p.runs.get(*run_index), _ => None })
+                    .and_then(|b| match b {
+                        DocxBlock::Paragraph(p) => p.runs.get(*run_index),
+                        _ => None,
+                    })
                     .map(|r| r.text.clone());
                 match old {
                     Some(text) => vec![DocxMutation::SetRunText { path: path.clone(), run_index: *run_index, text }],
@@ -180,17 +179,12 @@ impl Mutation<DocxSnapshot> for DocxMutation {
                 }
             }
             DocxMutation::SetRunFormatting { path, run_index, .. } => {
-                let old = resolve_blocks(&base.document.body, &path.segments)
-                    .and_then(|blocks| blocks.get(path.index))
-                    .and_then(|b| match b { DocxBlock::Paragraph(p) => p.runs.get(*run_index), _ => None });
+                let old = resolve_blocks(&base.document.body, &path.segments).and_then(|blocks| blocks.get(path.index)).and_then(|b| match b {
+                    DocxBlock::Paragraph(p) => p.runs.get(*run_index),
+                    _ => None,
+                });
                 match old {
-                    Some(run) => vec![DocxMutation::SetRunFormatting {
-                        path: path.clone(),
-                        run_index: *run_index,
-                        bold: run.bold,
-                        italic: run.italic,
-                        underline: run.underline,
-                    }],
+                    Some(run) => vec![DocxMutation::SetRunFormatting { path: path.clone(), run_index: *run_index, bold: run.bold, italic: run.italic, underline: run.underline }],
                     None => vec![DocxMutation::NoMutation],
                 }
             }
@@ -278,7 +272,7 @@ fn dec_opc_package(s: &str) -> Result<OpcPackage, String> {
     let [p, ct, rels] = parts.as_slice() else { return Err(format!("opc package: expected 3 fields, got {}", parts.len())) };
     let parts_list = split_top_level(strip_brackets(p)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_opc_part).collect::<Result<Vec<_>, String>>()?;
     let rel_entries = split_top_level(strip_brackets(rels)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_rel_owner_entry).collect::<Result<Vec<_>, String>>()?;
-    Ok(OpcPackage { parts: parts_list, content_types: dec_opc_content_types(ct)?, relationships: rel_entries.into_iter().collect::<HashMap<_, _>>() })
+    Ok(OpcPackage { parts: parts_list, content_types: dec_opc_content_types(ct)?, relationships: rel_entries.into_iter().collect::<HashMap<_, _>>(), ..Default::default() })
 }
 fn enc_docx_document(doc: &DocxDocument) -> String {
     format!("[{},{}]", enc_list(&doc.body, enc_block), enc_list(&doc.styles, enc_style))
@@ -310,10 +304,9 @@ fn print_docx_mutation(m: &DocxMutation) -> String {
         DocxMutation::RemoveBlock { path } => format!("remove-block path={}", enc_block_path(path)),
         DocxMutation::SetBlockContent { path, block } => format!("set-block-content path={} block={}", enc_block_path(path), enc_block(block)),
         DocxMutation::SetRunText { path, run_index, text } => format!("set-run-text path={} run-index={} text={}", enc_block_path(path), run_index, enc_str(text)),
-        DocxMutation::SetRunFormatting { path, run_index, bold, italic, underline } => format!(
-            "set-run-formatting path={} run-index={} bold={} italic={} underline={}",
-            enc_block_path(path), run_index, enc_bool(bold), enc_bool(italic), enc_bool(underline)
-        ),
+        DocxMutation::SetRunFormatting { path, run_index, bold, italic, underline } => {
+            format!("set-run-formatting path={} run-index={} bold={} italic={} underline={}", enc_block_path(path), run_index, enc_bool(bold), enc_bool(italic), enc_bool(underline))
+        }
         DocxMutation::InsertStyle { style } => format!("insert-style style={}", enc_style(style)),
         DocxMutation::RemoveStyle { id } => format!("remove-style id={}", enc_str(id)),
         DocxMutation::SetStyleName { id, name } => format!("set-style-name id={} name={}", enc_str(id), enc_str(name)),
@@ -327,13 +320,7 @@ fn parse_docx_mutation(line: &str) -> Result<DocxMutation, String> {
         return Ok(DocxMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("docx mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("docx mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("docx mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
@@ -342,13 +329,7 @@ fn parse_docx_mutation(line: &str) -> Result<DocxMutation, String> {
         "remove-block" => Ok(DocxMutation::RemoveBlock { path: dec_block_path(arg("path")?)? }),
         "set-block-content" => Ok(DocxMutation::SetBlockContent { path: dec_block_path(arg("path")?)?, block: dec_block(arg("block")?)? }),
         "set-run-text" => Ok(DocxMutation::SetRunText { path: dec_block_path(arg("path")?)?, run_index: usize_arg("run-index")?, text: dec_str(arg("text")?)? }),
-        "set-run-formatting" => Ok(DocxMutation::SetRunFormatting {
-            path: dec_block_path(arg("path")?)?,
-            run_index: usize_arg("run-index")?,
-            bold: dec_bool(arg("bold")?)?,
-            italic: dec_bool(arg("italic")?)?,
-            underline: dec_bool(arg("underline")?)?,
-        }),
+        "set-run-formatting" => Ok(DocxMutation::SetRunFormatting { path: dec_block_path(arg("path")?)?, run_index: usize_arg("run-index")?, bold: dec_bool(arg("bold")?)?, italic: dec_bool(arg("italic")?)?, underline: dec_bool(arg("underline")?)? }),
         "insert-style" => Ok(DocxMutation::InsertStyle { style: dec_style(arg("style")?)? }),
         "remove-style" => Ok(DocxMutation::RemoveStyle { id: dec_str(arg("id")?)? }),
         "set-style-name" => Ok(DocxMutation::SetStyleName { id: dec_str(arg("id")?)?, name: dec_str(arg("name")?)? }),
@@ -375,10 +356,7 @@ impl protocol::OpText for DocxMutation {
 /// `write_str_lp`/`read_str_lp`/`write_bytes_lp`/`read_bytes_lp`/`enc_block_bin`/`dec_block_bin`/
 /// `enc_style_bin`/`dec_style_bin`/`enc_opc_part_bin`/`dec_opc_part_bin`/`enc_rel_bin`/
 /// `dec_rel_bin` (`../🔺️diff/🦀️component.rs`, `pub(crate)` to this artifact).
-use crate::artifacts::docx::schema::diff::{
-    dec_block_bin, dec_opc_part_bin, dec_rel_bin, dec_style_bin, enc_block_bin, enc_opc_part_bin, enc_rel_bin, enc_style_bin, read_bytes_lp,
-    read_str_lp, write_bytes_lp, write_str_lp,
-};
+use crate::artifacts::docx::schema::diff::{dec_block_bin, dec_opc_part_bin, dec_rel_bin, dec_style_bin, enc_block_bin, enc_opc_part_bin, enc_rel_bin, enc_style_bin, read_bytes_lp, read_str_lp, write_bytes_lp, write_str_lp};
 
 fn enc_path_segment_bin(seg: &DocxPathSegment, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, seg.block_index as u64);
@@ -474,7 +452,7 @@ fn dec_opc_package_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPackage,
         }
         relationships.insert(owner, list);
     }
-    Ok(OpcPackage { parts, content_types, relationships })
+    Ok(OpcPackage { parts, content_types, relationships, ..Default::default() })
 }
 fn enc_docx_document_bin(doc: &DocxDocument, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, doc.body.len() as u64);
@@ -663,13 +641,7 @@ impl protocol::OpBinary for DocxMutation {
 /// conformance tests, same shape `📷️png/…/🧬️mutations/🦀️component.rs`'s own
 /// `demo_mutation_cases()` establishes.
 fn fixture() -> DocxSnapshot {
-    crate::artifacts::docx::engine::build_minimal_docx(DocxDocument {
-        body: vec![
-            DocxBlock::paragraph("first"),
-            DocxBlock::paragraph("second"),
-        ],
-        styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }],
-    })
+    crate::artifacts::docx::engine::build_minimal_docx(DocxDocument { body: vec![DocxBlock::paragraph("first"), DocxBlock::paragraph("second")], styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }] })
 }
 
 fn table_path(block_index: usize, row: usize, cell: usize, index: usize) -> DocxBlockPath {
@@ -694,17 +666,11 @@ fn sweep_a() -> DocxSnapshot {
     opc.set_part("word/toRemove.xml", "application/xml", b"gone".to_vec());
     opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
     opc.add_relationship("", "rId9", "http://example/toRemove", "word/toRemove.xml");
-    opc.relationships.insert(
-        "word/document.xml".into(),
-        vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "media/old.png".into(), target_mode: OpcTargetMode::Internal }],
-    );
+    opc.relationships.insert("word/document.xml".into(), vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "media/old.png".into(), target_mode: OpcTargetMode::Internal }]);
     // 🎯️ A relationships OWNER present only in `a` (owned by the part that itself gets
     // removed) -- exercises `relationships.removed` at the owner-key level, distinct from
     // `""`'s own list merely losing one entry (which exercises `relationships.modified`).
-    opc.relationships.insert(
-        "word/toRemove.xml".into(),
-        vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/ownerToRemove".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }],
-    );
+    opc.relationships.insert("word/toRemove.xml".into(), vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/ownerToRemove".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }]);
 
     DocxSnapshot::from_parts(
         opc,
@@ -712,16 +678,9 @@ fn sweep_a() -> DocxSnapshot {
             body: vec![
                 DocxBlock::Paragraph(DocxParagraph { runs: vec![DocxRun { text: "old".into(), bold: false, ..Default::default() }], style: None, extra_paragraph_properties: Vec::new() }),
                 DocxBlock::paragraph("stay"),
-                DocxBlock::Table(DocxTable {
-                    rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("toDrop cell")], ..Default::default() }], ..Default::default() }],
-                    ..Default::default()
-                }),
+                DocxBlock::Table(DocxTable { rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("toDrop cell")], ..Default::default() }], ..Default::default() }], ..Default::default() }),
             ],
-            styles: vec![
-                DocxStyle { id: "keep".into(), name: "Keep".into(), based_on: None },
-                DocxStyle { id: "toModify".into(), name: "old".into(), based_on: None },
-                DocxStyle { id: "toRemove".into(), name: "Gone".into(), based_on: None },
-            ],
+            styles: vec![DocxStyle { id: "keep".into(), name: "Keep".into(), based_on: None }, DocxStyle { id: "toModify".into(), name: "old".into(), based_on: None }, DocxStyle { id: "toRemove".into(), name: "Gone".into(), based_on: None }],
         },
     )
 }
@@ -744,10 +703,7 @@ fn sweep_b() -> DocxSnapshot {
     // convention already matches `sweep_b`'s own construction order.
     opc.content_types.set_override("word/toModify.xml", "application/xml-modified");
     opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
-    opc.relationships.insert(
-        "word/document.xml".into(),
-        vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "media/new.png".into(), target_mode: OpcTargetMode::Internal }],
-    );
+    opc.relationships.insert("word/document.xml".into(), vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "media/new.png".into(), target_mode: OpcTargetMode::Internal }]);
     opc.relationships.insert("word/added.xml".into(), vec![OpcRelationship { id: "rId3".into(), rel_type: "http://example/added".into(), target: "media/added.png".into(), target_mode: OpcTargetMode::Internal }]);
 
     DocxSnapshot::from_parts(
@@ -763,10 +719,7 @@ fn sweep_b() -> DocxSnapshot {
             // (the very same `Table`, recursed structurally as the added item's payload).
             body: vec![
                 DocxBlock::Paragraph(DocxParagraph {
-                    runs: vec![
-                        DocxRun { text: "new".into(), bold: true, ..Default::default() },
-                        DocxRun { text: "second run".into(), italic: true, ..Default::default() },
-                    ],
+                    runs: vec![DocxRun { text: "new".into(), bold: true, ..Default::default() }, DocxRun { text: "second run".into(), italic: true, ..Default::default() }],
                     style: Some("keep".into()),
                     extra_paragraph_properties: Vec::new(),
                 }),
@@ -876,10 +829,7 @@ mod tests {
     #[test]
     fn table_path_addressing_sets_nested_cell_content() {
         let mut base = fixture();
-        base.document.body.push(DocxBlock::Table(DocxTable {
-            rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("cell")], ..Default::default() }], ..Default::default() }],
-            ..Default::default()
-        }));
+        base.document.body.push(DocxBlock::Table(DocxTable { rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("cell")], ..Default::default() }], ..Default::default() }], ..Default::default() }));
         let path = table_path(2, 0, 0, 0);
         let mutation = DocxMutation::SetBlockContent { path: path.clone(), block: DocxBlock::paragraph("changed cell") };
         let mut after = base.clone();
@@ -1200,10 +1150,7 @@ mod tests {
     /// `Option<String>` tri-state on `SetStyleBasedOn`.
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let table_block = DocxBlock::Table(DocxTable {
-            rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("cell")], ..Default::default() }], ..Default::default() }],
-            ..Default::default()
-        });
+        let table_block = DocxBlock::Table(DocxTable { rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("cell")], ..Default::default() }], ..Default::default() }], ..Default::default() });
         let mutations = vec![
             DocxMutation::NoMutation,
             DocxMutation::SetSnapshot { snapshot: sweep_b() },

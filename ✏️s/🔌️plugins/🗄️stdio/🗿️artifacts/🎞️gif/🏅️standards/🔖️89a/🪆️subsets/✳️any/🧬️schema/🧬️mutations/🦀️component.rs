@@ -5,13 +5,8 @@
 //! disposal/transparency/user-input, and comment/app-extension insert/remove. Every variant's
 //! `diff()` is handcrafted directly against the sparse `GifDiff` shape (no apply-and-capture).
 
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::diff::{
-    self, GifAppExtensionAdded, GifAppExtensionsDiff, GifCommentAdded, GifCommentsDiff, GifDiff,
-    GifFrameAdded, GifFrameDiff, GifFrameModified, GifFramesDiff,
-};
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{
-    GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifSnapshot,
-};
+use crate::artifacts::gif::standards::v89a::subsets::any::schema::diff::{self, GifAppExtensionAdded, GifAppExtensionsDiff, GifCommentAdded, GifCommentsDiff, GifDiff, GifFrameAdded, GifFrameDiff, GifFrameModified, GifFramesDiff};
+use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifSnapshot};
 use protocol::{Mutation, MutationDiff};
 #[cfg(test)]
 use protocol::{OpBinary, OpText};
@@ -35,40 +30,82 @@ pub enum GifMutation {
         #[dsl(block)]
         snapshot: GifSnapshot,
     },
-    SetScreenSize { width: u32, height: u32 },
+    SetScreenSize {
+        width: u32,
+        height: u32,
+    },
     SetGlobalColorTable {
         #[dsl(block)]
         gct: Option<GifColorTable>,
     },
-    SetBackgroundColorIndex { index: u8 },
-    SetPixelAspectRatio { ratio: u8 },
-    SetLoopCount { loop_count: Option<u16> },
+    SetBackgroundColorIndex {
+        index: u8,
+    },
+    SetPixelAspectRatio {
+        ratio: u8,
+    },
+    SetLoopCount {
+        loop_count: Option<u16>,
+    },
     InsertFrame {
         index: usize,
         #[dsl(block)]
         frame: GifFrame,
     },
-    RemoveFrame { index: usize },
-    MoveFrame { from: usize, to: usize },
-    SetFrameGeometry { index: usize, left: u32, top: u32, width: u32, height: u32 },
+    RemoveFrame {
+        index: usize,
+    },
+    MoveFrame {
+        from: usize,
+        to: usize,
+    },
+    SetFrameGeometry {
+        index: usize,
+        left: u32,
+        top: u32,
+        width: u32,
+        height: u32,
+    },
     SetFramePixels {
         index: usize,
         #[dsl(base64)]
         indices: Vec<u8>,
     },
-    SetFrameInterlace { index: usize, interlace: bool },
-    SetFrameDelay { index: usize, delay_cs: u16 },
-    SetFrameDisposal { index: usize, disposal: GifDisposal },
-    SetFrameTransparency { index: usize, transparent_index: Option<u8> },
-    SetFrameUserInput { index: usize, user_input: bool },
-    InsertComment { index: usize, text: String },
-    RemoveComment { index: usize },
+    SetFrameInterlace {
+        index: usize,
+        interlace: bool,
+    },
+    SetFrameDelay {
+        index: usize,
+        delay_cs: u16,
+    },
+    SetFrameDisposal {
+        index: usize,
+        disposal: GifDisposal,
+    },
+    SetFrameTransparency {
+        index: usize,
+        transparent_index: Option<u8>,
+    },
+    SetFrameUserInput {
+        index: usize,
+        user_input: bool,
+    },
+    InsertComment {
+        index: usize,
+        text: String,
+    },
+    RemoveComment {
+        index: usize,
+    },
     AddAppExtension {
         index: usize,
         #[dsl(block)]
         extension: GifAppExtension,
     },
-    RemoveAppExtension { index: usize },
+    RemoveAppExtension {
+        index: usize,
+    },
 }
 //#endregion 🔖️Mutations
 
@@ -84,7 +121,8 @@ pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
     // shape, which this compact snapshot already covers field-for-field.
     let base = GifSnapshot {
         schema: crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::STDIO_GIF89A_DOCUMENT_SCHEMA.into(),
-        width: 2, height: 2,
+        width: 2,
+        height: 2,
         gct: Some(GifColorTable { sorted: false, colors: vec![crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifRgb { r: 4, g: 5, b: 6 }; 2] }),
         background_color_index: 0,
         pixel_aspect_ratio: 0,
@@ -94,7 +132,10 @@ pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
         app_extensions: vec![],
     };
     let sample_frame = GifFrame {
-        left: 0, top: 0, width: 2, height: 2,
+        left: 0,
+        top: 0,
+        width: 2,
+        height: 2,
         interlace: false,
         lct: Some(GifColorTable { sorted: false, colors: vec![crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifRgb { r: 9, g: 9, b: 9 }; 2] }),
         indices: vec![0, 1, 1, 0],
@@ -151,35 +192,13 @@ impl Mutation<GifSnapshot> for GifMutation {
         match self {
             GifMutation::NoMutation => GifDiff::default(),
             GifMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
-            GifMutation::SetScreenSize { width, height } => GifDiff {
-                width: (*width != base.width).then_some(*width),
-                height: (*height != base.height).then_some(*height),
-                ..Default::default()
-            },
-            GifMutation::SetGlobalColorTable { gct } => GifDiff {
-                gct: (*gct != base.gct).then_some(gct.clone()),
-                ..Default::default()
-            },
-            GifMutation::SetBackgroundColorIndex { index } => GifDiff {
-                background_color_index: (*index != base.background_color_index).then_some(*index),
-                ..Default::default()
-            },
-            GifMutation::SetPixelAspectRatio { ratio } => GifDiff {
-                pixel_aspect_ratio: (*ratio != base.pixel_aspect_ratio).then_some(*ratio),
-                ..Default::default()
-            },
-            GifMutation::SetLoopCount { loop_count } => GifDiff {
-                loop_count: (*loop_count != base.loop_count).then_some(*loop_count),
-                ..Default::default()
-            },
-            GifMutation::InsertFrame { index, frame } => GifDiff {
-                frames: Some(GifFramesDiff { added: vec![GifFrameAdded { index: (*index).min(base.frames.len()), frame: frame.clone() }], ..Default::default() }),
-                ..Default::default()
-            },
-            GifMutation::RemoveFrame { index } => GifDiff {
-                frames: Some(GifFramesDiff { removed: vec![*index], ..Default::default() }),
-                ..Default::default()
-            },
+            GifMutation::SetScreenSize { width, height } => GifDiff { width: (*width != base.width).then_some(*width), height: (*height != base.height).then_some(*height), ..Default::default() },
+            GifMutation::SetGlobalColorTable { gct } => GifDiff { gct: (*gct != base.gct).then_some(gct.clone()), ..Default::default() },
+            GifMutation::SetBackgroundColorIndex { index } => GifDiff { background_color_index: (*index != base.background_color_index).then_some(*index), ..Default::default() },
+            GifMutation::SetPixelAspectRatio { ratio } => GifDiff { pixel_aspect_ratio: (*ratio != base.pixel_aspect_ratio).then_some(*ratio), ..Default::default() },
+            GifMutation::SetLoopCount { loop_count } => GifDiff { loop_count: (*loop_count != base.loop_count).then_some(*loop_count), ..Default::default() },
+            GifMutation::InsertFrame { index, frame } => GifDiff { frames: Some(GifFramesDiff { added: vec![GifFrameAdded { index: (*index).min(base.frames.len()), frame: frame.clone() }], ..Default::default() }), ..Default::default() },
+            GifMutation::RemoveFrame { index } => GifDiff { frames: Some(GifFramesDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
             GifMutation::MoveFrame { from, to } => {
                 let mut frames = base.frames.clone();
                 if *from < frames.len() {
@@ -217,22 +236,12 @@ impl Mutation<GifSnapshot> for GifMutation {
                 let d = GifFrameDiff { user_input: Some(*user_input), ..Default::default() };
                 GifDiff { frames: Some(GifFramesDiff { modified: vec![GifFrameModified { index: *index, diff: d }], ..Default::default() }), ..Default::default() }
             }
-            GifMutation::InsertComment { index, text } => GifDiff {
-                comments: Some(GifCommentsDiff { added: vec![GifCommentAdded { index: (*index).min(base.comments.len()), text: text.clone() }], ..Default::default() }),
-                ..Default::default()
-            },
-            GifMutation::RemoveComment { index } => GifDiff {
-                comments: Some(GifCommentsDiff { removed: vec![*index], ..Default::default() }),
-                ..Default::default()
-            },
-            GifMutation::AddAppExtension { index, extension } => GifDiff {
-                app_extensions: Some(GifAppExtensionsDiff { added: vec![GifAppExtensionAdded { index: (*index).min(base.app_extensions.len()), extension: extension.clone() }], ..Default::default() }),
-                ..Default::default()
-            },
-            GifMutation::RemoveAppExtension { index } => GifDiff {
-                app_extensions: Some(GifAppExtensionsDiff { removed: vec![*index], ..Default::default() }),
-                ..Default::default()
-            },
+            GifMutation::InsertComment { index, text } => GifDiff { comments: Some(GifCommentsDiff { added: vec![GifCommentAdded { index: (*index).min(base.comments.len()), text: text.clone() }], ..Default::default() }), ..Default::default() },
+            GifMutation::RemoveComment { index } => GifDiff { comments: Some(GifCommentsDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
+            GifMutation::AddAppExtension { index, extension } => {
+                GifDiff { app_extensions: Some(GifAppExtensionsDiff { added: vec![GifAppExtensionAdded { index: (*index).min(base.app_extensions.len()), extension: extension.clone() }], ..Default::default() }), ..Default::default() }
+            }
+            GifMutation::RemoveAppExtension { index } => GifDiff { app_extensions: Some(GifAppExtensionsDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
         }
     }
 
@@ -259,7 +268,9 @@ impl Mutation<GifSnapshot> for GifMutation {
                     let at = (*to).min(frames.len());
                     frames.insert(at, item);
                     at
-                } else { *from };
+                } else {
+                    *from
+                };
                 vec![GifMutation::MoveFrame { from: landed_at, to: *from }]
             }
             GifMutation::SetFrameGeometry { index, .. } => match base.frames.get(*index) {
@@ -346,7 +357,10 @@ mod tests {
 
     fn sample_frame(seed: u8) -> GifFrame {
         GifFrame {
-            left: 0, top: 0, width: 2, height: 2,
+            left: 0,
+            top: 0,
+            width: 2,
+            height: 2,
             interlace: false,
             lct: Some(GifColorTable { sorted: false, colors: vec![crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifRgb { r: seed, g: seed, b: seed }; 2] }),
             indices: vec![0, 1, 1, 0],
@@ -361,7 +375,8 @@ mod tests {
     fn base_snapshot() -> GifSnapshot {
         GifSnapshot {
             schema: "stdio.gif.89a".into(),
-            width: 2, height: 2,
+            width: 2,
+            height: 2,
             gct: None,
             background_color_index: 0,
             pixel_aspect_ratio: 0,

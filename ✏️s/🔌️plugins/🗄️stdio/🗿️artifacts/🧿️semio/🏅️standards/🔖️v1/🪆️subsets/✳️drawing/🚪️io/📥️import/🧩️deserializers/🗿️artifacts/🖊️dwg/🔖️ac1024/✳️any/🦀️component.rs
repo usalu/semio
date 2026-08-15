@@ -11,7 +11,7 @@
 //!   dropped — mesh-shaped content is the `✳️mesh` bridge's job, not this one's.
 //! - Malformed logical geometry is a hard `Err`, not a fabricated empty drawing.
 
-use crate::artifacts::dwg::{DwgDrawing, DwgGeometry, DwgSnapshot, dwg_geometry_to_path_segments};
+use crate::artifacts::dwg::{dwg_geometry_to_path_segments, DwgDrawing, DwgGeometry, DwgSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioTransform};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
@@ -26,11 +26,7 @@ fn dwg_segment_to_path(segment: &crate::artifacts::dwg::DwgPathSegment) -> PathS
         DwgPathSegment::Move { to } => PathSegment::MoveTo { to: SemioPoint2 { x: to[0], y: to[1] } },
         DwgPathSegment::Line { to } => PathSegment::LineTo { to: SemioPoint2 { x: to[0], y: to[1] } },
         DwgPathSegment::Quad { ctrl, to } => PathSegment::QuadTo { c: SemioPoint2 { x: ctrl[0], y: ctrl[1] }, to: SemioPoint2 { x: to[0], y: to[1] } },
-        DwgPathSegment::Cubic { ctrl1, ctrl2, to } => PathSegment::CubicTo {
-            c1: SemioPoint2 { x: ctrl1[0], y: ctrl1[1] },
-            c2: SemioPoint2 { x: ctrl2[0], y: ctrl2[1] },
-            to: SemioPoint2 { x: to[0], y: to[1] },
-        },
+        DwgPathSegment::Cubic { ctrl1, ctrl2, to } => PathSegment::CubicTo { c1: SemioPoint2 { x: ctrl1[0], y: ctrl1[1] }, c2: SemioPoint2 { x: ctrl2[0], y: ctrl2[1] }, to: SemioPoint2 { x: to[0], y: to[1] } },
         DwgPathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => PathSegment::ArcTo { rx, ry, x_rotation: rotation, large_arc, sweep, to: SemioPoint2 { x: to[0], y: to[1] } },
         DwgPathSegment::Close => PathSegment::Close,
     }
@@ -78,17 +74,13 @@ impl ArtifactDeserializer for SemioDrawingFromDwg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::dwg::{DwgColor, DwgEntity};
     use crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing;
+    use crate::artifacts::dwg::{DwgColor, DwgEntity};
 
     fn sample_dwg() -> DwgSnapshot {
         let mut drawing = DwgDrawing::default();
         let layer = drawing.ensure_layer("annotations");
-        drawing.entities.push(DwgEntity {
-            layer,
-            color: DwgColor::ByLayer,
-            geometry: DwgGeometry::LwPolyline { closed: false, elevation: 0.0, vertices: vec![[0.0, 0.0], [5.0, 0.0]], bulges: vec![0.0, 0.0] },
-        });
+        drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: false, elevation: 0.0, vertices: vec![[0.0, 0.0], [5.0, 0.0]], bulges: vec![0.0, 0.0] } });
         drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::Text { at: [1.0, 1.0, 0.0], height: 1.0, rotation: 0.0, content: "hi".into() } });
         DwgSnapshot { version: "AC1015".into(), drawing: DwgLogicalDrawing::from_native(&drawing), ..DwgSnapshot::default() }
     }

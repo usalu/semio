@@ -1,6 +1,6 @@
 //! 🧩 set_snapshot diff leaf.
 
-use crate::artifacts::ifc::schema::diff::{IfcDiff, diff_set_snapshot};
+use crate::artifacts::ifc::schema::diff::{diff_set_snapshot, IfcDiff};
 use crate::artifacts::ifc::IfcSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot — the sparse field-by-field `between(base, next)` (no

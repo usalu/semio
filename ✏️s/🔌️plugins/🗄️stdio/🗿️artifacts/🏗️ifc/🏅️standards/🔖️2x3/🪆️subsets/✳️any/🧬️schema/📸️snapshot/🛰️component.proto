@@ -1,8 +1,18 @@
 syntax = "proto3";
 package semio.s_stdio_ifc_2x3.snapshot;
+message Part21Decimal { bool negative = 1; string coefficient = 2; uint32 scale = 3; optional int32 exponent = 4; }
+message Part21Value {
+  enum Kind { REF = 0; STR = 1; ENUM = 2; INT = 3; REAL = 4; LIST = 5; TYPED = 6; UNSET = 7; DERIVED = 8; }
+  Kind kind = 1; uint64 ref_value = 2; string string_value = 3; int64 int_value = 4; Part21Decimal real_value = 5;
+  repeated Part21Value values = 6; string type_name = 7;
+}
+message Part21Entity { string type_name = 1; repeated Part21Value arguments = 2; }
+message Part21Instance { uint64 id = 1; repeated Part21Entity entities = 2; }
+message Part21Header { repeated Part21Value file_description = 1; repeated Part21Value file_name = 2; repeated Part21Value file_schema = 3; }
+message Part21Document { Part21Header header = 1; repeated Part21Instance instances = 2; }
 message Ifc2x3EdmPreamble { string producer = 1; string module = 2; string creation_date = 3; string host = 4; string database = 5; string database_version = 6; string database_creation_date = 7; string schema = 8; string model = 9; string model_creation_date = 10; string header_model = 11; string header_model_creation_date = 12; string user = 13; string group = 14; string license = 15; string options = 16; }
 message Ifc2x3Snapshot {
   string schema = 1;
-  bytes document_wire = 2;
+  Part21Document document = 2;
   optional Ifc2x3EdmPreamble edm_preamble = 3;
 }

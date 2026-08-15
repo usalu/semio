@@ -13,15 +13,15 @@
 use std::collections::HashMap;
 use std::f64::consts::{FRAC_PI_2, TAU};
 
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 // #region 🔖️Wire
@@ -50,14 +50,7 @@ fn require_positive(name: &str, value: f64) -> Result<(), KernelError> {
     }
 }
 
-pub(crate) fn attach_face(
-    body: &mut Body,
-    surface_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SurfaceId,
-    members: &[(EdgeId, bool)],
-    flipped: bool,
-    tol: Tol,
-    rec: &mut OpRecorder,
-) -> FaceId {
+pub(crate) fn attach_face(body: &mut Body, surface_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SurfaceId, members: &[(EdgeId, bool)], flipped: bool, tol: Tol, rec: &mut OpRecorder) -> FaceId {
     let outer = make_loop(body, placeholder_face(), members);
     let face = add_face(body, surface_id, Some(outer), vec![], flipped, tol, rec);
     body.loops.get_mut(outer).unwrap().face = face;
@@ -69,24 +62,14 @@ pub(crate) fn line_edge(body: &mut Body, a: Pnt3, b: Pnt3, va: VertexId, vb: Ver
     make_edge(body, curve, (0.0, 1.0), va, vb, tol, rec)
 }
 
-fn circle_edge(
-    body: &mut Body,
-    center: Pnt3,
-    normal: Vec3,
-    radius: f64,
-    vertex: VertexId,
-    tol: Tol,
-    rec: &mut OpRecorder,
-) -> EdgeId {
+fn circle_edge(body: &mut Body, center: Pnt3, normal: Vec3, radius: f64, vertex: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
     let frame = Frame3::from_normal(center, normal).expect("circle frame");
     let curve = body.curves3.insert(Curve3::Circle { frame, radius });
     make_edge(body, curve, (0.0, TAU), vertex, vertex, tol, rec)
 }
 
 pub(crate) fn plane_at(origin: Pnt3, normal: Vec3) -> Surface {
-    Surface::Plane {
-        frame: Frame3::from_normal(origin, normal).expect("plane frame"),
-    }
+    Surface::Plane { frame: Frame3::from_normal(origin, normal).expect("plane frame") }
 }
 
 pub(crate) fn finish_solid(body: &mut Body, faces: Vec<FaceId>, rec: &mut OpRecorder) -> SolidId {
@@ -121,16 +104,7 @@ pub fn make_box(body: &mut Body, w: f64, d: f64, h: f64, rec: &mut OpRecorder) -
     require_positive("box depth", d)?;
     require_positive("box height", h)?;
     let tol = Tol::DEFAULT;
-    let corners = [
-        Pnt3::new(0.0, 0.0, 0.0),
-        Pnt3::new(w, 0.0, 0.0),
-        Pnt3::new(w, d, 0.0),
-        Pnt3::new(0.0, d, 0.0),
-        Pnt3::new(0.0, 0.0, h),
-        Pnt3::new(w, 0.0, h),
-        Pnt3::new(w, d, h),
-        Pnt3::new(0.0, d, h),
-    ];
+    let corners = [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(w, 0.0, 0.0), Pnt3::new(w, d, 0.0), Pnt3::new(0.0, d, 0.0), Pnt3::new(0.0, 0.0, h), Pnt3::new(w, 0.0, h), Pnt3::new(w, d, h), Pnt3::new(0.0, d, h)];
     let v: Vec<VertexId> = corners.iter().map(|&p| make_vertex(body, p, tol, rec)).collect();
     let eb0 = line_edge(body, corners[0], corners[1], v[0], v[1], tol, rec);
     let eb1 = line_edge(body, corners[1], corners[2], v[1], v[2], tol, rec);
@@ -209,14 +183,7 @@ pub fn make_cylinder(body: &mut Body, radius: f64, height: f64, segments: usize,
     let e_top = circle_edge(body, Pnt3::new(0.0, 0.0, height), Vec3::Z, radius, v_top, tol, rec);
     let e_seam = line_edge(body, bot_pt, top_pt, v_bot, v_top, tol, rec);
     let cyl = body.surfaces.insert(Surface::Cylinder { frame: Frame3::WORLD, radius });
-    let lateral = attach_face(
-        body,
-        cyl,
-        &[(e_bot, true), (e_seam, true), (e_top, false), (e_seam, false)],
-        false,
-        tol,
-        rec,
-    );
+    let lateral = attach_face(body, cyl, &[(e_bot, true), (e_seam, true), (e_top, false), (e_seam, false)], false, tol, rec);
     let s_bottom = body.surfaces.insert(plane_at(Pnt3::new(0.0, 0.0, 0.0), -Vec3::Z));
     let s_top = body.surfaces.insert(plane_at(Pnt3::new(0.0, 0.0, height), Vec3::Z));
     let bottom = attach_face(body, s_bottom, &[(e_bot, false)], false, tol, rec);
@@ -245,21 +212,9 @@ pub fn make_cone(body: &mut Body, radius: f64, height: f64, segments: usize, rec
     let v_base = make_vertex(body, base_pt, tol, rec);
     let e_circle = circle_edge(body, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, radius, v_base, tol, rec);
     let e_seam = line_edge(body, base_pt, apex, v_base, v_apex, tol, rec);
-    let cone_frame = Frame3 {
-        origin: apex,
-        x: Vec3::X,
-        y: Vec3::Y,
-        z: -Vec3::Z,
-    };
+    let cone_frame = Frame3 { origin: apex, x: Vec3::X, y: Vec3::Y, z: -Vec3::Z };
     let cone_surf = body.surfaces.insert(Surface::Cone { frame: cone_frame, half_angle });
-    let lateral = attach_face(
-        body,
-        cone_surf,
-        &[(e_circle, true), (e_seam, true), (e_seam, false)],
-        false,
-        tol,
-        rec,
-    );
+    let lateral = attach_face(body, cone_surf, &[(e_circle, true), (e_seam, true), (e_seam, false)], false, tol, rec);
     let s_base = body.surfaces.insert(plane_at(Pnt3::new(0.0, 0.0, 0.0), -Vec3::Z));
     let base = attach_face(body, s_base, &[(e_circle, false)], false, tol, rec);
     Ok(finish_solid(body, vec![lateral, base], rec))
@@ -270,9 +225,7 @@ pub fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize, rec:
     require_positive("torus major radius", major)?;
     require_positive("torus minor radius", minor)?;
     if minor >= major {
-        return Err(KernelError::InvalidInput(format!(
-            "torus minor radius ({minor}) must be less than major radius ({major})"
-        )));
+        return Err(KernelError::InvalidInput(format!("torus minor radius ({minor}) must be less than major radius ({major})")));
     }
     let major_seg = segments.max(8);
     let minor_seg = (segments / 2).max(6);
@@ -311,15 +264,7 @@ pub fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize, rec:
                         let edge = body.edges.get(existing).unwrap();
                         (existing, edge.v0 == verts[ia])
                     } else {
-                        let eid = line_edge(
-                            body,
-                            positions[ia],
-                            positions[ib],
-                            verts[ia],
-                            verts[ib],
-                            tol,
-                            rec,
-                        );
+                        let eid = line_edge(body, positions[ia], positions[ib], verts[ia], verts[ib], tol, rec);
                         edge_map.insert(key, eid);
                         (eid, true)
                     };
@@ -345,8 +290,6 @@ pub fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize, rec:
     }
     Ok(finish_solid(body, faces, rec))
 }
-
-
 
 /// 🧱 Builds a (possibly non-convex) solid from a triangle soup — used when convex-hull boolean fails.
 pub fn solid_from_triangle_soup(body: &mut Body, triangles: &[[Pnt3; 3]], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
@@ -399,9 +342,7 @@ pub fn solid_from_triangle_soup(body: &mut Body, triangles: &[[Pnt3; 3]], rec: &
 
 /// 🧱 Convex hull of a point cloud as a closed solid of planar triangles (Quickhull).
 pub fn make_convex_hull(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    let hull = convex_hull_3d(points).ok_or_else(|| {
-        KernelError::InvalidInput("points are coplanar or degenerate — cannot form a 3D convex hull".into())
-    })?;
+    let hull = convex_hull_3d(points).ok_or_else(|| KernelError::InvalidInput("points are coplanar or degenerate — cannot form a 3D convex hull".into()))?;
     let tol = Tol::DEFAULT;
     let vertex_ids: Vec<VertexId> = hull.vertices.iter().map(|&p| make_vertex(body, p, tol, rec)).collect();
     let mut edge_map: HashMap<(usize, usize), EdgeId> = HashMap::new();
@@ -416,15 +357,7 @@ pub fn make_convex_hull(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) 
                 let forward = edge.v0 == vertex_ids[ia];
                 (existing, forward)
             } else {
-                let eid = line_edge(
-                    body,
-                    hull.vertices[ia],
-                    hull.vertices[ib],
-                    vertex_ids[ia],
-                    vertex_ids[ib],
-                    tol,
-                    rec,
-                );
+                let eid = line_edge(body, hull.vertices[ia], hull.vertices[ib], vertex_ids[ia], vertex_ids[ib], tol, rec);
                 edge_map.insert(key, eid);
                 (eid, true)
             };
@@ -468,17 +401,7 @@ pub fn make_polyline_wire(body: &mut Body, points: &[Pnt3], closed: bool, rec: &
 pub fn make_rectangle_wire(body: &mut Body, width: f64, height: f64, rec: &mut OpRecorder) -> Result<Wire, KernelError> {
     require_positive("rectangle width", width)?;
     require_positive("rectangle height", height)?;
-    make_polyline_wire(
-        body,
-        &[
-            Pnt3::new(0.0, 0.0, 0.0),
-            Pnt3::new(width, 0.0, 0.0),
-            Pnt3::new(width, height, 0.0),
-            Pnt3::new(0.0, height, 0.0),
-        ],
-        true,
-        rec,
-    )
+    make_polyline_wire(body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(width, 0.0, 0.0), Pnt3::new(width, height, 0.0), Pnt3::new(0.0, height, 0.0)], true, rec)
 }
 
 /// 🧱 Regular `sides`-gon wire of given `radius` in the XY plane, centered at the origin.
@@ -507,13 +430,7 @@ pub fn make_planar_face_from_points(body: &mut Body, points: &[Pnt3], rec: &mut 
 }
 
 /// 🧱 Planar face whose outer loop is an existing closed [`Wire`].
-pub fn make_planar_face_from_wire(
-    body: &mut Body,
-    wire: &Wire,
-    origin: Pnt3,
-    normal: Vec3,
-    rec: &mut OpRecorder,
-) -> Result<FaceId, KernelError> {
+pub fn make_planar_face_from_wire(body: &mut Body, wire: &Wire, origin: Pnt3, normal: Vec3, rec: &mut OpRecorder) -> Result<FaceId, KernelError> {
     if !wire.closed {
         return Err(KernelError::InvalidInput("planar face requires a closed wire".into()));
     }
@@ -622,22 +539,13 @@ fn convex_hull_3d(points: &[Pnt3]) -> Option<ConvexHull> {
     }
     let tet = find_initial_tetrahedron(&pts)?;
     let mut faces: Vec<HullFace> = Vec::new();
-    let tet_faces = [
-        [tet[0], tet[1], tet[2]],
-        [tet[0], tet[2], tet[3]],
-        [tet[0], tet[3], tet[1]],
-        [tet[1], tet[3], tet[2]],
-    ];
+    let tet_faces = [[tet[0], tet[1], tet[2]], [tet[0], tet[2], tet[3]], [tet[0], tet[3], tet[1]], [tet[1], tet[3], tet[2]]];
     for &[a, b, c] in &tet_faces {
         let normal = face_normal(&pts, a, b, c);
         let d = -normal.dot(pts[a].to_vec());
         faces.push(HullFace { verts: [a, b, c], normal, d, alive: true });
     }
-    let centroid = Pnt3::new(
-        (pts[tet[0]].x + pts[tet[1]].x + pts[tet[2]].x + pts[tet[3]].x) / 4.0,
-        (pts[tet[0]].y + pts[tet[1]].y + pts[tet[2]].y + pts[tet[3]].y) / 4.0,
-        (pts[tet[0]].z + pts[tet[1]].z + pts[tet[2]].z + pts[tet[3]].z) / 4.0,
-    );
+    let centroid = Pnt3::new((pts[tet[0]].x + pts[tet[1]].x + pts[tet[2]].x + pts[tet[3]].x) / 4.0, (pts[tet[0]].y + pts[tet[1]].y + pts[tet[2]].y + pts[tet[3]].y) / 4.0, (pts[tet[0]].z + pts[tet[1]].z + pts[tet[2]].z + pts[tet[3]].z) / 4.0);
     for face in &mut faces {
         if signed_distance(face, centroid) > 0.0 {
             face.normal = -face.normal;
@@ -650,12 +558,7 @@ fn convex_hull_3d(points: &[Pnt3]) -> Option<ConvexHull> {
         if tet_set.contains(&pi) {
             continue;
         }
-        let visible: Vec<usize> = faces
-            .iter()
-            .enumerate()
-            .filter(|(_, f)| f.alive && signed_distance(f, point) > tol)
-            .map(|(i, _)| i)
-            .collect();
+        let visible: Vec<usize> = faces.iter().enumerate().filter(|(_, f)| f.alive && signed_distance(f, point) > tol).map(|(i, _)| i).collect();
         if visible.is_empty() {
             continue;
         }
@@ -725,10 +628,7 @@ mod tests {
 
     fn assert_rings_ok(body: &Body) {
         let issues = validate_body(body);
-        let ring_issues: Vec<_> = issues
-            .iter()
-            .filter(|i| matches!(i.code, "empty-loop" | "broken-ring" | "loop-not-closed" | "next-prev-mismatch"))
-            .collect();
+        let ring_issues: Vec<_> = issues.iter().filter(|i| matches!(i.code, "empty-loop" | "broken-ring" | "loop-not-closed" | "next-prev-mismatch")).collect();
         assert!(ring_issues.is_empty(), "ring integrity failed: {ring_issues:?}");
     }
 
@@ -787,10 +687,7 @@ mod tests {
         assert_eq!(f, 3);
         assert_rings_ok(&body);
         let issues = validate_body(&body);
-        assert!(
-            issues.iter().all(|i| i.code != "broken-ring" && i.code != "loop-not-closed"),
-            "{issues:?}"
-        );
+        assert!(issues.iter().all(|i| i.code != "broken-ring" && i.code != "loop-not-closed"), "{issues:?}");
     }
 
     #[test]
@@ -821,12 +718,7 @@ mod tests {
     fn make_convex_hull_tetrahedron() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        let pts = [
-            Pnt3::new(0.0, 0.0, 0.0),
-            Pnt3::new(1.0, 0.0, 0.0),
-            Pnt3::new(0.0, 1.0, 0.0),
-            Pnt3::new(0.0, 0.0, 1.0),
-        ];
+        let pts = [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Pnt3::new(0.0, 0.0, 1.0)];
         let solid = make_convex_hull(&mut body, &pts, &mut rec).unwrap();
         let (v, e, f) = solid_counts(&body, solid);
         assert_eq!((v, e, f), (4, 6, 4));
@@ -840,12 +732,7 @@ mod tests {
     fn make_convex_hull_rejects_coplanar() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        let pts = [
-            Pnt3::new(0.0, 0.0, 0.0),
-            Pnt3::new(1.0, 0.0, 0.0),
-            Pnt3::new(0.0, 1.0, 0.0),
-            Pnt3::new(1.0, 1.0, 0.0),
-        ];
+        let pts = [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Pnt3::new(1.0, 1.0, 0.0)];
         assert!(make_convex_hull(&mut body, &pts, &mut rec).is_err());
     }
 
@@ -860,16 +747,7 @@ mod tests {
         assert_eq!(body.loop_coedges(body.faces.get(face).unwrap().outer.unwrap()).len(), 4);
         let poly = make_regular_polygon_wire(&mut body, 1.0, 6, &mut rec).unwrap();
         assert_eq!(poly.members.len(), 6);
-        let face2 = make_planar_face_from_points(
-            &mut body,
-            &[
-                Pnt3::new(0.0, 0.0, 1.0),
-                Pnt3::new(1.0, 0.0, 1.0),
-                Pnt3::new(0.0, 1.0, 1.0),
-            ],
-            &mut rec,
-        )
-        .unwrap();
+        let face2 = make_planar_face_from_points(&mut body, &[Pnt3::new(0.0, 0.0, 1.0), Pnt3::new(1.0, 0.0, 1.0), Pnt3::new(0.0, 1.0, 1.0)], &mut rec).unwrap();
         assert!(body.faces.get(face2).unwrap().outer.is_some());
         assert_rings_ok(&body);
     }
@@ -878,13 +756,7 @@ mod tests {
     fn open_polyline_wire() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        let wire = make_polyline_wire(
-            &mut body,
-            &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0)],
-            false,
-            &mut rec,
-        )
-        .unwrap();
+        let wire = make_polyline_wire(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0)], false, &mut rec).unwrap();
         assert!(!wire.closed);
         assert_eq!(wire.members.len(), 2);
         assert!(make_planar_face_from_wire(&mut body, &wire, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, &mut rec).is_err());

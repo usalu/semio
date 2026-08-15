@@ -1,5 +1,5 @@
-use crate::artifacts::bcf::{BcfSnapshot};
 use crate::artifacts::bcf::schema::mutations::BcfMutation;
+use crate::artifacts::bcf::BcfSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

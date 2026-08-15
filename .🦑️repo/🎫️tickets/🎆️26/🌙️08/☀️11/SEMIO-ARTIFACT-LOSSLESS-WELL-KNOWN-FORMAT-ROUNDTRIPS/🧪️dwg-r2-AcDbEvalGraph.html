@@ -1,0 +1,113 @@
+<html>
+<head>
+<title>AcDbEvalGraph</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="generator" content="Doc-O-Matic">
+    <meta name="save" content="history">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+<meta name="topicid" content="OREF-AcDbEvalGraph">
+<meta name="canonical" content="http://help.autodesk.com/cloudhelp/2018/ENU/OARX-RefGuide/files/OREF-AcDbEvalGraph.html#!">
+<meta name="helpsystempath" content="/view/OARX/2018/ENU">
+<meta name="product" content="OARX">
+<meta name="release" content="2018">
+<meta name="language" content="ENU">
+<meta name="book" content="Developer">
+<meta name="component" content="OARX-RefGuide">
+<meta name="created" content="04/10/2017">
+<meta name="modified" content="04/10/2017">
+<meta name="experiencelevel" content="expert">
+<meta name="audience" content="programmer">
+<meta name="user-comments" content="enable">
+<link rel="stylesheet" type="text/css" href="/view/clientframework/client.css">
+<script type="text/javascript" src="/view/clientframework/client.js"><!--filler--></script>
+
+    
+
+
+
+
+
+
+</head>
+<body class="Element700"><link rel="stylesheet" type="text/css" href="../css/default.css">
+
+<div id="persistenceDiv" style="display:none; behavior:url(#default#userData);"></div>
+
+<!-- Begin Popups -->
+
+<!-- End Popups -->
+
+<!-- Begin Page Header -->
+<div class="head"><div class="head-text"><h1>AcDbEvalGraph</h1></div></div>
+
+<!-- End Page Header -->
+
+<!-- Begin Client Area -->
+<div class="Element720" id="areascroll">
+<div class="Element721">
+
+<!-- Begin Page Content -->
+<div class="Element58">
+<!--Element14 following sibling has _14_-->
+<div id="div436C61737320486965726172636879">
+<div class="Element151"><div class="Element150"><pre class="Element150"><a href="OREF-AcRxObject.html">AcRxObject</a>
+    <a href="OREF-AcGiDrawable.html">AcGiDrawable</a>
+    <a href="OREF-AcHeapOperators.html">AcHeapOperators</a>
+        <a href="OREF-AcDbObject.html">AcDbObject</a>
+            <strong>AcDbEvalGraph</strong></pre></div></div>
+</div>
+<div class="Element99">
+<a onclick="toggleVisibilityStored('432B2B');" class="a_Element99"><img src="../images/btn_collapse_large.gif" border="0" alt="" title="" id="img432B2B">C++</a></div>
+<div id="div432B2B">
+<div class="Element101"><div class="Element100"><pre class="Element100"><strong><span style="color: #871F78">class</span></strong> <strong><span style="color: #660000">AcDbEvalGraph</span></strong> : <strong><span style="color: #871F78">public</span></strong> AcDbObject;</pre></div></div>
+</div>
+<!--Element14 following has no -_14_--><div class="Element14">
+<!--a_Element14-->File</div>
+<div id="div46696C65">
+<div class="Element11">
+<!--Element10--><div class="Element10"><!--Element10 no _14_ in a --><div class="Element10">
+<p class="Element10">
+dbeval.h</p></div></div>
+</div>
+</div>
+<!--Element14 following has no -_14_--><div class="Element14">
+<!--a_Element14-->Description</div>
+<div id="div4465736372697074696F6E">
+<div class="Element11">
+<!--Element10--><div class="Element10"><!--Element10 no _14_ in a --><div class="Element10">
+<p class="Element10">
+This class holds the network of interrelated elements that implement the behavior of dynamic blocks. Each individual element (or <span class="Element146">AcDbEvalExpr</span>) can depend on zero or more other <span class="Element146">AcDbEvalExpr</span> objects. The role of <span class="Element146">AcDbEvalGraph</span> is to invoke the <span class="Element146">AcDbEvalExpr::evaluate()</span> method for each of the elements it contains at the proper time. Before an <span class="Element146">AcDbEvalExpr</span> can be evaluated, <span class="Element146">evaluate()</span> must be invoked for any dependent <span class="Element146">AcDbEvalExpr</span> objects. <span class="Element146">AcDbEvalGraph</span> uses a directed acyclic graph (DAG) to reprsent the dependencies between <span class="Element146">AcDbEvalExpr</span> objects. If an <span class="Element146">AcDbEvalExpr</span> E1 depends on (requires input from) an <span class="Element146">AcDbEvalExpr</span> E2, an edge from E2 to E1 is represented in the graph. See the <i>ObjectARX Developer's Guide</i> for more information. </p>
+<p class="Element10">
+Based on which <span class="Element146">AcDbEvalExpr</span> objects are active during evaluation (in other words, which objects have been directly modified through means such as the Properties palette or grip editing), the subset of <span class="Element146">AcDbEvalExpr</span> objects that can be reached from the activated set is determined. The resulting subgraph is expected to be a DAG, and is then topologically sorted to determine the order of node evaluation. </p>
+<p class="Element10">
+The current internal use of this graph class is for dynamic blocks, in which a graph of the expressions is maintained on the block table record. This graph is queried at graph editing time and evaluated in order to trigger the networked nodes (<span class="Element146">AcDbEvalExpr</span> objects) that, through their <span class="Element146">evaluate()</span> methods being invoked, implement the dynamic behavior.</p></div></div>
+</div>
+</div>
+<!--Element14 following has no -_14_--><div class="Element14">
+<!--a_Element14-->Links</div>
+<div id="div4C696E6B73">
+<div class="Element11">
+<!--Element10--><div class="Element10"><!--Element10 no _14_ in a --><div class="Element10">
+<a href="OREF-__MEMBERTYPE_Enumerations_AcDbEvalGraph.html">AcDbEvalGraph Enumerations</a>, <a href="OREF-__MEMBERTYPE_Methods_AcDbEvalGraph.html">AcDbEvalGraph Methods</a></div></div>
+</div>
+</div>
+<!--Element14 following has no -_14_--><div class="Element14">
+<!--a_Element14-->See Also</div>
+<div id="div53656520416C736F">
+<div class="Element11">
+<!--Element10--><div class="Element10"><!--Element10 no _14_ in a --><div class="Element10">
+<p class="Element10">
+<span class="Element146">AcDbEvalExpr</span></p></div></div>
+</div>
+</div>
+</div>
+<!-- End Page Content -->
+
+<!-- Begin Page Footer -->
+
+<!-- End Page Footer -->
+</div>
+</div>
+
+<!-- End Client Area -->
+</body></html>

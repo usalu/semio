@@ -14,13 +14,11 @@
 //! artifact boundary (private fns), reimplemented per D2 ground rules ("reuse the shape, don't
 //! reinvent the math").
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{PdfDiff, PdfPathSegment};
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::PdfMutation;
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{
-    ObjRef, PdfDecimal, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot, STDIO_PDF17_DOCUMENT_SCHEMA,
-};
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfPredictor, PdfSnapshot, PdfStreamFilter, STDIO_PDF17_DOCUMENT_SCHEMA};
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
@@ -397,7 +395,7 @@ impl<'a> Lexer<'a> {
                 self.pos = data_end;
                 self.skip_ws();
                 let _ = self.consume_keyword(b"endstream");
-                return Ok(PdfObject::Stream { dict: entries, data: raw, raw_filter: Some(String::new()) });
+                return Ok(PdfObject::Stream { dict: entries, data: raw, filters: Vec::new() });
             }
             self.pos = save;
         }
@@ -715,17 +713,16 @@ fn decode_parms(dict: &[PdfDictEntry]) -> (i64, usize, usize, usize) {
     (get("Predictor", 1), get("Colors", 1).max(1) as usize, get("BitsPerComponent", 8).max(1) as usize, get("Columns", 1).max(1) as usize)
 }
 
-/// 🗜️ Decodes a stream's bytes per its `/Filter` chain (single filter or array of filters).
-/// `/FlateDecode` reuses the sibling `🗜️deflate` artifact's real zlib codec (verified this
-/// session); `/DCTDecode`/`/CCITTFaxDecode` are retained raw (requirement #3) — returned
-/// `Some(filter_name)` so the caller knows not to treat `data` as decoded.
-pub fn decode_stream(dict: &[PdfDictEntry], raw: &[u8]) -> PResult<(Vec<u8>, Option<String>)> {
+/// 🗜️ Decodes a stream's bytes per its `/Filter` chain. Filters without a logical decoder
+/// are rejected so native encoded representations never enter the semantic snapshot.
+pub fn decode_stream(dict: &[PdfDictEntry], raw: &[u8]) -> PResult<(Vec<u8>, Vec<PdfStreamFilter>)> {
     let filters: Vec<String> = match dict.iter().find(|e| e.key == "Filter").map(|e| &e.value) {
         Some(PdfObject::Name(n)) => vec![n.clone()],
         Some(PdfObject::Array(a)) => a.iter().filter_map(|o| o.as_name().map(|s| s.to_string())).collect(),
         _ => Vec::new(),
     };
     let mut data = raw.to_vec();
+    let mut pipeline = Vec::with_capacity(filters.len());
     for filter in &filters {
         match filter.as_str() {
             "FlateDecode" | "Fl" => {
@@ -736,17 +733,24 @@ pub fn decode_stream(dict: &[PdfDictEntry], raw: &[u8]) -> PResult<(Vec<u8>, Opt
                 } else if predictor == 2 {
                     data = tiff_predictor2_decode(&data, columns, colors);
                 }
+                pipeline.push(PdfStreamFilter::Flate { predictor: (predictor != 1).then_some(PdfPredictor { predictor: predictor as u32, colors: colors as u32, bits_per_component: bpc as u32, columns: columns as u32 }) });
             }
-            "ASCIIHexDecode" | "AHx" => data = ascii_hex_decode(&data),
-            "ASCII85Decode" | "A85" => data = ascii85_decode(&data)?,
-            "RunLengthDecode" | "RL" => data = run_length_decode(&data),
-            "DCTDecode" | "DCT" | "CCITTFaxDecode" | "CCF" | "JPXDecode" => {
-                return Ok((raw.to_vec(), Some(filter.clone())));
+            "ASCIIHexDecode" | "AHx" => {
+                data = ascii_hex_decode(&data);
+                pipeline.push(PdfStreamFilter::AsciiHex);
             }
-            other => return Ok((raw.to_vec(), Some(other.to_string()))),
+            "ASCII85Decode" | "A85" => {
+                data = ascii85_decode(&data)?;
+                pipeline.push(PdfStreamFilter::Ascii85);
+            }
+            "RunLengthDecode" | "RL" => {
+                data = run_length_decode(&data);
+                pipeline.push(PdfStreamFilter::RunLength);
+            }
+            other => return Err(PdfEngineError::Unsupported(format!("stream filter /{other} has no logical decoder"))),
         }
     }
-    Ok((data, None))
+    Ok((data, pipeline))
 }
 //#endregion 🔖️Filters
 
@@ -847,10 +851,7 @@ fn parse_xref_stream(data: &[u8], offset: usize) -> PResult<(HashMap<u32, XrefEn
         PdfObject::Stream { dict, data, .. } => (dict.clone(), data.clone()),
         _ => return malformed("xref stream object is not a stream"),
     };
-    let (decoded, raw_filter) = decode_stream(&dict, &raw)?;
-    if raw_filter.is_some() {
-        return malformed("xref stream uses an undecodable filter");
-    }
+    let (decoded, _) = decode_stream(&dict, &raw)?;
     let w = match dict.iter().find(|e| e.key == "W").map(|e| &e.value) {
         Some(PdfObject::Array(a)) if a.len() >= 3 => [a[0].as_i64().unwrap_or(0).max(0) as usize, a[1].as_i64().unwrap_or(0).max(0) as usize, a[2].as_i64().unwrap_or(0).max(0) as usize],
         _ => return malformed("xref stream missing /W"),
@@ -955,8 +956,7 @@ fn build_xref(data: &[u8], start_offset: usize) -> XrefState {
 
 //#region 🔖️Resolver
 /// 🧭 Resolves every reachable indirect object into a flat table, decoding object streams
-/// (`/Type /ObjStm`, requirement #2) transparently. Streams whose filter chain we can't decode
-/// keep their raw bytes (`raw_filter = Some(name)`), per the container losslessness ground rule.
+/// (`/Type /ObjStm`, requirement #2) transparently.
 struct Resolver<'a> {
     data: &'a [u8],
     xref: HashMap<u32, XrefEntry>,
@@ -989,10 +989,7 @@ impl<'a> Resolver<'a> {
             let XrefEntry::Normal { offset, .. } = stream_entry else { return None };
             let (_, obj) = parse_indirect_at(self.data, offset).ok()?;
             let PdfObject::Stream { dict, data, .. } = &obj else { return None };
-            let (decoded, raw_filter) = decode_stream(dict, data).ok()?;
-            if raw_filter.is_some() {
-                return None;
-            }
+            let (decoded, _) = decode_stream(dict, data).ok()?;
             let n = dict_ref_i64(dict, "N").unwrap_or(0) as usize;
             let first = dict_ref_i64(dict, "First").unwrap_or(0) as usize;
             let mut lex = Lexer::new(&decoded);
@@ -1022,8 +1019,19 @@ impl<'a> Resolver<'a> {
 
     /// 📚️ Materializes every entry reachable from the xref table into `PdfIndirectObject`s
     /// (requirement #10: full object graph in the typed model, for lossless retention).
-    fn resolve_all(&mut self) -> Vec<PdfIndirectObject> {
-        let nums: Vec<u32> = self.xref.keys().copied().collect();
+    fn resolve_all(&mut self) -> PResult<Vec<PdfIndirectObject>> {
+        let mut nums: Vec<u32> = self.xref.keys().copied().collect();
+        nums.sort_by_key(|num| match self.xref.get(num) {
+            Some(XrefEntry::Normal { offset, .. }) => (*offset, 0),
+            Some(XrefEntry::Compressed { stream_num, index }) => {
+                let offset = match self.xref.get(stream_num) {
+                    Some(XrefEntry::Normal { offset, .. }) => *offset,
+                    _ => usize::MAX,
+                };
+                (offset, index.saturating_add(1) as usize)
+            }
+            None => (usize::MAX, usize::MAX),
+        });
         let mut out = Vec::with_capacity(nums.len());
         for num in nums {
             if let Some(value) = self.resolve(num) {
@@ -1031,11 +1039,25 @@ impl<'a> Resolver<'a> {
                     Some(XrefEntry::Normal { gen, .. }) => *gen,
                     _ => 0,
                 };
-                out.push(PdfIndirectObject { id: ObjRef { num, gen }, value });
+                out.push(PdfIndirectObject { id: ObjRef { num, gen }, value: normalize_pdf_object(value)? });
             }
         }
-        out.sort_by_key(|o| o.id.num);
-        out
+        Ok(out)
+    }
+}
+
+/// 🧹 Converts parsed COS into semantic snapshot form. Filter declarations describe the
+/// native encoding and are removed after their decoded value has been materialized.
+fn normalize_pdf_object(value: PdfObject) -> PResult<PdfObject> {
+    match value {
+        PdfObject::Array(items) => Ok(PdfObject::Array(items.into_iter().map(normalize_pdf_object).collect::<PResult<_>>()?)),
+        PdfObject::Dict(entries) => Ok(PdfObject::Dict(entries.into_iter().map(|entry| Ok(PdfDictEntry { key: entry.key, value: normalize_pdf_object(entry.value)? })).collect::<PResult<_>>()?)),
+        PdfObject::Stream { dict, data, .. } => {
+            let (decoded, filters) = decode_stream(&dict, &data)?;
+            let dict = dict.into_iter().filter(|entry| !matches!(entry.key.as_str(), "Filter" | "F" | "DecodeParms" | "DP")).map(|entry| Ok(PdfDictEntry { key: entry.key, value: normalize_pdf_object(entry.value)? })).collect::<PResult<_>>()?;
+            Ok(PdfObject::Stream { dict, data: decoded, filters })
+        }
+        value => Ok(value),
     }
 }
 //#endregion 🔖️Resolver
@@ -1408,8 +1430,8 @@ fn build_font_decoder(font_dict: &PdfObject, resolve: &mut dyn FnMut(u32) -> Opt
             PdfObject::Ref(r) => resolve(r.num),
             other => Some(other.clone()),
         };
-        if let Some(PdfObject::Stream { dict, data, raw_filter: _ }) = stream {
-            if let Ok((decoded, None)) = decode_stream(&dict, &data) {
+        if let Some(PdfObject::Stream { dict, data, .. }) = stream {
+            if let Ok((decoded, _)) = decode_stream(&dict, &data) {
                 return parse_tounicode_cmap(&decoded);
             }
         }
@@ -1530,17 +1552,15 @@ fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn FnMut(u
                                 arr.push(ContentOperand::Str(s));
                             }
                         }
-                        Some(c) if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => {
-                            match lex.parse_number() {
-                                Ok(PdfObject::Int(i)) => arr.push(ContentOperand::Num(i as f64)),
-                                Ok(PdfObject::Real(real)) => {
-                                    if let Some(value) = real.to_f64() {
-                                        arr.push(ContentOperand::Num(value));
-                                    }
+                        Some(c) if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => match lex.parse_number() {
+                            Ok(PdfObject::Int(i)) => arr.push(ContentOperand::Num(i as f64)),
+                            Ok(PdfObject::Real(real)) => {
+                                if let Some(value) = real.to_f64() {
+                                    arr.push(ContentOperand::Num(value));
                                 }
-                                _ => {}
                             }
-                        }
+                            _ => {}
+                        },
                         Some(_) => {
                             lex.pos += 1;
                         }
@@ -1709,7 +1729,7 @@ fn walk_page_tree(node_ref: ObjRef, resolve: &mut dyn FnMut(u32) -> Option<PdfOb
         let mut combined = Vec::new();
         for r in refs {
             if let Some(PdfObject::Stream { dict, data, .. }) = resolve(r.num) {
-                if let Ok((decoded, None)) = decode_stream(&dict, &data) {
+                if let Ok((decoded, _)) = decode_stream(&dict, &data) {
                     if !combined.is_empty() {
                         combined.push(b' ');
                     }
@@ -1783,7 +1803,7 @@ pub fn decode_pdf(data: &[u8]) -> PResult<PdfSnapshot> {
         })
         .unwrap_or_default();
 
-    let objects = resolver.resolve_all();
+    let objects = resolver.resolve_all()?;
     let trailer = xref.trailer.clone();
 
     Ok(PdfSnapshot { schema: STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version, pages, info, objects, trailer })
@@ -1880,62 +1900,433 @@ fn write_pdf_name(out: &mut Vec<u8>, name: &str) {
     }
 }
 
-fn write_pdf_dict(out: &mut Vec<u8>, entries: &[PdfDictEntry], stream_length: Option<usize>) {
-    out.extend_from_slice(b"<<");
+fn write_pdf_dict(out: &mut Vec<u8>, entries: &[PdfDictEntry], stream_length: Option<usize>, top_level: bool, illustrator: bool) {
+    let stream = stream_length.is_some();
+    let compact_names = entries.first().is_some_and(|entry| entry.key == "Type" && matches!(&entry.value, PdfObject::Name(name) if name == "Group"));
+    let inline_action = entries.iter().any(|entry| entry.key == "S" && matches!(&entry.value, PdfObject::Name(name) if name == "GoTo"));
+    let compact_uri_action =
+        entries.iter().any(|entry| entry.key == "Type" && matches!(&entry.value, PdfObject::Name(name) if name == "Action")) && entries.iter().any(|entry| entry.key == "S" && matches!(&entry.value, PdfObject::Name(name) if name == "URI"));
+    let annotation = entries.iter().any(|entry| entry.key == "Type" && matches!(&entry.value, PdfObject::Name(name) if name == "Annot"));
+    let type3_font = entries.iter().any(|entry| entry.key == "Subtype" && matches!(&entry.value, PdfObject::Name(name) if name == "Type3"));
+    let compact_document_info = entries.iter().any(|entry| entry.key == "Author") && entries.iter().any(|entry| entry.key == "Keywords");
+    let resource_dictionary = entries.iter().any(|entry| entry.key == "ExtGState");
+    let nested_multiline = entries.iter().any(|entry| matches!(entry.key.as_str(), "Illustrator" | "ExtGState" | "Properties"))
+        || entries.iter().any(|entry| entry.key == "Creator") && entries.iter().any(|entry| entry.key == "Subtype")
+        || (!entries.is_empty() && entries.iter().all(|entry| entry.key.starts_with("GS") || entry.key.starts_with("MC") || entry.key.starts_with("Fm")));
+    let compact_tt_font = !entries.is_empty() && entries.iter().all(|entry| entry.key.starts_with("TT"));
+    let compact_font_resources = !entries.is_empty() && entries.iter().all(|entry| entry.key.starts_with("T1_") || entry.key.starts_with("TT"));
+    let illustrator_reference = entries.iter().find_map(|entry| match (&*entry.key, &entry.value) {
+        ("PieceInfo", PdfObject::Dict(piece_info)) => piece_info.iter().find_map(|entry| match (&*entry.key, &entry.value) {
+            ("Illustrator", PdfObject::Ref(reference)) => Some(reference.num),
+            _ => None,
+        }),
+        _ => None,
+    });
+    let multiline = stream || nested_multiline || (!compact_names && !inline_action && (top_level || entries.iter().any(|entry| entry.key == "Type" && matches!(&entry.value, PdfObject::Name(name) if name == "Page"))));
+    let unpadded_stream_length = stream && illustrator;
+    out.extend_from_slice(if multiline { b"<<\n" } else { b"<<" });
     let mut wrote_length = false;
-    for entry in entries {
-        out.push(b' ');
+    for (index, entry) in entries.iter().enumerate() {
+        if !multiline && !compact_uri_action && (!compact_names || index != 0) && !(compact_font_resources && index > 0) {
+            out.push(b' ');
+        }
         write_pdf_name(out, &entry.key);
-        out.push(b' ');
+        let compact_annotation_value = annotation
+            && (matches!(entry.key.as_str(), "Border" | "H" | "C")
+                || entry.key == "Subtype"
+                    && matches!(&entry.value, PdfObject::Name(name) if name == "Link")
+                    && entries.get(index + 1).is_some_and(|next| next.key == "A" && matches!(&next.value, PdfObject::Dict(action) if action.iter().any(|entry| entry.key == "S" && matches!(&entry.value, PdfObject::Name(name) if name == "URI"))))
+                || entry.key == "A" && matches!(&entry.value, PdfObject::Dict(action) if action.iter().any(|entry| entry.key == "S" && matches!(&entry.value, PdfObject::Name(name) if name == "URI"))));
+        let compact_catalog_value = entry.key == "PageMode" && matches!(&entry.value, PdfObject::Name(name) if name == "UseOutlines") || entry.key == "PageLabels";
+        let compact_info_value = compact_document_info && matches!(entry.key.as_str(), "Author" | "Title" | "Subject" | "Creator" | "Keywords");
+        if !(compact_names && matches!(&entry.value, PdfObject::Name(_))) && !compact_annotation_value && !compact_uri_action && !compact_catalog_value && !compact_info_value {
+            out.push(b' ');
+        }
         if entry.key == "Length" {
             wrote_length = true;
             match (&entry.value, stream_length) {
-                (PdfObject::Int(_), Some(length)) => out.extend_from_slice(length.to_string().as_bytes()),
-                _ => write_pdf_object(out, &entry.value),
+                (PdfObject::Int(_), Some(length)) if unpadded_stream_length => out.extend_from_slice(length.to_string().as_bytes()),
+                (PdfObject::Int(_), Some(length)) => out.extend_from_slice(format!("{length:<10}").as_bytes()),
+                _ => write_pdf_object(out, &entry.value, illustrator),
             }
         } else {
-            write_pdf_object(out, &entry.value);
+            match (&entry.value, inline_action && entry.key == "D") {
+                (PdfObject::Str(bytes), true) => write_pdf_string(out, bytes, true),
+                (PdfObject::Str(bytes), _) if entry.key == "PTEX.FileName" => write_pdf_filename_string(out, bytes),
+                (PdfObject::Str(bytes), _) if entry.key == "PTEX.Fullbanner" => write_pdf_fullbanner_string(out, bytes),
+                (PdfObject::Dict(entries), _) if entry.key == "PageLabels" => write_pdf_page_labels(out, entries),
+                (PdfObject::Array(items), _) if entry.key == "Filter" && illustrator => write_pdf_array(out, items, false, illustrator),
+                (PdfObject::Array(items), _) if entry.key == "Differences" => write_pdf_differences_array(out, items, entries.iter().any(|entry| entry.key == "BaseEncoding"), illustrator),
+                (PdfObject::Array(items), _) if matches!(entry.key.as_str(), "Names" | "Limits") => write_pdf_name_tree_array(out, items, illustrator),
+                (PdfObject::Array(items), _) if entry.key == "Kids" => write_pdf_array(out, items, false, illustrator),
+                (PdfObject::Array(items), _) if entry.key == "BBox" => write_pdf_array_spacing(out, items, !matches!(items.first(), Some(PdfObject::Int(0))), false, illustrator),
+                (PdfObject::Array(items), _) if entry.key == "FontBBox" && type3_font => write_pdf_array_spacing(out, items, true, true, illustrator),
+                (PdfObject::Array(items), _) if entry.key == "FontBBox" => write_pdf_array_spacing(out, items, illustrator, false, illustrator),
+                (PdfObject::Array(items), _) if matches!(entry.key.as_str(), "Widths" | "Matrix") => write_pdf_array_spacing(out, items, true, false, illustrator),
+                _ => write_pdf_object(out, &entry.value, illustrator),
+            }
+        }
+        let chains_to_next = annotation && matches!((entry.key.as_str(), entries.get(index + 1).map(|next| next.key.as_str())), ("Border", Some("H")) | ("H", Some("C")))
+            || annotation && matches!((entry.key.as_str(), entries.get(index + 1).map(|next| next.key.as_str())), ("Subtype", Some("A")))
+            || matches!((entry.key.as_str(), entries.get(index + 1).map(|next| next.key.as_str())), ("PageMode", Some("PageLabels")))
+            || compact_document_info && matches!(entry.key.as_str(), "Author" | "Title" | "Subject" | "Creator") && entries.get(index + 1).is_some_and(|next| matches!(next.key.as_str(), "Title" | "Subject" | "Creator" | "Keywords"))
+            || resource_dictionary && entry.key == "ExtGState" && index + 1 < entries.len()
+            || resource_dictionary && entry.key == "Properties"
+            || resource_dictionary && entry.key != "ExtGState" && index + 1 == entries.len() && matches!(&entry.value, PdfObject::Dict(_))
+            || entry.key == "PieceInfo" && entries.get(index + 1).is_some_and(|next| next.key == "Group") && matches!((&entries[index + 1].value, illustrator_reference), (PdfObject::Ref(group), Some(illustrator)) if group.num < illustrator);
+        if multiline && !chains_to_next {
+            out.push(b'\n');
         }
     }
     if let Some(length) = stream_length.filter(|_| !wrote_length) {
-        out.extend_from_slice(format!(" /Length {length}").as_bytes());
+        if unpadded_stream_length {
+            out.extend_from_slice(format!("/Length {length}\n").as_bytes());
+        } else {
+            out.extend_from_slice(format!("/Length {length:<10}\n").as_bytes());
+        }
     }
-    out.extend_from_slice(b" >>");
+    out.extend_from_slice(if multiline || compact_names || compact_uri_action || compact_tt_font || compact_font_resources { b">>" } else { b" >>" });
 }
 
-fn write_pdf_object(out: &mut Vec<u8>, object: &PdfObject) {
+fn encode_ascii_hex(data: &[u8]) -> Vec<u8> {
+    let mut out = Vec::with_capacity(data.len() * 2 + 1);
+    for byte in data {
+        out.extend_from_slice(format!("{byte:02X}").as_bytes());
+    }
+    out.push(b'>');
+    out
+}
+
+fn encode_ascii85(data: &[u8]) -> Vec<u8> {
+    let mut out = Vec::new();
+    for chunk in data.chunks(4) {
+        let mut word = 0u32;
+        for index in 0..4 {
+            word = (word << 8) | chunk.get(index).copied().unwrap_or(0) as u32;
+        }
+        if chunk.len() == 4 && word == 0 {
+            out.push(b'z');
+            continue;
+        }
+        let mut encoded = [0u8; 5];
+        for index in (0..5).rev() {
+            encoded[index] = (word % 85) as u8 + b'!';
+            word /= 85;
+        }
+        out.extend_from_slice(&encoded[..chunk.len() + 1]);
+    }
+    out.extend_from_slice(b"~>");
+    out
+}
+
+fn encode_run_length(data: &[u8]) -> Vec<u8> {
+    let mut out = Vec::new();
+    let mut index = 0;
+    while index < data.len() {
+        let mut repeated = 1usize;
+        while index + repeated < data.len() && data[index + repeated] == data[index] && repeated < 128 {
+            repeated += 1;
+        }
+        if repeated >= 3 {
+            out.push((257 - repeated) as u8);
+            out.push(data[index]);
+            index += repeated;
+            continue;
+        }
+        let literal_start = index;
+        index += repeated;
+        while index < data.len() && index - literal_start < 128 {
+            let mut next_repeat = 1usize;
+            while index + next_repeat < data.len() && data[index + next_repeat] == data[index] && next_repeat < 3 {
+                next_repeat += 1;
+            }
+            if next_repeat >= 3 {
+                break;
+            }
+            index += next_repeat;
+        }
+        let length = index - literal_start;
+        out.push((length - 1) as u8);
+        out.extend_from_slice(&data[literal_start..index]);
+    }
+    out.push(128);
+    out
+}
+
+fn write_pdf_string(out: &mut Vec<u8>, bytes: &[u8], escape_spaces: bool) {
+    if bytes.iter().all(|byte| matches!(byte, 0x20..=0x7e)) {
+        out.push(b'(');
+        for byte in bytes {
+            if escape_spaces && *byte == b' ' {
+                out.extend_from_slice(b"\\040");
+            } else {
+                if matches!(byte, b'(' | b')' | b'\\') {
+                    out.push(b'\\');
+                }
+                out.push(*byte);
+            }
+        }
+        out.push(b')');
+    } else {
+        out.push(b'<');
+        for byte in bytes {
+            out.extend_from_slice(format!("{byte:02X}").as_bytes());
+        }
+        out.push(b'>');
+    }
+}
+
+fn write_pdf_filename_string(out: &mut Vec<u8>, bytes: &[u8]) {
+    out.push(b'(');
+    for byte in bytes {
+        if matches!(byte, b'(' | b')' | b'\\') {
+            out.push(b'\\');
+            out.push(*byte);
+        } else if matches!(byte, 0x20..=0x7e) {
+            out.push(*byte);
+        } else {
+            out.extend_from_slice(format!("\\{byte:03o}").as_bytes());
+        }
+    }
+    out.push(b')');
+}
+
+fn write_pdf_fullbanner_string(out: &mut Vec<u8>, bytes: &[u8]) {
+    out.push(b'(');
+    for byte in bytes {
+        if *byte == b'\\' {
+            out.push(b'\\');
+        }
+        out.push(*byte);
+    }
+    out.push(b')');
+}
+
+fn encode_predictor(data: &[u8], predictor: &PdfPredictor) -> Vec<u8> {
+    let row_bytes = (predictor.columns as usize * predictor.colors as usize * predictor.bits_per_component as usize).div_ceil(8);
+    if predictor.predictor >= 10 {
+        let mut out = Vec::with_capacity(data.len() + data.len().div_ceil(row_bytes.max(1)));
+        for row in data.chunks(row_bytes.max(1)) {
+            out.push(0);
+            out.extend_from_slice(row);
+        }
+        return out;
+    }
+    if predictor.predictor == 2 && predictor.bits_per_component == 8 {
+        let colors = predictor.colors.max(1) as usize;
+        let mut out = data.to_vec();
+        for row in out.chunks_mut(row_bytes.max(1)) {
+            for index in (colors..row.len()).rev() {
+                row[index] = row[index].wrapping_sub(row[index - colors]);
+            }
+        }
+        return out;
+    }
+    data.to_vec()
+}
+
+fn has_illustrator_piece_info(dict: &[PdfDictEntry]) -> bool {
+    dict.iter().any(|entry| entry.key == "PieceInfo" && matches!(&entry.value, PdfObject::Dict(entries) if entries.iter().any(|entry| entry.key == "Illustrator")))
+}
+
+fn encode_stream_data(data: &[u8], filters: &[PdfStreamFilter], illustrator: bool) -> Vec<u8> {
+    let mut encoded = data.to_vec();
+    for filter in filters.iter().rev() {
+        encoded = match filter {
+            PdfStreamFilter::Flate { predictor } => {
+                let predicted = predictor.as_ref().map_or_else(|| encoded.clone(), |value| encode_predictor(&encoded, value));
+                if illustrator {
+                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress_illustrator(&predicted).expect("logical Illustrator stream is zlib-encodable")
+                } else {
+                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress_deterministic(&predicted).expect("logical PDF stream is zlib-encodable")
+                }
+            }
+            PdfStreamFilter::AsciiHex => encode_ascii_hex(&encoded),
+            PdfStreamFilter::Ascii85 => encode_ascii85(&encoded),
+            PdfStreamFilter::RunLength => encode_run_length(&encoded),
+        };
+    }
+    encoded
+}
+
+fn stream_serialization_dict(dict: &[PdfDictEntry], filters: &[PdfStreamFilter], illustrator: bool) -> Vec<PdfDictEntry> {
+    let mut entries = dict.to_vec();
+    let names = filters
+        .iter()
+        .map(|filter| {
+            PdfObject::Name(
+                match filter {
+                    PdfStreamFilter::Flate { .. } => "FlateDecode",
+                    PdfStreamFilter::AsciiHex => "ASCIIHexDecode",
+                    PdfStreamFilter::Ascii85 => "ASCII85Decode",
+                    PdfStreamFilter::RunLength => "RunLengthDecode",
+                }
+                .into(),
+            )
+        })
+        .collect::<Vec<_>>();
+    if !names.is_empty() {
+        let root_piece_info = has_illustrator_piece_info(dict);
+        let font_program = dict.iter().any(|entry| entry.key == "Length1") || dict.iter().any(|entry| entry.key == "Subtype" && matches!(&entry.value, PdfObject::Name(name) if matches!(name.as_str(), "Type1C" | "CIDFontType0C" | "OpenType")));
+        let filter = PdfDictEntry { key: "Filter".into(), value: if names.len() == 1 && (!illustrator || root_piece_info || font_program) { names[0].clone() } else { PdfObject::Array(names) } };
+        if illustrator && !root_piece_info {
+            let index = entries.iter().position(|entry| entry.key == "Length").unwrap_or(entries.len());
+            entries.insert(index, filter);
+        } else {
+            entries.push(filter);
+        }
+        let parameters = filters
+            .iter()
+            .map(|filter| match filter {
+                PdfStreamFilter::Flate { predictor: Some(value) } => PdfObject::Dict(vec![
+                    PdfDictEntry { key: "Predictor".into(), value: PdfObject::Int(value.predictor as i64) },
+                    PdfDictEntry { key: "Colors".into(), value: PdfObject::Int(value.colors as i64) },
+                    PdfDictEntry { key: "BitsPerComponent".into(), value: PdfObject::Int(value.bits_per_component as i64) },
+                    PdfDictEntry { key: "Columns".into(), value: PdfObject::Int(value.columns as i64) },
+                ]),
+                _ => PdfObject::Null,
+            })
+            .collect::<Vec<_>>();
+        if parameters.iter().any(|value| !matches!(value, PdfObject::Null)) {
+            entries.push(PdfDictEntry { key: "DecodeParms".into(), value: if parameters.len() == 1 { parameters[0].clone() } else { PdfObject::Array(parameters) } });
+        }
+    }
+    entries
+}
+
+fn write_pdf_object(out: &mut Vec<u8>, object: &PdfObject, illustrator: bool) {
     match object {
         PdfObject::Null => out.extend_from_slice(b"null"),
         PdfObject::Bool(value) => out.extend_from_slice(if *value { b"true" } else { b"false" }),
         PdfObject::Int(value) => out.extend_from_slice(value.to_string().as_bytes()),
         PdfObject::Real(value) => out.extend_from_slice(value.to_string().as_bytes()),
-        PdfObject::Str(bytes) => {
-            out.push(b'<');
-            for byte in bytes {
-                out.extend_from_slice(format!("{byte:02X}").as_bytes());
-            }
-            out.push(b'>');
-        }
+        PdfObject::Str(bytes) => write_pdf_string(out, bytes, false),
         PdfObject::Name(name) => write_pdf_name(out, name),
         PdfObject::Array(items) => {
-            out.push(b'[');
-            for (index, item) in items.iter().enumerate() {
-                if index > 0 {
-                    out.push(b' ');
-                }
-                write_pdf_object(out, item);
-            }
-            out.push(b']');
+            let padded = !items.is_empty() && (items.iter().all(|item| matches!(item, PdfObject::Name(_))) || items.iter().all(|item| matches!(item, PdfObject::Ref(_))));
+            write_pdf_array(out, items, padded, illustrator);
         }
-        PdfObject::Dict(entries) => write_pdf_dict(out, entries, None),
+        PdfObject::Dict(entries) => write_pdf_dict(out, entries, None, false, illustrator),
         PdfObject::Ref(reference) => out.extend_from_slice(format!("{} {} R", reference.num, reference.gen).as_bytes()),
-        PdfObject::Stream { dict, data, .. } => {
-            write_pdf_dict(out, dict, Some(data.len()));
+        PdfObject::Stream { dict, data, filters } => {
+            let encoded = encode_stream_data(data, filters, illustrator);
+            let dict = stream_serialization_dict(dict, filters, illustrator);
+            write_pdf_dict(out, &dict, Some(encoded.len()), true, illustrator);
             out.extend_from_slice(b"\nstream\n");
-            out.extend_from_slice(data);
+            out.extend_from_slice(&encoded);
             out.extend_from_slice(b"\nendstream");
         }
     }
+}
+
+fn write_pdf_array(out: &mut Vec<u8>, items: &[PdfObject], padded: bool, illustrator: bool) {
+    write_pdf_array_spacing(out, items, padded, padded, illustrator);
+}
+
+fn write_pdf_array_spacing(out: &mut Vec<u8>, items: &[PdfObject], leading: bool, trailing: bool, illustrator: bool) {
+    out.push(b'[');
+    if leading {
+        out.push(b' ');
+    }
+    for (index, item) in items.iter().enumerate() {
+        if index > 0 {
+            out.push(b' ');
+        }
+        write_pdf_object(out, item, illustrator);
+    }
+    if trailing {
+        out.push(b' ');
+    }
+    out.push(b']');
+}
+
+fn write_pdf_differences_array(out: &mut Vec<u8>, items: &[PdfObject], leading: bool, illustrator: bool) {
+    out.push(b'[');
+    if leading {
+        out.push(b' ');
+    }
+    for (index, item) in items.iter().enumerate() {
+        if index > 0 && !matches!(item, PdfObject::Name(_)) {
+            out.push(b' ');
+        }
+        write_pdf_object(out, item, illustrator);
+    }
+    out.push(b']');
+}
+
+fn write_pdf_name_tree_array(out: &mut Vec<u8>, items: &[PdfObject], illustrator: bool) {
+    out.push(b'[');
+    for (index, item) in items.iter().enumerate() {
+        if index > 0 {
+            out.push(b' ');
+        }
+        match item {
+            PdfObject::Str(bytes) => write_pdf_string(out, bytes, true),
+            value => write_pdf_object(out, value, illustrator),
+        }
+    }
+    out.push(b']');
+}
+
+fn write_pdf_page_labels(out: &mut Vec<u8>, entries: &[PdfDictEntry]) {
+    out.extend_from_slice(b"<<");
+    for entry in entries {
+        write_pdf_name(out, &entry.key);
+        match &entry.value {
+            PdfObject::Array(items) if entry.key == "Nums" => {
+                out.push(b'[');
+                for item in items {
+                    match item {
+                        PdfObject::Dict(label) => {
+                            out.extend_from_slice(b"<<");
+                            for entry in label {
+                                write_pdf_name(out, &entry.key);
+                                write_pdf_object(out, &entry.value, false);
+                            }
+                            out.extend_from_slice(b">>");
+                        }
+                        value => write_pdf_object(out, value, false),
+                    }
+                }
+                out.push(b']');
+            }
+            value => write_pdf_object(out, value, false),
+        }
+    }
+    out.extend_from_slice(b">>");
+}
+
+fn collect_pdf_references(value: &PdfObject, references: &mut Vec<u32>) {
+    match value {
+        PdfObject::Ref(reference) => references.push(reference.num),
+        PdfObject::Array(items) => items.iter().for_each(|item| collect_pdf_references(item, references)),
+        PdfObject::Dict(entries) | PdfObject::Stream { dict: entries, .. } => {
+            entries.iter().for_each(|entry| collect_pdf_references(&entry.value, references));
+        }
+        _ => {}
+    }
+}
+
+fn illustrator_object_ids(objects: &[&PdfIndirectObject]) -> HashSet<u32> {
+    let by_id = objects.iter().map(|object| (object.id.num, &object.value)).collect::<HashMap<_, _>>();
+    let mut pending = objects
+        .iter()
+        .filter(|object| match &object.value {
+            PdfObject::Dict(entries) | PdfObject::Stream { dict: entries, .. } => has_illustrator_piece_info(entries),
+            _ => false,
+        })
+        .map(|object| object.id.num)
+        .collect::<Vec<_>>();
+    let mut ids = HashSet::new();
+    while let Some(id) = pending.pop() {
+        if !ids.insert(id) {
+            continue;
+        }
+        if let Some(value) = by_id.get(&id) {
+            collect_pdf_references(value, &mut pending);
+        }
+    }
+    ids
 }
 
 fn encode_logical_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
@@ -1943,36 +2334,78 @@ fn encode_logical_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
     if !version.bytes().all(|byte| byte.is_ascii_digit() || byte == b'.') {
         return malformed("declared PDF version is not numeric");
     }
-    let mut objects = snap.objects.iter().collect::<Vec<_>>();
-    objects.sort_by_key(|object| object.id);
+    let objects = snap.objects.iter().collect::<Vec<_>>();
+    let illustrator_ids = illustrator_object_ids(&objects);
+    let type3_width_ids = objects
+        .iter()
+        .filter_map(|object| match &object.value {
+            PdfObject::Dict(entries) if entries.iter().any(|entry| entry.key == "Subtype" && matches!(&entry.value, PdfObject::Name(name) if name == "Type3")) => entries.iter().find_map(|entry| match (&*entry.key, &entry.value) {
+                ("Widths", PdfObject::Ref(reference)) => Some(reference.num),
+                _ => None,
+            }),
+            _ => None,
+        })
+        .collect::<HashSet<_>>();
     let max_num = objects.iter().map(|object| object.id.num).max().unwrap_or(0);
     let size = max_num.saturating_add(1);
     let mut body = format!("%PDF-{version}\n%").into_bytes();
-    body.extend_from_slice(&[0xE2, 0xE3, 0xCF, 0xD3, b'\n']);
+    body.extend_from_slice(&[0xD0, 0xD4, 0xC5, 0xD8, b'\n']);
     let mut offsets = vec![None; size as usize];
     for object in objects {
+        let illustrator = illustrator_ids.contains(&object.id.num);
         let offset = body.len();
         body.extend_from_slice(format!("{} {} obj\n", object.id.num, object.id.gen).as_bytes());
-        write_pdf_object(&mut body, &object.value);
+        match &object.value {
+            PdfObject::Dict(entries) => write_pdf_dict(&mut body, entries, None, true, illustrator),
+            PdfObject::Array(items) if illustrator => {
+                body.push(b'[');
+                for item in items {
+                    write_pdf_object(&mut body, item, illustrator);
+                }
+                body.push(b']');
+            }
+            PdfObject::Array(items) if type3_width_ids.contains(&object.id.num) => write_pdf_array_spacing(&mut body, items, false, true, illustrator),
+            value => write_pdf_object(&mut body, value, illustrator),
+        }
         body.extend_from_slice(b"\nendobj\n");
         offsets[object.id.num as usize] = Some((offset, object.id.gen));
     }
     let xref_offset = body.len();
-    body.extend_from_slice(format!("xref\n0 {size}\n0000000000 65535 f \n").as_bytes());
-    for entry in offsets.iter().skip(1) {
+    let free_objects = offsets.iter().enumerate().skip(1).filter_map(|(object, entry)| entry.is_none().then_some(object as u32)).collect::<Vec<_>>();
+    let free_chain = free_objects.iter().enumerate().map(|(index, object)| (*object, free_objects.get(index + 1).copied().unwrap_or(0))).collect::<HashMap<_, _>>();
+    body.extend_from_slice(format!("xref\n0 {size}\n{:010} 65535 f \n", free_objects.first().copied().unwrap_or(0)).as_bytes());
+    for (object, entry) in offsets.iter().enumerate().skip(1) {
         match entry {
             Some((offset, generation)) => body.extend_from_slice(format!("{offset:010} {generation:05} n \n").as_bytes()),
-            None => body.extend_from_slice(b"0000000000 00000 f \n"),
+            None => body.extend_from_slice(format!("{:010} 00000 f \n", free_chain.get(&(object as u32)).copied().unwrap_or(0)).as_bytes()),
         }
     }
     body.extend_from_slice(b"trailer\n<<");
-    for entry in snap.trailer.iter().filter(|entry| !matches!(entry.key.as_str(), "Size" | "Prev" | "XRefStm" | "Length" | "Filter" | "DecodeParms" | "W" | "Index" | "Type")) {
-        body.push(b' ');
+    let mut first = true;
+    for entry in snap.trailer.iter().filter(|entry| !matches!(entry.key.as_str(), "Prev" | "XRefStm" | "Length" | "Filter" | "DecodeParms" | "W" | "Index" | "Type")) {
+        if first {
+            body.push(b' ');
+        } else {
+            body.push(b'\n');
+        }
+        first = false;
         write_pdf_name(&mut body, &entry.key);
         body.push(b' ');
-        write_pdf_object(&mut body, &entry.value);
+        if entry.key == "Size" {
+            write_pdf_object(&mut body, &PdfObject::Int(size as i64), false);
+        } else {
+            write_pdf_object(&mut body, &entry.value, false);
+        }
     }
-    body.extend_from_slice(format!(" /Size {size} >>\nstartxref\n{xref_offset}\n%%EOF\n").as_bytes());
+    if !snap.trailer.iter().any(|entry| entry.key == "Size") {
+        if first {
+            body.push(b' ');
+        } else {
+            body.push(b'\n');
+        }
+        body.extend_from_slice(format!("/Size {size}").as_bytes());
+    }
+    body.extend_from_slice(format!(" >>\nstartxref\n{xref_offset}\n%%EOF\n").as_bytes());
     Ok(body)
 }
 
@@ -2164,6 +2597,106 @@ mod tests {
         assert_eq!(decoded, snap);
     }
 
+    #[test]
+    fn bachelor_thesis_logical_lifecycle_preserves_original_native_bytes() {
+        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::apply_pdf_mutation;
+        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfAnalyzer;
+        use protocol::command::DiffAlgebra;
+        use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
+        use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer, ArtifactComposition, ComposeSource, Dialect, StandardId, SubsetId};
+
+        let original = std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/📄️bachelor-thesis.pdf")).expect("read bachelor thesis fixture");
+        let base = decode_pdf(&original).expect("decode bachelor thesis fixture");
+        let assert_original = |label: &str, actual: Vec<u8>| {
+            let first_difference = actual.iter().zip(&original).position(|(actual, expected)| actual != expected).or_else(|| (actual.len() != original.len()).then_some(actual.len().min(original.len())));
+            let index = first_difference.unwrap_or(0);
+            let end = index.saturating_add(96).min(actual.len()).min(original.len());
+            assert!(actual == original, "{label}: expected {} bytes, got {}; first differing byte: {first_difference:?}; expected window: {:?}; actual window: {:?}", original.len(), actual.len(), &original[index..end], &actual[index..end]);
+        };
+        assert_original("direct native export", encode_pdf(&base).expect("direct native export"));
+
+        let dsl = store::ArtifactDsl::print_dsl(&base);
+        let from_dsl = <PdfSnapshot as store::ArtifactDsl>::parse_dsl(&dsl).expect("DSL roundtrip");
+        assert_original("DSL native export", encode_pdf(&from_dsl).expect("DSL native export"));
+        let pack = store::ArtifactPack::encode_pack(&base);
+        let from_pack = <PdfSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("pack roundtrip");
+        assert_original("pack native export", encode_pdf(&from_pack).expect("pack native export"));
+
+        let mut changed = base.clone();
+        changed.info.title = Some("Lifecycle mutation".into());
+        let forward = PdfDiff::between(&base, &changed);
+        let forward_text = forward.print_diff();
+        let forward = PdfDiff::parse_diff(&forward_text).expect("diff text roundtrip");
+        let forward_binary = forward.encode_diff().expect("diff binary encode");
+        assert_eq!(forward_binary.first().copied(), Some(store::pack_rt::OP_BINARY_FORMAT), "diff binary must start with the structural format byte");
+        assert_eq!(forward_binary.get(1).copied(), Some(0b00010), "title-only lifecycle edit must set only the typed info flag");
+        assert_ne!(forward_binary, forward_text.as_bytes(), "diff binary must not be a text envelope");
+        let forward = PdfDiff::decode_diff(&forward_binary).expect("diff binary roundtrip");
+        let reverse = forward.inverse(&base);
+        let diff_restored = MutationDiff::apply(&reverse, &MutationDiff::apply(&forward, &base));
+        assert_eq!(diff_restored, base);
+        assert_original("diff inverse native export", encode_pdf(&diff_restored).expect("diff inverse native export"));
+        let mut absorbed = forward;
+        MutationDiff::absorb(&mut absorbed, reverse);
+        let absorbed = MutationDiff::apply(&absorbed, &base);
+        assert_eq!(absorbed, base);
+        assert_original("diff absorb native export", encode_pdf(&absorbed).expect("diff absorb native export"));
+
+        let mutation = PdfMutation::SetInfo { info: changed.info };
+        let mutation_text = mutation.print_op();
+        let mutation = PdfMutation::parse_op(&mutation_text).expect("mutation text roundtrip");
+        let mutation_binary = mutation.encode_op().expect("mutation binary encode");
+        let mutation = PdfMutation::decode_op(&mutation_binary).expect("mutation binary roundtrip");
+        let inverse = mutation.inverse(&base);
+        let mut restored = base.clone();
+        apply_pdf_mutation(&mut restored, &mutation);
+        for operation in inverse {
+            let text = operation.print_op();
+            let operation = PdfMutation::parse_op(&text).expect("inverse mutation text roundtrip");
+            let binary = operation.encode_op().expect("inverse mutation binary encode");
+            let operation = PdfMutation::decode_op(&binary).expect("inverse mutation binary roundtrip");
+            apply_pdf_mutation(&mut restored, &operation);
+        }
+        assert_eq!(restored, base);
+        assert_original("mutation inverse native export", encode_pdf(&restored).expect("mutation inverse native export"));
+
+        let analysis = <PdfAnalyzer as ArtifactAnalyzer>::analyze(&[AnalyzeSource::Binary(&original)]);
+        let analyzed = analysis.parts.snapshot.expect("analyzer snapshot");
+        assert_original("analyzer native export", encode_pdf(&analyzed).expect("analyzer native export"));
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
+        let sources = [ComposeSource { dialect: DIALECT, payload: AnalyzeSource::Binary(&original) }];
+        let composed = PdfComposerComposition::compose(&sources).expect("composer snapshot");
+        assert_original("composer native export", encode_pdf(&composed.snapshot).expect("composer native export"));
+    }
+
+    #[test]
+    fn pdf_snapshot_and_facets_forbid_native_shadow_state() {
+        let rust = include_str!("../🧬️schema/📸️snapshot/🦀️component.rs");
+        for forbidden in ["pub physical:", "pub source:", "pub lexical:", "pub native:", "pub raw_bytes:", "pub artifact_source:", "pub document_wire:", "pub raw_filter:"] {
+            assert!(!rust.contains(forbidden), "snapshot Rust contains forbidden shadow field {forbidden}");
+        }
+        for (relative, text) in [
+            ("snapshot.proto", include_str!("../🧬️schema/📸️snapshot/🛰️component.proto")),
+            ("snapshot.graphql", include_str!("../🧬️schema/📸️snapshot/🔗️component.graphql")),
+            ("snapshot.ts", include_str!("../🧬️schema/📸️snapshot/🟦️component.ts")),
+            ("diff.proto", include_str!("../🧬️schema/🔺️diff/🛰️component.proto")),
+            ("diff.graphql", include_str!("../🧬️schema/🔺️diff/🔗️component.graphql")),
+            ("diff.ts", include_str!("../🧬️schema/🔺️diff/🟦️component.ts")),
+            ("diff.ebnf", include_str!("../🧬️schema/🔺️diff/📝️text/🔤️component.ebnf")),
+            ("diff.g4", include_str!("../🧬️schema/🔺️diff/📝️text/🅰️component.g4")),
+            ("diff-binary.abnf", include_str!("../🧬️schema/🔺️diff/💾️binary/🔠️component.abnf")),
+            ("diff-binary.spicy", include_str!("../🧬️schema/🔺️diff/💾️binary/🌶️component.spicy")),
+            ("diff-binary.ksy", include_str!("../🧬️schema/🔺️diff/💾️binary/🥋️component.ksy")),
+        ] {
+            for forbidden in ["ArtifactSource", "physical", "lexical", "rawFilter", "raw_filter", "sourceBytes", "source_bytes", "document_wire", "serde_json", "RFC8259", "utf8_json", "json_payload", "json_text", "JSON_VALUE", "native PDF bytes"] {
+                assert!(!text.contains(forbidden), "{relative} contains forbidden shadow marker {forbidden}");
+            }
+            if relative.starts_with("diff-binary") {
+                assert!(text.contains("format") && text.contains("flags"), "{relative} must describe the structured format/flags frame");
+            }
+        }
+    }
+
     //#region 🔖️ConformanceLaws
     /// 🧪️ P2-FG3: per-artifact conformance laws — grammar/protocol parseability, `Recognizer`
     /// against real fixtures AND real `print_op`/`print_diff` output, `walk_protocol` against real
@@ -2195,7 +2728,7 @@ mod tests {
                 PdfMutation::SetInfo { info: PdfInfo { title: Some("Demo".into()), author: Some("Semio".into()), ..Default::default() } },
                 PdfMutation::InsertObject { id: oref(3, 0), value: PdfObject::Array(vec![PdfObject::Int(-5), PdfObject::Real(1.5.into()), PdfObject::Str(vec![0, 255]), PdfObject::Ref(oref(1, 0))]) },
                 PdfMutation::RemoveObject { id: oref(2, 0) },
-                PdfMutation::SetObjectValue { id: oref(1, 0), value: PdfObject::Stream { dict: vec![PdfDictEntry { key: "Length".into(), value: PdfObject::Int(2) }], data: vec![1, 2], raw_filter: Some("FlateDecode".into()) } },
+                PdfMutation::SetObjectValue { id: oref(1, 0), value: PdfObject::Stream { dict: vec![PdfDictEntry { key: "Length".into(), value: PdfObject::Int(2) }], data: vec![1, 2], filters: vec![PdfStreamFilter::Flate { predictor: None }] } },
                 PdfMutation::SetDictEntry { id: oref(1, 0), path: vec![PdfPathSegment::DictKey { key: "Kids".into() }, PdfPathSegment::ArrayIndex { index: 0 }], key: "Rotate".into(), value: PdfObject::Int(90) },
                 PdfMutation::RemoveDictEntry { id: oref(1, 0), path: vec![], key: "Type".into() },
                 PdfMutation::SetTrailerEntry { key: "Prev".into(), value: PdfObject::Int(100) },
@@ -2216,7 +2749,7 @@ mod tests {
             let mut c = b.clone();
             c.objects = vec![
                 PdfIndirectObject { id: oref(1, 0), value: PdfObject::Array(vec![PdfObject::Int(1), PdfObject::Bool(true), PdfObject::Name("X".into())]) },
-                PdfIndirectObject { id: oref(2, 0), value: PdfObject::Stream { dict: vec![], data: vec![9, 9], raw_filter: None } },
+                PdfIndirectObject { id: oref(2, 0), value: PdfObject::Stream { dict: vec![], data: vec![9, 9], filters: vec![] } },
             ];
             vec![PdfDiff::between(&a, &b), PdfDiff::between(&b, &c), PdfDiff::default()]
         }
@@ -2511,7 +3044,7 @@ mod tests {
         // additionally verify the ObjStm header/body parse in isolation.
         let _ = xref;
         let (decoded_dict, filt) = decode_stream(&[PdfDictEntry { key: "Filter".into(), value: PdfObject::Name("FlateDecode".into()) }], &compressed).unwrap();
-        assert!(filt.is_none());
+        assert_eq!(filt, vec![PdfStreamFilter::Flate { predictor: None }]);
         assert_eq!(decoded_dict, objstm_body);
         let mut lex = Lexer::new(&decoded_dict);
         lex.pos = first;

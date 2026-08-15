@@ -73,11 +73,7 @@ impl store::InferredField<SemioMeshSnapshot> for MeshAabb {
     }
 
     fn plan(snapshot: &SemioMeshSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
-        snapshot
-            .meshes
-            .iter()
-            .flat_map(|mesh| mesh.primitives.iter().map(move |p| store::InferenceStep { key: aabb_key(&mesh.id, &p.id), parents: Vec::new() }))
-            .collect()
+        snapshot.meshes.iter().flat_map(|mesh| mesh.primitives.iter().map(move |p| store::InferenceStep { key: aabb_key(&mesh.id, &p.id), parents: Vec::new() })).collect()
     }
 
     /// 🔑 Canonical dependency-input bytes — EXACTLY `positions` (the only field `compute` reads),

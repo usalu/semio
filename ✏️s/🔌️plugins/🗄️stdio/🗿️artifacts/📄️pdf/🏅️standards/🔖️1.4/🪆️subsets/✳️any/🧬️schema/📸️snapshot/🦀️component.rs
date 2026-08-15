@@ -27,16 +27,15 @@ pub struct PdfSnapshot {
 
 impl Default for PdfSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_PDF_DOCUMENT_SCHEMA.into(),
-            page: PageDoc { width: 612.0, height: 792.0, text: String::new() },
-        }
+        Self { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), page: PageDoc { width: 612.0, height: 792.0, text: String::new() } }
     }
 }
 
 impl store::ArtifactDsl for PdfSnapshot {
     const EXTENSION: &'static str = "pdf";
-    fn envelope_id() -> &'static str { "stdio.pdf" }
+    fn envelope_id() -> &'static str {
+        "stdio.pdf"
+    }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
@@ -48,20 +47,14 @@ impl store::ArtifactDsl for PdfSnapshot {
         }
         let mut bytes = Vec::with_capacity(hex.len() / 2);
         for i in (0..hex.len()).step_by(2) {
-            bytes.push(u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| {
-                store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1))
-            })?);
+            bytes.push(u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?);
         }
         crate::artifacts::pdf::standards::v1_4::subsets::any::io::decode_pdf(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
         let bytes = crate::artifacts::pdf::standards::v1_4::subsets::any::io::encode_pdf(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -70,16 +63,11 @@ impl store::ArtifactPack for PdfSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::pdf::standards::v1_4::subsets::any::io::encode_pdf(self).map_err(|e| store::PackError::Schema(e))?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));
         }
@@ -91,7 +79,9 @@ impl store::ArtifactPack for PdfSnapshot {
 //#region 🔖️SnapshotFixtures
 /// 🦑 Dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-
 /// STATE-MACHINES) — pure snapshot constructors, no codec/IO concern.
-pub fn empty_pdf_snapshot() -> PdfSnapshot { PdfSnapshot::default() }
+pub fn empty_pdf_snapshot() -> PdfSnapshot {
+    PdfSnapshot::default()
+}
 
 /// 📄️ The demo `stdio.pdf` document -- the single source of truth for `📚️examples/🎬️demo/🖼️assets/
 /// 🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are literally this snapshot's `print_dsl`/

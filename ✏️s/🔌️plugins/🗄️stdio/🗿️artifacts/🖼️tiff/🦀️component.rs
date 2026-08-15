@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::tiff::schema::snapshot::TiffSnapshot;
-pub use crate::artifacts::tiff::schema::TiffArtifact;
 pub use crate::artifacts::tiff::schema::diff::TiffDiff;
 pub use crate::artifacts::tiff::schema::mutations::TiffMutation;
+pub use crate::artifacts::tiff::schema::snapshot::TiffSnapshot;
+pub use crate::artifacts::tiff::schema::TiffArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_TIFF_DOCUMENT_SCHEMA: &str = "stdio.tiff";
@@ -27,7 +27,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
@@ -65,13 +65,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
 /// `✳️baseline/🚪️io`.
 fn declared_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
-    ENTRIES
-        .get_or_init(|| {
-            vec![semio_framework_plugin::subset_validator_entry_of::<
-                crate::artifacts::tiff::standards::v6_0::subsets::baseline::io::TiffBaselineValidator,
-            >()]
-        })
-        .as_slice()
+    ENTRIES.get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::tiff::standards::v6_0::subsets::baseline::io::TiffBaselineValidator>()]).as_slice()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — moved
@@ -141,9 +135,9 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::tiff::standards::v6_0::engine::io_registry as v6_0;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -152,10 +146,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("TiffComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("TiffComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::zip::schema::snapshot::ZipSnapshot;
-pub use crate::artifacts::zip::schema::ZipArtifact;
 pub use crate::artifacts::zip::schema::diff::ZipDiff;
 pub use crate::artifacts::zip::schema::mutations::ZipMutation;
+pub use crate::artifacts::zip::schema::snapshot::ZipSnapshot;
+pub use crate::artifacts::zip::schema::ZipArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_ZIP_DOCUMENT_SCHEMA: &str = "stdio.zip";
@@ -51,13 +51,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
 /// `🚪️io/🦀️component.rs`'s own (module-private) `validator_entry()` calls.
 fn zip_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
-    ENTRIES
-        .get_or_init(|| {
-            vec![semio_framework_plugin::subset_validator_entry_of::<
-                crate::artifacts::zip::standards::v2_0::subsets::iso21320::io::ZipIso21320Validator,
-            >()]
-        })
-        .as_slice()
+    ENTRIES.get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::zip::standards::v2_0::subsets::iso21320::io::ZipIso21320Validator>()]).as_slice()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary), copied verbatim (five
@@ -138,16 +132,16 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::zip::standards::v2_0::subsets::any::io::io_registry as v2_0;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -156,10 +150,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("ZipComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("ZipComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

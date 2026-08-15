@@ -44,11 +44,27 @@
         "standalone": { "type": "boolean" }
       }
     },
+    "XmlExternalId": {
+      "oneOf": [
+        { "type": "object", "required": ["kind", "systemId"], "properties": { "kind": { "const": "system" }, "systemId": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "publicId", "systemId"], "properties": { "kind": { "const": "public" }, "publicId": { "type": "string" }, "systemId": { "type": "string" } } }
+      ]
+    },
+    "XmlDtdDeclaration": {
+      "type": "object",
+      "required": ["kind", "parameter", "name", "value"],
+      "properties": { "kind": { "const": "entity" }, "parameter": { "type": "boolean" }, "name": { "type": "string" }, "value": { "type": "string" } }
+    },
+    "XmlDoctype": {
+      "type": "object",
+      "required": ["name"],
+      "properties": { "name": { "type": "string" }, "externalId": { "$ref": "#/$defs/XmlExternalId" }, "declarations": { "type": "array", "items": { "$ref": "#/$defs/XmlDtdDeclaration" } } }
+    },
     "XmlDocument": {
       "type": "object",
       "properties": {
         "root": { "$ref": "#/$defs/XmlNode" },
-        "doctype": { "type": "string" },
+        "doctype": { "$ref": "#/$defs/XmlDoctype" },
         "declaration": { "$ref": "#/$defs/XmlDeclaration" },
         "prolog": { "type": "array", "items": { "$ref": "#/$defs/XmlNode" } }
       }

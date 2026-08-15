@@ -1,5 +1,5 @@
-use crate::artifacts::bcf::{BcfSnapshot};
-use crate::artifacts::bcf::schema::mutations::{BcfMutation, apply_bcf_mutation};
+use crate::artifacts::bcf::schema::mutations::{apply_bcf_mutation, BcfMutation};
+use crate::artifacts::bcf::BcfSnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
 pub fn apply(projection: &mut BcfSnapshot, mutation: &BcfMutation) {

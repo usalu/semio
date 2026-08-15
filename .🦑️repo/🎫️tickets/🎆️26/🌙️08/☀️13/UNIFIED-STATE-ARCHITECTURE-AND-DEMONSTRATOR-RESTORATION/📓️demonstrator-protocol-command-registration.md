@@ -48,3 +48,10 @@ This report covers the demonstrator/plugin worker protocol failures observed whi
 ## Required Final Acceptance
 
 The final fresh-tab proof must show both `[DEBUG] plugin worker + procedural (2 live)` and `[DEBUG] plugin worker + demonstrator (2 live)`, all six pane markers (`Sechseckige Pilzsäule`, `Entwerfen mit Bestand · cad`, `Abbau Aufbau`, `Beispielbestand`, `Holzbalkenverbindung`, `Karte wiederverwenden`), no alerts, and zero page errors/warnings, including no `setContributions`, `setAppRegistrations`, `pk:`, empty action, timeout, restart, or unresponsive message.
+
+## Source-Stability Gate Evidence
+
+- Demonstrator acceptance was held while the shared stdio schema gate was red; building the procedural worker during those writes would have produced stale evidence.
+- A temporary assignment to the XML/SVG stdio compile clusters found active same-file collisions: `XmlSnapshot` and `SvgSnapshot` gained `lexical` fields during one read and lost them again before the next, while diff/mutation callers still referenced those fields. Malformed generated initializer fragments also appeared and disappeared between reads.
+- An isolated canonical Nx check used a separate ticket-local `🎯️target-xml-svg` and reached dependency compilation, but was intentionally stopped with exit 130 after root established exclusive ownership with the artifact tasks. It is not counted as validation.
+- No XML/SVG source edits were made by the demonstrator-protocol lane. The retained cold target and this report are the evidence requested before returning to source-stable demonstrator acceptance.

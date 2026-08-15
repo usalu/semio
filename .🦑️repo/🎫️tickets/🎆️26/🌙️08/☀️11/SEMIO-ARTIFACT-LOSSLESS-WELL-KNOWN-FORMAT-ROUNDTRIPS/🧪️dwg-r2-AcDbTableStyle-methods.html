@@ -1,0 +1,455 @@
+<html>
+<head>
+<title>AcDbTableStyle Methods</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="generator" content="Doc-O-Matic">
+    <meta name="save" content="history">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+<meta name="topicid" content="OREF-__MEMBERTYPE_Methods_AcDbTableStyle">
+<meta name="canonical" content="http://help.autodesk.com/cloudhelp/2018/ENU/OARX-RefGuide/files/OREF-__MEMBERTYPE_Methods_AcDbTableStyle.html#!">
+<meta name="helpsystempath" content="/view/OARX/2018/ENU">
+<meta name="product" content="OARX">
+<meta name="release" content="2018">
+<meta name="language" content="ENU">
+<meta name="book" content="Developer">
+<meta name="component" content="OARX-RefGuide">
+<meta name="created" content="04/10/2017">
+<meta name="modified" content="04/10/2017">
+<meta name="experiencelevel" content="expert">
+<meta name="audience" content="programmer">
+<meta name="user-comments" content="enable">
+<link rel="stylesheet" type="text/css" href="/view/clientframework/client.css">
+<script type="text/javascript" src="/view/clientframework/client.js"><!--filler--></script>
+
+    
+
+
+
+
+
+
+</head>
+<body class="Element700"><link rel="stylesheet" type="text/css" href="../css/default.css">
+
+<div id="persistenceDiv" style="display:none; behavior:url(#default#userData);"></div>
+
+<!-- Begin Popups -->
+
+<!-- End Popups -->
+
+<!-- Begin Page Header -->
+<div class="head"><div class="head-text"><h1>AcDbTableStyle Methods</h1></div></div>
+
+<!-- End Page Header -->
+
+<!-- Begin Client Area -->
+<div class="Element720" id="areascroll">
+<div class="Element721">
+
+<!-- Begin Page Content -->
+<div class="Element58">
+<!--Element14 following has no -_14_--><div class="Element14">
+<!--a_Element14-->Methods</div>
+<div id="div4D6574686F6473">
+<div class="Element11">
+<!--Element10--><div class="Element10"><!--Element10 no _14_ in a --><div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table1">
+<tr>
+<td class="Element200" valign="top" width="50%">
+<div class="Element201">
+Method </div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+Description </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_alignment_AcDbTableStyle.html">alignment</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__audit_AcDbAuditInfo_.html">audit</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function is called by AutoCAD when the AUDIT command is executed. The <span class="Element146">AcDbAuditInfo</span> object pointed to by <span class="Element146">pAuditInfo</span> contains member functions that are used to determine what to do and also to report the results of the audit operation on the object.<br>When overriding this function for a custom class, if conditions are correct, this function should return <span class="Element146">Acad::eOk</span>. If there's an internal problem, the object should call the <span class="Element146">pAuditInfo</span> argument's <span class="Element146">fixErrors()</span> member. If <span class="Element146">Adesk::kTrue</span> is returned, and the object can successfully repair itself, it should do so, and return <span class="Element146">Acad::eFixedAllErrors</span>. If the object cannot successfully repair... <a href="OREF-AcDbTableStyle__audit_AcDbAuditInfo_.html">more</a> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_backgroundColor_AcDbTableStyle.html">backgroundColor</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__bitFlags.html">bitFlags</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function returns an unsigned integer representing the operation bit <span class="Element146">setFlowDirection</span> flags set for the <span class="Element146">AcDbTableStyle</span> object.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_color_AcDbTableStyle.html">color</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_copyCellStyle_AcDbTableStyle.html">copyCellStyle</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_createCellStyle_AcDbTableStyle.html">createCellStyle</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__description.html">description</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function returns a pointer to the description of the table style. The pointer points to the actual internal string, not a copy, so do not attempt to delete the string. <br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__dwgInFields_AcDbDwgFiler_.html">dwgInFields</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function is called by <span class="Element146">dwgIn()</span>. Its purpose is to allow the object to read in its data.<br>There is a fixed set of steps that should be followed when implementing your own version of this function:<br>
+<ol class="Element630">
+<li value="1" class="Element600">Call <span class="Element146">assertWriteEnabled()</span>.</li>
+<li value="2" class="Element600">Call the parent class's <span class="Element146">dwgInFields()</span> passing it <span class="Element146">pFiler</span>. If this returns <span class="Element146">Acad::eOk</span>, then continue; otherwise, immediately return whatever the parent class's <span class="Element146">dwgInFields()</span> returned.</li>
+<li value="3" class="Element600">Use <span class="Element146">pFiler</span> to call the appropriate <span class="Element146">AcDbDwgFiler</span> methods to read in the object's data items. It is essential that the same number of data items be read in, and in the same order, as... <a href="OREF-AcDbTableStyle__dwgInFields_AcDbDwgFiler_.html">more</a> </li></ol></div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__dwgOutFields_AcDbDwgFiler__const.html">dwgOutFields</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function is called by <span class="Element146">dwgOut()</span>. Its purpose is to allow the object to write out its data.<br>There is a fixed set of steps that should be followed when implementing your own version of this function:<br>
+<ol class="Element630">
+<li value="1" class="Element600">Call <span class="Element146">assertReadEnabled()</span>.</li>
+<li value="2" class="Element600">Call the parent class's <span class="Element146">dwgOutFields()</span> passing it <span class="Element146">pFiler</span>. If this returns <span class="Element146">Acad::eOk</span>, then continue; otherwise, immediately return whatever the parent class's <span class="Element146">dwgInFields()</span> returned.</li>
+<li value="3" class="Element600">Use <span class="Element146">pFiler</span> to call the appropriate <span class="Element146">AcDbDwgFiler</span> methods to write out the object's data items. It is essential that the same number of data items be written out, and in the same order, as... <a href="OREF-AcDbTableStyle__dwgOutFields_AcDbDwgFiler__const.html">more</a> </li></ol></div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__dxfInFields_AcDbDxfFiler_.html">dxfInFields</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function is called by <span class="Element146">dxfIn()</span>. Its purpose is to allow the object to read in its data.<br>There is a fixed set of steps that should be followed when implementing your own version of this function:<br>
+<ol class="Element630">
+<li value="1" class="Element600">Call <span class="Element146">assertWriteEnabled()</span>.</li>
+<li value="2" class="Element600">Call the parent class's <span class="Element146">dxfInFields()</span>, passing it <span class="Element146">pFiler</span>. If this returns <span class="Element146">Acad::eOk</span>, then continue; otherwise immediately return whatever the parent class's <span class="Element146">dxfInFields()</span> returned.</li>
+<li value="3" class="Element600">Call <span class="Element146">pFiler-&gt;atSubclassData()</span>, passing in the string that was written out with group code 100 in <span class="Element146">dxfOutFields()</span>. If this returns <span class="Element146">Adesk::kTrue</span>, then continue. Otherwise immediately return an error status other than... <a href="OREF-AcDbTableStyle__dxfInFields_AcDbDxfFiler_.html">more</a> </li></ol></div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__dxfOutFields_AcDbDxfFiler__const.html">dxfOutFields</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function is called by <span class="Element146">dxfOut()</span>. Its purpose is to allow the object to write out its data.<br>There is a fixed set of steps that should be followed when implementing your own version of this function:<br>1. Call <span class="Element146">assertReadEnabled()</span>.<br>2. Call the parent class's <span class="Element146">dxfOutFields()</span>, passing it <span class="Element146">pFiler</span>. If this returns <span class="Element146">Acad::eOk</span>, then continue; otherwise immediately return whatever the parent class's <span class="Element146">dwgInFields()</span> returned.<br>3. Use <span class="Element146">pFiler-&gt;writeItem(AcDb::kDxfSubclass, )</span>, where is a string that is typically your class's name, but can be any string you wish up to 256 bytes long. This same string is... <a href="OREF-AcDbTableStyle__dxfOutFields_AcDbDxfFiler__const.html">more</a> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__flowDirection.html">flowDirection</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function returns the flow direction of the table.<br>Possible values for <span class="Element146">AcDb::FlowDirection</span> are <span class="Element146">kTtoB</span> and <span class="Element146">kBtoT</span>. <br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_format_AcDbTableStyle.html">format</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__getCellStyles_AcStringArray__const.html">getCellStyles</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Returns the number of cell styles in the table style. </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_getDataType_AcDbTableStyle.html">getDataType</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__getName_ACHAR___const.html">getName</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function returns a pointer to the name of the table style. <span class="Element146">pszName</span> points to a dynamically allocated copy of the table style name, and the caller is responsible for freeing the memory used by the returned string using <span class="Element146">acutDelString()</span>. <br>Returns <span class="Element146">Acad::eOk</span> if successful, or <span class="Element146">Acad::eOwnerNotSet</span> if the style is not yet in the style dictionary.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_getTemplate_AcDbTableStyle.html">getTemplate</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_gridColor_AcDbTableStyle.html">gridColor</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_gridLineWeight_AcDbTableStyle.html">gridLineWeight</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_gridVisibility_AcDbTableStyle.html">gridVisibility</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__cellClass_ACHAR__const.html">cellClass</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Returns the cell classification value for the specified cell style.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__deleteCellStyle_ACHAR_.html">deleteCellStyle</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Deletes the cell style.<br>Returns <span class="Element146">Acad::eOk</span> if successful, or AutoCAD error status if the function fails.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__horzCellMargin.html">horzCellMargin</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function returns the horizontal cell margin value used by the table style.<br>This method is deprecated and may be removed in a future release. <br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__isBackgroundColorNone_AcDb__RowType_const.html">isBackgroundColorNone</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Returns true if the background color for a given row type of the table style object is set to no color value. Otherwise, returns false.<br>The possible values of <span class="Element146">rowType</span> are <span class="Element146">AcDb::kDataRow</span>, <span class="Element146">AcDb::kTitleRow</span>, and <span class="Element146">AcDb::kHeaderRow</span>. If no row type is specified, the default of <span class="Element146">kDataRow</span> will be used.<br>This method is deprecated and may be removed in a future release<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__enableMergeAll_bool_ACHAR_.html">enableMergeAll</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Enables or disables the merge all flag in the specified cell style.<br>Returns <span class="Element146">Acad::eOk</span> if successful; otherwise, returns an AutoCAD error status.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__isHeaderSuppressed.html">isHeaderSuppressed</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function returns a true/false status for the <span class="Element146">isHeaderSuppressed</span> flag. <br>This method is deprecated and may be removed in a future release.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__getGridProperty_AcGridProperty__AcDb__GridLineType_ACHAR__const.html">getGridProperty</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Gets the grid line properties of the specified cell style.<br>Returns <span class="Element146">Acad::eOk</span> if successful; otherwise, returns an AutoCAD error status.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__isTitleSuppressed.html">isTitleSuppressed</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function returns a true/false status for the <span class="Element146">isTitleSuppressed</span> flag.<br>This method is deprecated and may be removed in a future release.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__getUniqueCellStyleName_ACHAR__AcString__const.html">getUniqueCellStyleName</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Gets a unique cell style name with the base name that is passed as the prefix.<br>Returns <span class="Element146">Acad::eOk</span> if successful, or AutoCAD error status if the function fails.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__numCellStyles.html">numCellStyles</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Returns the number of cell styles in a tablestyle.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__gridDoubleLineSpacing_AcDb__GridLineType_ACHAR__const.html">gridDoubleLineSpacing</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Returns the grid double line spacing of the specified cell style.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__gridLineStyle_AcDb__GridLineType_ACHAR__const.html">gridLineStyle</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Returns the grid line style of the specified cell style.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__gridLinetype_AcDb__GridLineType_ACHAR__const.html">gridLinetype</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Returns the grid line type of the specified cell style. </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_setAlignment_AcDbTableStyle.html">setAlignment</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_setBackgroundColor_AcDbTableStyle.html">setBackgroundColor</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__isCellStyleInUse_ACHAR__const.html">isCellStyleInUse</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Returns true if the cell style is in use; false otherwise.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__setBackgroundColorNone_bool_int.html">setBackgroundColorNone</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function enables or disables the background color for the specified row types. Different row types can be OR'd.<br>The possible row types are <span class="Element146">AcDb::kDataRow</span>, <span class="Element146">AcDb::kTitleRow</span>, and <span class="Element146">AcDb::kHeaderRow</span>. If no row type is specified, this function enables or disables the background color for all possible row types.<br>Returns <span class="Element146">Acad::eOk</span> if successful; otherwise, returns <span class="Element146">Acad::eInvalidInput</span>.<br>This method is deprecated and may be removed in a future release <br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__isMergeAllEnabled_ACHAR__const.html">isMergeAllEnabled</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Returns true if the merge all flag is enabled in the specified cell; false if not.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__setBitFlags_Adesk__UInt32.html">setBitFlags</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function sets the bit flag value for the table style object. The valid flags are a combination of values from the <span class="Element146">TableStyleFlags</span> enumeration.<br>Returns <span class="Element146">Acad::eOk</span> if successful; otherwise, returns <span class="Element146">Acad::eInvalidInput</span>.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__isRenamable_const.html">isRenamable</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This is isRenamable, a member of class AcDbTableStyle. </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_setColor_AcDbTableStyle.html">setColor</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_setDataType_AcDbTableStyle.html">setDataType</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__margin_AcDb__CellMargin_ACHAR__const.html">margin</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Returns the cell classification value for the specified cell style<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__postTableStyleToDb_AcDbDatabase__ACHAR__AcDbObjectId_.html">postTableStyleToDb</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Adds a table style to the specified database.<br>Returns <span class="Element146">Acad::eOk</span> if successful, <span class="Element146">Acad::eAlreadyInDb</span> if the table style already exists in the database, <span class="Element146">Acad::eDuplicateKey</span> if <span class="Element146">styleName</span> already exists in the style dictionary, or <span class="Element146">Acad::eInvalidInput</span> if <span class="Element146">styleName</span> is invalid. </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__setFlowDirection_AcDb__FlowDirection.html">setFlowDirection</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function sets the flow direction for the table in the table style object.<br>Possible values for <span class="Element146">AcDb::FlowDirection</span> are <span class="Element146">kTtoB</span> and <span class="Element146">kBtoT</span>. <br>Returns <span class="Element146">Acad::eOk</span> if successful; otherwise, returns <span class="Element146">Acad::eInvalidInput</span>.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_setFormat_AcDbTableStyle.html">setFormat</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__removeTemplate.html">removeTemplate</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Removes the template. Returns an object id to the new object. </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_setGridColor_AcDbTableStyle.html">setGridColor</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__renameCellStyle_ACHAR__ACHAR_.html">renameCellStyle</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function renames a cellstyle.<br>Returns <span class="Element146">Acad::eOk</span> if successful, or AutoCAD error status if the function fails. If the style already exists <span class="Element146">Acad::eDuplicateKey</span> is returned.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__rotation_ACHAR__const.html">rotation</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Returns a cell's rotation value. </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_setGridLineWeight_AcDbTableStyle.html">setGridLineWeight</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__setCellClass_int_ACHAR_.html">setCellClass</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Sets the class of a cell, by style. Returns <span class="Element146">Acad::eOk</span> if successful. </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__setDescription_ACHAR__.html">setDescription</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function sets the description of the table style to <span class="Element146">pszDescription</span>.<br>Returns <span class="Element146">Acad::eOk</span> if successful; otherwise, returns <span class="Element146">Acad::eInvalidInput</span>.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_setGridVisibility_AcDbTableStyle.html">setGridVisibility</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__setGridDoubleLineSpacing_double_AcDb__GridLineType_ACHAR_.html">setGridDoubleLineSpacing</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Sets the grid double line spacing in the specified cell style.<br>Returns <span class="Element146">Acad::eOk</span> if successful; otherwise, returns an AutoCAD error status.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__setHorzCellMargin_double.html">setHorzCellMargin</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function sets the horizontal cell margin value used by the table style.<br>Returns <span class="Element146">Acad::eOk</span> if successful; otherwise, returns <span class="Element146">Acad::eInvalidInput</span>.<br>This method is deprecated and may be removed in a future release.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__setGridLineStyle_AcDb__GridLineStyle_AcDb__GridLineType_ACHAR_.html">setGridLineStyle</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Sets the grid line style of the specified cell style.<br>Returns <span class="Element146">Acad::eOk</span> if successful; otherwise, returns an AutoCAD error status. </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__setGridLinetype_AcDbObjectId__AcDb__GridLineType_ACHAR_.html">setGridLinetype</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Sets the grid line type for a cell style.<br>Returns <span class="Element146">Acad::eOk</span> if successful; otherwise, returns an AutoCAD error status. </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__setGridProperty_AcGridProperty__AcDb__GridLineType_ACHAR_.html">setGridProperty</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Sets the grid line properties of the specified cell style.<br>Returns <span class="Element146">Acad::eOk </span>if successful; otherwise, returns an AutoCAD error status.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_setTemplate_AcDbTableStyle.html">setTemplate</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_setTextHeight_AcDbTableStyle.html">setTextHeight</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__setMargin_AcDb__CellMargin_double_ACHAR_.html">setMargin</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Sets the cell classification value for the specified cell style.<br> Returns <span class="Element146">Acad::eOk </span>if successful, or AutoCAD error status if the function fails. <br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_setTextStyle_AcDbTableStyle.html">setTextStyle</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__setName_ACHAR__.html">setName</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function sets the name of the table style to <span class="Element146">pszName</span>. <br>Returns <span class="Element146">Acad::eOk</span> if successful; otherwise, returns <span class="Element146">Acad::eInvalidInput</span>.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__setRotation_double_ACHAR_.html">setRotation</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+Sets the rotation angle of the specified cell style.<br>Returns <span class="Element146">Acad::eOk</span> if successful; otherwise, returns an AutoCAD error status.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__setVertCellMargin_double.html">setVertCellMargin</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function sets the vertical cell margin value used by the table style.<br>Returns <span class="Element146">Acad::eOk</span> if successful; otherwise, returns <span class="Element146">Acad::eInvalidInput</span>.<br>This method is deprecated and may be removed in a future release.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__suppressHeaderRow_bool.html">suppressHeaderRow</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function suppresses or enables the header row for the table.<br>Returns <span class="Element146">Acad::eOk</span> if successful; otherwise, returns <span class="Element146">Acad::eInvalidInput</span>.<br>This method is deprecated and may be removed in a future release.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__subGetClassID_CLSID__const.html">subGetClassID</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+  </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__suppressTitleRow_bool.html">suppressTitleRow</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function suppresses or enables the title row for the table.<br>Returns <span class="Element146">Acad::eOk</span> if successful; otherwise, returns <span class="Element146">Acad::eInvalidInput</span>.<br>This method is deprecated and may be removed in a future release.<br> </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_textHeight_AcDbTableStyle.html">textHeight</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""> <a href="OREF-__OVERLOADED_textStyle_AcDbTableStyle.html">textStyle</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+ </div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<img src="../images/indicator_method.gif" border="0" alt="" title=""><img src="../images/indicator_virtual.gif" border="0" alt="" title=""> <a href="OREF-AcDbTableStyle__vertCellMargin.html">vertCellMargin</a> </div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This function returns the vertical cell margin value used by the table style.<br>This method is deprecated and may be removed in a future release.<br> </div></td></tr></table></div></div>
+</div></div>
+</div>
+</div>
+</div>
+<!-- End Page Content -->
+
+<!-- Begin Page Footer -->
+
+<!-- End Page Footer -->
+</div>
+</div>
+
+<!-- End Client Area -->
+</body></html>

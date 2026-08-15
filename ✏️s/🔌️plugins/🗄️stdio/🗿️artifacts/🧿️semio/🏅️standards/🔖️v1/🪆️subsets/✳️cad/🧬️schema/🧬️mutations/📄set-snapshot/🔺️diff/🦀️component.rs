@@ -1,4 +1,4 @@
-use crate::artifacts::semio::standards::v1::subsets::cad::schema::diff::{SemioCadDiff, diff_set_snapshot};
+use crate::artifacts::semio::standards::v1::subsets::cad::schema::diff::{diff_set_snapshot, SemioCadDiff};
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot.

@@ -5,15 +5,12 @@
 //! established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use std::sync::OnceLock;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
-    use semio_framework_plugin::{
-        ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
-        register_subset_validator, subset_validator_entry_of,
-    };
-    use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::check_svg_basic_conformance;
-    use crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgComposer as SvgAnyComposer;
     use crate::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::{set_element_attr, SvgSnapshot};
+    use crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgComposer as SvgAnyComposer;
+    use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::check_svg_basic_conformance;
+    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use std::sync::OnceLock;
 
     const DIALECT_BASIC: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("basic") };
     const DIALECT_ANY: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
@@ -42,10 +39,7 @@ pub mod derived_composition {
             if !hard.is_empty() {
                 let mut all = hard.clone();
                 all.extend(soft);
-                return Err(ComposeError {
-                    message: format!("SVG Basic 1.1 conformance violated: {} hard issue(s) -- not stamping the basic dialect", hard.len()),
-                    diagnostics: all,
-                });
+                return Err(ComposeError { message: format!("SVG Basic 1.1 conformance violated: {} hard issue(s) -- not stamping the basic dialect", hard.len()), diagnostics: all });
             }
             let mut diagnostics = inner.diagnostics;
             diagnostics.extend(soft);
@@ -99,9 +93,9 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::AnalyzeSource;
-        use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::CODE_FILTER_PRIMITIVE;
         use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::SvgBasicBuilder;
+        use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::CODE_FILTER_PRIMITIVE;
+        use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 
         #[test]

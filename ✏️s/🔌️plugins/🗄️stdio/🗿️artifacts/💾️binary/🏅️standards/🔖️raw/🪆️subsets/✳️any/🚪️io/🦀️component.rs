@@ -4,10 +4,10 @@
 //! level, called once from `🔌️plugin/🔧️setup`).
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::binary::BinarySnapshot;
     use crate::artifacts::binary::standards::v_raw::subsets::any::schema::BinaryAnalyzer;
+    use crate::artifacts::binary::BinarySnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
 
@@ -32,16 +32,10 @@ pub mod derived_composition {
                 })
                 .collect();
             if native.is_empty() {
-                return Err(ComposeError {
-                    message: "BinaryComposerComposition: no source in dialect stdio.binary/raw/*".into(),
-                    diagnostics: Vec::new(),
-                });
+                return Err(ComposeError { message: "BinaryComposerComposition: no source in dialect stdio.binary/raw/*".into(), diagnostics: Vec::new() });
             }
             let analysis = BinaryAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "BinaryComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "BinaryComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -57,9 +51,9 @@ pub use derived_composition::*;
 /// a DIFFERENT return type (`&'static [&'static ComposerEntry]` vs this module's
 /// `&'static [ComposerEntry]`); a bare `io_registry::entries()` silently rebinds to the wrong one.
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::binary::standards::v_raw::subsets::any::schema::BinaryComposer as BinaryRawAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
@@ -84,10 +78,9 @@ pub fn register() {
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    store::register_document_codec(store::ArtifactCodec::of::<
-        crate::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot,
-        crate::artifacts::binary::standards::v_raw::subsets::any::schema::mutations::BinaryMutation,
-    >(crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA));
+    store::register_document_codec(store::ArtifactCodec::of::<crate::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot, crate::artifacts::binary::standards::v_raw::subsets::any::schema::mutations::BinaryMutation>(
+        crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA,
+    ));
 }
 
 /// 📇️ P2-P3 follow-up fix: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion
@@ -99,14 +92,8 @@ pub fn register() {
 /// is the genuine scope boundary, not "this facet has too many specs to register any of them."
 #[cfg(not(target_arch = "wasm32"))]
 pub fn register_schema_specs() {
-    dsl::registry::register_schema_spec(
-        "stdio.binary",
-        crate::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot::__dsl_spec,
-    );
-    dsl::registry::register_schema_spec(
-        "stdio.binary#diff",
-        crate::artifacts::binary::standards::v_raw::subsets::any::schema::diff::BinaryDiff::__dsl_diff_spec,
-    );
+    dsl::registry::register_schema_spec("stdio.binary", crate::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot::__dsl_spec);
+    dsl::registry::register_schema_spec("stdio.binary#diff", crate::artifacts::binary::standards::v_raw::subsets::any::schema::diff::BinaryDiff::__dsl_diff_spec);
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -174,17 +161,13 @@ pub fn register_pilot_languages() {
 
 /// 📌️ Registers schema leaves for `s.stdio.binary`.
 pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(
-        crate::artifacts::binary::standards::v_raw::subsets::any::schema::binary_artifact_schema_descriptor(),
-    );
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::binary::standards::v_raw::subsets::any::schema::binary_artifact_schema_descriptor());
 }
 
 /// 💡️ Registers `s.stdio.binary.inference`'s facet leaves into the OS-wide inference catalog —
 /// sibling to `register_artifact_schema` above (separate registry, ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
 pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(
-        crate::artifacts::binary::standards::v_raw::subsets::any::schema::inferences::binary_artifact_inference_descriptor(),
-    );
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::binary::standards::v_raw::subsets::any::schema::inferences::binary_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register

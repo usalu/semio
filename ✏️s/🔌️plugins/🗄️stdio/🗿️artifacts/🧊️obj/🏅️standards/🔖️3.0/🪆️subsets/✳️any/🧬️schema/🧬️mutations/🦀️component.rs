@@ -15,17 +15,11 @@
 //! §2.
 
 use crate::artifacts::obj::schema::diff::{
-    diff_insert_face, diff_insert_normal, diff_insert_texcoord, diff_insert_vertex,
-    diff_remove_face, diff_remove_group, diff_remove_normal, diff_remove_object,
-    diff_remove_texcoord, diff_remove_vertex, diff_set_face, diff_set_group, diff_set_mtllib,
-    diff_set_normal, diff_set_object, diff_set_smoothing_groups, diff_set_snapshot,
-    diff_set_texcoord, diff_set_unknown_statements, diff_set_usemtl, diff_set_vertex,
-    face_diff_between, normal_diff_between, texcoord_diff_between, vertex_diff_between, ObjDiff,
+    diff_insert_face, diff_insert_normal, diff_insert_texcoord, diff_insert_vertex, diff_remove_face, diff_remove_group, diff_remove_normal, diff_remove_object, diff_remove_texcoord, diff_remove_vertex, diff_set_face, diff_set_group,
+    diff_set_mtllib, diff_set_normal, diff_set_object, diff_set_smoothing_groups, diff_set_snapshot, diff_set_texcoord, diff_set_unknown_statements, diff_set_usemtl, diff_set_vertex, face_diff_between, normal_diff_between, texcoord_diff_between,
+    vertex_diff_between, ObjDiff,
 };
-use crate::artifacts::obj::schema::snapshot::{
-    ObjFace, ObjNormal, ObjSmoothingRange, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange,
-    ObjVertex,
-};
+use crate::artifacts::obj::schema::snapshot::{ObjFace, ObjNormal, ObjSmoothingRange, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange, ObjVertex};
 #[cfg(test)]
 use crate::artifacts::obj::schema::snapshot::{ObjFaceVertex, ObjGroup, ObjObject};
 use crate::artifacts::obj::ObjSnapshot;
@@ -306,20 +300,10 @@ impl protocol::OpBinary for ObjMutation {
 pub(crate) fn base_snapshot() -> ObjSnapshot {
     ObjSnapshot {
         schema: "stdio.obj".into(),
-        vertices: vec![
-            ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None },
-            ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None },
-            ObjVertex { x: 0.0, y: 1.0, z: 0.0, w: None },
-        ],
+        vertices: vec![ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 0.0, y: 1.0, z: 0.0, w: None }],
         texcoords: vec![ObjTexCoord { u: 0.0, v: 0.0, w: None }],
         normals: vec![ObjNormal { x: 0.0, y: 0.0, z: 1.0 }],
-        faces: vec![ObjFace {
-            vertices: vec![
-                ObjFaceVertex { vertex: 0, texcoord: None, normal: None },
-                ObjFaceVertex { vertex: 1, texcoord: None, normal: None },
-                ObjFaceVertex { vertex: 2, texcoord: None, normal: None },
-            ],
-        }],
+        faces: vec![ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }, ObjFaceVertex { vertex: 1, texcoord: None, normal: None }, ObjFaceVertex { vertex: 2, texcoord: None, normal: None }] }],
         groups: vec![ObjGroup { name: "Base".into(), faces: vec![0] }],
         objects: vec![ObjObject { name: "Obj".into(), faces: vec![0] }],
         mtllib: Some("m.mtl".into()),
@@ -343,9 +327,15 @@ pub(crate) fn demo_mutation_cases() -> Vec<ObjMutation> {
         ObjMutation::InsertNormal { index: 0, normal: ObjNormal { x: 1.0, y: 0.0, z: 0.0 } },
         ObjMutation::RemoveNormal { index: 0 },
         ObjMutation::SetNormal { index: 0, normal: ObjNormal { x: -1.0, y: 0.0, z: 0.0 } },
-        ObjMutation::InsertFace { index: 0, face: ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }, ObjFaceVertex { vertex: 1, texcoord: None, normal: None }, ObjFaceVertex { vertex: 2, texcoord: None, normal: None }] } },
+        ObjMutation::InsertFace {
+            index: 0,
+            face: ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }, ObjFaceVertex { vertex: 1, texcoord: None, normal: None }, ObjFaceVertex { vertex: 2, texcoord: None, normal: None }] },
+        },
         ObjMutation::RemoveFace { index: 0 },
-        ObjMutation::SetFace { index: 0, face: ObjFace { vertices: vec![ObjFaceVertex { vertex: 2, texcoord: None, normal: None }, ObjFaceVertex { vertex: 1, texcoord: None, normal: None }, ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] } },
+        ObjMutation::SetFace {
+            index: 0,
+            face: ObjFace { vertices: vec![ObjFaceVertex { vertex: 2, texcoord: None, normal: None }, ObjFaceVertex { vertex: 1, texcoord: None, normal: None }, ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] },
+        },
         ObjMutation::SetGroup { name: "Base".into(), faces: vec![0, 0] },
         ObjMutation::SetGroup { name: "New".into(), faces: vec![0] },
         ObjMutation::RemoveGroup { name: "Base".into() },
@@ -367,30 +357,12 @@ pub(crate) fn demo_mutation_cases() -> Vec<ObjMutation> {
 pub(crate) fn sweep_a() -> ObjSnapshot {
     ObjSnapshot {
         schema: "stdio.obj".into(),
-        vertices: vec![
-            ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None },
-            ObjVertex { x: 1.0, y: 1.0, z: 1.0, w: None },
-        ],
-        texcoords: vec![
-            ObjTexCoord { u: 0.0, v: 0.0, w: None },
-            ObjTexCoord { u: 1.0, v: 1.0, w: Some(5.0) },
-        ],
-        normals: vec![
-            ObjNormal { x: 0.0, y: 0.0, z: 1.0 },
-            ObjNormal { x: 1.0, y: 1.0, z: 1.0 },
-        ],
-        faces: vec![
-            ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] },
-            ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] },
-        ],
-        groups: vec![
-            ObjGroup { name: "G1".into(), faces: vec![0] },
-            ObjGroup { name: "G2".into(), faces: vec![1] },
-        ],
-        objects: vec![
-            ObjObject { name: "O1".into(), faces: vec![0] },
-            ObjObject { name: "O2".into(), faces: vec![1] },
-        ],
+        vertices: vec![ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 1.0, y: 1.0, z: 1.0, w: None }],
+        texcoords: vec![ObjTexCoord { u: 0.0, v: 0.0, w: None }, ObjTexCoord { u: 1.0, v: 1.0, w: Some(5.0) }],
+        normals: vec![ObjNormal { x: 0.0, y: 0.0, z: 1.0 }, ObjNormal { x: 1.0, y: 1.0, z: 1.0 }],
+        faces: vec![ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] }, ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] }],
+        groups: vec![ObjGroup { name: "G1".into(), faces: vec![0] }, ObjGroup { name: "G2".into(), faces: vec![1] }],
+        objects: vec![ObjObject { name: "O1".into(), faces: vec![0] }, ObjObject { name: "O2".into(), faces: vec![1] }],
         mtllib: Some("a.mtl".into()),
         usemtl: vec![ObjUsemtlRange { face_index_from: 0, material: "Red".into() }],
         smoothing_groups: vec![ObjSmoothingRange { face_index_from: 0, group: Some(1) }],
@@ -408,44 +380,20 @@ pub(crate) fn sweep_a() -> ObjSnapshot {
 pub(crate) fn sweep_b() -> ObjSnapshot {
     ObjSnapshot {
         schema: "stdio.obj".into(),
-        vertices: vec![
-            ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None },
-            ObjVertex { x: 9.0, y: 9.0, z: 9.0, w: Some(0.5) },
-            ObjVertex { x: 5.0, y: 5.0, z: 5.0, w: Some(1.0) },
-        ],
-        texcoords: vec![
-            ObjTexCoord { u: 0.0, v: 0.0, w: None },
-            ObjTexCoord { u: 2.0, v: 2.0, w: None },
-            ObjTexCoord { u: 5.0, v: 5.0, w: None },
-        ],
-        normals: vec![
-            ObjNormal { x: 0.0, y: 0.0, z: 1.0 },
-            ObjNormal { x: -1.0, y: -1.0, z: -1.0 },
-            ObjNormal { x: 0.0, y: 1.0, z: 0.0 },
-        ],
+        vertices: vec![ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 9.0, y: 9.0, z: 9.0, w: Some(0.5) }, ObjVertex { x: 5.0, y: 5.0, z: 5.0, w: Some(1.0) }],
+        texcoords: vec![ObjTexCoord { u: 0.0, v: 0.0, w: None }, ObjTexCoord { u: 2.0, v: 2.0, w: None }, ObjTexCoord { u: 5.0, v: 5.0, w: None }],
+        normals: vec![ObjNormal { x: 0.0, y: 0.0, z: 1.0 }, ObjNormal { x: -1.0, y: -1.0, z: -1.0 }, ObjNormal { x: 0.0, y: 1.0, z: 0.0 }],
         faces: vec![
             ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] },
             ObjFace { vertices: vec![ObjFaceVertex { vertex: 1, texcoord: Some(0), normal: Some(0) }] },
             ObjFace { vertices: vec![ObjFaceVertex { vertex: 2, texcoord: None, normal: None }] },
         ],
-        groups: vec![
-            ObjGroup { name: "G2".into(), faces: vec![1, 2] },
-            ObjGroup { name: "G3".into(), faces: vec![3] },
-        ],
-        objects: vec![
-            ObjObject { name: "O2".into(), faces: vec![1, 2] },
-            ObjObject { name: "O3".into(), faces: vec![3] },
-        ],
+        groups: vec![ObjGroup { name: "G2".into(), faces: vec![1, 2] }, ObjGroup { name: "G3".into(), faces: vec![3] }],
+        objects: vec![ObjObject { name: "O2".into(), faces: vec![1, 2] }, ObjObject { name: "O3".into(), faces: vec![3] }],
         mtllib: None,
-        usemtl: vec![
-            ObjUsemtlRange { face_index_from: 0, material: "Blue".into() },
-            ObjUsemtlRange { face_index_from: 2, material: "Green".into() },
-        ],
+        usemtl: vec![ObjUsemtlRange { face_index_from: 0, material: "Blue".into() }, ObjUsemtlRange { face_index_from: 2, material: "Green".into() }],
         smoothing_groups: vec![ObjSmoothingRange { face_index_from: 0, group: None }],
-        unknown_statements: vec![
-            ObjUnknownStatement { line_index: 5, raw: "# b".into() },
-            ObjUnknownStatement { line_index: 6, raw: "weird".into() },
-        ],
+        unknown_statements: vec![ObjUnknownStatement { line_index: 5, raw: "# b".into() }, ObjUnknownStatement { line_index: 6, raw: "weird".into() }],
     }
 }
 //#endregion 🔖️DemoCases

@@ -4,25 +4,24 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{
-        ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId,
-        SubsetValidator, SubsetValidatorEntry, register_subset_validator, subset_validator_entry_of,
-        ComposerEntry, deserializer_entry_of, serializer_entry_of, register_composer_entries,
-    };
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::SemioMeshAnalyzer;
+    use semio_framework_plugin::{
+        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition,
+        Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
+    };
     //#region 🔖️IoBridgeImports
     // 🌉️ W4 (mesh↔{gltf,stl,obj,ply,las}) io leaves — real trait impls registered below.
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::gltf::v2_0::any::SemioMeshFromGltf;
     use crate::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::gltf::v2_0::any::SemioMeshToGltf;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::stl::v_ascii::any::SemioMeshFromStl;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::obj::v3_0::any::SemioMeshFromObj;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::ply::v1_0::any::SemioMeshFromPly;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::ply::v1_0::any::SemioMeshToPly;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::las::v1_0::any::SemioMeshFromLas;
     use crate::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::las::v1_0::any::SemioMeshToLas;
+    use crate::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
+    use crate::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::ply::v1_0::any::SemioMeshToPly;
+    use crate::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
+    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::gltf::v2_0::any::SemioMeshFromGltf;
+    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::las::v1_0::any::SemioMeshFromLas;
+    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::obj::v3_0::any::SemioMeshFromObj;
+    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::ply::v1_0::any::SemioMeshFromPly;
+    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::stl::v_ascii::any::SemioMeshFromStl;
     //#endregion 🔖️IoBridgeImports
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
@@ -34,7 +33,9 @@ pub mod derived_composition {
         type Snapshot = SemioMeshSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] { &[DIALECT] }
+        fn reads() -> &'static [Dialect] {
+            &[DIALECT]
+        }
 
         fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
@@ -49,10 +50,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "SemioMeshComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = SemioMeshAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "SemioMeshComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "SemioMeshComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -75,11 +73,7 @@ pub mod derived_composition {
             };
             match decoded {
                 Some(snapshot) => check_mesh_referential_invariants(&snapshot),
-                None => vec![dsl::Diagnostic::error(
-                    "stdio.semio_mesh.validate-decode-failed",
-                    dsl::TextSpan::at(1, 1),
-                    "SemioMeshValidator: payload did not decode as a SemioMeshSnapshot".to_string(),
-                )],
+                None => vec![dsl::Diagnostic::error("stdio.semio_mesh.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioMeshValidator: payload did not decode as a SemioMeshSnapshot".to_string())],
             }
         }
     }
@@ -92,20 +86,12 @@ pub mod derived_composition {
         let mut seen_mesh_ids = std::collections::HashSet::new();
         for mesh in &snapshot.meshes {
             if !seen_mesh_ids.insert(mesh.id.as_str()) {
-                diagnostics.push(dsl::Diagnostic::error(
-                    "stdio.semio_mesh.duplicate-mesh-id",
-                    dsl::TextSpan::at(1, 1),
-                    format!("SemioMeshValidator: duplicate mesh id {:?}", mesh.id),
-                ));
+                diagnostics.push(dsl::Diagnostic::error("stdio.semio_mesh.duplicate-mesh-id", dsl::TextSpan::at(1, 1), format!("SemioMeshValidator: duplicate mesh id {:?}", mesh.id)));
             }
             let mut seen_primitive_ids = std::collections::HashSet::new();
             for primitive in &mesh.primitives {
                 if !seen_primitive_ids.insert(primitive.id.as_str()) {
-                    diagnostics.push(dsl::Diagnostic::error(
-                        "stdio.semio_mesh.duplicate-primitive-id",
-                        dsl::TextSpan::at(1, 1),
-                        format!("SemioMeshValidator: mesh {:?} has duplicate primitive id {:?}", mesh.id, primitive.id),
-                    ));
+                    diagnostics.push(dsl::Diagnostic::error("stdio.semio_mesh.duplicate-primitive-id", dsl::TextSpan::at(1, 1), format!("SemioMeshValidator: mesh {:?} has duplicate primitive id {:?}", mesh.id, primitive.id)));
                 }
                 if let Some(material_id) = &primitive.material_id {
                     if !snapshot.materials.iter().any(|m| &m.id == material_id) {
@@ -122,22 +108,14 @@ pub mod derived_composition {
         let mut seen_material_ids = std::collections::HashSet::new();
         for material in &snapshot.materials {
             if !seen_material_ids.insert(material.id.as_str()) {
-                diagnostics.push(dsl::Diagnostic::error(
-                    "stdio.semio_mesh.duplicate-material-id",
-                    dsl::TextSpan::at(1, 1),
-                    format!("SemioMeshValidator: duplicate material id {:?}", material.id),
-                ));
+                diagnostics.push(dsl::Diagnostic::error("stdio.semio_mesh.duplicate-material-id", dsl::TextSpan::at(1, 1), format!("SemioMeshValidator: duplicate material id {:?}", material.id)));
             }
         }
 
         let mut seen_texture_ids = std::collections::HashSet::new();
         for texture in &snapshot.textures {
             if !seen_texture_ids.insert(texture.id.as_str()) {
-                diagnostics.push(dsl::Diagnostic::error(
-                    "stdio.semio_mesh.duplicate-texture-id",
-                    dsl::TextSpan::at(1, 1),
-                    format!("SemioMeshValidator: duplicate texture id {:?}", texture.id),
-                ));
+                diagnostics.push(dsl::Diagnostic::error("stdio.semio_mesh.duplicate-texture-id", dsl::TextSpan::at(1, 1), format!("SemioMeshValidator: duplicate texture id {:?}", texture.id)));
             }
         }
 
@@ -145,7 +123,9 @@ pub mod derived_composition {
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    fn validator_entry() -> &'static SubsetValidatorEntry { VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioMeshValidator>) }
+    fn validator_entry() -> &'static SubsetValidatorEntry {
+        VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioMeshValidator>)
+    }
     //#endregion 🔖️SubsetValidator
 
     //#region 🔖️Register
@@ -153,7 +133,9 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::mesh::schema::semio_mesh_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioMeshSnapshot, crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation>(crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::STDIO_SEMIOMESH_DOCUMENT_SCHEMA));
+        store::register_document_codec(store::ArtifactCodec::of::<SemioMeshSnapshot, crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation>(
+            crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::STDIO_SEMIOMESH_DOCUMENT_SCHEMA,
+        ));
         register_subset_validator(validator_entry());
         register_composer_entries(io_bridge_entries());
         register_artifact_inferences();
@@ -213,10 +195,7 @@ pub mod derived_composition {
 
         #[test]
         fn dangling_material_ref_is_flagged() {
-            let snapshot = SemioMeshSnapshot {
-                meshes: vec![SemioMesh { id: "m1".into(), primitives: vec![SemioPrimitive { id: "p1".into(), material_id: Some("missing".into()), ..Default::default() }] }],
-                ..Default::default()
-            };
+            let snapshot = SemioMeshSnapshot { meshes: vec![SemioMesh { id: "m1".into(), primitives: vec![SemioPrimitive { id: "p1".into(), material_id: Some("missing".into()), ..Default::default() }] }], ..Default::default() };
             let diagnostics = check_mesh_referential_invariants(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_mesh.dangling-material-ref"), "got {diagnostics:?}");
         }
@@ -236,10 +215,7 @@ pub mod derived_composition {
 
         #[test]
         fn validator_decodes_and_runs_the_referential_checks_end_to_end() {
-            let snapshot = SemioMeshSnapshot {
-                meshes: vec![SemioMesh { id: "m1".into(), primitives: vec![SemioPrimitive { id: "p1".into(), material_id: Some("missing".into()), ..Default::default() }] }],
-                ..Default::default()
-            };
+            let snapshot = SemioMeshSnapshot { meshes: vec![SemioMesh { id: "m1".into(), primitives: vec![SemioPrimitive { id: "p1".into(), material_id: Some("missing".into()), ..Default::default() }] }], ..Default::default() };
             let bytes = store::ArtifactPack::encode_pack(&snapshot);
             let diagnostics = SemioMeshValidator::validate(&IoPayload::Binary(bytes));
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_mesh.dangling-material-ref"), "got {diagnostics:?}");
@@ -260,19 +236,11 @@ pub mod derived_composition {
             /// `walk_protocol` laws below.
             #[test]
             fn committed_facet_files_parse() {
-                for (label, text) in [
-                    ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-                ] {
+                for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                     assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
                 }
-                for (label, text) in [
-                    ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-                ] {
+                for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                     dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
                 }
             }
@@ -374,11 +342,7 @@ pub mod derived_composition {
             type Inference = ();
 
             fn dialect() -> store::os_io::ArtifactDialect {
-                store::os_io::ArtifactDialect {
-                    artifact_kind: "s.stdio.semio".into(),
-                    standard: "v1".into(),
-                    subset: "mesh".into(),
-                }
+                store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() }
             }
 
             fn fidelity() -> store::os_store::test_support::IoFidelityClass {
@@ -418,12 +382,12 @@ pub mod derived_composition {
             fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
                 let text = std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()])?;
                 let snapshot = <SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| vec![e.to_string()])?;
-                let hard: Vec<String> = check_mesh_referential_invariants(&snapshot)
-                    .into_iter()
-                    .filter(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal))
-                    .map(|d| d.code.0)
-                    .collect();
-                if hard.is_empty() { Ok(()) } else { Err(hard) }
+                let hard: Vec<String> = check_mesh_referential_invariants(&snapshot).into_iter().filter(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal)).map(|d| d.code.0).collect();
+                if hard.is_empty() {
+                    Ok(())
+                } else {
+                    Err(hard)
+                }
             }
 
             fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {
@@ -434,11 +398,7 @@ pub mod derived_composition {
         #[test]
         fn cube_subset_integrated_roundtrip() {
             let text = include_str!("../📚️examples/🧊️cube/🖼️assets/🗣️example.dsl.semio");
-            let asset = store::os_store::test_support::ExampleAsset {
-                bytes: text.as_bytes(),
-                text: Some(text),
-                provenance: "✳️mesh/📚️examples/🧊️cube/🖼️assets/🗣️example.dsl.semio",
-            };
+            let asset = store::os_store::test_support::ExampleAsset { bytes: text.as_bytes(), text: Some(text), provenance: "✳️mesh/📚️examples/🧊️cube/🖼️assets/🗣️example.dsl.semio" };
             store::os_store::test_support::assert_subset_roundtrip::<SemioMeshRoundtrip>(&asset, None);
         }
         //#endregion 🧪️SubsetRoundtrip

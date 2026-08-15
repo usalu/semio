@@ -1,5 +1,5 @@
-use crate::artifacts::binary::{BinarySnapshot};
 use crate::artifacts::binary::schema::mutations::BinaryMutation;
+use crate::artifacts::binary::BinarySnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

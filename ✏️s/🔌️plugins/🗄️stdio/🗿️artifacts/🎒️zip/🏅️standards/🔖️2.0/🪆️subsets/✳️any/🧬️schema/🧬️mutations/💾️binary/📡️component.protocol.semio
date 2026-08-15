@@ -13,8 +13,8 @@ framing record
 # this facet's own `../📝️text/📖️component.grammar.semio`'s `op` alternatives) + a
 # `pack_rt::encode_record_body`-produced record body. `format`/`ordinal` are real, protocol-
 # walkable fixed-shape fields; the record body's own field layout genuinely depends on WHICH
-# variant `ordinal` selects (13 different shapes, one per `ZipMutation` variant) — no single
-# `field`/`segment` list in this dialect can describe all 13 at once without a tag-dispatched
+# variant `ordinal` selects (7 logical shapes, one per `ZipMutation` variant) — no single
+# `field`/`segment` list in this dialect can describe all 7 at once without a tag-dispatched
 # `repeat` whose arms embed a full nested `RecordSpec` walk, which this dialect does not have (the
 # `Prim::Ref` recursion this would need is the same unresolved gap the P2-P1 json pilot already
 # filed as a `mechanism_gaps` entry). Modeled honestly: the two real fixed fields, then one opaque

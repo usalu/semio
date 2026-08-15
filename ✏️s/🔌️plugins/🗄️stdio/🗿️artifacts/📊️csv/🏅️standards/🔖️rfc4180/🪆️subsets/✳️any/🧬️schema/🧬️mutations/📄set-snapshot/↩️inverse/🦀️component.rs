@@ -1,5 +1,5 @@
-use crate::artifacts::csv::{CsvSnapshot};
 use crate::artifacts::csv::schema::mutations::CsvMutation;
+use crate::artifacts::csv::CsvSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

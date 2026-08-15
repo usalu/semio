@@ -1,7 +1,7 @@
 //! 🧬️ SemioValueArtifact schema — full artifact state, mirrors `SemioValueSnapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValueNode, SemioValueSnapshot, SemioValue};
+use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueNode, SemioValueSnapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -18,23 +18,17 @@ pub struct SemioValueArtifact {
 }
 
 impl Default for SemioValueArtifact {
-    fn default() -> Self { Self::from_snapshot(SemioValueSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(SemioValueSnapshot::default())
+    }
 }
 
 impl SemioValueArtifact {
     pub fn to_snapshot(&self) -> SemioValueSnapshot {
-        SemioValueSnapshot {
-            schema: self.schema.clone(),
-            root: self.root.clone(),
-            nodes: self.nodes.clone(),
-        }
+        SemioValueSnapshot { schema: self.schema.clone(), root: self.root.clone(), nodes: self.nodes.clone() }
     }
     pub fn from_snapshot(snapshot: SemioValueSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            root: snapshot.root,
-            nodes: snapshot.nodes,
-        }
+        Self { schema: snapshot.schema, root: snapshot.root, nodes: snapshot.nodes }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioValueSnapshot) {
         self.schema = snapshot.schema;
@@ -78,20 +72,26 @@ pub fn semio_value_artifact_schema_descriptor() -> schema::ArtifactSchemaDescrip
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::SemioValueTreeDiff;
-    use crate::artifacts::semio::standards::v1::subsets::value::schema::mutations::{SemioValueMutation, apply_semio_value_mutation};
+    use crate::artifacts::semio::standards::v1::subsets::value::schema::mutations::{apply_semio_value_mutation, SemioValueMutation};
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioValueBuilderConstruction { snapshot: SemioValueSnapshot }
+    pub struct SemioValueBuilderConstruction {
+        snapshot: SemioValueSnapshot,
+    }
 
     impl ArtifactBuilder for SemioValueBuilderConstruction {
         type Snapshot = SemioValueSnapshot;
         type Mutation = SemioValueMutation;
         type Diff = SemioValueTreeDiff;
-        fn empty() -> Self { Self { snapshot: SemioValueSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: SemioValueSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioValueSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -106,7 +106,9 @@ pub mod derived_construction {
             self.snapshot = <SemioValueTreeDiff as protocol::MutationDiff<SemioValueSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 }
 pub use derived_construction::*;
@@ -114,11 +116,13 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioValueParts { pub snapshot: Option<SemioValueSnapshot> }
+    pub struct SemioValueParts {
+        pub snapshot: Option<SemioValueSnapshot>,
+    }
 
     pub struct SemioValueAnalyzerAnalysis;
 
@@ -130,10 +134,18 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
-                    if text.contains(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                    if text.contains(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }

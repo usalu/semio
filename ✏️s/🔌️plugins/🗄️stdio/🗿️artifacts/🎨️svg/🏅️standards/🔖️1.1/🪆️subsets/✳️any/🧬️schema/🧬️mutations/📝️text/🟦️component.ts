@@ -1,3 +1,2 @@
-/** 📝️ Text representation for `stdio.svg` (mutations) -- `JSON.stringify` of the SvgMutation
- * shape (see `../🟦️component.ts`). */
+/** 📝️ Structured tagged/hex text emitted by `SvgMutation.printOp`. */
 export type SvgMutationText = string;

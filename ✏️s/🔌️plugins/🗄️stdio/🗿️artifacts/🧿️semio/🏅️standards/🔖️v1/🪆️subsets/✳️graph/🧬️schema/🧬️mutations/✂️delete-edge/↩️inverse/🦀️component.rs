@@ -8,13 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::Se
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteEdge, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
     match base.edges.iter().find(|e| e.id == payload.id) {
-        Some(edge) => vec![SemioGraphMutation::CreateEdge(create_edge::mutation::CreateEdge {
-            id: edge.id.clone(),
-            source: edge.source.clone(),
-            target: edge.target.clone(),
-            kind: edge.kind.clone(),
-            label: edge.label.clone(),
-        })],
+        Some(edge) => vec![SemioGraphMutation::CreateEdge(create_edge::mutation::CreateEdge { id: edge.id.clone(), source: edge.source.clone(), target: edge.target.clone(), kind: edge.kind.clone(), label: edge.label.clone() })],
         None => Vec::new(),
     }
 }

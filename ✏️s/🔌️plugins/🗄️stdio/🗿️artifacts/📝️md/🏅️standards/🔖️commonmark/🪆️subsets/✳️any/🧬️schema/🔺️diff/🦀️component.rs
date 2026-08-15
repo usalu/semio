@@ -13,8 +13,8 @@ use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
 use crate::artifacts::md::MdSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
-use serde::{Deserialize, Serialize};
 use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.md`.
@@ -120,9 +120,7 @@ pub enum MdBlockDiff {
         raw: Option<String>,
     },
     /// 🔁 Wholesale block replace -- used when the block's KIND changes.
-    Replace {
-        block: MdBlock,
-    },
+    Replace { block: MdBlock },
 }
 //#endregion 🔖️BlocksDiff
 
@@ -196,26 +194,13 @@ fn wrap_blocks_diff(path: &[MdPathStep], inner: MdBlocksDiff) -> MdBlocksDiff {
     let mut current = inner;
     for step in path.iter().rev() {
         current = match step {
-            MdPathStep::BlockQuote { index } => MdBlocksDiff {
-                removed: Vec::new(),
-                added: Vec::new(),
-                modified: vec![MdBlockModified { index: *index, diff: MdBlockDiff::BlockQuote { blocks: Some(current) } }],
-            },
+            MdPathStep::BlockQuote { index } => MdBlocksDiff { removed: Vec::new(), added: Vec::new(), modified: vec![MdBlockModified { index: *index, diff: MdBlockDiff::BlockQuote { blocks: Some(current) } }] },
             MdPathStep::ListItem { index, item } => MdBlocksDiff {
                 removed: Vec::new(),
                 added: Vec::new(),
                 modified: vec![MdBlockModified {
                     index: *index,
-                    diff: MdBlockDiff::List {
-                        ordered: None,
-                        start: None,
-                        tight: None,
-                        items: Some(MdListItemsDiff {
-                            removed: Vec::new(),
-                            added: Vec::new(),
-                            modified: vec![MdListItemModified { index: *item, diff: current }],
-                        }),
-                    },
+                    diff: MdBlockDiff::List { ordered: None, start: None, tight: None, items: Some(MdListItemsDiff { removed: Vec::new(), added: Vec::new(), modified: vec![MdListItemModified { index: *item, diff: current }] }) },
                 }],
             },
         };
@@ -295,9 +280,7 @@ fn apply_block_diff(block: &MdBlock, diff: &MdBlockDiff) -> MdBlock {
     match diff {
         MdBlockDiff::Replace { block: replacement } => replacement.clone(),
         MdBlockDiff::Heading { level, inlines } => match block {
-            MdBlock::Heading { level: l, inlines: i } => {
-                MdBlock::Heading { level: level.unwrap_or(*l), inlines: inlines.clone().unwrap_or_else(|| i.clone()) }
-            }
+            MdBlock::Heading { level: l, inlines: i } => MdBlock::Heading { level: level.unwrap_or(*l), inlines: inlines.clone().unwrap_or_else(|| i.clone()) },
             other => other.clone(),
         },
         MdBlockDiff::Paragraph { inlines } => match block {
@@ -305,10 +288,7 @@ fn apply_block_diff(block: &MdBlock, diff: &MdBlockDiff) -> MdBlock {
             other => other.clone(),
         },
         MdBlockDiff::CodeBlock { info, literal } => match block {
-            MdBlock::CodeBlock { info: i, literal: l } => MdBlock::CodeBlock {
-                info: info.clone().unwrap_or_else(|| i.clone()),
-                literal: literal.clone().unwrap_or_else(|| l.clone()),
-            },
+            MdBlock::CodeBlock { info: i, literal: l } => MdBlock::CodeBlock { info: info.clone().unwrap_or_else(|| i.clone()), literal: literal.clone().unwrap_or_else(|| l.clone()) },
             other => other.clone(),
         },
         MdBlockDiff::HtmlBlock { raw } => match block {
@@ -317,9 +297,12 @@ fn apply_block_diff(block: &MdBlock, diff: &MdBlockDiff) -> MdBlock {
         },
         MdBlockDiff::ThematicBreak => MdBlock::ThematicBreak,
         MdBlockDiff::BlockQuote { blocks } => match block {
-            MdBlock::BlockQuote { blocks: b } => {
-                MdBlock::BlockQuote { blocks: match blocks { Some(d) => apply_blocks_diff(b, d), None => b.clone() } }
-            }
+            MdBlock::BlockQuote { blocks: b } => MdBlock::BlockQuote {
+                blocks: match blocks {
+                    Some(d) => apply_blocks_diff(b, d),
+                    None => b.clone(),
+                },
+            },
             other => other.clone(),
         },
         MdBlockDiff::List { ordered, start, tight, items } => match block {
@@ -327,7 +310,10 @@ fn apply_block_diff(block: &MdBlock, diff: &MdBlockDiff) -> MdBlock {
                 ordered: ordered.unwrap_or(*o),
                 start: start.clone().unwrap_or(*s),
                 tight: tight.unwrap_or(*t),
-                items: match items { Some(d) => apply_list_items_diff(it, d), None => it.clone() },
+                items: match items {
+                    Some(d) => apply_list_items_diff(it, d),
+                    None => it.clone(),
+                },
             },
             other => other.clone(),
         },
@@ -400,9 +386,7 @@ fn inverse_block_diff(current: Option<&MdBlock>, diff: &MdBlockDiff) -> MdBlockD
     match diff {
         MdBlockDiff::Replace { .. } => fallback(),
         MdBlockDiff::Heading { level, inlines } => match current {
-            Some(MdBlock::Heading { level: l, inlines: i }) => {
-                MdBlockDiff::Heading { level: level.as_ref().map(|_| *l), inlines: inlines.as_ref().map(|_| i.clone()) }
-            }
+            Some(MdBlock::Heading { level: l, inlines: i }) => MdBlockDiff::Heading { level: level.as_ref().map(|_| *l), inlines: inlines.as_ref().map(|_| i.clone()) },
             Some(other) => MdBlockDiff::Replace { block: other.clone() },
             None => fallback(),
         },
@@ -412,9 +396,7 @@ fn inverse_block_diff(current: Option<&MdBlock>, diff: &MdBlockDiff) -> MdBlockD
             None => fallback(),
         },
         MdBlockDiff::CodeBlock { info, literal } => match current {
-            Some(MdBlock::CodeBlock { info: i, literal: l }) => {
-                MdBlockDiff::CodeBlock { info: info.as_ref().map(|_| i.clone()), literal: literal.as_ref().map(|_| l.clone()) }
-            }
+            Some(MdBlock::CodeBlock { info: i, literal: l }) => MdBlockDiff::CodeBlock { info: info.as_ref().map(|_| i.clone()), literal: literal.as_ref().map(|_| l.clone()) },
             Some(other) => MdBlockDiff::Replace { block: other.clone() },
             None => fallback(),
         },
@@ -425,19 +407,14 @@ fn inverse_block_diff(current: Option<&MdBlock>, diff: &MdBlockDiff) -> MdBlockD
         },
         MdBlockDiff::ThematicBreak => MdBlockDiff::ThematicBreak,
         MdBlockDiff::BlockQuote { blocks } => match current {
-            Some(MdBlock::BlockQuote { blocks: b }) => {
-                MdBlockDiff::BlockQuote { blocks: blocks.as_ref().map(|bd| inverse_blocks_diff(b, bd)) }
-            }
+            Some(MdBlock::BlockQuote { blocks: b }) => MdBlockDiff::BlockQuote { blocks: blocks.as_ref().map(|bd| inverse_blocks_diff(b, bd)) },
             Some(other) => MdBlockDiff::Replace { block: other.clone() },
             None => fallback(),
         },
         MdBlockDiff::List { ordered, start, tight, items } => match current {
-            Some(MdBlock::List { ordered: o, start: s, tight: t, items: it }) => MdBlockDiff::List {
-                ordered: ordered.as_ref().map(|_| *o),
-                start: start.as_ref().map(|_| *s),
-                tight: tight.as_ref().map(|_| *t),
-                items: items.as_ref().map(|id| inverse_list_items_diff(it, id)),
-            },
+            Some(MdBlock::List { ordered: o, start: s, tight: t, items: it }) => {
+                MdBlockDiff::List { ordered: ordered.as_ref().map(|_| *o), start: start.as_ref().map(|_| *s), tight: tight.as_ref().map(|_| *t), items: items.as_ref().map(|id| inverse_list_items_diff(it, id)) }
+            }
             Some(other) => MdBlockDiff::Replace { block: other.clone() },
             None => fallback(),
         },
@@ -475,7 +452,11 @@ fn between_blocks(base: &[MdBlock], other: &[MdBlock]) -> Option<MdBlocksDiff> {
     }
     let removed: Vec<usize> = (other.len()..base.len()).collect();
     let added: Vec<MdBlockAdded> = (min_len..other.len()).map(|i| MdBlockAdded { index: i, item: other[i].clone() }).collect();
-    if modified.is_empty() && removed.is_empty() && added.is_empty() { None } else { Some(MdBlocksDiff { removed, modified, added }) }
+    if modified.is_empty() && removed.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(MdBlocksDiff { removed, modified, added })
+    }
 }
 
 fn between_block(base: &MdBlock, other: &MdBlock) -> Option<MdBlockDiff> {
@@ -483,28 +464,27 @@ fn between_block(base: &MdBlock, other: &MdBlock) -> Option<MdBlockDiff> {
         return None;
     }
     match (base, other) {
-        (MdBlock::Heading { level: bl, inlines: bi }, MdBlock::Heading { level: ol, inlines: oi }) => Some(MdBlockDiff::Heading {
-            level: if bl != ol { Some(*ol) } else { None },
-            inlines: if bi != oi { Some(oi.clone()) } else { None },
-        }),
+        (MdBlock::Heading { level: bl, inlines: bi }, MdBlock::Heading { level: ol, inlines: oi }) => Some(MdBlockDiff::Heading { level: if bl != ol { Some(*ol) } else { None }, inlines: if bi != oi { Some(oi.clone()) } else { None } }),
         (MdBlock::Paragraph { inlines: bi }, MdBlock::Paragraph { inlines: oi }) => {
-            if bi == oi { None } else { Some(MdBlockDiff::Paragraph { inlines: Some(oi.clone()) }) }
+            if bi == oi {
+                None
+            } else {
+                Some(MdBlockDiff::Paragraph { inlines: Some(oi.clone()) })
+            }
         }
-        (MdBlock::CodeBlock { info: bin, literal: bl }, MdBlock::CodeBlock { info: oin, literal: ol }) => Some(MdBlockDiff::CodeBlock {
-            info: if bin != oin { Some(oin.clone()) } else { None },
-            literal: if bl != ol { Some(ol.clone()) } else { None },
-        }),
+        (MdBlock::CodeBlock { info: bin, literal: bl }, MdBlock::CodeBlock { info: oin, literal: ol }) => {
+            Some(MdBlockDiff::CodeBlock { info: if bin != oin { Some(oin.clone()) } else { None }, literal: if bl != ol { Some(ol.clone()) } else { None } })
+        }
         (MdBlock::HtmlBlock { raw: br }, MdBlock::HtmlBlock { raw: or }) => {
-            if br == or { None } else { Some(MdBlockDiff::HtmlBlock { raw: Some(or.clone()) }) }
+            if br == or {
+                None
+            } else {
+                Some(MdBlockDiff::HtmlBlock { raw: Some(or.clone()) })
+            }
         }
         (MdBlock::ThematicBreak, MdBlock::ThematicBreak) => None,
-        (MdBlock::BlockQuote { blocks: bb }, MdBlock::BlockQuote { blocks: ob }) => {
-            between_blocks(bb, ob).map(|bd| MdBlockDiff::BlockQuote { blocks: Some(bd) })
-        }
-        (
-            MdBlock::List { ordered: bo, start: bs, tight: bt, items: bi },
-            MdBlock::List { ordered: oo, start: os, tight: ot, items: oi },
-        ) => {
+        (MdBlock::BlockQuote { blocks: bb }, MdBlock::BlockQuote { blocks: ob }) => between_blocks(bb, ob).map(|bd| MdBlockDiff::BlockQuote { blocks: Some(bd) }),
+        (MdBlock::List { ordered: bo, start: bs, tight: bt, items: bi }, MdBlock::List { ordered: oo, start: os, tight: ot, items: oi }) => {
             let ordered = if bo != oo { Some(*oo) } else { None };
             let start = if bs != os { Some(*os) } else { None };
             let tight = if bt != ot { Some(*ot) } else { None };
@@ -533,7 +513,11 @@ fn between_list_items(base: &[Vec<MdBlock>], other: &[Vec<MdBlock>]) -> Option<M
     }
     let removed: Vec<usize> = (other.len()..base.len()).collect();
     let added: Vec<MdListItemAdded> = (min_len..other.len()).map(|i| MdListItemAdded { index: i, item: other[i].clone() }).collect();
-    if modified.is_empty() && removed.is_empty() && added.is_empty() { None } else { Some(MdListItemsDiff { removed, modified, added }) }
+    if modified.is_empty() && removed.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(MdListItemsDiff { removed, modified, added })
+    }
 }
 //#endregion 🔖️DiffAlgebra
 
@@ -578,13 +562,9 @@ fn absorb_block_diff(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
     match (a, b) {
         (_, MdBlockDiff::Replace { block }) => MdBlockDiff::Replace { block },
         (MdBlockDiff::Replace { block }, b) => MdBlockDiff::Replace { block: apply_block_diff(&block, &b) },
-        (MdBlockDiff::Heading { level: la, inlines: ia }, MdBlockDiff::Heading { level: lb, inlines: ib }) => {
-            MdBlockDiff::Heading { level: lb.or(la), inlines: ib.or(ia) }
-        }
+        (MdBlockDiff::Heading { level: la, inlines: ia }, MdBlockDiff::Heading { level: lb, inlines: ib }) => MdBlockDiff::Heading { level: lb.or(la), inlines: ib.or(ia) },
         (MdBlockDiff::Paragraph { inlines: ia }, MdBlockDiff::Paragraph { inlines: ib }) => MdBlockDiff::Paragraph { inlines: ib.or(ia) },
-        (MdBlockDiff::CodeBlock { info: ia, literal: la }, MdBlockDiff::CodeBlock { info: ib, literal: lb }) => {
-            MdBlockDiff::CodeBlock { info: ib.or(ia), literal: lb.or(la) }
-        }
+        (MdBlockDiff::CodeBlock { info: ia, literal: la }, MdBlockDiff::CodeBlock { info: ib, literal: lb }) => MdBlockDiff::CodeBlock { info: ib.or(ia), literal: lb.or(la) },
         (MdBlockDiff::HtmlBlock { raw: ra }, MdBlockDiff::HtmlBlock { raw: rb }) => MdBlockDiff::HtmlBlock { raw: rb.or(ra) },
         (MdBlockDiff::ThematicBreak, MdBlockDiff::ThematicBreak) => MdBlockDiff::ThematicBreak,
         (MdBlockDiff::BlockQuote { blocks: ba }, MdBlockDiff::BlockQuote { blocks: bb }) => MdBlockDiff::BlockQuote {
@@ -594,10 +574,7 @@ fn absorb_block_diff(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
                 (Some(x), Some(y)) => Some(absorb_blocks_diff(x, y)),
             },
         },
-        (
-            MdBlockDiff::List { ordered: oa, start: sa, tight: ta, items: ia },
-            MdBlockDiff::List { ordered: ob, start: sb, tight: tb, items: ib },
-        ) => MdBlockDiff::List {
+        (MdBlockDiff::List { ordered: oa, start: sa, tight: ta, items: ia }, MdBlockDiff::List { ordered: ob, start: sb, tight: tb, items: ib }) => MdBlockDiff::List {
             ordered: ob.or(oa),
             start: sb.or(sa),
             tight: tb.or(ta),
@@ -856,7 +833,11 @@ pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 pub(crate) fn enc_bool(b: bool) -> &'static str {
-    if b { "1" } else { "0" }
+    if b {
+        "1"
+    } else {
+        "0"
+    }
 }
 pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
     match s {
@@ -936,10 +917,7 @@ pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl 
         }
     }
 }
-pub(crate) fn read_option_bin<T>(
-    reader: &mut store::ByteReader<'_>,
-    dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>,
-) -> Result<Option<T>, String> {
+pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(dec(reader)?)),
@@ -958,10 +936,7 @@ pub(crate) fn write_tristate_bin<T>(out: &mut Vec<u8>, opt: &Option<Option<T>>, 
         }
     }
 }
-pub(crate) fn read_tristate_bin<T>(
-    reader: &mut store::ByteReader<'_>,
-    dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>,
-) -> Result<Option<Option<T>>, String> {
+pub(crate) fn read_tristate_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<Option<T>>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(None)),
@@ -1107,13 +1082,7 @@ pub(crate) fn enc_block(b: &MdBlock) -> String {
     match b {
         MdBlock::Heading { level, inlines } => format!("J[{},{}]", level, enc_inline_list(inlines)),
         MdBlock::Paragraph { inlines } => format!("K[{}]", enc_inline_list(inlines)),
-        MdBlock::List { ordered, start, tight, items } => format!(
-            "L[{},{},{},{}]",
-            enc_bool(*ordered),
-            encode_option(start, |v| v.to_string()),
-            enc_bool(*tight),
-            enc_item_list(items),
-        ),
+        MdBlock::List { ordered, start, tight, items } => format!("L[{},{},{},{}]", enc_bool(*ordered), encode_option(start, |v| v.to_string()), enc_bool(*tight), enc_item_list(items),),
         MdBlock::CodeBlock { info, literal } => format!("M[{},{}]", encode_option(info, |v| enc_str(v)), enc_str(literal)),
         MdBlock::BlockQuote { blocks } => format!("N[{}]", enc_block_list(blocks)),
         MdBlock::ThematicBreak => "O[]".to_string(),
@@ -1127,21 +1096,13 @@ pub(crate) fn dec_block(s: &str) -> Result<MdBlock, String> {
         "J" => {
             let parts = split_top_level(inner, ',');
             let [level, inlines] = parts.as_slice() else { return Err(format!("heading: expected 2 fields, got {}", parts.len())) };
-            Ok(MdBlock::Heading {
-                level: level.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-                inlines: dec_inline_list(inlines)?,
-            })
+            Ok(MdBlock::Heading { level: level.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, inlines: dec_inline_list(inlines)? })
         }
         "K" => Ok(MdBlock::Paragraph { inlines: dec_inline_list(inner)? }),
         "L" => {
             let parts = split_top_level(inner, ',');
             let [ordered, start, tight, items] = parts.as_slice() else { return Err(format!("list: expected 4 fields, got {}", parts.len())) };
-            Ok(MdBlock::List {
-                ordered: dec_bool(ordered)?,
-                start: decode_option(start, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?,
-                tight: dec_bool(tight)?,
-                items: dec_item_list(items)?,
-            })
+            Ok(MdBlock::List { ordered: dec_bool(ordered)?, start: decode_option(start, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?, tight: dec_bool(tight)?, items: dec_item_list(items)? })
         }
         "M" => {
             let parts = split_top_level(inner, ',');
@@ -1270,11 +1231,7 @@ pub(crate) fn enc_block_diff(d: &MdBlockDiff) -> String {
             encode_option(tight, |v| enc_bool(*v).to_string()),
             encode_option(items, |v| enc_list_items_diff(v)),
         ),
-        MdBlockDiff::CodeBlock { info, literal } => format!(
-            "T[{},{}]",
-            encode_option(info, |v| encode_option(v, |x| enc_str(x))),
-            encode_option(literal, |v| enc_str(v)),
-        ),
+        MdBlockDiff::CodeBlock { info, literal } => format!("T[{},{}]", encode_option(info, |v| encode_option(v, |x| enc_str(x))), encode_option(literal, |v| enc_str(v)),),
         MdBlockDiff::BlockQuote { blocks } => format!("U[{}]", encode_option(blocks, |v| enc_blocks_diff(v))),
         MdBlockDiff::ThematicBreak => "V[]".to_string(),
         MdBlockDiff::HtmlBlock { raw } => format!("W[{}]", encode_option(raw, |v| enc_str(v))),
@@ -1288,10 +1245,7 @@ pub(crate) fn dec_block_diff(s: &str) -> Result<MdBlockDiff, String> {
         "Q" => {
             let parts = split_top_level(inner, ',');
             let [level, inlines] = parts.as_slice() else { return Err(format!("heading diff: expected 2 fields, got {}", parts.len())) };
-            Ok(MdBlockDiff::Heading {
-                level: decode_option(level, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?,
-                inlines: decode_option(inlines, dec_inline_list)?,
-            })
+            Ok(MdBlockDiff::Heading { level: decode_option(level, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?, inlines: decode_option(inlines, dec_inline_list)? })
         }
         "R" => Ok(MdBlockDiff::Paragraph { inlines: decode_option(inner, dec_inline_list)? }),
         "S" => {
@@ -1307,10 +1261,7 @@ pub(crate) fn dec_block_diff(s: &str) -> Result<MdBlockDiff, String> {
         "T" => {
             let parts = split_top_level(inner, ',');
             let [info, literal] = parts.as_slice() else { return Err(format!("code block diff: expected 2 fields, got {}", parts.len())) };
-            Ok(MdBlockDiff::CodeBlock {
-                info: decode_option(info, |v| decode_option(v, dec_str))?,
-                literal: decode_option(literal, dec_str)?,
-            })
+            Ok(MdBlockDiff::CodeBlock { info: decode_option(info, |v| decode_option(v, dec_str))?, literal: decode_option(literal, dec_str)? })
         }
         "U" => Ok(MdBlockDiff::BlockQuote { blocks: decode_option(inner, dec_blocks_diff)? }),
         "V" => Ok(MdBlockDiff::ThematicBreak),
@@ -1332,14 +1283,22 @@ fn dec_blocks_diff(body: &str) -> Result<MdBlocksDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("blocks diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("block modified: bad entry {entry:?}"))?;
-        Ok(MdBlockModified { index: parse_usize(idx)?, diff: dec_block_diff(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("block added: bad entry {entry:?}"))?;
-        Ok(MdBlockAdded { index: parse_usize(idx)?, item: dec_block(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("block modified: bad entry {entry:?}"))?;
+            Ok(MdBlockModified { index: parse_usize(idx)?, diff: dec_block_diff(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("block added: bad entry {entry:?}"))?;
+            Ok(MdBlockAdded { index: parse_usize(idx)?, item: dec_block(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok(MdBlocksDiff { removed, modified, added })
 }
 
@@ -1357,14 +1316,22 @@ fn dec_list_items_diff(body: &str) -> Result<MdListItemsDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("list items diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("list item modified: bad entry {entry:?}"))?;
-        Ok(MdListItemModified { index: parse_usize(idx)?, diff: dec_blocks_diff(strip_brackets(rest)?)? })
-    }).collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("list item added: bad entry {entry:?}"))?;
-        Ok(MdListItemAdded { index: parse_usize(idx)?, item: dec_block_list(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("list item modified: bad entry {entry:?}"))?;
+            Ok(MdListItemModified { index: parse_usize(idx)?, diff: dec_blocks_diff(strip_brackets(rest)?)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("list item added: bad entry {entry:?}"))?;
+            Ok(MdListItemAdded { index: parse_usize(idx)?, item: dec_block_list(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok(MdListItemsDiff { removed, modified, added })
 }
 //#endregion 🔖️DiffValueCodecs
@@ -1570,11 +1537,7 @@ impl protocol::DiffCodec for MdDiff {
         let mut reader = store::ByteReader::new(bytes);
         let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
         let has_value = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_value", offset: 1, detail: e.to_string() })?;
-        let blocks = if has_value != 0 {
-            Some(dec_blocks_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks", offset: reader.position() as u64, detail: e })?)
-        } else {
-            None
-        };
+        let blocks = if has_value != 0 { Some(dec_blocks_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks", offset: reader.position() as u64, detail: e })?) } else { None };
         Ok(MdDiff { blocks })
     }
 }
@@ -1629,10 +1592,7 @@ fn md_a() -> Vec<MdBlock> {
             ordered: false,
             start: Some(3),
             tight: true,
-            items: vec![
-                vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item-a1".into() }] }],
-                vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item-a2".into() }] }],
-            ],
+            items: vec![vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item-a1".into() }] }], vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item-a2".into() }] }]],
         },
         MdBlock::CodeBlock { info: Some("rust".into()), literal: "fn a(){}".into() },
         MdBlock::BlockQuote { blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "quoted-a".into() }] }] },
@@ -1658,12 +1618,7 @@ fn md_b() -> Vec<MdBlock> {
             ],
         },
         MdBlock::CodeBlock { info: None, literal: "fn b(){}".into() },
-        MdBlock::BlockQuote {
-            blocks: vec![
-                MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "quoted-a".into() }] },
-                MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "quoted-b-added".into() }] },
-            ],
-        },
+        MdBlock::BlockQuote { blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "quoted-a".into() }] }, MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "quoted-b-added".into() }] }] },
         MdBlock::HtmlBlock { raw: "<div>b</div>".into() },
         MdBlock::Paragraph { inlines: vec![MdInline::Strong { inlines: vec![MdInline::Text { text: "unchanged".into() }] }] },
         MdBlock::Heading { level: 3, inlines: vec![MdInline::Text { text: "nowHeading".into() }] },
@@ -1683,13 +1638,7 @@ pub(crate) fn demo_diff_cases() -> Vec<MdDiff> {
     let b = demo_snapshot(md_b());
     let empty = demo_snapshot(Vec::new());
 
-    let mut cases = vec![
-        MdDiff::default(),
-        MdDiff::between(&a, &b),
-        MdDiff::between(&b, &a),
-        MdDiff::between(&a, &empty),
-        MdDiff::between(&empty, &a),
-    ];
+    let mut cases = vec![MdDiff::default(), MdDiff::between(&a, &b), MdDiff::between(&b, &a), MdDiff::between(&a, &empty), MdDiff::between(&empty, &a)];
     // 🍃 Manual case: `ThematicBreak` diff (never produced by `between`) + `Replace` at a nested
     // `BlockQuote` depth, proving the codec handles both even off the `between` path.
     cases.push(MdDiff {
@@ -1708,10 +1657,7 @@ pub(crate) fn demo_diff_cases() -> Vec<MdDiff> {
                     },
                 },
             ],
-            added: vec![MdBlockAdded {
-                index: 2,
-                item: MdBlock::List { ordered: true, start: Some(1), tight: false, items: vec![vec![MdBlock::ThematicBreak], Vec::new()] },
-            }],
+            added: vec![MdBlockAdded { index: 2, item: MdBlock::List { ordered: true, start: Some(1), tight: false, items: vec![vec![MdBlock::ThematicBreak], Vec::new()] } }],
         }),
     });
     cases

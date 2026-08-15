@@ -3,14 +3,13 @@
 //! `Ifc2x3Diff`'s own id-keyed shape.
 
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::{
-    dec_edm_preamble, dec_edm_preamble_bin, dec_part21_header, dec_part21_header_bin, dec_part21_instance, dec_part21_instance_bin, dec_str,
-    enc_part21_header, enc_part21_header_bin, enc_part21_instance, enc_edm_preamble, enc_edm_preamble_bin, enc_part21_instance_bin, enc_str,
-    read_str_bin, split_top_level, strip_brackets, write_str_bin, Ifc2x3Diff,
+    dec_edm_preamble, dec_edm_preamble_bin, dec_instance_list, dec_optional_edm_preamble, dec_part21_header, dec_part21_header_bin, dec_part21_instance, dec_part21_instance_bin, dec_str, enc_edm_preamble, enc_edm_preamble_bin,
+    enc_instance_list_into, enc_optional_edm_preamble, enc_part21_header, enc_part21_header_bin, enc_part21_instance, enc_part21_instance_bin, enc_str, read_str_bin, split_top_level, strip_brackets, write_str_bin, Ifc2x3Diff,
 };
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
 use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
-use protocol::{Mutation, MutationDiff};
 use protocol::os_spr::command::DiffAlgebra;
+use protocol::{Mutation, MutationDiff};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -20,10 +19,18 @@ use serde::{Deserialize, Serialize};
 pub enum Ifc2x3Mutation {
     #[default]
     NoMutation,
-    SetSnapshot { snapshot: Ifc2x3Snapshot },
-    UpsertInstance { instance: Part21Instance },
-    RemoveInstance { id: u64 },
-    SetHeader { header: Part21Header },
+    SetSnapshot {
+        snapshot: Ifc2x3Snapshot,
+    },
+    UpsertInstance {
+        instance: Part21Instance,
+    },
+    RemoveInstance {
+        id: u64,
+    },
+    SetHeader {
+        header: Part21Header,
+    },
 }
 //#endregion 🔖️Mutations
 
@@ -46,7 +53,7 @@ impl Mutation<Ifc2x3Snapshot> for Ifc2x3Mutation {
         match self {
             Ifc2x3Mutation::NoMutation => return Ifc2x3Diff::default(),
             Ifc2x3Mutation::SetSnapshot { snapshot } => {
-                crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(snapshot).expect("IFC2X3 SetSnapshot must carry a valid logical model");
+                crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::validate_ifc2x3_snapshot(snapshot).expect("IFC2X3 SetSnapshot must carry a valid logical model");
                 return Ifc2x3Diff::between(base, snapshot);
             }
             Ifc2x3Mutation::UpsertInstance { instance } => match next.document.instances.iter_mut().find(|candidate| candidate.id == instance.id) {
@@ -82,29 +89,38 @@ impl Mutation<Ifc2x3Snapshot> for Ifc2x3Mutation {
 /// intra-artifact-reuse split `4`'s own `🧬️mutations/🦀️component.rs` uses. Grammar: `keyword
 /// arg=value ...` (space-separated), one match arm per variant.
 fn enc_ifc2x3_snapshot(s: &Ifc2x3Snapshot) -> String {
-    let instances = s.document.instances.iter().map(enc_part21_instance).collect::<Vec<_>>().join(",");
-    let preamble = s.edm_preamble.as_ref().map(|value| format!("[1,{}]", enc_edm_preamble(value))).unwrap_or_else(|| "[0]".into());
-    format!("[{},{},[{}],{}]", enc_str(&s.schema), enc_part21_header(&s.document.header), instances, preamble)
+    let mut out = String::with_capacity(s.document.instances.len().saturating_mul(64));
+    enc_ifc2x3_snapshot_into(s, &mut out);
+    out
+}
+fn enc_ifc2x3_snapshot_into(s: &Ifc2x3Snapshot, out: &mut String) {
+    out.push('[');
+    out.push_str(&enc_str(&s.schema));
+    out.push(',');
+    out.push_str(&enc_part21_header(&s.document.header));
+    out.push(',');
+    enc_instance_list_into(&s.document.instances, out);
+    out.push(',');
+    out.push_str(&enc_optional_edm_preamble(&s.edm_preamble));
+    out.push(']');
 }
 fn dec_ifc2x3_snapshot(s: &str) -> Result<Ifc2x3Snapshot, String> {
-    // 🩹 `split_top_level` respects `[`/`]` depth, so a single depth-0 split of the whole inner
-    // string already yields exactly 3 fields (`header`'s and `instances`'s own internal commas
-    // sit at depth ≥1, matching `4`'s own `dec_ifc_snapshot` shape exactly).
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema, header, instances, preamble] = parts.as_slice() else { return Err(format!("ifc2x3 snapshot: expected 4 fields, got {}", parts.len())) };
-    let instances = split_top_level(strip_brackets(instances)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_part21_instance).collect::<Result<Vec<_>, String>>()?;
-    let edm_preamble = match split_top_level(strip_brackets(preamble)?, ',').as_slice() {
-        ["0"] => None,
-        ["1", value] => Some(dec_edm_preamble(value)?),
-        _ => return Err(format!("ifc2x3 snapshot: invalid EDM preamble {preamble:?}")),
+    let fields = split_top_level(strip_brackets(s)?, ',');
+    let [schema, header, instances, edm_preamble] = fields.as_slice() else {
+        return Err(format!("ifc2x3 snapshot: expected 4 fields, got {}", fields.len()));
     };
-    Ok(Ifc2x3Snapshot { schema: dec_str(schema)?, document: Part21Document { header: dec_part21_header(header)?, instances }, edm_preamble })
+    Ok(Ifc2x3Snapshot { schema: dec_str(schema)?, document: Part21Document { header: dec_part21_header(header)?, instances: dec_instance_list(instances)? }, edm_preamble: dec_optional_edm_preamble(edm_preamble)? })
 }
 
 fn print_ifc2x3_mutation(m: &Ifc2x3Mutation) -> String {
     match m {
         Ifc2x3Mutation::NoMutation => "no-mutation".to_string(),
-        Ifc2x3Mutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_ifc2x3_snapshot(snapshot)),
+        Ifc2x3Mutation::SetSnapshot { snapshot } => {
+            let mut out = String::with_capacity(snapshot.document.instances.len().saturating_mul(64).saturating_add(22));
+            out.push_str("set-snapshot snapshot=");
+            enc_ifc2x3_snapshot_into(snapshot, &mut out);
+            out
+        }
         Ifc2x3Mutation::UpsertInstance { instance } => format!("upsert-instance instance={}", enc_part21_instance(instance)),
         Ifc2x3Mutation::RemoveInstance { id } => format!("remove-instance id={id}"),
         Ifc2x3Mutation::SetHeader { header } => format!("set-header header={}", enc_part21_header(header)),
@@ -203,7 +219,9 @@ impl protocol::OpBinary for Ifc2x3Mutation {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
-        if format != store::pack_rt::OP_BINARY_FORMAT { return Err(malformed("op format", 0, format!("unsupported format {format}"))); }
+        if format != store::pack_rt::OP_BINARY_FORMAT {
+            return Err(malformed("op format", 0, format!("unsupported format {format}")));
+        }
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         let mutation = match tag {
             0 => Ifc2x3Mutation::NoMutation,
@@ -225,7 +243,9 @@ impl protocol::OpBinary for Ifc2x3Mutation {
             }
             other => return Err(malformed("op tag", 1, format!("unknown tag {other}"))),
         };
-        if reader.remaining() != 0 { return Err(malformed("op trailing bytes", reader.position(), format!("{} trailing bytes", reader.remaining()))); }
+        if reader.remaining() != 0 {
+            return Err(malformed("op trailing bytes", reader.position(), format!("{} trailing bytes", reader.remaining())));
+        }
         Ok(mutation)
     }
 }
@@ -244,17 +264,20 @@ pub(crate) fn demo_mutation_cases() -> Vec<Ifc2x3Mutation> {
             instance: Part21Instance {
                 id: 99,
                 entities: vec![
-                    ("IFCQUANTITYAREA".into(), vec![
-                        Part21Value::Unset,
-                        Part21Value::Derived,
-                        Part21Value::Int(-7),
-                        Part21Value::Real(3.25.into()),
-                        Part21Value::Str("hi".into()),
-                        Part21Value::Enum("EDGE".into()),
-                        Part21Value::Ref(42),
-                        Part21Value::List(vec![Part21Value::Int(1), Part21Value::Int(2)]),
-                        Part21Value::Typed("IFCLENGTHMEASURE".into(), vec![Part21Value::Real(3000.0.into())]),
-                    ]),
+                    (
+                        "IFCQUANTITYAREA".into(),
+                        vec![
+                            Part21Value::Unset,
+                            Part21Value::Derived,
+                            Part21Value::Int(-7),
+                            Part21Value::Real(3.25.into()),
+                            Part21Value::Str("hi".into()),
+                            Part21Value::Enum("EDGE".into()),
+                            Part21Value::Ref(42),
+                            Part21Value::List(vec![Part21Value::Int(1), Part21Value::Int(2)]),
+                            Part21Value::Typed("IFCLENGTHMEASURE".into(), vec![Part21Value::Real(3000.0.into())]),
+                        ],
+                    ),
                     ("IFCPHYSICALSIMPLEQUANTITY".into(), vec![Part21Value::Unset]),
                 ],
             },
@@ -279,28 +302,18 @@ mod tests {
 
     fn exact_fixture_bytes() -> &'static [u8] {
         static BYTES: OnceLock<Vec<u8>> = OnceLock::new();
-        BYTES.get_or_init(|| {
-            std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/wellness-center-sama.ifc"))
-                .expect("read temp/wellness-center-sama.ifc")
-        })
+        BYTES.get_or_init(|| std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/wellness-center-sama.ifc")).expect("read temp/wellness-center-sama.ifc"))
     }
 
     fn exact_fixture() -> Ifc2x3Snapshot {
         static SNAPSHOT: OnceLock<Ifc2x3Snapshot> = OnceLock::new();
-        SNAPSHOT
-            .get_or_init(|| crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(exact_fixture_bytes()).expect("import IFC2X3 fixture"))
-            .clone()
+        SNAPSHOT.get_or_init(|| crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(exact_fixture_bytes()).expect("import IFC2X3 fixture")).clone()
     }
 
     fn assert_exact(label: &str, actual: &[u8]) {
         let expected = exact_fixture_bytes();
         let first_difference = actual.iter().zip(expected).position(|(left, right)| left != right);
-        assert!(
-            actual == expected,
-            "{label}: expected {} bytes, got {}; first differing byte: {first_difference:?}",
-            expected.len(),
-            actual.len(),
-        );
+        assert!(actual == expected, "{label}: expected {} bytes, got {}; first differing byte: {first_difference:?}", expected.len(), actual.len(),);
     }
 
     #[test]
@@ -414,29 +427,68 @@ mod tests {
     fn exact_native_set_snapshot_codecs_retain_complete_logical_model() {
         let imported = exact_fixture();
         let projection = Ifc2x3Snapshot::default();
-        let diff = Ifc2x3Diff::between(&projection, &imported);
-        let text_diff = Ifc2x3Diff::parse_diff(&diff.print_diff()).expect("diff text decode");
-        let binary_diff = Ifc2x3Diff::decode_diff(&diff.encode_diff().expect("diff binary encode")).expect("diff binary decode");
-        assert_eq!(text_diff, diff);
-        assert_eq!(binary_diff, diff);
-        let rebuilt = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&MutationDiff::apply(&binary_diff, &projection)).expect("logical diff export");
-        assert_eq!(crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(&rebuilt).expect("logical diff re-import"), imported);
-        let mutation = Ifc2x3Mutation::SetSnapshot { snapshot: imported.clone() };
-        let text_op = Ifc2x3Mutation::parse_op(&mutation.print_op()).expect("op text decode");
-        let binary_op = Ifc2x3Mutation::decode_op(&mutation.encode_op().expect("op binary encode")).expect("op binary decode");
-        assert!(text_op == mutation, "set-snapshot text codec must retain the logical IFC model");
-        assert!(binary_op == mutation, "set-snapshot binary codec must retain the logical IFC model");
-        let applied = MutationDiff::apply(&Mutation::diff(&binary_op, &projection), &projection);
-        assert!(applied == imported, "set-snapshot mutation must restore imported snapshot");
-        assert_exact("set-snapshot export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&applied).expect("set-snapshot export"));
+        {
+            let diff = Ifc2x3Diff::between(&projection, &imported);
+            let wire = diff.print_diff();
+            let decoded = Ifc2x3Diff::parse_diff(&wire).expect("diff text decode");
+            drop(wire);
+            assert_eq!(decoded, diff);
+            drop(diff);
+            let applied = MutationDiff::apply(&decoded, &projection);
+            drop(decoded);
+            assert!(applied == imported, "text diff must restore imported snapshot");
+            assert_exact("text diff export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&applied).expect("text diff export"));
+        }
+        {
+            let diff = Ifc2x3Diff::between(&projection, &imported);
+            let wire = diff.encode_diff().expect("diff binary encode");
+            let decoded = Ifc2x3Diff::decode_diff(&wire).expect("diff binary decode");
+            drop(wire);
+            assert_eq!(decoded, diff);
+            drop(diff);
+            let applied = MutationDiff::apply(&decoded, &projection);
+            drop(decoded);
+            assert!(applied == imported, "binary diff must restore imported snapshot");
+            assert_exact("binary diff export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&applied).expect("binary diff export"));
+        }
+        {
+            let mutation = Ifc2x3Mutation::SetSnapshot { snapshot: imported.clone() };
+            let wire = mutation.print_op();
+            drop(mutation);
+            let decoded = Ifc2x3Mutation::parse_op(&wire).expect("op text decode");
+            drop(wire);
+            assert!(matches!(&decoded, Ifc2x3Mutation::SetSnapshot { snapshot } if snapshot == &imported), "set-snapshot text codec must retain the logical IFC model");
+            let diff = Mutation::diff(&decoded, &projection);
+            drop(decoded);
+            let applied = MutationDiff::apply(&diff, &projection);
+            drop(diff);
+            assert!(applied == imported, "set-snapshot text mutation must restore imported snapshot");
+            assert_exact("set-snapshot text export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&applied).expect("set-snapshot text export"));
+        }
+        {
+            let mutation = Ifc2x3Mutation::SetSnapshot { snapshot: imported.clone() };
+            let wire = mutation.encode_op().expect("op binary encode");
+            drop(mutation);
+            let decoded = Ifc2x3Mutation::decode_op(&wire).expect("op binary decode");
+            drop(wire);
+            assert!(matches!(&decoded, Ifc2x3Mutation::SetSnapshot { snapshot } if snapshot == &imported), "set-snapshot binary codec must retain the logical IFC model");
+            let diff = Mutation::diff(&decoded, &projection);
+            drop(decoded);
+            let applied = MutationDiff::apply(&diff, &projection);
+            drop(diff);
+            assert!(applied == imported, "set-snapshot binary mutation must restore imported snapshot");
+            assert_exact("set-snapshot binary export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&applied).expect("set-snapshot binary export"));
+        }
     }
 
     #[test]
-    fn exact_native_rejects_semantic_bypass_and_restores_interior_order() {
+    fn exact_native_materializes_logical_edits_and_restores_interior_order() {
         let imported = exact_fixture();
-        let mut bypass = imported.clone();
-        bypass.document.instances[1].entities[0].0 = "IFCILLEGALBYPASS".into();
-        assert!(crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&bypass).is_err());
+        let mut edited = imported.clone();
+        edited.document.instances[1].entities[0].0 = "IFCCHANGEDENTITY".into();
+        let edited_bytes = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&edited).expect("logical edit export");
+        assert_ne!(edited_bytes, exact_fixture_bytes());
+        assert_eq!(crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(&edited_bytes).expect("logical edit import"), edited);
 
         let target = imported.document.instances[1].clone();
         let mut replacement = target.clone();

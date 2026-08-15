@@ -15,15 +15,12 @@
 //! `AnimInterpolation::CubicSpline` is still recorded (informational -- see the reverse direction's
 //! own doc comment on why it downgrades on export).
 
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::gltf::GltfSnapshot;
 use crate::artifacts::gltf::engine::decode_accessor;
 use crate::artifacts::gltf::schema::snapshot::GltfAnimationPath;
+use crate::artifacts::gltf::GltfSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{
-    AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue,
-    SemioAnimationSnapshot, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA,
-};
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") };
@@ -68,12 +65,12 @@ impl ArtifactDeserializer for SemioAnimationFromGltf {
                     let base = (i * multiplier + if is_cubic { 1 } else { 0 }) * arity;
                     let slice = values.components.get(base..base + arity).unwrap_or(&[]);
                     let value = match property {
-                        AnimTargetProperty::Translation | AnimTargetProperty::Scale => AnimValue::Vec3 {
-                            value: SemioPoint3 { x: slice.first().copied().unwrap_or(0.0), y: slice.get(1).copied().unwrap_or(0.0), z: slice.get(2).copied().unwrap_or(0.0) },
-                        },
-                        AnimTargetProperty::Rotation => AnimValue::Quat {
-                            value: SemioQuaternion { x: slice.first().copied().unwrap_or(0.0), y: slice.get(1).copied().unwrap_or(0.0), z: slice.get(2).copied().unwrap_or(0.0), w: slice.get(3).copied().unwrap_or(1.0) },
-                        },
+                        AnimTargetProperty::Translation | AnimTargetProperty::Scale => {
+                            AnimValue::Vec3 { value: SemioPoint3 { x: slice.first().copied().unwrap_or(0.0), y: slice.get(1).copied().unwrap_or(0.0), z: slice.get(2).copied().unwrap_or(0.0) } }
+                        }
+                        AnimTargetProperty::Rotation => {
+                            AnimValue::Quat { value: SemioQuaternion { x: slice.first().copied().unwrap_or(0.0), y: slice.get(1).copied().unwrap_or(0.0), z: slice.get(2).copied().unwrap_or(0.0), w: slice.get(3).copied().unwrap_or(1.0) } }
+                        }
                         AnimTargetProperty::Weights => AnimValue::Weights { values: slice.to_vec() },
                         AnimTargetProperty::Custom { .. } => unreachable!(),
                     };
@@ -100,10 +97,8 @@ impl ArtifactDeserializer for SemioAnimationFromGltf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gltf::schema::snapshot::{
-        GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationSampler, GltfDocument, GltfInterpolation, GltfNode, GltfSourceForm,
-    };
     use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
+    use crate::artifacts::gltf::schema::snapshot::{GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationSampler, GltfDocument, GltfInterpolation, GltfNode, GltfSourceForm};
     use crate::artifacts::gltf::standards::v2_0::subsets::any::schema::{GltfAccessorSpec, GltfBuilderConstruction as GltfDocBuilder};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -117,13 +112,19 @@ mod tests {
         let n1 = b.add_node(None);
 
         let mut time_bytes = Vec::new();
-        for t in [0.0f32, 1.0f32] { time_bytes.extend_from_slice(&t.to_le_bytes()); }
+        for t in [0.0f32, 1.0f32] {
+            time_bytes.extend_from_slice(&t.to_le_bytes());
+        }
         let time_buf = b.add_buffer(time_bytes);
         let time_bv = b.add_buffer_view(time_buf, 0, 8, None, None);
         let time_acc = b.add_accessor(GltfAccessorSpec::new(GltfComponentType::Float, GltfAccessorType::Scalar, 2).with_buffer_view(time_bv, 0));
 
         let mut translation_bytes = Vec::new();
-        for v in [[0.0f32, 0.0, 0.0], [1.0, 2.0, 3.0]] { for c in v { translation_bytes.extend_from_slice(&c.to_le_bytes()); } }
+        for v in [[0.0f32, 0.0, 0.0], [1.0, 2.0, 3.0]] {
+            for c in v {
+                translation_bytes.extend_from_slice(&c.to_le_bytes());
+            }
+        }
         let trans_buf = b.add_buffer(translation_bytes);
         let trans_bv = b.add_buffer_view(trans_buf, 0, 24, None, None);
         let trans_acc = b.add_accessor(GltfAccessorSpec::new(GltfComponentType::Float, GltfAccessorType::Vec3, 2).with_buffer_view(trans_bv, 0));
@@ -135,7 +136,9 @@ mod tests {
         // from (see the reverse serializer's own doc comment on this same precision fact).
         let mut weight_bytes = Vec::new();
         let weight_floats: [f32; 12] = [0.0, 0.0, 0.25, 0.5, 0.0, 0.0, 0.0, 0.0, 0.75, 0.125, 0.0, 0.0];
-        for f in weight_floats { weight_bytes.extend_from_slice(&f.to_le_bytes()); }
+        for f in weight_floats {
+            weight_bytes.extend_from_slice(&f.to_le_bytes());
+        }
         let weight_buf = b.add_buffer(weight_bytes);
         let weight_bv = b.add_buffer_view(weight_buf, 0, 48, None, None);
         let weight_acc = b.add_accessor(GltfAccessorSpec::new(GltfComponentType::Float, GltfAccessorType::Scalar, 12).with_buffer_view(weight_bv, 0));

@@ -2,30 +2,14 @@
   "$id": "https://semio.tech/schema/s.stdio.zip/mutation.json",
   "title": "ZipMutation",
   "$defs": {
-    "ZipExtraField": {
-      "type": "object",
-      "required": ["id"],
-      "properties": { "id": { "type": "integer" }, "payload": { "type": "array", "items": { "type": "integer" } } }
-    },
     "ZipEntry": {
       "type": "object",
-      "required": ["name"],
+      "required": ["name", "data"],
       "properties": {
         "name": { "type": "string" },
-        "data": { "type": "array", "items": { "type": "integer" } },
-        "method": { "type": "string", "enum": ["stored", "deflate"] },
-        "dosDate": { "type": "integer" },
-        "dosTime": { "type": "integer" },
-        "unixMtime": { "type": ["integer", "null"] },
-        "flags": { "type": "integer" },
-        "versionMadeBy": { "type": "integer" },
-        "versionNeeded": { "type": "integer" },
-        "internalAttrs": { "type": "integer" },
-        "externalAttrs": { "type": "integer" },
-        "localExtra": { "type": "array", "items": { "$ref": "#/$defs/ZipExtraField" } },
-        "centralExtra": { "type": "array", "items": { "$ref": "#/$defs/ZipExtraField" } },
-        "comment": { "type": "string" }
-      }
+        "data": { "type": "array", "items": { "type": "integer" } }
+      },
+      "additionalProperties": false
     }
   },
   "type": "object",
@@ -33,29 +17,14 @@
   "properties": {
     "mutation": {
       "type": "string",
-      "enum": [
-        "noMutation", "setSnapshot", "setArchiveComment", "addEntry", "removeEntry", "renameEntry",
-        "setEntryData", "setEntryMethod", "setEntryTimestamps", "setEntryFlags", "setEntryVersions",
-        "setEntryAttributes", "setEntryExtra", "setEntryComment"
-      ]
+      "enum": ["noMutation", "setSnapshot", "setArchiveComment", "addEntry", "removeEntry", "renameEntry", "setEntryData"]
     },
-    "snapshot": { "type": "object", "description": "present when mutation = setSnapshot" },
+    "snapshot": { "type": "object" },
     "comment": { "type": "string" },
-    "index": { "type": "integer", "minimum": 0 },
     "entry": { "$ref": "#/$defs/ZipEntry" },
     "name": { "type": "string" },
     "newName": { "type": "string" },
-    "data": { "type": "array", "items": { "type": "integer" } },
-    "method": { "type": "string", "enum": ["stored", "deflate"] },
-    "dosDate": { "type": "integer" },
-    "dosTime": { "type": "integer" },
-    "unixMtime": { "type": ["integer", "null"] },
-    "flags": { "type": "integer" },
-    "versionMadeBy": { "type": "integer" },
-    "versionNeeded": { "type": "integer" },
-    "internalAttrs": { "type": "integer" },
-    "externalAttrs": { "type": "integer" },
-    "localExtra": { "type": "array", "items": { "$ref": "#/$defs/ZipExtraField" } },
-    "centralExtra": { "type": "array", "items": { "$ref": "#/$defs/ZipExtraField" } }
-  }
+    "data": { "type": "array", "items": { "type": "integer" } }
+  },
+  "additionalProperties": false
 }

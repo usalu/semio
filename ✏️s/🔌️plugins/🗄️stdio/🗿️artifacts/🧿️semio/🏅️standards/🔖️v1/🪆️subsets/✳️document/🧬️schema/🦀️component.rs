@@ -23,25 +23,17 @@ pub struct SemioDocumentArtifact {
 }
 
 impl Default for SemioDocumentArtifact {
-    fn default() -> Self { Self::from_snapshot(SemioDocumentSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(SemioDocumentSnapshot::default())
+    }
 }
 
 impl SemioDocumentArtifact {
     pub fn to_snapshot(&self) -> SemioDocumentSnapshot {
-        SemioDocumentSnapshot {
-            schema: self.schema.clone(),
-            styles: self.styles.clone(),
-            images: self.images.clone(),
-            blocks: self.blocks.clone(),
-        }
+        SemioDocumentSnapshot { schema: self.schema.clone(), styles: self.styles.clone(), images: self.images.clone(), blocks: self.blocks.clone() }
     }
     pub fn from_snapshot(snapshot: SemioDocumentSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            styles: snapshot.styles,
-            images: snapshot.images,
-            blocks: snapshot.blocks,
-        }
+        Self { schema: snapshot.schema, styles: snapshot.styles, images: snapshot.images, blocks: snapshot.blocks }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioDocumentSnapshot) {
         self.schema = snapshot.schema;
@@ -86,13 +78,15 @@ pub fn semio_document_artifact_schema_descriptor() -> schema::ArtifactSchemaDesc
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::document::schema::diff::SemioDocumentDiff;
-    use crate::artifacts::semio::standards::v1::subsets::document::schema::mutations::{SemioDocumentMutation, apply_semio_document_mutation};
+    use crate::artifacts::semio::standards::v1::subsets::document::schema::mutations::{apply_semio_document_mutation, SemioDocumentMutation};
     use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocStyle, SemioDocumentSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioDocumentBuilderConstruction { snapshot: SemioDocumentSnapshot }
+    pub struct SemioDocumentBuilderConstruction {
+        snapshot: SemioDocumentSnapshot,
+    }
 
     impl SemioDocumentBuilderConstruction {
         /// 🎨️ Fluent: appends a named style.
@@ -116,8 +110,12 @@ pub mod derived_construction {
         type Snapshot = SemioDocumentSnapshot;
         type Mutation = SemioDocumentMutation;
         type Diff = SemioDocumentDiff;
-        fn empty() -> Self { Self { snapshot: SemioDocumentSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: SemioDocumentSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -132,7 +130,9 @@ pub mod derived_construction {
             self.snapshot = <SemioDocumentDiff as protocol::MutationDiff<SemioDocumentSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 
     //#region 🔖️Tests
@@ -175,11 +175,13 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioDocumentParts { pub snapshot: Option<SemioDocumentSnapshot> }
+    pub struct SemioDocumentParts {
+        pub snapshot: Option<SemioDocumentSnapshot>,
+    }
 
     pub struct SemioDocumentAnalyzerAnalysis;
 
@@ -191,10 +193,18 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
-                    if text.contains(STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                    if text.contains(STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }

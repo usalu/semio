@@ -96,12 +96,7 @@ pub struct Mp3Snapshot {
 
 impl Default for Mp3Snapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_MP3_DOCUMENT_SCHEMA.into(),
-            id3v2: Default::default(),
-            frames: Default::default(),
-            id3v1: Default::default(),
-        }
+        Self { schema: STDIO_MP3_DOCUMENT_SCHEMA.into(), id3v2: Default::default(), frames: Default::default(), id3v1: Default::default() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -113,7 +108,9 @@ impl Default for Mp3Snapshot {
 /// `store::semio_format` envelope, not a JSON re-serialization of the Rust type).
 impl store::ArtifactDsl for Mp3Snapshot {
     const EXTENSION: &'static str = "mp3";
-    fn envelope_id() -> &'static str { STDIO_MP3_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_MP3_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -127,23 +124,17 @@ impl store::ArtifactDsl for Mp3Snapshot {
         let mut bytes = Vec::with_capacity(hex.len() / 2);
         let mut i = 0usize;
         while i < hex.len() {
-            let byte = u8::from_str_radix(&hex[i..i + 2], 16)
-                .map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
+            let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
             bytes.push(byte);
             i += 2;
         }
-        crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::decode_mp3(&bytes)
-            .map_err(|e| store::TextError::new(format!("mp3 decode: {e}"), dsl::TextSpan::at(1, 1)))
+        crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::decode_mp3(&bytes).map_err(|e| store::TextError::new(format!("mp3 decode: {e}"), dsl::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
         let bytes = crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::encode_mp3(self);
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -152,22 +143,14 @@ impl store::ArtifactPack for Mp3Snapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::encode_mp3(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::decode_mp3(&inner).map_err(store::PackError::Schema)
@@ -185,8 +168,18 @@ mod tests {
             id3v2: Some(Id3v2Tag { major_version: 3, minor_version: 0, flags: 0, frames: vec![Id3Frame { id: "TIT2".into(), flags: 0, data: vec![0, b's', b'x'] }] }),
             frames: vec![Mp3Frame {
                 header: Mp3FrameHeader {
-                    mpeg_version_id: 3, layer: 1, protection_bit: true, bitrate_index: 9, sample_rate_index: 0,
-                    padding: false, private_bit: false, channel_mode: 3, mode_extension: 0, copyright: false, original: true, emphasis: 0,
+                    mpeg_version_id: 3,
+                    layer: 1,
+                    protection_bit: true,
+                    bitrate_index: 9,
+                    sample_rate_index: 0,
+                    padding: false,
+                    private_bit: false,
+                    channel_mode: 3,
+                    mode_extension: 0,
+                    copyright: false,
+                    original: true,
+                    emphasis: 0,
                 },
                 payload: vec![0u8; 413],
             }],

@@ -6,8 +6,7 @@ use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{Gif
 pub fn register() {}
 
 pub fn deserialize(from: &BinarySnapshot) -> Result<GifSnapshot, store::PackError> {
-    let mut snap = crate::artifacts::gif::standards::v89a::engine::decode_gif(&from.bytes)
-        .map_err(|e| store::PackError::Schema(e))?;
+    let mut snap = crate::artifacts::gif::standards::v89a::engine::decode_gif(&from.bytes).map_err(|e| store::PackError::Schema(e))?;
     snap.schema = STDIO_GIF89A_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

@@ -14,12 +14,8 @@
 //! `split_top_level`/`encode_option`/...) rather than duplicating them a second time in this file.
 
 use crate::artifacts::ply::schema::diff::{
-    dec_element, dec_format, dec_row, dec_str, dec_value, diff_add_element, diff_insert_row,
-    diff_remove_element, diff_remove_row, diff_set_comments, diff_set_format,
-    diff_set_row_property, diff_set_snapshot, enc_element, enc_format, enc_row, enc_str,
-    enc_value, split_top_level, strip_brackets, PlyDiff,
-    read_bin_element, read_bin_row, read_bin_snapshot, read_bin_str, read_bin_value,
-    write_bin_element, write_bin_row, write_bin_snapshot, write_bin_str, write_bin_value,
+    dec_element, dec_format, dec_row, dec_str, dec_value, diff_add_element, diff_insert_row, diff_remove_element, diff_remove_row, diff_set_comments, diff_set_format, diff_set_row_property, diff_set_snapshot, enc_element, enc_format, enc_row,
+    enc_str, enc_value, read_bin_element, read_bin_row, read_bin_snapshot, read_bin_str, read_bin_value, split_top_level, strip_brackets, write_bin_element, write_bin_row, write_bin_snapshot, write_bin_str, write_bin_value, PlyDiff,
 };
 use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyRow, PlyValue};
 use crate::artifacts::ply::PlySnapshot;
@@ -36,15 +32,41 @@ use serde::{Deserialize, Serialize};
 pub enum PlyMutation {
     #[default]
     NoMutation,
-    SetSnapshot { snapshot: PlySnapshot },
-    SetFormat { format: PlyFormat },
-    InsertComment { index: usize, comment: String },
-    RemoveComment { index: usize },
-    AddElement { index: usize, element: PlyElement },
-    RemoveElement { name: String },
-    InsertRow { element_name: String, index: usize, row: PlyRow },
-    RemoveRow { element_name: String, index: usize },
-    SetRowProperty { element_name: String, row_index: usize, property_name: String, value: PlyValue },
+    SetSnapshot {
+        snapshot: PlySnapshot,
+    },
+    SetFormat {
+        format: PlyFormat,
+    },
+    InsertComment {
+        index: usize,
+        comment: String,
+    },
+    RemoveComment {
+        index: usize,
+    },
+    AddElement {
+        index: usize,
+        element: PlyElement,
+    },
+    RemoveElement {
+        name: String,
+    },
+    InsertRow {
+        element_name: String,
+        index: usize,
+        row: PlyRow,
+    },
+    RemoveRow {
+        element_name: String,
+        index: usize,
+    },
+    SetRowProperty {
+        element_name: String,
+        row_index: usize,
+        property_name: String,
+        value: PlyValue,
+    },
 }
 //#endregion 🔖️Mutations
 
@@ -76,16 +98,16 @@ impl Mutation<PlySnapshot> for PlyMutation {
             }
             PlyMutation::RemoveComment { index } => {
                 let mut comments = base.comments.clone();
-                if *index < comments.len() { comments.remove(*index); }
+                if *index < comments.len() {
+                    comments.remove(*index);
+                }
                 diff_set_comments(comments)
             }
             PlyMutation::AddElement { index, element } => diff_add_element(*index, element.clone()),
             PlyMutation::RemoveElement { name } => diff_remove_element(name),
             PlyMutation::InsertRow { element_name, index, row } => diff_insert_row(element_name, *index, row.clone()),
             PlyMutation::RemoveRow { element_name, index } => diff_remove_row(element_name, *index),
-            PlyMutation::SetRowProperty { element_name, row_index, property_name, value } => {
-                diff_set_row_property(element_name, *row_index, property_name, value.clone())
-            }
+            PlyMutation::SetRowProperty { element_name, row_index, property_name, value } => diff_set_row_property(element_name, *row_index, property_name, value.clone()),
         }
     }
 
@@ -110,29 +132,20 @@ impl Mutation<PlySnapshot> for PlyMutation {
                 None => vec![PlyMutation::NoMutation],
             },
             PlyMutation::InsertRow { element_name, index, .. } => {
-                let at = base.elements.iter().find(|e| &e.name == element_name)
-                    .map(|e| (*index).min(e.rows.len()))
-                    .unwrap_or(*index);
+                let at = base.elements.iter().find(|e| &e.name == element_name).map(|e| (*index).min(e.rows.len())).unwrap_or(*index);
                 vec![PlyMutation::RemoveRow { element_name: element_name.clone(), index: at }]
             }
-            PlyMutation::RemoveRow { element_name, index } => {
-                match base.elements.iter().find(|e| &e.name == element_name).and_then(|e| e.rows.get(*index)) {
-                    Some(row) => vec![PlyMutation::InsertRow { element_name: element_name.clone(), index: *index, row: row.clone() }],
-                    None => vec![PlyMutation::NoMutation],
-                }
-            }
+            PlyMutation::RemoveRow { element_name, index } => match base.elements.iter().find(|e| &e.name == element_name).and_then(|e| e.rows.get(*index)) {
+                Some(row) => vec![PlyMutation::InsertRow { element_name: element_name.clone(), index: *index, row: row.clone() }],
+                None => vec![PlyMutation::NoMutation],
+            },
             PlyMutation::SetRowProperty { element_name, row_index, property_name, .. } => {
                 let prior = base.elements.iter().find(|e| &e.name == element_name).and_then(|el| {
                     let prop_idx = el.properties.iter().position(|p| p.name() == property_name)?;
                     el.rows.get(*row_index)?.values.get(prop_idx).cloned()
                 });
                 match prior {
-                    Some(value) => vec![PlyMutation::SetRowProperty {
-                        element_name: element_name.clone(),
-                        row_index: *row_index,
-                        property_name: property_name.clone(),
-                        value,
-                    }],
+                    Some(value) => vec![PlyMutation::SetRowProperty { element_name: element_name.clone(), row_index: *row_index, property_name: property_name.clone(), value }],
                     None => vec![PlyMutation::NoMutation],
                 }
             }
@@ -150,13 +163,7 @@ impl Mutation<PlySnapshot> for PlyMutation {
 /// same shape svg's hand-rolled `OpText` uses), one match arm per variant (no `DslVariants`
 /// scaffolding available since nothing here derives it).
 fn enc_snapshot(s: &PlySnapshot) -> String {
-    format!(
-        "[{},{},[{}],[{}]]",
-        enc_str(&s.schema),
-        enc_format(s.format),
-        s.comments.iter().map(|c| enc_str(c)).collect::<Vec<_>>().join(","),
-        s.elements.iter().map(enc_element).collect::<Vec<_>>().join(","),
-    )
+    format!("[{},{},[{}],[{}]]", enc_str(&s.schema), enc_format(s.format), s.comments.iter().map(|c| enc_str(c)).collect::<Vec<_>>().join(","), s.elements.iter().map(enc_element).collect::<Vec<_>>().join(","),)
 }
 fn dec_snapshot(s: &str) -> Result<PlySnapshot, String> {
     let inner = strip_brackets(s)?;
@@ -181,10 +188,7 @@ fn print_ply_mutation(m: &PlyMutation) -> String {
         PlyMutation::RemoveElement { name } => format!("remove-element name={}", enc_str(name)),
         PlyMutation::InsertRow { element_name, index, row } => format!("insert-row element-name={} index={index} row={}", enc_str(element_name), enc_row(row)),
         PlyMutation::RemoveRow { element_name, index } => format!("remove-row element-name={} index={index}", enc_str(element_name)),
-        PlyMutation::SetRowProperty { element_name, row_index, property_name, value } => format!(
-            "set-row-property element-name={} row-index={row_index} property-name={} value={}",
-            enc_str(element_name), enc_str(property_name), enc_value(value),
-        ),
+        PlyMutation::SetRowProperty { element_name, row_index, property_name, value } => format!("set-row-property element-name={} row-index={row_index} property-name={} value={}", enc_str(element_name), enc_str(property_name), enc_value(value),),
     }
 }
 fn parse_ply_mutation(line: &str) -> Result<PlyMutation, String> {
@@ -192,13 +196,7 @@ fn parse_ply_mutation(line: &str) -> Result<PlyMutation, String> {
         return Ok(PlyMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("ply mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("ply mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("ply mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
@@ -210,12 +208,7 @@ fn parse_ply_mutation(line: &str) -> Result<PlyMutation, String> {
         "remove-element" => Ok(PlyMutation::RemoveElement { name: dec_str(arg("name")?)? }),
         "insert-row" => Ok(PlyMutation::InsertRow { element_name: dec_str(arg("element-name")?)?, index: usize_arg("index")?, row: dec_row(arg("row")?)? }),
         "remove-row" => Ok(PlyMutation::RemoveRow { element_name: dec_str(arg("element-name")?)?, index: usize_arg("index")? }),
-        "set-row-property" => Ok(PlyMutation::SetRowProperty {
-            element_name: dec_str(arg("element-name")?)?,
-            row_index: usize_arg("row-index")?,
-            property_name: dec_str(arg("property-name")?)?,
-            value: dec_value(arg("value")?)?,
-        }),
+        "set-row-property" => Ok(PlyMutation::SetRowProperty { element_name: dec_str(arg("element-name")?)?, row_index: usize_arg("row-index")?, property_name: dec_str(arg("property-name")?)?, value: dec_value(arg("value")?)? }),
         other => Err(format!("ply mutation: unknown keyword {other:?}")),
     }
 }
@@ -355,12 +348,7 @@ fn demo_base_snapshot() -> PlySnapshot {
         schema: crate::artifacts::ply::STDIO_PLY_DOCUMENT_SCHEMA.into(),
         format: PlyFormat::Ascii,
         comments: vec!["hi".into()],
-        elements: vec![PlyElement {
-            name: "vertex".into(),
-            count: 1,
-            properties: vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float }],
-            rows: vec![PlyRow { values: vec![PlyValue::Float(1.5)] }],
-        }],
+        elements: vec![PlyElement { name: "vertex".into(), count: 1, properties: vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float }], rows: vec![PlyRow { values: vec![PlyValue::Float(1.5)] }] }],
     }
 }
 
@@ -387,12 +375,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<PlyMutation> {
         PlyMutation::InsertRow { element_name: "vertex".into(), index: 0, row: PlyRow { values: vec![PlyValue::Float(-2.5)] } },
         PlyMutation::RemoveRow { element_name: "vertex".into(), index: 0 },
         PlyMutation::SetRowProperty { element_name: "vertex".into(), row_index: 0, property_name: "x".into(), value: PlyValue::Float(42.0) },
-        PlyMutation::SetRowProperty {
-            element_name: "face".into(),
-            row_index: 0,
-            property_name: "vertex_indices".into(),
-            value: PlyValue::List(vec![PlyValue::Int(3), PlyValue::Int(4), PlyValue::Int(5)]),
-        },
+        PlyMutation::SetRowProperty { element_name: "face".into(), row_index: 0, property_name: "vertex_indices".into(), value: PlyValue::List(vec![PlyValue::Int(3), PlyValue::Int(4), PlyValue::Int(5)]) },
     ]
 }
 //#endregion 🔖️DemoMutationCases

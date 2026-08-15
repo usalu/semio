@@ -1,5 +1,5 @@
-use crate::artifacts::xlsx::{XlsxSnapshot};
-use crate::artifacts::xlsx::schema::mutations::{XlsxMutation, apply_xlsx_mutation};
+use crate::artifacts::xlsx::schema::mutations::{apply_xlsx_mutation, XlsxMutation};
+use crate::artifacts::xlsx::XlsxSnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
 pub fn apply(projection: &mut XlsxSnapshot, mutation: &XlsxMutation) {

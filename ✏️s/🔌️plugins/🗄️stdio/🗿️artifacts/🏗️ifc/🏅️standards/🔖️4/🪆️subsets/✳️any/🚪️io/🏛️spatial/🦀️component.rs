@@ -50,11 +50,7 @@ impl Mat4 {
     }
     pub fn transform_point(&self, p: [f64; 3]) -> [f64; 3] {
         let m = &self.0;
-        [
-            m[0][0] * p[0] + m[0][1] * p[1] + m[0][2] * p[2] + m[0][3],
-            m[1][0] * p[0] + m[1][1] * p[1] + m[1][2] * p[2] + m[1][3],
-            m[2][0] * p[0] + m[2][1] * p[1] + m[2][2] * p[2] + m[2][3],
-        ]
+        [m[0][0] * p[0] + m[0][1] * p[1] + m[0][2] * p[2] + m[0][3], m[1][0] * p[0] + m[1][1] * p[1] + m[1][2] * p[2] + m[1][3], m[2][0] * p[0] + m[2][1] * p[1] + m[2][2] * p[2] + m[2][3]]
     }
 }
 
@@ -90,10 +86,7 @@ fn arg_ref(args: &[Part21Value], idx: usize) -> Option<u64> {
     args.get(idx).and_then(Part21Value::as_ref_id)
 }
 fn arg_refs(args: &[Part21Value], idx: usize) -> Vec<u64> {
-    args.get(idx)
-        .and_then(Part21Value::as_list)
-        .map(|items| items.iter().filter_map(Part21Value::as_ref_id).collect())
-        .unwrap_or_default()
+    args.get(idx).and_then(Part21Value::as_list).map(|items| items.iter().filter_map(Part21Value::as_ref_id).collect()).unwrap_or_default()
 }
 fn arg_str(args: &[Part21Value], idx: usize) -> Option<String> {
     args.get(idx).and_then(Part21Value::as_str).map(str::to_string)
@@ -133,12 +126,7 @@ fn build_node(doc: &Part21Document, id: u64, children_map: &HashMap<u64, Vec<u64
     let (ifc_type, args) = inst.primary()?;
     let name = arg_str(args, 2).filter(|n| !n.is_empty());
     let object_placement = arg_ref(args, 5);
-    let children = children_map
-        .get(&id)
-        .into_iter()
-        .flatten()
-        .filter_map(|&kid| build_node(doc, kid, children_map, seen))
-        .collect();
+    let children = children_map.get(&id).into_iter().flatten().filter_map(|&kid| build_node(doc, kid, children_map, seen)).collect();
     Some(SpatialNode { id, ifc_type: ifc_type.to_string(), name, object_placement, children })
 }
 //#endregion 🔖️SpatialTree
@@ -147,21 +135,13 @@ fn build_node(doc: &Part21Document, id: u64, children_map: &HashMap<u64, Vec<u64
 fn cartesian_point(doc: &Part21Document, id: u64) -> Option<[f64; 3]> {
     let args = doc.instance(id)?.entity("IFCCARTESIANPOINT")?;
     let coords = args.first()?.as_list()?;
-    Some([
-        coords.first().and_then(Part21Value::as_real).unwrap_or(0.0),
-        coords.get(1).and_then(Part21Value::as_real).unwrap_or(0.0),
-        coords.get(2).and_then(Part21Value::as_real).unwrap_or(0.0),
-    ])
+    Some([coords.first().and_then(Part21Value::as_real).unwrap_or(0.0), coords.get(1).and_then(Part21Value::as_real).unwrap_or(0.0), coords.get(2).and_then(Part21Value::as_real).unwrap_or(0.0)])
 }
 
 fn direction(doc: &Part21Document, id: u64) -> Option<[f64; 3]> {
     let args = doc.instance(id)?.entity("IFCDIRECTION")?;
     let r = args.first()?.as_list()?;
-    Some([
-        r.first().and_then(Part21Value::as_real).unwrap_or(0.0),
-        r.get(1).and_then(Part21Value::as_real).unwrap_or(0.0),
-        r.get(2).and_then(Part21Value::as_real).unwrap_or(0.0),
-    ])
+    Some([r.first().and_then(Part21Value::as_real).unwrap_or(0.0), r.get(1).and_then(Part21Value::as_real).unwrap_or(0.0), r.get(2).and_then(Part21Value::as_real).unwrap_or(0.0)])
 }
 
 fn sub3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
@@ -181,7 +161,11 @@ fn norm3(a: [f64; 3]) -> f64 {
 }
 fn normalize3(a: [f64; 3]) -> [f64; 3] {
     let n = norm3(a);
-    if n < 1e-12 { a } else { scale3(a, 1.0 / n) }
+    if n < 1e-12 {
+        a
+    } else {
+        scale3(a, 1.0 / n)
+    }
 }
 
 /// 🧭️ Builds a local transform from an `IfcAxis2Placement3D` (Location + optional Axis=local Z,
@@ -197,12 +181,7 @@ fn build_axis2placement(location: [f64; 3], axis_z: Option<[f64; 3]>, ref_x: Opt
         normalize3(x_proj)
     };
     let y = cross3(z, x);
-    Mat4([
-        [x[0], y[0], z[0], location[0]],
-        [x[1], y[1], z[1], location[1]],
-        [x[2], y[2], z[2], location[2]],
-        [0.0, 0.0, 0.0, 1.0],
-    ])
+    Mat4([[x[0], y[0], z[0], location[0]], [x[1], y[1], z[1], location[1]], [x[2], y[2], z[2], location[2]], [0.0, 0.0, 0.0, 1.0]])
 }
 
 fn axis2placement3d_matrix(doc: &Part21Document, id: u64) -> Option<Mat4> {

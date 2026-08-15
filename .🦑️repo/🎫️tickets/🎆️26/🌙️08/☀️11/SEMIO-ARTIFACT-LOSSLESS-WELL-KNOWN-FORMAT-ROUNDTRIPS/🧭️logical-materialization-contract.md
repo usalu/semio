@@ -4,7 +4,7 @@
 
 The artifact schema, snapshot, diff, and mutations must not retain an imported file image, physical byte ranges, lexical byte records, or any equivalent byte-replay side channel. Deserialization consumes native bytes into a lossless logical format model. Serialization materializes native bytes from that model through the ordinary writer.
 
-Permitted binary values are only genuine artifact content, such as PDF stream values after their declared filter semantics, MP4 media samples, embedded presentation media, and typed DWG entity values. Encoded pages, compressed ZIP members, encrypted headers, padding, token tapes, original whitespace bytes, and whole unknown file regions are not permitted merely to reproduce the input.
+Permitted binary values are only genuine artifact content, such as PDF stream values after their declared filter semantics, MP4 media samples, embedded presentation media, and typed DWG entity values. Encoded pages, compressed ZIP members, encrypted headers, padding, token tapes, original whitespace bytes, complete unsupported sample-entry boxes, raw unknown-box bodies, raw XML/STEP/PDF syntax strings, and whole unknown file regions are not permitted merely to reproduce the input.
 
 ## Required flow laws
 
@@ -14,6 +14,7 @@ Permitted binary values are only genuine artifact content, such as PDF stream va
 4. Native serialization uses only the resulting logical snapshot.
 5. Native output is compared byte-for-byte with the original fixture.
 6. Tests must fail if a source/physical replay field is reintroduced.
+7. Acceptance compares every route with the imported fixture itself; comparing with a first canonical export is forbidden.
 
 ## Information-theoretic constraint
 

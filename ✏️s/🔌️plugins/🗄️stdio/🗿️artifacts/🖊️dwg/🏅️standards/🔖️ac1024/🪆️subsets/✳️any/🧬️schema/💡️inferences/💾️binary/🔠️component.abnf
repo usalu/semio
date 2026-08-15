@@ -1,3 +1,16 @@
-; abnf s.stdio.dwg.inference (ac1024)
-document = payload
-payload = *OCTET
+; Structured semio pack record for the AC1024 DWG derived inference.
+; The root record contains one structure record with seven logical metrics.
+document = symbol-table record-fields
+symbol-table = varint *symbol
+symbol = varint *utf8-octet
+record-fields = varint *record-field
+record-field = varint field-value
+field-value = absent / uint / symbol-ref / inline-text / record
+absent = %x00
+uint = %x04 varint
+symbol-ref = %x06 varint
+inline-text = %x07 varint *utf8-octet
+record = %x0D record-fields
+varint = 1*10varint-octet
+varint-octet = %x00-FF
+utf8-octet = %x00-FF

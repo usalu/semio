@@ -28,4 +28,4 @@ DIGIT10: DIGIT5 DIGIT5;
 NAME_CHARS: (~[ \t\r\n()<>[]{}/%])*;
 STRING_CHARS: (~[()\\] | '\\' .)*;
 HEX_CHARS: [0-9a-fA-F]*;
-STREAM_DATA: .*?; // raw filter-encoded (or decoded) bytes -- the format's payload IS bytes here
+STREAM_DATA: .*?; // decoded logical stream value; filter pipeline is modeled separately

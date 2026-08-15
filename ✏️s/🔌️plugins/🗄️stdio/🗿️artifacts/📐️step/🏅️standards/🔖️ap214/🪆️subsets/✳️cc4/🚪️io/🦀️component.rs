@@ -4,16 +4,13 @@
 //! `SubsetValidator` directly), not per-leaf `register()` — same pattern `✳️any/🚪️io` established.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use std::sync::OnceLock;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
-    use semio_framework_plugin::{
-        ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
-        register_subset_validator, subset_validator_entry_of,
-    };
-    use crate::artifacts::step::standards::v_ap214::subsets::cc4::schema::check_cc4_conformance;
-    use crate::artifacts::step::standards::v_ap214::subsets::any::schema::StepComposer as StepAnyComposer;
-    use crate::artifacts::step::standards::v_ap214::subsets::any::schema::snapshot::StepSnapshot;
     use crate::artifacts::step::standards::v_ap214::engine::ladder::ensure_file_schema;
+    use crate::artifacts::step::standards::v_ap214::subsets::any::schema::snapshot::StepSnapshot;
+    use crate::artifacts::step::standards::v_ap214::subsets::any::schema::StepComposer as StepAnyComposer;
+    use crate::artifacts::step::standards::v_ap214::subsets::cc4::schema::check_cc4_conformance;
+    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use std::sync::OnceLock;
 
     const DIALECT_SELF: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("cc4") };
     const DIALECT_ANY: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("*") };
@@ -41,10 +38,7 @@ pub mod derived_composition {
             if !hard.is_empty() {
                 let mut all = hard.clone();
                 all.extend(soft);
-                return Err(ComposeError {
-                    message: format!("ISO 10303-214 CC4 (manifold surfaces with topology) conformance violated: {} hard issue(s) -- not stamping the cc4 dialect", hard.len()),
-                    diagnostics: all,
-                });
+                return Err(ComposeError { message: format!("ISO 10303-214 CC4 (manifold surfaces with topology) conformance violated: {} hard issue(s) -- not stamping the cc4 dialect", hard.len()), diagnostics: all });
             }
             let mut diagnostics = inner.diagnostics;
             diagnostics.extend(soft);
@@ -98,8 +92,8 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::AnalyzeSource;
         use crate::artifacts::step::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance};
+        use semio_framework_plugin::AnalyzeSource;
 
         fn clean_bytes() -> Vec<u8> {
             let doc = Part21Document {
@@ -119,10 +113,7 @@ pub mod derived_composition {
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
             let composed = StepCc4ComposerComposition::compose(&sources).expect("a document with no illegal representation must compose to cc4");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
-            assert!(
-                crate::artifacts::step::standards::v_ap214::engine::ladder::file_schema_contains(&composed.snapshot.to_part21_document(), "AUTOMOTIVE_DESIGN"),
-                "composer must inject FILE_SCHEMA=AUTOMOTIVE_DESIGN"
-            );
+            assert!(crate::artifacts::step::standards::v_ap214::engine::ladder::file_schema_contains(&composed.snapshot.to_part21_document(), "AUTOMOTIVE_DESIGN"), "composer must inject FILE_SCHEMA=AUTOMOTIVE_DESIGN");
         }
 
         #[test]

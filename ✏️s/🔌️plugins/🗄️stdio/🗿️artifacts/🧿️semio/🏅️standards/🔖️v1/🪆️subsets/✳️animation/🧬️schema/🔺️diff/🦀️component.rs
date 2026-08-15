@@ -11,17 +11,13 @@
 //! wire codecs (`enc_indexed_triple`/`dec_indexed_triple`) come from the shared
 //! `engine::triples` module per the ticket's explicit instruction — not re-derived here.
 
+use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{
-    IndexAdded, IndexModified, IndexedTripleDiff, dec_indexed_triple, enc_indexed_triple, split_top_level, strip_brackets,
-};
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{
-    AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot,
-};
-use protocol::MutationDiff;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{dec_indexed_triple, enc_indexed_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff};
 use protocol::command::DiffAlgebra;
 #[cfg(test)]
 use protocol::DiffCodec;
+use protocol::MutationDiff;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -101,10 +97,26 @@ fn apply_indexed<T: Clone, D>(diff: &IndexedTripleDiff<D, T>, base: &[T], apply_
 /// (Insert+Remove-before, Insert+Insert-same-index, Insert+SetField-into-added) are proven in this
 /// module's tests against the innermost `keyframes` level.
 fn absorb_indexed<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, other: IndexedTripleDiff<D, T>, mut absorb_diff: impl FnMut(&mut D, D), apply_diff_to_item: impl Fn(&D, &T) -> T) {
-    let removed1_sorted = { let mut v = mine.removed.clone(); v.sort_unstable(); v };
-    let added1_index_sorted = { let mut v: Vec<usize> = mine.added.iter().map(|a| a.index).collect(); v.sort_unstable(); v };
-    let removed2_sorted = { let mut v = other.removed.clone(); v.sort_unstable(); v };
-    let added2_index_sorted = { let mut v: Vec<usize> = other.added.iter().map(|a| a.index).collect(); v.sort_unstable(); v };
+    let removed1_sorted = {
+        let mut v = mine.removed.clone();
+        v.sort_unstable();
+        v
+    };
+    let added1_index_sorted = {
+        let mut v: Vec<usize> = mine.added.iter().map(|a| a.index).collect();
+        v.sort_unstable();
+        v
+    };
+    let removed2_sorted = {
+        let mut v = other.removed.clone();
+        v.sort_unstable();
+        v
+    };
+    let added2_index_sorted = {
+        let mut v: Vec<usize> = other.added.iter().map(|a| a.index).collect();
+        v.sort_unstable();
+        v
+    };
 
     let mut merged_added: Vec<IndexAdded<T>> = std::mem::take(&mut mine.added);
     let mut annihilated: std::collections::HashSet<usize> = Default::default();
@@ -145,10 +157,7 @@ fn absorb_indexed<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, other:
             if merged_removed_base.binary_search(&base_index).is_ok() {
                 continue;
             }
-            modified_map
-                .entry(base_index)
-                .and_modify(|d| absorb_diff(d, m2.diff.clone()))
-                .or_insert(m2.diff);
+            modified_map.entry(base_index).and_modify(|d| absorb_diff(d, m2.diff.clone())).or_insert(m2.diff);
         }
     }
     //#endregion Modified
@@ -177,8 +186,16 @@ fn absorb_indexed<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, other:
 
 /// ↩️ Diff-level inverse for an index-keyed triple, given the ORIGINAL base items.
 fn inverse_indexed<T: Clone, D>(diff: &IndexedTripleDiff<D, T>, base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> IndexedTripleDiff<D, T> {
-    let removed_sorted = { let mut v = diff.removed.clone(); v.sort_unstable(); v };
-    let added_index_sorted = { let mut v: Vec<usize> = diff.added.iter().map(|a| a.index).collect(); v.sort_unstable(); v };
+    let removed_sorted = {
+        let mut v = diff.removed.clone();
+        v.sort_unstable();
+        v
+    };
+    let added_index_sorted = {
+        let mut v: Vec<usize> = diff.added.iter().map(|a| a.index).collect();
+        v.sort_unstable();
+        v
+    };
 
     let mut inv_removed: Vec<usize> = diff.added.iter().map(|a| a.index).collect();
     let mut inv_modified: Vec<IndexModified<D>> = Vec::new();
@@ -361,37 +378,48 @@ impl AnimKeyframeDiff {
         self.t.is_none() && self.value.is_none()
     }
     fn between(base: &AnimKeyframe, other: &AnimKeyframe) -> Self {
-        Self {
-            t: (base.t != other.t).then_some(other.t),
-            value: (base.value != other.value).then_some(other.value.clone()),
-        }
+        Self { t: (base.t != other.t).then_some(other.t), value: (base.value != other.value).then_some(other.value.clone()) }
     }
     fn apply(&self, base: &AnimKeyframe) -> AnimKeyframe {
         let mut next = base.clone();
-        if let Some(v) = self.t { next.t = v; }
-        if let Some(v) = &self.value { next.value = v.clone(); }
+        if let Some(v) = self.t {
+            next.t = v;
+        }
+        if let Some(v) = &self.value {
+            next.value = v.clone();
+        }
         next
     }
     fn inverse(&self, base: &AnimKeyframe) -> Self {
         Self { t: self.t.map(|_| base.t), value: self.value.as_ref().map(|_| base.value.clone()) }
     }
     fn absorb(&mut self, other: Self) {
-        if other.t.is_some() { self.t = other.t; }
-        if other.value.is_some() { self.value = other.value; }
+        if other.t.is_some() {
+            self.t = other.t;
+        }
+        if other.value.is_some() {
+            self.value = other.value;
+        }
     }
 }
 
 fn enc_keyframe_diff(d: &AnimKeyframeDiff) -> String {
     let mut parts = Vec::new();
-    if let Some(v) = d.t { parts.push(format!("T:{v}")); }
-    if let Some(v) = &d.value { parts.push(format!("Y:{}", enc_value(v))); }
+    if let Some(v) = d.t {
+        parts.push(format!("T:{v}"));
+    }
+    if let Some(v) = &d.value {
+        parts.push(format!("Y:{}", enc_value(v)));
+    }
     format!("[{}]", parts.join(","))
 }
 fn dec_keyframe_diff(s: &str) -> Result<AnimKeyframeDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = AnimKeyframeDiff::default();
     for entry in split_top_level(inner, ',') {
-        if entry.is_empty() { continue; }
+        if entry.is_empty() {
+            continue;
+        }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("keyframe diff: bad entry {entry:?}"))?;
         match tag {
             "T" => d.t = Some(parse_f64(val)?),
@@ -421,29 +449,31 @@ impl AnimChannelDiff {
     }
     fn between(base: &AnimChannel, other: &AnimChannel) -> Self {
         let kf = between_indexed(&base.keyframes, &other.keyframes, AnimKeyframeDiff::between, AnimKeyframeDiff::is_empty);
-        Self {
-            target: (base.target != other.target).then_some(other.target.clone()),
-            interpolation: (base.interpolation != other.interpolation).then_some(other.interpolation),
-            keyframes: (!indexed_is_empty(&kf)).then_some(kf),
-        }
+        Self { target: (base.target != other.target).then_some(other.target.clone()), interpolation: (base.interpolation != other.interpolation).then_some(other.interpolation), keyframes: (!indexed_is_empty(&kf)).then_some(kf) }
     }
     fn apply(&self, base: &AnimChannel) -> AnimChannel {
         let mut next = base.clone();
-        if let Some(v) = &self.target { next.target = v.clone(); }
-        if let Some(v) = self.interpolation { next.interpolation = v; }
-        if let Some(d) = &self.keyframes { next.keyframes = apply_indexed(d, &next.keyframes, |d, item| d.apply(item)); }
+        if let Some(v) = &self.target {
+            next.target = v.clone();
+        }
+        if let Some(v) = self.interpolation {
+            next.interpolation = v;
+        }
+        if let Some(d) = &self.keyframes {
+            next.keyframes = apply_indexed(d, &next.keyframes, |d, item| d.apply(item));
+        }
         next
     }
     fn inverse(&self, base: &AnimChannel) -> Self {
-        Self {
-            target: self.target.as_ref().map(|_| base.target.clone()),
-            interpolation: self.interpolation.map(|_| base.interpolation),
-            keyframes: self.keyframes.as_ref().map(|d| inverse_indexed(d, &base.keyframes, |d, item| d.inverse(item))),
-        }
+        Self { target: self.target.as_ref().map(|_| base.target.clone()), interpolation: self.interpolation.map(|_| base.interpolation), keyframes: self.keyframes.as_ref().map(|d| inverse_indexed(d, &base.keyframes, |d, item| d.inverse(item))) }
     }
     fn absorb(&mut self, other: Self) {
-        if other.target.is_some() { self.target = other.target; }
-        if other.interpolation.is_some() { self.interpolation = other.interpolation; }
+        if other.target.is_some() {
+            self.target = other.target;
+        }
+        if other.interpolation.is_some() {
+            self.interpolation = other.interpolation;
+        }
         match (&mut self.keyframes, other.keyframes) {
             (Some(mine), Some(theirs)) => absorb_indexed(mine, theirs, |d, o| d.absorb(o), |d, item| d.apply(item)),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
@@ -454,16 +484,24 @@ impl AnimChannelDiff {
 
 fn enc_channel_diff(d: &AnimChannelDiff) -> String {
     let mut parts = Vec::new();
-    if let Some(v) = &d.target { parts.push(format!("G:{}", enc_target(v))); }
-    if let Some(v) = d.interpolation { parts.push(format!("I:{}", enc_interpolation(v))); }
-    if let Some(v) = &d.keyframes { parts.push(format!("K:[{}]", enc_indexed_triple(v, enc_keyframe_diff, enc_keyframe))); }
+    if let Some(v) = &d.target {
+        parts.push(format!("G:{}", enc_target(v)));
+    }
+    if let Some(v) = d.interpolation {
+        parts.push(format!("I:{}", enc_interpolation(v)));
+    }
+    if let Some(v) = &d.keyframes {
+        parts.push(format!("K:[{}]", enc_indexed_triple(v, enc_keyframe_diff, enc_keyframe)));
+    }
     format!("[{}]", parts.join(","))
 }
 fn dec_channel_diff(s: &str) -> Result<AnimChannelDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = AnimChannelDiff::default();
     for entry in split_top_level(inner, ',') {
-        if entry.is_empty() { continue; }
+        if entry.is_empty() {
+            continue;
+        }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("channel diff: bad entry {entry:?}"))?;
         match tag {
             "G" => d.target = Some(dec_target(val)?),
@@ -493,25 +531,25 @@ impl AnimTimelineDiff {
     }
     fn between(base: &AnimTimeline, other: &AnimTimeline) -> Self {
         let ch = between_indexed(&base.channels, &other.channels, AnimChannelDiff::between, AnimChannelDiff::is_empty);
-        Self {
-            name: (base.name != other.name).then_some(other.name.clone()),
-            channels: (!indexed_is_empty(&ch)).then_some(ch),
-        }
+        Self { name: (base.name != other.name).then_some(other.name.clone()), channels: (!indexed_is_empty(&ch)).then_some(ch) }
     }
     fn apply(&self, base: &AnimTimeline) -> AnimTimeline {
         let mut next = base.clone();
-        if let Some(v) = &self.name { next.name = v.clone(); }
-        if let Some(d) = &self.channels { next.channels = apply_indexed(d, &next.channels, |d, item| d.apply(item)); }
+        if let Some(v) = &self.name {
+            next.name = v.clone();
+        }
+        if let Some(d) = &self.channels {
+            next.channels = apply_indexed(d, &next.channels, |d, item| d.apply(item));
+        }
         next
     }
     fn inverse(&self, base: &AnimTimeline) -> Self {
-        Self {
-            name: self.name.as_ref().map(|_| base.name.clone()),
-            channels: self.channels.as_ref().map(|d| inverse_indexed(d, &base.channels, |d, item| d.inverse(item))),
-        }
+        Self { name: self.name.as_ref().map(|_| base.name.clone()), channels: self.channels.as_ref().map(|d| inverse_indexed(d, &base.channels, |d, item| d.inverse(item))) }
     }
     fn absorb(&mut self, other: Self) {
-        if other.name.is_some() { self.name = other.name; }
+        if other.name.is_some() {
+            self.name = other.name;
+        }
         match (&mut self.channels, other.channels) {
             (Some(mine), Some(theirs)) => absorb_indexed(mine, theirs, |d, o| d.absorb(o), |d, item| d.apply(item)),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
@@ -522,15 +560,21 @@ impl AnimTimelineDiff {
 
 fn enc_timeline_diff(d: &AnimTimelineDiff) -> String {
     let mut parts = Vec::new();
-    if let Some(v) = &d.name { parts.push(format!("N:{}", encode_option(v, |n| enc_str(n)))); }
-    if let Some(v) = &d.channels { parts.push(format!("C:[{}]", enc_indexed_triple(v, enc_channel_diff, enc_channel))); }
+    if let Some(v) = &d.name {
+        parts.push(format!("N:{}", encode_option(v, |n| enc_str(n))));
+    }
+    if let Some(v) = &d.channels {
+        parts.push(format!("C:[{}]", enc_indexed_triple(v, enc_channel_diff, enc_channel)));
+    }
     format!("[{}]", parts.join(","))
 }
 fn dec_timeline_diff(s: &str) -> Result<AnimTimelineDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = AnimTimelineDiff::default();
     for entry in split_top_level(inner, ',') {
-        if entry.is_empty() { continue; }
+        if entry.is_empty() {
+            continue;
+        }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("timeline diff: bad entry {entry:?}"))?;
         match tag {
             "N" => d.name = Some(decode_option(val, dec_str)?),
@@ -690,32 +734,17 @@ pub(crate) fn timeline(name: Option<&str>, channels: Vec<AnimChannel>) -> AnimTi
 #[cfg(test)]
 pub(crate) fn demo_diff_cases() -> Vec<SemioAnimationDiff> {
     let a = SemioAnimationSnapshot {
-        timelines: vec![
-            timeline(Some("gone"), vec![]),
-            timeline(Some("kept"), vec![channel("n", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Scalar { value: 1.0 })])]),
-        ],
+        timelines: vec![timeline(Some("gone"), vec![]), timeline(Some("kept"), vec![channel("n", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Scalar { value: 1.0 })])])],
         ..SemioAnimationSnapshot::default()
     };
     let b = SemioAnimationSnapshot {
         timelines: vec![
-            timeline(
-                None,
-                vec![channel(
-                    "n",
-                    AnimTargetProperty::Rotation,
-                    AnimInterpolation::CubicSpline,
-                    vec![kf(0.0, AnimValue::Quat { value: SemioQuaternion::default() }), kf(1.0, AnimValue::Weights { values: vec![0.1, 0.9] })],
-                )],
-            ),
+            timeline(None, vec![channel("n", AnimTargetProperty::Rotation, AnimInterpolation::CubicSpline, vec![kf(0.0, AnimValue::Quat { value: SemioQuaternion::default() }), kf(1.0, AnimValue::Weights { values: vec![0.1, 0.9] })])]),
             timeline(Some("added"), vec![channel("m", AnimTargetProperty::Custom { name: "x".into() }, AnimInterpolation::Step, vec![])]),
         ],
         ..SemioAnimationSnapshot::default()
     };
-    vec![
-        SemioAnimationDiff::default(),
-        <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&a, &b),
-        <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&b, &a),
-    ]
+    vec![SemioAnimationDiff::default(), <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&a, &b), <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&b, &a)]
 }
 
 //#region 🔖️Tests
@@ -754,10 +783,7 @@ mod tests {
     fn absorb_insert_then_set_field_patches_into_added() {
         let f = kf(1.0, AnimValue::Scalar { value: 1.0 });
         let mut d1: IndexedTripleDiff<AnimKeyframeDiff, AnimKeyframe> = IndexedTripleDiff { added: vec![IndexAdded { index: 1, item: f.clone() }], ..Default::default() };
-        let d2: IndexedTripleDiff<AnimKeyframeDiff, AnimKeyframe> = IndexedTripleDiff {
-            modified: vec![IndexModified { index: 1, diff: AnimKeyframeDiff { t: Some(42.0), value: None } }],
-            ..Default::default()
-        };
+        let d2: IndexedTripleDiff<AnimKeyframeDiff, AnimKeyframe> = IndexedTripleDiff { modified: vec![IndexModified { index: 1, diff: AnimKeyframeDiff { t: Some(42.0), value: None } }], ..Default::default() };
         absorb_indexed(&mut d1, d2, |d, o| d.absorb(o), |d, item| d.apply(item));
         assert!(d1.modified.is_empty());
         assert_eq!(d1.added.len(), 1);
@@ -770,10 +796,7 @@ mod tests {
     #[test]
     fn absorb_law_holds_over_curated_ops() {
         let base = SemioAnimationSnapshot {
-            timelines: vec![
-                timeline(Some("walk"), vec![channel("hip", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Vec3 { value: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } })])]),
-                timeline(Some("blink"), vec![]),
-            ],
+            timelines: vec![timeline(Some("walk"), vec![channel("hip", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Vec3 { value: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } })])]), timeline(Some("blink"), vec![])],
             ..SemioAnimationSnapshot::default()
         };
         let mid = {
@@ -797,15 +820,10 @@ mod tests {
 
     #[test]
     fn between_roundtrip_law() {
-        let a = SemioAnimationSnapshot {
-            timelines: vec![timeline(Some("walk"), vec![channel("hip", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Scalar { value: 1.0 })])])],
-            ..SemioAnimationSnapshot::default()
-        };
+        let a =
+            SemioAnimationSnapshot { timelines: vec![timeline(Some("walk"), vec![channel("hip", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Scalar { value: 1.0 })])])], ..SemioAnimationSnapshot::default() };
         let b = SemioAnimationSnapshot {
-            timelines: vec![
-                timeline(Some("walk"), vec![channel("hip", AnimTargetProperty::Translation, AnimInterpolation::Step, vec![kf(0.0, AnimValue::Scalar { value: 1.0 }), kf(1.0, AnimValue::Scalar { value: 2.0 })])]),
-                timeline(None, vec![]),
-            ],
+            timelines: vec![timeline(Some("walk"), vec![channel("hip", AnimTargetProperty::Translation, AnimInterpolation::Step, vec![kf(0.0, AnimValue::Scalar { value: 1.0 }), kf(1.0, AnimValue::Scalar { value: 2.0 })])]), timeline(None, vec![])],
             ..SemioAnimationSnapshot::default()
         };
         let ab = <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&a, &b);
@@ -817,10 +835,8 @@ mod tests {
 
     #[test]
     fn inverse_law() {
-        let base = SemioAnimationSnapshot {
-            timelines: vec![timeline(Some("walk"), vec![channel("hip", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Scalar { value: 1.0 })])])],
-            ..SemioAnimationSnapshot::default()
-        };
+        let base =
+            SemioAnimationSnapshot { timelines: vec![timeline(Some("walk"), vec![channel("hip", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Scalar { value: 1.0 })])])], ..SemioAnimationSnapshot::default() };
         let next = {
             let mut s = base.clone();
             s.timelines[0].name = None;
@@ -858,15 +874,7 @@ mod tests {
             timelines: vec![
                 timeline(
                     Some("kept"),
-                    vec![
-                        channel(
-                            "kept-node",
-                            AnimTargetProperty::Translation,
-                            AnimInterpolation::Linear,
-                            vec![kf(9.0, AnimValue::Scalar { value: 9.0 })],
-                        ),
-                        channel("gone-node", AnimTargetProperty::Weights, AnimInterpolation::Linear, vec![]),
-                    ],
+                    vec![channel("kept-node", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(9.0, AnimValue::Scalar { value: 9.0 })]), channel("gone-node", AnimTargetProperty::Weights, AnimInterpolation::Linear, vec![])],
                 ),
                 timeline(Some("filler"), vec![]),
                 timeline(Some("gone"), vec![]),
@@ -875,18 +883,7 @@ mod tests {
         };
         let sweep_b = SemioAnimationSnapshot {
             timelines: vec![
-                timeline(
-                    None,
-                    vec![channel(
-                        "kept-node",
-                        AnimTargetProperty::Rotation,
-                        AnimInterpolation::CubicSpline,
-                        vec![
-                            kf(1.0, AnimValue::Quat { value: SemioQuaternion::default() }),
-                            kf(2.0, AnimValue::Weights { values: vec![0.5, 0.5] }),
-                        ],
-                    )],
-                ),
+                timeline(None, vec![channel("kept-node", AnimTargetProperty::Rotation, AnimInterpolation::CubicSpline, vec![kf(1.0, AnimValue::Quat { value: SemioQuaternion::default() }), kf(2.0, AnimValue::Weights { values: vec![0.5, 0.5] })])]),
                 timeline(Some("filler2"), vec![]),
             ],
             ..SemioAnimationSnapshot::default()

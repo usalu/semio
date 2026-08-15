@@ -15,13 +15,8 @@
 //! codec primitives from `🧰️triples` rather than re-deriving them.
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{
-    dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff,
-};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
-    BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell,
-    BrepSurface, BrepVertex, SemioBrepSnapshot,
-};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
@@ -56,7 +51,11 @@ where
             added.push(o.clone());
         }
     }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(NamedTripleDiff { removed, modified, added }) }
+    if removed.is_empty() && modified.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(NamedTripleDiff { removed, modified, added })
+    }
 }
 
 fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
@@ -99,13 +98,7 @@ where
 /// 🧮️ Name-keyed absorb — identity is the KEY (not position): a `d2`-removal of a `d1`-added key
 /// annihilates the add; a `d2`-modify of a `d1`-added key patches into the carried payload;
 /// everything else composes directly on the shared key space.
-fn absorb_named<K, T, D>(
-    d1: NamedTripleDiff<K, D, T>,
-    d2: NamedTripleDiff<K, D, T>,
-    key_of: impl Fn(&T) -> K,
-    absorb_item: impl Fn(D, D) -> D,
-    apply_item: impl Fn(&mut T, &D),
-) -> NamedTripleDiff<K, D, T>
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -230,44 +223,78 @@ pub struct SemioBrepDiff {
 
 //#region 🔖️PerEntityApply
 fn apply_vertex(v: &mut BrepVertex, d: &BrepVertexDiff) {
-    if let Some(p) = &d.point { v.point = *p; }
+    if let Some(p) = &d.point {
+        v.point = *p;
+    }
 }
 fn apply_edge(e: &mut BrepEdge, d: &BrepEdgeDiff) {
-    if let Some(v) = &d.start_vertex { e.start_vertex = v.clone(); }
-    if let Some(v) = &d.end_vertex { e.end_vertex = v.clone(); }
-    if let Some(v) = &d.curve { e.curve = v.clone(); }
+    if let Some(v) = &d.start_vertex {
+        e.start_vertex = v.clone();
+    }
+    if let Some(v) = &d.end_vertex {
+        e.end_vertex = v.clone();
+    }
+    if let Some(v) = &d.curve {
+        e.curve = v.clone();
+    }
 }
 fn apply_loop(l: &mut BrepLoop, d: &BrepLoopDiff) {
-    if let Some(v) = &d.edges { l.edges = v.clone(); }
+    if let Some(v) = &d.edges {
+        l.edges = v.clone();
+    }
 }
 fn apply_face(f: &mut BrepFace, d: &BrepFaceDiff) {
-    if let Some(v) = &d.outer_loop { f.outer_loop = v.clone(); }
-    if let Some(v) = &d.inner_loops { f.inner_loops = v.clone(); }
-    if let Some(v) = &d.surface { f.surface = v.clone(); }
-    if let Some(v) = &d.orientation { f.orientation = *v; }
+    if let Some(v) = &d.outer_loop {
+        f.outer_loop = v.clone();
+    }
+    if let Some(v) = &d.inner_loops {
+        f.inner_loops = v.clone();
+    }
+    if let Some(v) = &d.surface {
+        f.surface = v.clone();
+    }
+    if let Some(v) = &d.orientation {
+        f.orientation = *v;
+    }
 }
 fn apply_shell(s: &mut BrepShell, d: &BrepShellDiff) {
-    if let Some(v) = &d.faces { s.faces = v.clone(); }
+    if let Some(v) = &d.faces {
+        s.faces = v.clone();
+    }
 }
 fn apply_solid(s: &mut BrepSolid, d: &BrepSolidDiff) {
-    if let Some(v) = &d.shells { s.shells = v.clone(); }
+    if let Some(v) = &d.shells {
+        s.shells = v.clone();
+    }
 }
 //#endregion 🔖️PerEntityApply
 
 //#region 🔖️PerEntityBetween
 fn between_vertex(a: &BrepVertex, b: &BrepVertex) -> Option<BrepVertexDiff> {
     let point = if a.point != b.point { Some(b.point) } else { None };
-    if point.is_none() { None } else { Some(BrepVertexDiff { point }) }
+    if point.is_none() {
+        None
+    } else {
+        Some(BrepVertexDiff { point })
+    }
 }
 fn between_edge(a: &BrepEdge, b: &BrepEdge) -> Option<BrepEdgeDiff> {
     let start_vertex = if a.start_vertex != b.start_vertex { Some(b.start_vertex.clone()) } else { None };
     let end_vertex = if a.end_vertex != b.end_vertex { Some(b.end_vertex.clone()) } else { None };
     let curve = if a.curve != b.curve { Some(b.curve.clone()) } else { None };
-    if start_vertex.is_none() && end_vertex.is_none() && curve.is_none() { None } else { Some(BrepEdgeDiff { start_vertex, end_vertex, curve }) }
+    if start_vertex.is_none() && end_vertex.is_none() && curve.is_none() {
+        None
+    } else {
+        Some(BrepEdgeDiff { start_vertex, end_vertex, curve })
+    }
 }
 fn between_loop(a: &BrepLoop, b: &BrepLoop) -> Option<BrepLoopDiff> {
     let edges = if a.edges != b.edges { Some(b.edges.clone()) } else { None };
-    if edges.is_none() { None } else { Some(BrepLoopDiff { edges }) }
+    if edges.is_none() {
+        None
+    } else {
+        Some(BrepLoopDiff { edges })
+    }
 }
 fn between_face(a: &BrepFace, b: &BrepFace) -> Option<BrepFaceDiff> {
     let outer_loop = if a.outer_loop != b.outer_loop { Some(b.outer_loop.clone()) } else { None };
@@ -282,11 +309,19 @@ fn between_face(a: &BrepFace, b: &BrepFace) -> Option<BrepFaceDiff> {
 }
 fn between_shell(a: &BrepShell, b: &BrepShell) -> Option<BrepShellDiff> {
     let faces = if a.faces != b.faces { Some(b.faces.clone()) } else { None };
-    if faces.is_none() { None } else { Some(BrepShellDiff { faces }) }
+    if faces.is_none() {
+        None
+    } else {
+        Some(BrepShellDiff { faces })
+    }
 }
 fn between_solid(a: &BrepSolid, b: &BrepSolid) -> Option<BrepSolidDiff> {
     let shells = if a.shells != b.shells { Some(b.shells.clone()) } else { None };
-    if shells.is_none() { None } else { Some(BrepSolidDiff { shells }) }
+    if shells.is_none() {
+        None
+    } else {
+        Some(BrepSolidDiff { shells })
+    }
 }
 //#endregion 🔖️PerEntityBetween
 
@@ -295,11 +330,7 @@ fn inverse_vertex(base: &BrepVertex, d: &BrepVertexDiff) -> BrepVertexDiff {
     BrepVertexDiff { point: d.point.as_ref().map(|_| base.point) }
 }
 fn inverse_edge(base: &BrepEdge, d: &BrepEdgeDiff) -> BrepEdgeDiff {
-    BrepEdgeDiff {
-        start_vertex: d.start_vertex.as_ref().map(|_| base.start_vertex.clone()),
-        end_vertex: d.end_vertex.as_ref().map(|_| base.end_vertex.clone()),
-        curve: d.curve.as_ref().map(|_| base.curve.clone()),
-    }
+    BrepEdgeDiff { start_vertex: d.start_vertex.as_ref().map(|_| base.start_vertex.clone()), end_vertex: d.end_vertex.as_ref().map(|_| base.end_vertex.clone()), curve: d.curve.as_ref().map(|_| base.curve.clone()) }
 }
 fn inverse_loop(base: &BrepLoop, d: &BrepLoopDiff) -> BrepLoopDiff {
     BrepLoopDiff { edges: d.edges.as_ref().map(|_| base.edges.clone()) }
@@ -322,32 +353,54 @@ fn inverse_solid(base: &BrepSolid, d: &BrepSolidDiff) -> BrepSolidDiff {
 
 //#region 🔖️PerEntityAbsorb
 fn absorb_vertex_diff(mut a: BrepVertexDiff, b: BrepVertexDiff) -> BrepVertexDiff {
-    if b.point.is_some() { a.point = b.point; }
+    if b.point.is_some() {
+        a.point = b.point;
+    }
     a
 }
 fn absorb_edge_diff(mut a: BrepEdgeDiff, b: BrepEdgeDiff) -> BrepEdgeDiff {
-    if b.start_vertex.is_some() { a.start_vertex = b.start_vertex; }
-    if b.end_vertex.is_some() { a.end_vertex = b.end_vertex; }
-    if b.curve.is_some() { a.curve = b.curve; }
+    if b.start_vertex.is_some() {
+        a.start_vertex = b.start_vertex;
+    }
+    if b.end_vertex.is_some() {
+        a.end_vertex = b.end_vertex;
+    }
+    if b.curve.is_some() {
+        a.curve = b.curve;
+    }
     a
 }
 fn absorb_loop_diff(mut a: BrepLoopDiff, b: BrepLoopDiff) -> BrepLoopDiff {
-    if b.edges.is_some() { a.edges = b.edges; }
+    if b.edges.is_some() {
+        a.edges = b.edges;
+    }
     a
 }
 fn absorb_face_diff(mut a: BrepFaceDiff, b: BrepFaceDiff) -> BrepFaceDiff {
-    if b.outer_loop.is_some() { a.outer_loop = b.outer_loop; }
-    if b.inner_loops.is_some() { a.inner_loops = b.inner_loops; }
-    if b.surface.is_some() { a.surface = b.surface; }
-    if b.orientation.is_some() { a.orientation = b.orientation; }
+    if b.outer_loop.is_some() {
+        a.outer_loop = b.outer_loop;
+    }
+    if b.inner_loops.is_some() {
+        a.inner_loops = b.inner_loops;
+    }
+    if b.surface.is_some() {
+        a.surface = b.surface;
+    }
+    if b.orientation.is_some() {
+        a.orientation = b.orientation;
+    }
     a
 }
 fn absorb_shell_diff(mut a: BrepShellDiff, b: BrepShellDiff) -> BrepShellDiff {
-    if b.faces.is_some() { a.faces = b.faces; }
+    if b.faces.is_some() {
+        a.faces = b.faces;
+    }
     a
 }
 fn absorb_solid_diff(mut a: BrepSolidDiff, b: BrepSolidDiff) -> BrepSolidDiff {
-    if b.shells.is_some() { a.shells = b.shells; }
+    if b.shells.is_some() {
+        a.shells = b.shells;
+    }
     a
 }
 //#endregion 🔖️PerEntityAbsorb
@@ -356,12 +409,24 @@ fn absorb_solid_diff(mut a: BrepSolidDiff, b: BrepSolidDiff) -> BrepSolidDiff {
 impl MutationDiff<SemioBrepSnapshot> for SemioBrepDiff {
     fn apply(&self, base: &SemioBrepSnapshot) -> SemioBrepSnapshot {
         let mut next = base.clone();
-        if let Some(d) = &self.vertices { apply_named(&mut next.vertices, d, |v: &BrepVertex| v.id.clone(), apply_vertex); }
-        if let Some(d) = &self.edges { apply_named(&mut next.edges, d, |e: &BrepEdge| e.id.clone(), apply_edge); }
-        if let Some(d) = &self.loops { apply_named(&mut next.loops, d, |l: &BrepLoop| l.id.clone(), apply_loop); }
-        if let Some(d) = &self.faces { apply_named(&mut next.faces, d, |f: &BrepFace| f.id.clone(), apply_face); }
-        if let Some(d) = &self.shells { apply_named(&mut next.shells, d, |s: &BrepShell| s.id.clone(), apply_shell); }
-        if let Some(d) = &self.solids { apply_named(&mut next.solids, d, |s: &BrepSolid| s.id.clone(), apply_solid); }
+        if let Some(d) = &self.vertices {
+            apply_named(&mut next.vertices, d, |v: &BrepVertex| v.id.clone(), apply_vertex);
+        }
+        if let Some(d) = &self.edges {
+            apply_named(&mut next.edges, d, |e: &BrepEdge| e.id.clone(), apply_edge);
+        }
+        if let Some(d) = &self.loops {
+            apply_named(&mut next.loops, d, |l: &BrepLoop| l.id.clone(), apply_loop);
+        }
+        if let Some(d) = &self.faces {
+            apply_named(&mut next.faces, d, |f: &BrepFace| f.id.clone(), apply_face);
+        }
+        if let Some(d) = &self.shells {
+            apply_named(&mut next.shells, d, |s: &BrepShell| s.id.clone(), apply_shell);
+        }
+        if let Some(d) = &self.solids {
+            apply_named(&mut next.solids, d, |s: &BrepSolid| s.id.clone(), apply_solid);
+        }
         next
     }
 
@@ -432,21 +497,46 @@ impl DiffAlgebra<SemioBrepSnapshot> for SemioBrepDiff {
 
 //#region 🔖️HandcraftedDiffCodec
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|b| format!("{b:02x}")).collect() }
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 { return Err(format!("odd hex length: {s:?}")); }
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
-pub(crate) fn parse_f64(s: &str) -> Result<f64, String> { s.parse().map_err(|e: std::num::ParseFloatError| e.to_string()) }
-pub(crate) fn parse_u32(s: &str) -> Result<u32, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
-pub(crate) fn enc_bool(b: bool) -> &'static str { if b { "1" } else { "0" } }
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
+    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
+}
+pub(crate) fn parse_u32(s: &str) -> Result<u32, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+pub(crate) fn enc_bool(b: bool) -> &'static str {
+    if b {
+        "1"
+    } else {
+        "0"
+    }
+}
 pub(crate) fn parse_bool(s: &str) -> Result<bool, String> {
-    match s { "1" => Ok(true), "0" => Ok(false), other => Err(format!("bad bool {other:?}")) }
+    match s {
+        "1" => Ok(true),
+        "0" => Ok(false),
+        other => Err(format!("bad bool {other:?}")),
+    }
 }
 pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
-    match opt { None => "[0]".to_string(), Some(v) => format!("[1,{}]", enc(v)) }
+    match opt {
+        None => "[0]".to_string(),
+        Some(v) => format!("[1,{}]", enc(v)),
+    }
 }
 pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
@@ -465,7 +555,9 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-pub(crate) fn enc_point3(p: &SemioPoint3) -> String { format!("[{},{},{}]", p.x, p.y, p.z) }
+pub(crate) fn enc_point3(p: &SemioPoint3) -> String {
+    format!("[{},{},{}]", p.x, p.y, p.z)
+}
 pub(crate) fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, z] = parts.as_slice() else { return Err(format!("point3: expected 3 fields, got {}", parts.len())) };
@@ -482,13 +574,7 @@ pub(crate) fn enc_curve(c: &BrepCurve) -> String {
         BrepCurve::Ellipse { center, axis, radius_major, radius_minor } => {
             format!("E[{},{},{},{}]", enc_point3(center), enc_point3(axis), radius_major, radius_minor)
         }
-        BrepCurve::Nurbs { control_points, weights, degree, knots } => format!(
-            "N[{},{},{},{}]",
-            enc_list(control_points, enc_point3),
-            enc_list(weights, |w: &f64| w.to_string()),
-            degree,
-            enc_list(knots, |k: &f64| k.to_string()),
-        ),
+        BrepCurve::Nurbs { control_points, weights, degree, knots } => format!("N[{},{},{},{}]", enc_list(control_points, enc_point3), enc_list(weights, |w: &f64| w.to_string()), degree, enc_list(knots, |k: &f64| k.to_string()),),
     }
 }
 pub(crate) fn dec_curve(s: &str) -> Result<BrepCurve, String> {
@@ -583,42 +669,54 @@ pub(crate) fn dec_surface(s: &str) -> Result<BrepSurface, String> {
     }
 }
 
-pub(crate) fn enc_loop_edge(le: &BrepLoopEdge) -> String { format!("[{},{}]", enc_str(&le.edge), enc_bool(le.orientation)) }
+pub(crate) fn enc_loop_edge(le: &BrepLoopEdge) -> String {
+    format!("[{},{}]", enc_str(&le.edge), enc_bool(le.orientation))
+}
 pub(crate) fn dec_loop_edge(s: &str) -> Result<BrepLoopEdge, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [edge, orientation] = parts.as_slice() else { return Err(format!("loop edge: expected 2 fields, got {}", parts.len())) };
     Ok(BrepLoopEdge { edge: dec_str(edge)?, orientation: parse_bool(orientation)? })
 }
 
-pub(crate) fn enc_shell_face(sf: &BrepShellFace) -> String { format!("[{},{}]", enc_str(&sf.face), enc_bool(sf.orientation)) }
+pub(crate) fn enc_shell_face(sf: &BrepShellFace) -> String {
+    format!("[{},{}]", enc_str(&sf.face), enc_bool(sf.orientation))
+}
 pub(crate) fn dec_shell_face(s: &str) -> Result<BrepShellFace, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [face, orientation] = parts.as_slice() else { return Err(format!("shell face: expected 2 fields, got {}", parts.len())) };
     Ok(BrepShellFace { face: dec_str(face)?, orientation: parse_bool(orientation)? })
 }
 
-pub(crate) fn enc_solid_shell(ss: &BrepSolidShell) -> String { format!("[{},{}]", enc_str(&ss.shell), enc_bool(ss.is_void)) }
+pub(crate) fn enc_solid_shell(ss: &BrepSolidShell) -> String {
+    format!("[{},{}]", enc_str(&ss.shell), enc_bool(ss.is_void))
+}
 pub(crate) fn dec_solid_shell(s: &str) -> Result<BrepSolidShell, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [shell, is_void] = parts.as_slice() else { return Err(format!("solid shell: expected 2 fields, got {}", parts.len())) };
     Ok(BrepSolidShell { shell: dec_str(shell)?, is_void: parse_bool(is_void)? })
 }
 
-pub(crate) fn enc_vertex(v: &BrepVertex) -> String { format!("[{},{}]", enc_str(&v.id), enc_point3(&v.point)) }
+pub(crate) fn enc_vertex(v: &BrepVertex) -> String {
+    format!("[{},{}]", enc_str(&v.id), enc_point3(&v.point))
+}
 pub(crate) fn dec_vertex(s: &str) -> Result<BrepVertex, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, point] = parts.as_slice() else { return Err(format!("vertex: expected 2 fields, got {}", parts.len())) };
     Ok(BrepVertex { id: dec_str(id)?, point: dec_point3(point)? })
 }
 
-pub(crate) fn enc_edge(e: &BrepEdge) -> String { format!("[{},{},{},{}]", enc_str(&e.id), enc_str(&e.start_vertex), enc_str(&e.end_vertex), enc_curve(&e.curve)) }
+pub(crate) fn enc_edge(e: &BrepEdge) -> String {
+    format!("[{},{},{},{}]", enc_str(&e.id), enc_str(&e.start_vertex), enc_str(&e.end_vertex), enc_curve(&e.curve))
+}
 pub(crate) fn dec_edge(s: &str) -> Result<BrepEdge, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, start_vertex, end_vertex, curve] = parts.as_slice() else { return Err(format!("edge: expected 4 fields, got {}", parts.len())) };
     Ok(BrepEdge { id: dec_str(id)?, start_vertex: dec_str(start_vertex)?, end_vertex: dec_str(end_vertex)?, curve: dec_curve(curve)? })
 }
 
-pub(crate) fn enc_loop(l: &BrepLoop) -> String { format!("[{},{}]", enc_str(&l.id), enc_list(&l.edges, enc_loop_edge)) }
+pub(crate) fn enc_loop(l: &BrepLoop) -> String {
+    format!("[{},{}]", enc_str(&l.id), enc_list(&l.edges, enc_loop_edge))
+}
 pub(crate) fn dec_loop(s: &str) -> Result<BrepLoop, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, edges] = parts.as_slice() else { return Err(format!("loop: expected 2 fields, got {}", parts.len())) };
@@ -626,10 +724,7 @@ pub(crate) fn dec_loop(s: &str) -> Result<BrepLoop, String> {
 }
 
 pub(crate) fn enc_face(f: &BrepFace) -> String {
-    format!(
-        "[{},{},{},{},{}]",
-        enc_str(&f.id), enc_str(&f.outer_loop), enc_list(&f.inner_loops, |s: &String| enc_str(s)), enc_surface(&f.surface), enc_bool(f.orientation),
-    )
+    format!("[{},{},{},{},{}]", enc_str(&f.id), enc_str(&f.outer_loop), enc_list(&f.inner_loops, |s: &String| enc_str(s)), enc_surface(&f.surface), enc_bool(f.orientation),)
 }
 pub(crate) fn dec_face(s: &str) -> Result<BrepFace, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -637,14 +732,18 @@ pub(crate) fn dec_face(s: &str) -> Result<BrepFace, String> {
     Ok(BrepFace { id: dec_str(id)?, outer_loop: dec_str(outer_loop)?, inner_loops: dec_list(inner_loops, dec_str)?, surface: dec_surface(surface)?, orientation: parse_bool(orientation)? })
 }
 
-pub(crate) fn enc_shell(sh: &BrepShell) -> String { format!("[{},{}]", enc_str(&sh.id), enc_list(&sh.faces, enc_shell_face)) }
+pub(crate) fn enc_shell(sh: &BrepShell) -> String {
+    format!("[{},{}]", enc_str(&sh.id), enc_list(&sh.faces, enc_shell_face))
+}
 pub(crate) fn dec_shell(s: &str) -> Result<BrepShell, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, faces] = parts.as_slice() else { return Err(format!("shell: expected 2 fields, got {}", parts.len())) };
     Ok(BrepShell { id: dec_str(id)?, faces: dec_list(faces, dec_shell_face)? })
 }
 
-pub(crate) fn enc_solid(so: &BrepSolid) -> String { format!("[{},{}]", enc_str(&so.id), enc_list(&so.shells, enc_solid_shell)) }
+pub(crate) fn enc_solid(so: &BrepSolid) -> String {
+    format!("[{},{}]", enc_str(&so.id), enc_list(&so.shells, enc_solid_shell))
+}
 pub(crate) fn dec_solid(s: &str) -> Result<BrepSolid, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, shells] = parts.as_slice() else { return Err(format!("solid: expected 2 fields, got {}", parts.len())) };
@@ -653,7 +752,9 @@ pub(crate) fn dec_solid(s: &str) -> Result<BrepSolid, String> {
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
-fn enc_vertex_diff(d: &BrepVertexDiff) -> String { format!("[{}]", encode_option(&d.point, enc_point3)) }
+fn enc_vertex_diff(d: &BrepVertexDiff) -> String {
+    format!("[{}]", encode_option(&d.point, enc_point3))
+}
 fn dec_vertex_diff(s: &str) -> Result<BrepVertexDiff, String> {
     let inner = strip_brackets(s)?;
     Ok(BrepVertexDiff { point: decode_option(inner, dec_point3)? })
@@ -668,7 +769,9 @@ fn dec_edge_diff(s: &str) -> Result<BrepEdgeDiff, String> {
     Ok(BrepEdgeDiff { start_vertex: decode_option(start_vertex, dec_str)?, end_vertex: decode_option(end_vertex, dec_str)?, curve: decode_option(curve, dec_curve)? })
 }
 
-fn enc_loop_diff(d: &BrepLoopDiff) -> String { format!("[{}]", encode_option(&d.edges, |v: &Vec<BrepLoopEdge>| enc_list(v, enc_loop_edge))) }
+fn enc_loop_diff(d: &BrepLoopDiff) -> String {
+    format!("[{}]", encode_option(&d.edges, |v: &Vec<BrepLoopEdge>| enc_list(v, enc_loop_edge)))
+}
 fn dec_loop_diff(s: &str) -> Result<BrepLoopDiff, String> {
     let inner = strip_brackets(s)?;
     Ok(BrepLoopDiff { edges: decode_option(inner, |s| dec_list(s, dec_loop_edge))? })
@@ -689,13 +792,17 @@ fn dec_face_diff(s: &str) -> Result<BrepFaceDiff, String> {
     Ok(BrepFaceDiff { outer_loop: decode_option(outer_loop, dec_str)?, inner_loops: decode_option(inner_loops, |s| dec_list(s, dec_str))?, surface: decode_option(surface, dec_surface)?, orientation: decode_option(orientation, parse_bool)? })
 }
 
-fn enc_shell_diff(d: &BrepShellDiff) -> String { format!("[{}]", encode_option(&d.faces, |v: &Vec<BrepShellFace>| enc_list(v, enc_shell_face))) }
+fn enc_shell_diff(d: &BrepShellDiff) -> String {
+    format!("[{}]", encode_option(&d.faces, |v: &Vec<BrepShellFace>| enc_list(v, enc_shell_face)))
+}
 fn dec_shell_diff(s: &str) -> Result<BrepShellDiff, String> {
     let inner = strip_brackets(s)?;
     Ok(BrepShellDiff { faces: decode_option(inner, |s| dec_list(s, dec_shell_face))? })
 }
 
-fn enc_solid_diff(d: &BrepSolidDiff) -> String { format!("[{}]", encode_option(&d.shells, |v: &Vec<BrepSolidShell>| enc_list(v, enc_solid_shell))) }
+fn enc_solid_diff(d: &BrepSolidDiff) -> String {
+    format!("[{}]", encode_option(&d.shells, |v: &Vec<BrepSolidShell>| enc_list(v, enc_solid_shell)))
+}
 fn dec_solid_diff(s: &str) -> Result<BrepSolidDiff, String> {
     let inner = strip_brackets(s)?;
     Ok(BrepSolidDiff { shells: decode_option(inner, |s| dec_list(s, dec_solid_shell))? })
@@ -705,25 +812,47 @@ fn dec_solid_diff(s: &str) -> Result<BrepSolidDiff, String> {
 //#region 🔖️TopLevel
 fn print_brep_diff(d: &SemioBrepDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.vertices { tokens.push(format!("vertices={}", enc_named_triple(v, |k: &String| enc_str(k), enc_vertex_diff, enc_vertex))); }
-    if let Some(v) = &d.edges { tokens.push(format!("edges={}", enc_named_triple(v, |k: &String| enc_str(k), enc_edge_diff, enc_edge))); }
-    if let Some(v) = &d.loops { tokens.push(format!("loops={}", enc_named_triple(v, |k: &String| enc_str(k), enc_loop_diff, enc_loop))); }
-    if let Some(v) = &d.faces { tokens.push(format!("faces={}", enc_named_triple(v, |k: &String| enc_str(k), enc_face_diff, enc_face))); }
-    if let Some(v) = &d.shells { tokens.push(format!("shells={}", enc_named_triple(v, |k: &String| enc_str(k), enc_shell_diff, enc_shell))); }
-    if let Some(v) = &d.solids { tokens.push(format!("solids={}", enc_named_triple(v, |k: &String| enc_str(k), enc_solid_diff, enc_solid))); }
+    if let Some(v) = &d.vertices {
+        tokens.push(format!("vertices={}", enc_named_triple(v, |k: &String| enc_str(k), enc_vertex_diff, enc_vertex)));
+    }
+    if let Some(v) = &d.edges {
+        tokens.push(format!("edges={}", enc_named_triple(v, |k: &String| enc_str(k), enc_edge_diff, enc_edge)));
+    }
+    if let Some(v) = &d.loops {
+        tokens.push(format!("loops={}", enc_named_triple(v, |k: &String| enc_str(k), enc_loop_diff, enc_loop)));
+    }
+    if let Some(v) = &d.faces {
+        tokens.push(format!("faces={}", enc_named_triple(v, |k: &String| enc_str(k), enc_face_diff, enc_face)));
+    }
+    if let Some(v) = &d.shells {
+        tokens.push(format!("shells={}", enc_named_triple(v, |k: &String| enc_str(k), enc_shell_diff, enc_shell)));
+    }
+    if let Some(v) = &d.solids {
+        tokens.push(format!("solids={}", enc_named_triple(v, |k: &String| enc_str(k), enc_solid_diff, enc_solid)));
+    }
     tokens.join(" ")
 }
 fn parse_brep_diff(line: &str) -> Result<SemioBrepDiff, String> {
     let mut d = SemioBrepDiff::default();
-    if line.is_empty() { return Ok(d); }
+    if line.is_empty() {
+        return Ok(d);
+    }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("vertices=") { d.vertices = Some(dec_named_triple(rest, dec_str, dec_vertex_diff, dec_vertex)?); }
-        else if let Some(rest) = token.strip_prefix("edges=") { d.edges = Some(dec_named_triple(rest, dec_str, dec_edge_diff, dec_edge)?); }
-        else if let Some(rest) = token.strip_prefix("loops=") { d.loops = Some(dec_named_triple(rest, dec_str, dec_loop_diff, dec_loop)?); }
-        else if let Some(rest) = token.strip_prefix("faces=") { d.faces = Some(dec_named_triple(rest, dec_str, dec_face_diff, dec_face)?); }
-        else if let Some(rest) = token.strip_prefix("shells=") { d.shells = Some(dec_named_triple(rest, dec_str, dec_shell_diff, dec_shell)?); }
-        else if let Some(rest) = token.strip_prefix("solids=") { d.solids = Some(dec_named_triple(rest, dec_str, dec_solid_diff, dec_solid)?); }
-        else { return Err(format!("brep diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("vertices=") {
+            d.vertices = Some(dec_named_triple(rest, dec_str, dec_vertex_diff, dec_vertex)?);
+        } else if let Some(rest) = token.strip_prefix("edges=") {
+            d.edges = Some(dec_named_triple(rest, dec_str, dec_edge_diff, dec_edge)?);
+        } else if let Some(rest) = token.strip_prefix("loops=") {
+            d.loops = Some(dec_named_triple(rest, dec_str, dec_loop_diff, dec_loop)?);
+        } else if let Some(rest) = token.strip_prefix("faces=") {
+            d.faces = Some(dec_named_triple(rest, dec_str, dec_face_diff, dec_face)?);
+        } else if let Some(rest) = token.strip_prefix("shells=") {
+            d.shells = Some(dec_named_triple(rest, dec_str, dec_shell_diff, dec_shell)?);
+        } else if let Some(rest) = token.strip_prefix("solids=") {
+            d.solids = Some(dec_named_triple(rest, dec_str, dec_solid_diff, dec_solid)?);
+        } else {
+            return Err(format!("brep diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -747,7 +876,9 @@ fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
 }
 
 impl protocol::DiffCodec for SemioBrepDiff {
-    fn print_diff(&self) -> String { print_brep_diff(self) }
+    fn print_diff(&self) -> String {
+        print_brep_diff(self)
+    }
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_brep_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
@@ -762,19 +893,43 @@ impl protocol::DiffCodec for SemioBrepDiff {
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;
-        if self.vertices.is_some() { presence |= 0b0000_0001; }
-        if self.edges.is_some() { presence |= 0b0000_0010; }
-        if self.loops.is_some() { presence |= 0b0000_0100; }
-        if self.faces.is_some() { presence |= 0b0000_1000; }
-        if self.shells.is_some() { presence |= 0b0001_0000; }
-        if self.solids.is_some() { presence |= 0b0010_0000; }
+        if self.vertices.is_some() {
+            presence |= 0b0000_0001;
+        }
+        if self.edges.is_some() {
+            presence |= 0b0000_0010;
+        }
+        if self.loops.is_some() {
+            presence |= 0b0000_0100;
+        }
+        if self.faces.is_some() {
+            presence |= 0b0000_1000;
+        }
+        if self.shells.is_some() {
+            presence |= 0b0001_0000;
+        }
+        if self.solids.is_some() {
+            presence |= 0b0010_0000;
+        }
         let mut out = vec![DIFF_BINARY_FORMAT, presence];
-        if let Some(v) = &self.vertices { write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_vertex_diff, enc_vertex)); }
-        if let Some(v) = &self.edges { write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_edge_diff, enc_edge)); }
-        if let Some(v) = &self.loops { write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_loop_diff, enc_loop)); }
-        if let Some(v) = &self.faces { write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_face_diff, enc_face)); }
-        if let Some(v) = &self.shells { write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_shell_diff, enc_shell)); }
-        if let Some(v) = &self.solids { write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_solid_diff, enc_solid)); }
+        if let Some(v) = &self.vertices {
+            write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_vertex_diff, enc_vertex));
+        }
+        if let Some(v) = &self.edges {
+            write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_edge_diff, enc_edge));
+        }
+        if let Some(v) = &self.loops {
+            write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_loop_diff, enc_loop));
+        }
+        if let Some(v) = &self.faces {
+            write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_face_diff, enc_face));
+        }
+        if let Some(v) = &self.shells {
+            write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_shell_diff, enc_shell));
+        }
+        if let Some(v) = &self.solids {
+            write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_solid_diff, enc_solid));
+        }
         Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -787,27 +942,28 @@ impl protocol::DiffCodec for SemioBrepDiff {
         }
         let presence = bytes[1];
         let mut reader = store::ByteReader::new(&bytes[2..]);
-        let mut next_blob = |what: &'static str| -> Result<String, protocol::ProtocolError> {
-            read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what, offset: 2, detail: e })
-        };
+        let mut next_blob = |what: &'static str| -> Result<String, protocol::ProtocolError> { read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what, offset: 2, detail: e }) };
         let vertices = if presence & 0b0000_0001 != 0 {
             Some(dec_named_triple(&next_blob("diff vertices blob")?, dec_str, dec_vertex_diff, dec_vertex).map_err(|e| protocol::ProtocolError::Malformed { what: "diff vertices text", offset: 2, detail: e })?)
-        } else { None };
-        let edges = if presence & 0b0000_0010 != 0 {
-            Some(dec_named_triple(&next_blob("diff edges blob")?, dec_str, dec_edge_diff, dec_edge).map_err(|e| protocol::ProtocolError::Malformed { what: "diff edges text", offset: 2, detail: e })?)
-        } else { None };
-        let loops = if presence & 0b0000_0100 != 0 {
-            Some(dec_named_triple(&next_blob("diff loops blob")?, dec_str, dec_loop_diff, dec_loop).map_err(|e| protocol::ProtocolError::Malformed { what: "diff loops text", offset: 2, detail: e })?)
-        } else { None };
-        let faces = if presence & 0b0000_1000 != 0 {
-            Some(dec_named_triple(&next_blob("diff faces blob")?, dec_str, dec_face_diff, dec_face).map_err(|e| protocol::ProtocolError::Malformed { what: "diff faces text", offset: 2, detail: e })?)
-        } else { None };
+        } else {
+            None
+        };
+        let edges =
+            if presence & 0b0000_0010 != 0 { Some(dec_named_triple(&next_blob("diff edges blob")?, dec_str, dec_edge_diff, dec_edge).map_err(|e| protocol::ProtocolError::Malformed { what: "diff edges text", offset: 2, detail: e })?) } else { None };
+        let loops =
+            if presence & 0b0000_0100 != 0 { Some(dec_named_triple(&next_blob("diff loops blob")?, dec_str, dec_loop_diff, dec_loop).map_err(|e| protocol::ProtocolError::Malformed { what: "diff loops text", offset: 2, detail: e })?) } else { None };
+        let faces =
+            if presence & 0b0000_1000 != 0 { Some(dec_named_triple(&next_blob("diff faces blob")?, dec_str, dec_face_diff, dec_face).map_err(|e| protocol::ProtocolError::Malformed { what: "diff faces text", offset: 2, detail: e })?) } else { None };
         let shells = if presence & 0b0001_0000 != 0 {
             Some(dec_named_triple(&next_blob("diff shells blob")?, dec_str, dec_shell_diff, dec_shell).map_err(|e| protocol::ProtocolError::Malformed { what: "diff shells text", offset: 2, detail: e })?)
-        } else { None };
+        } else {
+            None
+        };
         let solids = if presence & 0b0010_0000 != 0 {
             Some(dec_named_triple(&next_blob("diff solids blob")?, dec_str, dec_solid_diff, dec_solid).map_err(|e| protocol::ProtocolError::Malformed { what: "diff solids text", offset: 2, detail: e })?)
-        } else { None };
+        } else {
+            None
+        };
         Ok(SemioBrepDiff { vertices, edges, loops, faces, shells, solids })
     }
 }
@@ -832,17 +988,18 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioBrepDiff> {
 
     let mut b = SemioBrepSnapshot::default();
     b.vertices = vec![BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 } }, BrepVertex { id: "v-added".into(), point: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }];
-    b.edges = vec![BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v-added".into(), curve: BrepCurve::Nurbs { control_points: vec![SemioPoint3::default(), SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 }], weights: vec![1.0, 1.0], degree: 1, knots: vec![0.0, 0.0, 1.0, 1.0] } }];
+    b.edges = vec![BrepEdge {
+        id: "e1".into(),
+        start_vertex: "v1".into(),
+        end_vertex: "v-added".into(),
+        curve: BrepCurve::Nurbs { control_points: vec![SemioPoint3::default(), SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 }], weights: vec![1.0, 1.0], degree: 1, knots: vec![0.0, 0.0, 1.0, 1.0] },
+    }];
     b.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: false }] }];
     b.faces = vec![BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec!["l1".into()], surface: BrepSurface::Sphere { center: SemioPoint3::default(), radius: 2.0 }, orientation: false }];
     b.shells = vec![BrepShell { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: false }] }];
     b.solids = vec![BrepSolid { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: true }] }, BrepSolid { id: "so-added".into(), shells: vec![] }];
 
-    vec![
-        SemioBrepDiff::default(),
-        <SemioBrepDiff as DiffAlgebra<SemioBrepSnapshot>>::between(&a, &b),
-        <SemioBrepDiff as DiffAlgebra<SemioBrepSnapshot>>::between(&b, &a),
-    ]
+    vec![SemioBrepDiff::default(), <SemioBrepDiff as DiffAlgebra<SemioBrepSnapshot>>::between(&a, &b), <SemioBrepDiff as DiffAlgebra<SemioBrepSnapshot>>::between(&b, &a)]
 }
 //#endregion 🔖️Demo
 
@@ -856,59 +1013,47 @@ mod tests {
     /// only in `sweep_a` (removed), and (in `sweep_b`) one item present only there (added).
     fn sweep_a() -> SemioBrepSnapshot {
         let mut s = SemioBrepSnapshot::default();
-        s.vertices = vec![
-            BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } },
-            BrepVertex { id: "v-removed".into(), point: SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 } },
-        ];
+        s.vertices = vec![BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } }, BrepVertex { id: "v-removed".into(), point: SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 } }];
         s.edges = vec![
             BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v1".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } },
             BrepEdge { id: "e-removed".into(), start_vertex: "v-removed".into(), end_vertex: "v-removed".into(), curve: BrepCurve::Circle { center: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 1.0 } },
         ];
-        s.loops = vec![
-            BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }] },
-            BrepLoop { id: "l-removed".into(), edges: vec![] },
-        ];
+        s.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }] }, BrepLoop { id: "l-removed".into(), edges: vec![] }];
         s.faces = vec![
             BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } }, orientation: true },
             BrepFace { id: "f-removed".into(), outer_loop: "l-removed".into(), inner_loops: vec![], surface: BrepSurface::Sphere { center: SemioPoint3::default(), radius: 1.0 }, orientation: true },
         ];
-        s.shells = vec![
-            BrepShell { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: true }] },
-            BrepShell { id: "s-removed".into(), faces: vec![] },
-        ];
-        s.solids = vec![
-            BrepSolid { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: false }] },
-            BrepSolid { id: "so-removed".into(), shells: vec![] },
-        ];
+        s.shells = vec![BrepShell { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: true }] }, BrepShell { id: "s-removed".into(), faces: vec![] }];
+        s.solids = vec![BrepSolid { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: false }] }, BrepSolid { id: "so-removed".into(), shells: vec![] }];
         s
     }
 
     fn sweep_b() -> SemioBrepSnapshot {
         let mut s = SemioBrepSnapshot::default();
-        s.vertices = vec![
-            BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } },
-            BrepVertex { id: "v-added".into(), point: SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 } },
-        ];
+        s.vertices = vec![BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }, BrepVertex { id: "v-added".into(), point: SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 } }];
         s.edges = vec![
             BrepEdge { id: "e1".into(), start_vertex: "v-added".into(), end_vertex: "v-added".into(), curve: BrepCurve::Circle { center: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 }, axis: SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 }, radius: 2.0 } },
             BrepEdge { id: "e-added".into(), start_vertex: "v-added".into(), end_vertex: "v-added".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 } } },
         ];
-        s.loops = vec![
-            BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: false }] },
-            BrepLoop { id: "l-added".into(), edges: vec![] },
-        ];
+        s.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: false }] }, BrepLoop { id: "l-added".into(), edges: vec![] }];
         s.faces = vec![
-            BrepFace { id: "f1".into(), outer_loop: "l1-alt".into(), inner_loops: vec!["l-added".into()], surface: BrepSurface::Cylinder { origin: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 5.0 }, orientation: false },
-            BrepFace { id: "f-added".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Torus { center: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, major_radius: 3.0, minor_radius: 1.0 }, orientation: true },
+            BrepFace {
+                id: "f1".into(),
+                outer_loop: "l1-alt".into(),
+                inner_loops: vec!["l-added".into()],
+                surface: BrepSurface::Cylinder { origin: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 5.0 },
+                orientation: false,
+            },
+            BrepFace {
+                id: "f-added".into(),
+                outer_loop: "l1".into(),
+                inner_loops: vec![],
+                surface: BrepSurface::Torus { center: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, major_radius: 3.0, minor_radius: 1.0 },
+                orientation: true,
+            },
         ];
-        s.shells = vec![
-            BrepShell { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: false }] },
-            BrepShell { id: "s-added".into(), faces: vec![] },
-        ];
-        s.solids = vec![
-            BrepSolid { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: true }] },
-            BrepSolid { id: "so-added".into(), shells: vec![] },
-        ];
+        s.shells = vec![BrepShell { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: false }] }, BrepShell { id: "s-added".into(), faces: vec![] }];
+        s.solids = vec![BrepSolid { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: true }] }, BrepSolid { id: "so-added".into(), shells: vec![] }];
         s
     }
     //#endregion 🔖️Fixtures

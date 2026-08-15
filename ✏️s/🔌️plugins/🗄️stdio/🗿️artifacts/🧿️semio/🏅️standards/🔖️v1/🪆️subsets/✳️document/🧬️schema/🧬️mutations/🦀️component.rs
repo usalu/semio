@@ -15,9 +15,8 @@
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::document::schema::diff::{
-    dec_bool, dec_f64, dec_image, dec_run_style, dec_str, dec_style, dec_u8, decode_option, diff_block, diff_set_snapshot, enc_bool, enc_f64, enc_image,
-    enc_run_style, enc_str, enc_style, enc_u8, encode_option, hex_decode, hex_encode, BlocksDiff, DocBlockDiff, DocHeadingDiff,
-    DocParagraphDiff, DocQuoteDiff, DocRunDiff, DocTableCellDiff, DocTableRowDiff, ListItemsDiff, RunsDiff, SemioDocumentDiff, TableCellsDiff, TableRowsDiff,
+    dec_bool, dec_f64, dec_image, dec_run_style, dec_str, dec_style, dec_u8, decode_option, diff_block, diff_set_snapshot, enc_bool, enc_f64, enc_image, enc_run_style, enc_str, enc_style, enc_u8, encode_option, hex_decode, hex_encode, BlocksDiff,
+    DocBlockDiff, DocHeadingDiff, DocParagraphDiff, DocQuoteDiff, DocRunDiff, DocTableCellDiff, DocTableRowDiff, ListItemsDiff, RunsDiff, SemioDocumentDiff, TableCellsDiff, TableRowsDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocRun, DocStyle, RunStyle, SemioDocumentSnapshot};
 use protocol::Mutation;
@@ -279,15 +278,11 @@ impl Mutation<SemioDocumentSnapshot> for SemioDocumentMutation {
                 None => SemioDocumentDiff::default(),
             },
             SemioDocumentMutation::SetParagraphStyle { path, style_id } => match block_at(base, path) {
-                Some(DocBlock::Paragraph { style_id: old, .. }) if old != style_id => {
-                    wrap_body_diff(path, DocBlockLeaf::Modified(DocBlockDiff::Paragraph(DocParagraphDiff { style_id: Some(style_id.clone()), runs: None })))
-                }
+                Some(DocBlock::Paragraph { style_id: old, .. }) if old != style_id => wrap_body_diff(path, DocBlockLeaf::Modified(DocBlockDiff::Paragraph(DocParagraphDiff { style_id: Some(style_id.clone()), runs: None }))),
                 _ => SemioDocumentDiff::default(),
             },
             SemioDocumentMutation::SetHeadingLevel { path, level } => match block_at(base, path) {
-                Some(DocBlock::Heading { level: old, .. }) if old != level => {
-                    wrap_body_diff(path, DocBlockLeaf::Modified(DocBlockDiff::Heading(DocHeadingDiff { level: Some(*level), style_id: None, runs: None })))
-                }
+                Some(DocBlock::Heading { level: old, .. }) if old != level => wrap_body_diff(path, DocBlockLeaf::Modified(DocBlockDiff::Heading(DocHeadingDiff { level: Some(*level), style_id: None, runs: None }))),
                 _ => SemioDocumentDiff::default(),
             },
             SemioDocumentMutation::SetListOrdered { path, ordered } => match block_at(base, path) {
@@ -341,16 +336,12 @@ impl Mutation<SemioDocumentSnapshot> for SemioDocumentMutation {
                 }
                 _ => SemioDocumentDiff::default(),
             },
-            SemioDocumentMutation::InsertStyle { style } => SemioDocumentDiff {
-                styles: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::StylesDiff { added: vec![style.clone()], ..Default::default() }),
-                images: None,
-                blocks: None,
-            },
-            SemioDocumentMutation::RemoveStyle { id } => SemioDocumentDiff {
-                styles: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::StylesDiff { removed: vec![id.clone()], ..Default::default() }),
-                images: None,
-                blocks: None,
-            },
+            SemioDocumentMutation::InsertStyle { style } => {
+                SemioDocumentDiff { styles: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::StylesDiff { added: vec![style.clone()], ..Default::default() }), images: None, blocks: None }
+            }
+            SemioDocumentMutation::RemoveStyle { id } => {
+                SemioDocumentDiff { styles: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::StylesDiff { removed: vec![id.clone()], ..Default::default() }), images: None, blocks: None }
+            }
             SemioDocumentMutation::SetStyleName { id, name } => match style_at(base, id) {
                 Some(old) if &old.name != name => SemioDocumentDiff {
                     styles: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::StylesDiff {
@@ -379,16 +370,12 @@ impl Mutation<SemioDocumentSnapshot> for SemioDocumentMutation {
                 },
                 _ => SemioDocumentDiff::default(),
             },
-            SemioDocumentMutation::InsertImage { image } => SemioDocumentDiff {
-                styles: None,
-                images: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::ImagesDiff { added: vec![image.clone()], ..Default::default() }),
-                blocks: None,
-            },
-            SemioDocumentMutation::RemoveImage { id } => SemioDocumentDiff {
-                styles: None,
-                images: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::ImagesDiff { removed: vec![id.clone()], ..Default::default() }),
-                blocks: None,
-            },
+            SemioDocumentMutation::InsertImage { image } => {
+                SemioDocumentDiff { styles: None, images: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::ImagesDiff { added: vec![image.clone()], ..Default::default() }), blocks: None }
+            }
+            SemioDocumentMutation::RemoveImage { id } => {
+                SemioDocumentDiff { styles: None, images: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::ImagesDiff { removed: vec![id.clone()], ..Default::default() }), blocks: None }
+            }
             SemioDocumentMutation::SetImageBytes { id, mime, bytes } => match image_at(base, id) {
                 Some(old) if &old.mime != mime || &old.bytes != bytes => SemioDocumentDiff {
                     styles: None,
@@ -563,10 +550,9 @@ fn print_document_mutation(m: &SemioDocumentMutation) -> String {
         SemioDocumentMutation::SetListOrdered { path, ordered } => format!("set-list-ordered path={} ordered={}", enc_block_path(path), enc_bool(ordered)),
         SemioDocumentMutation::SetRunText { path, run_index, text } => format!("set-run-text path={} run-index={} text={}", enc_block_path(path), run_index, enc_str(text)),
         SemioDocumentMutation::SetRunStyle { path, run_index, style } => format!("set-run-style path={} run-index={} style={}", enc_block_path(path), run_index, enc_run_style_full(style)),
-        SemioDocumentMutation::SetImageBlock { path, image_id, alt, width, height } => format!(
-            "set-image-block path={} image-id={} alt={} width={} height={}",
-            enc_block_path(path), enc_str(image_id), enc_str(alt), encode_option(width, enc_f64), encode_option(height, enc_f64)
-        ),
+        SemioDocumentMutation::SetImageBlock { path, image_id, alt, width, height } => {
+            format!("set-image-block path={} image-id={} alt={} width={} height={}", enc_block_path(path), enc_str(image_id), enc_str(alt), encode_option(width, enc_f64), encode_option(height, enc_f64))
+        }
         SemioDocumentMutation::InsertStyle { style } => format!("insert-style style={}", enc_style(style)),
         SemioDocumentMutation::RemoveStyle { id } => format!("remove-style id={}", enc_str(id)),
         SemioDocumentMutation::SetStyleName { id, name } => format!("set-style-name id={} name={}", enc_str(id), enc_str(name)),
@@ -581,13 +567,8 @@ fn parse_document_mutation(line: &str) -> Result<SemioDocumentMutation, String> 
         return Ok(SemioDocumentMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("document mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> =
+        rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("document mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("document mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
@@ -718,9 +699,11 @@ impl protocol::OpBinary for SemioDocumentMutation {
 /// `protocol_walk_law` in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<SemioDocumentMutation> {
-    let table_block = DocBlock::Table { rows: vec![crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocTableRow {
-        cells: vec![crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocTableCell { blocks: vec![DocBlock::paragraph("cell")] }],
-    }] };
+    let table_block = DocBlock::Table {
+        rows: vec![crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocTableRow {
+            cells: vec![crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocTableCell { blocks: vec![DocBlock::paragraph("cell")] }],
+        }],
+    };
     vec![
         SemioDocumentMutation::NoMutation,
         SemioDocumentMutation::SetSnapshot { snapshot: crate::artifacts::semio::standards::v1::subsets::document::schema::diff::snapshot_b() },
@@ -867,15 +850,8 @@ mod tests {
     fn sweep_a() -> SemioDocumentSnapshot {
         SemioDocumentSnapshot {
             schema: "s.stdio.semio.document".into(),
-            styles: vec![
-                DocStyle { id: "keep".into(), name: "Keep".into(), based_on: None },
-                DocStyle { id: "toModify".into(), name: "old".into(), based_on: None },
-                DocStyle { id: "toRemove".into(), name: "Gone".into(), based_on: None },
-            ],
-            images: vec![
-                DocImage { id: "toModify".into(), mime: "image/png".into(), bytes: vec![1] },
-                DocImage { id: "toRemove".into(), mime: "image/gif".into(), bytes: vec![2] },
-            ],
+            styles: vec![DocStyle { id: "keep".into(), name: "Keep".into(), based_on: None }, DocStyle { id: "toModify".into(), name: "old".into(), based_on: None }, DocStyle { id: "toRemove".into(), name: "Gone".into(), based_on: None }],
+            images: vec![DocImage { id: "toModify".into(), mime: "image/png".into(), bytes: vec![1] }, DocImage { id: "toRemove".into(), mime: "image/gif".into(), bytes: vec![2] }],
             blocks: vec![
                 DocBlock::Paragraph { style_id: None, runs: vec![DocRun { text: "old".into(), style: RunStyle { bold: false, ..Default::default() } }] },
                 DocBlock::paragraph("stay"),
@@ -892,17 +868,8 @@ mod tests {
                 DocStyle { id: "toModify".into(), name: "new".into(), based_on: Some("keep".into()) },
                 DocStyle { id: "added".into(), name: "Added".into(), based_on: None },
             ],
-            images: vec![
-                DocImage { id: "toModify".into(), mime: "image/jpeg".into(), bytes: vec![9, 9] },
-                DocImage { id: "added".into(), mime: "image/webp".into(), bytes: vec![3] },
-            ],
-            blocks: vec![
-                DocBlock::Paragraph {
-                    style_id: Some("keep".into()),
-                    runs: vec![DocRun { text: "new".into(), style: RunStyle { bold: true, ..Default::default() } }, DocRun::plain("second run")],
-                },
-                DocBlock::paragraph("stay"),
-            ],
+            images: vec![DocImage { id: "toModify".into(), mime: "image/jpeg".into(), bytes: vec![9, 9] }, DocImage { id: "added".into(), mime: "image/webp".into(), bytes: vec![3] }],
+            blocks: vec![DocBlock::Paragraph { style_id: Some("keep".into()), runs: vec![DocRun { text: "new".into(), style: RunStyle { bold: true, ..Default::default() } }, DocRun::plain("second run")] }, DocBlock::paragraph("stay")],
         }
     }
     //#endregion 🔖️Fixtures

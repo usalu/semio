@@ -67,8 +67,8 @@ type PdfValueDiff {
   dictDiff: PdfDictDiff
   streamDict: PdfDictDiff
   streamData: [Int!]
-  streamRawFilter: String
-  streamHasRawFilter: Boolean!
+  streamFilters: [PdfStreamFilter!]
+  streamHasFilters: Boolean!
 }
 
 enum PdfValueDiffKind {

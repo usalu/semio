@@ -20,7 +20,7 @@ comment none
 # backtracks and would silently swallow a following bareword literal like `declaration`/`doctype`).
 document = declaration-tok? doctype-tok? root-tok?
 declaration-tok = "declaration" "=" opt-declaration
-doctype-tok = "doctype" "=" opt-hex
+doctype-tok = "doctype" "=" opt-doctype
 root-tok = "root" "=" node-diff
 
 # `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4): `[0]` (unchanged/None) /
@@ -32,6 +32,12 @@ bool-lit = "0" | "1"
 # `enc_declaration`/`dec_declaration`: `[hex(version),opt-hex(encoding),opt-bool(standalone)]`.
 opt-declaration = "[" "0" "]" | "[" "1" "," declaration-lit "]"
 declaration-lit = "[" hex "," opt-hex "," opt-bool "]"
+opt-doctype = "[" "0" "]" | "[" "1" "," doctype-lit "]"
+doctype-lit = "[" hex "," opt-external-id "," "[" dtd-declaration-list? "]" "]"
+opt-external-id = "[" "0" "]" | "[" "1" "," external-id "]"
+external-id = "S" "[" hex "]" | "P" "[" hex "," hex "]"
+dtd-declaration-list = dtd-declaration ("," dtd-declaration)*
+dtd-declaration = "E" "[" bool-lit "," hex "," hex "]"
 
 # `enc_node_diff`/`dec_node_diff` -- `XmlNodeDiff` itself needs a tag (`E`=Element, `T`=Text,
 # `R`=Replace) since, unlike a bare `XmlNode`, it appears standalone (not always inside a bracketed

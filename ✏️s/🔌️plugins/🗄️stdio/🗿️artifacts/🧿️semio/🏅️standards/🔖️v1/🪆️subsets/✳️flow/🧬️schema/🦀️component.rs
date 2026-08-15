@@ -1,7 +1,7 @@
 //! 🧬️ SemioFlowArtifact schema — full artifact state, mirrors `SemioFlowSnapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{SemioFlowSnapshot, FlowNode, FlowEdge};
+use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, SemioFlowSnapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -20,23 +20,17 @@ pub struct SemioFlowArtifact {
 }
 
 impl Default for SemioFlowArtifact {
-    fn default() -> Self { Self::from_snapshot(SemioFlowSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(SemioFlowSnapshot::default())
+    }
 }
 
 impl SemioFlowArtifact {
     pub fn to_snapshot(&self) -> SemioFlowSnapshot {
-        SemioFlowSnapshot {
-            schema: self.schema.clone(),
-            nodes: self.nodes.clone(),
-            edges: self.edges.clone(),
-        }
+        SemioFlowSnapshot { schema: self.schema.clone(), nodes: self.nodes.clone(), edges: self.edges.clone() }
     }
     pub fn from_snapshot(snapshot: SemioFlowSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            nodes: snapshot.nodes,
-            edges: snapshot.edges,
-        }
+        Self { schema: snapshot.schema, nodes: snapshot.nodes, edges: snapshot.edges }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioFlowSnapshot) {
         self.schema = snapshot.schema;
@@ -80,20 +74,26 @@ pub fn semio_flow_artifact_schema_descriptor() -> schema::ArtifactSchemaDescript
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::flow::schema::diff::SemioFlowDiff;
-    use crate::artifacts::semio::standards::v1::subsets::flow::schema::mutations::{SemioFlowMutation, apply_semio_flow_mutation};
+    use crate::artifacts::semio::standards::v1::subsets::flow::schema::mutations::{apply_semio_flow_mutation, SemioFlowMutation};
     use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioFlowBuilderConstruction { snapshot: SemioFlowSnapshot }
+    pub struct SemioFlowBuilderConstruction {
+        snapshot: SemioFlowSnapshot,
+    }
 
     impl ArtifactBuilder for SemioFlowBuilderConstruction {
         type Snapshot = SemioFlowSnapshot;
         type Mutation = SemioFlowMutation;
         type Diff = SemioFlowDiff;
-        fn empty() -> Self { Self { snapshot: SemioFlowSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: SemioFlowSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -108,7 +108,9 @@ pub mod derived_construction {
             self.snapshot = <SemioFlowDiff as protocol::MutationDiff<SemioFlowSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 }
 pub use derived_construction::*;
@@ -116,11 +118,13 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioFlowParts { pub snapshot: Option<SemioFlowSnapshot> }
+    pub struct SemioFlowParts {
+        pub snapshot: Option<SemioFlowSnapshot>,
+    }
 
     pub struct SemioFlowAnalyzerAnalysis;
 
@@ -132,10 +136,18 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
-                    if text.contains(STDIO_SEMIOFLOW_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                    if text.contains(STDIO_SEMIOFLOW_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }

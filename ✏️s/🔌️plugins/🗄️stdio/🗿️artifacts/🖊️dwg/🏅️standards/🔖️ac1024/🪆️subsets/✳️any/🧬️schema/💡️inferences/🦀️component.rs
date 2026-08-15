@@ -2,13 +2,8 @@
 //! 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Directory shape
 //! mirrors `🧬️mutations/`: this file is the family-root assembly (never mod's/includes the slug
 //! dirs directly — `📦️glue.rs` is the sole mounting mechanism, same as mutations); each named
-//! inference gets its own `<emoji><slug>/` child (currently: `🗂structure/`). ac1024's
-//! `DwgSnapshot` locates named sections/pages (D1/D2 real structural decode — see
-//! `📸️snapshot/🦀️component.rs`) but never decodes any geometric entity out of them (that's
-//! D3-D4, out of this ticket's scope), so a bounding-box inference (dxf's `📦bounds/`) would be
-//! dishonest here; `structure` is the closest honest derived statistic — real byte/section/page
-//! counts, richer than ac1018's own (this standard's snapshot genuinely has more decoded
-//! structure: named sections with per-page decode/error status), not fabricated geometry.
+//! inference gets its own `<emoji><slug>/` child (currently: `🗂structure/`). `structure`
+//! derives only modeled logical drawing counts.
 //!
 //! 🆔️ Schema id is `s.stdio.dwg.inference`, and it does NOT collide: its ac1018 sibling is
 //! authored as `s.stdio.dwg.ac1018.inference`. The two *snapshots* do still share `s.stdio.dwg`,
@@ -41,8 +36,7 @@ impl protocol::Inference<DwgSnapshot> for DwgInference {
     }
 }
 
-/// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
-/// `DwgSnapshot::default()`'s `source`/`sections` ever stop being empty.
+/// 🌱 Defined in terms of `infer` so the default follows the logical snapshot model.
 impl Default for DwgInference {
     fn default() -> Self {
         <Self as protocol::Inference<DwgSnapshot>>::infer(&DwgSnapshot::default())
@@ -57,20 +51,13 @@ impl protocol::InferenceSpec<DwgSnapshot> for DwgInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec {
-            id: "s.stdio.dwg.inference.structure",
-            reads: &["source", "sections", "codepage", "version"],
-        }]
+        &[protocol::InferenceFieldSpec { id: "s.stdio.dwg.inference.structure", reads: &["drawing", "codepage", "version"] }]
     }
 }
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `structure` is a whole-snapshot fold over `sections`/`pages`
-/// (summing page/decoded/error counts and declared sizes) plus a few O(1) field reads
-/// (decoded logical content size, `codepage`, `version`); no honest per-entity incremental decomposition exists
-/// (a merkle dep-chain over this flat section/page list costs more than the fold it would
-/// cache) — the default `infer_cached` passthrough is exact.
+/// 💡️ `structure` is a whole-snapshot fold over the logical drawing.
 impl ArtifactInferrer for crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::DwgBuilder {
     type Snapshot = DwgSnapshot;
     type Inference = DwgInference;

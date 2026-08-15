@@ -1,6 +1,3 @@
 syntax = "proto3";
-package semio.s_stdio_dwg.snapshot;
-message DwgSnapshot {
-  string schema = 1;
-  string bytes_wire = 2;
-}
+package semio.s_stdio_dwg_ac1018.snapshot;
+message DwgSnapshot { string schema = 1; string version = 2; uint32 maintenance_version = 3; uint32 codepage = 4; string drawing_wire = 5; string header_wire = 6; repeated string classes_wire = 7; repeated string dependencies_wire = 8; string summary_wire = 9; string application_wire = 10; string template_wire = 11; }

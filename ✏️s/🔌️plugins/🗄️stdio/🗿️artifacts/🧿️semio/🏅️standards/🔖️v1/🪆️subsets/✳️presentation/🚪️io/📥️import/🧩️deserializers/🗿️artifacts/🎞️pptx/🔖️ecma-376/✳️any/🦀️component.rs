@@ -21,12 +21,13 @@
 //!   block-content field to receive it (a real, spec-mandated shape limitation of this subset's
 //!   own type, not invented here).
 
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::pptx::PptxSnapshot;
 use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxTransform};
+use crate::artifacts::pptx::PptxSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, RunStyle};
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SemioPresentationSnapshot, Slide, SlideFrame, SlidePictureImage, SlideShape, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
+use crate::artifacts::xml::schema::snapshot::XmlNode;
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
 fn frame_from_transform(t: &PptxTransform) -> SlideFrame {
@@ -74,13 +75,7 @@ impl ArtifactDeserializer for SemioPresentationFromPptx {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("presentation") };
 
     fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let slides = from
-            .presentation
-            .slides
-            .iter()
-            .enumerate()
-            .map(|(i, slide)| Slide { id: format!("slide{i}"), layout_id: None, shapes: slide.shapes.iter().filter_map(map_shape).collect(), notes: Vec::new() })
-            .collect();
+        let slides = from.presentation.slides.iter().enumerate().map(|(i, slide)| Slide { id: format!("slide{i}"), layout_id: None, shapes: slide.shapes.iter().filter_map(map_shape).collect(), notes: Vec::new() }).collect();
         Ok(SemioPresentationSnapshot { schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(), masters: Vec::new(), layouts: Vec::new(), slides })
     }
 }
@@ -96,13 +91,14 @@ mod tests {
     pub(crate) fn sample_pptx() -> PptxSnapshot {
         PptxSnapshot::from_parts(
             OpcPackage::default(),
+            Vec::new(),
             PptxPresentation {
                 slides: vec![PptxSlide {
                     shapes: vec![
                         PptxShape::TextBox { text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "Hello".into(), bold: true, italic: false, font_size: Some(24) }] }], position: PptxTransform { x: 0, y: 0, cx: 100, cy: 20 } },
                         PptxShape::Picture { blip_rel_id: "rId2".into(), position: PptxTransform { x: 0, y: 30, cx: 50, cy: 50 } },
                         PptxShape::Placeholder { kind: "title".into(), text_frame: vec![PptxParagraph::text("Title text")], position: PptxTransform { x: 0, y: 0, cx: 200, cy: 40 } },
-                        PptxShape::Other { xml: "<p:graphicFrame/>".into() },
+                        PptxShape::Other { node: XmlNode::Element { name: "p:graphicFrame".into(), attrs: Vec::new(), children: Vec::new() } },
                     ],
                 }],
             },

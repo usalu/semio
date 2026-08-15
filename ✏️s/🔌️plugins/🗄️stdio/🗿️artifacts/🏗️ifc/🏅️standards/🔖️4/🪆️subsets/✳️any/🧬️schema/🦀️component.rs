@@ -3,7 +3,7 @@
 //! `IfcSnapshot`'s prior worst-offender defect (`document: step::engine::part21::Part21Document`
 //! verbatim) — now mirrors `IfcSnapshot`'s own typed `header`/`entities` fields.
 
-use crate::artifacts::ifc::schema::snapshot::{IfcHeader, IfcEntity};
+use crate::artifacts::ifc::schema::snapshot::{IfcEntity, IfcHeader};
 use crate::artifacts::ifc::{IfcMutation, IfcSnapshot, STDIO_IFC_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -34,19 +34,11 @@ impl Default for IfcArtifact {
 
 impl IfcArtifact {
     pub fn to_snapshot(&self) -> IfcSnapshot {
-        IfcSnapshot {
-            schema: self.schema.clone(),
-            header: self.header.clone(),
-            entities: self.entities.clone(),
-        }
+        IfcSnapshot { schema: self.schema.clone(), header: self.header.clone(), entities: self.entities.clone() }
     }
 
     pub fn from_snapshot(snapshot: IfcSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            header: snapshot.header,
-            entities: snapshot.entities,
-        }
+        Self { schema: snapshot.schema, header: snapshot.header, entities: snapshot.entities }
     }
 
     pub fn set_snapshot(&mut self, snapshot: IfcSnapshot) {
@@ -102,8 +94,8 @@ pub fn ifc_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::ifc::{IfcDiff, IfcMutation, IfcSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.ifc` snapshot.
@@ -138,7 +130,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -148,8 +144,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::ifc::IfcSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.ifc` parts.
@@ -181,22 +177,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <IfcSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }

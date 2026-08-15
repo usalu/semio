@@ -34,12 +34,10 @@
 //!
 //! `model.spatial` is always empty from this bridge (BCF has no spatial-structure concept).
 
-use crate::artifacts::bcf::BcfSnapshot;
 use crate::artifacts::bcf::schema::snapshot::{BcfComponents, BcfTopic};
+use crate::artifacts::bcf::BcfSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
-use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{
-    ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA,
-};
+use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️Deserializer
@@ -83,10 +81,7 @@ fn referenced_guids(components: &BcfComponents, out: &mut Vec<String>) {
 }
 
 fn topic_pset(topic: &BcfTopic) -> PropertySet {
-    let mut properties = vec![
-        Property { key: "title".into(), value: PsetValue::Text { value: topic.title.clone() } },
-        Property { key: "status".into(), value: PsetValue::Text { value: topic.status.clone() } },
-    ];
+    let mut properties = vec![Property { key: "title".into(), value: PsetValue::Text { value: topic.title.clone() } }, Property { key: "status".into(), value: PsetValue::Text { value: topic.status.clone() } }];
     if !topic.priority.is_empty() {
         properties.push(Property { key: "priority".into(), value: PsetValue::Text { value: topic.priority.clone() } });
     }
@@ -134,14 +129,7 @@ pub fn model_from_bcf(from: &BcfSnapshot) -> SemioModelSnapshot {
         if let Some(comments) = comments_pset(topic) {
             psets.push(comments);
         }
-        elements.push(SemioModelElement {
-            id: topic.guid.clone(),
-            class: ElementClass::Other { name: "BcfTopic".into() },
-            placement: SemioTransform::identity(),
-            geometry: GeometryRef::None,
-            spatial_id: None,
-            psets,
-        });
+        elements.push(SemioModelElement { id: topic.guid.clone(), class: ElementClass::Other { name: "BcfTopic".into() }, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets });
 
         let mut refs: Vec<String> = Vec::new();
         for vp in &topic.viewpoints {
@@ -152,21 +140,9 @@ pub fn model_from_bcf(from: &BcfSnapshot) -> SemioModelSnapshot {
         for guid in &refs {
             if !known_component_ids.contains(guid) {
                 known_component_ids.push(guid.clone());
-                elements.push(SemioModelElement {
-                    id: guid.clone(),
-                    class: ElementClass::Other { name: "BcfReferencedComponent".into() },
-                    placement: SemioTransform::identity(),
-                    geometry: GeometryRef::None,
-                    spatial_id: None,
-                    psets: vec![],
-                });
+                elements.push(SemioModelElement { id: guid.clone(), class: ElementClass::Other { name: "BcfReferencedComponent".into() }, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] });
             }
-            relations.push(ModelRelation {
-                id: format!("rel-bcfreferences-{}-{}", topic.guid, guid),
-                kind: RelationKind::Other { label: "BcfReferences".into() },
-                from: topic.guid.clone(),
-                to: guid.clone(),
-            });
+            relations.push(ModelRelation { id: format!("rel-bcfreferences-{}-{}", topic.guid, guid), kind: RelationKind::Other { label: "BcfReferences".into() }, from: topic.guid.clone(), to: guid.clone() });
         }
     }
 

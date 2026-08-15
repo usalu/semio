@@ -46,19 +46,26 @@ pub struct BitReader<'a> {
 }
 
 impl<'a> BitReader<'a> {
-    pub fn new(data: &'a [u8]) -> Self { Self { data, byte_pos: 0, bit_pos: 0 } }
+    pub fn new(data: &'a [u8]) -> Self {
+        Self { data, byte_pos: 0, bit_pos: 0 }
+    }
 
     pub fn u1(&mut self) -> Result<u32, H264Error> {
         let &byte = self.data.get(self.byte_pos).ok_or(H264Error::Truncated)?;
         let bit = (byte >> (7 - self.bit_pos)) & 1;
         self.bit_pos += 1;
-        if self.bit_pos == 8 { self.bit_pos = 0; self.byte_pos += 1; }
+        if self.bit_pos == 8 {
+            self.bit_pos = 0;
+            self.byte_pos += 1;
+        }
         Ok(u32::from(bit))
     }
 
     pub fn u(&mut self, n: u8) -> Result<u32, H264Error> {
         let mut v = 0u32;
-        for _ in 0..n { v = (v << 1) | self.u1()?; }
+        for _ in 0..n {
+            v = (v << 1) | self.u1()?;
+        }
         Ok(v)
     }
 
@@ -71,7 +78,9 @@ impl<'a> BitReader<'a> {
                 return Err(H264Error::Malformed("exp-golomb code exceeds 31 leading zero bits"));
             }
         }
-        if leading_zero_bits == 0 { return Ok(0); }
+        if leading_zero_bits == 0 {
+            return Ok(0);
+        }
         let suffix = self.u(leading_zero_bits as u8)?;
         Ok((1u32 << leading_zero_bits) - 1 + suffix)
     }
@@ -137,7 +146,10 @@ pub fn split_avcc_nals(data: &[u8], length_size: u8) -> Result<Vec<&[u8]>, H264E
 /// fields this container codec's cross-validation accessor uses; baseline-profile only, matches
 /// the source's own scoping). <https://www.itu.int/rec/T-REC-H.264> (clause 7.3.2.1.1)
 #[derive(Clone, Debug, PartialEq)]
-pub struct SpsDimensions { pub width_px: u32, pub height_px: u32 }
+pub struct SpsDimensions {
+    pub width_px: u32,
+    pub height_px: u32,
+}
 
 pub fn parse_sps_dimensions(rbsp: &[u8]) -> Result<SpsDimensions, H264Error> {
     let mut b = BitReader::new(rbsp);
@@ -184,7 +196,7 @@ pub fn parse_sps_dimensions(rbsp: &[u8]) -> Result<SpsDimensions, H264Error> {
 //#region 🔖️AvcC
 /// 📥️ `avcC` (AVCDecoderConfigurationRecord) → `(sps_list, pps_list, nal_length_size)`, each NAL
 /// kept as its own owned byte vector (adapted from remodel's `extract_avc_config`, which instead
-/// flattens SPS/PPS into one `(u16 len, NAL)*` buffer — this artifact's `Mp4Codec::Avc` schema
+/// flattens SPS/PPS into one `(u16 len, NAL)*` buffer — this artifact's `Mp4Codec` schema
 /// wants them as separate lists, so the adaptation only changes the output container shape, not
 /// the parse logic). <https://www.iso.org/standard/74428.html> (ISO/IEC 14496-15)
 pub fn parse_avcc(avcc: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8), H264Error> {
@@ -192,9 +204,7 @@ pub fn parse_avcc(avcc: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8), H264E
     Ok((sps, pps, nal_length_size))
 }
 
-pub fn parse_avcc_extended(
-    avcc: &[u8],
-) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8, Option<crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>), H264Error> {
+pub fn parse_avcc_extended(avcc: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8, Option<crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>), H264Error> {
     let mut pos = 4usize;
     let length_size_byte = *avcc.get(pos).ok_or(H264Error::Truncated)?;
     pos += 1;
@@ -239,7 +249,7 @@ pub fn parse_avcc_extended(
 
 /// ✍️ Builds an `avcC` box from separate SPS/PPS lists (adapted from remodel's `build_avcc`,
 /// which reads its input from the flattened `(u16,NAL)*` internal format — this version takes
-/// the lists directly since that is this artifact's own `Mp4Codec::Avc` shape). `profile`/
+/// the lists directly since that is this artifact's own `Mp4Codec` shape). `profile`/
 /// `compat`/`level` are read back out of the first SPS when present (bytes 1..4 of the RBSP,
 /// clause 7.3.2.1.1's `profile_idc`/`constraint flags`/`level_idc`) so a round-tripped file
 /// reports the same AVC profile it was decoded from, instead of a fixed placeholder.
@@ -247,12 +257,7 @@ pub fn build_avcc(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal_length_size: u
     build_avcc_extended(sps_list, pps_list, nal_length_size, None)
 }
 
-pub fn build_avcc_extended(
-    sps_list: &[Vec<u8>],
-    pps_list: &[Vec<u8>],
-    nal_length_size: u8,
-    extension: Option<&crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>,
-) -> Vec<u8> {
+pub fn build_avcc_extended(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal_length_size: u8, extension: Option<&crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>) -> Vec<u8> {
     let (profile, compat, level) = sps_list.first().and_then(|s| s.get(1..4)).map_or((66, 0, 30), |b| (b[0], b[1], b[2]));
     let mut out = vec![1, profile, compat, level, 0xFC | (nal_length_size.saturating_sub(1) & 0x03), 0xE0 | (sps_list.len() as u8 & 0x1F)];
     for nal in sps_list {

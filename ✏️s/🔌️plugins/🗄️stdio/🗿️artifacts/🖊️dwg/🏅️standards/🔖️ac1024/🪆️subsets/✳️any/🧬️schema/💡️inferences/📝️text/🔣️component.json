@@ -1,5 +1,27 @@
 {
   "$id": "https://semio.tech/schema/s/stdio/dwg/ac1024/inference/text.json",
   "title": "DwgAc1024InferenceText",
-  "type": "object"
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "structure"],
+  "properties": {
+    "schema": { "const": "s.stdio.dwg.inference" },
+    "structure": { "$ref": "#/$defs/DwgStructureText" }
+  },
+  "$defs": {
+    "DwgStructureText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["layerCount", "entityCount", "geometryValueCount", "geometryIndexCount", "textCharacterCount", "codepage", "version"],
+      "properties": {
+        "layerCount": { "type": "integer", "minimum": 0 },
+        "entityCount": { "type": "integer", "minimum": 0 },
+        "geometryValueCount": { "type": "integer", "minimum": 0 },
+        "geometryIndexCount": { "type": "integer", "minimum": 0 },
+        "textCharacterCount": { "type": "integer", "minimum": 0 },
+        "codepage": { "type": "integer", "minimum": 0 },
+        "version": { "type": "string" }
+      }
+    }
+  }
 }

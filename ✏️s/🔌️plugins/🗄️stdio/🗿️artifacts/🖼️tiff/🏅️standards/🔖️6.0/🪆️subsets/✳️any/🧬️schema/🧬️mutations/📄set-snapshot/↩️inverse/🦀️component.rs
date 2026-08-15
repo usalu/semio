@@ -1,5 +1,5 @@
-use crate::artifacts::tiff::{TiffSnapshot};
 use crate::artifacts::tiff::schema::mutations::TiffMutation;
+use crate::artifacts::tiff::TiffSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

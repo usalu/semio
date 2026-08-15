@@ -70,3 +70,25 @@ Consequently, no claim is made that Rust compilation or the new tests passed. Ro
 ## Expected invariant
 
 For the exact fixture, `decode_mp4(bytes)` captures `bytes` and fingerprints `snapshot.projection()`. Immediate export, pack decode/export, DSL parse/export, empty diff, no mutation, and a mutation followed by its inverse all restore the matching projection and therefore select the exact-source fast path. Any persistent semantic change makes the fingerprint mismatch and selects canonical MP4 reconstruction instead of returning stale native bytes.
+
+## 2026-08-14 Governing Logical-Model Result
+
+This section supersedes every source-replay statement above. The final MP4 implementation retains no source archive, physical box mirror, raw unknown box, or replay fingerprint. Import materializes a typed logical movie/track/AVC/sample model; export deterministically emits `ftyp(32) → moov(11272) → free(8) → mdat(16074739)`. Only encoded audiovisual samples remain bytes.
+
+Snapshot, sparse diff, and mutation persistence now use `DslRecord`/`DslDiff`/`DslOps` structured text and the shared RecordSpec binary protocol. No JSON persistence placeholder is involved. Large semantic sample payloads use an explicit 32 MiB DSL input budget.
+
+### Exact isolated Nx evidence
+
+Command:
+
+`CARGO_TARGET_DIR='.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/SEMIO-ARTIFACT-LOSSLESS-WELL-KNOWN-FORMAT-ROUNDTRIPS/🎯️mp4-pptx-logical-target' bun nx run @semio-tech/stdio-plugin:test-long -- exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte --nocapture`
+
+Result: `PASS`, 1 passed, 0 failed, 3416 skipped; test runtime 11.04 seconds. The consolidated test compares every export directly with the 16,086,051-byte original fixture through direct IO, DSL, binary pack, analyzer, composer, text/binary diff, no-op and semantic mutation codecs, and mutation/diff inverse reconstruction.
+
+### Final facet and anti-shadow audit
+
+The snapshot binary ABNF, protocol, Spicy, and Kaitai leaves now describe the shared logical RecordSpec pack rather than a wrapped native ISO-BMFF box stream. Mutation text facets describe the structured `DslVariants` named-record operations, and mutation binary facets describe the shared tagged-record protocol; the remaining stale JSON-line/JSON-byte descriptions and unknown-box mutation enum values were removed from root, text, and binary facets.
+
+The existing anti-shadow test now audits snapshot, diff, mutation, text-codec, and binary-codec facets for unknown boxes, raw codec alternatives, source/native archive fields, JSON persistence, and native-box pack claims. Its isolated Nx filter passed all three matching MP4/PPTX/ZIP anti-shadow tests: 3 passed, 0 failed, 3,375 skipped.
+
+The accepted MP4 exact lifecycle was rerun after the facet correction with the same isolated target. Result: exit 0; 1 passed, 0 failed, 3,377 skipped; test runtime 11.24 seconds; Nx reported success.

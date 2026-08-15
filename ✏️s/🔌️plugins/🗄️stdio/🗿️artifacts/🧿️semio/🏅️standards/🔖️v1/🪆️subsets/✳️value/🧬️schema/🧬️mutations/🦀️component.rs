@@ -8,16 +8,15 @@
 //! sparse [`SemioValueTreeDiff`] shape — never apply-and-capture.
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets, IndexAdded, NamedModified, NamedTripleDiff};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{
-    dec_value_id, dec_semio_value_node_bin, dec_semio_value, dec_semio_value_bin, dec_str, enc_value_id,
-    enc_semio_value_node_bin, enc_semio_value, enc_semio_value_bin, enc_str, value_diff_between, write_str_lp, read_str_lp,
-    NamedAdded, SemioValueTreeDiff, SemioValueDiff,
-};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::diff_set_snapshot;
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{dec_semio_value_snapshot, enc_semio_value_snapshot, ValueId, SemioValueEntry, SemioValueNode, SemioValueSnapshot, SemioValue};
-use protocol::{Mutation, MutationDiff, OpText};
+use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{
+    dec_semio_value, dec_semio_value_bin, dec_semio_value_node_bin, dec_str, dec_value_id, enc_semio_value, enc_semio_value_bin, enc_semio_value_node_bin, enc_str, enc_value_id, read_str_lp, value_diff_between, write_str_lp, NamedAdded,
+    SemioValueDiff, SemioValueTreeDiff,
+};
+use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{dec_semio_value_snapshot, enc_semio_value_snapshot, SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
 #[cfg(test)]
 use protocol::command::DiffAlgebra;
+use protocol::{Mutation, MutationDiff, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SemioValuePath
@@ -65,23 +64,47 @@ fn resolve<'a>(root: &'a SemioValue, path: &[SemioValuePathSegment]) -> Option<&
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioValueMutation {
     NoMutation,
-    SetSnapshot { snapshot: SemioValueSnapshot },
+    SetSnapshot {
+        snapshot: SemioValueSnapshot,
+    },
     /// 🔁️ Replaces the whole node found at `path` (root, if empty) with `value`, regardless of
     /// its previous kind.
-    SetValue { path: SemioValuePath, value: SemioValue },
+    SetValue {
+        path: SemioValuePath,
+        value: SemioValue,
+    },
     /// ➕️ Sets (creating or overwriting) entry `key` on the map at `path` to `value`.
-    SetMapEntry { path: SemioValuePath, key: String, value: SemioValue },
+    SetMapEntry {
+        path: SemioValuePath,
+        key: String,
+        value: SemioValue,
+    },
     /// ➖️ Removes entry `key` from the map at `path`, if present.
-    RemoveMapEntry { path: SemioValuePath, key: String },
+    RemoveMapEntry {
+        path: SemioValuePath,
+        key: String,
+    },
     /// ➕️ Inserts `value` into the list at `path` at `index` (ascending-insert-clamped, per the
     /// normative apply contract).
-    InsertListItem { path: SemioValuePath, index: usize, value: SemioValue },
+    InsertListItem {
+        path: SemioValuePath,
+        index: usize,
+        value: SemioValue,
+    },
     /// ➖️ Removes the element at `index` from the list at `path`, if present.
-    RemoveListItem { path: SemioValuePath, index: usize },
+    RemoveListItem {
+        path: SemioValuePath,
+        index: usize,
+    },
     /// ➕️ Sets (creating or overwriting) the graph node `id` to `value`.
-    SetNode { id: ValueId, value: SemioValue },
+    SetNode {
+        id: ValueId,
+        value: SemioValue,
+    },
     /// ➖️ Removes graph node `id`, if present.
-    RemoveNode { id: ValueId },
+    RemoveNode {
+        id: ValueId,
+    },
 }
 
 impl Default for SemioValueMutation {
@@ -102,9 +125,7 @@ fn diff_at_path(path: &[SemioValuePathSegment], leaf: Option<SemioValueDiff>) ->
 fn wrap_at_path(path: &[SemioValuePathSegment], leaf: SemioValueDiff) -> SemioValueDiff {
     match path.split_first() {
         None => leaf,
-        Some((SemioValuePathSegment::Key { key }, rest)) => SemioValueDiff::Map {
-            diff: NamedTripleDiff { removed: Vec::new(), added: Vec::new(), modified: vec![NamedModified { key: key.clone(), diff: wrap_at_path(rest, leaf) }] },
-        },
+        Some((SemioValuePathSegment::Key { key }, rest)) => SemioValueDiff::Map { diff: NamedTripleDiff { removed: Vec::new(), added: Vec::new(), modified: vec![NamedModified { key: key.clone(), diff: wrap_at_path(rest, leaf) }] } },
         Some((SemioValuePathSegment::Index { index }, rest)) => SemioValueDiff::List {
             diff: crate::artifacts::semio::standards::v1::subsets::any::schema::triples::IndexedTripleDiff {
                 removed: Vec::new(),
@@ -144,39 +165,35 @@ impl Mutation<SemioValueSnapshot> for SemioValueMutation {
                 Some(SemioValue::Map { entries }) => match entries.iter().find(|e| &e.key == key) {
                     Some(existing) => {
                         let leaf = value_diff_between(&existing.value, value);
-                        diff_at_path(path, leaf.map(|diff| SemioValueDiff::Map {
-                            diff: NamedTripleDiff { removed: Vec::new(), added: Vec::new(), modified: vec![NamedModified { key: key.clone(), diff }] },
-                        }))
+                        diff_at_path(path, leaf.map(|diff| SemioValueDiff::Map { diff: NamedTripleDiff { removed: Vec::new(), added: Vec::new(), modified: vec![NamedModified { key: key.clone(), diff }] } }))
                     }
-                    None => diff_at_path(path, Some(SemioValueDiff::Map {
-                        diff: NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: entries.len(), item: SemioValueEntry { key: key.clone(), value: value.clone() } }] },
-                    })),
+                    None => diff_at_path(
+                        path,
+                        Some(SemioValueDiff::Map { diff: NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: entries.len(), item: SemioValueEntry { key: key.clone(), value: value.clone() } }] } }),
+                    ),
                 },
                 _ => SemioValueTreeDiff::default(),
             },
 
             SemioValueMutation::RemoveMapEntry { path, key } => match resolve(&base.root, path) {
-                Some(SemioValue::Map { entries }) if entries.iter().any(|e| &e.key == key) => diff_at_path(path, Some(SemioValueDiff::Map {
-                    diff: NamedTripleDiff { removed: vec![key.clone()], modified: Vec::new(), added: Vec::new() },
-                })),
+                Some(SemioValue::Map { entries }) if entries.iter().any(|e| &e.key == key) => diff_at_path(path, Some(SemioValueDiff::Map { diff: NamedTripleDiff { removed: vec![key.clone()], modified: Vec::new(), added: Vec::new() } })),
                 _ => SemioValueTreeDiff::default(),
             },
 
             SemioValueMutation::InsertListItem { path, index, value } => match resolve(&base.root, path) {
-                Some(SemioValue::List { items }) => diff_at_path(path, Some(SemioValueDiff::List {
-                    diff: crate::artifacts::semio::standards::v1::subsets::any::schema::triples::IndexedTripleDiff {
-                        removed: Vec::new(),
-                        modified: Vec::new(),
-                        added: vec![IndexAdded { index: (*index).min(items.len()), item: value.clone() }],
-                    },
-                })),
+                Some(SemioValue::List { items }) => diff_at_path(
+                    path,
+                    Some(SemioValueDiff::List {
+                        diff: crate::artifacts::semio::standards::v1::subsets::any::schema::triples::IndexedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![IndexAdded { index: (*index).min(items.len()), item: value.clone() }] },
+                    }),
+                ),
                 _ => SemioValueTreeDiff::default(),
             },
 
             SemioValueMutation::RemoveListItem { path, index } => match resolve(&base.root, path) {
-                Some(SemioValue::List { items }) if *index < items.len() => diff_at_path(path, Some(SemioValueDiff::List {
-                    diff: crate::artifacts::semio::standards::v1::subsets::any::schema::triples::IndexedTripleDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() },
-                })),
+                Some(SemioValue::List { items }) if *index < items.len() => {
+                    diff_at_path(path, Some(SemioValueDiff::List { diff: crate::artifacts::semio::standards::v1::subsets::any::schema::triples::IndexedTripleDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() } }))
+                }
                 _ => SemioValueTreeDiff::default(),
             },
 
@@ -185,10 +202,7 @@ impl Mutation<SemioValueSnapshot> for SemioValueMutation {
                     Some(diff) => SemioValueTreeDiff { root: None, nodes: Some(NamedTripleDiff { removed: Vec::new(), added: Vec::new(), modified: vec![NamedModified { key: id.clone(), diff }] }) },
                     None => SemioValueTreeDiff::default(),
                 },
-                None => SemioValueTreeDiff {
-                    root: None,
-                    nodes: Some(NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: base.nodes.len(), item: SemioValueNode { id: id.clone(), value: value.clone() } }] }),
-                },
+                None => SemioValueTreeDiff { root: None, nodes: Some(NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: base.nodes.len(), item: SemioValueNode { id: id.clone(), value: value.clone() } }] }) },
             },
 
             SemioValueMutation::RemoveNode { id } => {
@@ -231,9 +245,7 @@ impl Mutation<SemioValueSnapshot> for SemioValueMutation {
                 Some(SemioValue::Map { entries }) => match entries.iter().position(|e| &e.key == key) {
                     Some(pos) => {
                         let tail: Vec<SemioValueEntry> = entries[pos + 1..].to_vec();
-                        let mut steps: Vec<SemioValueMutation> = tail.iter().rev()
-                            .map(|e| SemioValueMutation::RemoveMapEntry { path: path.clone(), key: e.key.clone() })
-                            .collect();
+                        let mut steps: Vec<SemioValueMutation> = tail.iter().rev().map(|e| SemioValueMutation::RemoveMapEntry { path: path.clone(), key: e.key.clone() }).collect();
                         steps.push(SemioValueMutation::SetMapEntry { path: path.clone(), key: key.clone(), value: entries[pos].value.clone() });
                         steps.extend(tail.into_iter().map(|e| SemioValueMutation::SetMapEntry { path: path.clone(), key: e.key, value: e.value }));
                         steps
@@ -328,13 +340,8 @@ fn parse_value_mutation(line: &str) -> Result<SemioValueMutation, String> {
         return Ok(SemioValueMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("semio value mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> =
+        rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("semio value mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("semio value mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
@@ -342,11 +349,7 @@ fn parse_value_mutation(line: &str) -> Result<SemioValueMutation, String> {
         "set-value" => Ok(SemioValueMutation::SetValue { path: dec_path(arg("path")?)?, value: dec_semio_value(arg("value")?)? }),
         "set-map-entry" => Ok(SemioValueMutation::SetMapEntry { path: dec_path(arg("path")?)?, key: dec_str(arg("key")?)?, value: dec_semio_value(arg("value")?)? }),
         "remove-map-entry" => Ok(SemioValueMutation::RemoveMapEntry { path: dec_path(arg("path")?)?, key: dec_str(arg("key")?)? }),
-        "insert-list-item" => Ok(SemioValueMutation::InsertListItem {
-            path: dec_path(arg("path")?)?,
-            index: usize_arg("index")?,
-            value: dec_semio_value(arg("value")?)?,
-        }),
+        "insert-list-item" => Ok(SemioValueMutation::InsertListItem { path: dec_path(arg("path")?)?, index: usize_arg("index")?, value: dec_semio_value(arg("value")?)? }),
         "remove-list-item" => Ok(SemioValueMutation::RemoveListItem { path: dec_path(arg("path")?)?, index: usize_arg("index")? }),
         "set-node" => Ok(SemioValueMutation::SetNode { id: dec_value_id(arg("id")?)?, value: dec_semio_value(arg("value")?)? }),
         "remove-node" => Ok(SemioValueMutation::RemoveNode { id: dec_value_id(arg("id")?)? }),
@@ -560,12 +563,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioValueMutation> {
     let mixed_path = vec![SemioValuePathSegment::Key { key: "outer".into() }, SemioValuePathSegment::Index { index: 2 }, SemioValuePathSegment::Key { key: "inner".into() }];
     vec![
         SemioValueMutation::NoMutation,
-        SemioValueMutation::SetSnapshot {
-            snapshot: snap(
-                mapv(vec![("a", intv("1")), ("b", listv(vec![strv("x"), SemioValue::Null, SemioValue::Bool { value: true }]))]),
-                vec![node("n1", SemioValue::Bytes { value: vec![1, 2, 3] })],
-            ),
-        },
+        SemioValueMutation::SetSnapshot { snapshot: snap(mapv(vec![("a", intv("1")), ("b", listv(vec![strv("x"), SemioValue::Null, SemioValue::Bool { value: true }]))]), vec![node("n1", SemioValue::Bytes { value: vec![1, 2, 3] })]) },
         SemioValueMutation::SetValue { path: vec![], value: SemioValue::Ref { id: ValueId::new("n1") } },
         SemioValueMutation::SetMapEntry { path: vec![], key: "a".into(), value: SemioValue::Float { lexeme: "2.5e10".into() } },
         SemioValueMutation::SetMapEntry { path: mixed_path.clone(), key: "k".into(), value: mapv(vec![("nested", strv("v"))]) },
@@ -610,10 +608,7 @@ mod tests {
     }
 
     fn base_fixture() -> SemioValueSnapshot {
-        snap(
-            mapv(vec![("a", intv("1")), ("list", listv(vec![intv("1"), intv("2")]))]),
-            vec![node("n1", strv("hello"))],
-        )
+        snap(mapv(vec![("a", intv("1")), ("list", listv(vec![intv("1"), intv("2")]))]), vec![node("n1", strv("hello"))])
     }
 
     fn apply_and_check(base: &SemioValueSnapshot, mutation: SemioValueMutation) -> (SemioValueSnapshot, SemioValueTreeDiff) {
@@ -662,11 +657,7 @@ mod tests {
     #[test]
     fn nested_path_targets_inner_entry() {
         let base = snap(mapv(vec![("outer", mapv(vec![("inner", intv("1"))]))]), vec![]);
-        let (result, _) = apply_and_check(&base, SemioValueMutation::SetMapEntry {
-            path: vec![SemioValuePathSegment::Key { key: "outer".into() }],
-            key: "inner".into(),
-            value: intv("42"),
-        });
+        let (result, _) = apply_and_check(&base, SemioValueMutation::SetMapEntry { path: vec![SemioValuePathSegment::Key { key: "outer".into() }], key: "inner".into(), value: intv("42") });
         assert_eq!(result.root, mapv(vec![("outer", mapv(vec![("inner", intv("42"))]))]));
     }
 

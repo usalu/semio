@@ -2,54 +2,5 @@ dialect grammar
 grammar stdio.zip.diff
 start diff
 
-# P2-P2: real one-line diff-text grammar matching `ZipDiff`'s hand-rolled
-# `print_zip_diff`/`parse_zip_diff` (../🦀️component.rs's `HandcraftedDiffCodec` region — the F6
-# gif89a/svg-precedent shape: space-separated top-level `key=value`/`key{...}` tokens, hex for
-# strings/bytes, positional `[f1,f2,...]` tuples, a uniform `[0]`/`[1,<T>]` tag for the one
-# `Option<Option<i64>>` tri-state field, single-letter `tag:value` pairs for the sparse
-# `ZipEntryDiff`, and `entries{[removed];[modified];[added]}` for the one NAME-keyed collection
-# triple — `removed`/`modified` keyed by hex-encoded entry name, `added` keyed by the
-# final-position `usize` index). Per this program's mandatory fix-report guidance
-# (`p2-p1-fix-report.md`): grouping is always `{...}`, never bare `(...)`; hex-byte runs reference
-# the framework `hex` MACRO (a bare `hex` ident with no matching production — `Symbol::Ref`'s own
-# production-then-macro fallback resolves it), never a hand-written `{INT|IDENT}*` production
-# (which silently mis-swallows an adjacent keyword-shaped token, per that same report).
-
-diff = {comment-part}? {entries-part}?
-
-comment-part = "comment" "=" hex
-
-entries-part = "entries" "{" "[" removed-list "]" ";" "[" modified-list "]" ";" "[" added-list "]" "}"
-
-# `enc_entries_diff`'s three `join(",")` sections — each degrades to the empty string when its
-# Vec is empty, matching `{...}?`'s own zero-match behavior for free.
-removed-list = {hex {"," hex}*}?
-modified-list = {modified-item {"," modified-item}*}?
-added-list = {added-item {"," added-item}*}?
-
-# `{hex-name}:{entry-diff-body}` (`dec_entries_diff`'s `modified` section).
-modified-item = hex ":" entry-diff-body
-# `{final-index}:{whole-entry-body}` (`dec_entries_diff`'s `added` section).
-added-item = INT ":" entry-body
-
-# `enc_entry_diff`'s single-letter `tag:value` pairs — only present (changed) fields are emitted,
-# comma-joined, in `[ ... ]`.
-entry-diff-body = "[" {diff-tag {"," diff-tag}*}? "]"
-diff-tag = "N" ":" hex | "D" ":" hex | "M" ":" method-char | "A" ":" INT | "T" ":" INT | "U" ":" opt-mtime | "F" ":" INT | "B" ":" INT | "V" ":" INT | "I" ":" INT | "E" ":" INT | "L" ":" extra-list | "C" ":" extra-list | "O" ":" hex
-
-# `enc_method`'s single-char tag — DIFFERENT from the sibling mutations facet's `"stored"`/
-# `"deflate"` DslScalar tags (this codec is fully hand-rolled, its own convention).
-method-char = "s" | "d"
-
-# `encode_option`'s uniform `[0]` (None) / `[1,<value>]` (Some) tri-state tag — here the tri-state
-# `unix_mtime`'s inner `Option<i64>` value.
-opt-mtime = "[" "0" "]" | "[" "1" "," INT "]"
-
-# `enc_extra_list`/`dec_extra_list` — a bracketed, comma-joined list of `ZipExtraField` pairs.
-extra-list = "[" {extra-item {"," extra-item}*}? "]"
-extra-item = "[" INT "," hex "]"
-
-# `enc_entry`'s full positional 14-tuple, field order matching `ZipEntry`'s own struct declaration
-# exactly (name, data, method, dos_date, dos_time, unix_mtime, flags, version_made_by,
-# version_needed, internal_attrs, external_attrs, local_extra, central_extra, comment).
-entry-body = "[" hex "," hex "," method-char "," INT "," INT "," opt-mtime "," INT "," INT "," INT "," INT "," INT "," extra-list "," extra-list "," hex "]"
+# 🔺️ The shared DslValue record recursively carries only archive comment and name-keyed logical members.
+diff = "value" "=" REST

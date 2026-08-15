@@ -12,9 +12,21 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 //#region 🔖️OpBinary
 const OP_KEYWORDS: [&str; 15] = [
-    "createObject", "deleteObject", "createModel", "deleteModel", "createProperties", "deleteProperties",
-    "bindRepresentation", "unbindRepresentation", "changeRepresentationPin",
-    "addType", "removeType", "renameType", "addDesign", "removeDesign", "editDesign",
+    "createObject",
+    "deleteObject",
+    "createModel",
+    "deleteModel",
+    "createProperties",
+    "deleteProperties",
+    "bindRepresentation",
+    "unbindRepresentation",
+    "changeRepresentationPin",
+    "addType",
+    "removeType",
+    "renameType",
+    "addDesign",
+    "removeDesign",
+    "editDesign",
 ];
 
 fn variant_ordinal(m: &SemioKitMutation) -> u8 {

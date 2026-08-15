@@ -48,18 +48,14 @@ mod tests {
     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Sample, Mp4Track};
 
     fn track(timescale: u32, sample_durations: &[u32]) -> Mp4Track {
-        Mp4Track {
-            timescale,
-            samples: sample_durations.iter().map(|&d| Mp4Sample { duration: d, ..Mp4Sample::default() }).collect(),
-            ..Mp4Track::default()
-        }
+        Mp4Track { timescale, samples: sample_durations.iter().map(|&d| Mp4Sample { duration: d, ..Mp4Sample::default() }).collect(), ..Mp4Track::default() }
     }
 
     #[test]
     fn container_duration_is_bounded_by_the_slowest_ending_track() {
         let snapshot = Mp4Snapshot {
             tracks: vec![
-                track(1000, &[33, 33]), // 0.066s
+                track(1000, &[33, 33]),         // 0.066s
                 track(1000, &[33, 33, 33, 33]), // 0.132s — the real container duration
             ],
             ..Mp4Snapshot::default()

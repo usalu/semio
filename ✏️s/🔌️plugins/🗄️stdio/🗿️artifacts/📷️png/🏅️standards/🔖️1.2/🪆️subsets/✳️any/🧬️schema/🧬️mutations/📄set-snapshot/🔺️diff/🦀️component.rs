@@ -1,6 +1,6 @@
 //! 🧩 set_snapshot diff leaf.
 
-use crate::artifacts::png::schema::diff::{PngDiff, diff_set_snapshot};
+use crate::artifacts::png::schema::diff::{diff_set_snapshot, PngDiff};
 use crate::artifacts::png::PngSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot: sparse field-by-field `between(base, next)`.

@@ -1,5 +1,5 @@
-use crate::artifacts::txt::{TxtSnapshot};
-use crate::artifacts::txt::schema::mutations::{TxtMutation, apply_txt_mutation};
+use crate::artifacts::txt::schema::mutations::{apply_txt_mutation, TxtMutation};
+use crate::artifacts::txt::TxtSnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
 pub fn apply(projection: &mut TxtSnapshot, mutation: &TxtMutation) {

@@ -5,15 +5,12 @@
 //! `✳️any/🚪️io` and pdf `1.7/✳️a/🚪️io` already established for this artifact family.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use std::sync::OnceLock;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
-    use semio_framework_plugin::{
-        ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
-        register_subset_validator, subset_validator_entry_of,
-    };
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::XlsxComposer as XlsxAnyComposer;
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxSnapshot;
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::XlsxComposer as XlsxAnyComposer;
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::check_strict_conformance;
+    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use std::sync::OnceLock;
 
     const DIALECT_STRICT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("strict") };
     const DIALECT_ANY: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
@@ -38,10 +35,7 @@ pub mod derived_composition {
             if !hard.is_empty() {
                 let mut all = hard.clone();
                 all.extend(soft);
-                return Err(ComposeError {
-                    message: format!("ISO/IEC 29500-1 Strict conformance violated: {} hard issue(s) -- not stamping the strict dialect", hard.len()),
-                    diagnostics: all,
-                });
+                return Err(ComposeError { message: format!("ISO/IEC 29500-1 Strict conformance violated: {} hard issue(s) -- not stamping the strict dialect", hard.len()), diagnostics: all });
             }
             let mut diagnostics = inner.diagnostics;
             diagnostics.extend(soft);
@@ -98,10 +92,10 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder as _};
-        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::{CODE_CONFORMANCE_ATTRIBUTE, CODE_NAMESPACE_MISMATCH};
-        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::XlsxStrictBuilderConstruction as XlsxStrictBuilder;
         use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxWorkbook;
+        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::XlsxStrictBuilderConstruction as XlsxStrictBuilder;
+        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::{CODE_CONFORMANCE_ATTRIBUTE, CODE_NAMESPACE_MISMATCH};
+        use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder as _};
 
         /// 🩹 `encode_xlsx` (`⚙️engine/🦀️component.rs`) always calls `regenerate_workbook_parts`,
         /// which REBUILDS `xl/workbook.xml` from `snap.workbook` (the typed model) on every encode --
@@ -112,11 +106,7 @@ pub mod derived_composition {
         /// same fix as docx's sibling `✳️strict` composer test.
         fn conforming_pack_bytes(snapshot: &XlsxSnapshot) -> Vec<u8> {
             let raw = crate::artifacts::zip::opc::encode_opc(&snapshot.opc).expect("valid opc package encodes");
-            let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-                <XlsxSnapshot as store::ArtifactDsl>::envelope_id(),
-                store::semio_format::Component::Pack,
-                1,
-            ).expect("valid envelope_id");
+            let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<XlsxSnapshot as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).expect("valid envelope_id");
             store::semio_format::wrap_binary(&envelope, &raw)
         }
 

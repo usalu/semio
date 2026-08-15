@@ -1,2 +1,2 @@
-""" 📝️ stdio.svg mutations text representation -- JSON per the sibling SvgMutation type. """
+""" 📝️ Structured tagged/hex stdio.svg mutation text representation. """
 scalar SvgMutationText

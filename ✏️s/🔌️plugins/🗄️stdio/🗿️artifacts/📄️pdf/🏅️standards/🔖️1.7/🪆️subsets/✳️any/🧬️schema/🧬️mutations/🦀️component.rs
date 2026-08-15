@@ -7,8 +7,8 @@
 //! `inverse()` is handcrafted per variant.
 
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{
-    self, dec_box, dec_dict_entry, dec_objref, dec_pdf_info, dec_pdf_object, dec_pdf_page, dec_str, decode_option, enc_box, enc_dict_entry, enc_objref, enc_pdf_info, enc_pdf_object, enc_pdf_page, enc_str,
-    encode_option, split_top_level, strip_brackets, PdfDiff, PdfPathSegment,
+    self, dec_box, dec_dict_entry, dec_objref, dec_pdf_info, dec_pdf_object, dec_pdf_page, dec_str, decode_option, enc_box, enc_dict_entry, enc_objref, enc_pdf_info, enc_pdf_object, enc_pdf_page, enc_str, encode_option, hex_decode, hex_encode,
+    split_top_level, strip_brackets, PdfDiff, PdfPathSegment,
 };
 /// 🧪️ P2-FG3: real recursive binary primitives backing the upgraded `OpBinary` impl below --
 /// reuses the diff facet's own `pub(crate)` binary codecs (`../🔺️diff/🦀️component.rs`) rather
@@ -18,7 +18,7 @@ use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{
     dec_box_bin, dec_objref_bin, dec_path_bin, dec_pdf_info_bin, dec_pdf_object_bin, dec_pdf_page_bin, dec_pdf_snapshot_bin, enc_box_bin, enc_objref_bin, enc_path_bin, enc_pdf_info_bin, enc_pdf_object_bin, enc_pdf_page_bin, enc_pdf_snapshot_bin,
     read_str_lp, write_str_lp,
 };
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot, PdfStreamFilter};
 #[cfg(test)]
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
@@ -347,29 +347,18 @@ fn dec_indirect_object(s: &str) -> Result<PdfIndirectObject, String> {
     Ok(PdfIndirectObject { id: dec_objref(id)?, value: dec_pdf_object(value)? })
 }
 fn enc_pdf_snapshot(s: &PdfSnapshot) -> String {
-    format!(
-        "[{},{},[{}],{},[{}],[{}]]",
-        enc_str(&s.schema),
-        enc_str(&s.declared_version),
-        s.pages.iter().map(enc_pdf_page).collect::<Vec<_>>().join(","),
-        enc_pdf_info(&s.info),
-        s.objects.iter().map(enc_indirect_object).collect::<Vec<_>>().join(","),
-        s.trailer.iter().map(enc_dict_entry).collect::<Vec<_>>().join(","),
-    )
+    let mut bytes = Vec::new();
+    enc_pdf_snapshot_bin(s, &mut bytes);
+    hex_encode(&bytes)
 }
 fn dec_pdf_snapshot(s: &str) -> Result<PdfSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema, declared_version, pages, info, objects, trailer] = parts.as_slice() else {
-        return Err(format!("snapshot: expected 6 fields, got {}", parts.len()));
-    };
-    Ok(PdfSnapshot {
-        schema: dec_str(schema)?,
-        declared_version: dec_str(declared_version)?,
-        pages: split_top_level(strip_brackets(pages)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_pdf_page).collect::<Result<Vec<_>, String>>()?,
-        info: dec_pdf_info(info)?,
-        objects: split_top_level(strip_brackets(objects)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_indirect_object).collect::<Result<Vec<_>, String>>()?,
-        trailer: split_top_level(strip_brackets(trailer)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_dict_entry).collect::<Result<Vec<_>, String>>()?,
-    })
+    let bytes = hex_decode(s)?;
+    let mut reader = store::ByteReader::new(&bytes);
+    let snapshot = dec_pdf_snapshot_bin(&mut reader)?;
+    if reader.remaining() != 0 {
+        return Err(format!("snapshot: {} trailing bytes", reader.remaining()));
+    }
+    Ok(snapshot)
 }
 
 fn print_pdf_mutation(m: &PdfMutation) -> String {
@@ -607,7 +596,7 @@ mod tests {
             info: PdfInfo { title: Some("Base".into()), ..Default::default() },
             objects: vec![
                 PdfIndirectObject { id: oref(1, 0), value: PdfObject::Dict(vec![PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Catalog".into()) }]) },
-                PdfIndirectObject { id: oref(2, 0), value: PdfObject::Stream { dict: vec![PdfDictEntry { key: "Length".into(), value: PdfObject::Int(3) }], data: vec![1, 2, 3], raw_filter: None } },
+                PdfIndirectObject { id: oref(2, 0), value: PdfObject::Stream { dict: vec![PdfDictEntry { key: "Length".into(), value: PdfObject::Int(3) }], data: vec![1, 2, 3], filters: vec![] } },
             ],
             trailer: vec![PdfDictEntry { key: "Root".into(), value: PdfObject::Ref(oref(1, 0)) }, PdfDictEntry { key: "Size".into(), value: PdfObject::Int(3) }],
         }
@@ -753,7 +742,7 @@ mod tests {
             PdfMutation::InsertObject { id: oref(4, 0), value: PdfObject::Array(vec![PdfObject::Real(1.5.into()), PdfObject::Str(vec![0, 255, 128]), PdfObject::Ref(oref(1, 0))]) },
             PdfMutation::RemoveObject { id: oref(2, 0) },
             PdfMutation::SetObjectValue { id: oref(1, 0), value: PdfObject::Name("Pages".into()) },
-            PdfMutation::SetObjectValue { id: oref(2, 0), value: PdfObject::Stream { dict: vec![PdfDictEntry { key: "Length".into(), value: PdfObject::Int(2) }], data: vec![1, 2], raw_filter: Some("FlateDecode".into()) } },
+            PdfMutation::SetObjectValue { id: oref(2, 0), value: PdfObject::Stream { dict: vec![PdfDictEntry { key: "Length".into(), value: PdfObject::Int(2) }], data: vec![1, 2], filters: vec![PdfStreamFilter::Flate { predictor: None }] } },
             PdfMutation::SetObjectValue { id: oref(2, 0), value: PdfObject::Null },
             PdfMutation::SetDictEntry { id: oref(1, 0), path: vec![], key: "Count".into(), value: PdfObject::Int(5) },
             PdfMutation::SetDictEntry { id: oref(1, 0), path: vec![PdfPathSegment::DictKey { key: "Kids".into() }, PdfPathSegment::ArrayIndex { index: 2 }], key: "Rotate".into(), value: PdfObject::Int(90) },

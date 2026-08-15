@@ -144,11 +144,7 @@ pub struct StepSnapshot {
 
 impl Default for StepSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_STEP_DOCUMENT_SCHEMA.into(),
-            header: StepHeader::default(),
-            entities: Vec::new(),
-        }
+        Self { schema: STDIO_STEP_DOCUMENT_SCHEMA.into(), header: StepHeader::default(), entities: Vec::new() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -174,11 +170,7 @@ fn value_from_part21(v: &Part21Value) -> StepValue {
         Part21Value::Ref(id) => StepValue::Reference(*id),
         Part21Value::List(items) => StepValue::Aggregate(items.iter().map(value_from_part21).collect()),
         Part21Value::Typed(name, items) => {
-            let value = if items.len() == 1 {
-                value_from_part21(&items[0])
-            } else {
-                StepValue::Aggregate(items.iter().map(value_from_part21).collect())
-            };
+            let value = if items.len() == 1 { value_from_part21(&items[0]) } else { StepValue::Aggregate(items.iter().map(value_from_part21).collect()) };
             StepValue::TypedValue { type_name: name.clone(), value: Box::new(value) }
         }
     }
@@ -223,10 +215,7 @@ fn file_description_from_part21(args: &[Part21Value]) -> StepFileDescription {
     StepFileDescription { description: as_string_list(args.first()), implementation_level: as_string(args.get(1)) }
 }
 fn file_description_to_part21(d: &StepFileDescription) -> Vec<Part21Value> {
-    vec![
-        Part21Value::List(d.description.iter().cloned().map(Part21Value::Str).collect()),
-        Part21Value::Str(d.implementation_level.clone()),
-    ]
+    vec![Part21Value::List(d.description.iter().cloned().map(Part21Value::Str).collect()), Part21Value::Str(d.implementation_level.clone())]
 }
 
 fn file_name_from_part21(args: &[Part21Value]) -> StepFileName {
@@ -260,18 +249,10 @@ fn file_schema_to_part21(s: &StepFileSchema) -> Vec<Part21Value> {
 }
 
 fn header_from_part21(h: &Part21Header) -> StepHeader {
-    StepHeader {
-        file_description: file_description_from_part21(&h.file_description),
-        file_name: file_name_from_part21(&h.file_name),
-        file_schema: file_schema_from_part21(&h.file_schema),
-    }
+    StepHeader { file_description: file_description_from_part21(&h.file_description), file_name: file_name_from_part21(&h.file_name), file_schema: file_schema_from_part21(&h.file_schema) }
 }
 fn header_to_part21(h: &StepHeader) -> Part21Header {
-    Part21Header {
-        file_description: file_description_to_part21(&h.file_description),
-        file_name: file_name_to_part21(&h.file_name),
-        file_schema: file_schema_to_part21(&h.file_schema),
-    }
+    Part21Header { file_description: file_description_to_part21(&h.file_description), file_name: file_name_to_part21(&h.file_name), file_schema: file_schema_to_part21(&h.file_schema) }
 }
 
 fn entity_from_part21(inst: &Part21Instance) -> StepEntity {
@@ -280,9 +261,7 @@ fn entity_from_part21(inst: &Part21Instance) -> StepEntity {
         Some((n, a)) => (n.clone(), a.iter().map(value_from_part21).collect()),
         None => (String::new(), Vec::new()),
     };
-    let complex = types
-        .map(|(n, a)| StepComplexType { name: n.clone(), args: a.iter().map(value_from_part21).collect() })
-        .collect();
+    let complex = types.map(|(n, a)| StepComplexType { name: n.clone(), args: a.iter().map(value_from_part21).collect() }).collect();
     StepEntity { id: inst.id, name, args, complex }
 }
 fn entity_to_part21(e: &StepEntity) -> Part21Instance {
@@ -323,25 +302,21 @@ impl StepSnapshot {
 //#region 🔖️Part21Codec
 impl store::ArtifactDsl for StepSnapshot {
     const EXTENSION: &'static str = "step";
-    fn envelope_id() -> &'static str { "stdio.step" }
+    fn envelope_id() -> &'static str {
+        "stdio.step"
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let document = parse_part21(body).map_err(|e| {
-            store::TextError::new(format!("step parse: {e}"), dsl::TextSpan::at(1, 1))
-        })?;
+        let document = parse_part21(body).map_err(|e| store::TextError::new(format!("step parse: {e}"), dsl::TextSpan::at(1, 1)))?;
         Ok(Self::from_part21_document(document))
     }
     fn print_dsl(&self) -> String {
         let body = write_part21(&self.to_part21_document());
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -350,22 +325,13 @@ impl store::ArtifactPack for StepSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = write_part21(&self.to_part21_document()).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -414,7 +380,8 @@ mod tests {
 
     #[test]
     fn complex_instance_keeps_every_type() {
-        let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=(IFCQUANTITYAREA($,$,$,10.5,$)IFCPHYSICALSIMPLEQUANTITY($,$,$,$));\nENDSEC;\nEND-ISO-10303-21;\n";
+        let text =
+            "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=(IFCQUANTITYAREA($,$,$,10.5,$)IFCPHYSICALSIMPLEQUANTITY($,$,$,$));\nENDSEC;\nEND-ISO-10303-21;\n";
         let snapshot = <StepSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("parse");
         let entity = &snapshot.entities[0];
         assert_eq!(entity.name, "IFCQUANTITYAREA");

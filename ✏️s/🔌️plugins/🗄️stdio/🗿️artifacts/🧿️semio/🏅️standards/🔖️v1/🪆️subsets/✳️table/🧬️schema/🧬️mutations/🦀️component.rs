@@ -24,12 +24,12 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Leaves
 use super::create_column;
 use super::delete_column;
-use super::rename_column;
-use super::reorder_columns;
+use super::edit_cell;
 use super::insert_row;
 use super::remove_row;
+use super::rename_column;
+use super::reorder_columns;
 use super::reorder_rows;
-use super::edit_cell;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -63,10 +63,7 @@ mod tests {
     fn fixture() -> SemioTableSnapshot {
         SemioTableSnapshot {
             schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
-            columns: vec![
-                SemioTableColumn { name: "label".into(), kind: SemioTableCellKind::Str },
-                SemioTableColumn { name: "score".into(), kind: SemioTableCellKind::Float },
-            ],
+            columns: vec![SemioTableColumn { name: "label".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "score".into(), kind: SemioTableCellKind::Float }],
             rows: vec![
                 SemioTableRow { cells: vec![SemioValue::Str { value: "a".into() }, SemioValue::Float { lexeme: "1.000".into() }] },
                 SemioTableRow { cells: vec![SemioValue::Str { value: "b".into() }, SemioValue::Float { lexeme: "2.000".into() }] },

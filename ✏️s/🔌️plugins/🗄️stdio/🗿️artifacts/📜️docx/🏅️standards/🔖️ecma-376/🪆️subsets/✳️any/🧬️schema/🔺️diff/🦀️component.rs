@@ -45,7 +45,9 @@ pub struct IndexedTripleDiff<D, T> {
 }
 
 impl<D, T> Default for IndexedTripleDiff<D, T> {
-    fn default() -> Self { Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() } }
+    fn default() -> Self {
+        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -76,7 +78,9 @@ pub struct NamedTripleDiff<K, D, T> {
 }
 
 impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
-    fn default() -> Self { Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() } }
+    fn default() -> Self {
+        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -334,7 +338,11 @@ where
     }
     let removed: Vec<usize> = (other.len()..base.len()).collect();
     let added: Vec<IndexAdded<T>> = (min_len..other.len()).map(|i| IndexAdded { index: i, item: other[i].clone() }).collect();
-    if modified.is_empty() && removed.is_empty() && added.is_empty() { None } else { Some(IndexedTripleDiff { removed, modified, added }) }
+    if modified.is_empty() && removed.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(IndexedTripleDiff { removed, modified, added })
+    }
 }
 
 fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
@@ -422,12 +430,7 @@ fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdd
 /// generalized): `absorb_item` recursively absorbs two per-field diffs of the SAME item;
 /// `apply_item` patches a `D` onto a `T` (needed when `d2` modifies an item `d1` just added).
 #[allow(clippy::too_many_arguments)]
-fn absorb_indexed<T, D>(
-    d1: IndexedTripleDiff<D, T>,
-    d2: IndexedTripleDiff<D, T>,
-    absorb_item: impl Fn(D, D) -> D,
-    apply_item: impl Fn(&T, &D) -> T,
-) -> IndexedTripleDiff<D, T>
+fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
 where
     T: Clone,
     D: Clone,
@@ -532,7 +535,11 @@ where
             added.push(o.clone());
         }
     }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(NamedTripleDiff { removed, modified, added }) }
+    if removed.is_empty() && modified.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(NamedTripleDiff { removed, modified, added })
+    }
 }
 
 fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
@@ -575,13 +582,7 @@ where
 /// 🧮️ Name-keyed absorb — identity is the KEY (not position), so no index transport is needed:
 /// a `d2`-removal of a `d1`-added key annihilates the add; a `d2`-modify of a `d1`-added key
 /// patches into the carried payload; everything else composes directly on the shared key space.
-fn absorb_named<K, T, D>(
-    d1: NamedTripleDiff<K, D, T>,
-    d2: NamedTripleDiff<K, D, T>,
-    key_of: impl Fn(&T) -> K,
-    absorb_item: impl Fn(D, D) -> D,
-    apply_item: impl Fn(&mut T, &D),
-) -> NamedTripleDiff<K, D, T>
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -638,7 +639,11 @@ fn diff_block(old: &DocxBlock, new: &DocxBlock) -> Option<DocxBlockDiff> {
 fn diff_paragraph(old: &DocxParagraph, new: &DocxParagraph) -> Option<DocxParagraphDiff> {
     let runs = between_indexed(&old.runs, &new.runs, diff_run);
     let style = if old.style != new.style { Some(new.style.clone()) } else { None };
-    if runs.is_none() && style.is_none() { None } else { Some(DocxParagraphDiff { runs, style }) }
+    if runs.is_none() && style.is_none() {
+        None
+    } else {
+        Some(DocxParagraphDiff { runs, style })
+    }
 }
 
 fn diff_run(old: &DocxRun, new: &DocxRun) -> Option<DocxRunDiff> {
@@ -655,33 +660,46 @@ fn diff_run(old: &DocxRun, new: &DocxRun) -> Option<DocxRunDiff> {
 
 fn diff_table(old: &DocxTable, new: &DocxTable) -> Option<DocxTableDiff> {
     let rows = between_indexed(&old.rows, &new.rows, diff_row);
-    if rows.is_none() { None } else { Some(DocxTableDiff { rows }) }
+    if rows.is_none() {
+        None
+    } else {
+        Some(DocxTableDiff { rows })
+    }
 }
 
 fn diff_row(old: &DocxTableRow, new: &DocxTableRow) -> Option<DocxTableRowDiff> {
     let cells = between_indexed(&old.cells, &new.cells, diff_cell);
-    if cells.is_none() { None } else { Some(DocxTableRowDiff { cells }) }
+    if cells.is_none() {
+        None
+    } else {
+        Some(DocxTableRowDiff { cells })
+    }
 }
 
 fn diff_cell(old: &DocxTableCell, new: &DocxTableCell) -> Option<DocxTableCellDiff> {
     let blocks = between_indexed(&old.blocks, &new.blocks, diff_block);
-    if blocks.is_none() { None } else { Some(DocxTableCellDiff { blocks }) }
+    if blocks.is_none() {
+        None
+    } else {
+        Some(DocxTableCellDiff { blocks })
+    }
 }
 
 fn diff_style(old: &DocxStyle, new: &DocxStyle) -> Option<DocxStyleDiff> {
     if old == new {
         return None;
     }
-    Some(DocxStyleDiff {
-        name: (old.name != new.name).then(|| new.name.clone()),
-        based_on: (old.based_on != new.based_on).then(|| new.based_on.clone()),
-    })
+    Some(DocxStyleDiff { name: (old.name != new.name).then(|| new.name.clone()), based_on: (old.based_on != new.based_on).then(|| new.based_on.clone()) })
 }
 
 fn diff_document(base: &DocxDocument, other: &DocxDocument) -> Option<DocxDocumentDiff> {
     let body = between_indexed(&base.body, &other.body, diff_block);
     let styles = between_named(&base.styles, &other.styles, |s| s.id.clone(), diff_style);
-    if body.is_none() && styles.is_none() { None } else { Some(DocxDocumentDiff { body, styles }) }
+    if body.is_none() && styles.is_none() {
+        None
+    } else {
+        Some(DocxDocumentDiff { body, styles })
+    }
 }
 
 fn apply_block(block: &mut DocxBlock, diff: &DocxBlockDiff) {
@@ -781,10 +799,7 @@ fn inverse_block(base: &DocxBlock, diff: &DocxBlockDiff) -> DocxBlockDiff {
         DocxBlockDiff::Replace { .. } => DocxBlockDiff::Replace { block: base.clone() },
         DocxBlockDiff::Paragraph(pd) => {
             let DocxBlock::Paragraph(p) = base else { return DocxBlockDiff::Replace { block: base.clone() } };
-            DocxBlockDiff::Paragraph(DocxParagraphDiff {
-                runs: pd.runs.as_ref().map(|rd| inverse_indexed(&p.runs, rd, inverse_run)),
-                style: pd.style.as_ref().map(|_| p.style.clone()),
-            })
+            DocxBlockDiff::Paragraph(DocxParagraphDiff { runs: pd.runs.as_ref().map(|rd| inverse_indexed(&p.runs, rd, inverse_run)), style: pd.style.as_ref().map(|_| p.style.clone()) })
         }
         DocxBlockDiff::Table(td) => {
             let DocxBlock::Table(t) = base else { return DocxBlockDiff::Replace { block: base.clone() } };
@@ -794,12 +809,7 @@ fn inverse_block(base: &DocxBlock, diff: &DocxBlockDiff) -> DocxBlockDiff {
 }
 
 fn inverse_run(base: &DocxRun, diff: &DocxRunDiff) -> DocxRunDiff {
-    DocxRunDiff {
-        text: diff.text.as_ref().map(|_| base.text.clone()),
-        bold: diff.bold.map(|_| base.bold),
-        italic: diff.italic.map(|_| base.italic),
-        underline: diff.underline.map(|_| base.underline),
-    }
+    DocxRunDiff { text: diff.text.as_ref().map(|_| base.text.clone()), bold: diff.bold.map(|_| base.bold), italic: diff.italic.map(|_| base.italic), underline: diff.underline.map(|_| base.underline) }
 }
 
 fn inverse_row(base: &DocxTableRow, diff: &DocxTableRowDiff) -> DocxTableRowDiff {
@@ -811,17 +821,11 @@ fn inverse_cell(base: &DocxTableCell, diff: &DocxTableCellDiff) -> DocxTableCell
 }
 
 fn inverse_style(base: &DocxStyle, diff: &DocxStyleDiff) -> DocxStyleDiff {
-    DocxStyleDiff {
-        name: diff.name.as_ref().map(|_| base.name.clone()),
-        based_on: diff.based_on.as_ref().map(|_| base.based_on.clone()),
-    }
+    DocxStyleDiff { name: diff.name.as_ref().map(|_| base.name.clone()), based_on: diff.based_on.as_ref().map(|_| base.based_on.clone()) }
 }
 
 fn inverse_document_diff(base: &DocxDocument, diff: &DocxDocumentDiff) -> DocxDocumentDiff {
-    DocxDocumentDiff {
-        body: diff.body.as_ref().map(|bd| inverse_indexed(&base.body, bd, inverse_block)),
-        styles: diff.styles.as_ref().map(|sd| inverse_named(&base.styles, sd, |s| s.id.clone(), inverse_style)),
-    }
+    DocxDocumentDiff { body: diff.body.as_ref().map(|bd| inverse_indexed(&base.body, bd, inverse_block)), styles: diff.styles.as_ref().map(|sd| inverse_named(&base.styles, sd, |s| s.id.clone(), inverse_style)) }
 }
 
 fn absorb_block_diff(a: DocxBlockDiff, b: DocxBlockDiff) -> DocxBlockDiff {
@@ -847,12 +851,7 @@ fn absorb_paragraph_diff(mut a: DocxParagraphDiff, b: DocxParagraphDiff) -> Docx
 }
 
 fn absorb_run_diff(a: DocxRunDiff, b: DocxRunDiff) -> DocxRunDiff {
-    DocxRunDiff {
-        text: b.text.or(a.text),
-        bold: b.bold.or(a.bold),
-        italic: b.italic.or(a.italic),
-        underline: b.underline.or(a.underline),
-    }
+    DocxRunDiff { text: b.text.or(a.text), bold: b.bold.or(a.bold), italic: b.italic.or(a.italic), underline: b.underline.or(a.underline) }
 }
 
 fn absorb_table_diff(mut a: DocxTableDiff, b: DocxTableDiff) -> DocxTableDiff {
@@ -930,17 +929,18 @@ fn absorb_ct_entries(a: DocxOpcCtEntriesDiff, b: DocxOpcCtEntriesDiff) -> DocxOp
 fn diff_content_types(old: &OpcContentTypes, new: &OpcContentTypes) -> Option<DocxOpcContentTypesDiff> {
     let defaults = diff_ct_entries(&old.defaults, &new.defaults);
     let overrides = diff_ct_entries(&old.overrides, &new.overrides);
-    if defaults.is_none() && overrides.is_none() { None } else { Some(DocxOpcContentTypesDiff { defaults, overrides }) }
+    if defaults.is_none() && overrides.is_none() {
+        None
+    } else {
+        Some(DocxOpcContentTypesDiff { defaults, overrides })
+    }
 }
 
 fn diff_part(old: &OpcPart, new: &OpcPart) -> Option<DocxOpcPartDiff> {
     if old == new {
         return None;
     }
-    Some(DocxOpcPartDiff {
-        content_type: (old.content_type != new.content_type).then(|| new.content_type.clone()),
-        bytes: (old.bytes != new.bytes).then(|| new.bytes.clone()),
-    })
+    Some(DocxOpcPartDiff { content_type: (old.content_type != new.content_type).then(|| new.content_type.clone()), bytes: (old.bytes != new.bytes).then(|| new.bytes.clone()) })
 }
 
 fn apply_part(part: &mut OpcPart, diff: &DocxOpcPartDiff) {
@@ -959,10 +959,7 @@ fn part_with_diff_applied(part: &OpcPart, diff: &DocxOpcPartDiff) -> OpcPart {
 }
 
 fn inverse_part(base: &OpcPart, diff: &DocxOpcPartDiff) -> DocxOpcPartDiff {
-    DocxOpcPartDiff {
-        content_type: diff.content_type.as_ref().map(|_| base.content_type.clone()),
-        bytes: diff.bytes.as_ref().map(|_| base.bytes.clone()),
-    }
+    DocxOpcPartDiff { content_type: diff.content_type.as_ref().map(|_| base.content_type.clone()), bytes: diff.bytes.as_ref().map(|_| base.bytes.clone()) }
 }
 
 fn absorb_part_diff(mut a: DocxOpcPartDiff, b: DocxOpcPartDiff) -> DocxOpcPartDiff {
@@ -983,11 +980,7 @@ fn diff_rel(old: &OpcRelationship, new: &OpcRelationship) -> Option<DocxOpcRelDi
     if old == new {
         return None;
     }
-    Some(DocxOpcRelDiff {
-        rel_type: (old.rel_type != new.rel_type).then(|| new.rel_type.clone()),
-        target: (old.target != new.target).then(|| new.target.clone()),
-        target_mode: (old.target_mode != new.target_mode).then_some(new.target_mode),
-    })
+    Some(DocxOpcRelDiff { rel_type: (old.rel_type != new.rel_type).then(|| new.rel_type.clone()), target: (old.target != new.target).then(|| new.target.clone()), target_mode: (old.target_mode != new.target_mode).then_some(new.target_mode) })
 }
 
 fn apply_rel(rel: &mut OpcRelationship, diff: &DocxOpcRelDiff) {
@@ -1003,11 +996,7 @@ fn apply_rel(rel: &mut OpcRelationship, diff: &DocxOpcRelDiff) {
 }
 
 fn inverse_rel(base: &OpcRelationship, diff: &DocxOpcRelDiff) -> DocxOpcRelDiff {
-    DocxOpcRelDiff {
-        rel_type: diff.rel_type.as_ref().map(|_| base.rel_type.clone()),
-        target: diff.target.as_ref().map(|_| base.target.clone()),
-        target_mode: diff.target_mode.map(|_| base.target_mode),
-    }
+    DocxOpcRelDiff { rel_type: diff.rel_type.as_ref().map(|_| base.rel_type.clone()), target: diff.target.as_ref().map(|_| base.target.clone()), target_mode: diff.target_mode.map(|_| base.target_mode) }
 }
 
 fn absorb_rel_diff(mut a: DocxOpcRelDiff, b: DocxOpcRelDiff) -> DocxOpcRelDiff {
@@ -1064,7 +1053,11 @@ fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap
             added.push((owner.clone(), list.clone()));
         }
     }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(DocxOpcRelationshipsDiff { removed, modified, added }) }
+    if removed.is_empty() && modified.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(DocxOpcRelationshipsDiff { removed, modified, added })
+    }
 }
 
 fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &DocxOpcRelationshipsDiff) {
@@ -1099,20 +1092,18 @@ fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &Do
 }
 
 fn absorb_relationships(d1: DocxOpcRelationshipsDiff, d2: DocxOpcRelationshipsDiff) -> DocxOpcRelationshipsDiff {
-    absorb_named(
-        d1,
-        d2,
-        |(owner, _)| owner.clone(),
-        absorb_rel_list_diff,
-        |(_, list), diff| *list = rel_list_with_diff_applied(list, diff),
-    )
+    absorb_named(d1, d2, |(owner, _)| owner.clone(), absorb_rel_list_diff, |(_, list), diff| *list = rel_list_with_diff_applied(list, diff))
 }
 
 fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<DocxOpcDiff> {
     let content_types = diff_content_types(&base.content_types, &other.content_types);
     let parts = diff_parts(&base.parts, &other.parts);
     let relationships = diff_relationships(&base.relationships, &other.relationships);
-    if content_types.is_none() && parts.is_none() && relationships.is_none() { None } else { Some(DocxOpcDiff { content_types, parts, relationships }) }
+    if content_types.is_none() && parts.is_none() && relationships.is_none() {
+        None
+    } else {
+        Some(DocxOpcDiff { content_types, parts, relationships })
+    }
 }
 
 fn apply_opc_diff(opc: &mut OpcPackage, diff: &DocxOpcDiff) {
@@ -1134,10 +1125,10 @@ fn apply_opc_diff(opc: &mut OpcPackage, diff: &DocxOpcDiff) {
 
 fn inverse_opc_diff(base: &OpcPackage, diff: &DocxOpcDiff) -> DocxOpcDiff {
     DocxOpcDiff {
-        content_types: diff.content_types.as_ref().map(|d| DocxOpcContentTypesDiff {
-            defaults: d.defaults.as_ref().map(|dd| inverse_ct_entries(&base.content_types.defaults, dd)),
-            overrides: d.overrides.as_ref().map(|dd| inverse_ct_entries(&base.content_types.overrides, dd)),
-        }),
+        content_types: diff
+            .content_types
+            .as_ref()
+            .map(|d| DocxOpcContentTypesDiff { defaults: d.defaults.as_ref().map(|dd| inverse_ct_entries(&base.content_types.defaults, dd)), overrides: d.overrides.as_ref().map(|dd| inverse_ct_entries(&base.content_types.overrides, dd)) }),
         parts: diff.parts.as_ref().map(|d| inverse_named(&base.parts, d, |p| p.path.clone(), inverse_part)),
         relationships: diff.relationships.as_ref().map(|d| inverse_relationships(&base.relationships, d)),
     }
@@ -1206,10 +1197,7 @@ impl MutationDiff<DocxSnapshot> for DocxDiff {
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<DocxSnapshot> for DocxDiff {
     fn inverse(&self, base: &DocxSnapshot) -> Self {
-        DocxDiff {
-            opc: self.opc.as_ref().map(|d| inverse_opc_diff(&base.opc, d)),
-            document: self.document.as_ref().map(|d| inverse_document_diff(&base.document, d)),
-        }
+        DocxDiff { opc: self.opc.as_ref().map(|d| inverse_opc_diff(&base.opc, d)), document: self.document.as_ref().map(|d| inverse_document_diff(&base.document, d)) }
     }
 
     fn between(base: &DocxSnapshot, other: &DocxSnapshot) -> Self {
@@ -1270,12 +1258,7 @@ pub fn diff_set_run_formatting(document: &DocxDocument, path: &DocxBlockPath, ru
     let Some(blocks) = resolve_blocks(&document.body, &path.segments) else { return DocxDiff::default() };
     let Some(DocxBlock::Paragraph(p)) = blocks.get(path.index) else { return DocxDiff::default() };
     let Some(run) = p.runs.get(run_index) else { return DocxDiff::default() };
-    let run_diff = DocxRunDiff {
-        text: None,
-        bold: (run.bold != bold).then_some(bold),
-        italic: (run.italic != italic).then_some(italic),
-        underline: (run.underline != underline).then_some(underline),
-    };
+    let run_diff = DocxRunDiff { text: None, bold: (run.bold != bold).then_some(bold), italic: (run.italic != italic).then_some(italic), underline: (run.underline != underline).then_some(underline) };
     if run_diff.bold.is_none() && run_diff.italic.is_none() && run_diff.underline.is_none() {
         return DocxDiff::default();
     }
@@ -1314,16 +1297,12 @@ pub fn diff_set_part(opc: &OpcPackage, path: &str, content_type: &str, bytes: Ve
             let new_part = OpcPart { path: p, content_type: content_type.to_string(), bytes };
             match diff_part(existing, &new_part) {
                 None => DocxDiff::default(),
-                Some(d) => DocxDiff {
-                    opc: Some(DocxOpcDiff { content_types: None, parts: Some(DocxOpcPartsDiff { modified: vec![NamedModified { key: existing.path.clone(), diff: d }], ..Default::default() }), relationships: None }),
-                    document: None,
-                },
+                Some(d) => {
+                    DocxDiff { opc: Some(DocxOpcDiff { content_types: None, parts: Some(DocxOpcPartsDiff { modified: vec![NamedModified { key: existing.path.clone(), diff: d }], ..Default::default() }), relationships: None }), document: None }
+                }
             }
         }
-        None => DocxDiff {
-            opc: Some(DocxOpcDiff { content_types: None, parts: Some(DocxOpcPartsDiff { added: vec![OpcPart { path: p, content_type: content_type.to_string(), bytes }], ..Default::default() }), relationships: None }),
-            document: None,
-        },
+        None => DocxDiff { opc: Some(DocxOpcDiff { content_types: None, parts: Some(DocxOpcPartsDiff { added: vec![OpcPart { path: p, content_type: content_type.to_string(), bytes }], ..Default::default() }), relationships: None }), document: None },
     }
 }
 
@@ -1364,7 +1343,11 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 pub(crate) fn enc_bool(b: &bool) -> String {
-    if *b { "1".to_string() } else { "0".to_string() }
+    if *b {
+        "1".to_string()
+    } else {
+        "0".to_string()
+    }
 }
 pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
     match s {
@@ -1625,14 +1608,22 @@ fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, String
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("indexed triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("indexed modified: bad entry {entry:?}"))?;
-        Ok(IndexModified { index: parse_usize(idx)?, diff: dec_d(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("indexed added: bad entry {entry:?}"))?;
-        Ok(IndexAdded { index: parse_usize(idx)?, item: dec_t(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("indexed modified: bad entry {entry:?}"))?;
+            Ok(IndexModified { index: parse_usize(idx)?, diff: dec_d(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("indexed added: bad entry {entry:?}"))?;
+            Ok(IndexAdded { index: parse_usize(idx)?, item: dec_t(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok(IndexedTripleDiff { removed, modified, added })
 }
 
@@ -1649,30 +1640,54 @@ fn dec_named_triple<K, D, T>(body: &str, dec_k: impl Fn(&str) -> Result<K, Strin
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| dec_k(s)).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (key, rest) = entry.split_once(':').ok_or_else(|| format!("named modified: bad entry {entry:?}"))?;
-        Ok(NamedModified { key: dec_k(key)?, diff: dec_d(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (key, rest) = entry.split_once(':').ok_or_else(|| format!("named modified: bad entry {entry:?}"))?;
+            Ok(NamedModified { key: dec_k(key)?, diff: dec_d(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| dec_t(s)).collect::<Result<Vec<_>, String>>()?;
     Ok(NamedTripleDiff { removed, modified, added })
 }
 //#endregion 🔖️GenericTripleCodecs
 
 //#region 🔖️DiffValueCodecs
-fn enc_runs_diff(d: &DocxRunsDiff) -> String { enc_indexed_triple(d, enc_run_diff, enc_run) }
-fn dec_runs_diff(s: &str) -> Result<DocxRunsDiff, String> { dec_indexed_triple(s, dec_run_diff, dec_run) }
+fn enc_runs_diff(d: &DocxRunsDiff) -> String {
+    enc_indexed_triple(d, enc_run_diff, enc_run)
+}
+fn dec_runs_diff(s: &str) -> Result<DocxRunsDiff, String> {
+    dec_indexed_triple(s, dec_run_diff, dec_run)
+}
 
-fn enc_blocks_diff(d: &DocxBlocksDiff) -> String { enc_indexed_triple(d, enc_block_diff, enc_block) }
-fn dec_blocks_diff(s: &str) -> Result<DocxBlocksDiff, String> { dec_indexed_triple(s, dec_block_diff, dec_block) }
+fn enc_blocks_diff(d: &DocxBlocksDiff) -> String {
+    enc_indexed_triple(d, enc_block_diff, enc_block)
+}
+fn dec_blocks_diff(s: &str) -> Result<DocxBlocksDiff, String> {
+    dec_indexed_triple(s, dec_block_diff, dec_block)
+}
 
-fn enc_table_rows_diff(d: &DocxTableRowsDiff) -> String { enc_indexed_triple(d, enc_table_row_diff, enc_row) }
-fn dec_table_rows_diff(s: &str) -> Result<DocxTableRowsDiff, String> { dec_indexed_triple(s, dec_table_row_diff, dec_row) }
+fn enc_table_rows_diff(d: &DocxTableRowsDiff) -> String {
+    enc_indexed_triple(d, enc_table_row_diff, enc_row)
+}
+fn dec_table_rows_diff(s: &str) -> Result<DocxTableRowsDiff, String> {
+    dec_indexed_triple(s, dec_table_row_diff, dec_row)
+}
 
-fn enc_table_cells_diff(d: &DocxTableCellsDiff) -> String { enc_indexed_triple(d, enc_table_cell_diff, enc_cell) }
-fn dec_table_cells_diff(s: &str) -> Result<DocxTableCellsDiff, String> { dec_indexed_triple(s, dec_table_cell_diff, dec_cell) }
+fn enc_table_cells_diff(d: &DocxTableCellsDiff) -> String {
+    enc_indexed_triple(d, enc_table_cell_diff, enc_cell)
+}
+fn dec_table_cells_diff(s: &str) -> Result<DocxTableCellsDiff, String> {
+    dec_indexed_triple(s, dec_table_cell_diff, dec_cell)
+}
 
-fn enc_styles_diff(d: &DocxStylesDiff) -> String { enc_named_triple(d, |k| enc_str(k), enc_style_diff, enc_style) }
-fn dec_styles_diff(s: &str) -> Result<DocxStylesDiff, String> { dec_named_triple(s, dec_str, dec_style_diff, dec_style) }
+fn enc_styles_diff(d: &DocxStylesDiff) -> String {
+    enc_named_triple(d, |k| enc_str(k), enc_style_diff, enc_style)
+}
+fn dec_styles_diff(s: &str) -> Result<DocxStylesDiff, String> {
+    dec_named_triple(s, dec_str, dec_style_diff, dec_style)
+}
 
 fn enc_run_diff(d: &DocxRunDiff) -> String {
     format!("[{},{},{},{}]", encode_option(&d.text, |v| enc_str(v)), encode_option(&d.bold, enc_bool), encode_option(&d.italic, enc_bool), encode_option(&d.underline, enc_bool))
@@ -1746,17 +1761,33 @@ fn dec_block_diff(s: &str) -> Result<DocxBlockDiff, String> {
     }
 }
 
-fn enc_ct_entries_diff(d: &DocxOpcCtEntriesDiff) -> String { enc_named_triple(d, |k| enc_str(k), |v: &String| enc_str(v), enc_ct_entry) }
-fn dec_ct_entries_diff(s: &str) -> Result<DocxOpcCtEntriesDiff, String> { dec_named_triple(s, dec_str, dec_str, dec_ct_entry) }
+fn enc_ct_entries_diff(d: &DocxOpcCtEntriesDiff) -> String {
+    enc_named_triple(d, |k| enc_str(k), |v: &String| enc_str(v), enc_ct_entry)
+}
+fn dec_ct_entries_diff(s: &str) -> Result<DocxOpcCtEntriesDiff, String> {
+    dec_named_triple(s, dec_str, dec_str, dec_ct_entry)
+}
 
-fn enc_parts_diff(d: &DocxOpcPartsDiff) -> String { enc_named_triple(d, |k| enc_str(k), enc_opc_part_diff, enc_opc_part) }
-fn dec_parts_diff(s: &str) -> Result<DocxOpcPartsDiff, String> { dec_named_triple(s, dec_str, dec_opc_part_diff, dec_opc_part) }
+fn enc_parts_diff(d: &DocxOpcPartsDiff) -> String {
+    enc_named_triple(d, |k| enc_str(k), enc_opc_part_diff, enc_opc_part)
+}
+fn dec_parts_diff(s: &str) -> Result<DocxOpcPartsDiff, String> {
+    dec_named_triple(s, dec_str, dec_opc_part_diff, dec_opc_part)
+}
 
-fn enc_rel_list_diff(d: &DocxOpcRelListDiff) -> String { enc_named_triple(d, |k| enc_str(k), enc_rel_diff, enc_rel) }
-fn dec_rel_list_diff(s: &str) -> Result<DocxOpcRelListDiff, String> { dec_named_triple(s, dec_str, dec_rel_diff, dec_rel) }
+fn enc_rel_list_diff(d: &DocxOpcRelListDiff) -> String {
+    enc_named_triple(d, |k| enc_str(k), enc_rel_diff, enc_rel)
+}
+fn dec_rel_list_diff(s: &str) -> Result<DocxOpcRelListDiff, String> {
+    dec_named_triple(s, dec_str, dec_rel_diff, dec_rel)
+}
 
-fn enc_relationships_diff(d: &DocxOpcRelationshipsDiff) -> String { enc_named_triple(d, |k| enc_str(k), enc_rel_list_diff, enc_rel_owner_entry) }
-fn dec_relationships_diff(s: &str) -> Result<DocxOpcRelationshipsDiff, String> { dec_named_triple(s, dec_str, dec_rel_list_diff, dec_rel_owner_entry) }
+fn enc_relationships_diff(d: &DocxOpcRelationshipsDiff) -> String {
+    enc_named_triple(d, |k| enc_str(k), enc_rel_list_diff, enc_rel_owner_entry)
+}
+fn dec_relationships_diff(s: &str) -> Result<DocxOpcRelationshipsDiff, String> {
+    dec_named_triple(s, dec_str, dec_rel_list_diff, dec_rel_owner_entry)
+}
 
 fn enc_opc_part_diff(d: &DocxOpcPartDiff) -> String {
     format!("[{},{}]", encode_option(&d.content_type, |v| enc_str(v)), encode_option(&d.bytes, |v: &Vec<u8>| hex_encode(v)))
@@ -2143,11 +2174,7 @@ fn enc_indexed_triple_bin<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn(&
         enc_t(&a.item, out);
     }
 }
-fn dec_indexed_triple_bin<D, T>(
-    reader: &mut store::ByteReader<'_>,
-    dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
-    dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
-) -> Result<IndexedTripleDiff<D, T>, String> {
+fn dec_indexed_triple_bin<D, T>(reader: &mut store::ByteReader<'_>, dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>, dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<IndexedTripleDiff<D, T>, String> {
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
@@ -2172,13 +2199,7 @@ fn dec_indexed_triple_bin<D, T>(
 
 /// 🏷️ Binary twin of `enc_named_triple`/`dec_named_triple` -- three varint-counted sections
 /// (removed keys / modified key+diff pairs / added whole items), generic over `K`/`D`/`T`.
-fn enc_named_triple_bin<K, D, T>(
-    diff: &NamedTripleDiff<K, D, T>,
-    enc_k: impl Fn(&K, &mut Vec<u8>),
-    enc_d: impl Fn(&D, &mut Vec<u8>),
-    enc_t: impl Fn(&T, &mut Vec<u8>),
-    out: &mut Vec<u8>,
-) {
+fn enc_named_triple_bin<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K, &mut Vec<u8>), enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
     for k in &diff.removed {
         enc_k(k, out);
@@ -2221,30 +2242,58 @@ fn dec_named_triple_bin<K, D, T>(
 //#endregion 🔖️GenericTripleBinaryCodecs
 
 //#region 🔖️DiffValueBinaryCodecs
-fn enc_runs_diff_bin(d: &DocxRunsDiff, out: &mut Vec<u8>) { enc_indexed_triple_bin(d, enc_run_diff_bin, enc_run_bin, out) }
-fn dec_runs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRunsDiff, String> { dec_indexed_triple_bin(reader, dec_run_diff_bin, dec_run_bin) }
+fn enc_runs_diff_bin(d: &DocxRunsDiff, out: &mut Vec<u8>) {
+    enc_indexed_triple_bin(d, enc_run_diff_bin, enc_run_bin, out)
+}
+fn dec_runs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRunsDiff, String> {
+    dec_indexed_triple_bin(reader, dec_run_diff_bin, dec_run_bin)
+}
 
-fn enc_blocks_diff_bin(d: &DocxBlocksDiff, out: &mut Vec<u8>) { enc_indexed_triple_bin(d, enc_block_diff_bin, enc_block_bin, out) }
-fn dec_blocks_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlocksDiff, String> { dec_indexed_triple_bin(reader, dec_block_diff_bin, dec_block_bin) }
+fn enc_blocks_diff_bin(d: &DocxBlocksDiff, out: &mut Vec<u8>) {
+    enc_indexed_triple_bin(d, enc_block_diff_bin, enc_block_bin, out)
+}
+fn dec_blocks_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlocksDiff, String> {
+    dec_indexed_triple_bin(reader, dec_block_diff_bin, dec_block_bin)
+}
 
-fn enc_table_rows_diff_bin(d: &DocxTableRowsDiff, out: &mut Vec<u8>) { enc_indexed_triple_bin(d, enc_table_row_diff_bin, enc_row_bin, out) }
-fn dec_table_rows_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRowsDiff, String> { dec_indexed_triple_bin(reader, dec_table_row_diff_bin, dec_row_bin) }
+fn enc_table_rows_diff_bin(d: &DocxTableRowsDiff, out: &mut Vec<u8>) {
+    enc_indexed_triple_bin(d, enc_table_row_diff_bin, enc_row_bin, out)
+}
+fn dec_table_rows_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRowsDiff, String> {
+    dec_indexed_triple_bin(reader, dec_table_row_diff_bin, dec_row_bin)
+}
 
-fn enc_table_cells_diff_bin(d: &DocxTableCellsDiff, out: &mut Vec<u8>) { enc_indexed_triple_bin(d, enc_table_cell_diff_bin, enc_cell_bin, out) }
-fn dec_table_cells_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCellsDiff, String> { dec_indexed_triple_bin(reader, dec_table_cell_diff_bin, dec_cell_bin) }
+fn enc_table_cells_diff_bin(d: &DocxTableCellsDiff, out: &mut Vec<u8>) {
+    enc_indexed_triple_bin(d, enc_table_cell_diff_bin, enc_cell_bin, out)
+}
+fn dec_table_cells_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCellsDiff, String> {
+    dec_indexed_triple_bin(reader, dec_table_cell_diff_bin, dec_cell_bin)
+}
 
-fn enc_styles_diff_bin(d: &DocxStylesDiff, out: &mut Vec<u8>) { enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_style_diff_bin, enc_style_bin, out) }
-fn dec_styles_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStylesDiff, String> { dec_named_triple_bin(reader, |r| read_str_lp(r), dec_style_diff_bin, dec_style_bin) }
+fn enc_styles_diff_bin(d: &DocxStylesDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_style_diff_bin, enc_style_bin, out)
+}
+fn dec_styles_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStylesDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_style_diff_bin, dec_style_bin)
+}
 
 fn enc_run_diff_bin(d: &DocxRunDiff, out: &mut Vec<u8>) {
     out.push(if d.text.is_some() { 1 } else { 0 });
-    if let Some(v) = &d.text { write_str_lp(out, v); }
+    if let Some(v) = &d.text {
+        write_str_lp(out, v);
+    }
     out.push(if d.bold.is_some() { 1 } else { 0 });
-    if let Some(v) = d.bold { out.push(v as u8); }
+    if let Some(v) = d.bold {
+        out.push(v as u8);
+    }
     out.push(if d.italic.is_some() { 1 } else { 0 });
-    if let Some(v) = d.italic { out.push(v as u8); }
+    if let Some(v) = d.italic {
+        out.push(v as u8);
+    }
     out.push(if d.underline.is_some() { 1 } else { 0 });
-    if let Some(v) = d.underline { out.push(v as u8); }
+    if let Some(v) = d.underline {
+        out.push(v as u8);
+    }
 }
 fn dec_run_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRunDiff, String> {
     let text = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
@@ -2256,26 +2305,28 @@ fn dec_run_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRunDiff, S
 
 fn enc_paragraph_diff_bin(pd: &DocxParagraphDiff, out: &mut Vec<u8>) {
     out.push(if pd.runs.is_some() { 1 } else { 0 });
-    if let Some(runs) = &pd.runs { enc_runs_diff_bin(runs, out); }
+    if let Some(runs) = &pd.runs {
+        enc_runs_diff_bin(runs, out);
+    }
     out.push(if pd.style.is_some() { 1 } else { 0 });
     if let Some(style_opt) = &pd.style {
         out.push(if style_opt.is_some() { 1 } else { 0 });
-        if let Some(v) = style_opt { write_str_lp(out, v); }
+        if let Some(v) = style_opt {
+            write_str_lp(out, v);
+        }
     }
 }
 fn dec_paragraph_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxParagraphDiff, String> {
     let runs = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_runs_diff_bin(reader)?) } else { None };
-    let style = if reader.read_u8().map_err(|e| e.to_string())? != 0 {
-        Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None })
-    } else {
-        None
-    };
+    let style = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None }) } else { None };
     Ok(DocxParagraphDiff { runs, style })
 }
 
 fn enc_table_diff_bin(d: &DocxTableDiff, out: &mut Vec<u8>) {
     out.push(if d.rows.is_some() { 1 } else { 0 });
-    if let Some(rows) = &d.rows { enc_table_rows_diff_bin(rows, out); }
+    if let Some(rows) = &d.rows {
+        enc_table_rows_diff_bin(rows, out);
+    }
 }
 fn dec_table_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableDiff, String> {
     let rows = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_table_rows_diff_bin(reader)?) } else { None };
@@ -2284,7 +2335,9 @@ fn dec_table_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableDif
 
 fn enc_table_row_diff_bin(d: &DocxTableRowDiff, out: &mut Vec<u8>) {
     out.push(if d.cells.is_some() { 1 } else { 0 });
-    if let Some(cells) = &d.cells { enc_table_cells_diff_bin(cells, out); }
+    if let Some(cells) = &d.cells {
+        enc_table_cells_diff_bin(cells, out);
+    }
 }
 fn dec_table_row_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRowDiff, String> {
     let cells = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_table_cells_diff_bin(reader)?) } else { None };
@@ -2293,7 +2346,9 @@ fn dec_table_row_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTabl
 
 fn enc_table_cell_diff_bin(d: &DocxTableCellDiff, out: &mut Vec<u8>) {
     out.push(if d.blocks.is_some() { 1 } else { 0 });
-    if let Some(blocks) = &d.blocks { enc_blocks_diff_bin(blocks, out); }
+    if let Some(blocks) = &d.blocks {
+        enc_blocks_diff_bin(blocks, out);
+    }
 }
 fn dec_table_cell_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCellDiff, String> {
     let blocks = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_blocks_diff_bin(reader)?) } else { None };
@@ -2302,20 +2357,20 @@ fn dec_table_cell_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTab
 
 fn enc_style_diff_bin(d: &DocxStyleDiff, out: &mut Vec<u8>) {
     out.push(if d.name.is_some() { 1 } else { 0 });
-    if let Some(v) = &d.name { write_str_lp(out, v); }
+    if let Some(v) = &d.name {
+        write_str_lp(out, v);
+    }
     out.push(if d.based_on.is_some() { 1 } else { 0 });
     if let Some(inner) = &d.based_on {
         out.push(if inner.is_some() { 1 } else { 0 });
-        if let Some(v) = inner { write_str_lp(out, v); }
+        if let Some(v) = inner {
+            write_str_lp(out, v);
+        }
     }
 }
 fn dec_style_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStyleDiff, String> {
     let name = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
-    let based_on = if reader.read_u8().map_err(|e| e.to_string())? != 0 {
-        Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None })
-    } else {
-        None
-    };
+    let based_on = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None }) } else { None };
     Ok(DocxStyleDiff { name, based_on })
 }
 
@@ -2323,9 +2378,18 @@ fn dec_style_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStyleDif
 /// twin of `enc_block_diff`/`dec_block_diff`.
 fn enc_block_diff_bin(d: &DocxBlockDiff, out: &mut Vec<u8>) {
     match d {
-        DocxBlockDiff::Paragraph(pd) => { out.push(0); enc_paragraph_diff_bin(pd, out); }
-        DocxBlockDiff::Table(td) => { out.push(1); enc_table_diff_bin(td, out); }
-        DocxBlockDiff::Replace { block } => { out.push(2); enc_block_bin(block, out); }
+        DocxBlockDiff::Paragraph(pd) => {
+            out.push(0);
+            enc_paragraph_diff_bin(pd, out);
+        }
+        DocxBlockDiff::Table(td) => {
+            out.push(1);
+            enc_table_diff_bin(td, out);
+        }
+        DocxBlockDiff::Replace { block } => {
+            out.push(2);
+            enc_block_bin(block, out);
+        }
     }
 }
 fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlockDiff, String> {
@@ -2346,9 +2410,13 @@ fn dec_ct_entries_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpc
 
 fn enc_opc_part_diff_bin(d: &DocxOpcPartDiff, out: &mut Vec<u8>) {
     out.push(if d.content_type.is_some() { 1 } else { 0 });
-    if let Some(v) = &d.content_type { write_str_lp(out, v); }
+    if let Some(v) = &d.content_type {
+        write_str_lp(out, v);
+    }
     out.push(if d.bytes.is_some() { 1 } else { 0 });
-    if let Some(v) = &d.bytes { write_bytes_lp(out, v); }
+    if let Some(v) = &d.bytes {
+        write_bytes_lp(out, v);
+    }
 }
 fn dec_opc_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcPartDiff, String> {
     let content_type = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
@@ -2365,11 +2433,17 @@ fn dec_parts_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcParts
 
 fn enc_rel_diff_bin(d: &DocxOpcRelDiff, out: &mut Vec<u8>) {
     out.push(if d.rel_type.is_some() { 1 } else { 0 });
-    if let Some(v) = &d.rel_type { write_str_lp(out, v); }
+    if let Some(v) = &d.rel_type {
+        write_str_lp(out, v);
+    }
     out.push(if d.target.is_some() { 1 } else { 0 });
-    if let Some(v) = &d.target { write_str_lp(out, v); }
+    if let Some(v) = &d.target {
+        write_str_lp(out, v);
+    }
     out.push(if d.target_mode.is_some() { 1 } else { 0 });
-    if let Some(v) = &d.target_mode { enc_target_mode_bin(v, out); }
+    if let Some(v) = &d.target_mode {
+        enc_target_mode_bin(v, out);
+    }
 }
 fn dec_rel_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcRelDiff, String> {
     let rel_type = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
@@ -2394,9 +2468,13 @@ fn dec_relationships_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<Docx
 
 fn enc_content_types_diff_bin(d: &DocxOpcContentTypesDiff, out: &mut Vec<u8>) {
     out.push(if d.defaults.is_some() { 1 } else { 0 });
-    if let Some(v) = &d.defaults { enc_ct_entries_diff_bin(v, out); }
+    if let Some(v) = &d.defaults {
+        enc_ct_entries_diff_bin(v, out);
+    }
     out.push(if d.overrides.is_some() { 1 } else { 0 });
-    if let Some(v) = &d.overrides { enc_ct_entries_diff_bin(v, out); }
+    if let Some(v) = &d.overrides {
+        enc_ct_entries_diff_bin(v, out);
+    }
 }
 fn dec_content_types_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcContentTypesDiff, String> {
     let defaults = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
@@ -2406,11 +2484,17 @@ fn dec_content_types_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<Docx
 
 pub(crate) fn enc_opc_diff_bin(d: &DocxOpcDiff, out: &mut Vec<u8>) {
     out.push(if d.content_types.is_some() { 1 } else { 0 });
-    if let Some(v) = &d.content_types { enc_content_types_diff_bin(v, out); }
+    if let Some(v) = &d.content_types {
+        enc_content_types_diff_bin(v, out);
+    }
     out.push(if d.parts.is_some() { 1 } else { 0 });
-    if let Some(v) = &d.parts { enc_parts_diff_bin(v, out); }
+    if let Some(v) = &d.parts {
+        enc_parts_diff_bin(v, out);
+    }
     out.push(if d.relationships.is_some() { 1 } else { 0 });
-    if let Some(v) = &d.relationships { enc_relationships_diff_bin(v, out); }
+    if let Some(v) = &d.relationships {
+        enc_relationships_diff_bin(v, out);
+    }
 }
 pub(crate) fn dec_opc_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcDiff, String> {
     let content_types = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_content_types_diff_bin(reader)?) } else { None };
@@ -2421,9 +2505,13 @@ pub(crate) fn dec_opc_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<Doc
 
 pub(crate) fn enc_document_diff_bin(d: &DocxDocumentDiff, out: &mut Vec<u8>) {
     out.push(if d.body.is_some() { 1 } else { 0 });
-    if let Some(v) = &d.body { enc_blocks_diff_bin(v, out); }
+    if let Some(v) = &d.body {
+        enc_blocks_diff_bin(v, out);
+    }
     out.push(if d.styles.is_some() { 1 } else { 0 });
-    if let Some(v) = &d.styles { enc_styles_diff_bin(v, out); }
+    if let Some(v) = &d.styles {
+        enc_styles_diff_bin(v, out);
+    }
 }
 pub(crate) fn dec_document_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxDocumentDiff, String> {
     let body = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_blocks_diff_bin(reader)?) } else { None };
@@ -2436,8 +2524,12 @@ pub(crate) fn dec_document_diff_bin(reader: &mut store::ByteReader<'_>) -> Resul
 //#region 🔖️TopLevel
 fn print_docx_diff(d: &DocxDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.opc { tokens.push(format!("opc={}", enc_opc_diff(v))); }
-    if let Some(v) = &d.document { tokens.push(format!("document={}", enc_document_diff(v))); }
+    if let Some(v) = &d.opc {
+        tokens.push(format!("opc={}", enc_opc_diff(v)));
+    }
+    if let Some(v) = &d.document {
+        tokens.push(format!("document={}", enc_document_diff(v)));
+    }
     tokens.join(" ")
 }
 fn parse_docx_diff(line: &str) -> Result<DocxDiff, String> {
@@ -2446,9 +2538,13 @@ fn parse_docx_diff(line: &str) -> Result<DocxDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("opc=") { d.opc = Some(dec_opc_diff(rest)?); }
-        else if let Some(rest) = token.strip_prefix("document=") { d.document = Some(dec_document_diff(rest)?); }
-        else { return Err(format!("docx diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("opc=") {
+            d.opc = Some(dec_opc_diff(rest)?);
+        } else if let Some(rest) = token.strip_prefix("document=") {
+            d.document = Some(dec_document_diff(rest)?);
+        } else {
+            return Err(format!("docx diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -2469,8 +2565,12 @@ impl protocol::DiffCodec for DocxDiff {
     /// `🔖️BinaryCodecs` above).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u8 = 0;
-        if self.opc.is_some() { flags |= 0b01; }
-        if self.document.is_some() { flags |= 0b10; }
+        if self.opc.is_some() {
+            flags |= 0b01;
+        }
+        if self.document.is_some() {
+            flags |= 0b10;
+        }
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
         if let Some(opc) = &self.opc {
             enc_opc_diff_bin(opc, &mut out);
@@ -2505,66 +2605,47 @@ pub(crate) fn xml_node(name: &str) -> XmlNode {
 }
 
 pub(crate) fn snapshot_a() -> DocxSnapshot {
-        let mut opc = OpcPackage::empty();
-        opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
-        opc.content_types.set_default("xml", "application/xml");
-        opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", b"<w:document/>".to_vec());
-        opc.set_part("word/toRemove.xml", "application/xml", b"gone".to_vec());
-        opc.add_relationship("", "rId1", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
-        opc.relationships.insert(
-            "word/toRemove.xml".into(),
-            vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/gone".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }],
-        );
+    let mut opc = OpcPackage::empty();
+    opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
+    opc.content_types.set_default("xml", "application/xml");
+    opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", b"<w:document/>".to_vec());
+    opc.set_part("word/toRemove.xml", "application/xml", b"gone".to_vec());
+    opc.add_relationship("", "rId1", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
+    opc.relationships.insert("word/toRemove.xml".into(), vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/gone".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }]);
 
-        DocxSnapshot::from_parts(
-            opc,
-            DocxDocument {
-                body: vec![
-                    DocxBlock::Paragraph(DocxParagraph {
-                        runs: vec![DocxRun { text: "old".into(), bold: false, extra_run_properties: vec![xml_node("rPr")], ..Default::default() }],
-                        style: None,
-                        extra_paragraph_properties: Vec::new(),
-                    }),
-                    DocxBlock::Table(DocxTable {
-                        rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("cell")], ..Default::default() }], ..Default::default() }],
-                        ..Default::default()
-                    }),
-                ],
-                styles: vec![
-                    DocxStyle { id: "keep".into(), name: "Keep".into(), based_on: Some("toRemove".into()) },
-                    DocxStyle { id: "toRemove".into(), name: "Gone".into(), based_on: Some("keep".into()) },
-                ],
-            },
-        )
-    }
+    DocxSnapshot::from_parts(
+        opc,
+        DocxDocument {
+            body: vec![
+                DocxBlock::Paragraph(DocxParagraph { runs: vec![DocxRun { text: "old".into(), bold: false, extra_run_properties: vec![xml_node("rPr")], ..Default::default() }], style: None, extra_paragraph_properties: Vec::new() }),
+                DocxBlock::Table(DocxTable { rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("cell")], ..Default::default() }], ..Default::default() }], ..Default::default() }),
+            ],
+            styles: vec![DocxStyle { id: "keep".into(), name: "Keep".into(), based_on: Some("toRemove".into()) }, DocxStyle { id: "toRemove".into(), name: "Gone".into(), based_on: Some("keep".into()) }],
+        },
+    )
+}
 
 pub(crate) fn snapshot_b() -> DocxSnapshot {
-        let mut opc = OpcPackage::empty();
-        opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
-        opc.content_types.set_default("xml", "application/xml");
-        opc.content_types.set_default("added", "application/octet-stream");
-        opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", b"<w:document/>changed".to_vec());
-        opc.set_part("word/added.xml", "application/xml", b"fresh".to_vec());
-        opc.add_relationship("", "rId1", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
-        opc.relationships.insert("word/added.xml".into(), vec![OpcRelationship { id: "rId3".into(), rel_type: "http://example/added".into(), target: "media/added.png".into(), target_mode: OpcTargetMode::External }]);
+    let mut opc = OpcPackage::empty();
+    opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
+    opc.content_types.set_default("xml", "application/xml");
+    opc.content_types.set_default("added", "application/octet-stream");
+    opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", b"<w:document/>changed".to_vec());
+    opc.set_part("word/added.xml", "application/xml", b"fresh".to_vec());
+    opc.add_relationship("", "rId1", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
+    opc.relationships.insert("word/added.xml".into(), vec![OpcRelationship { id: "rId3".into(), rel_type: "http://example/added".into(), target: "media/added.png".into(), target_mode: OpcTargetMode::External }]);
 
-        DocxSnapshot::from_parts(
-            opc,
-            DocxDocument {
-                body: vec![DocxBlock::Paragraph(DocxParagraph {
-                    runs: vec![
-                        DocxRun { text: "new".into(), bold: true, italic: true, extra_run_properties: Vec::new(), ..Default::default() },
-                        DocxRun { text: "second".into(), underline: true, ..Default::default() },
-                    ],
-                    style: Some("keep".into()),
-                    extra_paragraph_properties: vec![xml_node("pPr")],
-                })],
-                styles: vec![
-                    DocxStyle { id: "keep".into(), name: "Keep2".into(), based_on: None },
-                    DocxStyle { id: "added".into(), name: "Added".into(), based_on: None },
-                ],
-            },
-        )
+    DocxSnapshot::from_parts(
+        opc,
+        DocxDocument {
+            body: vec![DocxBlock::Paragraph(DocxParagraph {
+                runs: vec![DocxRun { text: "new".into(), bold: true, italic: true, extra_run_properties: Vec::new(), ..Default::default() }, DocxRun { text: "second".into(), underline: true, ..Default::default() }],
+                style: Some("keep".into()),
+                extra_paragraph_properties: vec![xml_node("pPr")],
+            })],
+            styles: vec![DocxStyle { id: "keep".into(), name: "Keep2".into(), based_on: None }, DocxStyle { id: "added".into(), name: "Added".into(), based_on: None }],
+        },
+    )
 }
 
 /// 🧪️ The demo cases proper — `default()` (empty diff) plus every real `between()` shape (both
@@ -2591,12 +2672,7 @@ mod handcrafted_diff_codec_tests {
     fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot_a();
         let b = snapshot_b();
-        let cases = vec![
-            DocxDiff::default(),
-            DocxDiff::between(&a, &b),
-            DocxDiff::between(&b, &a),
-            DocxDiff::between(&a, &a),
-        ];
+        let cases = vec![DocxDiff::default(), DocxDiff::between(&a, &b), DocxDiff::between(&b, &a), DocxDiff::between(&a, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

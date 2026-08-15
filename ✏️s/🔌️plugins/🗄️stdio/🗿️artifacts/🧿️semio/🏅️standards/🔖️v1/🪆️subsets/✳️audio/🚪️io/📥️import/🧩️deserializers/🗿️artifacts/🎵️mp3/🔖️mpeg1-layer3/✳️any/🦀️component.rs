@@ -12,11 +12,9 @@
 //! its own doc comment -- so this bridge doesn't fabricate a decode ID3v1's own type declines to
 //! do either).
 
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 use crate::artifacts::mp3::Mp3Snapshot;
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{
-    SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA,
-};
+use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp3", standard: StandardId("mpeg1-layer3"), subset: SubsetId("*") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") };
@@ -55,9 +53,15 @@ impl ArtifactDeserializer for SemioAudioFromMp3 {
 /// honestly to `0` (never a fabricated guess) for both the reserved index and unrecognized version.
 fn mpeg_sample_rate(version_id: u8, index: u8) -> u32 {
     match (version_id, index) {
-        (3, 0) => 44_100, (3, 1) => 48_000, (3, 2) => 32_000, // MPEG1
-        (2, 0) => 22_050, (2, 1) => 24_000, (2, 2) => 16_000, // MPEG2
-        (0, 0) => 11_025, (0, 1) => 12_000, (0, 2) => 8_000,  // MPEG2.5
+        (3, 0) => 44_100,
+        (3, 1) => 48_000,
+        (3, 2) => 32_000, // MPEG1
+        (2, 0) => 22_050,
+        (2, 1) => 24_000,
+        (2, 2) => 16_000, // MPEG2
+        (0, 0) => 11_025,
+        (0, 1) => 12_000,
+        (0, 2) => 8_000, // MPEG2.5
         _ => 0,
     }
 }
@@ -88,13 +92,35 @@ mod tests {
     fn real_world_mp3() -> Mp3Snapshot {
         Mp3Snapshot {
             schema: "stdio.mp3".into(),
-            id3v2: Some(Id3v2Tag { major_version: 3, minor_version: 0, flags: 0, frames: vec![Id3Frame { id: "TIT2".into(), flags: 0, data: {
-                let mut d = vec![0u8]; // ISO-8859-1
-                d.extend_from_slice(b"Test Tone");
-                d
-            } }] }),
+            id3v2: Some(Id3v2Tag {
+                major_version: 3,
+                minor_version: 0,
+                flags: 0,
+                frames: vec![Id3Frame {
+                    id: "TIT2".into(),
+                    flags: 0,
+                    data: {
+                        let mut d = vec![0u8]; // ISO-8859-1
+                        d.extend_from_slice(b"Test Tone");
+                        d
+                    },
+                }],
+            }),
             frames: vec![Mp3Frame {
-                header: Mp3FrameHeader { mpeg_version_id: 3, layer: 1, protection_bit: true, bitrate_index: 9, sample_rate_index: 0, padding: false, private_bit: false, channel_mode: 0, mode_extension: 0, copyright: false, original: true, emphasis: 0 },
+                header: Mp3FrameHeader {
+                    mpeg_version_id: 3,
+                    layer: 1,
+                    protection_bit: true,
+                    bitrate_index: 9,
+                    sample_rate_index: 0,
+                    padding: false,
+                    private_bit: false,
+                    channel_mode: 0,
+                    mode_extension: 0,
+                    copyright: false,
+                    original: true,
+                    emphasis: 0,
+                },
                 payload: vec![0u8; 100],
             }],
             id3v1: Some(Id3v1Tag { raw: vec![0u8; 128] }),

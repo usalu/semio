@@ -1,2 +1,2 @@
-; abnf stdio.mp4 mutations (binary) — one JSON-serialized Mp4Mutation op payload.
-document = *OCTET                                    ; UTF-8 JSON bytes
+; Shared tagged-record binary protocol for Mp4Mutation.
+document = 1*OCTET

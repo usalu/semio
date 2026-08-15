@@ -22,25 +22,17 @@ pub struct TsvArtifact {
 }
 
 impl Default for TsvArtifact {
-    fn default() -> Self { Self::from_snapshot(TsvSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(TsvSnapshot::default())
+    }
 }
 
 impl TsvArtifact {
     pub fn to_snapshot(&self) -> TsvSnapshot {
-        TsvSnapshot {
-            schema: self.schema.clone(),
-            records: self.records.clone(),
-            trailing_newline: self.trailing_newline,
-            line_ending: self.line_ending,
-        }
+        TsvSnapshot { schema: self.schema.clone(), records: self.records.clone(), trailing_newline: self.trailing_newline, line_ending: self.line_ending }
     }
     pub fn from_snapshot(snapshot: TsvSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            records: snapshot.records,
-            trailing_newline: snapshot.trailing_newline,
-            line_ending: snapshot.line_ending,
-        }
+        Self { schema: snapshot.schema, records: snapshot.records, trailing_newline: snapshot.trailing_newline, line_ending: snapshot.line_ending }
     }
     pub fn set_snapshot(&mut self, snapshot: TsvSnapshot) {
         self.schema = snapshot.schema;
@@ -85,20 +77,26 @@ pub fn tsv_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::tsv::standards::iana::subsets::any::schema::diff::TsvDiff;
-    use crate::artifacts::tsv::standards::iana::subsets::any::schema::mutations::{TsvMutation, apply_tsv_mutation};
+    use crate::artifacts::tsv::standards::iana::subsets::any::schema::mutations::{apply_tsv_mutation, TsvMutation};
     use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct TsvBuilderConstruction { snapshot: TsvSnapshot }
+    pub struct TsvBuilderConstruction {
+        snapshot: TsvSnapshot,
+    }
 
     impl ArtifactBuilder for TsvBuilderConstruction {
         type Snapshot = TsvSnapshot;
         type Mutation = TsvMutation;
         type Diff = TsvDiff;
-        fn empty() -> Self { Self { snapshot: TsvSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: TsvSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<TsvSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -113,7 +111,9 @@ pub mod derived_construction {
             self.snapshot = <TsvDiff as protocol::MutationDiff<TsvSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 }
 pub use derived_construction::*;
@@ -121,12 +121,14 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot;
     use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::{TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct TsvParts { pub snapshot: Option<TsvSnapshot> }
+    pub struct TsvParts {
+        pub snapshot: Option<TsvSnapshot>,
+    }
 
     pub struct TsvAnalyzerAnalysis;
 
@@ -141,7 +143,11 @@ pub mod derived_analysis {
                         return IoConfidence::High;
                     }
                     let marker = STDIO_TSV_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
                     if snapshot::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_TSV_DOCUMENT_SCHEMA) {

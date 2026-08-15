@@ -5,6 +5,6 @@
   "type": "object",
   "required": ["mutation"],
   "properties": {
-    "mutation": { "enum": ["noMutation", "setSnapshot", "setFtyp", "insertTrack", "removeTrack", "setTrackDimensions", "setTrackCodec", "insertSample", "removeSample", "setSampleSync", "addUnknownBox", "removeUnknownBox"] }
+    "mutation": { "enum": ["noMutation", "setSnapshot", "setFtyp", "insertTrack", "removeTrack", "setTrackDimensions", "setTrackCodec", "insertSample", "removeSample", "setSampleSync"] }
   }
 }

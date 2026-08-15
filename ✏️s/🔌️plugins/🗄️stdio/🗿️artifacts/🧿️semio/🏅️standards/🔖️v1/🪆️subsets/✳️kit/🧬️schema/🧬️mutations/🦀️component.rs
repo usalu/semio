@@ -15,21 +15,21 @@ use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::Semi
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
-use super::create_object;
-use super::delete_object;
-use super::create_model;
-use super::delete_model;
-use super::create_properties;
-use super::delete_properties;
-use super::bind_representation;
-use super::unbind_representation;
-use super::change_representation_pin;
+use super::add_design;
 use super::add_type;
+use super::bind_representation;
+use super::change_representation_pin;
+use super::create_model;
+use super::create_object;
+use super::create_properties;
+use super::delete_model;
+use super::delete_object;
+use super::delete_properties;
+use super::edit_design;
+use super::remove_design;
 use super::remove_type;
 use super::rename_type;
-use super::add_design;
-use super::remove_design;
-use super::edit_design;
+use super::unbind_representation;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -61,7 +61,9 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{demo_kit_snapshot, SemioKitDesign, SemioKitPiece};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
-    fn fixture() -> SemioKitSnapshot { demo_kit_snapshot() }
+    fn fixture() -> SemioKitSnapshot {
+        demo_kit_snapshot()
+    }
 
     fn ref_of(subset: &str, id: &str) -> store::os_io::ArtifactRef {
         store::os_io::ArtifactRef { artifact_id: id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } }

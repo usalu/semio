@@ -38,7 +38,11 @@ pub fn compute_wav_duration(snapshot: &WavSnapshot) -> WavDuration {
         WavData::Pcm8(v) => v.len() as u64,
         WavData::Float32(v) => v.len() as u64,
         WavData::Raw(bytes) => {
-            if snapshot.fmt.block_align > 0 { bytes.len() as u64 / snapshot.fmt.block_align as u64 } else { 0 }
+            if snapshot.fmt.block_align > 0 {
+                bytes.len() as u64 / snapshot.fmt.block_align as u64
+            } else {
+                0
+            }
         }
     };
     let channels = (snapshot.fmt.channels as u64).max(1);

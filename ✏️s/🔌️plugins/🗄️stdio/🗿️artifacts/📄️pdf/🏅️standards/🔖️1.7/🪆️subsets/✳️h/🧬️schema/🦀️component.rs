@@ -8,12 +8,12 @@
 pub use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use dsl::Diagnostic;
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::pdf::standards::v1_7::subsets::h::schema::check_h_conformance;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, PdfMutation};
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
+    use crate::artifacts::pdf::standards::v1_7::subsets::h::schema::check_h_conformance;
+    use dsl::Diagnostic;
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     #[derive(Clone, Debug)]
@@ -112,11 +112,11 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
-    use semio_framework_plugin::{AnalyzeSource, Analysis, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot};
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfAnalyzer as PdfAnyAnalyzer;
     pub use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfParts;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot};
+    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("h") };
@@ -152,11 +152,7 @@ pub mod derived_analysis {
     }
 
     fn scan_js_key_only(objects: &[PdfIndirectObject], already: &[ObjRef]) -> Vec<ObjRef> {
-        objects
-            .iter()
-            .filter(|o| !already.contains(&o.id) && o.value.as_dict().map(|d| d.iter().any(|e| e.key == "JS")).unwrap_or(false))
-            .map(|o| o.id)
-            .collect()
+        objects.iter().filter(|o| !already.contains(&o.id) && o.value.as_dict().map(|d| d.iter().any(|e| e.key == "JS")).unwrap_or(false)).map(|o| o.id).collect()
     }
 
     /// ✍️ Real check: `/Root/AcroForm/Fields` contains a resolved entry with `/FT /Sig`.
@@ -168,10 +164,7 @@ pub mod derived_analysis {
     }
 
     fn descriptor_has_embedded_file(objects: &[PdfIndirectObject], desc_ref: ObjRef) -> bool {
-        resolve_ref(objects, desc_ref)
-            .and_then(|o| o.as_dict())
-            .map(|d| d.iter().any(|e| e.key == "FontFile" || e.key == "FontFile2" || e.key == "FontFile3"))
-            .unwrap_or(false)
+        resolve_ref(objects, desc_ref).and_then(|o| o.as_dict()).map(|d| d.iter().any(|e| e.key == "FontFile" || e.key == "FontFile2" || e.key == "FontFile3")).unwrap_or(false)
     }
 
     fn non_embedded_fonts(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
@@ -188,11 +181,7 @@ pub mod derived_analysis {
                 .and_then(|e| e.value.as_array())
                 .map(|arr| {
                     arr.iter().any(|item| {
-                        resolve_item(objects, item)
-                            .and_then(|desc| desc.as_dict())
-                            .and_then(|dd| dd.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref()))
-                            .map(|r| descriptor_has_embedded_file(objects, r))
-                            .unwrap_or(false)
+                        resolve_item(objects, item).and_then(|desc| desc.as_dict()).and_then(|dd| dd.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref())).map(|r| descriptor_has_embedded_file(objects, r)).unwrap_or(false)
                     })
                 })
                 .unwrap_or(false);
@@ -288,10 +277,7 @@ pub mod derived_analysis {
 
         #[test]
         fn javascript_action_is_soft_never_hard() {
-            let objects = vec![PdfIndirectObject {
-                id: ObjRef { num: 1, gen: 0 },
-                value: PdfObject::Dict(vec![PdfDictEntry { key: "S".into(), value: PdfObject::Name("JavaScript".into()) }]),
-            }];
+            let objects = vec![PdfIndirectObject { id: ObjRef { num: 1, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "S".into(), value: PdfObject::Name("JavaScript".into()) }]) }];
             let snapshot = PdfSnapshot { objects, ..PdfSnapshot::default() };
             let diagnostics = check_h_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_JAVASCRIPT && d.severity == Severity::Warning), "got {diagnostics:?}");
@@ -302,19 +288,10 @@ pub mod derived_analysis {
             let objects = vec![
                 PdfIndirectObject {
                     id: ObjRef { num: 1, gen: 0 },
-                    value: PdfObject::Dict(vec![
-                        PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Catalog".into()) },
-                        PdfDictEntry { key: "AcroForm".into(), value: PdfObject::Ref(ObjRef { num: 2, gen: 0 }) },
-                    ]),
+                    value: PdfObject::Dict(vec![PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Catalog".into()) }, PdfDictEntry { key: "AcroForm".into(), value: PdfObject::Ref(ObjRef { num: 2, gen: 0 }) }]),
                 },
-                PdfIndirectObject {
-                    id: ObjRef { num: 2, gen: 0 },
-                    value: PdfObject::Dict(vec![PdfDictEntry { key: "Fields".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 3, gen: 0 })]) }]),
-                },
-                PdfIndirectObject {
-                    id: ObjRef { num: 3, gen: 0 },
-                    value: PdfObject::Dict(vec![PdfDictEntry { key: "FT".into(), value: PdfObject::Name("Sig".into()) }]),
-                },
+                PdfIndirectObject { id: ObjRef { num: 2, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "Fields".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 3, gen: 0 })]) }]) },
+                PdfIndirectObject { id: ObjRef { num: 3, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "FT".into(), value: PdfObject::Name("Sig".into()) }]) },
             ];
             let snapshot = PdfSnapshot { objects, ..PdfSnapshot::default() };
             let diagnostics = check_h_conformance(&snapshot);

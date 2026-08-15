@@ -2,50 +2,9 @@ dialect grammar
 grammar stdio.dwg.ac1018.mutations
 start op
 comment none
-
-# 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG2: real one-line
-# `OpText` grammar matching `DwgMutation`'s GENERIC `dsl::DslOps`-derived `print_op`/`parse_op`
-# (../🦀️component.rs `OpCodecs` region: `dsl::DslVariants::to_named_record` +
-# `dsl::print(..., dsl::JoinMode::Inline)` — no per-artifact custom printer, same mechanism as
-# `stdio.binary`/`stdio.txt`/`stdio.zip`'s own already-real mutations grammars). Every
-# keyword/field-key token below is copied verbatim from real, directly-observed `print_op()`
-# output for every `DwgMutation::demo_mutation_cases()` variant (temp `[DEBUG]` test, run once,
-# deleted before landing — never hand-derived independently of the real code path):
-#   no-mutation
-#   set-snapshot snapshot { schema=stdio.dwg version=AC1018 maintenance-version=2 codepage=30 bytes="QUMxMDE4AAAAAAAAAAAAAAAAAh4AAA==" section-names=[ "AcDb:Header" "AcDb:Classes" ] }
-#   set-version-info version=AC1018 maintenance-version=5 codepage=1252
-#   insert-section-name index=1 name="AcDb:Template"
-#   remove-section-name name="AcDb:Classes"
-# Keyword = kebab-case of the Rust variant name (`to_kebab`); field keys likewise kebab-case of
-# the Rust field ident, printed `key=value` in `keyed_field_rank` order: every scalar field
-# (`schema`/`version`/`maintenance-version`/`codepage`/`bytes` — `bytes` is `#[dsl(base64)]`
-# directly on `DwgSnapshot`, no `Option` layer in the way, so IT genuinely prints as one quoted
-# base64 token) is rank 0 (declaration order); `section-names` (`Vec<String>`) is the one rank-1
-# `List` field, printed last.
-op = no-mutation | set-snapshot | set-version-info | insert-section-name | remove-section-name
-
-# `scalar_to_text` prints a `String` field bare (`IDENT`) when it lexes back as exactly one
-# identifier (`is_bare_ident`), quoted+escaped (`TEXT`) otherwise — `AcDb:Classes`/`AC1018` are
-# both bare idents (`:` and digits are part of this dialect's `IDENT` alphabet), `AcDb:Template`
-# likewise.
-text-value = IDENT | TEXT
-
+op = no-mutation | set-snapshot | set-version-info
 no-mutation = "no-mutation"
-
-# `SetSnapshot`'s whole `DwgSnapshot` payload is `#[dsl(block)]` — printed as `snapshot { ... }`.
-set-snapshot = "set-snapshot" "snapshot" "{" snapshot-fields "}"
-snapshot-fields = schema-field version-field maintenance-version-field codepage-field bytes-field section-names-field
-schema-field = "schema" "=" text-value
-version-field = "version" "=" text-value
-maintenance-version-field = "maintenance-version" "=" INT
-codepage-field = "codepage" "=" INT
-# `bytes: Vec<u8>` is `#[dsl(base64)]` directly (no `Option` wrapper) — always one quoted TEXT
-# token (`FieldValue::Bytes64` -> `"{base64}"`), never bare, regardless of content.
-bytes-field = "bytes" "=" TEXT
-section-names-field = "section-names" "=" "[" text-value* "]"
-
+set-snapshot = "set-snapshot" "snapshot" "{" token* "}"
 set-version-info = "set-version-info" "version" "=" text-value "maintenance-version" "=" INT "codepage" "=" INT
-
-insert-section-name = "insert-section-name" "index" "=" INT "name" "=" text-value
-
-remove-section-name = "remove-section-name" "name" "=" text-value
+token = IDENT | TEXT | INT | "=" | "[" | "]" | "{" | "}"
+text-value = IDENT | TEXT

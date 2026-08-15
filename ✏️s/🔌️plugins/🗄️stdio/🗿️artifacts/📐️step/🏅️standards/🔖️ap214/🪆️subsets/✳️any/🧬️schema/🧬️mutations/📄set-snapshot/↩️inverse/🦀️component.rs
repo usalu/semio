@@ -1,5 +1,5 @@
-use crate::artifacts::step::{StepSnapshot};
 use crate::artifacts::step::schema::mutations::StepMutation;
+use crate::artifacts::step::StepSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

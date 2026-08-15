@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::bcf::schema::snapshot::BcfSnapshot;
-pub use crate::artifacts::bcf::schema::BcfArtifact;
 pub use crate::artifacts::bcf::schema::diff::BcfDiff;
 pub use crate::artifacts::bcf::schema::mutations::BcfMutation;
+pub use crate::artifacts::bcf::schema::snapshot::BcfSnapshot;
+pub use crate::artifacts::bcf::schema::BcfArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_BCF_DOCUMENT_SCHEMA: &str = "stdio.bcf";
@@ -119,16 +119,16 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: STDIO_BCF_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::bcf::standards::v2_1::subsets::any::io::io_registry as v2_1;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -137,10 +137,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("BcfComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("BcfComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

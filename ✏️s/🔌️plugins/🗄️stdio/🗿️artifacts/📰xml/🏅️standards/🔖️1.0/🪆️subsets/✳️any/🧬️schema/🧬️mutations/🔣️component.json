@@ -5,7 +5,7 @@
     { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
     { "type": "object", "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "type": "object" } } },
     { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "setDeclaration" }, "declaration": { "type": "object" } } },
-    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "setDoctype" }, "doctype": { "type": "string" } } },
+    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "setDoctype" }, "doctype": { "$ref": "https://semio.tech/schema/s.stdio.xml/snapshot.xml#/$defs/XmlDoctype" } } },
     {
       "type": "object",
       "required": ["mutation", "path", "index", "node"],

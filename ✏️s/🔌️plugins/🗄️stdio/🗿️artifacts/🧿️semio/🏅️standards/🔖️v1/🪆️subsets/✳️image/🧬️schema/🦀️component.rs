@@ -1,9 +1,7 @@
 //! 🧬️ SemioImageArtifact schema — full artifact state, mirrors `SemioImageSnapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{
-    SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot,
-};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -35,33 +33,17 @@ pub struct SemioImageArtifact {
 }
 
 impl Default for SemioImageArtifact {
-    fn default() -> Self { Self::from_snapshot(SemioImageSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(SemioImageSnapshot::default())
+    }
 }
 
 impl SemioImageArtifact {
     pub fn to_snapshot(&self) -> SemioImageSnapshot {
-        SemioImageSnapshot {
-            schema: self.schema.clone(),
-            width: self.width,
-            height: self.height,
-            colorspace: self.colorspace,
-            bit_depth: self.bit_depth,
-            frames: self.frames.clone(),
-            icc: self.icc.clone(),
-            metadata: self.metadata.clone(),
-        }
+        SemioImageSnapshot { schema: self.schema.clone(), width: self.width, height: self.height, colorspace: self.colorspace, bit_depth: self.bit_depth, frames: self.frames.clone(), icc: self.icc.clone(), metadata: self.metadata.clone() }
     }
     pub fn from_snapshot(snapshot: SemioImageSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            width: snapshot.width,
-            height: snapshot.height,
-            colorspace: snapshot.colorspace,
-            bit_depth: snapshot.bit_depth,
-            frames: snapshot.frames,
-            icc: snapshot.icc,
-            metadata: snapshot.metadata,
-        }
+        Self { schema: snapshot.schema, width: snapshot.width, height: snapshot.height, colorspace: snapshot.colorspace, bit_depth: snapshot.bit_depth, frames: snapshot.frames, icc: snapshot.icc, metadata: snapshot.metadata }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioImageSnapshot) {
         self.schema = snapshot.schema;
@@ -110,13 +92,15 @@ pub fn semio_image_artifact_schema_descriptor() -> schema::ArtifactSchemaDescrip
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-    use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{SemioImageMutation, apply_semio_image_mutation};
+    use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
     use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioImageBuilderConstruction { snapshot: SemioImageSnapshot }
+    pub struct SemioImageBuilderConstruction {
+        snapshot: SemioImageSnapshot,
+    }
 
     //#region 🔖️TypedConstructors
     impl SemioImageBuilderConstruction {
@@ -156,8 +140,12 @@ pub mod derived_construction {
         type Snapshot = SemioImageSnapshot;
         type Mutation = SemioImageMutation;
         type Diff = SemioImageDiff;
-        fn empty() -> Self { Self { snapshot: SemioImageSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: SemioImageSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioImageSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -172,7 +160,9 @@ pub mod derived_construction {
             self.snapshot = <SemioImageDiff as protocol::MutationDiff<SemioImageSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 
     //#region 🔖️Tests
@@ -205,11 +195,13 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioImageParts { pub snapshot: Option<SemioImageSnapshot> }
+    pub struct SemioImageParts {
+        pub snapshot: Option<SemioImageSnapshot>,
+    }
 
     pub struct SemioImageAnalyzerAnalysis;
 
@@ -221,10 +213,18 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
-                    if text.contains(STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                    if text.contains(STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }

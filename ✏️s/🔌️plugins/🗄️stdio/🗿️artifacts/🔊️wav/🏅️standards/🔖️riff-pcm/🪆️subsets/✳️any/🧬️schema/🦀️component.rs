@@ -1,7 +1,7 @@
 //! 🧬️ WavArtifact schema — full artifact state, mirrors `WavSnapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
 
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{WavSnapshot, WavFmt, WavData, RiffChunk};
+use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -21,25 +21,17 @@ pub struct WavArtifact {
 }
 
 impl Default for WavArtifact {
-    fn default() -> Self { Self::from_snapshot(WavSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(WavSnapshot::default())
+    }
 }
 
 impl WavArtifact {
     pub fn to_snapshot(&self) -> WavSnapshot {
-        WavSnapshot {
-            schema: self.schema.clone(),
-            fmt: self.fmt.clone(),
-            data: self.data.clone(),
-            other_chunks: self.other_chunks.clone(),
-        }
+        WavSnapshot { schema: self.schema.clone(), fmt: self.fmt.clone(), data: self.data.clone(), other_chunks: self.other_chunks.clone() }
     }
     pub fn from_snapshot(snapshot: WavSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            fmt: snapshot.fmt,
-            data: snapshot.data,
-            other_chunks: snapshot.other_chunks,
-        }
+        Self { schema: snapshot.schema, fmt: snapshot.fmt, data: snapshot.data, other_chunks: snapshot.other_chunks }
     }
     pub fn set_snapshot(&mut self, snapshot: WavSnapshot) {
         self.schema = snapshot.schema;
@@ -84,20 +76,26 @@ pub fn wav_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::diff::WavDiff;
-    use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations::{WavMutation, apply_wav_mutation};
+    use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation, WavMutation};
     use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct WavBuilderConstruction { snapshot: WavSnapshot }
+    pub struct WavBuilderConstruction {
+        snapshot: WavSnapshot,
+    }
 
     impl ArtifactBuilder for WavBuilderConstruction {
         type Snapshot = WavSnapshot;
         type Mutation = WavMutation;
         type Diff = WavDiff;
-        fn empty() -> Self { Self { snapshot: WavSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: WavSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<WavSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -112,7 +110,9 @@ pub mod derived_construction {
             self.snapshot = <WavDiff as protocol::MutationDiff<WavSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 }
 pub use derived_construction::*;
@@ -120,12 +120,14 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::wav::standards::riff_pcm::subsets::any::io;
     use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{WavSnapshot, STDIO_WAV_DOCUMENT_SCHEMA};
-    use crate::artifacts::wav::standards::riff_pcm::subsets::any::io as io;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct WavParts { pub snapshot: Option<WavSnapshot> }
+    pub struct WavParts {
+        pub snapshot: Option<WavSnapshot>,
+    }
 
     pub struct WavAnalyzerAnalysis;
 
@@ -140,7 +142,11 @@ pub mod derived_analysis {
                         return IoConfidence::High;
                     }
                     let marker = STDIO_WAV_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
                     if io::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_WAV_DOCUMENT_SCHEMA) {

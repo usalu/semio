@@ -9,8 +9,7 @@ pub fn register() {}
 
 /// 📤️ Encode xml into a TxtSnapshot.
 pub fn serialize(from: &XmlSnapshot) -> Result<TxtSnapshot, store::PackError> {
-    let text = String::from_utf8(from.export_utf8().map_err(store::PackError::Schema)?)
-        .map_err(|error| store::PackError::Schema(error.to_string()))?;
+    let text = String::from_utf8(from.export_utf8().map_err(store::PackError::Schema)?).map_err(|error| store::PackError::Schema(error.to_string()))?;
     Ok(TxtSnapshot::from_body(&text))
 }
 

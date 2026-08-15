@@ -18,14 +18,13 @@
 //!   correct, not byte-packing-optimal; gltf's own encoder is free to re-pack on a later true
 //!   binary write, this bridge only produces the typed `Snapshot`.
 
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::gltf::GltfSnapshot;
 use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
 use crate::artifacts::gltf::schema::snapshot::{
-    GltfAccessor, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAnimationSampler,
-    GltfAsset, GltfBuffer, GltfBufferView, GltfDocument, GltfInterpolation, GltfNode, GltfSourceForm,
+    GltfAccessor, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAnimationSampler, GltfAsset, GltfBuffer, GltfBufferView, GltfDocument, GltfInterpolation, GltfNode, GltfSourceForm,
 };
+use crate::artifacts::gltf::GltfSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimInterpolation, AnimTargetProperty, AnimValue, SemioAnimationSnapshot};
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
@@ -101,12 +100,7 @@ impl ArtifactSerializer for SemioAnimationToGltf {
                 };
                 let sampler_index = samplers.len();
                 samplers.push(GltfAnimationSampler { input: input_acc, interpolation, output: output_acc, extensions: None, extras: None });
-                channels.push(GltfAnimationChannel {
-                    sampler: sampler_index,
-                    target: GltfAnimationChannelTarget { node: Some(node_index), path, extensions: None, extras: None },
-                    extensions: None,
-                    extras: None,
-                });
+                channels.push(GltfAnimationChannel { sampler: sampler_index, target: GltfAnimationChannelTarget { node: Some(node_index), path, extensions: None, extras: None }, extensions: None, extras: None });
             }
             animations.push(GltfAnimation { channels, samplers, name: timeline.name.clone(), extensions: None, extras: None });
         }
@@ -162,9 +156,9 @@ fn push_accessor(buffers: &mut Vec<Vec<u8>>, buffer_views: &mut Vec<GltfBufferVi
 mod tests {
     use super::*;
     use crate::artifacts::gltf::engine::decode_accessor;
-    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
-    use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimKeyframe, AnimTarget, AnimTimeline, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
     use crate::artifacts::semio::standards::v1::subsets::animation::io::gltf_deserializer::SemioAnimationFromGltf;
+    use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimKeyframe, AnimTarget, AnimTimeline, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
     use semio_framework_plugin::ArtifactDeserializer;
 
     fn real_world_animation() -> SemioAnimationSnapshot {
@@ -176,10 +170,7 @@ mod tests {
                     AnimChannel {
                         target: AnimTarget { node: "hip".into(), property: AnimTargetProperty::Translation },
                         interpolation: AnimInterpolation::Linear,
-                        keyframes: vec![
-                            AnimKeyframe { t: 0.0, value: AnimValue::Vec3 { value: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } } },
-                            AnimKeyframe { t: 1.0, value: AnimValue::Vec3 { value: SemioPoint3 { x: 1.0, y: 0.5, z: 0.0 } } },
-                        ],
+                        keyframes: vec![AnimKeyframe { t: 0.0, value: AnimValue::Vec3 { value: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } } }, AnimKeyframe { t: 1.0, value: AnimValue::Vec3 { value: SemioPoint3 { x: 1.0, y: 0.5, z: 0.0 } } }],
                     },
                     AnimChannel {
                         target: AnimTarget { node: "spine".into(), property: AnimTargetProperty::Rotation },

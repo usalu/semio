@@ -176,3 +176,9 @@ This table preserves the initial sweep baseline: all 58 variants were `NOT-START
 3. Four-shard 58-variant sweep active with a shared ticket-local Cargo target.
 4. Generated JSON/Markdown reports and per-renderer boot logs remain in this ticket.
 5. Final rows require per-variant boot plus `PASS`, `FAIL`, or explicit `SKIP` state evidence; framework chrome alone is never counted.
+
+## Shared stdio gate audit before definitive sweep
+
+The 15:23 stdio gate snapshot reported eleven IFC `E0560` diagnostics for stale `physical` initializers. A source audit at 15:24 found that the concurrently developed IFC2X3 schema had since established `physical: Option<Part21PhysicalFile>` as a current first-class artifact/snapshot/diff field, with logical mutations invalidating the physical projection. Every current `Ifc2x3Snapshot` initializer now supplies that field; removing it would reverse the active lossless Part-21 design rather than reconcile a stale caller. The same gate contained no MP4 error, only warnings.
+
+The next canonical `@semio-tech/stdio-plugin:test-quick` compile emitted no IFC or MP4 diagnostic. It still exited red with 95 unrelated XML/SVG lexical-source syntax/type errors and one DWG physical-field error, recorded in `🧪️stdio-dwg-gate.log`. The runtime sweep remains stopped until the responsible stdio lanes and app-conformance lane provide one explicit source-stable green timestamp.

@@ -14,8 +14,8 @@
 //! geometry (flattened by walk order only, not by matrix) — same simplification the dxf↔drawing
 //! bridge's own entity walk makes.
 
-use crate::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgPathSegment, DwgSnapshot, paths_to_dwg_drawing};
 use crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing;
+use crate::artifacts::dwg::{paths_to_dwg_drawing, DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgPathSegment, DwgSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment, SemioDrawingSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
@@ -82,11 +82,7 @@ impl ArtifactSerializer for SemioDrawingToDwg {
                 drawing.entities.push(entity);
             }
             for (at, content) in texts {
-                drawing.entities.push(DwgEntity {
-                    layer: layer_index,
-                    color: DwgColor::ByLayer,
-                    geometry: DwgGeometry::Text { at: [at.x, at.y, 0.0], height: 1.0, rotation: 0.0, content },
-                });
+                drawing.entities.push(DwgEntity { layer: layer_index, color: DwgColor::ByLayer, geometry: DwgGeometry::Text { at: [at.x, at.y, 0.0], height: 1.0, rotation: 0.0, content } });
             }
         }
 

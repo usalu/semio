@@ -16,6 +16,10 @@ type PdfDecimal {
   scale: Int!
 }
 
+type PdfPredictor { predictor: Int! colors: Int! bitsPerComponent: Int! columns: Int! }
+type PdfStreamFilter { kind: PdfStreamFilterKind! predictor: PdfPredictor }
+enum PdfStreamFilterKind { FLATE ASCII_HEX ASCII_85 RUN_LENGTH }
+
 """ISO 32000-1 §7.3 COS object grammar, including streams. Exactly the kind-specific field(s)
 matching `kind` are populated. `str` is a byte string (not necessarily UTF-8)."""
 type PdfObject {
@@ -30,7 +34,7 @@ type PdfObject {
   refValue: ObjRef
   streamDict: [PdfDictEntry!]
   streamData: [Int!]
-  streamRawFilter: String
+  streamFilters: [PdfStreamFilter!]
 }
 
 enum PdfObjectKind {

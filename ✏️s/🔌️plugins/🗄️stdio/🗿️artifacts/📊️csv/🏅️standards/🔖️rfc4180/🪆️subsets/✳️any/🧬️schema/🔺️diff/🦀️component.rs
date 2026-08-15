@@ -10,11 +10,11 @@ use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord, CsvSnapshot};
 // (`.🦑️repo/🎫️tickets/…/ARTIFACT-SYSTEM-OVERHAUL…/f1-csv-report.md` `## Deviations`); reach it
 // via the same crate's directly-mounted `command` module instead of editing the shared facade.
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
 #[cfg(test)]
 use protocol::DiffCodec;
-use serde::{Deserialize, Serialize};
+use protocol::MutationDiff;
 use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️FieldDiff
@@ -35,17 +35,11 @@ impl CsvFieldDiff {
     }
     /// ▶️ Applies this patch to a field.
     pub fn apply(&self, base: &CsvField) -> CsvField {
-        CsvField {
-            value: self.value.clone().unwrap_or_else(|| base.value.clone()),
-            quoted: self.quoted.unwrap_or(base.quoted),
-        }
+        CsvField { value: self.value.clone().unwrap_or_else(|| base.value.clone()), quoted: self.quoted.unwrap_or(base.quoted) }
     }
     /// 🧭️ State delta between two fields.
     pub fn between(base: &CsvField, other: &CsvField) -> Self {
-        Self {
-            value: (base.value != other.value).then(|| other.value.clone()),
-            quoted: (base.quoted != other.quoted).then_some(other.quoted),
-        }
+        Self { value: (base.value != other.value).then(|| other.value.clone()), quoted: (base.quoted != other.quoted).then_some(other.quoted) }
     }
     /// ➕️ LWW field-level absorb: `other`'s populated sub-fields win.
     fn absorb(&mut self, other: Self) {
@@ -232,19 +226,8 @@ fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec
 /// that at least `k` survivor positions exist before it — without this, a diff with ONLY
 /// an `added` entry (no removed/modified at all, e.g. a lone `InsertRecord`) would simulate
 /// against a zero-length virtual base and lose every earlier survivor entirely.
-fn base_len_hint(
-    removed: &[usize],
-    modified_indices: impl Iterator<Item = usize>,
-    added_indices: impl Iterator<Item = usize>,
-) -> usize {
-    removed
-        .iter()
-        .copied()
-        .chain(modified_indices)
-        .chain(added_indices)
-        .max()
-        .map(|m| m + 1)
-        .unwrap_or(0)
+fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
+    removed.iter().copied().chain(modified_indices).chain(added_indices).max().map(|m| m + 1).unwrap_or(0)
 }
 //#endregion 🔖️IndexTransport
 
@@ -331,23 +314,14 @@ fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
         r.dedup();
         r.len()
     };
-    let needed_mid_len = d2
-        .removed
-        .iter()
-        .copied()
-        .chain(d2.modified.iter().map(|m| m.index))
-        .max()
-        .map(|m| m + 1)
-        .unwrap_or(0);
-    let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied())
-        .max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
+    let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0);
+    let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied()).max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
     let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices);
     //#endregion 🔖️PhiBaseToMid
 
     //#region 🔖️Seed
     let mut final_removed: Vec<usize> = d1.removed.clone();
-    let mut modified_map: BTreeMap<usize, CsvRecordDiff> =
-        d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
+    let mut modified_map: BTreeMap<usize, CsvRecordDiff> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
     // Parallel to `d1.added`, indexed by the SAME `i` used in `Slot::Added(i)`; `None` once
     // annihilated by a `d2` removal of that mid slot.
     let mut added_alive: Vec<Option<CsvRecordAdded>> = d1.added.into_iter().map(Some).collect();
@@ -387,11 +361,7 @@ fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
     for r in &final_removed {
         modified_map.remove(r);
     }
-    let mut final_modified: Vec<CsvRecordModified> = modified_map
-        .into_iter()
-        .filter(|(_, d)| !d.is_empty())
-        .map(|(index, diff)| CsvRecordModified { index, diff })
-        .collect();
+    let mut final_modified: Vec<CsvRecordModified> = modified_map.into_iter().filter(|(_, d)| !d.is_empty()).map(|(index, diff)| CsvRecordModified { index, diff }).collect();
     final_modified.sort_by_key(|m| m.index);
     //#endregion 🔖️FinalizeRemovedModified
 
@@ -407,16 +377,7 @@ fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
         })
         .collect();
     let d2_added_indices: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
-    let mid_len = d2
-        .removed
-        .iter()
-        .copied()
-        .chain(d2.modified.iter().map(|m| m.index))
-        .chain(alive_mid_positions.iter().copied())
-        .chain(d2_added_indices.iter().copied())
-        .max()
-        .map(|m| m + 1)
-        .unwrap_or(0);
+    let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map(|m| m + 1).unwrap_or(0);
     let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices);
     let mut mid_to_after: HashMap<usize, usize> = HashMap::new();
     for (pos, slot) in after_slots.iter().enumerate() {
@@ -430,10 +391,7 @@ fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
     let mut final_added: Vec<CsvRecordAdded> = Vec::new();
     for (ai, alive) in added_alive.into_iter().enumerate() {
         if let Some(added) = alive {
-            let mid_pos = mid_slots
-                .iter()
-                .position(|s| matches!(s, Slot::Added(idx) if *idx == ai))
-                .expect("added_alive index always has a corresponding mid slot");
+            let mid_pos = mid_slots.iter().position(|s| matches!(s, Slot::Added(idx) if *idx == ai)).expect("added_alive index always has a corresponding mid slot");
             if let Some(after_pos) = mid_to_after.get(&mid_pos) {
                 final_added.push(CsvRecordAdded { index: *after_pos, record: added.record });
             }
@@ -488,11 +446,7 @@ impl DiffAlgebra<CsvSnapshot> for CsvDiff {
             added.push(CsvRecordAdded { index: i, record: other.records[i].clone() });
         }
 
-        let records = if removed.is_empty() && modified.is_empty() && added.is_empty() {
-            None
-        } else {
-            Some(CsvRecordsDiff { removed, modified, added })
-        };
+        let records = if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(CsvRecordsDiff { removed, modified, added }) };
         Self { has_header, records }
     }
 
@@ -534,7 +488,9 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
 
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only): a top-level `sep` inside nested brackets is
 /// never mistaken for a field separator — the whole hand-rolled grammar's parsing primitive.
@@ -597,11 +553,7 @@ pub(crate) fn enc_record(r: &CsvRecord) -> String {
     format!("[{}]", r.fields.iter().map(enc_field).collect::<Vec<_>>().join(","))
 }
 pub(crate) fn dec_record(s: &str) -> Result<CsvRecord, String> {
-    let fields = split_top_level(strip_brackets(s)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(dec_field)
-        .collect::<Result<Vec<_>, String>>()?;
+    let fields = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_field).collect::<Result<Vec<_>, String>>()?;
     Ok(CsvRecord { fields })
 }
 //#endregion 🔖️ValueCodecs
@@ -609,15 +561,21 @@ pub(crate) fn dec_record(s: &str) -> Result<CsvRecord, String> {
 //#region 🔖️DiffValueCodecs
 fn enc_field_diff(d: &CsvFieldDiff) -> String {
     let mut parts = Vec::new();
-    if let Some(v) = &d.value { parts.push(format!("V:{}", enc_str(v))); }
-    if let Some(v) = d.quoted { parts.push(format!("Q:{}", if v { 1 } else { 0 })); }
+    if let Some(v) = &d.value {
+        parts.push(format!("V:{}", enc_str(v)));
+    }
+    if let Some(v) = d.quoted {
+        parts.push(format!("Q:{}", if v { 1 } else { 0 }));
+    }
     format!("[{}]", parts.join(","))
 }
 fn dec_field_diff(s: &str) -> Result<CsvFieldDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = CsvFieldDiff::default();
     for entry in split_top_level(inner, ',') {
-        if entry.is_empty() { continue; }
+        if entry.is_empty() {
+            continue;
+        }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("field diff: bad entry {entry:?}"))?;
         match tag {
             "V" => d.value = Some(dec_str(val)?),
@@ -628,18 +586,10 @@ fn dec_field_diff(s: &str) -> Result<CsvFieldDiff, String> {
     Ok(d)
 }
 fn enc_record_diff(d: &CsvRecordDiff) -> String {
-    encode_option(&d.fields, |fields| {
-        format!("[{}]", fields.iter().map(|f| encode_option(f, enc_field_diff)).collect::<Vec<_>>().join(","))
-    })
+    encode_option(&d.fields, |fields| format!("[{}]", fields.iter().map(|f| encode_option(f, enc_field_diff)).collect::<Vec<_>>().join(",")))
 }
 fn dec_record_diff(s: &str) -> Result<CsvRecordDiff, String> {
-    let fields = decode_option(s, |inner| {
-        split_top_level(strip_brackets(inner)?, ',')
-            .into_iter()
-            .filter(|s| !s.is_empty())
-            .map(|p| decode_option(p, dec_field_diff))
-            .collect::<Result<Vec<_>, String>>()
-    })?;
+    let fields = decode_option(s, |inner| split_top_level(strip_brackets(inner)?, ',').into_iter().filter(|s| !s.is_empty()).map(|p| decode_option(p, dec_field_diff)).collect::<Result<Vec<_>, String>>())?;
     Ok(CsvRecordDiff { fields })
 }
 
@@ -679,8 +629,12 @@ fn dec_records_diff(body: &str) -> Result<CsvRecordsDiff, String> {
 //#region 🔖️TopLevel
 fn print_csv_diff(d: &CsvDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = d.has_header { tokens.push(format!("has-header={}", if v { 1 } else { 0 })); }
-    if let Some(v) = &d.records { tokens.push(enc_records_diff(v)); }
+    if let Some(v) = d.has_header {
+        tokens.push(format!("has-header={}", if v { 1 } else { 0 }));
+    }
+    if let Some(v) = &d.records {
+        tokens.push(enc_records_diff(v));
+    }
     tokens.join(" ")
 }
 fn parse_csv_diff(line: &str) -> Result<CsvDiff, String> {
@@ -689,9 +643,13 @@ fn parse_csv_diff(line: &str) -> Result<CsvDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("has-header=") { d.has_header = Some(rest == "1"); }
-        else if let Some(rest) = token.strip_prefix("records{") { d.records = Some(dec_records_diff(rest.strip_suffix('}').ok_or_else(|| "records: missing closing brace".to_string())?)?); }
-        else { return Err(format!("csv diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("has-header=") {
+            d.has_header = Some(rest == "1");
+        } else if let Some(rest) = token.strip_prefix("records{") {
+            d.records = Some(dec_records_diff(rest.strip_suffix('}').ok_or_else(|| "records: missing closing brace".to_string())?)?);
+        } else {
+            return Err(format!("csv diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -863,29 +821,9 @@ mod handcrafted_diff_codec_tests {
 
     #[test]
     fn diff_codec_text_binary_roundtrip_law() {
-        let a = CsvSnapshot {
-            schema: "stdio.csv".into(),
-            has_header: true,
-            records: vec![
-                record(&[("name", false), ("note, with comma", true)]),
-                record(&[("a", false), ("b", false)]),
-                record(&[("x", false), ("y", false)]),
-            ],
-        };
-        let b = CsvSnapshot {
-            schema: "stdio.csv".into(),
-            has_header: false,
-            records: vec![
-                record(&[("new-a", true), ("new-b", false)]),
-                record(&[("x", false), ("y", false)]),
-                record(&[("brand [new]", true)]),
-            ],
-        };
-        let cases = vec![
-            CsvDiff::default(),
-            CsvDiff::between(&a, &b),
-            CsvDiff::between(&b, &a),
-        ];
+        let a = CsvSnapshot { schema: "stdio.csv".into(), has_header: true, records: vec![record(&[("name", false), ("note, with comma", true)]), record(&[("a", false), ("b", false)]), record(&[("x", false), ("y", false)])] };
+        let b = CsvSnapshot { schema: "stdio.csv".into(), has_header: false, records: vec![record(&[("new-a", true), ("new-b", false)]), record(&[("x", false), ("y", false)]), record(&[("brand [new]", true)])] };
+        let cases = vec![CsvDiff::default(), CsvDiff::between(&a, &b), CsvDiff::between(&b, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
@@ -908,24 +846,8 @@ mod handcrafted_diff_codec_tests {
         let grammar = dsl::parse_grammar(grammar_text).expect("parse diff grammar");
         let recognizer = dsl::Recognizer::compile(&grammar);
 
-        let a = CsvSnapshot {
-            schema: "stdio.csv".into(),
-            has_header: true,
-            records: vec![
-                record(&[("name", false), ("note, with comma", true)]),
-                record(&[("a", false), ("b", false)]),
-                record(&[("x", false), ("y", false)]),
-            ],
-        };
-        let b = CsvSnapshot {
-            schema: "stdio.csv".into(),
-            has_header: false,
-            records: vec![
-                record(&[("new-a", true), ("new-b", false)]),
-                record(&[("x", false), ("y", false)]),
-                record(&[("brand [new]", true)]),
-            ],
-        };
+        let a = CsvSnapshot { schema: "stdio.csv".into(), has_header: true, records: vec![record(&[("name", false), ("note, with comma", true)]), record(&[("a", false), ("b", false)]), record(&[("x", false), ("y", false)])] };
+        let b = CsvSnapshot { schema: "stdio.csv".into(), has_header: false, records: vec![record(&[("new-a", true), ("new-b", false)]), record(&[("x", false), ("y", false)]), record(&[("brand [new]", true)])] };
         let diffs = vec![CsvDiff::default(), CsvDiff::between(&a, &b), CsvDiff::between(&b, &a)];
         for d in diffs {
             let printed = d.print_diff();

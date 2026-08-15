@@ -1,6 +1,6 @@
 //! 🧬️ PptxArtifact schema — full artifact state.
 
-use crate::artifacts::pptx::schema::snapshot::{PptxPhysicalState, PptxPresentation, PptxXmlPart};
+use crate::artifacts::pptx::schema::snapshot::{PptxPresentation, PptxXmlPart};
 use crate::artifacts::pptx::PptxSnapshot;
 use crate::artifacts::zip::opc::OpcPackage;
 use schema::ArtifactSchema;
@@ -23,9 +23,6 @@ pub struct PptxArtifact {
     #[state(artifact)]
     #[serde(default)]
     pub presentation: PptxPresentation,
-    #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub physical: Option<PptxPhysicalState>,
 }
 //#endregion Artifact
 
@@ -39,12 +36,12 @@ impl Default for PptxArtifact {
 impl PptxArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> PptxSnapshot {
-        PptxSnapshot { schema: self.schema.clone(), opc: self.opc.clone(), xml_parts: self.xml_parts.clone(), presentation: self.presentation.clone(), physical: self.physical.clone() }
+        PptxSnapshot { schema: self.schema.clone(), opc: self.opc.clone(), xml_parts: self.xml_parts.clone(), presentation: self.presentation.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: PptxSnapshot) -> Self {
-        Self { schema: snapshot.schema, opc: snapshot.opc, xml_parts: snapshot.xml_parts, presentation: snapshot.presentation, physical: snapshot.physical }
+        Self { schema: snapshot.schema, opc: snapshot.opc, xml_parts: snapshot.xml_parts, presentation: snapshot.presentation }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -53,7 +50,6 @@ impl PptxArtifact {
         self.opc = snapshot.opc;
         self.xml_parts = snapshot.xml_parts;
         self.presentation = snapshot.presentation;
-        self.physical = snapshot.physical;
     }
 }
 //#endregion Conversions
@@ -228,13 +224,20 @@ pub mod derived_analysis {
                             diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <PptxSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                    AnalyzeSource::Binary(bytes) => {
+                        let result = if crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::sniff_pptx_bytes(bytes) {
+                            crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(bytes).map_err(|err| err.to_string())
+                        } else {
+                            <PptxSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|err| err.to_string())
+                        };
+                        match result {
+                            Ok(snapshot) => parts.snapshot = Some(snapshot),
+                            Err(err) => {
+                                confidence = IoConfidence::Low;
+                                diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err));
+                            }
                         }
-                    },
+                    }
                 }
             }
             Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
@@ -465,8 +468,8 @@ mod tests {
         let decoded = decode_pptx(&bytes).expect("decode");
         assert_eq!(decoded.presentation.slides[0].shapes.len(), 1);
         let PptxShape::Other { node } = &decoded.presentation.slides[0].shapes[0] else { panic!("expected Other shape") };
-        let node_json = serde_json::to_string(node).expect("serialize logical other node");
-        assert!(node_json.contains("p:graphicFrame") && node_json.contains("Table 1"));
+        let node_model = format!("{node:?}");
+        assert!(node_model.contains("p:graphicFrame") && node_model.contains("Table 1"));
 
         // Re-encode -> re-decode: the logical XML node must survive the round trip.
         let re_encoded = encode_pptx(&decoded).expect("re-encode");
@@ -564,8 +567,106 @@ mod tests {
         std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("read exact pptx fixture")
     }
 
-    fn assert_canonical_export(snapshot: &PptxSnapshot, expected: &[u8]) {
-        assert_eq!(encode_pptx(snapshot).expect("export canonical fixture"), expected);
+    fn local_member_names(bytes: &[u8]) -> Vec<String> {
+        let mut names = Vec::new();
+        let mut offset = 0usize;
+        while bytes.get(offset..offset + 4) == Some(b"PK\x03\x04") {
+            let compressed = u32::from_le_bytes(bytes[offset + 18..offset + 22].try_into().expect("compressed size")) as usize;
+            let name_len = u16::from_le_bytes(bytes[offset + 26..offset + 28].try_into().expect("name length")) as usize;
+            let extra_len = u16::from_le_bytes(bytes[offset + 28..offset + 30].try_into().expect("extra length")) as usize;
+            let name_start = offset + 30;
+            names.push(String::from_utf8(bytes[name_start..name_start + name_len].to_vec()).expect("UTF-8 member name"));
+            offset = name_start + name_len + extra_len + compressed;
+        }
+        names
+    }
+
+    fn local_compressed_members(bytes: &[u8]) -> Vec<(String, u16, u16, u16, u16, u16, u32, u32, Vec<u8>, Vec<u8>)> {
+        let mut members = Vec::new();
+        let mut offset = 0usize;
+        while bytes.get(offset..offset + 4) == Some(b"PK\x03\x04") {
+            let flags = u16::from_le_bytes(bytes[offset + 6..offset + 8].try_into().expect("flags"));
+            let method = u16::from_le_bytes(bytes[offset + 8..offset + 10].try_into().expect("method"));
+            let version = u16::from_le_bytes(bytes[offset + 4..offset + 6].try_into().expect("version"));
+            let time = u16::from_le_bytes(bytes[offset + 10..offset + 12].try_into().expect("time"));
+            let date = u16::from_le_bytes(bytes[offset + 12..offset + 14].try_into().expect("date"));
+            let crc = u32::from_le_bytes(bytes[offset + 14..offset + 18].try_into().expect("crc"));
+            let compressed = u32::from_le_bytes(bytes[offset + 18..offset + 22].try_into().expect("compressed size")) as usize;
+            let uncompressed = u32::from_le_bytes(bytes[offset + 22..offset + 26].try_into().expect("uncompressed size"));
+            let name_len = u16::from_le_bytes(bytes[offset + 26..offset + 28].try_into().expect("name length")) as usize;
+            let extra_len = u16::from_le_bytes(bytes[offset + 28..offset + 30].try_into().expect("extra length")) as usize;
+            let name_start = offset + 30;
+            let payload_start = name_start + name_len + extra_len;
+            members.push((
+                String::from_utf8(bytes[name_start..name_start + name_len].to_vec()).expect("UTF-8 member name"),
+                version,
+                flags,
+                method,
+                time,
+                date,
+                crc,
+                uncompressed,
+                bytes[name_start + name_len..payload_start].to_vec(),
+                bytes[payload_start..payload_start + compressed].to_vec(),
+            ));
+            offset = payload_start + compressed;
+        }
+        members
+    }
+
+    #[track_caller]
+    fn assert_exact_export(snapshot: &PptxSnapshot, expected: &[u8]) {
+        let actual = encode_pptx(snapshot).expect("export exact fixture");
+        if actual != expected {
+            let first_diff = actual.iter().zip(expected).position(|(left, right)| left != right).unwrap_or(actual.len().min(expected.len()));
+            let actual_names = local_member_names(&actual);
+            let expected_names = local_member_names(expected);
+            let first_order_diff = actual_names.iter().zip(&expected_names).position(|(left, right)| left != right).unwrap_or(actual_names.len().min(expected_names.len()));
+            let actual_compressed = local_compressed_members(&actual);
+            let expected_compressed = local_compressed_members(expected);
+            let first_compressed = actual_compressed.iter().zip(&expected_compressed).position(|(left, right)| left != right).unwrap_or(actual_compressed.len().min(expected_compressed.len()));
+            let compressed_detail = actual_compressed
+                .get(first_compressed)
+                .zip(expected_compressed.get(first_compressed))
+                .map(|(left, right)| {
+                    let prefix = left.9.iter().zip(&right.9).position(|(actual, expected)| actual != expected).unwrap_or(left.9.len().min(right.9.len()));
+                    format!(" compressed_name={} actual_version={} expected_version={} actual_flags={} expected_flags={} actual_method={} expected_method={} actual_time={} expected_time={} actual_date={} expected_date={} actual_crc={} expected_crc={} actual_uncompressed={} expected_uncompressed={} actual_extra={:?} expected_extra={:?} actual_compressed={} expected_compressed={} compressed_prefix={prefix}", left.0, left.1, right.1, left.2, right.2, left.3, right.3, left.4, right.4, left.5, right.5, left.6, right.6, left.7, right.7, left.8, right.8, left.9.len(), right.9.len())
+                })
+                .unwrap_or_default();
+            let actual_zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&actual).expect("decode actual mismatch");
+            let expected_zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(expected).expect("decode expected mismatch");
+            let first_entry = actual_zip.entries.iter().zip(&expected_zip.entries).position(|(left, right)| left != right).unwrap_or(actual_zip.entries.len().min(expected_zip.entries.len()));
+            let logical_mismatches = actual_zip
+                .entries
+                .iter()
+                .zip(&expected_zip.entries)
+                .filter(|(left, right)| left != right)
+                .take(16)
+                .map(|(left, right)| {
+                    let offset = left.data.iter().zip(&right.data).position(|(a, b)| a != b).unwrap_or(left.data.len().min(right.data.len()));
+                    let start = offset.saturating_sub(12);
+                    let actual_end = (offset + 44).min(left.data.len());
+                    let expected_end = (offset + 44).min(right.data.len());
+                    format!("{}:{}/{}@{}:{:?}!={:?}", left.name, left.data.len(), right.data.len(), offset, String::from_utf8_lossy(&left.data[start..actual_end]), String::from_utf8_lossy(&right.data[start..expected_end]),)
+                })
+                .collect::<Vec<_>>()
+                .join(",");
+            let entry_detail = actual_zip
+                .entries
+                .get(first_entry)
+                .zip(expected_zip.entries.get(first_entry))
+                .map(|(left, right)| {
+                    let data_diff = left.data.iter().zip(&right.data).position(|(a, b)| a != b).unwrap_or(left.data.len().min(right.data.len()));
+                    let start = data_diff.saturating_sub(24);
+                    let actual_end = (data_diff + 72).min(left.data.len());
+                    let expected_end = (data_diff + 72).min(right.data.len());
+                    let actual_snippet = String::from_utf8_lossy(&left.data[start..actual_end]);
+                    let expected_snippet = String::from_utf8_lossy(&right.data[start..expected_end]);
+                    format!(" name={} actual_data_len={} expected_data_len={} data_diff={data_diff} actual_snippet={actual_snippet:?} expected_snippet={expected_snippet:?}", left.name, left.data.len(), right.data.len())
+                })
+                .unwrap_or_default();
+            panic!("PPTX exact export mismatch: actual_len={} expected_len={} first_diff={first_diff} first_order_diff={first_order_diff} first_compressed={first_compressed}{compressed_detail} first_entry={first_entry}{entry_detail} logical_mismatches=[{logical_mismatches}]", actual.len(), expected.len());
+        }
     }
 
     fn first_positioned_shape(snapshot: &PptxSnapshot) -> (usize, usize, PptxTransform) {
@@ -585,15 +686,41 @@ mod tests {
     fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
         use crate::artifacts::pptx::{PptxDiff, PptxMutation};
         use protocol::{DiffAlgebra, DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
+        use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};
 
         let exact_bytes = exact_pptx_bytes();
         let snapshot = decode_pptx(&exact_bytes).expect("import exact fixture");
         assert_eq!(snapshot.presentation.slides.len(), 62);
         assert!(!snapshot.xml_parts.is_empty());
-        let canonical_bytes = encode_pptx(&snapshot).expect("canonicalize exact fixture logically");
-        let canonical_snapshot = decode_pptx(&canonical_bytes).expect("decode canonical fixture");
-        assert_eq!(canonical_snapshot, snapshot);
-        assert_canonical_export(&canonical_snapshot, &canonical_bytes);
+        let xml_paths: std::collections::HashSet<&str> = snapshot.xml_parts.iter().map(|part| part.path.as_str()).collect();
+        assert_eq!(xml_paths.len(), snapshot.xml_parts.len(), "every logical XML part must have one authority");
+        assert!(snapshot.xml_parts.iter().any(|part| part.path == "ppt/drawings/vmlDrawing1.vml"), "VML must be parsed as logical XML");
+        assert!(snapshot.opc.parts.iter().all(|part| !crate::artifacts::pptx::schema::snapshot::pptx_part_is_xml(&part.path, &part.content_type)), "OPC byte parts must contain no XML");
+        assert!(snapshot.opc.parts.iter().all(|part| !xml_paths.contains(part.path.as_str())), "XML and binary authorities must be disjoint");
+        assert!(
+            snapshot.opc.parts.iter().all(|part| {
+                let path = part.path.to_ascii_lowercase();
+                [".png", ".jpg", ".jpeg", ".emf", ".bin"].iter().any(|extension| path.ends_with(extension))
+            }),
+            "fixture binary parts must be genuine media or embedded object payloads"
+        );
+        let relationship_parts = snapshot.opc.relationships.values().filter(|relationships| !relationships.is_empty()).count();
+        assert_eq!(1 + relationship_parts + snapshot.xml_parts.len() + snapshot.opc.parts.len(), 211, "every native member must map to exactly one logical authority");
+        let mut duplicate_authority = snapshot.clone();
+        let duplicated = duplicate_authority.xml_parts.first().expect("fixture XML part");
+        duplicate_authority.opc.parts.push(crate::artifacts::zip::opc::OpcPart { path: duplicated.path.clone(), content_type: duplicated.content_type.clone(), bytes: b"<shadow/>".to_vec() });
+        assert!(encode_pptx(&duplicate_authority).is_err(), "export must reject XML stored as opaque OPC bytes");
+        assert_exact_export(&snapshot, &exact_bytes);
+
+        let analysis = derived_analysis::PptxAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&exact_bytes)]);
+        let analyzed = analysis.parts.snapshot.expect("analyze native PPTX fixture");
+        assert_eq!(analyzed, snapshot);
+        assert_exact_export(&analyzed, &exact_bytes);
+
+        let dialect = <derived_analysis::PptxAnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
+        let composition = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::PptxComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&exact_bytes) }]).expect("compose native PPTX fixture");
+        assert_eq!(composition.snapshot, snapshot);
+        assert_exact_export(&composition.snapshot, &exact_bytes);
 
         let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&exact_bytes).expect("decode exact zip");
         assert_eq!(zip.entries.len(), 211);
@@ -603,26 +730,26 @@ mod tests {
         let packed = store::ArtifactPack::encode_pack(&snapshot);
         let unpacked = <PptxSnapshot as store::ArtifactPack>::decode_pack(&packed).expect("unpack exact fixture");
         assert_eq!(unpacked, snapshot);
-        assert_canonical_export(&unpacked, &canonical_bytes);
+        assert_exact_export(&unpacked, &exact_bytes);
 
         let binary = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::artifacts::zip::v2_0::any::serialize(&snapshot).expect("serialize exact fixture to binary");
         let from_binary = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::artifacts::zip::v2_0::any::deserialize(&binary).expect("deserialize exact fixture from binary");
         assert_eq!(from_binary, snapshot);
-        assert_canonical_export(&from_binary, &canonical_bytes);
+        assert_exact_export(&from_binary, &exact_bytes);
 
         let dsl = store::ArtifactDsl::print_dsl(&snapshot);
         let parsed = <PptxSnapshot as store::ArtifactDsl>::parse_dsl(&dsl).expect("parse exact fixture dsl");
         assert_eq!(parsed, snapshot);
-        assert_canonical_export(&parsed, &canonical_bytes);
+        assert_exact_export(&parsed, &exact_bytes);
 
         let self_diff = PptxDiff::between(&snapshot, &snapshot);
         assert!(self_diff.is_empty());
-        assert_canonical_export(&self_diff.apply(&snapshot), &canonical_bytes);
+        assert_exact_export(&self_diff.apply(&snapshot), &exact_bytes);
 
         let mut no_op = snapshot.clone();
         let no_op_diff = crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut no_op, &PptxMutation::NoMutation);
         assert!(no_op_diff.is_empty());
-        assert_canonical_export(&no_op, &canonical_bytes);
+        assert_exact_export(&no_op, &exact_bytes);
 
         let (slide_index, shape_index, position) = first_positioned_shape(&snapshot);
         let changed_x = if position.x == i64::MAX { position.x - 1 } else { position.x + 1 };
@@ -630,12 +757,12 @@ mod tests {
         let mut changed = snapshot.clone();
         let forward = crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut changed, &mutation);
         assert_ne!(changed, snapshot);
-        assert_ne!(encode_pptx(&changed).expect("encode mutated presentation"), canonical_bytes);
+        assert_ne!(encode_pptx(&changed).expect("encode mutated presentation"), exact_bytes);
         for inverse in mutation.inverse(&snapshot) {
             crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut changed, &inverse);
         }
         assert_eq!(changed, snapshot);
-        assert_canonical_export(&changed, &canonical_bytes);
+        assert_exact_export(&changed, &exact_bytes);
 
         let mid = forward.apply(&snapshot);
         let inverse = forward.inverse(&snapshot);
@@ -644,30 +771,30 @@ mod tests {
         let restored = inverse.apply(&mid);
         assert_eq!(restored, snapshot);
         assert_eq!(absorbed.apply(&snapshot), snapshot);
-        assert_canonical_export(&restored, &canonical_bytes);
-        assert_canonical_export(&absorbed.apply(&snapshot), &canonical_bytes);
+        assert_exact_export(&restored, &exact_bytes);
+        assert_exact_export(&absorbed.apply(&snapshot), &exact_bytes);
 
         let mut without_xml_parts = snapshot.clone();
         without_xml_parts.xml_parts.clear();
         let xml_parts_diff = PptxDiff::between(&without_xml_parts, &snapshot);
         let printed_diff = xml_parts_diff.print_diff();
         let parsed_diff = PptxDiff::parse_diff(&printed_diff).expect("parse logical XML parts diff");
-        assert_canonical_export(&parsed_diff.apply(&without_xml_parts), &canonical_bytes);
+        assert_exact_export(&parsed_diff.apply(&without_xml_parts), &exact_bytes);
         let encoded_diff = xml_parts_diff.encode_diff().expect("encode logical XML parts diff");
         let decoded_diff = PptxDiff::decode_diff(&encoded_diff).expect("decode logical XML parts diff");
-        assert_canonical_export(&decoded_diff.apply(&without_xml_parts), &canonical_bytes);
+        assert_exact_export(&decoded_diff.apply(&without_xml_parts), &exact_bytes);
 
         let set_snapshot = PptxMutation::SetSnapshot { snapshot: snapshot.clone() };
         let printed_op = set_snapshot.print_op();
         let parsed_op = PptxMutation::parse_op(&printed_op).expect("parse exact set-snapshot");
         let mut via_text_op = without_xml_parts.clone();
         crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut via_text_op, &parsed_op);
-        assert_canonical_export(&via_text_op, &canonical_bytes);
+        assert_exact_export(&via_text_op, &exact_bytes);
         let encoded_op = set_snapshot.encode_op().expect("encode exact set-snapshot");
         let decoded_op = PptxMutation::decode_op(&encoded_op).expect("decode exact set-snapshot");
         let mut via_binary_op = without_xml_parts;
         crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut via_binary_op, &decoded_op);
-        assert_canonical_export(&via_binary_op, &canonical_bytes);
+        assert_exact_export(&via_binary_op, &exact_bytes);
     }
     //#endregion 🔖️ExactSourceRoundtrip
 

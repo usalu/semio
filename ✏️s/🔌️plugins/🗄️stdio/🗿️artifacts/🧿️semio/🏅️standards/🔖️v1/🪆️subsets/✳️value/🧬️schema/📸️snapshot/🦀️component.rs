@@ -110,11 +110,7 @@ pub struct SemioValueSnapshot {
 
 impl Default for SemioValueSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(),
-            root: SemioValue::default(),
-            nodes: Vec::new(),
-        }
+        Self { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: SemioValue::default(), nodes: Vec::new() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -132,16 +128,11 @@ impl Default for SemioValueSnapshot {
 /// functions directly rather than keeping its own second copy.
 pub(crate) fn enc_semio_value_snapshot(s: &SemioValueSnapshot) -> String {
     let nodes = s.nodes.iter().map(crate::artifacts::semio::standards::v1::subsets::value::schema::diff::enc_semio_value_node).collect::<Vec<_>>().join(",");
-    format!(
-        "[{},{},[{}]]",
-        crate::artifacts::semio::standards::v1::subsets::value::schema::diff::enc_str(&s.schema),
-        crate::artifacts::semio::standards::v1::subsets::value::schema::diff::enc_semio_value(&s.root),
-        nodes
-    )
+    format!("[{},{},[{}]]", crate::artifacts::semio::standards::v1::subsets::value::schema::diff::enc_str(&s.schema), crate::artifacts::semio::standards::v1::subsets::value::schema::diff::enc_semio_value(&s.root), nodes)
 }
 pub(crate) fn dec_semio_value_snapshot(s: &str) -> Result<SemioValueSnapshot, String> {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
-    use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value_node, dec_semio_value, dec_str};
+    use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value, dec_semio_value_node, dec_str};
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [schema_s, root_s, nodes_s] = parts.as_slice() else {
@@ -163,7 +154,9 @@ pub(crate) fn dec_semio_value_snapshot(s: &str) -> Result<SemioValueSnapshot, St
 /// `serde_json` anywhere in this impl block.
 impl store::ArtifactDsl for SemioValueSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str { STDIO_SEMIOVALUE_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_SEMIOVALUE_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -175,11 +168,7 @@ impl store::ArtifactDsl for SemioValueSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = enc_semio_value_snapshot(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -188,22 +177,14 @@ impl store::ArtifactPack for SemioValueSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = enc_semio_value_snapshot(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         let text = std::str::from_utf8(&inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -230,10 +211,7 @@ pub(crate) fn demo_semio_value_snapshot() -> SemioValueSnapshot {
                 SemioValueEntry { key: "count".into(), value: SemioValue::Int { lexeme: "42".into() } },
                 SemioValueEntry { key: "ratio".into(), value: SemioValue::Float { lexeme: "3.500".into() } },
                 SemioValueEntry { key: "blob".into(), value: SemioValue::Bytes { value: vec![0, 1, 2, 255] } },
-                SemioValueEntry {
-                    key: "tags".into(),
-                    value: SemioValue::List { items: vec![SemioValue::Str { value: "a".into() }, SemioValue::Null] },
-                },
+                SemioValueEntry { key: "tags".into(), value: SemioValue::List { items: vec![SemioValue::Str { value: "a".into() }, SemioValue::Null] } },
                 SemioValueEntry { key: "linked".into(), value: SemioValue::Ref { id: ValueId::new("n1") } },
             ],
         },
@@ -272,12 +250,7 @@ mod tests {
         let snap = SemioValueSnapshot {
             schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(),
             root: SemioValue::List {
-                items: vec![
-                    SemioValue::Int { lexeme: "9007199254740993".into() },
-                    SemioValue::Float { lexeme: "1.2300".into() },
-                    SemioValue::Bytes { value: (0..=255u8).collect() },
-                    SemioValue::Ref { id: ValueId::new("root-child") },
-                ],
+                items: vec![SemioValue::Int { lexeme: "9007199254740993".into() }, SemioValue::Float { lexeme: "1.2300".into() }, SemioValue::Bytes { value: (0..=255u8).collect() }, SemioValue::Ref { id: ValueId::new("root-child") }],
             },
             nodes: vec![SemioValueNode { id: ValueId::new("root-child"), value: SemioValue::Str { value: "leaf".into() } }],
         };

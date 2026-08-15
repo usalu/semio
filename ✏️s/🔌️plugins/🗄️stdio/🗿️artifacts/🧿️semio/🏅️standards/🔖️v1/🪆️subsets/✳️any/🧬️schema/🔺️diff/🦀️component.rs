@@ -7,28 +7,28 @@
 //! "same-kind-nested | Replace" split gif/svg's own recursive-node diffs use for their own
 //! heterogeneous variant trees, applied here one level up at the artifact-subset boundary.
 
+use crate::artifacts::semio::standards::v1::subsets::animation::schema::{diff::SemioAnimationDiff, snapshot::SemioAnimationSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::audio::schema::{diff::SemioAudioDiff, snapshot::SemioAudioSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::{diff::SemioBrepDiff, snapshot::SemioBrepSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::cad::schema::{diff::SemioCadDiff, snapshot::SemioCadSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::document::schema::{diff::SemioDocumentDiff, snapshot::SemioDocumentSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::{diff::SemioDrawingDiff, snapshot::SemioDrawingSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::flow::schema::{diff::SemioFlowDiff, snapshot::SemioFlowSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::graph::schema::{diff::SemioGraphDiff, snapshot::SemioGraphSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::{diff::SemioImageDiff, snapshot::SemioImageSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::kit::schema::{diff::SemioKitDiff, snapshot::SemioKitSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::{diff::SemioMeshDiff, snapshot::SemioMeshSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::model::schema::{diff::SemioModelDiff, snapshot::SemioModelSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::{diff::SemioValueTreeDiff, snapshot::SemioValueSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::document::schema::{diff::SemioDocumentDiff, snapshot::SemioDocumentSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::cad::schema::{diff::SemioCadDiff, snapshot::SemioCadSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::{diff::SemioDrawingDiff, snapshot::SemioDrawingSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::{diff::SemioImageDiff, snapshot::SemioImageSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::video::schema::{diff::SemioVideoDiff, snapshot::SemioVideoSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::{diff::SemioAudioDiff, snapshot::SemioAudioSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::{diff::SemioAnimationDiff, snapshot::SemioAnimationSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::{diff::SemioPresentationDiff, snapshot::SemioPresentationSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::{diff::SemioFlowDiff, snapshot::SemioFlowSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::text::schema::{diff::SemioTextDiff, snapshot::SemioTextSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::table::schema::{diff::SemioTableDiff, snapshot::SemioTableSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::{diff::SemioGraphDiff, snapshot::SemioGraphSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::object::schema::{diff::SemioObjectDiff, snapshot::SemioObjectSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::{diff::SemioKitDiff, snapshot::SemioKitSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::presentation::schema::{diff::SemioPresentationDiff, snapshot::SemioPresentationSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::table::schema::{diff::SemioTableDiff, snapshot::SemioTableSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::text::schema::{diff::SemioTextDiff, snapshot::SemioTextSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::value::schema::{diff::SemioValueTreeDiff, snapshot::SemioValueSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::video::schema::{diff::SemioVideoDiff, snapshot::SemioVideoSnapshot};
+use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
 use protocol::MutationDiff;
-use protocol::command::DiffAlgebra;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
@@ -110,24 +110,78 @@ impl MutationDiff<SemioSnapshot> for SemioDiff {
             // into the replacement snapshot by re-using this impl's own `apply` (self-consistent,
             // no duplicated dispatch logic) and keep the result as the new replacement.
             (Replace(s1), o) => Replace(Box::new(o.apply(&s1))),
-            (Brep(mut d1), Brep(d2)) => { d1.absorb(d2); Brep(d1) }
-            (Mesh(mut d1), Mesh(d2)) => { d1.absorb(d2); Mesh(d1) }
-            (Model(mut d1), Model(d2)) => { d1.absorb(d2); Model(d1) }
-            (Value(mut d1), Value(d2)) => { d1.absorb(d2); Value(d1) }
-            (Document(mut d1), Document(d2)) => { d1.absorb(d2); Document(d1) }
-            (Cad(mut d1), Cad(d2)) => { d1.absorb(d2); Cad(d1) }
-            (Drawing(mut d1), Drawing(d2)) => { d1.absorb(d2); Drawing(d1) }
-            (Image(mut d1), Image(d2)) => { d1.absorb(d2); Image(d1) }
-            (Video(mut d1), Video(d2)) => { d1.absorb(d2); Video(d1) }
-            (Audio(mut d1), Audio(d2)) => { d1.absorb(d2); Audio(d1) }
-            (Animation(mut d1), Animation(d2)) => { d1.absorb(d2); Animation(d1) }
-            (Presentation(mut d1), Presentation(d2)) => { d1.absorb(d2); Presentation(d1) }
-            (Flow(mut d1), Flow(d2)) => { d1.absorb(d2); Flow(d1) }
-            (Text(mut d1), Text(d2)) => { d1.absorb(d2); Text(d1) }
-            (Table(mut d1), Table(d2)) => { d1.absorb(d2); Table(d1) }
-            (Graph(mut d1), Graph(d2)) => { d1.absorb(d2); Graph(d1) }
-            (Object(mut d1), Object(d2)) => { d1.absorb(d2); Object(d1) }
-            (Kit(mut d1), Kit(d2)) => { d1.absorb(d2); Kit(d1) }
+            (Brep(mut d1), Brep(d2)) => {
+                d1.absorb(d2);
+                Brep(d1)
+            }
+            (Mesh(mut d1), Mesh(d2)) => {
+                d1.absorb(d2);
+                Mesh(d1)
+            }
+            (Model(mut d1), Model(d2)) => {
+                d1.absorb(d2);
+                Model(d1)
+            }
+            (Value(mut d1), Value(d2)) => {
+                d1.absorb(d2);
+                Value(d1)
+            }
+            (Document(mut d1), Document(d2)) => {
+                d1.absorb(d2);
+                Document(d1)
+            }
+            (Cad(mut d1), Cad(d2)) => {
+                d1.absorb(d2);
+                Cad(d1)
+            }
+            (Drawing(mut d1), Drawing(d2)) => {
+                d1.absorb(d2);
+                Drawing(d1)
+            }
+            (Image(mut d1), Image(d2)) => {
+                d1.absorb(d2);
+                Image(d1)
+            }
+            (Video(mut d1), Video(d2)) => {
+                d1.absorb(d2);
+                Video(d1)
+            }
+            (Audio(mut d1), Audio(d2)) => {
+                d1.absorb(d2);
+                Audio(d1)
+            }
+            (Animation(mut d1), Animation(d2)) => {
+                d1.absorb(d2);
+                Animation(d1)
+            }
+            (Presentation(mut d1), Presentation(d2)) => {
+                d1.absorb(d2);
+                Presentation(d1)
+            }
+            (Flow(mut d1), Flow(d2)) => {
+                d1.absorb(d2);
+                Flow(d1)
+            }
+            (Text(mut d1), Text(d2)) => {
+                d1.absorb(d2);
+                Text(d1)
+            }
+            (Table(mut d1), Table(d2)) => {
+                d1.absorb(d2);
+                Table(d1)
+            }
+            (Graph(mut d1), Graph(d2)) => {
+                d1.absorb(d2);
+                Graph(d1)
+            }
+            (Object(mut d1), Object(d2)) => {
+                d1.absorb(d2);
+                Object(d1)
+            }
+            (Kit(mut d1), Kit(d2)) => {
+                d1.absorb(d2);
+                Kit(d1)
+            }
             // 🛡️ Mismatched, non-`Replace` kind pair — structurally impossible from this module's
             // OWN sequential diffs (a kind change always goes through `Replace`), but `absorb`
             // must stay TOTAL over every pair per its trait contract; last-diff-wins is the
@@ -163,7 +217,13 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
             // 🧭 Different kinds (or, degenerately, the exact same value): a cross-kind change has
             // no sparse representation, so it's `Replace`; an identical pair collapses to `NoChange`
             // so `between(a, a).is_empty()` holds even when `a`/`b` happen to share a reference.
-            _ => if base == other { SemioDiff::NoChange } else { SemioDiff::Replace(Box::new(other.clone())) },
+            _ => {
+                if base == other {
+                    SemioDiff::NoChange
+                } else {
+                    SemioDiff::Replace(Box::new(other.clone()))
+                }
+            }
         }
     }
 
@@ -339,7 +399,9 @@ fn parse_semio_diff(line: &str) -> Result<SemioDiff, String> {
 }
 
 impl protocol::DiffCodec for SemioDiff {
-    fn print_diff(&self) -> String { print_semio_diff(self) }
+    fn print_diff(&self) -> String {
+        print_semio_diff(self)
+    }
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_semio_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
@@ -458,24 +520,18 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioDiff> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
-    use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{SemioFlowSnapshot, FlowNode};
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+    use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
+    use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowNode, SemioFlowSnapshot};
 
     fn audio_snapshot(sample_rate: u32) -> SemioSnapshot {
-        SemioSnapshot {
-            subset: SemioSubsetSnapshot::Audio(SemioAudioSnapshot { sample_rate, format: SemioAudioFormat::Pcm16, ..Default::default() }),
-            ..Default::default()
-        }
+        SemioSnapshot { subset: SemioSubsetSnapshot::Audio(SemioAudioSnapshot { sample_rate, format: SemioAudioFormat::Pcm16, ..Default::default() }), ..Default::default() }
     }
 
     fn flow_snapshot(node_ids: &[&str]) -> SemioSnapshot {
         SemioSnapshot {
             subset: SemioSubsetSnapshot::Flow(SemioFlowSnapshot {
-                nodes: node_ids.iter().map(|id| FlowNode {
-                    id: (*id).into(), kind: "task".into(), label: (*id).into(), params: vec![],
-                    position: SemioPoint2 { x: 0.0, y: 0.0 },
-                }).collect(),
+                nodes: node_ids.iter().map(|id| FlowNode { id: (*id).into(), kind: "task".into(), label: (*id).into(), params: vec![], position: SemioPoint2 { x: 0.0, y: 0.0 } }).collect(),
                 ..Default::default()
             }),
             ..Default::default()
@@ -524,11 +580,7 @@ mod tests {
     /// 🧪️ inverse_law across all 3 shapes: same-kind nested, cross-kind Replace, and NoChange.
     #[test]
     fn inverse_law_covers_nested_replace_and_no_change() {
-        for (a, b) in [
-            (audio_snapshot(44_100), audio_snapshot(96_000)),
-            (audio_snapshot(44_100), flow_snapshot(&["n1", "n2"])),
-            (audio_snapshot(44_100), audio_snapshot(44_100)),
-        ] {
+        for (a, b) in [(audio_snapshot(44_100), audio_snapshot(96_000)), (audio_snapshot(44_100), flow_snapshot(&["n1", "n2"])), (audio_snapshot(44_100), audio_snapshot(44_100))] {
             let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
             let applied = d.apply(&a);
             let inv = d.inverse(&a);

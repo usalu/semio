@@ -142,7 +142,9 @@ pub fn apply_las_mutation(snapshot: &mut LasSnapshot, mutation: &LasMutation) ->
             }
         }
         LasMutation::SetVlrData { index, data } => {
-            if let Some(v) = snapshot.vlrs.get_mut(*index) { v.data = data.clone(); }
+            if let Some(v) = snapshot.vlrs.get_mut(*index) {
+                v.data = data.clone();
+            }
         }
         LasMutation::InsertPoint { index, point } => {
             let at = (*index).min(snapshot.points.len());
@@ -156,7 +158,9 @@ pub fn apply_las_mutation(snapshot: &mut LasSnapshot, mutation: &LasMutation) ->
             }
         }
         LasMutation::SetPoint { index, point } => {
-            if let Some(p) = snapshot.points.get_mut(*index) { *p = point.clone(); }
+            if let Some(p) = snapshot.points.get_mut(*index) {
+                *p = point.clone();
+            }
         }
     }
 
@@ -199,14 +203,8 @@ impl Mutation<LasSnapshot> for LasMutation {
             LasMutation::SetSystemIdentifier { .. } => vec![LasMutation::SetSystemIdentifier { system_identifier: base.header.system_identifier.clone() }],
             LasMutation::SetSoftwareInfo { .. } => vec![LasMutation::SetSoftwareInfo { generating_software: base.header.generating_software.clone() }],
             LasMutation::SetCreationDate { .. } => vec![LasMutation::SetCreationDate { day_of_year: base.header.creation_day_of_year, year: base.header.creation_year }],
-            LasMutation::SetScaleAndOffset { .. } => vec![LasMutation::SetScaleAndOffset {
-                scale: (base.header.x_scale, base.header.y_scale, base.header.z_scale),
-                offset: (base.header.x_offset, base.header.y_offset, base.header.z_offset),
-            }],
-            LasMutation::SetBounds { .. } => vec![LasMutation::SetBounds {
-                max: (base.header.max_x, base.header.max_y, base.header.max_z),
-                min: (base.header.min_x, base.header.min_y, base.header.min_z),
-            }],
+            LasMutation::SetScaleAndOffset { .. } => vec![LasMutation::SetScaleAndOffset { scale: (base.header.x_scale, base.header.y_scale, base.header.z_scale), offset: (base.header.x_offset, base.header.y_offset, base.header.z_offset) }],
+            LasMutation::SetBounds { .. } => vec![LasMutation::SetBounds { max: (base.header.max_x, base.header.max_y, base.header.max_z), min: (base.header.min_x, base.header.min_y, base.header.min_z) }],
             LasMutation::SetPointsByReturn { .. } => vec![LasMutation::SetPointsByReturn { counts: base.header.points_by_return }],
             LasMutation::InsertVlr { index, .. } => vec![LasMutation::RemoveVlr { index: (*index).min(base.vlrs.len()) }],
             LasMutation::RemoveVlr { index } => match base.vlrs.get(*index) {
@@ -269,17 +267,26 @@ fn enc_header(h: &LasHeader) -> String {
         h.point_data_record_length.to_string(),
         h.number_of_point_records.to_string(),
         diff::enc_u32x5(&h.points_by_return),
-        h.x_scale.to_string(), h.y_scale.to_string(), h.z_scale.to_string(),
-        h.x_offset.to_string(), h.y_offset.to_string(), h.z_offset.to_string(),
-        h.max_x.to_string(), h.min_x.to_string(),
-        h.max_y.to_string(), h.min_y.to_string(),
-        h.max_z.to_string(), h.min_z.to_string(),
+        h.x_scale.to_string(),
+        h.y_scale.to_string(),
+        h.z_scale.to_string(),
+        h.x_offset.to_string(),
+        h.y_offset.to_string(),
+        h.z_offset.to_string(),
+        h.max_x.to_string(),
+        h.min_x.to_string(),
+        h.max_y.to_string(),
+        h.min_y.to_string(),
+        h.max_z.to_string(),
+        h.min_z.to_string(),
     ];
     format!("[{}]", fields.join(","))
 }
 fn dec_header(s: &str) -> Result<LasHeader, String> {
     let parts = diff::split_top_level(diff::strip_brackets(s)?, ',');
-    let [version_major, version_minor, system_identifier, generating_software, creation_day_of_year, creation_year, header_size, offset_to_point_data, number_of_vlrs, point_data_format_id, point_data_record_length, number_of_point_records, points_by_return, x_scale, y_scale, z_scale, x_offset, y_offset, z_offset, max_x, min_x, max_y, min_y, max_z, min_z] = parts.as_slice() else {
+    let [version_major, version_minor, system_identifier, generating_software, creation_day_of_year, creation_year, header_size, offset_to_point_data, number_of_vlrs, point_data_format_id, point_data_record_length, number_of_point_records, points_by_return, x_scale, y_scale, z_scale, x_offset, y_offset, z_offset, max_x, min_x, max_y, min_y, max_z, min_z] =
+        parts.as_slice()
+    else {
         return Err(format!("header: expected 25 fields, got {}", parts.len()));
     };
     Ok(LasHeader {
@@ -296,11 +303,18 @@ fn dec_header(s: &str) -> Result<LasHeader, String> {
         point_data_record_length: diff::parse_u16(point_data_record_length)?,
         number_of_point_records: diff::parse_u32(number_of_point_records)?,
         points_by_return: diff::dec_u32x5(points_by_return)?,
-        x_scale: diff::parse_f64(x_scale)?, y_scale: diff::parse_f64(y_scale)?, z_scale: diff::parse_f64(z_scale)?,
-        x_offset: diff::parse_f64(x_offset)?, y_offset: diff::parse_f64(y_offset)?, z_offset: diff::parse_f64(z_offset)?,
-        max_x: diff::parse_f64(max_x)?, min_x: diff::parse_f64(min_x)?,
-        max_y: diff::parse_f64(max_y)?, min_y: diff::parse_f64(min_y)?,
-        max_z: diff::parse_f64(max_z)?, min_z: diff::parse_f64(min_z)?,
+        x_scale: diff::parse_f64(x_scale)?,
+        y_scale: diff::parse_f64(y_scale)?,
+        z_scale: diff::parse_f64(z_scale)?,
+        x_offset: diff::parse_f64(x_offset)?,
+        y_offset: diff::parse_f64(y_offset)?,
+        z_offset: diff::parse_f64(z_offset)?,
+        max_x: diff::parse_f64(max_x)?,
+        min_x: diff::parse_f64(min_x)?,
+        max_y: diff::parse_f64(max_y)?,
+        min_y: diff::parse_f64(min_y)?,
+        max_z: diff::parse_f64(max_z)?,
+        min_z: diff::parse_f64(min_z)?,
     })
 }
 fn enc_snapshot(s: &LasSnapshot) -> String {
@@ -315,10 +329,8 @@ fn dec_snapshot(s: &str) -> Result<LasSnapshot, String> {
         return Err(format!("snapshot: expected 3 top-level fields, got {}", parts.len()));
     };
     let header = dec_header(header_s)?;
-    let vlrs = diff::split_top_level(diff::strip_brackets(vlrs_s)?, ',')
-        .into_iter().filter(|s| !s.is_empty()).map(diff::dec_vlr).collect::<Result<Vec<_>, String>>()?;
-    let points = diff::split_top_level(diff::strip_brackets(points_s)?, ',')
-        .into_iter().filter(|s| !s.is_empty()).map(diff::dec_point).collect::<Result<Vec<_>, String>>()?;
+    let vlrs = diff::split_top_level(diff::strip_brackets(vlrs_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_vlr).collect::<Result<Vec<_>, String>>()?;
+    let points = diff::split_top_level(diff::strip_brackets(points_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_point).collect::<Result<Vec<_>, String>>()?;
     Ok(LasSnapshot { schema: crate::artifacts::las::STDIO_LAS_DOCUMENT_SCHEMA.into(), header, vlrs, points })
 }
 //#endregion 🔖️SnapshotCodec
@@ -358,9 +370,7 @@ fn parse_las_mutation(line: &str) -> Result<LasMutation, String> {
     let mut tokens = line.split(' ');
     let keyword = tokens.next().filter(|k| !k.is_empty()).ok_or_else(|| "empty mutation line".to_string())?;
     let rest: Vec<&str> = tokens.collect();
-    let arg = |key: &str| -> Result<&str, String> {
-        rest.iter().find_map(|t| t.strip_prefix(key)).ok_or_else(|| format!("{keyword}: missing arg {key:?}"))
-    };
+    let arg = |key: &str| -> Result<&str, String> { rest.iter().find_map(|t| t.strip_prefix(key)).ok_or_else(|| format!("{keyword}: missing arg {key:?}")) };
     match keyword {
         "no-mutation" => Ok(LasMutation::NoMutation),
         "set-snapshot" => Ok(LasMutation::SetSnapshot { snapshot: dec_snapshot(arg("snapshot=")?)? }),
@@ -407,11 +417,7 @@ fn enc_f64x3_bin(t: (f64, f64, f64), out: &mut Vec<u8>) {
     out.extend_from_slice(&t.2.to_le_bytes());
 }
 fn dec_f64x3_bin(reader: &mut store::ByteReader<'_>) -> Result<(f64, f64, f64), String> {
-    Ok((
-        reader.read_f64_le().map_err(|e| e.to_string())?,
-        reader.read_f64_le().map_err(|e| e.to_string())?,
-        reader.read_f64_le().map_err(|e| e.to_string())?,
-    ))
+    Ok((reader.read_f64_le().map_err(|e| e.to_string())?, reader.read_f64_le().map_err(|e| e.to_string())?, reader.read_f64_le().map_err(|e| e.to_string())?))
 }
 
 /// 🧭️ A whole `LasSnapshot` — `schema` (real, genuinely round-tripped identity field) + the full
@@ -420,9 +426,13 @@ fn enc_snapshot_bin(s: &LasSnapshot, out: &mut Vec<u8>) {
     diff::write_str_lp(out, &s.schema);
     diff::enc_header_bin(&s.header, out);
     store::pack_rt::write_varint_u64(out, s.vlrs.len() as u64);
-    for v in &s.vlrs { diff::enc_vlr_bin(v, out); }
+    for v in &s.vlrs {
+        diff::enc_vlr_bin(v, out);
+    }
     store::pack_rt::write_varint_u64(out, s.points.len() as u64);
-    for p in &s.points { diff::enc_point_bin(p, out); }
+    for p in &s.points {
+        diff::enc_point_bin(p, out);
+    }
 }
 fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<LasSnapshot, String> {
     let schema = diff::read_str_lp(reader)?;
@@ -462,10 +472,23 @@ impl protocol::OpBinary for LasMutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT];
         match self {
             LasMutation::NoMutation => out.push(TAG_NO_MUTATION),
-            LasMutation::SetSnapshot { snapshot } => { out.push(TAG_SET_SNAPSHOT); enc_snapshot_bin(snapshot, &mut out); }
-            LasMutation::SetVersion { major, minor } => { out.push(TAG_SET_VERSION); out.push(*major); out.push(*minor); }
-            LasMutation::SetSystemIdentifier { system_identifier } => { out.push(TAG_SET_SYSTEM_IDENTIFIER); diff::write_str_lp(&mut out, system_identifier); }
-            LasMutation::SetSoftwareInfo { generating_software } => { out.push(TAG_SET_SOFTWARE_INFO); diff::write_str_lp(&mut out, generating_software); }
+            LasMutation::SetSnapshot { snapshot } => {
+                out.push(TAG_SET_SNAPSHOT);
+                enc_snapshot_bin(snapshot, &mut out);
+            }
+            LasMutation::SetVersion { major, minor } => {
+                out.push(TAG_SET_VERSION);
+                out.push(*major);
+                out.push(*minor);
+            }
+            LasMutation::SetSystemIdentifier { system_identifier } => {
+                out.push(TAG_SET_SYSTEM_IDENTIFIER);
+                diff::write_str_lp(&mut out, system_identifier);
+            }
+            LasMutation::SetSoftwareInfo { generating_software } => {
+                out.push(TAG_SET_SOFTWARE_INFO);
+                diff::write_str_lp(&mut out, generating_software);
+            }
             LasMutation::SetCreationDate { day_of_year, year } => {
                 out.push(TAG_SET_CREATION_DATE);
                 store::pack_rt::write_varint_u64(&mut out, *day_of_year as u64);
@@ -483,14 +506,19 @@ impl protocol::OpBinary for LasMutation {
             }
             LasMutation::SetPointsByReturn { counts } => {
                 out.push(TAG_SET_POINTS_BY_RETURN);
-                for c in counts { store::pack_rt::write_varint_u64(&mut out, *c as u64); }
+                for c in counts {
+                    store::pack_rt::write_varint_u64(&mut out, *c as u64);
+                }
             }
             LasMutation::InsertVlr { index, vlr } => {
                 out.push(TAG_INSERT_VLR);
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 diff::enc_vlr_bin(vlr, &mut out);
             }
-            LasMutation::RemoveVlr { index } => { out.push(TAG_REMOVE_VLR); store::pack_rt::write_varint_u64(&mut out, *index as u64); }
+            LasMutation::RemoveVlr { index } => {
+                out.push(TAG_REMOVE_VLR);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+            }
             LasMutation::SetVlrData { index, data } => {
                 out.push(TAG_SET_VLR_DATA);
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
@@ -501,7 +529,10 @@ impl protocol::OpBinary for LasMutation {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 diff::enc_point_bin(point, &mut out);
             }
-            LasMutation::RemovePoint { index } => { out.push(TAG_REMOVE_POINT); store::pack_rt::write_varint_u64(&mut out, *index as u64); }
+            LasMutation::RemovePoint { index } => {
+                out.push(TAG_REMOVE_POINT);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+            }
             LasMutation::SetPoint { index, point } => {
                 out.push(TAG_SET_POINT);
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
@@ -521,47 +552,25 @@ impl protocol::OpBinary for LasMutation {
             Ok(match tag {
                 TAG_NO_MUTATION => LasMutation::NoMutation,
                 TAG_SET_SNAPSHOT => LasMutation::SetSnapshot { snapshot: dec_snapshot_bin(&mut reader)? },
-                TAG_SET_VERSION => LasMutation::SetVersion {
-                    major: reader.read_u8().map_err(|e| e.to_string())?,
-                    minor: reader.read_u8().map_err(|e| e.to_string())?,
-                },
+                TAG_SET_VERSION => LasMutation::SetVersion { major: reader.read_u8().map_err(|e| e.to_string())?, minor: reader.read_u8().map_err(|e| e.to_string())? },
                 TAG_SET_SYSTEM_IDENTIFIER => LasMutation::SetSystemIdentifier { system_identifier: diff::read_str_lp(&mut reader)? },
                 TAG_SET_SOFTWARE_INFO => LasMutation::SetSoftwareInfo { generating_software: diff::read_str_lp(&mut reader)? },
-                TAG_SET_CREATION_DATE => LasMutation::SetCreationDate {
-                    day_of_year: reader.read_varint_u64().map_err(|e| e.to_string())? as u16,
-                    year: reader.read_varint_u64().map_err(|e| e.to_string())? as u16,
-                },
-                TAG_SET_SCALE_AND_OFFSET => LasMutation::SetScaleAndOffset {
-                    scale: dec_f64x3_bin(&mut reader)?,
-                    offset: dec_f64x3_bin(&mut reader)?,
-                },
-                TAG_SET_BOUNDS => LasMutation::SetBounds {
-                    max: dec_f64x3_bin(&mut reader)?,
-                    min: dec_f64x3_bin(&mut reader)?,
-                },
+                TAG_SET_CREATION_DATE => LasMutation::SetCreationDate { day_of_year: reader.read_varint_u64().map_err(|e| e.to_string())? as u16, year: reader.read_varint_u64().map_err(|e| e.to_string())? as u16 },
+                TAG_SET_SCALE_AND_OFFSET => LasMutation::SetScaleAndOffset { scale: dec_f64x3_bin(&mut reader)?, offset: dec_f64x3_bin(&mut reader)? },
+                TAG_SET_BOUNDS => LasMutation::SetBounds { max: dec_f64x3_bin(&mut reader)?, min: dec_f64x3_bin(&mut reader)? },
                 TAG_SET_POINTS_BY_RETURN => {
                     let mut counts = [0u32; 5];
-                    for slot in counts.iter_mut() { *slot = reader.read_varint_u64().map_err(|e| e.to_string())? as u32; }
+                    for slot in counts.iter_mut() {
+                        *slot = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+                    }
                     LasMutation::SetPointsByReturn { counts }
                 }
-                TAG_INSERT_VLR => LasMutation::InsertVlr {
-                    index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize,
-                    vlr: diff::dec_vlr_bin(&mut reader)?,
-                },
+                TAG_INSERT_VLR => LasMutation::InsertVlr { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize, vlr: diff::dec_vlr_bin(&mut reader)? },
                 TAG_REMOVE_VLR => LasMutation::RemoveVlr { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize },
-                TAG_SET_VLR_DATA => LasMutation::SetVlrData {
-                    index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize,
-                    data: diff::read_bytes_lp(&mut reader)?,
-                },
-                TAG_INSERT_POINT => LasMutation::InsertPoint {
-                    index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize,
-                    point: diff::dec_point_bin(&mut reader)?,
-                },
+                TAG_SET_VLR_DATA => LasMutation::SetVlrData { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize, data: diff::read_bytes_lp(&mut reader)? },
+                TAG_INSERT_POINT => LasMutation::InsertPoint { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize, point: diff::dec_point_bin(&mut reader)? },
                 TAG_REMOVE_POINT => LasMutation::RemovePoint { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize },
-                TAG_SET_POINT => LasMutation::SetPoint {
-                    index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize,
-                    point: diff::dec_point_bin(&mut reader)?,
-                },
+                TAG_SET_POINT => LasMutation::SetPoint { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize, point: diff::dec_point_bin(&mut reader)? },
                 other => return Err(format!("las mutation: unknown binary tag {other}")),
             })
         }
@@ -602,16 +611,7 @@ pub(crate) fn point(seed: u8) -> LasPoint {
 pub(crate) fn base_snapshot() -> LasSnapshot {
     let vlrs = vec![vlr("LASF_Spec", 100, b"vlr-a"), vlr("LASF_Spec", 101, b"vlr-b")];
     let points = vec![point(0), point(1), point(2)];
-    LasSnapshot {
-        schema: "stdio.las".into(),
-        header: LasHeader {
-            number_of_vlrs: vlrs.len() as u32,
-            number_of_point_records: points.len() as u32,
-            ..LasHeader::default()
-        },
-        vlrs,
-        points,
-    }
+    LasSnapshot { schema: "stdio.las".into(), header: LasHeader { number_of_vlrs: vlrs.len() as u32, number_of_point_records: points.len() as u32, ..LasHeader::default() }, vlrs, points }
 }
 
 /// 🧪️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: representative
@@ -823,10 +823,7 @@ mod tests {
     //#region 🔖️codec_retention_law
     #[test]
     fn codec_retention_law() {
-        let bytes = std::fs::read(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../🗿️artifacts/☁️las/📚️examples/🎬️demo/🖼️assets/☁️example.las"
-        ));
+        let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/☁️las/📚️examples/🎬️demo/🖼️assets/☁️example.las"));
         let snap = match bytes {
             Ok(b) => crate::artifacts::las::engine::decode_las(&b).expect("decode fixture"),
             // Fixture path is relative to this crate's manifest dir under the workspace layout;
@@ -886,18 +883,21 @@ mod tests {
                 point_data_record_length: 28,
                 number_of_point_records: 2,
                 points_by_return: [1, 1, 0, 0, 0],
-                x_scale: 0.01, y_scale: 0.01, z_scale: 0.01,
-                x_offset: 0.0, y_offset: 0.0, z_offset: 0.0,
-                max_x: 100.0, min_x: 0.0, max_y: 100.0, min_y: 0.0, max_z: 100.0, min_z: 0.0,
+                x_scale: 0.01,
+                y_scale: 0.01,
+                z_scale: 0.01,
+                x_offset: 0.0,
+                y_offset: 0.0,
+                z_offset: 0.0,
+                max_x: 100.0,
+                min_x: 0.0,
+                max_y: 100.0,
+                min_y: 0.0,
+                max_z: 100.0,
+                min_z: 0.0,
             },
-            vlrs: vec![
-                vlr("stay-user", 1, b"stay-data-before"),
-                vlr("gone-user", 2, b"will be removed"),
-            ],
-            points: vec![
-                LasPoint { gps_time: Some(1000.0), ..point(0) },
-                point(1),
-            ],
+            vlrs: vec![vlr("stay-user", 1, b"stay-data-before"), vlr("gone-user", 2, b"will be removed")],
+            points: vec![LasPoint { gps_time: Some(1000.0), ..point(0) }, point(1)],
         }
     }
 
@@ -918,9 +918,18 @@ mod tests {
                 point_data_record_length: 34,
                 number_of_point_records: 3,
                 points_by_return: [0, 0, 2, 1, 0],
-                x_scale: 0.001, y_scale: 0.001, z_scale: 0.001,
-                x_offset: 500.0, y_offset: 500.0, z_offset: 10.0,
-                max_x: 999.0, min_x: -1.0, max_y: 999.0, min_y: -1.0, max_z: 50.0, min_z: -50.0,
+                x_scale: 0.001,
+                y_scale: 0.001,
+                z_scale: 0.001,
+                x_offset: 500.0,
+                y_offset: 500.0,
+                z_offset: 10.0,
+                max_x: 999.0,
+                min_x: -1.0,
+                max_y: 999.0,
+                min_y: -1.0,
+                max_z: 50.0,
+                min_z: -50.0,
             },
             vlrs: vec![
                 // Index 0 stays "alive" but every field changes (exercises `modified`). `a`'s
@@ -932,7 +941,9 @@ mod tests {
                 // Index 0 stays "alive" but every field changes, incl. both tri-states going
                 // from Some -> None and None -> Some.
                 LasPoint {
-                    x: 1.0, y: 2.0, z: 3.0,
+                    x: 1.0,
+                    y: 2.0,
+                    z: 3.0,
                     intensity: 500,
                     return_number: 4,
                     number_of_returns: 5,
@@ -942,7 +953,7 @@ mod tests {
                     scan_angle_rank: 5,
                     user_data: 200,
                     point_source_id: 42,
-                    gps_time: None, // tri-state: Some(1000.0) -> None
+                    gps_time: None,          // tri-state: Some(1000.0) -> None
                     rgb: Some((10, 20, 30)), // tri-state: None -> Some
                 },
                 point(1),

@@ -1,8 +1,6 @@
 //! 🧬️ GltfArtifact schema — full artifact state.
 
-use crate::artifacts::gltf::schema::snapshot::{
-    GltfAccessor, GltfBuffer, GltfBufferView, GltfDocument, GltfJson, GltfMesh, GltfPrimitive, GltfSourceForm,
-};
+use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfDocument, GltfJson, GltfMesh, GltfPrimitive, GltfSourceForm};
 use crate::artifacts::gltf::{GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -35,21 +33,11 @@ impl Default for GltfArtifact {
 
 impl GltfArtifact {
     pub fn to_snapshot(&self) -> GltfSnapshot {
-        GltfSnapshot {
-            schema: self.schema.clone(),
-            document: self.document.clone(),
-            buffers: self.buffers.clone(),
-            source_form: self.source_form,
-        }
+        GltfSnapshot { schema: self.schema.clone(), document: self.document.clone(), buffers: self.buffers.clone(), source_form: self.source_form }
     }
 
     pub fn from_snapshot(snapshot: GltfSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            document: snapshot.document,
-            buffers: snapshot.buffers,
-            source_form: snapshot.source_form,
-        }
+        Self { schema: snapshot.schema, document: snapshot.document, buffers: snapshot.buffers, source_form: snapshot.source_form }
     }
 
     pub fn set_snapshot(&mut self, snapshot: GltfSnapshot) {
@@ -98,12 +86,10 @@ pub fn gltf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
-    use crate::artifacts::gltf::schema::snapshot::{
-        GltfAccessor, GltfBuffer, GltfBufferView, GltfJson, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene,
-    };
+    use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfJson, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene};
     use crate::artifacts::gltf::{GltfDiff, GltfMutation, GltfSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.gltf` snapshot.
@@ -138,7 +124,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -246,14 +236,7 @@ pub mod derived_construction {
         /// pairs (e.g. `("POSITION", 0)`), `indices`/`material` are optional accessor/material
         /// indices, `mode` is the primitive topology (defaults to `4` TRIANGLES per spec when unset).
         pub fn add_mesh_primitive(&mut self, mesh: usize, attributes: &[(&str, usize)], indices: Option<usize>, material: Option<usize>, mode: Option<u64>) {
-            let primitive = GltfPrimitive {
-                attributes: attributes.iter().map(|(name, idx)| ((*name).to_string(), *idx)).collect(),
-                indices,
-                material,
-                mode,
-                extensions: None,
-                extras: None,
-            };
+            let primitive = GltfPrimitive { attributes: attributes.iter().map(|(name, idx)| ((*name).to_string(), *idx)).collect(), indices, material, mode, extensions: None, extras: None };
             let mesh_entry = self.snapshot.document.meshes.get_mut(mesh).expect("mesh index out of range -- call add_mesh first");
             mesh_entry.primitives.push(primitive);
         }
@@ -311,17 +294,15 @@ pub mod derived_construction {
             b.set_asset_version("2.0");
             let mut bytes = Vec::new();
             let verts: [[f32; 3]; 3] = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]];
-            for v in verts { for c in v { bytes.extend_from_slice(&c.to_le_bytes()); } }
+            for v in verts {
+                for c in v {
+                    bytes.extend_from_slice(&c.to_le_bytes());
+                }
+            }
             let buf = b.add_buffer(bytes);
             let bv = b.add_buffer_view(buf, 0, 36, None, Some(34962));
             let acc = b.add_accessor(GltfAccessorSpec::new(GltfComponentType::Float, GltfAccessorType::Vec3, 3).with_buffer_view(bv, 0).with_min_max(vec![0.0, 0.0, 0.0], vec![1.0, 1.0, 0.0]));
-            let mat = b.add_material(GltfMaterial {
-                pbr_metallic_roughness: Some(crate::artifacts::gltf::schema::snapshot::GltfPbrMetallicRoughness {
-                    base_color_factor: [1.0, 0.0, 0.0, 1.0],
-                    ..Default::default()
-                }),
-                ..Default::default()
-            });
+            let mat = b.add_material(GltfMaterial { pbr_metallic_roughness: Some(crate::artifacts::gltf::schema::snapshot::GltfPbrMetallicRoughness { base_color_factor: [1.0, 0.0, 0.0, 1.0], ..Default::default() }), ..Default::default() });
             let mesh = b.add_mesh();
             b.add_mesh_primitive(mesh, &[("POSITION", acc)], None, Some(mat), None);
             let node = b.add_node(Some(mesh));
@@ -341,8 +322,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::gltf::GltfSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.gltf` parts.
@@ -410,11 +391,7 @@ pub mod derived_analysis {
                         // A genuine `.gltf` JSON document parses directly through the real codec; only
                         // fall back to the SemioEnvelope-wrapped `ArtifactDsl` preamble form (used by
                         // this crate's own internal store round-trips) when the text isn't bare JSON.
-                        let result = if looks_like_gltf_json(text) {
-                            crate::artifacts::gltf::engine::parse_gltf_document(text.trim().as_bytes())
-                        } else {
-                            <GltfSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
-                        };
+                        let result = if looks_like_gltf_json(text) { crate::artifacts::gltf::engine::parse_gltf_document(text.trim().as_bytes()) } else { <GltfSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string()) };
                         match result {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),
                             Err(err) => {
@@ -427,11 +404,7 @@ pub mod derived_analysis {
                         // A genuine raw `.glb` container decodes directly through the real codec; only
                         // fall back to the SemioEnvelope-wrapped `ArtifactPack` form (this crate's own
                         // internal store round-trip encoding) when the bytes aren't a `.glb` container.
-                        let result = if looks_like_glb(bytes) {
-                            crate::artifacts::gltf::engine::decode_glb(bytes)
-                        } else {
-                            <GltfSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|e| e.to_string())
-                        };
+                        let result = if looks_like_glb(bytes) { crate::artifacts::gltf::engine::decode_glb(bytes) } else { <GltfSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|e| e.to_string()) };
                         match result {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),
                             Err(err) => {
@@ -509,26 +482,31 @@ pub fn empty_gltf_snapshot() -> GltfSnapshot {
 /// bare fake like the pre-FG3 `{"hello":"stdio.gltf","n":1}` stub, `fixture_honesty_law`'s own
 /// mandate). Mirrors `demo_json_snapshot`'s own role in json's pilot report.
 pub fn demo_gltf_snapshot() -> GltfSnapshot {
-    use crate::artifacts::gltf::schema::snapshot::{
-        GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAsset, GltfCamera,
-        GltfCameraProjection, GltfImage, GltfInterpolation, GltfMaterial, GltfNode, GltfPbrMetallicRoughness,
-        GltfPerspective, GltfSampler, GltfScene, GltfSkin, GltfTexture,
-    };
     use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
+    use crate::artifacts::gltf::schema::snapshot::{
+        GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAsset, GltfCamera, GltfCameraProjection, GltfImage, GltfInterpolation, GltfMaterial, GltfNode, GltfPbrMetallicRoughness, GltfPerspective, GltfSampler,
+        GltfScene, GltfSkin, GltfTexture,
+    };
 
     let document = GltfDocument {
         asset: GltfAsset { version: "2.0".into(), generator: Some("semio".into()), ..GltfAsset::default() },
         scene: Some(0),
         scenes: vec![GltfScene { nodes: vec![0], name: Some("root-scene".into()), ..GltfScene::default() }],
         nodes: vec![GltfNode { mesh: Some(0), camera: Some(0), name: Some("root-node".into()), ..GltfNode::default() }],
-        meshes: vec![GltfMesh {
-            primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), 0)], indices: None, material: Some(0), mode: Some(4), extensions: None, extras: None }],
-            ..GltfMesh::default()
-        }],
+        meshes: vec![GltfMesh { primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), 0)], indices: None, material: Some(0), mode: Some(4), extensions: None, extras: None }], ..GltfMesh::default() }],
         accessors: vec![GltfAccessor {
-            buffer_view: Some(0), byte_offset: 0, component_type: GltfComponentType::Float, normalized: false, count: 3,
-            kind: GltfAccessorType::Vec3, max: Some(vec![1.0, 1.0, 1.0]), min: Some(vec![0.0, 0.0, 0.0]), sparse: None,
-            name: Some("positions".into()), extensions: None, extras: None,
+            buffer_view: Some(0),
+            byte_offset: 0,
+            component_type: GltfComponentType::Float,
+            normalized: false,
+            count: 3,
+            kind: GltfAccessorType::Vec3,
+            max: Some(vec![1.0, 1.0, 1.0]),
+            min: Some(vec![0.0, 0.0, 0.0]),
+            sparse: None,
+            name: Some("positions".into()),
+            extensions: None,
+            extras: None,
         }],
         buffer_views: vec![GltfBufferView { buffer: 0, byte_offset: 0, byte_length: 36, byte_stride: None, target: Some(34962), name: None, extensions: None, extras: None }],
         // A real `data:` URI (not `None`) -- `None` would round-trip LOSSY through the TEXT

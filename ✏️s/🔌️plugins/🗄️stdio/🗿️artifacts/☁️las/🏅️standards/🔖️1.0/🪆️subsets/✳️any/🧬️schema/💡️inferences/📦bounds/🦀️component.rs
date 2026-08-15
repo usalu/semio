@@ -27,15 +27,7 @@ pub struct LasBounds {
 /// authoritative bbox, not a derived one).
 pub fn compute_las_bounds(snapshot: &LasSnapshot) -> LasBounds {
     let header = &snapshot.header;
-    LasBounds {
-        min_x: header.min_x,
-        min_y: header.min_y,
-        min_z: header.min_z,
-        max_x: header.max_x,
-        max_y: header.max_y,
-        max_z: header.max_z,
-        point_count: header.number_of_point_records,
-    }
+    LasBounds { min_x: header.min_x, min_y: header.min_y, min_z: header.min_z, max_x: header.max_x, max_y: header.max_y, max_z: header.max_z, point_count: header.number_of_point_records }
 }
 //#endregion 🔖️Bounds
 
@@ -52,20 +44,8 @@ mod tests {
 
     #[test]
     fn bounds_matches_hand_built_header_extent() {
-        let header = LasHeader {
-            min_x: -12.5,
-            min_y: 0.0,
-            min_z: -3.25,
-            max_x: 100.0,
-            max_y: 88.75,
-            max_z: 15.0,
-            number_of_point_records: 3,
-            ..LasHeader::default()
-        };
-        let snapshot = snapshot_with(
-            header,
-            vec![LasPoint::default(), LasPoint::default(), LasPoint::default()],
-        );
+        let header = LasHeader { min_x: -12.5, min_y: 0.0, min_z: -3.25, max_x: 100.0, max_y: 88.75, max_z: 15.0, number_of_point_records: 3, ..LasHeader::default() };
+        let snapshot = snapshot_with(header, vec![LasPoint::default(), LasPoint::default(), LasPoint::default()]);
         let bounds = compute_las_bounds(&snapshot);
         assert_eq!(bounds.min_x, -12.5);
         assert_eq!(bounds.min_y, 0.0);

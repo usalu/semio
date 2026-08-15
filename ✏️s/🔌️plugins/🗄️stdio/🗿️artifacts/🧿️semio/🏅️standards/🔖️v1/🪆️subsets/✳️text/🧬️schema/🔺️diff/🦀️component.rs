@@ -78,13 +78,21 @@ impl protocol::command::DiffAlgebra<SemioTextSnapshot> for SemioTextDiff {
 /// `runs=[<run>,...]` (empty string = no-op diff), reusing the snapshot facet's own real
 /// hex/bracket run/mark encoders (duplicated locally, same convention every sibling subset's
 /// `🔺️diff` facet already establishes — see that facet's own doc comment for why).
-fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|b| format!("{b:02x}")).collect() }
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 { return Err(format!("odd hex length: {s:?}")); }
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
-fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
+fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextMark;
@@ -95,7 +103,9 @@ fn enc_mark_kind(k: crate::artifacts::semio::standards::v1::subsets::text::schem
 fn dec_mark_kind(s: &str) -> Result<crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextMarkKind, String> {
     crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::dec_mark_kind(s)
 }
-fn enc_mark(m: &SemioTextMark) -> String { format!("[{},{}]", enc_mark_kind(m.kind), enc_str(&m.href)) }
+fn enc_mark(m: &SemioTextMark) -> String {
+    format!("[{},{}]", enc_mark_kind(m.kind), enc_str(&m.href))
+}
 fn dec_mark(s: &str) -> Result<SemioTextMark, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [kind, href] = parts.as_slice() else { return Err(format!("mark: expected 2 fields, got {}", parts.len())) };
@@ -134,7 +144,9 @@ fn parse_text_diff(line: &str) -> Result<SemioTextDiff, String> {
 }
 
 impl protocol::DiffCodec for SemioTextDiff {
-    fn print_diff(&self) -> String { print_text_diff(self) }
+    fn print_diff(&self) -> String {
+        print_text_diff(self)
+    }
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_text_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
@@ -188,15 +200,11 @@ impl protocol::DiffCodec for SemioTextDiff {
 /// law`/`protocol_walk_law` in `🚪️io/🦀️component.rs`.
 #[cfg(test)]
 pub(crate) fn demo_diff_cases() -> Vec<SemioTextDiff> {
-    use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMarkKind, demo_text_snapshot};
+    use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{demo_text_snapshot, SemioTextMarkKind};
     vec![
         SemioTextDiff::default(),
         SemioTextDiff { runs: Some(SemioTextRunList { values: demo_text_snapshot().runs }) },
-        SemioTextDiff {
-            runs: Some(SemioTextRunList {
-                values: vec![SemioTextRun { language: "fr".into(), content: "bonjour".into(), marks: vec![SemioTextMark { kind: SemioTextMarkKind::Italic, href: String::new() }] }],
-            }),
-        },
+        SemioTextDiff { runs: Some(SemioTextRunList { values: vec![SemioTextRun { language: "fr".into(), content: "bonjour".into(), marks: vec![SemioTextMark { kind: SemioTextMarkKind::Italic, href: String::new() }] }] }) },
     ]
 }
 //#endregion 🔖️Demo
@@ -205,8 +213,8 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioTextDiff> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::DiffCodec;
     use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMarkKind, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
+    use protocol::DiffCodec;
 
     #[test]
     fn apply_replaces_runs_wholesale() {

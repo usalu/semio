@@ -12,10 +12,10 @@
 //! `colors` stay empty, `material_id` stays `None`, and `solid_name` (the one file-level string
 //! STL carries) becomes the single `SemioMesh.id`.
 
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::stl::StlSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+use crate::artifacts::stl::StlSnapshot;
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
@@ -39,22 +39,8 @@ impl ArtifactDeserializer for SemioMeshFromStl {
             }
         }
         let mesh_id = if from.solid_name.is_empty() { "mesh-0".to_string() } else { from.solid_name.clone() };
-        let primitive = SemioPrimitive {
-            id: format!("{mesh_id}-prim-0"),
-            topology: SemioTopology::Triangles,
-            positions,
-            normals,
-            uvs: Vec::new(),
-            colors: Vec::new(),
-            indices: Vec::new(),
-            material_id: None,
-        };
-        Ok(SemioMeshSnapshot {
-            schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(),
-            meshes: vec![SemioMesh { id: mesh_id, primitives: vec![primitive] }],
-            materials: Vec::new(),
-            textures: Vec::new(),
-        })
+        let primitive = SemioPrimitive { id: format!("{mesh_id}-prim-0"), topology: SemioTopology::Triangles, positions, normals, uvs: Vec::new(), colors: Vec::new(), indices: Vec::new(), material_id: None };
+        Ok(SemioMeshSnapshot { schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(), meshes: vec![SemioMesh { id: mesh_id, primitives: vec![primitive] }], materials: Vec::new(), textures: Vec::new() })
     }
 }
 
@@ -68,10 +54,7 @@ mod tests {
         StlSnapshot {
             schema: "stdio.stl".into(),
             solid_name: "pyramid".into(),
-            triangles: vec![
-                StlTriangle { normal: [0.0, 0.0, 1.0], vertices: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] },
-                StlTriangle { normal: [0.0, -1.0, 0.0], vertices: [[0.0, 0.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]] },
-            ],
+            triangles: vec![StlTriangle { normal: [0.0, 0.0, 1.0], vertices: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] }, StlTriangle { normal: [0.0, -1.0, 0.0], vertices: [[0.0, 0.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]] }],
         }
     }
 

@@ -272,7 +272,9 @@ fn decode_text_snapshot_binary(bytes: &[u8]) -> Result<SemioTextSnapshot, String
 /// 🎁 Real structured text/binary codecs, wrapped in the repo-wide `store::semio_format` envelope.
 impl store::ArtifactDsl for SemioTextSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str { STDIO_SEMIOTEXT_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_SEMIOTEXT_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -284,11 +286,7 @@ impl store::ArtifactDsl for SemioTextSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_text_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -297,22 +295,14 @@ impl store::ArtifactPack for SemioTextSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_text_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_text_snapshot_binary(&inner).map_err(store::PackError::Schema)
@@ -332,11 +322,7 @@ pub(crate) fn demo_text_snapshot() -> SemioTextSnapshot {
         runs: vec![
             SemioTextRun { language: "en".into(), content: "Hello, ".into(), marks: vec![] },
             SemioTextRun { language: "en".into(), content: "world".into(), marks: vec![SemioTextMark { kind: SemioTextMarkKind::Bold, href: String::new() }] },
-            SemioTextRun {
-                language: "de".into(),
-                content: "semio.tech".into(),
-                marks: vec![SemioTextMark { kind: SemioTextMarkKind::Link, href: "https://semio.tech".into() }],
-            },
+            SemioTextRun { language: "de".into(), content: "semio.tech".into(), marks: vec![SemioTextMark { kind: SemioTextMarkKind::Link, href: "https://semio.tech".into() }] },
         ],
     }
 }

@@ -1,2 +1,2 @@
-""" 📝️ stdio.svg diff text representation -- JSON per the sibling SvgDiff type. """
+""" 📝️ Structured tagged/hex stdio.svg diff text representation. """
 scalar SvgDiffText

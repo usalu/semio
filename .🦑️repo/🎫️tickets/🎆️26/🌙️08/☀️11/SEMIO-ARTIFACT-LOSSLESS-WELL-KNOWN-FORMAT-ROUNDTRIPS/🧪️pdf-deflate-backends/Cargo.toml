@@ -1,0 +1,15 @@
+[package]
+name = "pdf-deflate-backends"
+version = "0.0.0"
+edition = "2021"
+
+[[bin]]
+name = "pdf-deflate-backends"
+path = "../🧪️pdf-deflate-backends.rs"
+
+[dependencies]
+miniz_oxide = "=0.8.9"
+zlib-rs = "=0.6.3"
+zopfli = { version = "=0.8.3", features = ["zlib"] }
+
+[workspace]

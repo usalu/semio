@@ -1,14 +1,11 @@
-// stdio.mp4 snapshot text facet — same shape as ../🟦️component.ts; the DSL wire form is a hex dump of the real bytes, not a distinct text grammar.
-/** 🧬️ Mp4Snapshot — ISO-BMFF: ftyp typed, decoded per-track sample tables, everything else
- * typed-raw retained. Mirrors 🦀️component.rs field-for-field. */
+// stdio.mp4 snapshot text facet — structured DSL records for the logical movie model.
+/** 🧬️ Logical ISO-BMFF movie model. Container syntax is materialized only by native IO. */
 export interface Mp4Ftyp {
   majorBrand: string;
   minorVersion: number;
   compatibleBrands: string[];
 }
-export type Mp4Codec =
-  | { codec: "avc"; sps: number[][]; pps: number[][]; nalLengthSize: number }
-  | { codec: "other"; fourcc: string; raw: number[] };
+export interface Mp4Codec { sps: number[][]; pps: number[][]; nalLengthSize: number; }
 export interface Mp4Sample {
   data: number[];
   duration: number;
@@ -24,13 +21,8 @@ export interface Mp4Track {
   chunkSampleCounts: number[];
   samples: Mp4Sample[];
 }
-export interface Mp4Box {
-  fourcc: string;
-  data: number[];
-}
 export interface Mp4Snapshot {
   /** @state artifact */ schema: string;
   /** @state artifact */ ftyp: Mp4Ftyp;
   /** @state artifact */ tracks: Mp4Track[];
-  /** @state artifact */ unknownBoxes: Mp4Box[];
 }

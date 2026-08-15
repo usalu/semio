@@ -4,8 +4,8 @@
 //! "Scalars: LWW" shape `DeflateDiff` uses, adapted to wav's own value types.
 
 use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot};
-use protocol::MutationDiff;
 use protocol::command::DiffAlgebra;
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
@@ -23,32 +23,36 @@ pub struct WavDiff {
 impl MutationDiff<WavSnapshot> for WavDiff {
     fn apply(&self, base: &WavSnapshot) -> WavSnapshot {
         let mut next = base.clone();
-        if let Some(v) = &self.fmt { next.fmt = v.clone(); }
-        if let Some(v) = &self.data { next.data = v.clone(); }
-        if let Some(v) = &self.other_chunks { next.other_chunks = v.clone(); }
+        if let Some(v) = &self.fmt {
+            next.fmt = v.clone();
+        }
+        if let Some(v) = &self.data {
+            next.data = v.clone();
+        }
+        if let Some(v) = &self.other_chunks {
+            next.other_chunks = v.clone();
+        }
         next
     }
     fn absorb(&mut self, other: Self) {
-        if other.fmt.is_some() { self.fmt = other.fmt; }
-        if other.data.is_some() { self.data = other.data; }
-        if other.other_chunks.is_some() { self.other_chunks = other.other_chunks; }
+        if other.fmt.is_some() {
+            self.fmt = other.fmt;
+        }
+        if other.data.is_some() {
+            self.data = other.data;
+        }
+        if other.other_chunks.is_some() {
+            self.other_chunks = other.other_chunks;
+        }
     }
 }
 
 impl DiffAlgebra<WavSnapshot> for WavDiff {
     fn between(base: &WavSnapshot, other: &WavSnapshot) -> Self {
-        WavDiff {
-            fmt: (base.fmt != other.fmt).then(|| other.fmt.clone()),
-            data: (base.data != other.data).then(|| other.data.clone()),
-            other_chunks: (base.other_chunks != other.other_chunks).then(|| other.other_chunks.clone()),
-        }
+        WavDiff { fmt: (base.fmt != other.fmt).then(|| other.fmt.clone()), data: (base.data != other.data).then(|| other.data.clone()), other_chunks: (base.other_chunks != other.other_chunks).then(|| other.other_chunks.clone()) }
     }
     fn inverse(&self, base: &WavSnapshot) -> Self {
-        WavDiff {
-            fmt: self.fmt.as_ref().map(|_| base.fmt.clone()),
-            data: self.data.as_ref().map(|_| base.data.clone()),
-            other_chunks: self.other_chunks.as_ref().map(|_| base.other_chunks.clone()),
-        }
+        WavDiff { fmt: self.fmt.as_ref().map(|_| base.fmt.clone()), data: self.data.as_ref().map(|_| base.data.clone()), other_chunks: self.other_chunks.as_ref().map(|_| base.other_chunks.clone()) }
     }
     fn is_empty(&self) -> bool {
         self.fmt.is_none() && self.data.is_none() && self.other_chunks.is_none()
@@ -137,16 +141,7 @@ fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<
 
 //#region 🔖️ValueCodecs
 fn enc_wav_fmt(f: &WavFmt) -> String {
-    format!(
-        "[{},{},{},{},{},{},{}]",
-        f.audio_format,
-        f.channels,
-        f.sample_rate,
-        f.byte_rate,
-        f.block_align,
-        f.bits_per_sample,
-        encode_option(&f.ext, |v| hex_encode(v))
-    )
+    format!("[{},{},{},{},{},{},{}]", f.audio_format, f.channels, f.sample_rate, f.byte_rate, f.block_align, f.bits_per_sample, encode_option(&f.ext, |v| hex_encode(v)))
 }
 fn dec_wav_fmt(s: &str) -> Result<WavFmt, String> {
     let inner = strip_brackets(s)?;
@@ -220,9 +215,15 @@ fn dec_riff_chunks(s: &str) -> Result<Vec<RiffChunk>, String> {
 //#region 🔖️TopLevel
 fn print_wav_diff(d: &WavDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.fmt { tokens.push(format!("fmt={}", enc_wav_fmt(v))); }
-    if let Some(v) = &d.data { tokens.push(format!("data={}", enc_wav_data(v))); }
-    if let Some(v) = &d.other_chunks { tokens.push(format!("other-chunks={}", enc_riff_chunks(v))); }
+    if let Some(v) = &d.fmt {
+        tokens.push(format!("fmt={}", enc_wav_fmt(v)));
+    }
+    if let Some(v) = &d.data {
+        tokens.push(format!("data={}", enc_wav_data(v)));
+    }
+    if let Some(v) = &d.other_chunks {
+        tokens.push(format!("other-chunks={}", enc_riff_chunks(v)));
+    }
     tokens.join(" ")
 }
 fn parse_wav_diff(line: &str) -> Result<WavDiff, String> {
@@ -231,10 +232,15 @@ fn parse_wav_diff(line: &str) -> Result<WavDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("fmt=") { d.fmt = Some(dec_wav_fmt(rest)?); }
-        else if let Some(rest) = token.strip_prefix("data=") { d.data = Some(dec_wav_data(rest)?); }
-        else if let Some(rest) = token.strip_prefix("other-chunks=") { d.other_chunks = Some(dec_riff_chunks(rest)?); }
-        else { return Err(format!("wav diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("fmt=") {
+            d.fmt = Some(dec_wav_fmt(rest)?);
+        } else if let Some(rest) = token.strip_prefix("data=") {
+            d.data = Some(dec_wav_data(rest)?);
+        } else if let Some(rest) = token.strip_prefix("other-chunks=") {
+            d.other_chunks = Some(dec_riff_chunks(rest)?);
+        } else {
+            return Err(format!("wav diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -252,8 +258,7 @@ impl protocol::DiffCodec for WavDiff {
         Ok(self.print_diff().into_bytes())
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes)
-            .map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
         Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
     }
 }
@@ -376,10 +381,7 @@ mod tests {
             diff_set_data(WavData::Pcm16(vec![])),
             diff_set_data(WavData::Pcm8(vec![1, 2, 3])),
             diff_set_data(WavData::Float32(vec![1.5, -2.5])),
-            diff_set_other_chunks(vec![
-                RiffChunk { fourcc: "fact".into(), data: vec![] },
-                RiffChunk { fourcc: "LIST".into(), data: vec![0xDE, 0xAD] },
-            ]),
+            diff_set_other_chunks(vec![RiffChunk { fourcc: "fact".into(), data: vec![] }, RiffChunk { fourcc: "LIST".into(), data: vec![0xDE, 0xAD] }]),
         ];
         for d in cases {
             let printed = d.print_diff();

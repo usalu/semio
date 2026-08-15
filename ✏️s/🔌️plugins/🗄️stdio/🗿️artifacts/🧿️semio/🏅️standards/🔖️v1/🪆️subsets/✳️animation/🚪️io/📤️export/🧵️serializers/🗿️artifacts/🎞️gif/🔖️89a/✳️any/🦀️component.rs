@@ -12,10 +12,10 @@
 //! frame -- `animation` carries no pixel/palette data at all (see the deserializer's own doc
 //! comment), so this never fabricates image content, only real, honest frame TIMING.
 
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::gif::GifSnapshot;
 use crate::artifacts::gif::schema::snapshot::GifFrame;
+use crate::artifacts::gif::GifSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("89a"), subset: SubsetId("*") };
@@ -43,18 +43,7 @@ impl ArtifactSerializer for SemioAnimationToGif {
             };
             frames.push(GifFrame { delay_cs, ..GifFrame::default() });
         }
-        Ok(GifSnapshot {
-            schema: "stdio.gif.89a".into(),
-            width: 0,
-            height: 0,
-            gct: None,
-            background_color_index: 0,
-            pixel_aspect_ratio: 0,
-            loop_count: None,
-            frames,
-            comments: Vec::new(),
-            app_extensions: Vec::new(),
-        })
+        Ok(GifSnapshot { schema: "stdio.gif.89a".into(), width: 0, height: 0, gct: None, background_color_index: 0, pixel_aspect_ratio: 0, loop_count: None, frames, comments: Vec::new(), app_extensions: Vec::new() })
     }
 }
 
@@ -72,11 +61,7 @@ mod tests {
                 channels: vec![AnimChannel {
                     target: AnimTarget { node: "gif-frame".into(), property: AnimTargetProperty::Custom { name: "frameIndex".into() } },
                     interpolation: AnimInterpolation::Step,
-                    keyframes: vec![
-                        AnimKeyframe { t: 0.0, value: AnimValue::Scalar { value: 0.0 } },
-                        AnimKeyframe { t: 0.10, value: AnimValue::Scalar { value: 1.0 } },
-                        AnimKeyframe { t: 0.30, value: AnimValue::Scalar { value: 2.0 } },
-                    ],
+                    keyframes: vec![AnimKeyframe { t: 0.0, value: AnimValue::Scalar { value: 0.0 } }, AnimKeyframe { t: 0.10, value: AnimValue::Scalar { value: 1.0 } }, AnimKeyframe { t: 0.30, value: AnimValue::Scalar { value: 2.0 } }],
                 }],
             }],
         }

@@ -31,13 +31,13 @@
 //!   (named colors, `hsl()`, `currentColor`, …) is not parsed and yields no color (documented,
 //!   real-but-partial, not fabricated).
 
-use crate::artifacts::svg::{
-    SvgSnapshot,
-    schema::snapshot::{PathCommand, SvgElement, TransformOp, ViewBox, transform_ops_to_matrix, svg_element_from_xml_node, Matrix2D},
-};
-use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlNode};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+use crate::artifacts::svg::{
+    schema::snapshot::{svg_element_from_xml_node, transform_ops_to_matrix, Matrix2D, PathCommand, SvgElement, TransformOp, ViewBox},
+    SvgSnapshot,
+};
+use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlNode};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId::ANY };
@@ -58,54 +58,83 @@ fn resolve_path_commands(cmds: &[PathCommand]) -> Vec<PathSegment> {
             PathCommand::MoveTo { x, y, relative } => {
                 let (nx, ny) = if relative { (cur_x + x, cur_y + y) } else { (x, y) };
                 segs.push(PathSegment::MoveTo { to: SemioPoint2 { x: nx, y: ny } });
-                cur_x = nx; cur_y = ny; start_x = nx; start_y = ny;
-                last_cubic_ctrl = None; last_quad_ctrl = None;
+                cur_x = nx;
+                cur_y = ny;
+                start_x = nx;
+                start_y = ny;
+                last_cubic_ctrl = None;
+                last_quad_ctrl = None;
             }
             PathCommand::LineTo { x, y, relative } => {
                 let (nx, ny) = if relative { (cur_x + x, cur_y + y) } else { (x, y) };
                 segs.push(PathSegment::LineTo { to: SemioPoint2 { x: nx, y: ny } });
-                cur_x = nx; cur_y = ny; last_cubic_ctrl = None; last_quad_ctrl = None;
+                cur_x = nx;
+                cur_y = ny;
+                last_cubic_ctrl = None;
+                last_quad_ctrl = None;
             }
             PathCommand::HorizontalLineTo { x, relative } => {
                 let nx = if relative { cur_x + x } else { x };
                 segs.push(PathSegment::LineTo { to: SemioPoint2 { x: nx, y: cur_y } });
-                cur_x = nx; last_cubic_ctrl = None; last_quad_ctrl = None;
+                cur_x = nx;
+                last_cubic_ctrl = None;
+                last_quad_ctrl = None;
             }
             PathCommand::VerticalLineTo { y, relative } => {
                 let ny = if relative { cur_y + y } else { y };
                 segs.push(PathSegment::LineTo { to: SemioPoint2 { x: cur_x, y: ny } });
-                cur_y = ny; last_cubic_ctrl = None; last_quad_ctrl = None;
+                cur_y = ny;
+                last_cubic_ctrl = None;
+                last_quad_ctrl = None;
             }
             PathCommand::CurveTo { x1, y1, x2, y2, x, y, relative } => {
                 let (c1, c2, to) = if relative { ((cur_x + x1, cur_y + y1), (cur_x + x2, cur_y + y2), (cur_x + x, cur_y + y)) } else { ((x1, y1), (x2, y2), (x, y)) };
                 segs.push(PathSegment::CubicTo { c1: SemioPoint2 { x: c1.0, y: c1.1 }, c2: SemioPoint2 { x: c2.0, y: c2.1 }, to: SemioPoint2 { x: to.0, y: to.1 } });
-                last_cubic_ctrl = Some(c2); last_quad_ctrl = None; cur_x = to.0; cur_y = to.1;
+                last_cubic_ctrl = Some(c2);
+                last_quad_ctrl = None;
+                cur_x = to.0;
+                cur_y = to.1;
             }
             PathCommand::SmoothCurveTo { x2, y2, x, y, relative } => {
                 let (c2, to) = if relative { ((cur_x + x2, cur_y + y2), (cur_x + x, cur_y + y)) } else { ((x2, y2), (x, y)) };
                 let c1 = last_cubic_ctrl.map(|(lx, ly)| (2.0 * cur_x - lx, 2.0 * cur_y - ly)).unwrap_or((cur_x, cur_y));
                 segs.push(PathSegment::CubicTo { c1: SemioPoint2 { x: c1.0, y: c1.1 }, c2: SemioPoint2 { x: c2.0, y: c2.1 }, to: SemioPoint2 { x: to.0, y: to.1 } });
-                last_cubic_ctrl = Some(c2); last_quad_ctrl = None; cur_x = to.0; cur_y = to.1;
+                last_cubic_ctrl = Some(c2);
+                last_quad_ctrl = None;
+                cur_x = to.0;
+                cur_y = to.1;
             }
             PathCommand::QuadraticCurveTo { x1, y1, x, y, relative } => {
                 let (c, to) = if relative { ((cur_x + x1, cur_y + y1), (cur_x + x, cur_y + y)) } else { ((x1, y1), (x, y)) };
                 segs.push(PathSegment::QuadTo { c: SemioPoint2 { x: c.0, y: c.1 }, to: SemioPoint2 { x: to.0, y: to.1 } });
-                last_quad_ctrl = Some(c); last_cubic_ctrl = None; cur_x = to.0; cur_y = to.1;
+                last_quad_ctrl = Some(c);
+                last_cubic_ctrl = None;
+                cur_x = to.0;
+                cur_y = to.1;
             }
             PathCommand::SmoothQuadraticCurveTo { x, y, relative } => {
                 let to = if relative { (cur_x + x, cur_y + y) } else { (x, y) };
                 let c = last_quad_ctrl.map(|(lx, ly)| (2.0 * cur_x - lx, 2.0 * cur_y - ly)).unwrap_or((cur_x, cur_y));
                 segs.push(PathSegment::QuadTo { c: SemioPoint2 { x: c.0, y: c.1 }, to: SemioPoint2 { x: to.0, y: to.1 } });
-                last_quad_ctrl = Some(c); last_cubic_ctrl = None; cur_x = to.0; cur_y = to.1;
+                last_quad_ctrl = Some(c);
+                last_cubic_ctrl = None;
+                cur_x = to.0;
+                cur_y = to.1;
             }
             PathCommand::Arc { rx, ry, x_axis_rotation, large_arc, sweep, x, y, relative } => {
                 let to = if relative { (cur_x + x, cur_y + y) } else { (x, y) };
                 segs.push(PathSegment::ArcTo { rx, ry, x_rotation: x_axis_rotation, large_arc, sweep, to: SemioPoint2 { x: to.0, y: to.1 } });
-                cur_x = to.0; cur_y = to.1; last_cubic_ctrl = None; last_quad_ctrl = None;
+                cur_x = to.0;
+                cur_y = to.1;
+                last_cubic_ctrl = None;
+                last_quad_ctrl = None;
             }
             PathCommand::ClosePath => {
                 segs.push(PathSegment::Close);
-                cur_x = start_x; cur_y = start_y; last_cubic_ctrl = None; last_quad_ctrl = None;
+                cur_x = start_x;
+                cur_y = start_y;
+                last_cubic_ctrl = None;
+                last_quad_ctrl = None;
             }
         }
     }
@@ -132,11 +161,7 @@ fn matrix_to_semio_transform(m: &Matrix2D) -> SemioTransform {
     let det = m.a * m.d - m.b * m.c;
     let sy = if sx != 0.0 { det / sx } else { 0.0 };
     let theta = m.b.atan2(m.a);
-    SemioTransform {
-        translation: SemioPoint3 { x: m.e, y: m.f, z: 0.0 },
-        rotation: SemioQuaternion { x: 0.0, y: 0.0, z: (theta / 2.0).sin(), w: (theta / 2.0).cos() },
-        scale: SemioPoint3 { x: sx, y: sy, z: 1.0 },
-    }
+    SemioTransform { translation: SemioPoint3 { x: m.e, y: m.f, z: 0.0 }, rotation: SemioQuaternion { x: 0.0, y: 0.0, z: (theta / 2.0).sin(), w: (theta / 2.0).cos() }, scale: SemioPoint3 { x: sx, y: sy, z: 1.0 } }
 }
 //#endregion 🔖️TransformDecompose
 
@@ -183,7 +208,9 @@ fn decode_data_uri(href: &str) -> Option<(String, Vec<u8>)> {
     let rest = href.strip_prefix("data:")?;
     let (meta, data) = rest.split_once(',')?;
     let mime = meta.split(';').next().unwrap_or("application/octet-stream").to_string();
-    if !meta.contains("base64") { return None; }
+    if !meta.contains("base64") {
+        return None;
+    }
     let bytes = base64_decode(data)?;
     Some((mime, bytes))
 }
@@ -209,8 +236,12 @@ fn base64_decode(s: &str) -> Option<Vec<u8>> {
         let n = vals.len();
         let combined = vals.iter().fold(0u32, |acc, &v| (acc << 6) | v as u32) << ((4 - n) * 6);
         out.push((combined >> 16) as u8);
-        if n > 2 { out.push((combined >> 8) as u8); }
-        if n > 3 { out.push(combined as u8); }
+        if n > 2 {
+            out.push((combined >> 8) as u8);
+        }
+        if n > 3 {
+            out.push(combined as u8);
+        }
     }
     Some(out)
 }
@@ -253,10 +284,10 @@ fn draw_node_from_svg(el: &SvgElement, styles: &mut Vec<DrawStyle>) -> Option<Dr
         SvgElement::Polyline { common, points } | SvgElement::Polygon { common, points } => {
             let (fill, stroke, sw, op) = common_presentation(common);
             let style = intern_style(styles, fill, stroke, sw, op);
-            let mut segments: Vec<PathSegment> = points.iter().enumerate().map(|(i, (x, y))| {
-                if i == 0 { PathSegment::MoveTo { to: SemioPoint2 { x: *x, y: *y } } } else { PathSegment::LineTo { to: SemioPoint2 { x: *x, y: *y } } }
-            }).collect();
-            if matches!(el, SvgElement::Polygon { .. }) { segments.push(PathSegment::Close); }
+            let mut segments: Vec<PathSegment> = points.iter().enumerate().map(|(i, (x, y))| if i == 0 { PathSegment::MoveTo { to: SemioPoint2 { x: *x, y: *y } } } else { PathSegment::LineTo { to: SemioPoint2 { x: *x, y: *y } } }).collect();
+            if matches!(el, SvgElement::Polygon { .. }) {
+                segments.push(PathSegment::Close);
+            }
             Some(DrawNode::Path { segments, style })
         }
         SvgElement::Path { common, d } => {
@@ -289,11 +320,15 @@ fn attr_f64(attrs: &[XmlAttr], name: &str) -> f64 {
 }
 
 fn flatten_text(children: &[SvgElement]) -> String {
-    children.iter().map(|c| match c {
-        SvgElement::TextNode(t) => t.clone(),
-        SvgElement::Tspan { children, .. } => flatten_text(children),
-        _ => String::new(),
-    }).collect::<Vec<_>>().join("")
+    children
+        .iter()
+        .map(|c| match c {
+            SvgElement::TextNode(t) => t.clone(),
+            SvgElement::Tspan { children, .. } => flatten_text(children),
+            _ => String::new(),
+        })
+        .collect::<Vec<_>>()
+        .join("")
 }
 //#endregion 🔖️ElementWalk
 
@@ -313,10 +348,7 @@ impl ArtifactDeserializer for SemioDrawingFromSvg {
             SvgElement::Svg { view_box, width, height, children, .. } => {
                 let (w, h) = match view_box {
                     Some(ViewBox { width, height, .. }) => (*width, *height),
-                    None => (
-                        width.as_deref().and_then(|s| s.trim_end_matches("px").parse::<f64>().ok()).unwrap_or(0.0),
-                        height.as_deref().and_then(|s| s.trim_end_matches("px").parse::<f64>().ok()).unwrap_or(0.0),
-                    ),
+                    None => (width.as_deref().and_then(|s| s.trim_end_matches("px").parse::<f64>().ok()).unwrap_or(0.0), height.as_deref().and_then(|s| s.trim_end_matches("px").parse::<f64>().ok()).unwrap_or(0.0)),
                 };
                 (DrawCanvas { width: w, height: h, background: None }, children.as_slice())
             }

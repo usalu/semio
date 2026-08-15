@@ -27,6 +27,16 @@
         "scale": { "type": "integer", "minimum": 0 }
       }
     },
+    "PdfPredictor": {
+      "type": "object",
+      "required": ["predictor", "colors", "bitsPerComponent", "columns"],
+      "properties": { "predictor": {"type":"integer"}, "colors": {"type":"integer"}, "bitsPerComponent": {"type":"integer"}, "columns": {"type":"integer"} }
+    },
+    "PdfStreamFilter": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": { "kind": {"type":"string","enum":["flate","asciiHex","ascii85","runLength"]}, "predictor": {"$ref":"#/$defs/PdfPredictor"} }
+    },
     "PdfObject": {
       "type": "object",
       "required": ["kind"],
@@ -35,7 +45,7 @@
         "value": {},
         "dict": { "type": "array", "items": { "$ref": "#/$defs/PdfDictEntry" } },
         "data": { "type": "array", "items": { "type": "integer" } },
-        "rawFilter": { "type": "string" }
+        "filters": { "type": "array", "items": { "$ref": "#/$defs/PdfStreamFilter" } }
       }
     },
     "PdfIndirectObject": {

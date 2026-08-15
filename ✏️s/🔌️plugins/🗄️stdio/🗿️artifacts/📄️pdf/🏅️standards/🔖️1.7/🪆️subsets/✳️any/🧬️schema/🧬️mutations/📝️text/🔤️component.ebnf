@@ -1,23 +1,18 @@
-(* ISO-14977 EBNF for the real wire shape of PdfMutation (1.7): OpText::print_op is literally
-   serde_json::to_string(self) -- one JSON object tagged by "mutation". Matches
-   ../🔣️component.json. *)
-pdf mutation = '{', '"mutation"', ':', mutation tag, { ',', field }, '}' ;
-mutation tag = '"noMutation"' | '"setSnapshot"' | '"insertPage"' | '"removePage"'
-             | '"setPageMediaBox"' | '"setPageCropBox"' | '"appendPageContent"' | '"setInfo"'
-             | '"insertObject"' | '"removeObject"' | '"setObjectValue"'
-             | '"setDictEntry"' | '"removeDictEntry"' | '"setTrailerEntry"' | '"removeTrailerEntry"' ;
-field = '"snapshot"', ':', json object
-      | '"index"', ':', number
-      | '"page"', ':', json object
-      | '"mediaBox"', ':', json array
-      | '"cropBox"', ':', ( json array | 'null' )
-      | '"text"', ':', json string
-      | '"info"', ':', json object
-      | '"id"', ':', json object
-      | '"value"', ':', json value
-      | '"path"', ':', json array
-      | '"key"', ':', json string ;
-json value = json object | json array | json string | number | 'true' | 'false' | 'null' ;
-json object = '{', [ json string, ':', json value, { ',', json string, ':', json value } ], '}' ;
-json array = '[', [ json value, { ',', json value } ], ']' ;
-json string = '"', { ? any char except '"' or '\' ? | '\', escape }, '"' ;
+(* Structured logical PdfMutation text. Strings and semantic byte values are hexadecimal;
+   PDF objects and typed stream-filter pipelines use recursive tagged records. *)
+pdf mutation = no mutation | operation ;
+no mutation = "no-mutation" ;
+operation = keyword, { " ", field } ;
+keyword = "set-snapshot" | "insert-page" | "remove-page" | "set-page-media-box"
+        | "set-page-crop-box" | "append-page-content" | "set-info" | "insert-object"
+        | "remove-object" | "set-object-value" | "set-dict-entry" | "remove-dict-entry"
+        | "set-trailer-entry" | "remove-trailer-entry" ;
+field = name, "=", value ;
+name = ? lowercase ASCII name ? ;
+value = integer | hexadecimal | record | pdf object ;
+record = "[", [ value, { ",", value } ], "]" ;
+pdf object = "Z" | object tag, "[", [ value, { ",", value } ], "]" ;
+object tag = "B" | "I" | "R" | "S" | "N" | "A" | "D" | "F" | "T" ;
+integer = [ "-" ], digit, { digit } ;
+hexadecimal = { digit | "a" | "b" | "c" | "d" | "e" | "f" } ;
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;

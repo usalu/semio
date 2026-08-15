@@ -5,15 +5,12 @@
 //! already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use std::sync::OnceLock;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
-    use semio_framework_plugin::{
-        ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
-        register_subset_validator, subset_validator_entry_of,
-    };
-    use crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance;
-    use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::TiffComposer as TiffAnyComposer;
     use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::TiffSnapshot;
+    use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::TiffComposer as TiffAnyComposer;
+    use crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance;
+    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use std::sync::OnceLock;
 
     const DIALECT_BASELINE: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("baseline") };
     const DIALECT_ANY: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("*") };
@@ -81,8 +78,8 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::AnalyzeSource;
         use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
+        use semio_framework_plugin::AnalyzeSource;
 
         /// 🩹 `TiffSnapshot::default()` has no IFD at all, which the real encoder rejects ("tiff:
         /// encode requires an ImageWidth tag") -- `encode_pack`'s infallible convenience wrapper
@@ -92,12 +89,7 @@ pub mod derived_composition {
         fn minimal_non_degenerate_snapshot() -> TiffSnapshot {
             TiffSnapshot {
                 byte_order: TiffByteOrder::LittleEndian,
-                ifds: vec![TiffIfd {
-                    entries: vec![
-                        TiffTag { tag: 256, kind: TiffFieldType::Long, values: TiffValues::Long(vec![1]) },
-                        TiffTag { tag: 257, kind: TiffFieldType::Long, values: TiffValues::Long(vec![1]) },
-                    ],
-                }],
+                ifds: vec![TiffIfd { entries: vec![TiffTag { tag: 256, kind: TiffFieldType::Long, values: TiffValues::Long(vec![1]) }, TiffTag { tag: 257, kind: TiffFieldType::Long, values: TiffValues::Long(vec![1]) }] }],
                 pixels: vec![0, 0, 0, 255],
                 ..TiffSnapshot::default()
             }

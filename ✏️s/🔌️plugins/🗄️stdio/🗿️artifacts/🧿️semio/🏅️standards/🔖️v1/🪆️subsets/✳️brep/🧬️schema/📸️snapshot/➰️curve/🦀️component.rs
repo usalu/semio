@@ -12,18 +12,18 @@
 
 // #region 🔖️Submodules
 
-#[path = "🪢️bspline/🦀️component.rs"]
-pub mod bspline;
 #[path = "🎢️bezier/🦀️component.rs"]
 pub mod bezier;
+#[path = "🪢️bspline/🦀️component.rs"]
+pub mod bspline;
 #[path = "✂️curve-ops/🦀️component.rs"]
 pub mod curve_ops;
 
 // #endregion 🔖️Submodules
 
-use bspline::{de_boor, KnotVector};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2, Vec3};
+use bspline::{de_boor, KnotVector};
 
 // #region 🔖️Curve3
 

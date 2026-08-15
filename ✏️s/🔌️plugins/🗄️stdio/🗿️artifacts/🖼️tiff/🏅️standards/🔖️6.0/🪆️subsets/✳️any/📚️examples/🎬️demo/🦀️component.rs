@@ -3,12 +3,16 @@
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "demo";
-pub fn label() -> LocalizedLabel { LocalizedLabel::native("Demo", "Demo") }
+pub fn label() -> LocalizedLabel {
+    LocalizedLabel::native("Demo", "Demo")
+}
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.semio");
 /// 🖼️ Genuine `encode_tiff(demo_tiff_snapshot())` bytes (populated by engine fixture honesty).
 pub const NATIVE_BYTES: &[u8] = include_bytes!("🖼️assets/🖼️example.tiff");
-pub fn source() -> ExampleSource { ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON) }
+pub fn source() -> ExampleSource {
+    ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
+}
 
 #[cfg(test)]
 mod tests {
@@ -48,11 +52,7 @@ mod tests {
         type Inference = crate::artifacts::tiff::standards::v6_0::subsets::any::schema::inferences::TiffInference;
 
         fn dialect() -> store::os_io::ArtifactDialect {
-            store::os_io::ArtifactDialect {
-                artifact_kind: "s.stdio.tiff".into(),
-                standard: "6.0".into(),
-                subset: "*".into(),
-            }
+            store::os_io::ArtifactDialect { artifact_kind: "s.stdio.tiff".into(), standard: "6.0".into(), subset: "*".into() }
         }
 
         fn fidelity() -> store::os_store::test_support::IoFidelityClass {
@@ -91,12 +91,7 @@ mod tests {
                     _ => None,
                 })
                 .unwrap_or(1);
-            vec![crate::artifacts::tiff::TiffMutation::SetTag {
-                ifd_index: 0,
-                tag: TAG_IMAGE_WIDTH,
-                kind: TiffFieldType::Long,
-                values: TiffValues::Long(vec![width + 1]),
-            }]
+            vec![crate::artifacts::tiff::TiffMutation::SetTag { ifd_index: 0, tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![width + 1]) }]
         }
 
         fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
@@ -110,11 +105,7 @@ mod tests {
 
     #[test]
     fn demo_subset_integrated_roundtrip() {
-        let asset = store::os_store::test_support::ExampleAsset {
-            bytes: super::NATIVE_BYTES,
-            text: None,
-            provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/🖼️example.tiff",
-        };
+        let asset = store::os_store::test_support::ExampleAsset { bytes: super::NATIVE_BYTES, text: None, provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/🖼️example.tiff" };
         store::os_store::test_support::assert_subset_roundtrip::<TiffAnyRoundtrip>(&asset, None);
     }
     //#endregion 🧪️SubsetRoundtrip

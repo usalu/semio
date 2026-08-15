@@ -98,3 +98,9 @@ The exact fixture assertion now checks the real root order `ftyp -> moov -> free
 byte equality, semantic anti-bypass, and mutation+inverse reconstruction. Static `rustfmt --emit
 stdout` parse checks completed successfully for the five MP4 Rust implementation files. Per the
 lane constraint, no Cargo or Nx command was run for this upgrade.
+
+## Movie-Aware Structural Reapply
+
+After the concurrent typed `movie` projection landed, the MP4 physical state was reapplied alongside it. `Mp4PhysicalBox` persists ordered 32-bit, extended-64-bit, and to-EOF size forms, fourcc and UUID user-type headers, container preludes, recursive child order, and leaf bytes. `mdat`, codec payloads, and unknown leaves remain opaque at box-leaf scope; there is no whole-file source field.
+
+The semantic fingerprint now includes the typed `movie` value as well as ftyp, tracks, samples, and logical unknown boxes. Decode captures the tree; unchanged encode uses the recursive structural writer; dirty encode uses canonical authoring. Artifact conversion, sparse diff/inverse/absorb/between, JSON snapshot DSL/pack, and JSON mutation/diff codecs carry the physical state without removing movie fields. Existing exact fixture, pack/DSL, mutation/inverse, and anti-bypass tests exercise this path. Rustfmt parse-only checking found no syntax diagnostic; Cargo/Nx remain for central integration.

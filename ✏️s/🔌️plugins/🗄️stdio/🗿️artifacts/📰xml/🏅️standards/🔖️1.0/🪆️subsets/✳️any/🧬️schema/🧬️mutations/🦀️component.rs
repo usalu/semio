@@ -2,18 +2,14 @@
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, key/index-aware.
 
 use crate::artifacts::xml::schema::diff::{
-    diff_set_snapshot, XmlAttrAdded, XmlAttrModified, XmlAttributesDiff, XmlChildAdded, XmlChildrenDiff, XmlDiff,
-    XmlElementDiff, XmlNodeDiff,
+    dec_declaration, dec_doctype, dec_doctype_bin, dec_prolog, dec_str, dec_xml_node, decode_option, enc_declaration, enc_doctype, enc_doctype_bin, enc_prolog, enc_str, enc_xml_node, encode_option, split_top_level, strip_brackets,
 };
-use crate::artifacts::xml::schema::diff::{
-    decode_option, dec_declaration, dec_prolog, dec_str, dec_xml_node, encode_option, enc_declaration, enc_prolog, enc_str, enc_xml_node,
-    split_top_level, strip_brackets,
-};
-use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlNode};
+use crate::artifacts::xml::schema::diff::{diff_set_snapshot, XmlAttrAdded, XmlAttrModified, XmlAttributesDiff, XmlChildAdded, XmlChildrenDiff, XmlDiff, XmlElementDiff, XmlNodeDiff};
+use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlDoctype, XmlNode};
 use crate::artifacts::xml::XmlSnapshot;
-use protocol::{Mutation, OpText};
 #[cfg(test)]
 use protocol::OpBinary;
+use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️NodePath
@@ -70,7 +66,7 @@ pub enum XmlMutation {
         declaration: Option<XmlDeclaration>,
     },
     SetDoctype {
-        doctype: Option<String>,
+        doctype: Option<XmlDoctype>,
     },
     /// ➕️ Inserts `node` at `index` among the children of the element addressed by `path`.
     InsertElement {
@@ -116,30 +112,15 @@ impl Mutation<XmlSnapshot> for XmlMutation {
         match self {
             XmlMutation::NoMutation => XmlDiff::default(),
             XmlMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-            XmlMutation::SetDeclaration { declaration } => {
-                XmlDiff { prolog: None, declaration: Some(declaration.clone()), doctype: None, root: None }
-            }
+            XmlMutation::SetDeclaration { declaration } => XmlDiff { prolog: None, declaration: Some(declaration.clone()), doctype: None, root: None },
             XmlMutation::SetDoctype { doctype } => XmlDiff { prolog: None, declaration: None, doctype: Some(doctype.clone()), root: None },
             XmlMutation::InsertElement { path, index, node } => diff_at_path(
                 &path.0,
-                XmlNodeDiff::Element(XmlElementDiff {
-                    name: None,
-                    attributes: None,
-                    children: Some(XmlChildrenDiff {
-                        removed: Vec::new(),
-                        modified: Vec::new(),
-                        added: vec![XmlChildAdded { index: *index, item: node.clone() }],
-                    }),
-                }),
+                XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed: Vec::new(), modified: Vec::new(), added: vec![XmlChildAdded { index: *index, item: node.clone() }] }) }),
             ),
-            XmlMutation::RemoveElement { path, index } => diff_at_path(
-                &path.0,
-                XmlNodeDiff::Element(XmlElementDiff {
-                    name: None,
-                    attributes: None,
-                    children: Some(XmlChildrenDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }),
-                }),
-            ),
+            XmlMutation::RemoveElement { path, index } => {
+                diff_at_path(&path.0, XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }) }))
+            }
             XmlMutation::SetAttribute { path, name, value } => {
                 let target = path.resolve(base.doc.root.as_ref());
                 let existing = target.and_then(|n| match n {
@@ -147,24 +128,14 @@ impl Mutation<XmlSnapshot> for XmlMutation {
                     _ => None,
                 });
                 let attrs_diff = match (existing, value) {
-                    (Some(_), Some(v)) => XmlAttributesDiff {
-                        removed: Vec::new(),
-                        modified: vec![XmlAttrModified { name: name.clone(), value: v.clone() }],
-                        added: Vec::new(),
-                    },
-                    (Some(_), None) => {
-                        XmlAttributesDiff { removed: vec![name.clone()], modified: Vec::new(), added: Vec::new() }
-                    }
+                    (Some(_), Some(v)) => XmlAttributesDiff { removed: Vec::new(), modified: vec![XmlAttrModified { name: name.clone(), value: v.clone() }], added: Vec::new() },
+                    (Some(_), None) => XmlAttributesDiff { removed: vec![name.clone()], modified: Vec::new(), added: Vec::new() },
                     (None, Some(v)) => {
                         let next_index = match target {
                             Some(XmlNode::Element { attrs, .. }) => attrs.len(),
                             _ => 0,
                         };
-                        XmlAttributesDiff {
-                            removed: Vec::new(),
-                            modified: Vec::new(),
-                            added: vec![XmlAttrAdded { index: next_index, name: name.clone(), value: v.clone() }],
-                        }
+                        XmlAttributesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![XmlAttrAdded { index: next_index, name: name.clone(), value: v.clone() }] }
                     }
                     (None, None) => XmlAttributesDiff::default(),
                 };
@@ -236,34 +207,17 @@ fn enc_node_path(p: &XmlNodePath) -> String {
     format!("[{}]", p.0.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(","))
 }
 fn dec_node_path(s: &str) -> Result<XmlNodePath, String> {
-    split_top_level(strip_brackets(s)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(|s| s.parse().map_err(|e: std::num::ParseIntError| e.to_string()))
-        .collect::<Result<Vec<usize>, String>>()
-        .map(XmlNodePath)
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| s.parse().map_err(|e: std::num::ParseIntError| e.to_string())).collect::<Result<Vec<usize>, String>>().map(XmlNodePath)
 }
 pub(crate) fn enc_xml_snapshot(s: &XmlSnapshot) -> String {
-    format!(
-        "[{},{},{},{},{}]",
-        enc_str(&s.schema),
-        encode_option(&s.doc.root, enc_xml_node),
-        encode_option(&s.doc.doctype, |v| enc_str(v)),
-        encode_option(&s.doc.declaration, enc_declaration),
-        enc_prolog(&s.doc.prolog),
-    )
+    format!("[{},{},{},{},{}]", enc_str(&s.schema), encode_option(&s.doc.root, enc_xml_node), encode_option(&s.doc.doctype, enc_doctype), encode_option(&s.doc.declaration, enc_declaration), enc_prolog(&s.doc.prolog),)
 }
 pub(crate) fn dec_xml_snapshot(s: &str) -> Result<XmlSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, root, doctype, declaration, prolog] = parts.as_slice() else { return Err(format!("xml snapshot: expected 5 fields, got {}", parts.len())) };
     Ok(XmlSnapshot {
         schema: dec_str(schema)?,
-        doc: crate::artifacts::xml::schema::snapshot::XmlDocument {
-            root: decode_option(root, dec_xml_node)?,
-            doctype: decode_option(doctype, dec_str)?,
-            declaration: decode_option(declaration, dec_declaration)?,
-            prolog: dec_prolog(prolog)?,
-        },
+        doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root: decode_option(root, dec_xml_node)?, doctype: decode_option(doctype, dec_doctype)?, declaration: decode_option(declaration, dec_declaration)?, prolog: dec_prolog(prolog)? },
     })
 }
 
@@ -272,7 +226,7 @@ fn print_xml_mutation(m: &XmlMutation) -> String {
         XmlMutation::NoMutation => "no-mutation".to_string(),
         XmlMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_xml_snapshot(snapshot)),
         XmlMutation::SetDeclaration { declaration } => format!("set-declaration declaration={}", encode_option(declaration, enc_declaration)),
-        XmlMutation::SetDoctype { doctype } => format!("set-doctype doctype={}", encode_option(doctype, |v| enc_str(v))),
+        XmlMutation::SetDoctype { doctype } => format!("set-doctype doctype={}", encode_option(doctype, enc_doctype)),
         XmlMutation::InsertElement { path, index, node } => format!("insert-element path={} index={index} node={}", enc_node_path(path), enc_xml_node(node)),
         XmlMutation::RemoveElement { path, index } => format!("remove-element path={} index={index}", enc_node_path(path)),
         XmlMutation::SetAttribute { path, name, value } => format!("set-attribute path={} name={} value={}", enc_node_path(path), enc_str(name), encode_option(value, |v| enc_str(v))),
@@ -284,19 +238,13 @@ fn parse_xml_mutation(line: &str) -> Result<XmlMutation, String> {
         return Ok(XmlMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("xml mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("xml mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("xml mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
         "set-snapshot" => Ok(XmlMutation::SetSnapshot { snapshot: dec_xml_snapshot(arg("snapshot")?)? }),
         "set-declaration" => Ok(XmlMutation::SetDeclaration { declaration: decode_option(arg("declaration")?, dec_declaration)? }),
-        "set-doctype" => Ok(XmlMutation::SetDoctype { doctype: decode_option(arg("doctype")?, dec_str)? }),
+        "set-doctype" => Ok(XmlMutation::SetDoctype { doctype: decode_option(arg("doctype")?, dec_doctype)? }),
         "insert-element" => Ok(XmlMutation::InsertElement { path: dec_node_path(arg("path")?)?, index: usize_arg("index")?, node: dec_xml_node(arg("node")?)? }),
         "remove-element" => Ok(XmlMutation::RemoveElement { path: dec_node_path(arg("path")?)?, index: usize_arg("index")? }),
         "set-attribute" => Ok(XmlMutation::SetAttribute { path: dec_node_path(arg("path")?)?, name: dec_str(arg("name")?)?, value: decode_option(arg("value")?, dec_str)? }),
@@ -321,10 +269,7 @@ impl protocol::OpText for XmlMutation {
 /// `store::ByteReader` plus `XmlDiff`'s own `write_str_lp`/`read_str_lp`/`enc_xml_node_bin`/
 /// `dec_xml_node_bin`/`enc_declaration_bin`/`dec_declaration_bin` (`../🔺️diff/🦀️component.rs`,
 /// `pub(crate)` to this artifact).
-use crate::artifacts::xml::schema::diff::{
-    dec_declaration_bin, dec_prolog_bin, dec_xml_node_bin, enc_declaration_bin, enc_prolog_bin, enc_xml_node_bin,
-    read_str_lp, write_str_lp,
-};
+use crate::artifacts::xml::schema::diff::{dec_declaration_bin, dec_prolog_bin, dec_xml_node_bin, enc_declaration_bin, enc_prolog_bin, enc_xml_node_bin, read_str_lp, write_str_lp};
 
 fn enc_node_path_bin(p: &XmlNodePath, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, p.0.len() as u64);
@@ -348,7 +293,7 @@ pub(crate) fn enc_xml_snapshot_bin(s: &XmlSnapshot, out: &mut Vec<u8>) {
     }
     out.push(if s.doc.doctype.is_some() { 1 } else { 0 });
     if let Some(doctype) = &s.doc.doctype {
-        write_str_lp(out, doctype);
+        enc_doctype_bin(doctype, out);
     }
     out.push(if s.doc.declaration.is_some() { 1 } else { 0 });
     if let Some(declaration) = &s.doc.declaration {
@@ -359,7 +304,7 @@ pub(crate) fn enc_xml_snapshot_bin(s: &XmlSnapshot, out: &mut Vec<u8>) {
 pub(crate) fn dec_xml_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlSnapshot, String> {
     let schema = read_str_lp(reader)?;
     let root = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
-    let doctype = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let doctype = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_doctype_bin(reader)?) } else { None };
     let declaration = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_declaration_bin(reader)?) } else { None };
     let prolog = dec_prolog_bin(reader)?;
     Ok(XmlSnapshot { schema, doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root, doctype, declaration, prolog } })
@@ -395,7 +340,7 @@ impl protocol::OpBinary for XmlMutation {
             XmlMutation::SetDoctype { doctype } => {
                 out.push(if doctype.is_some() { 1 } else { 0 });
                 if let Some(doctype) = doctype {
-                    write_str_lp(&mut out, doctype);
+                    enc_doctype_bin(doctype, &mut out);
                 }
             }
             XmlMutation::InsertElement { path, index, node } => {
@@ -441,7 +386,7 @@ impl protocol::OpBinary for XmlMutation {
             }
             3 => {
                 let has = reader.read_u8().map_err(|e| malformed("op doctype presence", reader.position(), e.to_string()))?;
-                let doctype = if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("op doctype", reader.position(), e))?) } else { None };
+                let doctype = if has != 0 { Some(dec_doctype_bin(&mut reader).map_err(|e| malformed("op doctype", reader.position(), e))?) } else { None };
                 Ok(XmlMutation::SetDoctype { doctype })
             }
             4 => {
@@ -491,11 +436,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<XmlMutation> {
         XmlMutation::SetDeclaration { declaration: None },
         XmlMutation::SetDoctype { doctype: Some("<!DOCTYPE root>".into()) },
         XmlMutation::SetDoctype { doctype: None },
-        XmlMutation::InsertElement {
-            path: XmlNodePath(vec![]),
-            index: 1,
-            node: XmlNode::Element { name: "grandchild".into(), attrs: vec![XmlAttr { name: "r".into(), value: "1".into() }], children: vec![] },
-        },
+        XmlMutation::InsertElement { path: XmlNodePath(vec![]), index: 1, node: XmlNode::Element { name: "grandchild".into(), attrs: vec![XmlAttr { name: "r".into(), value: "1".into() }], children: vec![] } },
         XmlMutation::RemoveElement { path: XmlNodePath(vec![]), index: 0 },
         XmlMutation::SetAttribute { path: XmlNodePath(vec![0]), name: "width".into(), value: Some("99".into()) },
         XmlMutation::SetAttribute { path: XmlNodePath(vec![0]), name: "width".into(), value: None },

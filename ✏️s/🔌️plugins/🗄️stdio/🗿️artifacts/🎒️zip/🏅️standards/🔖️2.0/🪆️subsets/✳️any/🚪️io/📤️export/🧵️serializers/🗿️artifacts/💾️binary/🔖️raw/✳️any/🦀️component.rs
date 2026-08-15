@@ -9,12 +9,8 @@ pub fn register() {}
 
 /// 🎒️ Encode ZipSnapshot as ZIP container bytes.
 pub fn serialize(from: &ZipSnapshot) -> Result<BinarySnapshot, store::PackError> {
-    let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(from)
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
-    Ok(BinarySnapshot {
-        schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(),
-        bytes,
-    })
+    let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    Ok(BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
 }
 
 /// Encode ZIP then wrap as binary pack bytes.

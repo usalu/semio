@@ -15,10 +15,10 @@
 //!   `RiffChunk`'s own doc comment) and decoding a `LIST INFO` sub-chunk here would be re-parsing
 //!   bytes this bridge's job explicitly excludes ("zero codec reimplementation").
 
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::wav::WavSnapshot;
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::WavData;
 use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
+use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::WavData;
+use crate::artifacts::wav::WavSnapshot;
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.wav", standard: StandardId("riff-pcm"), subset: SubsetId("*") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") };
@@ -38,7 +38,13 @@ impl ArtifactDeserializer for SemioAudioFromWav {
             WavData::Pcm8(samples) => (SemioAudioFormat::Pcm8, samples.iter().map(|&s| (s as f32 - 128.0) / 128.0).collect()),
             WavData::Float32(samples) => (SemioAudioFormat::Float32, samples.clone()),
             WavData::Raw(_) => (
-                if from.fmt.bits_per_sample == 24 { SemioAudioFormat::Pcm24 } else if from.fmt.bits_per_sample >= 32 && from.fmt.audio_format == 3 { SemioAudioFormat::Float64 } else { SemioAudioFormat::Pcm32 },
+                if from.fmt.bits_per_sample == 24 {
+                    SemioAudioFormat::Pcm24
+                } else if from.fmt.bits_per_sample >= 32 && from.fmt.audio_format == 3 {
+                    SemioAudioFormat::Float64
+                } else {
+                    SemioAudioFormat::Pcm32
+                },
                 Vec::new(),
             ),
         };

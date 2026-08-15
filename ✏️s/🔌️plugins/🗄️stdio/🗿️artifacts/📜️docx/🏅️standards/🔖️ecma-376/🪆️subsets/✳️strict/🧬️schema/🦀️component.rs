@@ -8,13 +8,13 @@
 pub use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use dsl::{Diagnostic, Severity};
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::docx::schema::snapshot::{DocxDocument, DocxParagraph, DocxRun};
     use crate::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::{check_strict_conformance, STRICT_REL_BASE};
     use crate::artifacts::docx::{DocxDiff, DocxMutation, DocxSnapshot};
     use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
     use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
+    use dsl::{Diagnostic, Severity};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Namespaces
     const STRICT_MAIN_NS: &str = "http://purl.oclc.org/ooxml/wordprocessingml/main";
@@ -71,11 +71,7 @@ pub mod derived_construction {
                             }
                             rc.push(XmlNode::Element { name: "w:rPr".into(), attrs: vec![], children: rpr });
                         }
-                        rc.push(XmlNode::Element {
-                            name: "w:t".into(),
-                            attrs: vec![XmlAttr { name: "xml:space".into(), value: "preserve".into() }],
-                            children: vec![XmlNode::Text { text: r.text.clone() }],
-                        });
+                        rc.push(XmlNode::Element { name: "w:t".into(), attrs: vec![XmlAttr { name: "xml:space".into(), value: "preserve".into() }], children: vec![XmlNode::Text { text: r.text.clone() }] });
                         XmlNode::Element { name: "w:r".into(), attrs: vec![], children: rc }
                     })
                     .collect();
@@ -86,10 +82,7 @@ pub mod derived_construction {
             prolog: Vec::new(),
             root: Some(XmlNode::Element {
                 name: "w:document".into(),
-                attrs: vec![
-                    XmlAttr { name: "xmlns:w".into(), value: STRICT_MAIN_NS.into() },
-                    XmlAttr { name: "conformance".into(), value: "strict".into() },
-                ],
+                attrs: vec![XmlAttr { name: "xmlns:w".into(), value: STRICT_MAIN_NS.into() }, XmlAttr { name: "conformance".into(), value: "strict".into() }],
                 children: vec![XmlNode::Element { name: "w:body".into(), attrs: vec![], children: body_children }],
             }),
             doctype: None,
@@ -202,11 +195,11 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
-    use semio_framework_plugin::{AnalyzeSource, Analysis, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
     use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
     use crate::artifacts::docx::DocxSnapshot;
     use crate::artifacts::zip::opc::{resolve_relationship_target, OpcPackage, OpcPart};
+    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("strict") };
@@ -268,24 +261,15 @@ pub mod derived_analysis {
                     out.push(soft(CODE_CONFORMANCE_ATTR, format!("main document part {path} root element does not declare conformance=\"strict\"")));
                 }
             }
-            None => out.push(hard(
-                CODE_MAIN_NS_MISSING,
-                "package has no root officeDocument relationship -- cannot locate the main document part to check the strict namespace on".into(),
-            )),
+            None => out.push(hard(CODE_MAIN_NS_MISSING, "package has no root officeDocument relationship -- cannot locate the main document part to check the strict namespace on".into())),
         }
 
         for part in &opc.parts {
             if part_contains(&part.bytes, TRANSITIONAL_MAIN_NS) {
-                out.push(hard(
-                    CODE_TRANSITIONAL_NS_PRESENT,
-                    format!("part {} contains the transitional WordprocessingML namespace {TRANSITIONAL_MAIN_NS} -- strict conformance forbids mixed namespaces", part.path),
-                ));
+                out.push(hard(CODE_TRANSITIONAL_NS_PRESENT, format!("part {} contains the transitional WordprocessingML namespace {TRANSITIONAL_MAIN_NS} -- strict conformance forbids mixed namespaces", part.path)));
             }
             if part_contains(&part.bytes, VML_NS) {
-                out.push(hard(
-                    CODE_VML_PRESENT,
-                    format!("part {} contains the VML namespace {VML_NS} -- VML is transitional-only markup, forbidden under strict conformance", part.path),
-                ));
+                out.push(hard(CODE_VML_PRESENT, format!("part {} contains the VML namespace {VML_NS} -- VML is transitional-only markup, forbidden under strict conformance", part.path)));
             }
             if part_contains(&part.bytes, "mc:AlternateContent") {
                 out.push(soft(CODE_ALTERNATE_CONTENT, format!("part {} contains mc:AlternateContent compatibility markup", part.path)));
@@ -297,10 +281,7 @@ pub mod derived_analysis {
         for owner in owners {
             for rel in &opc.relationships[owner] {
                 if rel.rel_type.starts_with(TRANSITIONAL_REL_BASE) {
-                    out.push(hard(
-                        CODE_REL_BASE,
-                        format!("relationship {} owned by {owner:?} uses the transitional relationship base {TRANSITIONAL_REL_BASE} -- strict conformance requires {STRICT_REL_BASE}", rel.id),
-                    ));
+                    out.push(hard(CODE_REL_BASE, format!("relationship {} owned by {owner:?} uses the transitional relationship base {TRANSITIONAL_REL_BASE} -- strict conformance requires {STRICT_REL_BASE}", rel.id)));
                 }
             }
         }
@@ -342,7 +323,7 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::zip::opc::{OpcPackage, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
+        use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
         fn strict_document_bytes() -> Vec<u8> {
             format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}" conformance="strict"><w:body/></w:document>"#).into_bytes()

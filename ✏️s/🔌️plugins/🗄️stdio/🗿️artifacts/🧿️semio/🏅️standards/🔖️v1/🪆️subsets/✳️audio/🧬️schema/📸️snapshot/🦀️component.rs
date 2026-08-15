@@ -87,13 +87,7 @@ pub struct SemioAudioSnapshot {
 
 impl Default for SemioAudioSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA.into(),
-            sample_rate: 0,
-            format: SemioAudioFormat::default(),
-            channels: Vec::new(),
-            tags: Vec::new(),
-        }
+        Self { schema: STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA.into(), sample_rate: 0, format: SemioAudioFormat::default(), channels: Vec::new(), tags: Vec::new() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -131,7 +125,9 @@ fn enc_str(s: &str) -> String {
 fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn parse_u32(s: &str) -> Result<u32, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+fn parse_u32(s: &str) -> Result<u32, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
 
 fn enc_format(f: SemioAudioFormat) -> &'static str {
     match f {
@@ -164,12 +160,20 @@ fn enc_f32_list(v: &[f32]) -> String {
 }
 fn dec_f32_list(s: &str) -> Result<Vec<f32>, String> {
     let inner = strip_brackets(s)?;
-    if inner.is_empty() { return Ok(Vec::new()); }
+    if inner.is_empty() {
+        return Ok(Vec::new());
+    }
     split_top_level(inner, ',').into_iter().map(|tok| u32::from_str_radix(tok, 16).map(f32::from_bits).map_err(|e| e.to_string())).collect()
 }
-fn enc_channel(c: &SemioAudioChannel) -> String { enc_f32_list(&c.samples) }
-fn dec_channel(s: &str) -> Result<SemioAudioChannel, String> { Ok(SemioAudioChannel { samples: dec_f32_list(s)? }) }
-fn enc_tag(t: &SemioAudioTag) -> String { format!("[{},{}]", enc_str(&t.key), enc_str(&t.value)) }
+fn enc_channel(c: &SemioAudioChannel) -> String {
+    enc_f32_list(&c.samples)
+}
+fn dec_channel(s: &str) -> Result<SemioAudioChannel, String> {
+    Ok(SemioAudioChannel { samples: dec_f32_list(s)? })
+}
+fn enc_tag(t: &SemioAudioTag) -> String {
+    format!("[{},{}]", enc_str(&t.key), enc_str(&t.value))
+}
 fn dec_tag(s: &str) -> Result<SemioAudioTag, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [key, value] = parts.as_slice() else { return Err(format!("tag: expected 2 fields, got {}", parts.len())) };
@@ -188,14 +192,7 @@ fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T
 /// Newlines are pure lexer trivia in the shared dialect, so this is genuinely recognizable by
 /// `dsl::Recognizer`, not merely readable.
 fn print_audio_snapshot_body(s: &SemioAudioSnapshot) -> String {
-    format!(
-        "schema={}\nsampleRate={}\nformat={}\nchannels={}\ntags={}",
-        enc_str(&s.schema),
-        s.sample_rate,
-        enc_format(s.format),
-        enc_list(&s.channels, enc_channel),
-        enc_list(&s.tags, enc_tag),
-    )
+    format!("schema={}\nsampleRate={}\nformat={}\nchannels={}\ntags={}", enc_str(&s.schema), s.sample_rate, enc_format(s.format), enc_list(&s.channels, enc_channel), enc_list(&s.tags, enc_tag),)
 }
 fn parse_audio_snapshot_body(body: &str) -> Result<SemioAudioSnapshot, String> {
     let mut schema = None;
@@ -343,7 +340,9 @@ fn decode_audio_snapshot_binary(bytes: &[u8]) -> Result<SemioAudioSnapshot, Stri
 /// Wrapped in the repo-wide `store::semio_format` envelope, unchanged.
 impl store::ArtifactDsl for SemioAudioSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str { STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA }
+    fn envelope_id() -> &'static str {
+        STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -355,11 +354,7 @@ impl store::ArtifactDsl for SemioAudioSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_audio_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -368,22 +363,14 @@ impl store::ArtifactPack for SemioAudioSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_audio_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_audio_snapshot_binary(&inner).map_err(store::PackError::Schema)
@@ -402,10 +389,7 @@ pub(crate) fn demo_audio_snapshot() -> SemioAudioSnapshot {
         schema: STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA.into(),
         sample_rate: 44_100,
         format: SemioAudioFormat::Float32,
-        channels: vec![
-            SemioAudioChannel { samples: vec![0.0, 0.5, -0.5, 1.0] },
-            SemioAudioChannel { samples: vec![0.0, -0.5, 0.5, -1.0] },
-        ],
+        channels: vec![SemioAudioChannel { samples: vec![0.0, 0.5, -0.5, 1.0] }, SemioAudioChannel { samples: vec![0.0, -0.5, 0.5, -1.0] }],
         tags: vec![SemioAudioTag { key: "title".into(), value: "test tone".into() }],
     }
 }

@@ -17,7 +17,7 @@
 //! - Every OTHER unmodeled `DxfEntity::Other` kind (3DFACE, POINT, DIMENSION, …) is dropped — no
 //!   raw-retention path node kind exists on `DrawNode`.
 
-use crate::artifacts::dxf::{DxfSnapshot, schema::snapshot::DxfEntity};
+use crate::artifacts::dxf::{schema::snapshot::DxfEntity, DxfSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioTransform};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
@@ -48,18 +48,25 @@ fn arc_path(cx: f64, cy: f64, r: f64, start_deg: f64, end_deg: f64) -> Vec<PathS
 //#region 🔖️EntityMap
 fn draw_node_from_entity(e: &DxfEntity) -> Option<DrawNode> {
     match e {
-        DxfEntity::Line { start, end, .. } => Some(DrawNode::Path {
-            segments: vec![PathSegment::MoveTo { to: SemioPoint2 { x: start[0], y: start[1] } }, PathSegment::LineTo { to: SemioPoint2 { x: end[0], y: end[1] } }],
-            style: None,
-        }),
+        DxfEntity::Line { start, end, .. } => Some(DrawNode::Path { segments: vec![PathSegment::MoveTo { to: SemioPoint2 { x: start[0], y: start[1] } }, PathSegment::LineTo { to: SemioPoint2 { x: end[0], y: end[1] } }], style: None }),
         DxfEntity::Circle { center, radius, .. } => Some(DrawNode::Path { segments: ellipse_path(center[0], center[1], *radius), style: None }),
         DxfEntity::Arc { center, radius, start_angle, end_angle, .. } => Some(DrawNode::Path { segments: arc_path(center[0], center[1], *radius, *start_angle, *end_angle), style: None }),
         DxfEntity::Polyline { vertices, closed, .. } => {
-            let mut segments: Vec<PathSegment> = vertices.iter().enumerate().map(|(i, v)| {
-                let to = SemioPoint2 { x: v.x, y: v.y };
-                if i == 0 { PathSegment::MoveTo { to } } else { PathSegment::LineTo { to } }
-            }).collect();
-            if *closed { segments.push(PathSegment::Close); }
+            let mut segments: Vec<PathSegment> = vertices
+                .iter()
+                .enumerate()
+                .map(|(i, v)| {
+                    let to = SemioPoint2 { x: v.x, y: v.y };
+                    if i == 0 {
+                        PathSegment::MoveTo { to }
+                    } else {
+                        PathSegment::LineTo { to }
+                    }
+                })
+                .collect();
+            if *closed {
+                segments.push(PathSegment::Close);
+            }
             Some(DrawNode::Path { segments, style: None })
         }
         DxfEntity::Text { position, value, .. } => Some(DrawNode::Text { value: value.clone(), at: SemioPoint2 { x: position[0], y: position[1] }, style: None }),
@@ -79,7 +86,9 @@ fn draw_node_from_entity(e: &DxfEntity) -> Option<DrawNode> {
 
 fn entity_layer(e: &DxfEntity) -> Option<&str> {
     match e {
-        DxfEntity::Line { layer, .. } | DxfEntity::Circle { layer, .. } | DxfEntity::Arc { layer, .. } | DxfEntity::Polyline { layer, .. } | DxfEntity::Text { layer, .. } | DxfEntity::Solid { layer, .. } | DxfEntity::Insert { layer, .. } => Some(layer.as_str()),
+        DxfEntity::Line { layer, .. } | DxfEntity::Circle { layer, .. } | DxfEntity::Arc { layer, .. } | DxfEntity::Polyline { layer, .. } | DxfEntity::Text { layer, .. } | DxfEntity::Solid { layer, .. } | DxfEntity::Insert { layer, .. } => {
+            Some(layer.as_str())
+        }
         DxfEntity::Other { .. } => None,
     }
 }

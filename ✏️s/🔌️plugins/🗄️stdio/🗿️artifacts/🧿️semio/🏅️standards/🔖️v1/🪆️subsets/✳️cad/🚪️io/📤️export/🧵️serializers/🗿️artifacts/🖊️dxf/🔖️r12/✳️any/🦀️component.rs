@@ -5,7 +5,10 @@
 //! (`$ACADVER AC1009`) plus a `LAYER` table built from `layers` — `print_dxf_document` (dxf's own
 //! writer) needs no MORE than that for a structurally valid file.
 
-use crate::artifacts::dxf::{DxfSnapshot, schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfTables, DxfValue}};
+use crate::artifacts::dxf::{
+    schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfTables, DxfValue},
+    DxfSnapshot,
+};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, SemioCadSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
@@ -18,9 +21,13 @@ fn ellipse_to_other(center: &SemioPoint2, major_axis_end: &SemioPoint2, ratio: f
     DxfEntity::Other {
         kind: "ELLIPSE".into(),
         group_codes: vec![
-            (10, DxfValue::Double { value: center.x }), (20, DxfValue::Double { value: center.y }),
-            (11, DxfValue::Double { value: major_axis_end.x - center.x }), (21, DxfValue::Double { value: major_axis_end.y - center.y }),
-            (40, DxfValue::Double { value: ratio }), (41, DxfValue::Double { value: start_param }), (42, DxfValue::Double { value: end_param }),
+            (10, DxfValue::Double { value: center.x }),
+            (20, DxfValue::Double { value: center.y }),
+            (11, DxfValue::Double { value: major_axis_end.x - center.x }),
+            (21, DxfValue::Double { value: major_axis_end.y - center.y }),
+            (40, DxfValue::Double { value: ratio }),
+            (41, DxfValue::Double { value: start_param }),
+            (42, DxfValue::Double { value: end_param }),
         ],
     }
 }
@@ -28,9 +35,12 @@ fn dimension_to_other(def_point: &SemioPoint2, text_position: &SemioPoint2, meas
     DxfEntity::Other {
         kind: "DIMENSION".into(),
         group_codes: vec![
-            (10, DxfValue::Double { value: def_point.x }), (20, DxfValue::Double { value: def_point.y }),
-            (11, DxfValue::Double { value: text_position.x }), (21, DxfValue::Double { value: text_position.y }),
-            (42, DxfValue::Double { value: measurement }), (1, DxfValue::Str { value: text.to_string() }),
+            (10, DxfValue::Double { value: def_point.x }),
+            (20, DxfValue::Double { value: def_point.y }),
+            (11, DxfValue::Double { value: text_position.x }),
+            (21, DxfValue::Double { value: text_position.y }),
+            (42, DxfValue::Double { value: measurement }),
+            (1, DxfValue::Str { value: text.to_string() }),
         ],
     }
 }
@@ -42,9 +52,7 @@ fn dxf_entity_from_cad(rec: &CadEntityRecord) -> DxfEntity {
     match &rec.entity {
         CadEntity::Line { a, b } => DxfEntity::Line { start: [a.x, a.y, 0.0], end: [b.x, b.y, 0.0], layer, unknown_group_codes: vec![] },
         CadEntity::Circle { center, radius } => DxfEntity::Circle { center: [center.x, center.y, 0.0], radius: *radius, layer, unknown_group_codes: vec![] },
-        CadEntity::Arc { center, radius, start_angle, end_angle } => {
-            DxfEntity::Arc { center: [center.x, center.y, 0.0], radius: *radius, start_angle: *start_angle, end_angle: *end_angle, layer, unknown_group_codes: vec![] }
-        }
+        CadEntity::Arc { center, radius, start_angle, end_angle } => DxfEntity::Arc { center: [center.x, center.y, 0.0], radius: *radius, start_angle: *start_angle, end_angle: *end_angle, layer, unknown_group_codes: vec![] },
         CadEntity::Ellipse { center, major_axis_end, ratio, start_param, end_param } => ellipse_to_other(center, major_axis_end, *ratio, *start_param, *end_param),
         CadEntity::Polyline { vertices, closed } => DxfEntity::Polyline {
             vertices: vertices.iter().map(|v| crate::artifacts::dxf::schema::snapshot::DxfVertex { x: v.x, y: v.y, z: 0.0, bulge: 0.0, unknown_group_codes: vec![] }).collect(),

@@ -2,19 +2,18 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::dwg::schema::snapshot::DwgSnapshot;
-pub use crate::artifacts::dwg::schema::snapshot::{DwgDecodeStatus, DwgSection, DwgSectionPage};
-pub use crate::artifacts::dwg::schema::DwgArtifact;
 pub use crate::artifacts::dwg::schema::diff::DwgDiff;
 pub use crate::artifacts::dwg::schema::mutations::DwgMutation;
+pub use crate::artifacts::dwg::schema::snapshot::DwgSnapshot;
+pub use crate::artifacts::dwg::schema::snapshot::{DwgApplicationInfo, DwgClass, DwgCustomProperty, DwgDependency, DwgHeaderVariables, DwgJulianDate, DwgMeasurement, DwgSummaryInfo, DwgTemplate};
+pub use crate::artifacts::dwg::schema::DwgArtifact;
 
 /// 📐️ The relocated (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS
 /// G2) hand-rolled DWG structural codec — see `standards::v_ac1024::subsets::any::io`'s own
 /// `DwgStructuralCodec` region doc for what this is (and, importantly, is NOT: it is unrelated to
 /// this file's own real R2004+ `DwgSnapshot` decode pipeline).
 pub use crate::artifacts::dwg::standards::v_ac1024::subsets::any::io::{
-    dwg_drawing_to_mesh, dwg_drawing_to_paths, dwg_from_bytes, dwg_geometry_to_path_segments, dwg_to_bytes, mesh_to_dwg_drawing, paths_to_dwg_drawing,
-    DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgLayer, DwgPathSegment,
+    dwg_drawing_to_mesh, dwg_drawing_to_paths, dwg_from_bytes, dwg_geometry_to_path_segments, dwg_to_bytes, mesh_to_dwg_drawing, paths_to_dwg_drawing, DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgLayer, DwgPathSegment,
 };
 
 /// 🏷️ Document schema / DSL envelope id.
@@ -161,17 +160,17 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: STDIO_DWG_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::dwg::standards::v_ac1018::engine::io_registry as v_ac1018;
     use crate::artifacts::dwg::standards::v_ac1024::engine::io_registry as v_ac1024;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -180,10 +179,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("DwgComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("DwgComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

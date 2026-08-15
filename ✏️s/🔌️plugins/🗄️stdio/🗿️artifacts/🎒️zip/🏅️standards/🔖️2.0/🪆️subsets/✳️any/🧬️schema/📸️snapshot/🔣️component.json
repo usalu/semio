@@ -2,32 +2,12 @@
   "$id": "https://semio.tech/schema/s.stdio.zip/snapshot.json",
   "title": "ZipSnapshot",
   "$defs": {
-    "ZipExtraField": {
-      "type": "object",
-      "required": ["id"],
-      "properties": {
-        "id": { "type": "integer" },
-        "payload": { "type": "array", "items": { "type": "integer" } }
-      }
-    },
     "ZipEntry": {
       "type": "object",
       "required": ["name"],
       "properties": {
         "name": { "type": "string" },
-        "data": { "type": "array", "items": { "type": "integer" } },
-        "method": { "type": "string", "enum": ["stored", "deflate"] },
-        "dosDate": { "type": "integer" },
-        "dosTime": { "type": "integer" },
-        "unixMtime": { "type": ["integer", "null"] },
-        "flags": { "type": "integer" },
-        "versionMadeBy": { "type": "integer" },
-        "versionNeeded": { "type": "integer" },
-        "internalAttrs": { "type": "integer" },
-        "externalAttrs": { "type": "integer" },
-        "localExtra": { "type": "array", "items": { "$ref": "#/$defs/ZipExtraField" } },
-        "centralExtra": { "type": "array", "items": { "$ref": "#/$defs/ZipExtraField" } },
-        "comment": { "type": "string" }
+        "data": { "type": "array", "items": { "type": "integer" } }
       }
     }
   },

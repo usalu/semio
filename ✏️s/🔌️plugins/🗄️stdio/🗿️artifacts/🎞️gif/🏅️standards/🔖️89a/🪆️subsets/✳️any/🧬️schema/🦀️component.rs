@@ -38,7 +38,9 @@ pub struct GifArtifact {
 }
 
 impl Default for GifArtifact {
-    fn default() -> Self { Self::from_snapshot(GifSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(GifSnapshot::default())
+    }
 }
 
 impl GifArtifact {
@@ -119,10 +121,10 @@ pub fn gif_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::gif::standards::v89a::subsets::any::schema::diff::GifDiff;
     use crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::GifMutation;
     use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifFrame, GifSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     #[derive(Clone, Debug, Default)]
@@ -200,7 +202,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -210,8 +216,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.gif` parts.
@@ -243,22 +249,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <GifSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -294,7 +292,9 @@ semio_framework_plugin::derive_artifact_facets!(
 // own local override explicitly calls BOTH `standards::v87a::engine::register()` AND
 // `standards::v89a::engine::register()` — untouched) + `io_registry` all moved to `../🚪️io`;
 // tests moved beside what they now test.
-pub fn empty_gif_snapshot() -> GifSnapshot { GifSnapshot::default() }
+pub fn empty_gif_snapshot() -> GifSnapshot {
+    GifSnapshot::default()
+}
 
 /// 🧪️ P2-FG2: real, deterministic demo `GifSnapshot` for `conformance_laws` (in `../🚪️io`'s own
 /// tests) and the shipped `.dsl.semio`/`.pack.semio` fixtures (`../📚️examples/🎬️demo/🖼️assets/`)

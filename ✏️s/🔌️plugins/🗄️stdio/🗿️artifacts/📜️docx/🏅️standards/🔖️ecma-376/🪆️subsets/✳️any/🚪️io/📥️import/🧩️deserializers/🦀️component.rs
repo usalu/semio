@@ -3,11 +3,11 @@
 //! never reimplemented here: it is reused from the shared `crate::artifacts::zip::opc` layer and,
 //! transitively, `crate::artifacts::zip::engine` + `crate::artifacts::xml::schema::snapshot`.
 
+use super::super::super::{DocxError, MAIN_DOCUMENT_PART, REL_TYPE_STYLES, STRICT_REL_TYPE_OFFICE_DOCUMENT, STYLES_PART};
 use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
 use crate::artifacts::docx::DocxSnapshot;
 use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlAttr, XmlDocument, XmlNode};
 use crate::artifacts::zip::opc::{self, REL_TYPE_OFFICE_DOCUMENT};
-use super::super::super::{DocxError, MAIN_DOCUMENT_PART, REL_TYPE_STYLES, STRICT_REL_TYPE_OFFICE_DOCUMENT, STYLES_PART};
 
 //#region 🔖️XmlHelpers
 fn find_attr<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
@@ -184,10 +184,7 @@ fn styles_from_xml(doc: &XmlDocument) -> Result<Vec<DocxStyle>, DocxError> {
 //#region 🔖️Codec
 pub fn decode_docx(data: &[u8]) -> Result<DocxSnapshot, DocxError> {
     let opc = opc::decode_opc(data)?;
-    let main_path = opc
-        .resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT)
-        .or_else(|| opc.resolve_relationship("", STRICT_REL_TYPE_OFFICE_DOCUMENT))
-        .ok_or(DocxError::MissingMainDocumentRelationship)?;
+    let main_path = opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", STRICT_REL_TYPE_OFFICE_DOCUMENT)).ok_or(DocxError::MissingMainDocumentRelationship)?;
     let bytes = opc.part_bytes(&main_path).ok_or_else(|| DocxError::MissingPart(main_path.clone()))?;
     let text = String::from_utf8(bytes.to_vec()).map_err(|_| DocxError::Xml { part: main_path.clone(), detail: "not valid utf-8".into() })?;
     let xml = xml_document_from_text(&text).map_err(|e| DocxError::Xml { part: main_path.clone(), detail: e })?;

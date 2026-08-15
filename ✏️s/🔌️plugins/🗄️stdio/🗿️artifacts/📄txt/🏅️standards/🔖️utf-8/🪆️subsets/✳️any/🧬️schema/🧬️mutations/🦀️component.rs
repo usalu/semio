@@ -27,11 +27,23 @@ pub enum TxtMutation {
         #[dsl(block)]
         snapshot: TxtSnapshot,
     },
-    SetTrailingNewline { value: bool },
-    SetLineEnding { value: LineEnding },
-    InsertLine { index: usize, text: String },
-    RemoveLine { index: usize },
-    SetLine { index: usize, text: String },
+    SetTrailingNewline {
+        value: bool,
+    },
+    SetLineEnding {
+        value: LineEnding,
+    },
+    InsertLine {
+        index: usize,
+        text: String,
+    },
+    RemoveLine {
+        index: usize,
+    },
+    SetLine {
+        index: usize,
+        text: String,
+    },
 }
 //#endregion 🔖️Mutations
 
@@ -67,28 +79,19 @@ impl Mutation<TxtSnapshot> for TxtMutation {
                     TxtDiff { line_ending: Some(*value), ..Default::default() }
                 }
             }
-            TxtMutation::InsertLine { index, text } => TxtDiff {
-                lines: Some(TxtLinesDiff { removed: vec![], modified: vec![], added: vec![TxtLineAdded { index: *index, text: text.clone() }] }),
-                ..Default::default()
-            },
+            TxtMutation::InsertLine { index, text } => TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![], added: vec![TxtLineAdded { index: *index, text: text.clone() }] }), ..Default::default() },
             TxtMutation::RemoveLine { index } => {
                 if *index >= base.lines.len() {
                     TxtDiff::default()
                 } else {
-                    TxtDiff {
-                        lines: Some(TxtLinesDiff { removed: vec![*index], modified: vec![], added: vec![] }),
-                        ..Default::default()
-                    }
+                    TxtDiff { lines: Some(TxtLinesDiff { removed: vec![*index], modified: vec![], added: vec![] }), ..Default::default() }
                 }
             }
             TxtMutation::SetLine { index, text } => {
                 if base.lines.get(*index).map_or(true, |cur| cur == text) {
                     TxtDiff::default()
                 } else {
-                    TxtDiff {
-                        lines: Some(TxtLinesDiff { removed: vec![], modified: vec![TxtLineModified { index: *index, text: text.clone() }], added: vec![] }),
-                        ..Default::default()
-                    }
+                    TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![TxtLineModified { index: *index, text: text.clone() }], added: vec![] }), ..Default::default() }
                 }
             }
         }
@@ -159,16 +162,11 @@ impl protocol::OpBinary for TxtMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::MutationDiff;
     use protocol::os_spr::command::DiffAlgebra;
+    use protocol::MutationDiff;
 
     fn base() -> TxtSnapshot {
-        TxtSnapshot {
-            lines: vec!["a".into(), "b".into(), "c".into()],
-            trailing_newline: true,
-            line_ending: LineEnding::Lf,
-            ..Default::default()
-        }
+        TxtSnapshot { lines: vec!["a".into(), "b".into(), "c".into()], trailing_newline: true, line_ending: LineEnding::Lf, ..Default::default() }
     }
 
     fn all_variants(b: &TxtSnapshot) -> Vec<TxtMutation> {

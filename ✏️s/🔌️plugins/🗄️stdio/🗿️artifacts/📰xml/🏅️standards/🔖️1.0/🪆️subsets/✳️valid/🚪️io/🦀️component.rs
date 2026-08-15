@@ -5,15 +5,12 @@
 //! established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use std::sync::OnceLock;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
-    use semio_framework_plugin::{
-        ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
-        register_subset_validator, subset_validator_entry_of,
-    };
-    use crate::artifacts::xml::standards::v1_0::subsets::any::schema::XmlComposer as XmlAnyComposer;
     use crate::artifacts::xml::standards::v1_0::subsets::any::schema::snapshot::XmlSnapshot;
+    use crate::artifacts::xml::standards::v1_0::subsets::any::schema::XmlComposer as XmlAnyComposer;
     use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::check_valid_conformance;
+    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use std::sync::OnceLock;
 
     const DIALECT_VALID: Dialect = Dialect { artifact_kind: "s.stdio.xml", standard: StandardId("1.0"), subset: SubsetId("valid") };
     const DIALECT_ANY: Dialect = Dialect { artifact_kind: "s.stdio.xml", standard: StandardId("1.0"), subset: SubsetId("*") };
@@ -37,10 +34,7 @@ pub mod derived_composition {
             if !hard.is_empty() {
                 let mut all = hard.clone();
                 all.extend(soft);
-                return Err(ComposeError {
-                    message: format!("XML 1.0 validity violated: {} hard issue(s) -- not stamping the valid dialect", hard.len()),
-                    diagnostics: all,
-                });
+                return Err(ComposeError { message: format!("XML 1.0 validity violated: {} hard issue(s) -- not stamping the valid dialect", hard.len()), diagnostics: all });
             }
             let mut diagnostics = inner.diagnostics;
             diagnostics.extend(soft);
@@ -137,11 +131,7 @@ pub mod derived_composition {
             let text = crate::artifacts::xml::standards::v1_0::subsets::valid::examples::no_doctype::PRIMARY_TEXT;
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(text) }];
             let err = XmlValidComposerComposition::compose(&sources).expect_err("missing doctype must not stamp valid");
-            assert!(
-                err.diagnostics.iter().any(|d| d.code.0 == "stdio.xml.valid.doctype-missing" && d.severity == Severity::Error),
-                "got {:?}",
-                err.diagnostics
-            );
+            assert!(err.diagnostics.iter().any(|d| d.code.0 == "stdio.xml.valid.doctype-missing" && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
         //#region 🧪️SubsetRoundtrip
@@ -153,11 +143,7 @@ pub mod derived_composition {
             type Inference = crate::artifacts::xml::standards::v1_0::subsets::any::schema::inferences::XmlInference;
 
             fn dialect() -> store::os_io::ArtifactDialect {
-                store::os_io::ArtifactDialect {
-                    artifact_kind: "s.stdio.xml".into(),
-                    standard: "1.0".into(),
-                    subset: "valid".into(),
-                }
+                store::os_io::ArtifactDialect { artifact_kind: "s.stdio.xml".into(), standard: "1.0".into(), subset: "valid".into() }
             }
 
             fn fidelity() -> store::os_store::test_support::IoFidelityClass {
@@ -192,47 +178,33 @@ pub mod derived_composition {
             }
 
             fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
-                vec![crate::artifacts::xml::standards::v1_0::subsets::any::schema::mutations::XmlMutation::SetSnapshot {
-                    snapshot: snapshot.clone(),
-                }]
+                vec![crate::artifacts::xml::standards::v1_0::subsets::any::schema::mutations::XmlMutation::SetSnapshot { snapshot: snapshot.clone() }]
             }
 
             fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
                 let text = std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()])?;
                 let snapshot = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| vec![e.to_string()])?;
-                let hard: Vec<String> = check_valid_conformance(&snapshot)
-                    .into_iter()
-                    .filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal))
-                    .map(|d| d.code.0)
-                    .collect();
-                if hard.is_empty() { Ok(()) } else { Err(hard) }
+                let hard: Vec<String> = check_valid_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).map(|d| d.code.0).collect();
+                if hard.is_empty() {
+                    Ok(())
+                } else {
+                    Err(hard)
+                }
             }
 
             fn validate_negative(bytes: &[u8]) -> Result<Vec<String>, String> {
                 let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
                 let snapshot = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())?;
-                Ok(check_valid_conformance(&snapshot)
-                    .into_iter()
-                    .filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal))
-                    .map(|d| d.code.0)
-                    .collect())
+                Ok(check_valid_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).map(|d| d.code.0).collect())
             }
         }
 
         #[test]
         fn xml_valid_subset_integrated_roundtrip() {
             let text = crate::artifacts::xml::standards::v1_0::subsets::any::examples::demo::PRIMARY_TEXT;
-            let positive = store::os_store::test_support::ExampleAsset {
-                bytes: text.as_bytes(),
-                text: Some(text),
-                provenance: "✳️any/📚️examples/🎬️demo (conforming doctype for valid)",
-            };
+            let positive = store::os_store::test_support::ExampleAsset { bytes: text.as_bytes(), text: Some(text), provenance: "✳️any/📚️examples/🎬️demo (conforming doctype for valid)" };
             let negative_text = crate::artifacts::xml::standards::v1_0::subsets::valid::examples::no_doctype::PRIMARY_TEXT;
-            let negative = store::os_store::test_support::ExampleAsset {
-                bytes: negative_text.as_bytes(),
-                text: Some(negative_text),
-                provenance: "✳️valid/📚️examples/🚫️no-doctype",
-            };
+            let negative = store::os_store::test_support::ExampleAsset { bytes: negative_text.as_bytes(), text: Some(negative_text), provenance: "✳️valid/📚️examples/🚫️no-doctype" };
             store::os_store::test_support::assert_subset_roundtrip::<XmlValidRoundtrip>(&positive, Some(&negative));
         }
         //#endregion 🧪️SubsetRoundtrip

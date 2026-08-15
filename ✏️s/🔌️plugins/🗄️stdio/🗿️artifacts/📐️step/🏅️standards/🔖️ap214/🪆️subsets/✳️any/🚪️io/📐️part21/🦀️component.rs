@@ -97,13 +97,25 @@ pub enum Part21Value {
 
 impl Part21Value {
     pub fn as_ref_id(&self) -> Option<u64> {
-        if let Part21Value::Ref(id) = self { Some(*id) } else { None }
+        if let Part21Value::Ref(id) = self {
+            Some(*id)
+        } else {
+            None
+        }
     }
     pub fn as_str(&self) -> Option<&str> {
-        if let Part21Value::Str(s) = self { Some(s.as_str()) } else { None }
+        if let Part21Value::Str(s) = self {
+            Some(s.as_str())
+        } else {
+            None
+        }
     }
     pub fn as_enum(&self) -> Option<&str> {
-        if let Part21Value::Enum(s) = self { Some(s.as_str()) } else { None }
+        if let Part21Value::Enum(s) = self {
+            Some(s.as_str())
+        } else {
+            None
+        }
     }
     pub fn as_real(&self) -> Option<f64> {
         match self {
@@ -113,10 +125,18 @@ impl Part21Value {
         }
     }
     pub fn as_list(&self) -> Option<&[Part21Value]> {
-        if let Part21Value::List(items) = self { Some(items.as_slice()) } else { None }
+        if let Part21Value::List(items) = self {
+            Some(items.as_slice())
+        } else {
+            None
+        }
     }
     pub fn as_typed(&self) -> Option<(&str, &[Part21Value])> {
-        if let Part21Value::Typed(name, items) = self { Some((name.as_str(), items.as_slice())) } else { None }
+        if let Part21Value::Typed(name, items) = self {
+            Some((name.as_str(), items.as_slice()))
+        } else {
+            None
+        }
     }
     pub fn is_unset(&self) -> bool {
         matches!(self, Part21Value::Unset)
@@ -364,10 +384,8 @@ impl Lexer {
                                 _ => return Err(Part21Error::UnsupportedEscape { at: start, detail: "bad \\X2\\ hex group".into() }),
                             }
                         }
-                        let code = u32::from_str_radix(&hex, 16)
-                            .map_err(|_| Part21Error::UnsupportedEscape { at: start, detail: "bad hex".into() })?;
-                        let ch = char::from_u32(code)
-                            .ok_or_else(|| Part21Error::UnsupportedEscape { at: start, detail: format!("bad codepoint {code}") })?;
+                        let code = u32::from_str_radix(&hex, 16).map_err(|_| Part21Error::UnsupportedEscape { at: start, detail: "bad hex".into() })?;
+                        let ch = char::from_u32(code).ok_or_else(|| Part21Error::UnsupportedEscape { at: start, detail: format!("bad codepoint {code}") })?;
                         out.push(ch);
                         if self.peek() == Some('\\') && self.peek_at(1) == Some('X') && self.peek_at(2) == Some('0') {
                             self.pos += 3;
@@ -393,10 +411,8 @@ impl Lexer {
                     if self.bump() != Some('\\') {
                         return Err(Part21Error::UnsupportedEscape { at: start, detail: "expected trailing \\ after \\X..".into() });
                     }
-                    let code = u32::from_str_radix(&hex, 16)
-                        .map_err(|_| Part21Error::UnsupportedEscape { at: start, detail: "bad hex".into() })?;
-                    let ch = char::from_u32(code)
-                        .ok_or_else(|| Part21Error::UnsupportedEscape { at: start, detail: format!("bad byte {code}") })?;
+                    let code = u32::from_str_radix(&hex, 16).map_err(|_| Part21Error::UnsupportedEscape { at: start, detail: "bad hex".into() })?;
+                    let ch = char::from_u32(code).ok_or_else(|| Part21Error::UnsupportedEscape { at: start, detail: format!("bad byte {code}") })?;
                     out.push(ch);
                     Ok(())
                 }
@@ -839,7 +855,8 @@ mod tests {
 
     #[test]
     fn complex_instance_keeps_every_type() {
-        let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=(IFCQUANTITYAREA($,$,$,10.5,$)IFCPHYSICALSIMPLEQUANTITY($,$,$,$));\nENDSEC;\nEND-ISO-10303-21;\n";
+        let text =
+            "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=(IFCQUANTITYAREA($,$,$,10.5,$)IFCPHYSICALSIMPLEQUANTITY($,$,$,$));\nENDSEC;\nEND-ISO-10303-21;\n";
         let doc = parse_part21(text).expect("parse complex instance");
         let inst = doc.instance(1).expect("instance 1");
         assert_eq!(inst.entities.len(), 2);
@@ -863,10 +880,7 @@ mod tests {
     #[test]
     fn string_escapes_round_trip() {
         for raw in ["it's a test", "unicode: \u{20AC} \u{4E2D}\u{6587}", "back\\slash", "", "plain"] {
-            let text = format!(
-                "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=LABEL('{}');\nENDSEC;\nEND-ISO-10303-21;\n",
-                escape_part21_string(raw)
-            );
+            let text = format!("ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=LABEL('{}');\nENDSEC;\nEND-ISO-10303-21;\n", escape_part21_string(raw));
             let doc = parse_part21(&text).unwrap_or_else(|e| panic!("parse {raw:?}: {e}"));
             let got = doc.instance(1).unwrap().entity("LABEL").unwrap()[0].as_str().unwrap();
             assert_eq!(got, raw, "escape round trip for {raw:?}");

@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::obj::schema::snapshot::ObjSnapshot;
-pub use crate::artifacts::obj::schema::ObjArtifact;
 pub use crate::artifacts::obj::schema::diff::ObjDiff;
 pub use crate::artifacts::obj::schema::mutations::ObjMutation;
+pub use crate::artifacts::obj::schema::snapshot::ObjSnapshot;
+pub use crate::artifacts::obj::schema::ObjArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_OBJ_DOCUMENT_SCHEMA: &str = "stdio.obj";
@@ -122,16 +122,16 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: STDIO_OBJ_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::obj::standards::v3_0::engine::io_registry as v3_0;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -140,10 +140,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("ObjComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("ObjComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

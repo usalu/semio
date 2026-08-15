@@ -1,27 +1,14 @@
-// ANTLR4 grammar for the real wire shape of PdfMutation (1.7): `OpText::print_op` is literally
-// `serde_json::to_string(self)` -- one JSON object tagged by "mutation". Matches
-// ../🔣️component.json / ../🟦️component.ts.
 grammar Stdio_pdf_1_7_Mutations;
-
-pdfMutation: '{' '"mutation"' ':' MUTATION_TAG (',' field)* '}';
-MUTATION_TAG: '"noMutation"' | '"setSnapshot"' | '"insertPage"' | '"removePage"'
-            | '"setPageMediaBox"' | '"setPageCropBox"' | '"appendPageContent"' | '"setInfo"'
-            | '"insertObject"' | '"removeObject"' | '"setObjectValue"'
-            | '"setDictEntry"' | '"removeDictEntry"' | '"setTrailerEntry"' | '"removeTrailerEntry"';
-field: '"snapshot"' ':' jsonObject
-     | '"index"' ':' NUMBER
-     | '"page"' ':' jsonObject
-     | '"mediaBox"' ':' jsonArray
-     | '"cropBox"' ':' (jsonArray | 'null')
-     | '"text"' ':' STRING
-     | '"info"' ':' jsonObject
-     | '"id"' ':' jsonObject
-     | '"value"' ':' jsonValue
-     | '"path"' ':' jsonArray
-     | '"key"' ':' STRING
-     ;
-jsonValue: jsonObject | jsonArray | STRING | NUMBER | 'true' | 'false' | 'null';
-jsonObject: '{' (STRING ':' jsonValue (',' STRING ':' jsonValue)*)? '}';
-jsonArray: '[' (jsonValue (',' jsonValue)*)? ']';
-STRING: '"' (~["\\] | '\\' .)* '"';
-NUMBER: '-'? [0-9]+ ('.' [0-9]+)?;
+pdfMutation: 'no-mutation' | KEYWORD (' ' field)* EOF;
+field: NAME '=' value;
+value: INTEGER | HEX | record | pdfObject;
+record: '[' (value (',' value)*)? ']';
+pdfObject: 'Z' | OBJECT_TAG '[' (value (',' value)*)? ']';
+KEYWORD: 'set-snapshot' | 'insert-page' | 'remove-page' | 'set-page-media-box'
+       | 'set-page-crop-box' | 'append-page-content' | 'set-info' | 'insert-object'
+       | 'remove-object' | 'set-object-value' | 'set-dict-entry' | 'remove-dict-entry'
+       | 'set-trailer-entry' | 'remove-trailer-entry';
+OBJECT_TAG: [BIRSNADFT];
+NAME: [a-z] [a-z-]*;
+INTEGER: '-'? [0-9]+;
+HEX: [0-9a-f]*;

@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::jpg::schema::snapshot::JpgSnapshot;
-pub use crate::artifacts::jpg::schema::JpgArtifact;
 pub use crate::artifacts::jpg::schema::diff::JpgDiff;
 pub use crate::artifacts::jpg::schema::mutations::JpgMutation;
+pub use crate::artifacts::jpg::schema::snapshot::JpgSnapshot;
+pub use crate::artifacts::jpg::schema::JpgArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_JPG_DOCUMENT_SCHEMA: &str = "stdio.jpg";
@@ -27,7 +27,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: STDIO_JPG_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
@@ -69,13 +69,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
 /// `✳️baseline/🚪️io`.
 fn declared_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
-    ENTRIES
-        .get_or_init(|| {
-            vec![semio_framework_plugin::subset_validator_entry_of::<
-                crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::io::JpgBaselineValidator,
-            >()]
-        })
-        .as_slice()
+    ENTRIES.get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::io::JpgBaselineValidator>()]).as_slice()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — moved
@@ -145,9 +139,9 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::jpg::standards::v_jfif_1_01::engine::io_registry as v_jfif_1_01;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -156,10 +150,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("JpgComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("JpgComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

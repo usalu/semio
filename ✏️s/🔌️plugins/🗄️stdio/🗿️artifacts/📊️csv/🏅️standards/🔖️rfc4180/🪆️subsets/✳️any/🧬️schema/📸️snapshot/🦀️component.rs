@@ -7,7 +7,9 @@ use crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
-fn default_true() -> bool { true }
+fn default_true() -> bool {
+    true
+}
 
 //#region 🔖️Field
 /// 🔤 One RFC 4180 field value plus whether the source quoted it — rfc4180's own optional
@@ -57,11 +59,7 @@ pub struct CsvSnapshot {
 
 impl Default for CsvSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),
-            has_header: true,
-            records: Vec::new(),
-        }
+        Self { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records: Vec::new() }
     }
 }
 //#endregion 🔖️Snapshot
@@ -127,11 +125,7 @@ fn parse_csv_records(text: &str) -> Vec<CsvRecord> {
 /// 📤 Quotes a field when the source quoted it OR when RFC 4180 §2 rule 6 REQUIRES
 /// quoting (the value itself contains a comma, quote, or line break).
 fn escape_field(field: &CsvField) -> String {
-    let needs_quote = field.quoted
-        || field.value.contains(',')
-        || field.value.contains('"')
-        || field.value.contains('\n')
-        || field.value.contains('\r');
+    let needs_quote = field.quoted || field.value.contains(',') || field.value.contains('"') || field.value.contains('\n') || field.value.contains('\r');
     if needs_quote {
         format!("\"{}\"", field.value.replace('"', "\"\""))
     } else {
@@ -196,7 +190,9 @@ pub fn demo_csv_snapshot() -> CsvSnapshot {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for CsvSnapshot {
     const EXTENSION: &'static str = "csv";
-    fn envelope_id() -> &'static str { "stdio.csv" }
+    fn envelope_id() -> &'static str {
+        "stdio.csv"
+    }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -207,11 +203,7 @@ impl store::ArtifactDsl for CsvSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = encode_csv(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -220,22 +212,13 @@ impl store::ArtifactPack for CsvSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_csv(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -314,11 +297,7 @@ mod tests {
     fn quoted_flag_round_trips_even_when_not_structurally_required() {
         // 🔒 A field that didn't NEED quoting but WAS quoted in the source must re-encode
         // quoted (lossless retention, not a lossy structural-minimum normal form).
-        let snap = CsvSnapshot {
-            schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),
-            has_header: false,
-            records: vec![CsvRecord { fields: vec![CsvField { value: "plain".into(), quoted: true }] }],
-        };
+        let snap = CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: false, records: vec![CsvRecord { fields: vec![CsvField { value: "plain".into(), quoted: true }] }] };
         let text = encode_csv(&snap);
         assert_eq!(text, "\"plain\"\n");
         let reparsed = decode_csv_with(&text, false);
@@ -361,7 +340,9 @@ mod tests {
         let repo_root = {
             let mut dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
             loop {
-                if dir.join("nx.json").is_file() { break dir; }
+                if dir.join("nx.json").is_file() {
+                    break dir;
+                }
                 assert!(dir.pop(), "could not find repo root");
             }
         };

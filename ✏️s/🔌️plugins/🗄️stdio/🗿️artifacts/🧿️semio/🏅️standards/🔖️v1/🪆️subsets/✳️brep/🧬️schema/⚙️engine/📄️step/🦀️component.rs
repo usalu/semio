@@ -14,16 +14,16 @@
 use std::collections::HashMap;
 use std::fmt::Write as _;
 
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve3Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::StepError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 // #region 🔖️Api
@@ -42,11 +42,7 @@ pub fn write_step(body: &Body, solids: &[SolidId]) -> Result<String, StepError> 
     }
     let items: Vec<String> = brep_ids.iter().map(|id| format!("#{id}")).collect();
     let shape_repr_id = ctx.next_id();
-    ctx.write_entity(
-        shape_repr_id,
-        "ADVANCED_BREP_SHAPE_REPRESENTATION",
-        &format!("'semio export', ({},), #{repr_context_id})", items.join(", ")),
-    );
+    ctx.write_entity(shape_repr_id, "ADVANCED_BREP_SHAPE_REPRESENTATION", &format!("'semio export', ({},), #{repr_context_id})", items.join(", ")));
     let prod_def_shape_id = ctx.next_id();
     ctx.write_entity(prod_def_shape_id, "PRODUCT_DEFINITION_SHAPE", &format!("'','',#{})", product_ids.definition));
     let shape_def_repr_id = ctx.next_id();
@@ -123,11 +119,7 @@ impl StepWriteContext {
         let solid_angle_unit = self.next_id();
         let _ = writeln!(self.entities, "#{solid_angle_unit} = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );");
         let uncertainty = self.next_id();
-        self.write_entity(
-            uncertainty,
-            "UNCERTAINTY_MEASURE_WITH_UNIT",
-            &format!("LENGTH_MEASURE(1.E-07), #{len_unit}, 'distance_accuracy_value', 'confusion accuracy')"),
-        );
+        self.write_entity(uncertainty, "UNCERTAINTY_MEASURE_WITH_UNIT", &format!("LENGTH_MEASURE(1.E-07), #{len_unit}, 'distance_accuracy_value', 'confusion accuracy')"));
         let ctx = self.next_id();
         let _ = writeln!(
             self.entities,
@@ -291,13 +283,7 @@ impl StepWriteContext {
         })
     }
 
-    fn write_nurbs_surface(
-        &mut self,
-        u_knots: &KnotVector,
-        v_knots: &KnotVector,
-        controls: &[Vec<Pnt3>],
-        weights: &[Vec<f64>],
-    ) -> Result<u64, StepError> {
+    fn write_nurbs_surface(&mut self, u_knots: &KnotVector, v_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>]) -> Result<u64, StepError> {
         if controls.is_empty() {
             return Err(StepError::Syntax("NURBS surface has no control points".to_string()));
         }
@@ -698,15 +684,7 @@ fn parse_bspline_surface_attrs(attrs: &str) -> Option<(usize, usize, Vec<Vec<u64
     if degrees.len() < 2 || groups.len() < 5 {
         return None;
     }
-    Some((
-        degrees[0],
-        degrees[1],
-        parse_nested_refs(&groups[0]),
-        parse_ints_in_parens(&groups[1]),
-        parse_ints_in_parens(&groups[2]),
-        parse_floats(&groups[3]),
-        parse_floats(&groups[4]),
-    ))
+    Some((degrees[0], degrees[1], parse_nested_refs(&groups[0]), parse_ints_in_parens(&groups[1]), parse_ints_in_parens(&groups[2]), parse_floats(&groups[3]), parse_floats(&groups[4])))
 }
 
 // #endregion 🔖️Parse
@@ -732,12 +710,7 @@ impl<'a> StepBuilder<'a> {
     }
 
     fn build_all_solids(&mut self) -> Result<(), StepError> {
-        let brep_ids: Vec<u64> = self
-            .entities
-            .iter()
-            .filter(|(_, e)| e.entity_type == "MANIFOLD_SOLID_BREP")
-            .map(|(&id, _)| id)
-            .collect();
+        let brep_ids: Vec<u64> = self.entities.iter().filter(|(_, e)| e.entity_type == "MANIFOLD_SOLID_BREP").map(|(&id, _)| id).collect();
         for brep_id in brep_ids {
             self.build_solid(brep_id)?;
         }
@@ -769,12 +742,7 @@ impl<'a> StepBuilder<'a> {
         let all_refs = parse_refs(&attrs);
         let list_refs = parse_list_refs(&attrs);
         let list_set: std::collections::HashSet<u64> = list_refs.iter().copied().collect();
-        let surface_ref = all_refs
-            .iter()
-            .rev()
-            .find(|r| !list_set.contains(r))
-            .copied()
-            .ok_or(StepError::Syntax(format!("ADVANCED_FACE #{face_ref} missing surface")))?;
+        let surface_ref = all_refs.iter().rev().find(|r| !list_set.contains(r)).copied().ok_or(StepError::Syntax(format!("ADVANCED_FACE #{face_ref} missing surface")))?;
         let surface_id = self.build_surface(surface_ref)?;
         let mut outer_loop = None;
         let mut inner_loops = Vec::new();
@@ -791,13 +759,7 @@ impl<'a> StepBuilder<'a> {
                 inner_loops.push(loop_id);
             }
         }
-        let outer = outer_loop.or_else(|| {
-            if inner_loops.is_empty() {
-                None
-            } else {
-                Some(inner_loops.remove(0))
-            }
-        });
+        let outer = outer_loop.or_else(|| if inner_loops.is_empty() { None } else { Some(inner_loops.remove(0)) });
         let outer = outer.ok_or(StepError::Syntax(format!("ADVANCED_FACE #{face_ref} has no bounds")))?;
         let face_id = add_face(self.body, surface_id, Some(outer), inner_loops.clone(), face_reversed, self.tol, self.rec);
         self.body.loops.get_mut(outer).unwrap().face = face_id;
@@ -944,8 +906,7 @@ impl<'a> StepBuilder<'a> {
     }
 
     fn build_bspline_surface(&self, surface_ref: u64, attrs: &str) -> Result<Surface, StepError> {
-        let (degree_u, degree_v, cp_grid_refs, u_mults, v_mults, u_knots, v_knots) =
-            parse_bspline_surface_attrs(attrs).ok_or_else(|| StepError::Syntax(format!("B_SPLINE_SURFACE #{surface_ref} parse failed")))?;
+        let (degree_u, degree_v, cp_grid_refs, u_mults, v_mults, u_knots, v_knots) = parse_bspline_surface_attrs(attrs).ok_or_else(|| StepError::Syntax(format!("B_SPLINE_SURFACE #{surface_ref} parse failed")))?;
         let mut cp_grid: Vec<Vec<Pnt3>> = Vec::new();
         for row_refs in &cp_grid_refs {
             let mut row: Vec<Pnt3> = Vec::new();

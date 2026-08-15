@@ -14,10 +14,10 @@
 //!   in `nodes`, or a reference cycle (a node reachable from itself through one or more `Ref`
 //!   hops), is a hard `PackError` — never silently dropped or truncated.
 
+use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
 use crate::artifacts::json::JsonSnapshot;
 use crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
-use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{ValueId, SemioValueSnapshot, SemioValue};
+use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot, ValueId};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use std::collections::{HashMap, HashSet};
 
@@ -72,10 +72,7 @@ fn json_value_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>,
             Ok(JsonValue::Array { items })
         }
         SemioValue::Map { entries } => {
-            let members = entries
-                .iter()
-                .map(|e| Ok(JsonMember { key: e.key.clone(), value: json_value_from_semio(&e.value, nodes, visiting)? }))
-                .collect::<Result<Vec<_>, store::PackError>>()?;
+            let members = entries.iter().map(|e| Ok(JsonMember { key: e.key.clone(), value: json_value_from_semio(&e.value, nodes, visiting)? })).collect::<Result<Vec<_>, store::PackError>>()?;
             Ok(JsonValue::Object { members })
         }
         SemioValue::Ref { id } => {

@@ -2,14 +2,13 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
     use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
     use crate::artifacts::gif::standards::v87a::subsets::any::schema::GifAnalyzer;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("87a"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
-
 
     pub struct GifComposerComposition;
 
@@ -38,10 +37,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "GifComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = GifAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "GifComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "GifComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -61,16 +57,25 @@ pub use derived_composition::*;
 // kept together here (not dead: `register()` is reached by stdio's protected imperative
 // `crate::artifacts::gif::engine::register()` plugin-root call via this standard's own inline
 // `engine` barrel). `empty_gif_snapshot`/`demo_gif_snapshot` moved to `../🧬️schema`.
+use crate::artifacts::gif::standards::v87a::subsets::any::schema::{
+    mutations::GifMutation,
+    snapshot::{GifColorTable, GifImage, GifRgb, GifSnapshot},
+};
 use crate::artifacts::gif::STDIO_GIF_DOCUMENT_SCHEMA;
-use crate::artifacts::gif::standards::v87a::subsets::any::schema::{mutations::GifMutation, snapshot::{GifColorTable, GifImage, GifRgb, GifSnapshot}};
 use std::collections::HashMap;
 
 //#region BitIO
 /// 📦️ LSB-first bit packer — GIF's LZW codes are packed least-significant-bit-first within each
 /// byte (GIF89a Appendix F), the same convention TIFF's LZW variant uses.
-struct BitWriter { out: Vec<u8>, cur: u32, nbits: u32 }
+struct BitWriter {
+    out: Vec<u8>,
+    cur: u32,
+    nbits: u32,
+}
 impl BitWriter {
-    fn new() -> Self { Self { out: Vec::new(), cur: 0, nbits: 0 } }
+    fn new() -> Self {
+        Self { out: Vec::new(), cur: 0, nbits: 0 }
+    }
     fn write_bits(&mut self, value: u32, count: u8) {
         self.cur |= value << self.nbits;
         self.nbits += count as u32;
@@ -81,17 +86,28 @@ impl BitWriter {
         }
     }
     fn finish(mut self) -> Vec<u8> {
-        if self.nbits > 0 { self.out.push((self.cur & 0xFF) as u8); }
+        if self.nbits > 0 {
+            self.out.push((self.cur & 0xFF) as u8);
+        }
         self.out
     }
 }
 
-struct BitReader<'a> { data: &'a [u8], pos: usize, cur: u32, nbits: u32 }
+struct BitReader<'a> {
+    data: &'a [u8],
+    pos: usize,
+    cur: u32,
+    nbits: u32,
+}
 impl<'a> BitReader<'a> {
-    fn new(data: &'a [u8]) -> Self { Self { data, pos: 0, cur: 0, nbits: 0 } }
+    fn new(data: &'a [u8]) -> Self {
+        Self { data, pos: 0, cur: 0, nbits: 0 }
+    }
     fn read_bits(&mut self, count: u8) -> Result<u32, String> {
         while self.nbits < count as u32 {
-            if self.pos >= self.data.len() { return Err("unexpected end of lzw stream".into()); }
+            if self.pos >= self.data.len() {
+                return Err("unexpected end of lzw stream".into());
+            }
             self.cur |= (self.data[self.pos] as u32) << self.nbits;
             self.pos += 1;
             self.nbits += 8;
@@ -472,8 +488,7 @@ pub fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
         if image.indices.len() != (image.width as usize) * (image.height as usize) {
             return Err(format!("gif87a: image {index} indices length mismatch"));
         }
-        let table = image.lct.as_ref().or(snap.gct.as_ref())
-            .ok_or_else(|| format!("gif87a: image {index} has no color table (neither local nor global)"))?;
+        let table = image.lct.as_ref().or(snap.gct.as_ref()).ok_or_else(|| format!("gif87a: image {index} has no color table (neither local nor global)"))?;
         if image.indices.iter().any(|&i| (i as usize) >= table.colors.len()) {
             return Err(format!("gif87a: image {index} has an index past the end of its color table"));
         }
@@ -498,11 +513,7 @@ pub fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
         if let Some(colors) = &local_bytes {
             write_color_table(&mut out, colors);
         }
-        let on_disk_indices = if image.interlace {
-            interlace_rows(&image.indices, image.width as usize, image.height as usize)
-        } else {
-            image.indices.clone()
-        };
+        let on_disk_indices = if image.interlace { interlace_rows(&image.indices, image.width as usize, image.height as usize) } else { image.indices.clone() };
         out.push(min_code_size);
         out.extend_from_slice(&pack_sub_blocks(&lzw_encode(&on_disk_indices, min_code_size)));
     }
@@ -600,7 +611,11 @@ pub fn sniff_magic(source: &semio_framework_plugin::AnalyzeSource<'_>, magic: &[
     use semio_framework_plugin::{AnalyzeSource, IoConfidence};
     match source {
         AnalyzeSource::Binary(bytes) => {
-            if bytes.len() >= 6 && &bytes[0..6] == magic { IoConfidence::High } else { IoConfidence::Low }
+            if bytes.len() >= 6 && &bytes[0..6] == magic {
+                IoConfidence::High
+            } else {
+                IoConfidence::Low
+            }
         }
         AnalyzeSource::Text(text) => {
             let body = match store::semio_format::split_text_preamble(text) {
@@ -618,7 +633,11 @@ pub fn sniff_magic(source: &semio_framework_plugin::AnalyzeSource<'_>, magic: &[
                     Err(_) => return IoConfidence::Low,
                 }
             }
-            if &bytes == magic { IoConfidence::Medium } else { IoConfidence::Low }
+            if &bytes == magic {
+                IoConfidence::Medium
+            } else {
+                IoConfidence::Low
+            }
         }
     }
 }
@@ -650,7 +669,9 @@ pub fn register_artifact_inferences() {
 /// binary form is exercised directly by `protocol_walk_law` below).
 pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
-        id: "stdio.gif", extension: Some("gif"), role: dsl::LanguageRole::Document,
+        id: "stdio.gif",
+        extension: Some("gif"),
+        role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
@@ -658,7 +679,9 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("stdio.gif"),
     });
     dsl::register_language(dsl::LanguageSpec {
-        id: "stdio.gif.op", extension: None, role: dsl::LanguageRole::Ops,
+        id: "stdio.gif.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
         grammar: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
@@ -666,7 +689,9 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("stdio.gif.op"),
     });
     dsl::register_language(dsl::LanguageSpec {
-        id: "stdio.gif.diff", extension: None, role: dsl::LanguageRole::Diff,
+        id: "stdio.gif.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
         grammar: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
@@ -674,15 +699,21 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("stdio.gif.diff"),
     });
     dsl::register_language(dsl::LanguageSpec {
-        id: "stdio.gif.pack", extension: None, role: dsl::LanguageRole::Pack,
-        grammar: None, grammar_path: None,
+        id: "stdio.gif.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
         protocol: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.gif.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
-        id: "stdio.gif.spr", extension: None, role: dsl::LanguageRole::Spr,
-        grammar: None, grammar_path: None,
+        id: "stdio.gif.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
         protocol: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.gif.spr"),
@@ -732,12 +763,7 @@ mod tests {
             }
         }
         let (palette, indices, _transparent) = quantize_rgba(&rgba).expect("quantize");
-        GifImage {
-            left: 0, top: 0, width, height,
-            interlace: false,
-            lct: Some(color_table_from_bytes(palette, false)),
-            indices,
-        }
+        GifImage { left: 0, top: 0, width, height, interlace: false, lct: Some(color_table_from_bytes(palette, false)), indices }
     }
 
     /// 🧪️ LZW core: trivial round trip at the smallest legal minimum code size.
@@ -824,15 +850,7 @@ mod tests {
     }
 
     fn sample_snapshot() -> GifSnapshot {
-        GifSnapshot {
-            schema: STDIO_GIF_DOCUMENT_SCHEMA.into(),
-            width: 37,
-            height: 29,
-            gct: None,
-            background_color_index: 0,
-            pixel_aspect_ratio: 0,
-            images: vec![checkerboard(37, 29)],
-        }
+        GifSnapshot { schema: STDIO_GIF_DOCUMENT_SCHEMA.into(), width: 37, height: 29, gct: None, background_color_index: 0, pixel_aspect_ratio: 0, images: vec![checkerboard(37, 29)] }
     }
 
     /// 🧪️ Full byte-level codec round trip through a real (non-solid) checkerboard image,
@@ -861,11 +879,7 @@ mod tests {
     /// extension block — a real spec-fidelity gain over the prior single-`RasterImage` model.
     #[test]
     fn encode_decode_round_trip_multiple_images() {
-        let snap = GifSnapshot {
-            width: 20, height: 20,
-            images: vec![checkerboard(6, 6), checkerboard(9, 4), checkerboard(3, 3)],
-            ..GifSnapshot::default()
-        };
+        let snap = GifSnapshot { width: 20, height: 20, images: vec![checkerboard(6, 6), checkerboard(9, 4), checkerboard(3, 3)], ..GifSnapshot::default() };
         let bytes = encode_gif(&snap).expect("encode");
         let decoded = decode_gif(&bytes).expect("decode");
         assert_eq!(decoded.images.len(), 3);
@@ -878,11 +892,16 @@ mod tests {
     fn encode_decode_round_trip_global_color_table_and_screen_fields() {
         let (palette, indices, _) = quantize_rgba(&{
             let mut rgba = vec![0u8; 4 * 4 * 4];
-            for i in 0..16 { rgba[i * 4] = (i * 16) as u8; rgba[i * 4 + 3] = 255; }
+            for i in 0..16 {
+                rgba[i * 4] = (i * 16) as u8;
+                rgba[i * 4 + 3] = 255;
+            }
             rgba
-        }).unwrap();
+        })
+        .unwrap();
         let snap = GifSnapshot {
-            width: 4, height: 4,
+            width: 4,
+            height: 4,
             gct: Some(color_table_from_bytes(palette, true)),
             background_color_index: 2,
             pixel_aspect_ratio: 17,
@@ -953,19 +972,11 @@ mod tests {
         /// files parse under the real dialect.
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }
@@ -1058,9 +1069,9 @@ mod tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::gif::standards::v87a::subsets::any::schema::GifComposer as GifRawAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 

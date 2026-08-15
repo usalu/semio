@@ -1,7 +1,7 @@
 //! 🧬️ SemioCadArtifact schema — full artifact state, mirrors `SemioCadSnapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{SemioCadSnapshot, CadBlock, CadEntityRecord, CadLayer};
+use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntityRecord, CadLayer, SemioCadSnapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -23,25 +23,17 @@ pub struct SemioCadArtifact {
 }
 
 impl Default for SemioCadArtifact {
-    fn default() -> Self { Self::from_snapshot(SemioCadSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(SemioCadSnapshot::default())
+    }
 }
 
 impl SemioCadArtifact {
     pub fn to_snapshot(&self) -> SemioCadSnapshot {
-        SemioCadSnapshot {
-            schema: self.schema.clone(),
-            layers: self.layers.clone(),
-            blocks: self.blocks.clone(),
-            entities: self.entities.clone(),
-        }
+        SemioCadSnapshot { schema: self.schema.clone(), layers: self.layers.clone(), blocks: self.blocks.clone(), entities: self.entities.clone() }
     }
     pub fn from_snapshot(snapshot: SemioCadSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            layers: snapshot.layers,
-            blocks: snapshot.blocks,
-            entities: snapshot.entities,
-        }
+        Self { schema: snapshot.schema, layers: snapshot.layers, blocks: snapshot.blocks, entities: snapshot.entities }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioCadSnapshot) {
         self.schema = snapshot.schema;
@@ -86,20 +78,26 @@ pub fn semio_cad_artifact_schema_descriptor() -> schema::ArtifactSchemaDescripto
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::cad::schema::diff::SemioCadDiff;
-    use crate::artifacts::semio::standards::v1::subsets::cad::schema::mutations::{SemioCadMutation, apply_semio_cad_mutation};
+    use crate::artifacts::semio::standards::v1::subsets::cad::schema::mutations::{apply_semio_cad_mutation, SemioCadMutation};
     use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioCadBuilderConstruction { snapshot: SemioCadSnapshot }
+    pub struct SemioCadBuilderConstruction {
+        snapshot: SemioCadSnapshot,
+    }
 
     impl ArtifactBuilder for SemioCadBuilderConstruction {
         type Snapshot = SemioCadSnapshot;
         type Mutation = SemioCadMutation;
         type Diff = SemioCadDiff;
-        fn empty() -> Self { Self { snapshot: SemioCadSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: SemioCadSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -114,7 +112,9 @@ pub mod derived_construction {
             self.snapshot = <SemioCadDiff as protocol::MutationDiff<SemioCadSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 }
 pub use derived_construction::*;
@@ -122,11 +122,13 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{SemioCadSnapshot, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioCadParts { pub snapshot: Option<SemioCadSnapshot> }
+    pub struct SemioCadParts {
+        pub snapshot: Option<SemioCadSnapshot>,
+    }
 
     pub struct SemioCadAnalyzerAnalysis;
 
@@ -138,10 +140,18 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOCAD_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
-                    if text.contains(STDIO_SEMIOCAD_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                    if text.contains(STDIO_SEMIOCAD_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }

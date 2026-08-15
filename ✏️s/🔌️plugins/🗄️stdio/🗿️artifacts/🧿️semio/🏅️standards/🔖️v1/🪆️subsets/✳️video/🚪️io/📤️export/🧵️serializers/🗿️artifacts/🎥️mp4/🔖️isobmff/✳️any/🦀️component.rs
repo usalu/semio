@@ -7,15 +7,12 @@
 //! encode would need, matching the master plan's "direct reshape of typed metadata" framing, not a
 //! byte-identical codec round trip).
 //!
-//! `SemioVideoStream.codec` is always written back as `Mp4Codec::Other{fourcc, raw: vec![]}` —
-//! this bridge never fabricates AVC `sps`/`pps`/`nal_length_size` structured codec config (that
-//! data was never captured on decode; see the deserializer's own doc comment), so an AVC track
-//! round-tripped through `video` loses its codec-config box contents, keeping only its fourcc name.
+//! The bridge emits the supported logical AVC variant and never retains an opaque sample-entry box.
 
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::mp4::Mp4Snapshot;
 use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Track};
+use crate::artifacts::mp4::Mp4Snapshot;
 use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
+use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") };
@@ -34,9 +31,9 @@ impl ArtifactSerializer for SemioVideoToMp4 {
             .iter()
             .enumerate()
             .map(|(i, stream)| {
-                let codec = Mp4Codec::Other { fourcc: normalize_fourcc(&stream.codec), raw: Vec::new() };
+                let codec = Mp4Codec::default();
                 let fallback_duration = stream.rate.den.max(1) as u32;
-                let samples = stream
+                let samples: Vec<Mp4Sample> = stream
                     .samples
                     .iter()
                     .enumerate()
@@ -51,37 +48,16 @@ impl ArtifactSerializer for SemioVideoToMp4 {
                 Mp4Track { track_id: (i + 1) as u32, timescale: stream.rate.num.max(1) as u32, codec, width: stream.width, height: stream.height, metadata: Default::default(), chunk_sample_counts: vec![samples.len() as u32], samples }
             })
             .collect();
-        Ok(Mp4Snapshot {
-            schema: "stdio.mp4".into(),
-            ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: Vec::new() },
-            movie: Default::default(),
-            tracks,
-            unknown_boxes: Vec::new(),
-        })
+        Ok(Mp4Snapshot { schema: "stdio.mp4".into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: Vec::new() }, movie: Default::default(), tracks })
     }
-}
-
-/// 🔤️ `Mp4Box`/`Mp4Codec::Other.fourcc` is meant to hold a 4-byte ISO-BMFF box type; a
-/// video-subset codec name shorter/longer than 4 ASCII bytes is padded with spaces / truncated so
-/// the written snapshot stays a structurally plausible fourcc (never silently dropped -- the full
-/// original string, if longer, is impossible to preserve exactly here, a real, documented
-/// truncation boundary of this specific typed field, not of the bridge as a whole).
-fn normalize_fourcc(codec: &str) -> String {
-    let mut out: String = codec.chars().take(4).collect();
-    while out.len() < 4 {
-        out.push(' ');
-    }
-    out
 }
 
 //#region 🔖️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{
-        SemioRational, SemioVideoSample, SemioVideoStream, SemioVideoStreamKind, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA,
-    };
     use crate::artifacts::semio::standards::v1::subsets::video::io::mp4_deserializer::SemioVideoFromMp4;
+    use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStream, SemioVideoStreamKind, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
     use semio_framework_plugin::ArtifactDeserializer;
 
     fn real_world_video() -> SemioVideoSnapshot {
@@ -93,11 +69,7 @@ mod tests {
                 width: 640,
                 height: 480,
                 rate: SemioRational { num: 30, den: 1 },
-                samples: vec![
-                    SemioVideoSample { pts: 0, key: true, data: vec![1, 2, 3] },
-                    SemioVideoSample { pts: 1, key: false, data: vec![4, 5] },
-                    SemioVideoSample { pts: 2, key: false, data: vec![6] },
-                ],
+                samples: vec![SemioVideoSample { pts: 0, key: true, data: vec![1, 2, 3] }, SemioVideoSample { pts: 1, key: false, data: vec![4, 5] }, SemioVideoSample { pts: 2, key: false, data: vec![6] }],
             }],
         }
     }
@@ -122,10 +94,7 @@ mod tests {
         let mut snap = real_world_video();
         snap.streams[0].codec = "hevc-main10".into();
         let mp4 = SemioVideoToMp4::serialize(&snap).expect("serialize");
-        match &mp4.tracks[0].codec {
-            Mp4Codec::Other { fourcc, .. } => assert_eq!(fourcc, "hevc"),
-            other => panic!("expected Other codec, got {other:?}"),
-        }
+        assert_eq!(mp4.tracks[0].codec.nal_length_size, 4);
     }
 
     #[test]

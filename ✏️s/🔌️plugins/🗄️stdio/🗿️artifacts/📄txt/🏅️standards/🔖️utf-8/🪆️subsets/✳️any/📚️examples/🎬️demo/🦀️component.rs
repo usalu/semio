@@ -3,10 +3,14 @@
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "demo";
-pub fn label() -> LocalizedLabel { LocalizedLabel::native("Demo", "Demo") }
+pub fn label() -> LocalizedLabel {
+    LocalizedLabel::native("Demo", "Demo")
+}
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.semio");
-pub fn source() -> ExampleSource { ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON) }
+pub fn source() -> ExampleSource {
+    ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
+}
 
 /// 🎒️ P2-P3: genuine `encode_pack` bytes of the demo snapshot (SEMIO binary envelope + the
 /// demo body's raw UTF-8 bytes as payload) — `fixture_honesty_law` (⚙️engine/🦀️component.rs)

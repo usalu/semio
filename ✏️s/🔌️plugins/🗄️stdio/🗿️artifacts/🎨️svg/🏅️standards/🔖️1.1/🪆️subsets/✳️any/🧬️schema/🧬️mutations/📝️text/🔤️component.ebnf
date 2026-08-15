@@ -1,2 +1,4 @@
-(* ebnf stdio.svg mutations -- JSON per the sibling JSON Schema facet, no custom textual grammar *)
-document = jsonValue ;
+(* 🧬️ Structured stdio.svg mutation text; canonical productions live in component.grammar.semio. *)
+document = keyword, [ " ", arguments ] ;
+keyword = "no-mutation" | "set-snapshot" | "set-declaration" | "set-doctype" | "insert-element" | "remove-element" | "set-element-name" | "set-attribute" | "set-text" | "set-view-box" | "set-transform" ;
+arguments = ? named tagged/hex mutation fields defined by component.grammar.semio ? ;

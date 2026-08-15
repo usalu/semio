@@ -9,19 +9,14 @@
 //! a setter for each (see report deviations).
 
 use crate::artifacts::bcf::schema::diff::{
-    diff_set_snapshot, wrap_comment_diff, wrap_topic_diff, wrap_viewpoint_diff,
-    BcfCommentDiff, BcfCommentsDiff, BcfDiff, BcfTopicDiff, BcfTopicsDiff, BcfViewpointDiff, BcfViewpointsDiff,
+    dec_bcf_snapshot_bin, dec_camera_bin, dec_comment_bin, dec_components_bin, dec_topic_bin, dec_viewpoint_bin, enc_bcf_snapshot_bin, enc_camera_bin, enc_comment_bin, enc_components_bin, enc_topic_bin, enc_viewpoint_bin, read_bytes_lp, read_str_lp,
+    write_bytes_lp, write_str_lp,
 };
 use crate::artifacts::bcf::schema::diff::{
-    dec_bytes, dec_camera, dec_comment, dec_components, dec_list, dec_part, dec_str, dec_topic, dec_viewpoint,
-    decode_option, enc_bytes, enc_camera, enc_comment, enc_components, enc_list, enc_part, enc_str, enc_topic,
-    enc_viewpoint, encode_option, split_top_level, strip_brackets,
+    dec_bytes, dec_camera, dec_comment, dec_components, dec_list, dec_part, dec_str, dec_topic, dec_viewpoint, decode_option, enc_bytes, enc_camera, enc_comment, enc_components, enc_list, enc_part, enc_str, enc_topic, enc_viewpoint, encode_option,
+    split_top_level, strip_brackets,
 };
-use crate::artifacts::bcf::schema::diff::{
-    dec_bcf_snapshot_bin, dec_camera_bin, dec_comment_bin, dec_components_bin, dec_topic_bin, dec_viewpoint_bin,
-    enc_bcf_snapshot_bin, enc_camera_bin, enc_comment_bin, enc_components_bin, enc_topic_bin, enc_viewpoint_bin,
-    read_bytes_lp, read_str_lp, write_bytes_lp, write_str_lp,
-};
+use crate::artifacts::bcf::schema::diff::{diff_set_snapshot, wrap_comment_diff, wrap_topic_diff, wrap_viewpoint_diff, BcfCommentDiff, BcfCommentsDiff, BcfDiff, BcfTopicDiff, BcfTopicsDiff, BcfViewpointDiff, BcfViewpointsDiff};
 use crate::artifacts::bcf::schema::snapshot::{BcfCamera, BcfComment, BcfComponents, BcfTopic, BcfViewpoint};
 use crate::artifacts::bcf::BcfSnapshot;
 use protocol::{Mutation, OpText};
@@ -140,18 +135,11 @@ impl Mutation<BcfSnapshot> for BcfMutation {
             BcfMutation::NoMutation => BcfDiff::default(),
             BcfMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             BcfMutation::SetVersion { version } => BcfDiff { version: Some(version.clone()), topics: None, parts: None },
-            BcfMutation::InsertTopic { topic } => BcfDiff {
-                version: None,
-                topics: Some(BcfTopicsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![topic.clone()] }),
-                parts: None,
-            },
-            BcfMutation::RemoveTopic { guid } => BcfDiff {
-                version: None,
-                topics: Some(BcfTopicsDiff { removed: vec![guid.clone()], modified: Vec::new(), added: Vec::new() }),
-                parts: None,
-            },
-            BcfMutation::SetTopicMarkup { guid, title, description, status, priority, labels, creation_date, creation_author } => {
-                wrap_topic_diff(guid, BcfTopicDiff {
+            BcfMutation::InsertTopic { topic } => BcfDiff { version: None, topics: Some(BcfTopicsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![topic.clone()] }), parts: None },
+            BcfMutation::RemoveTopic { guid } => BcfDiff { version: None, topics: Some(BcfTopicsDiff { removed: vec![guid.clone()], modified: Vec::new(), added: Vec::new() }), parts: None },
+            BcfMutation::SetTopicMarkup { guid, title, description, status, priority, labels, creation_date, creation_author } => wrap_topic_diff(
+                guid,
+                BcfTopicDiff {
                     title: title.clone(),
                     description: description.clone(),
                     status: status.clone(),
@@ -161,41 +149,20 @@ impl Mutation<BcfSnapshot> for BcfMutation {
                     creation_author: creation_author.clone(),
                     comments: None,
                     viewpoints: None,
-                })
-            }
-            BcfMutation::InsertComment { topic_guid, comment } => wrap_topic_diff(topic_guid, BcfTopicDiff {
-                comments: Some(BcfCommentsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![comment.clone()] }),
-                ..Default::default()
-            }),
-            BcfMutation::RemoveComment { topic_guid, guid } => wrap_topic_diff(topic_guid, BcfTopicDiff {
-                comments: Some(BcfCommentsDiff { removed: vec![guid.clone()], modified: Vec::new(), added: Vec::new() }),
-                ..Default::default()
-            }),
+                },
+            ),
+            BcfMutation::InsertComment { topic_guid, comment } => wrap_topic_diff(topic_guid, BcfTopicDiff { comments: Some(BcfCommentsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![comment.clone()] }), ..Default::default() }),
+            BcfMutation::RemoveComment { topic_guid, guid } => wrap_topic_diff(topic_guid, BcfTopicDiff { comments: Some(BcfCommentsDiff { removed: vec![guid.clone()], modified: Vec::new(), added: Vec::new() }), ..Default::default() }),
             BcfMutation::SetComment { topic_guid, guid, date, author, text, viewpoint_ref } => {
-                wrap_comment_diff(topic_guid, guid, BcfCommentDiff {
-                    date: date.clone(),
-                    author: author.clone(),
-                    text: text.clone(),
-                    viewpoint_ref: viewpoint_ref.clone(),
-                })
+                wrap_comment_diff(topic_guid, guid, BcfCommentDiff { date: date.clone(), author: author.clone(), text: text.clone(), viewpoint_ref: viewpoint_ref.clone() })
             }
-            BcfMutation::InsertViewpoint { topic_guid, viewpoint } => wrap_topic_diff(topic_guid, BcfTopicDiff {
-                viewpoints: Some(BcfViewpointsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![viewpoint.clone()] }),
-                ..Default::default()
-            }),
-            BcfMutation::RemoveViewpoint { topic_guid, guid } => wrap_topic_diff(topic_guid, BcfTopicDiff {
-                viewpoints: Some(BcfViewpointsDiff { removed: vec![guid.clone()], modified: Vec::new(), added: Vec::new() }),
-                ..Default::default()
-            }),
-            BcfMutation::SetViewpointCamera { topic_guid, guid, camera } => {
-                wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: Some(camera.clone()), components: None, snapshot: None })
+            BcfMutation::InsertViewpoint { topic_guid, viewpoint } => {
+                wrap_topic_diff(topic_guid, BcfTopicDiff { viewpoints: Some(BcfViewpointsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![viewpoint.clone()] }), ..Default::default() })
             }
-            BcfMutation::SetViewpointComponents { topic_guid, guid, components } => {
-                wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: None, components: Some(components.clone()), snapshot: None })
-            }
-            BcfMutation::SetViewpointSnapshot { topic_guid, guid, snapshot } => {
-                wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: None, components: None, snapshot: Some(snapshot.clone()) })
-            }
+            BcfMutation::RemoveViewpoint { topic_guid, guid } => wrap_topic_diff(topic_guid, BcfTopicDiff { viewpoints: Some(BcfViewpointsDiff { removed: vec![guid.clone()], modified: Vec::new(), added: Vec::new() }), ..Default::default() }),
+            BcfMutation::SetViewpointCamera { topic_guid, guid, camera } => wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: Some(camera.clone()), components: None, snapshot: None }),
+            BcfMutation::SetViewpointComponents { topic_guid, guid, components } => wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: None, components: Some(components.clone()), snapshot: None }),
+            BcfMutation::SetViewpointSnapshot { topic_guid, guid, snapshot } => wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: None, components: None, snapshot: Some(snapshot.clone()) }),
         }
     }
 
@@ -209,21 +176,19 @@ impl Mutation<BcfSnapshot> for BcfMutation {
                 Some(t) => vec![BcfMutation::InsertTopic { topic: t.clone() }],
                 None => vec![BcfMutation::NoMutation],
             },
-            BcfMutation::SetTopicMarkup { guid, title, description, status, priority, labels, creation_date, creation_author } => {
-                match find_topic(base, guid) {
-                    Some(t) => vec![BcfMutation::SetTopicMarkup {
-                        guid: guid.clone(),
-                        title: title.as_ref().map(|_| t.title.clone()),
-                        description: description.as_ref().map(|_| t.description.clone()),
-                        status: status.as_ref().map(|_| t.status.clone()),
-                        priority: priority.as_ref().map(|_| t.priority.clone()),
-                        labels: labels.as_ref().map(|_| t.labels.clone()),
-                        creation_date: creation_date.as_ref().map(|_| t.creation_date.clone()),
-                        creation_author: creation_author.as_ref().map(|_| t.creation_author.clone()),
-                    }],
-                    None => vec![BcfMutation::NoMutation],
-                }
-            }
+            BcfMutation::SetTopicMarkup { guid, title, description, status, priority, labels, creation_date, creation_author } => match find_topic(base, guid) {
+                Some(t) => vec![BcfMutation::SetTopicMarkup {
+                    guid: guid.clone(),
+                    title: title.as_ref().map(|_| t.title.clone()),
+                    description: description.as_ref().map(|_| t.description.clone()),
+                    status: status.as_ref().map(|_| t.status.clone()),
+                    priority: priority.as_ref().map(|_| t.priority.clone()),
+                    labels: labels.as_ref().map(|_| t.labels.clone()),
+                    creation_date: creation_date.as_ref().map(|_| t.creation_date.clone()),
+                    creation_author: creation_author.as_ref().map(|_| t.creation_author.clone()),
+                }],
+                None => vec![BcfMutation::NoMutation],
+            },
             BcfMutation::InsertComment { topic_guid, comment } => {
                 vec![BcfMutation::RemoveComment { topic_guid: topic_guid.clone(), guid: comment.guid.clone() }]
             }
@@ -231,19 +196,17 @@ impl Mutation<BcfSnapshot> for BcfMutation {
                 Some(c) => vec![BcfMutation::InsertComment { topic_guid: topic_guid.clone(), comment: c.clone() }],
                 None => vec![BcfMutation::NoMutation],
             },
-            BcfMutation::SetComment { topic_guid, guid, date, author, text, viewpoint_ref } => {
-                match find_comment(base, topic_guid, guid) {
-                    Some(c) => vec![BcfMutation::SetComment {
-                        topic_guid: topic_guid.clone(),
-                        guid: guid.clone(),
-                        date: date.as_ref().map(|_| c.date.clone()),
-                        author: author.as_ref().map(|_| c.author.clone()),
-                        text: text.as_ref().map(|_| c.text.clone()),
-                        viewpoint_ref: viewpoint_ref.as_ref().map(|_| c.viewpoint_ref.clone()),
-                    }],
-                    None => vec![BcfMutation::NoMutation],
-                }
-            }
+            BcfMutation::SetComment { topic_guid, guid, date, author, text, viewpoint_ref } => match find_comment(base, topic_guid, guid) {
+                Some(c) => vec![BcfMutation::SetComment {
+                    topic_guid: topic_guid.clone(),
+                    guid: guid.clone(),
+                    date: date.as_ref().map(|_| c.date.clone()),
+                    author: author.as_ref().map(|_| c.author.clone()),
+                    text: text.as_ref().map(|_| c.text.clone()),
+                    viewpoint_ref: viewpoint_ref.as_ref().map(|_| c.viewpoint_ref.clone()),
+                }],
+                None => vec![BcfMutation::NoMutation],
+            },
             BcfMutation::InsertViewpoint { topic_guid, viewpoint } => {
                 vec![BcfMutation::RemoveViewpoint { topic_guid: topic_guid.clone(), guid: viewpoint.guid.clone() }]
             }
@@ -317,7 +280,8 @@ fn print_bcf_mutation(m: &BcfMutation) -> String {
         BcfMutation::RemoveComment { topic_guid, guid } => format!("remove-comment topic-guid={} guid={}", enc_str(topic_guid), enc_str(guid)),
         BcfMutation::SetComment { topic_guid, guid, date, author, text, viewpoint_ref } => format!(
             "set-comment topic-guid={} guid={} date={} author={} text={} viewpoint-ref={}",
-            enc_str(topic_guid), enc_str(guid),
+            enc_str(topic_guid),
+            enc_str(guid),
             encode_option(date, |v: &String| enc_str(v)),
             encode_option(author, |v: &String| enc_str(v)),
             encode_option(text, |v: &String| enc_str(v)),
@@ -335,13 +299,7 @@ fn parse_bcf_mutation(line: &str) -> Result<BcfMutation, String> {
         return Ok(BcfMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("bcf mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("bcf mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("bcf mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
         "set-snapshot" => Ok(BcfMutation::SetSnapshot { snapshot: dec_bcf_snapshot(arg("snapshot")?)? }),
@@ -395,7 +353,9 @@ impl protocol::OpText for BcfMutation {
 /// this file's text-form `OpText` impl already established for the string-grammar codecs.
 fn write_opt_str_bin(out: &mut Vec<u8>, opt: &Option<String>) {
     out.push(if opt.is_some() { 1 } else { 0 });
-    if let Some(v) = opt { write_str_lp(out, v); }
+    if let Some(v) = opt {
+        write_str_lp(out, v);
+    }
 }
 fn read_opt_str_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
     Ok(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None })
@@ -452,7 +412,9 @@ impl protocol::OpBinary for BcfMutation {
                 write_opt_str_bin(&mut out, status);
                 write_opt_str_bin(&mut out, priority);
                 out.push(if labels.is_some() { 1 } else { 0 });
-                if let Some(v) = labels { write_str_list_bin(&mut out, v); }
+                if let Some(v) = labels {
+                    write_str_list_bin(&mut out, v);
+                }
                 write_opt_str_bin(&mut out, creation_date);
                 write_opt_str_bin(&mut out, creation_author);
             }
@@ -471,7 +433,9 @@ impl protocol::OpBinary for BcfMutation {
                 write_opt_str_bin(&mut out, author);
                 write_opt_str_bin(&mut out, text);
                 out.push(if viewpoint_ref.is_some() { 1 } else { 0 });
-                if let Some(inner) = viewpoint_ref { write_opt_str_bin(&mut out, inner); }
+                if let Some(inner) = viewpoint_ref {
+                    write_opt_str_bin(&mut out, inner);
+                }
             }
             BcfMutation::InsertViewpoint { topic_guid, viewpoint } => {
                 write_str_lp(&mut out, topic_guid);
@@ -485,19 +449,25 @@ impl protocol::OpBinary for BcfMutation {
                 write_str_lp(&mut out, topic_guid);
                 write_str_lp(&mut out, guid);
                 out.push(if camera.is_some() { 1 } else { 0 });
-                if let Some(c) = camera { enc_camera_bin(c, &mut out); }
+                if let Some(c) = camera {
+                    enc_camera_bin(c, &mut out);
+                }
             }
             BcfMutation::SetViewpointComponents { topic_guid, guid, components } => {
                 write_str_lp(&mut out, topic_guid);
                 write_str_lp(&mut out, guid);
                 out.push(if components.is_some() { 1 } else { 0 });
-                if let Some(c) = components { enc_components_bin(c, &mut out); }
+                if let Some(c) = components {
+                    enc_components_bin(c, &mut out);
+                }
             }
             BcfMutation::SetViewpointSnapshot { topic_guid, guid, snapshot } => {
                 write_str_lp(&mut out, topic_guid);
                 write_str_lp(&mut out, guid);
                 out.push(if snapshot.is_some() { 1 } else { 0 });
-                if let Some(b) = snapshot { write_bytes_lp(&mut out, b); }
+                if let Some(b) = snapshot {
+                    write_bytes_lp(&mut out, b);
+                }
             }
         }
         Ok(out)
@@ -520,11 +490,7 @@ impl protocol::OpBinary for BcfMutation {
                 let description = read_opt_str_bin(&mut reader).map_err(|e| malformed("op description", reader.position(), e))?;
                 let status = read_opt_str_bin(&mut reader).map_err(|e| malformed("op status", reader.position(), e))?;
                 let priority = read_opt_str_bin(&mut reader).map_err(|e| malformed("op priority", reader.position(), e))?;
-                let labels = if reader.read_u8().map_err(|e| malformed("op labels presence", reader.position(), e.to_string()))? != 0 {
-                    Some(read_str_list_bin(&mut reader).map_err(|e| malformed("op labels", reader.position(), e))?)
-                } else {
-                    None
-                };
+                let labels = if reader.read_u8().map_err(|e| malformed("op labels presence", reader.position(), e.to_string()))? != 0 { Some(read_str_list_bin(&mut reader).map_err(|e| malformed("op labels", reader.position(), e))?) } else { None };
                 let creation_date = read_opt_str_bin(&mut reader).map_err(|e| malformed("op creation_date", reader.position(), e))?;
                 let creation_author = read_opt_str_bin(&mut reader).map_err(|e| malformed("op creation_author", reader.position(), e))?;
                 Ok(BcfMutation::SetTopicMarkup { guid, title, description, status, priority, labels, creation_date, creation_author })
@@ -565,31 +531,20 @@ impl protocol::OpBinary for BcfMutation {
             11 => {
                 let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
                 let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
-                let camera = if reader.read_u8().map_err(|e| malformed("op camera presence", reader.position(), e.to_string()))? != 0 {
-                    Some(dec_camera_bin(&mut reader).map_err(|e| malformed("op camera", reader.position(), e))?)
-                } else {
-                    None
-                };
+                let camera = if reader.read_u8().map_err(|e| malformed("op camera presence", reader.position(), e.to_string()))? != 0 { Some(dec_camera_bin(&mut reader).map_err(|e| malformed("op camera", reader.position(), e))?) } else { None };
                 Ok(BcfMutation::SetViewpointCamera { topic_guid, guid, camera })
             }
             12 => {
                 let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
                 let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
-                let components = if reader.read_u8().map_err(|e| malformed("op components presence", reader.position(), e.to_string()))? != 0 {
-                    Some(dec_components_bin(&mut reader).map_err(|e| malformed("op components", reader.position(), e))?)
-                } else {
-                    None
-                };
+                let components =
+                    if reader.read_u8().map_err(|e| malformed("op components presence", reader.position(), e.to_string()))? != 0 { Some(dec_components_bin(&mut reader).map_err(|e| malformed("op components", reader.position(), e))?) } else { None };
                 Ok(BcfMutation::SetViewpointComponents { topic_guid, guid, components })
             }
             13 => {
                 let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
                 let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
-                let snapshot = if reader.read_u8().map_err(|e| malformed("op snapshot presence", reader.position(), e.to_string()))? != 0 {
-                    Some(read_bytes_lp(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?)
-                } else {
-                    None
-                };
+                let snapshot = if reader.read_u8().map_err(|e| malformed("op snapshot presence", reader.position(), e.to_string()))? != 0 { Some(read_bytes_lp(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?) } else { None };
                 Ok(BcfMutation::SetViewpointSnapshot { topic_guid, guid, snapshot })
             }
             other => Err(malformed("op tag", 1, format!("unknown BcfMutation tag {other}"))),

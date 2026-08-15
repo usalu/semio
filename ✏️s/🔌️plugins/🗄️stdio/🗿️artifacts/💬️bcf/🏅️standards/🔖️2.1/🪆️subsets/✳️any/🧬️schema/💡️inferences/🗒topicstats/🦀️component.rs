@@ -38,12 +38,7 @@ pub fn compute_bcf_topic_stats(snapshot: &BcfSnapshot) -> BcfTopicStats {
         }
     }
 
-    BcfTopicStats {
-        topic_count: snapshot.topics.len() as u32,
-        comment_count,
-        viewpoint_count,
-        author_count: authors.len() as u32,
-    }
+    BcfTopicStats { topic_count: snapshot.topics.len() as u32, comment_count, viewpoint_count, author_count: authors.len() as u32 }
 }
 //#endregion 🔖️TopicStats
 

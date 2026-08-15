@@ -19,10 +19,10 @@
 //!   empty since md only carries a URL, never raw bytes.
 //! - `styles` is always empty: CommonMark has no named-style concept.
 
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::md::MdSnapshot;
 use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
+use crate::artifacts::md::MdSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocListItem, DocRun, RunStyle, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
 /// ✍️ Flattens one inline node into zero or more runs, threading `style` down through
@@ -83,10 +83,7 @@ fn map_block(block: &MdBlock) -> Vec<DocBlock> {
             out.extend(images);
             out
         }
-        MdBlock::List { ordered, items, .. } => vec![DocBlock::List {
-            ordered: *ordered,
-            items: items.iter().map(|item_blocks| DocListItem { blocks: item_blocks.iter().flat_map(map_block).collect() }).collect(),
-        }],
+        MdBlock::List { ordered, items, .. } => vec![DocBlock::List { ordered: *ordered, items: items.iter().map(|item_blocks| DocListItem { blocks: item_blocks.iter().flat_map(map_block).collect() }).collect() }],
         MdBlock::CodeBlock { info, literal } => vec![DocBlock::Code { language: info.clone(), text: literal.clone() }],
         MdBlock::BlockQuote { blocks } => vec![DocBlock::Quote { blocks: blocks.iter().flat_map(map_block).collect() }],
         MdBlock::ThematicBreak => Vec::new(),

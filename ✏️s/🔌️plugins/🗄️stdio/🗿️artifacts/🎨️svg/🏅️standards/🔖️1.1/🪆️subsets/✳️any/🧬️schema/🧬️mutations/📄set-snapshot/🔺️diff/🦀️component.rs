@@ -1,6 +1,6 @@
 //! 🧩 set_snapshot diff leaf.
 
-use crate::artifacts::svg::schema::diff::{SvgDiff, diff_set_snapshot};
+use crate::artifacts::svg::schema::diff::{diff_set_snapshot, SvgDiff};
 use crate::artifacts::svg::SvgSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot -- the sparse field-by-field `SvgDiff::between(base, next)`,

@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
-pub use crate::artifacts::epw::standards::energyplus::subsets::any::schema::EpwArtifact;
 pub use crate::artifacts::epw::standards::energyplus::subsets::any::schema::diff::EpwDiff;
 pub use crate::artifacts::epw::standards::energyplus::subsets::any::schema::mutations::EpwMutation;
+pub use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
+pub use crate::artifacts::epw::standards::energyplus::subsets::any::schema::EpwArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_EPW_DOCUMENT_SCHEMA: &str = "stdio.epw";
@@ -62,9 +62,9 @@ pub fn register_pilot_languages() {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::epw::standards::energyplus::subsets::any::io::io_registry as std_composer;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -73,10 +73,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("EpwComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("EpwComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

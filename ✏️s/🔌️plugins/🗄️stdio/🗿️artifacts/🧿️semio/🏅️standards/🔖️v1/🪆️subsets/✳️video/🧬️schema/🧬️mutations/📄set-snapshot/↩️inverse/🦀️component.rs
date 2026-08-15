@@ -1,5 +1,5 @@
-use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::video::schema::mutations::SemioVideoMutation;
+use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

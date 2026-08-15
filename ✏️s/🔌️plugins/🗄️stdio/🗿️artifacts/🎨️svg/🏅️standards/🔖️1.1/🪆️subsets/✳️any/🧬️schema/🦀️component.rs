@@ -28,18 +28,12 @@ impl Default for SvgArtifact {
 impl SvgArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> SvgSnapshot {
-        SvgSnapshot {
-            schema: self.schema.clone(),
-            doc: self.doc.clone(),
-        }
+        SvgSnapshot { schema: self.schema.clone(), doc: self.doc.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: SvgSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            doc: snapshot.doc,
-        }
+        Self { schema: snapshot.schema, doc: snapshot.doc }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -88,12 +82,10 @@ pub fn svg_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::svg::schema::snapshot::{
-        set_element_attr, svg_element_to_xml_node, view_box_to_string, CommonAttrs, PathCommand, SvgElement, ViewBox,
-    };
+    use crate::artifacts::svg::schema::snapshot::{set_element_attr, svg_element_to_xml_node, view_box_to_string, CommonAttrs, PathCommand, SvgElement, ViewBox};
     use crate::artifacts::svg::{SvgDiff, SvgMutation, SvgSnapshot};
     use crate::artifacts::xml::schema::snapshot::XmlNode;
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️PathBuilder
     /// 🖊️ Fluent constructor for a `d` attribute's typed command list -- mirrors the path mini-language
@@ -113,42 +105,85 @@ pub mod derived_construction {
         pub fn from_commands(cmds: Vec<PathCommand>) -> Self {
             Self { cmds }
         }
-        pub fn move_to(mut self, x: f64, y: f64) -> Self { self.cmds.push(PathCommand::MoveTo { x, y, relative: false }); self }
-        pub fn move_by(mut self, dx: f64, dy: f64) -> Self { self.cmds.push(PathCommand::MoveTo { x: dx, y: dy, relative: true }); self }
-        pub fn line_to(mut self, x: f64, y: f64) -> Self { self.cmds.push(PathCommand::LineTo { x, y, relative: false }); self }
-        pub fn line_by(mut self, dx: f64, dy: f64) -> Self { self.cmds.push(PathCommand::LineTo { x: dx, y: dy, relative: true }); self }
-        pub fn horizontal_to(mut self, x: f64) -> Self { self.cmds.push(PathCommand::HorizontalLineTo { x, relative: false }); self }
-        pub fn horizontal_by(mut self, dx: f64) -> Self { self.cmds.push(PathCommand::HorizontalLineTo { x: dx, relative: true }); self }
-        pub fn vertical_to(mut self, y: f64) -> Self { self.cmds.push(PathCommand::VerticalLineTo { y, relative: false }); self }
-        pub fn vertical_by(mut self, dy: f64) -> Self { self.cmds.push(PathCommand::VerticalLineTo { y: dy, relative: true }); self }
+        pub fn move_to(mut self, x: f64, y: f64) -> Self {
+            self.cmds.push(PathCommand::MoveTo { x, y, relative: false });
+            self
+        }
+        pub fn move_by(mut self, dx: f64, dy: f64) -> Self {
+            self.cmds.push(PathCommand::MoveTo { x: dx, y: dy, relative: true });
+            self
+        }
+        pub fn line_to(mut self, x: f64, y: f64) -> Self {
+            self.cmds.push(PathCommand::LineTo { x, y, relative: false });
+            self
+        }
+        pub fn line_by(mut self, dx: f64, dy: f64) -> Self {
+            self.cmds.push(PathCommand::LineTo { x: dx, y: dy, relative: true });
+            self
+        }
+        pub fn horizontal_to(mut self, x: f64) -> Self {
+            self.cmds.push(PathCommand::HorizontalLineTo { x, relative: false });
+            self
+        }
+        pub fn horizontal_by(mut self, dx: f64) -> Self {
+            self.cmds.push(PathCommand::HorizontalLineTo { x: dx, relative: true });
+            self
+        }
+        pub fn vertical_to(mut self, y: f64) -> Self {
+            self.cmds.push(PathCommand::VerticalLineTo { y, relative: false });
+            self
+        }
+        pub fn vertical_by(mut self, dy: f64) -> Self {
+            self.cmds.push(PathCommand::VerticalLineTo { y: dy, relative: true });
+            self
+        }
         pub fn cubic_to(mut self, x1: f64, y1: f64, x2: f64, y2: f64, x: f64, y: f64) -> Self {
-            self.cmds.push(PathCommand::CurveTo { x1, y1, x2, y2, x, y, relative: false }); self
+            self.cmds.push(PathCommand::CurveTo { x1, y1, x2, y2, x, y, relative: false });
+            self
         }
         pub fn cubic_by(mut self, x1: f64, y1: f64, x2: f64, y2: f64, dx: f64, dy: f64) -> Self {
-            self.cmds.push(PathCommand::CurveTo { x1, y1, x2, y2, x: dx, y: dy, relative: true }); self
+            self.cmds.push(PathCommand::CurveTo { x1, y1, x2, y2, x: dx, y: dy, relative: true });
+            self
         }
         pub fn smooth_cubic_to(mut self, x2: f64, y2: f64, x: f64, y: f64) -> Self {
-            self.cmds.push(PathCommand::SmoothCurveTo { x2, y2, x, y, relative: false }); self
+            self.cmds.push(PathCommand::SmoothCurveTo { x2, y2, x, y, relative: false });
+            self
         }
         pub fn smooth_cubic_by(mut self, x2: f64, y2: f64, dx: f64, dy: f64) -> Self {
-            self.cmds.push(PathCommand::SmoothCurveTo { x2, y2, x: dx, y: dy, relative: true }); self
+            self.cmds.push(PathCommand::SmoothCurveTo { x2, y2, x: dx, y: dy, relative: true });
+            self
         }
         pub fn quadratic_to(mut self, x1: f64, y1: f64, x: f64, y: f64) -> Self {
-            self.cmds.push(PathCommand::QuadraticCurveTo { x1, y1, x, y, relative: false }); self
+            self.cmds.push(PathCommand::QuadraticCurveTo { x1, y1, x, y, relative: false });
+            self
         }
         pub fn quadratic_by(mut self, x1: f64, y1: f64, dx: f64, dy: f64) -> Self {
-            self.cmds.push(PathCommand::QuadraticCurveTo { x1, y1, x: dx, y: dy, relative: true }); self
+            self.cmds.push(PathCommand::QuadraticCurveTo { x1, y1, x: dx, y: dy, relative: true });
+            self
         }
-        pub fn smooth_quadratic_to(mut self, x: f64, y: f64) -> Self { self.cmds.push(PathCommand::SmoothQuadraticCurveTo { x, y, relative: false }); self }
-        pub fn smooth_quadratic_by(mut self, dx: f64, dy: f64) -> Self { self.cmds.push(PathCommand::SmoothQuadraticCurveTo { x: dx, y: dy, relative: true }); self }
+        pub fn smooth_quadratic_to(mut self, x: f64, y: f64) -> Self {
+            self.cmds.push(PathCommand::SmoothQuadraticCurveTo { x, y, relative: false });
+            self
+        }
+        pub fn smooth_quadratic_by(mut self, dx: f64, dy: f64) -> Self {
+            self.cmds.push(PathCommand::SmoothQuadraticCurveTo { x: dx, y: dy, relative: true });
+            self
+        }
         pub fn arc_to(mut self, rx: f64, ry: f64, x_axis_rotation: f64, large_arc: bool, sweep: bool, x: f64, y: f64) -> Self {
-            self.cmds.push(PathCommand::Arc { rx, ry, x_axis_rotation, large_arc, sweep, x, y, relative: false }); self
+            self.cmds.push(PathCommand::Arc { rx, ry, x_axis_rotation, large_arc, sweep, x, y, relative: false });
+            self
         }
         pub fn arc_by(mut self, rx: f64, ry: f64, x_axis_rotation: f64, large_arc: bool, sweep: bool, dx: f64, dy: f64) -> Self {
-            self.cmds.push(PathCommand::Arc { rx, ry, x_axis_rotation, large_arc, sweep, x: dx, y: dy, relative: true }); self
+            self.cmds.push(PathCommand::Arc { rx, ry, x_axis_rotation, large_arc, sweep, x: dx, y: dy, relative: true });
+            self
         }
-        pub fn close(mut self) -> Self { self.cmds.push(PathCommand::ClosePath); self }
-        pub fn build(self) -> Vec<PathCommand> { self.cmds }
+        pub fn close(mut self) -> Self {
+            self.cmds.push(PathCommand::ClosePath);
+            self
+        }
+        pub fn build(self) -> Vec<PathCommand> {
+            self.cmds
+        }
     }
     //#endregion 🔖️PathBuilder
 
@@ -165,8 +200,14 @@ pub mod derived_construction {
         pub fn new(offset: impl Into<String>) -> Self {
             Self { offset: offset.into(), color: None, opacity: None }
         }
-        pub fn with_color(mut self, color: impl Into<String>) -> Self { self.color = Some(color.into()); self }
-        pub fn with_opacity(mut self, opacity: impl Into<String>) -> Self { self.opacity = Some(opacity.into()); self }
+        pub fn with_color(mut self, color: impl Into<String>) -> Self {
+            self.color = Some(color.into());
+            self
+        }
+        pub fn with_opacity(mut self, opacity: impl Into<String>) -> Self {
+            self.opacity = Some(opacity.into());
+            self
+        }
         fn into_element(self) -> SvgElement {
             SvgElement::Stop { common: CommonAttrs::default(), offset: self.offset, stop_color: self.color, stop_opacity: self.opacity }
         }
@@ -238,15 +279,7 @@ pub mod derived_construction {
             self.children.push(SvgElement::Use { common, href: href.into(), x, y, width, height });
             self
         }
-        pub fn define_linear_gradient(
-            mut self,
-            id: impl Into<String>,
-            x1: Option<f64>,
-            y1: Option<f64>,
-            x2: Option<f64>,
-            y2: Option<f64>,
-            stops: Vec<GradientStopSpec>,
-        ) -> Self {
+        pub fn define_linear_gradient(mut self, id: impl Into<String>, x1: Option<f64>, y1: Option<f64>, x2: Option<f64>, y2: Option<f64>, stops: Vec<GradientStopSpec>) -> Self {
             self.children.push(SvgElement::LinearGradient {
                 common: CommonAttrs::default(),
                 id: Some(id.into()),
@@ -258,16 +291,7 @@ pub mod derived_construction {
             });
             self
         }
-        pub fn define_radial_gradient(
-            mut self,
-            id: impl Into<String>,
-            cx: Option<f64>,
-            cy: Option<f64>,
-            r: Option<f64>,
-            fx: Option<f64>,
-            fy: Option<f64>,
-            stops: Vec<GradientStopSpec>,
-        ) -> Self {
+        pub fn define_radial_gradient(mut self, id: impl Into<String>, cx: Option<f64>, cy: Option<f64>, r: Option<f64>, fx: Option<f64>, fy: Option<f64>, stops: Vec<GradientStopSpec>) -> Self {
             self.children.push(SvgElement::RadialGradient {
                 common: CommonAttrs::default(),
                 id: Some(id.into()),
@@ -428,7 +452,11 @@ pub mod derived_construction {
                     }
                 }
             }
-            if self.diagnostics.is_empty() { Ok(snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -438,10 +466,10 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::svg::schema::snapshot::{svg_document_to_typed, SvgElement};
     use crate::artifacts::svg::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
     use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlNode};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.svg` parts. `typed` is the real 1.1 semantic model (`SvgElement` tree),
@@ -488,26 +516,24 @@ pub mod derived_analysis {
             let mut confidence = IoConfidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <SvgSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => {
-                            match svg_document_to_typed(&snapshot.doc) {
-                                Ok(typed) => parts.typed = Some(typed),
-                                Err(err) => {
-                                    confidence = IoConfidence::Low;
-                                    diagnostics.push(dsl::Diagnostic::error("stdio.analyze.typed", dsl::TextSpan::at(1, 1), err));
+                    AnalyzeSource::Text(text) => {
+                        match if store::semio_format::split_text_preamble(text).is_ok() { <SvgSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string()) } else { SvgSnapshot::import_utf8(text.as_bytes()) } {
+                            Ok(snapshot) => {
+                                match svg_document_to_typed(&snapshot.doc) {
+                                    Ok(typed) => parts.typed = Some(typed),
+                                    Err(err) => {
+                                        confidence = IoConfidence::Low;
+                                        diagnostics.push(dsl::Diagnostic::error("stdio.analyze.typed", dsl::TextSpan::at(1, 1), err));
+                                    }
                                 }
+                                parts.snapshot = Some(snapshot);
                             }
-                            parts.snapshot = Some(snapshot);
+                            Err(err) => {
+                                confidence = IoConfidence::Low;
+                                diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            }
                         }
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
-                        }
-                    },
+                    }
                     AnalyzeSource::Binary(bytes) => match <SvgSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => {
                             if let Ok(typed) = svg_document_to_typed(&snapshot.doc) {
@@ -517,11 +543,7 @@ pub mod derived_analysis {
                         }
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -557,10 +579,7 @@ pub mod derived_analysis {
                 .add_group(CommonAttrs::new().with_id("layer1"), |g: ElementBuilder| {
                     g.add_rect(10.0, 10.0, 80.0, 40.0, CommonAttrs::new().with_fill("url(#grad1)"))
                         .add_circle(150.0, 50.0, 30.0, CommonAttrs::new().with_fill("red").with_stroke("black"))
-                        .add_path(
-                            PathBuilder::new().move_to(10.0, 80.0).line_to(50.0, 80.0).arc_to(20.0, 20.0, 0.0, false, true, 90.0, 80.0).close(),
-                            CommonAttrs::new().with_stroke("blue"),
-                        )
+                        .add_path(PathBuilder::new().move_to(10.0, 80.0).line_to(50.0, 80.0).arc_to(20.0, 20.0, 0.0, false, true, 90.0, 80.0).close(), CommonAttrs::new().with_stroke("blue"))
                 })
                 .build()
                 .expect("build succeeds");
@@ -629,17 +648,11 @@ pub mod derived_analysis {
                     elements_only(children).iter().map(strip_whitespace).collect()
                 }
                 match el.clone() {
-                    SvgElement::Svg { common, view_box, width, height, xmlns, children } => {
-                        SvgElement::Svg { common, view_box, width, height, xmlns, children: strip_all(&children) }
-                    }
+                    SvgElement::Svg { common, view_box, width, height, xmlns, children } => SvgElement::Svg { common, view_box, width, height, xmlns, children: strip_all(&children) },
                     SvgElement::Group { common, children } => SvgElement::Group { common, children: strip_all(&children) },
                     SvgElement::Defs { common, children } => SvgElement::Defs { common, children: strip_all(&children) },
-                    SvgElement::LinearGradient { common, id, x1, y1, x2, y2, children } => {
-                        SvgElement::LinearGradient { common, id, x1, y1, x2, y2, children: strip_all(&children) }
-                    }
-                    SvgElement::RadialGradient { common, id, cx, cy, r, fx, fy, children } => {
-                        SvgElement::RadialGradient { common, id, cx, cy, r, fx, fy, children: strip_all(&children) }
-                    }
+                    SvgElement::LinearGradient { common, id, x1, y1, x2, y2, children } => SvgElement::LinearGradient { common, id, x1, y1, x2, y2, children: strip_all(&children) },
+                    SvgElement::RadialGradient { common, id, cx, cy, r, fx, fy, children } => SvgElement::RadialGradient { common, id, cx, cy, r, fx, fy, children: strip_all(&children) },
                     other => other,
                 }
             }
@@ -672,8 +685,12 @@ pub mod derived_analysis {
                         .filter_map(|c| match c {
                             SvgElement::Stop { offset, stop_color, stop_opacity, .. } => {
                                 let mut spec = GradientStopSpec::new(offset.clone());
-                                if let Some(c) = stop_color { spec = spec.with_color(c.clone()); }
-                                if let Some(o) = stop_opacity { spec = spec.with_opacity(o.clone()); }
+                                if let Some(c) = stop_color {
+                                    spec = spec.with_color(c.clone());
+                                }
+                                if let Some(o) = stop_opacity {
+                                    spec = spec.with_opacity(o.clone());
+                                }
                                 Some(spec)
                             }
                             _ => None,
@@ -688,9 +705,7 @@ pub mod derived_analysis {
                 builder = builder.set_xmlns(xmlns);
             }
             let rebuilt_snapshot = builder
-                .add_defs(CommonAttrs::default(), |d: ElementBuilder| {
-                    d.define_linear_gradient(grad_id.unwrap_or_default(), grad_x1, grad_y1, grad_x2, grad_y2, stop_specs)
-                })
+                .add_defs(CommonAttrs::default(), |d: ElementBuilder| d.define_linear_gradient(grad_id.unwrap_or_default(), grad_x1, grad_y1, grad_x2, grad_y2, stop_specs))
                 .add_group(group_common, |mut g: ElementBuilder| {
                     for child in &group_children {
                         g = rebuild_one(g, child);
@@ -773,11 +788,7 @@ pub fn demo_svg_snapshot() -> SvgSnapshot {
     use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDocument, XmlNode};
     let root = XmlNode::Element {
         name: "svg".into(),
-        attrs: vec![
-            XmlAttr { name: "xmlns".into(), value: "http://www.w3.org/2000/svg".into() },
-            XmlAttr { name: "xmlns:xlink".into(), value: "http://www.w3.org/1999/xlink".into() },
-            XmlAttr { name: "viewBox".into(), value: "0 0 100 100".into() },
-        ],
+        attrs: vec![XmlAttr { name: "xmlns".into(), value: "http://www.w3.org/2000/svg".into() }, XmlAttr { name: "xmlns:xlink".into(), value: "http://www.w3.org/1999/xlink".into() }, XmlAttr { name: "viewBox".into(), value: "0 0 100 100".into() }],
         children: vec![
             XmlNode::Comment { text: " demo scene ".into() },
             XmlNode::ProcessingInstruction { target: "xml-stylesheet".into(), data: "text".into() },
@@ -792,23 +803,14 @@ pub fn demo_svg_snapshot() -> SvgSnapshot {
                 ],
                 children: vec![],
             },
-            XmlNode::Element {
-                name: "text".into(),
-                attrs: vec![XmlAttr { name: "x".into(), value: "5".into() }],
-                children: vec![XmlNode::Text { text: "Tom & Jerry".into() }],
-            },
+            XmlNode::Element { name: "text".into(), attrs: vec![XmlAttr { name: "x".into(), value: "5".into() }], children: vec![XmlNode::Text { text: "Tom & Jerry".into() }] },
             XmlNode::Element { name: "circle".into(), attrs: vec![XmlAttr { name: "cx".into(), value: "1".into() }], children: vec![] },
             XmlNode::CData { text: "raw markup".into() },
         ],
     };
     let mut snapshot = SvgSnapshot {
         schema: STDIO_SVG_DOCUMENT_SCHEMA.into(),
-        doc: XmlDocument {
-            declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
-            doctype: Some("<!DOCTYPE svg>".into()),
-            prolog: Vec::new(),
-            root: Some(root),
-        },
+        doc: XmlDocument { declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }), doctype: Some("<!DOCTYPE svg>".into()), prolog: Vec::new(), root: Some(root) },
     };
     let text = crate::artifacts::svg::schema::snapshot::write_svg_xml(&snapshot.doc);
     snapshot

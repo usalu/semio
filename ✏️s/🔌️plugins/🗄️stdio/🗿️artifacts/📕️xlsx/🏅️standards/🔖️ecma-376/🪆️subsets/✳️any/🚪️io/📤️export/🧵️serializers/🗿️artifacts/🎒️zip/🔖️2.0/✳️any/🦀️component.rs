@@ -9,12 +9,8 @@ pub fn register() {}
 
 /// 🎒️ Encode XlsxSnapshot as ZIP container bytes.
 pub fn serialize(from: &XlsxSnapshot) -> Result<BinarySnapshot, store::PackError> {
-    let bytes = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_xlsx(from)
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
-    Ok(BinarySnapshot {
-        schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(),
-        bytes,
-    })
+    let bytes = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_xlsx(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    Ok(BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
 }
 
 /// Encode ZIP then wrap as binary pack bytes.

@@ -1,4 +1,4 @@
-use crate::artifacts::html::standards::v5::subsets::any::schema::diff::{HtmlDiff, diff_set_snapshot};
+use crate::artifacts::html::standards::v5::subsets::any::schema::diff::{diff_set_snapshot, HtmlDiff};
 use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot.

@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::docx::schema::snapshot::DocxSnapshot;
-pub use crate::artifacts::docx::schema::DocxArtifact;
 pub use crate::artifacts::docx::schema::diff::DocxDiff;
 pub use crate::artifacts::docx::schema::mutations::DocxMutation;
+pub use crate::artifacts::docx::schema::snapshot::DocxSnapshot;
+pub use crate::artifacts::docx::schema::DocxArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_DOCX_DOCUMENT_SCHEMA: &str = "stdio.docx";
@@ -51,12 +51,8 @@ fn docx_subset_validators() -> &'static [semio_framework_plugin::SubsetValidator
     ENTRIES
         .get_or_init(|| {
             vec![
-                semio_framework_plugin::subset_validator_entry_of::<
-                    crate::artifacts::docx::standards::v_ecma_376::subsets::strict::io::DocxStrictValidator,
-                >(),
-                semio_framework_plugin::subset_validator_entry_of::<
-                    crate::artifacts::docx::standards::v_ecma_376::subsets::transitional::io::DocxTransitionalValidator,
-                >(),
+                semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::docx::standards::v_ecma_376::subsets::strict::io::DocxStrictValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::docx::standards::v_ecma_376::subsets::transitional::io::DocxTransitionalValidator>(),
             ]
         })
         .as_slice()
@@ -140,16 +136,16 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: STDIO_DOCX_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::io_registry as v_ecma_376;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -158,10 +154,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("DocxComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("DocxComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

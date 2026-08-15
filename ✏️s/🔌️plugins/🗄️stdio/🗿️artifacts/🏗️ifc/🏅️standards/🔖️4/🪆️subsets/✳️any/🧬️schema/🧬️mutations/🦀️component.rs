@@ -7,16 +7,14 @@
 //! apply-and-capture is never used.
 
 use crate::artifacts::ifc::schema::diff::{
-    self, dec_entity, dec_entity_bin, dec_entity_list_bin, dec_ifc_value, dec_ifc_value_bin, dec_ifc_value_list,
-    dec_ifc_value_list_bin, dec_str, enc_entity, enc_entity_bin, enc_entity_list_bin, enc_ifc_value, enc_ifc_value_bin,
-    enc_ifc_value_list, enc_ifc_value_list_bin, enc_str, read_str_bin, split_top_level, strip_brackets, write_str_bin,
-    IfcDiff,
+    self, dec_entity, dec_entity_bin, dec_entity_list_bin, dec_ifc_value, dec_ifc_value_bin, dec_ifc_value_list, dec_ifc_value_list_bin, dec_str, enc_entity, enc_entity_bin, enc_entity_list_bin, enc_ifc_value, enc_ifc_value_bin, enc_ifc_value_list,
+    enc_ifc_value_list_bin, enc_str, read_str_bin, split_top_level, strip_brackets, write_str_bin, IfcDiff,
 };
 use crate::artifacts::ifc::schema::snapshot::{IfcEntity, IfcHeader, IfcValue};
 use crate::artifacts::ifc::IfcSnapshot;
-use protocol::{Mutation, OpText};
 #[cfg(test)]
 use protocol::OpBinary;
+use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -111,11 +109,15 @@ pub fn apply_ifc_mutation(snapshot: &mut IfcSnapshot, mutation: &IfcMutation) ->
         }
         IfcMutation::RemoveEntity { id } => snapshot.entities.retain(|e| &e.id != id),
         IfcMutation::SetEntityName { id, name } => {
-            if let Some(e) = find_mut(snapshot, *id) { e.name = name.clone(); }
+            if let Some(e) = find_mut(snapshot, *id) {
+                e.name = name.clone();
+            }
         }
         IfcMutation::SetEntityArg { id, index, value } => {
             if let Some(e) = find_mut(snapshot, *id) {
-                if let Some(slot) = e.args.get_mut(*index) { *slot = value.clone(); }
+                if let Some(slot) = e.args.get_mut(*index) {
+                    *slot = value.clone();
+                }
             }
         }
         IfcMutation::InsertEntityArg { id, index, value } => {
@@ -126,7 +128,9 @@ pub fn apply_ifc_mutation(snapshot: &mut IfcSnapshot, mutation: &IfcMutation) ->
         }
         IfcMutation::RemoveEntityArg { id, index } => {
             if let Some(e) = find_mut(snapshot, *id) {
-                if *index < e.args.len() { e.args.remove(*index); }
+                if *index < e.args.len() {
+                    e.args.remove(*index);
+                }
             }
         }
     }
@@ -234,13 +238,7 @@ fn parse_ifc_mutation(line: &str) -> Result<IfcMutation, String> {
         return Ok(IfcMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("ifc mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("ifc mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("ifc mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     let u64_arg = |k: &str| -> Result<u64, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
@@ -430,11 +428,21 @@ pub(crate) fn demo_mutation_cases() -> Vec<IfcMutation> {
         IfcMutation::SetFileSchema { values: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])] },
         IfcMutation::InsertEntity {
             index: 1,
-            entity: demo_entity(99, "IFCSITE", vec![
-                IfcValue::Unset, IfcValue::Derived, IfcValue::Integer(-7), IfcValue::Real(3.25), IfcValue::String("hi".into()),
-                IfcValue::Enum("EDGE".into()), IfcValue::Reference(42), IfcValue::Aggregate(vec![IfcValue::Integer(1), IfcValue::Integer(2)]),
-                IfcValue::TypedValue("IFCLENGTHMEASURE".into(), vec![IfcValue::Real(3000.0)]),
-            ]),
+            entity: demo_entity(
+                99,
+                "IFCSITE",
+                vec![
+                    IfcValue::Unset,
+                    IfcValue::Derived,
+                    IfcValue::Integer(-7),
+                    IfcValue::Real(3.25),
+                    IfcValue::String("hi".into()),
+                    IfcValue::Enum("EDGE".into()),
+                    IfcValue::Reference(42),
+                    IfcValue::Aggregate(vec![IfcValue::Integer(1), IfcValue::Integer(2)]),
+                    IfcValue::TypedValue("IFCLENGTHMEASURE".into(), vec![IfcValue::Real(3000.0)]),
+                ],
+            ),
         },
         IfcMutation::RemoveEntity { id: 2 },
         IfcMutation::SetEntityName { id: 1, name: "IFCSLAB".into() },
@@ -462,11 +470,7 @@ mod tests {
     fn base_snapshot() -> IfcSnapshot {
         IfcSnapshot {
             schema: "stdio.ifc".into(),
-            header: IfcHeader {
-                file_description: vec![IfcValue::String("".into())],
-                file_name: vec![IfcValue::String("semio.ifc".into())],
-                file_schema: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])],
-            },
+            header: IfcHeader { file_description: vec![IfcValue::String("".into())], file_name: vec![IfcValue::String("semio.ifc".into())], file_schema: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])] },
             entities: vec![
                 entity(1, "IFCPROJECT", vec![IfcValue::String("gid".into()), IfcValue::Reference(2)]),
                 entity(2, "IFCOWNERHISTORY", vec![IfcValue::Unset, IfcValue::Integer(0)]),
@@ -620,10 +624,7 @@ mod tests {
     //#region 🔖️codec_retention_law
     #[test]
     fn codec_retention_law() {
-        let text = std::fs::read_to_string(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../🗿️artifacts/🏗️ifc/📚️examples/🎬️demo/🖼️assets/🏗️example.ifc"
-        ));
+        let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/🏗️ifc/📚️examples/🎬️demo/🖼️assets/🏗️example.ifc"));
         let text = match text {
             Ok(t) => t,
             // Fixture path is relative to this crate's manifest dir under the workspace layout;
@@ -645,11 +646,7 @@ mod tests {
     fn sweep_a() -> IfcSnapshot {
         IfcSnapshot {
             schema: "stdio.ifc".into(),
-            header: IfcHeader {
-                file_description: vec![IfcValue::String("before desc".into())],
-                file_name: vec![IfcValue::String("before.ifc".into())],
-                file_schema: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])],
-            },
+            header: IfcHeader { file_description: vec![IfcValue::String("before desc".into())], file_name: vec![IfcValue::String("before.ifc".into())], file_schema: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])] },
             entities: vec![
                 entity(1, "IFCPROJECT", vec![IfcValue::String("gone".into())]),
                 IfcEntity {
@@ -665,11 +662,7 @@ mod tests {
     fn sweep_b() -> IfcSnapshot {
         IfcSnapshot {
             schema: "stdio.ifc".into(),
-            header: IfcHeader {
-                file_description: vec![IfcValue::String("after desc".into())],
-                file_name: vec![IfcValue::String("after.ifc".into())],
-                file_schema: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4X3".into())])],
-            },
+            header: IfcHeader { file_description: vec![IfcValue::String("after desc".into())], file_name: vec![IfcValue::String("after.ifc".into())], file_schema: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4X3".into())])] },
             entities: vec![
                 IfcEntity {
                     id: 2,
@@ -746,17 +739,21 @@ mod tests {
             IfcMutation::SetFileSchema { values: vec![] },
             IfcMutation::InsertEntity {
                 index: 1,
-                entity: entity(99, "IFCSITE", vec![
-                    IfcValue::Unset,
-                    IfcValue::Derived,
-                    IfcValue::Integer(-7),
-                    IfcValue::Real(3.25),
-                    IfcValue::String("hi".into()),
-                    IfcValue::Enum("EDGE".into()),
-                    IfcValue::Reference(42),
-                    IfcValue::Aggregate(vec![IfcValue::Integer(1), IfcValue::Integer(2)]),
-                    IfcValue::TypedValue("IFCLENGTHMEASURE".into(), vec![IfcValue::Real(3000.0)]),
-                ]),
+                entity: entity(
+                    99,
+                    "IFCSITE",
+                    vec![
+                        IfcValue::Unset,
+                        IfcValue::Derived,
+                        IfcValue::Integer(-7),
+                        IfcValue::Real(3.25),
+                        IfcValue::String("hi".into()),
+                        IfcValue::Enum("EDGE".into()),
+                        IfcValue::Reference(42),
+                        IfcValue::Aggregate(vec![IfcValue::Integer(1), IfcValue::Integer(2)]),
+                        IfcValue::TypedValue("IFCLENGTHMEASURE".into(), vec![IfcValue::Real(3000.0)]),
+                    ],
+                ),
             },
             IfcMutation::RemoveEntity { id: 2 },
             IfcMutation::SetEntityName { id: 6, name: "IFCSLAB".into() },

@@ -1,7 +1,12 @@
 module Stdio_pdf_1_7_Diff;
 
-# `PdfDiff` has no dedicated OpText/binary envelope yet (F6 wave, not this one) -- on the wire
-# this is plain UTF-8 JSON (RFC8259), tagged per ../📝️text/📖️component.grammar.semio.
+# Structured logical diff frame. `format` is 1. `flags` bits 0-4 select, in fixed order,
+# declared-version, PdfInfo, page collection diff, indirect-object collection diff, and trailer
+# dictionary diff. Selected fields are recursive LEB128/length-prefixed records containing
+# decoded stream data and typed filter/predictor records. Spicy has no native LEB128 primitive,
+# so the recursive field sequence is EOD-bounded after its typed framing bytes.
 public type Document = unit {
-    utf8_json_text: bytes &eod;
+    format: uint8;
+    flags: uint8;
+    structural_fields: bytes &eod;
 };

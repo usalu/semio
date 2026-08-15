@@ -35,22 +35,12 @@ impl Default for BcfArtifact {
 impl BcfArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> BcfSnapshot {
-        BcfSnapshot {
-            schema: self.schema.clone(),
-            version: self.version.clone(),
-            topics: self.topics.clone(),
-            parts: self.parts.clone(),
-        }
+        BcfSnapshot { schema: self.schema.clone(), version: self.version.clone(), topics: self.topics.clone(), parts: self.parts.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: BcfSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            version: snapshot.version,
-            topics: snapshot.topics,
-            parts: snapshot.parts,
-        }
+        Self { schema: snapshot.schema, version: snapshot.version, topics: snapshot.topics, parts: snapshot.parts }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -101,8 +91,8 @@ pub fn bcf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::bcf::{BcfDiff, BcfMutation, BcfSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.bcf` snapshot.
@@ -137,7 +127,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -147,8 +141,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::bcf::BcfSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.bcf` parts.
@@ -206,22 +200,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <BcfSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -246,11 +232,7 @@ pub mod derived_analysis {
         fn sniff_stays_medium_for_a_real_zip_without_bcf_version() {
             let zip_snap = crate::artifacts::zip::ZipSnapshot {
                 schema: crate::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(),
-                entries: vec![crate::artifacts::zip::schema::snapshot::ZipEntry {
-                    name: "unrelated.txt".into(),
-                    data: b"not a bcf archive".to_vec(),
-                    ..Default::default()
-                }],
+                entries: vec![crate::artifacts::zip::schema::snapshot::ZipEntry { name: "unrelated.txt".into(), data: b"not a bcf archive".to_vec(), ..Default::default() }],
                 comment: String::new(),
             };
             let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&zip_snap).expect("encode plain zip");

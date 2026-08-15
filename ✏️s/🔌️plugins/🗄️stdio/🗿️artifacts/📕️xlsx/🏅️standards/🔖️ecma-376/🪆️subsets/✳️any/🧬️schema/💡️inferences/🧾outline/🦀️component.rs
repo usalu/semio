@@ -40,10 +40,7 @@ mod tests {
             schema: "stdio.xlsx".into(),
             opc: Default::default(),
             workbook: crate::artifacts::xlsx::schema::snapshot::XlsxWorkbook {
-                sheets: vec![
-                    XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] },
-                    XlsxSheet { name: "Sheet2".into(), cells: vec![] },
-                ],
+                sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }, XlsxSheet { name: "Sheet2".into(), cells: vec![] }],
                 shared_strings: vec![],
             },
         };

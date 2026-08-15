@@ -1,8 +1,8 @@
 //! 🏗️ `create-face` — brings a new id-keyed face into existence over `surface`, bounded by `outer_loop` (and optional `inner_loops`) — both must already exist in `base`: no `create-loop` verb exists (SMO ruled `Loop`/`Coedge` carry no `PersistentLabel` and are excluded), so loops are established only via `ArtifactStore::reset`/import, never incrementally through this facet. A duplicate `id` already present in `base` is a no-op.
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepSurface;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload

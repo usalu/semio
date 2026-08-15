@@ -1,6 +1,6 @@
 //! 🧩 set_snapshot diff leaf.
 
-use crate::artifacts::dxf::schema::diff::{DxfDiff, diff_set_snapshot};
+use crate::artifacts::dxf::schema::diff::{diff_set_snapshot, DxfDiff};
 use crate::artifacts::dxf::DxfSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot — the sparse field-by-field `between(base, next)` (no

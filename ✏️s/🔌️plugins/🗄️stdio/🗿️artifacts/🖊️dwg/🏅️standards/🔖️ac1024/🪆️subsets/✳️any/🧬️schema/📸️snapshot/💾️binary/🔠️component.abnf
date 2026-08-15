@@ -1,3 +1,27 @@
-; abnf stdio.dwg snapshot
-document = payload
-payload = *OCTET
+; Structured semio pack record for stdio.dwg AC1024 snapshot.
+; Every repetition is bounded by the immediately preceding unsigned varint count.
+document = symbol-table record-fields
+symbol-table = varint *symbol
+symbol = varint *utf8-octet
+record-fields = varint *record-field
+record-field = varint field-value
+field-value = absent / false / true / sint / uint / float64 / symbol-ref / inline-text / enumeration / tuple / list / record / packed-float64 / packed-varint
+absent = %x00
+false = %x01
+true = %x02
+sint = %x03 zigzag-varint
+uint = %x04 varint
+float64 = %x05 8OCTET
+symbol-ref = %x06 varint
+inline-text = %x07 varint *utf8-octet
+enumeration = %x0A varint
+tuple = %x0B varint *field-value
+list = %x0C varint *field-value
+record = %x0D record-fields
+packed-float64 = %x15 varint *float64-word
+packed-varint = %x16 varint *zigzag-varint
+float64-word = 8OCTET
+varint = 1*10varint-octet
+zigzag-varint = varint
+varint-octet = %x00-FF
+utf8-octet = %x00-FF

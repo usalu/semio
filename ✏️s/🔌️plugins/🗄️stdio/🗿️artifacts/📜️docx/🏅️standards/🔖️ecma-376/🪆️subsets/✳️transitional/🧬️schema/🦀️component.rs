@@ -8,12 +8,12 @@
 pub use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use dsl::{Diagnostic, Severity};
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::docx::schema::snapshot::{DocxParagraph, DocxRun, DocxStyle, DocxTable};
     use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::DocxBuilderConstruction as DocxAnyBuilder;
     use crate::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
     use crate::artifacts::docx::{DocxDiff, DocxMutation, DocxSnapshot};
+    use dsl::{Diagnostic, Severity};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     #[derive(Clone, Debug, Default)]
@@ -132,11 +132,11 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
-    use semio_framework_plugin::{AnalyzeSource, Analysis, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
     use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
     use crate::artifacts::docx::DocxSnapshot;
     use crate::artifacts::zip::opc::{resolve_relationship_target, OpcPackage, OpcPart};
+    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("transitional") };
@@ -191,18 +191,12 @@ pub mod derived_analysis {
                     out.push(soft(CODE_CONFORMANCE_ATTR, format!("main document part {path} root element declares conformance=\"strict\" -- transitional documents must leave it absent or =\"transitional\"")));
                 }
             }
-            None => out.push(hard(
-                CODE_MAIN_NS_MISSING,
-                "package has no root officeDocument relationship -- cannot locate the main document part to check the transitional namespace on".into(),
-            )),
+            None => out.push(hard(CODE_MAIN_NS_MISSING, "package has no root officeDocument relationship -- cannot locate the main document part to check the transitional namespace on".into())),
         }
 
         for part in &opc.parts {
             if part_contains(&part.bytes, STRICT_NS_FAMILY_PREFIX) {
-                out.push(hard(
-                    CODE_STRICT_NS_PRESENT,
-                    format!("part {} contains a strict-family namespace ({STRICT_NS_FAMILY_PREFIX}) -- transitional conformance forbids mixed namespaces", part.path),
-                ));
+                out.push(hard(CODE_STRICT_NS_PRESENT, format!("part {} contains a strict-family namespace ({STRICT_NS_FAMILY_PREFIX}) -- transitional conformance forbids mixed namespaces", part.path)));
             }
         }
 
@@ -211,10 +205,7 @@ pub mod derived_analysis {
         for owner in owners {
             for rel in &opc.relationships[owner] {
                 if rel.rel_type.contains(STRICT_NS_FAMILY_PREFIX) {
-                    out.push(hard(
-                        CODE_STRICT_NS_PRESENT,
-                        format!("relationship {} owned by {owner:?} uses a strict-family relationship base ({STRICT_NS_FAMILY_PREFIX}) -- transitional conformance forbids it", rel.id),
-                    ));
+                    out.push(hard(CODE_STRICT_NS_PRESENT, format!("relationship {} owned by {owner:?} uses a strict-family relationship base ({STRICT_NS_FAMILY_PREFIX}) -- transitional conformance forbids it", rel.id)));
                 }
             }
         }
@@ -256,7 +247,7 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::zip::opc::{OpcPackage, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
+        use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
         fn transitional_document_bytes() -> Vec<u8> {
             format!(r#"<w:document xmlns:w="{TRANSITIONAL_MAIN_NS}"><w:body/></w:document>"#).into_bytes()

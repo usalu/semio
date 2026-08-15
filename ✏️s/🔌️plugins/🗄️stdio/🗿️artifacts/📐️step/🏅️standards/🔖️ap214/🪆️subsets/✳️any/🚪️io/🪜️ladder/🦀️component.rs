@@ -77,9 +77,7 @@ pub fn file_schema_contains(doc: &Part21Document, schema_name: &str) -> bool {
 /// presence-only check (not full referential linkage) — honestly scoped to what `Part21Document`'s
 /// own `by_type` alone can verify over the generic instance graph.
 pub fn has_product_definition_chain(doc: &Part21Document) -> bool {
-    doc.by_type("PRODUCT").next().is_some()
-        && doc.by_type("PRODUCT_DEFINITION_FORMATION").next().is_some()
-        && doc.by_type("PRODUCT_DEFINITION").next().is_some()
+    doc.by_type("PRODUCT").next().is_some() && doc.by_type("PRODUCT_DEFINITION_FORMATION").next().is_some() && doc.by_type("PRODUCT_DEFINITION").next().is_some()
 }
 
 /// ✍️ Real mutation: forces `FILE_SCHEMA` to declare the given schema name (no-op if it already
@@ -97,8 +95,8 @@ pub fn ensure_file_schema(doc: &mut Part21Document, schema_name: &str) {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::part21::Part21Instance;
+    use super::*;
 
     #[test]
     fn ladder_classifies_named_subtypes_and_defaults_others_to_rung_2() {
@@ -114,10 +112,7 @@ mod tests {
     #[test]
     fn ladder_violations_filters_by_max_rung() {
         let doc = Part21Document {
-            instances: vec![
-                Part21Instance { id: 1, entities: vec![("MANIFOLD_SURFACE_SHAPE_REPRESENTATION".into(), vec![])] },
-                Part21Instance { id: 2, entities: vec![("GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION".into(), vec![])] },
-            ],
+            instances: vec![Part21Instance { id: 1, entities: vec![("MANIFOLD_SURFACE_SHAPE_REPRESENTATION".into(), vec![])] }, Part21Instance { id: 2, entities: vec![("GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION".into(), vec![])] }],
             ..Part21Document::default()
         };
         assert_eq!(ladder_violations(&doc, 1).len(), 2, "CC1 forbids any shape representation at all");

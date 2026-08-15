@@ -5,8 +5,11 @@
 //! representation this bridge builds and is dropped on export, documented, not fabricated.
 //! `z` is always written `0.0` (`cad` is 2D-only).
 
-use crate::artifacts::step::{StepSnapshot, schema::snapshot::{StepEntity, StepFileName, StepFileSchema, StepHeader, StepValue}};
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadEntity, SemioCadSnapshot};
+use crate::artifacts::step::{
+    schema::snapshot::{StepEntity, StepFileName, StepFileSchema, StepHeader, StepValue},
+    StepSnapshot,
+};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("cad") };
@@ -17,7 +20,10 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard:
 /// Part-21 exchange file's convention (dense, monotonically-issued `#N` ids).
 struct IdGen(u64);
 impl IdGen {
-    fn next(&mut self) -> u64 { self.0 += 1; self.0 }
+    fn next(&mut self) -> u64 {
+        self.0 += 1;
+        self.0
+    }
 }
 
 fn point_entity(id: u64, x: f64, y: f64) -> StepEntity {
@@ -68,11 +74,7 @@ impl ArtifactSerializer for SemioCadToStep {
                 _ => {} // no B-rep/solid equivalent in this bridge's scope — documented, dropped.
             }
         }
-        let header = StepHeader {
-            file_description: Default::default(),
-            file_name: StepFileName { name: "semio-cad-export".into(), ..Default::default() },
-            file_schema: StepFileSchema { schemas: vec!["AUTOMOTIVE_DESIGN".into()] },
-        };
+        let header = StepHeader { file_description: Default::default(), file_name: StepFileName { name: "semio-cad-export".into(), ..Default::default() }, file_schema: StepFileSchema { schemas: vec!["AUTOMOTIVE_DESIGN".into()] } };
         Ok(StepSnapshot { schema: crate::artifacts::step::STDIO_STEP_DOCUMENT_SCHEMA.into(), header, entities })
     }
 }

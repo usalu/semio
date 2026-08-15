@@ -42,10 +42,7 @@ impl protocol::InferenceSpec<SemioBrepSnapshot> for SemioBrepInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec {
-            id: "s.stdio.semio.brep.inference.validationReport",
-            reads: &["vertices", "edges", "loops", "faces", "shells", "solids"],
-        }]
+        &[protocol::InferenceFieldSpec { id: "s.stdio.semio.brep.inference.validationReport", reads: &["vertices", "edges", "loops", "faces", "shells", "solids"] }]
     }
 }
 //#endregion 🔖️Inference

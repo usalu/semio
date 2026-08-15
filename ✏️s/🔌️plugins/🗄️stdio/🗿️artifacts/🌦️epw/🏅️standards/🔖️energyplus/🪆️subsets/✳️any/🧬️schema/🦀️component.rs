@@ -1,8 +1,6 @@
 //! 🧬️ EpwArtifact schema — full artifact state, mirrors `EpwSnapshot` field for field.
 
-use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{
-    EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot,
-};
+use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -40,7 +38,9 @@ pub struct EpwArtifact {
 }
 
 impl Default for EpwArtifact {
-    fn default() -> Self { Self::from_snapshot(EpwSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(EpwSnapshot::default())
+    }
 }
 
 impl EpwArtifact {
@@ -121,20 +121,26 @@ pub fn epw_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::epw::standards::energyplus::subsets::any::schema::diff::EpwDiff;
-    use crate::artifacts::epw::standards::energyplus::subsets::any::schema::mutations::{EpwMutation, apply_epw_mutation};
+    use crate::artifacts::epw::standards::energyplus::subsets::any::schema::mutations::{apply_epw_mutation, EpwMutation};
     use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct EpwBuilderConstruction { snapshot: EpwSnapshot }
+    pub struct EpwBuilderConstruction {
+        snapshot: EpwSnapshot,
+    }
 
     impl ArtifactBuilder for EpwBuilderConstruction {
         type Snapshot = EpwSnapshot;
         type Mutation = EpwMutation;
         type Diff = EpwDiff;
-        fn empty() -> Self { Self { snapshot: EpwSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: EpwSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<EpwSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -149,7 +155,9 @@ pub mod derived_construction {
             self.snapshot = <EpwDiff as protocol::MutationDiff<EpwSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 }
 pub use derived_construction::*;
@@ -157,12 +165,14 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
-    use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwSnapshot, STDIO_EPW_DOCUMENT_SCHEMA};
     use crate::artifacts::epw::standards::energyplus::subsets::any::io;
+    use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwSnapshot, STDIO_EPW_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct EpwParts { pub snapshot: Option<EpwSnapshot> }
+    pub struct EpwParts {
+        pub snapshot: Option<EpwSnapshot>,
+    }
 
     pub struct EpwAnalyzerAnalysis;
 
@@ -177,7 +187,11 @@ pub mod derived_analysis {
                         return IoConfidence::High;
                     }
                     let marker = STDIO_EPW_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
                     if io::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_EPW_DOCUMENT_SCHEMA) {

@@ -13,8 +13,11 @@
 //!   came from a non-Ascii source type on import re-emit as text, a real, honest normalization,
 //!   not a byte-exact inverse of every possible TIFF field type).
 
-use crate::artifacts::tiff::{TiffSnapshot, schema::snapshot::{TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TiffFieldType, TiffIfd, TiffTag, TiffValues}};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use crate::artifacts::tiff::{
+    schema::snapshot::{TiffFieldType, TiffIfd, TiffTag, TiffValues, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH},
+    TiffSnapshot,
+};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
@@ -34,22 +37,14 @@ impl ArtifactSerializer for SemioImageToTiff {
         if frame.rgba8.len() != (from.width as usize) * (from.height as usize) * 4 {
             return Err(store::PackError::Schema("semio/image→tiff: frame pixel length does not match width*height*4".into()));
         }
-        let mut entries = vec![
-            TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![from.width]) },
-            TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![from.height]) },
-        ];
+        let mut entries = vec![TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![from.width]) }, TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![from.height]) }];
         for m in &from.metadata {
             if let Ok(tag) = m.key.parse::<u16>() {
                 entries.push(TiffTag { tag, kind: TiffFieldType::Ascii, values: TiffValues::Ascii(m.value.clone()) });
             }
         }
         entries.sort_by_key(|t| t.tag);
-        Ok(TiffSnapshot {
-            schema: crate::artifacts::tiff::STDIO_TIFF_DOCUMENT_SCHEMA.into(),
-            byte_order: Default::default(),
-            ifds: vec![TiffIfd { entries }],
-            pixels: frame.rgba8.clone(),
-        })
+        Ok(TiffSnapshot { schema: crate::artifacts::tiff::STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: Default::default(), ifds: vec![TiffIfd { entries }], pixels: frame.rgba8.clone() })
     }
 }
 //#endregion 🔖️Serializer

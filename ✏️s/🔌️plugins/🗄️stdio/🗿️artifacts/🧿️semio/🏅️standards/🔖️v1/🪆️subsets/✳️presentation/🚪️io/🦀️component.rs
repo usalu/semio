@@ -4,16 +4,15 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use dsl::{Diagnostic, TextSpan};
-    use semio_framework_plugin::{
-        ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId,
-        SubsetValidator, SubsetValidatorEntry, register_subset_validator, subset_validator_entry_of,
-        ComposerEntry, ArtifactDeserializer as _, ArtifactSerializer as _, deserializer_entry_of, serializer_entry_of, register_composer_entries,
-    };
+    use super::super::export::serializers::artifacts::pptx::v_ecma_376::any::SemioPresentationToPptx;
+    use super::super::import::deserializers::artifacts::pptx::v_ecma_376::any::SemioPresentationFromPptx;
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::SemioPresentationAnalyzer;
-    use super::super::import::deserializers::artifacts::pptx::v_ecma_376::any::SemioPresentationFromPptx;
-    use super::super::export::serializers::artifacts::pptx::v_ecma_376::any::SemioPresentationToPptx;
+    use dsl::{Diagnostic, TextSpan};
+    use semio_framework_plugin::{
+        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ArtifactDeserializer as _, ArtifactSerializer as _,
+        ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
+    };
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("presentation") };
 
@@ -24,7 +23,9 @@ pub mod derived_composition {
         type Snapshot = SemioPresentationSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] { &[DIALECT] }
+        fn reads() -> &'static [Dialect] {
+            &[DIALECT]
+        }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
@@ -39,10 +40,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "SemioPresentationComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = SemioPresentationAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "SemioPresentationComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "SemioPresentationComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -60,38 +58,22 @@ pub mod derived_composition {
         let mut seen_master_ids = std::collections::HashSet::new();
         for master in &snapshot.masters {
             if !seen_master_ids.insert(master.id.as_str()) {
-                diagnostics.push(Diagnostic::error(
-                    "stdio.semio_presentation.duplicate-master-id",
-                    TextSpan::at(1, 1),
-                    format!("duplicate master id {:?}", master.id),
-                ));
+                diagnostics.push(Diagnostic::error("stdio.semio_presentation.duplicate-master-id", TextSpan::at(1, 1), format!("duplicate master id {:?}", master.id)));
             }
         }
         let mut seen_layout_ids = std::collections::HashSet::new();
         for layout in &snapshot.layouts {
             if !seen_layout_ids.insert(layout.id.as_str()) {
-                diagnostics.push(Diagnostic::error(
-                    "stdio.semio_presentation.duplicate-layout-id",
-                    TextSpan::at(1, 1),
-                    format!("duplicate layout id {:?}", layout.id),
-                ));
+                diagnostics.push(Diagnostic::error("stdio.semio_presentation.duplicate-layout-id", TextSpan::at(1, 1), format!("duplicate layout id {:?}", layout.id)));
             }
             if !seen_master_ids.contains(layout.master_id.as_str()) {
-                diagnostics.push(Diagnostic::error(
-                    "stdio.semio_presentation.dangling-layout-master",
-                    TextSpan::at(1, 1),
-                    format!("layout {:?} references unknown master {:?}", layout.id, layout.master_id),
-                ));
+                diagnostics.push(Diagnostic::error("stdio.semio_presentation.dangling-layout-master", TextSpan::at(1, 1), format!("layout {:?} references unknown master {:?}", layout.id, layout.master_id)));
             }
         }
         for slide in &snapshot.slides {
             if let Some(layout_id) = &slide.layout_id {
                 if !seen_layout_ids.contains(layout_id.as_str()) {
-                    diagnostics.push(Diagnostic::error(
-                        "stdio.semio_presentation.dangling-slide-layout",
-                        TextSpan::at(1, 1),
-                        format!("slide {:?} references unknown layout {:?}", slide.id, layout_id),
-                    ));
+                    diagnostics.push(Diagnostic::error("stdio.semio_presentation.dangling-slide-layout", TextSpan::at(1, 1), format!("slide {:?} references unknown layout {:?}", slide.id, layout_id)));
                 }
             }
         }
@@ -109,17 +91,15 @@ pub mod derived_composition {
             };
             match decoded {
                 Some(snapshot) => check_presentation_referential_integrity(&snapshot),
-                None => vec![Diagnostic::error(
-                    "stdio.semio_presentation.validate-decode-failed",
-                    TextSpan::at(1, 1),
-                    "SemioPresentationValidator: payload did not decode as a SemioPresentationSnapshot".to_string(),
-                )],
+                None => vec![Diagnostic::error("stdio.semio_presentation.validate-decode-failed", TextSpan::at(1, 1), "SemioPresentationValidator: payload did not decode as a SemioPresentationSnapshot".to_string())],
             }
         }
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    fn validator_entry() -> &'static SubsetValidatorEntry { VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioPresentationValidator>) }
+    fn validator_entry() -> &'static SubsetValidatorEntry {
+        VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioPresentationValidator>)
+    }
     //#endregion 🔖️SubsetValidator
 
     //#region 🔖️IoEntries
@@ -137,7 +117,9 @@ pub mod derived_composition {
     /// presentation<->pptx io bridge row. Called from this artifact's standard-level `engine::register()`.
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::presentation::schema::semio_presentation_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioPresentationSnapshot, crate::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::SemioPresentationMutation>(crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA));
+        store::register_document_codec(store::ArtifactCodec::of::<SemioPresentationSnapshot, crate::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::SemioPresentationMutation>(
+            crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA,
+        ));
         register_subset_validator(validator_entry());
         register_composer_entries(io_entries());
         register_artifact_inferences();
@@ -215,12 +197,13 @@ pub mod derived_composition {
         /// comparison exercises TextBox/Picture/Placeholder shape fidelity end to end).
         #[test]
         fn pptx_round_trip_is_stable() {
-            use crate::artifacts::pptx::PptxSnapshot;
             use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform};
+            use crate::artifacts::pptx::PptxSnapshot;
             use crate::artifacts::zip::opc::OpcPackage;
 
             let pptx1 = PptxSnapshot::from_parts(
                 OpcPackage::default(),
+                Vec::new(),
                 PptxPresentation {
                     slides: vec![PptxSlide {
                         shapes: vec![
@@ -256,19 +239,11 @@ pub mod derived_composition {
             /// `walk_protocol` laws below.
             #[test]
             fn committed_facet_files_parse() {
-                for (label, text) in [
-                    ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-                ] {
+                for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                     assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
                 }
-                for (label, text) in [
-                    ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-                ] {
+                for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                     dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
                 }
             }

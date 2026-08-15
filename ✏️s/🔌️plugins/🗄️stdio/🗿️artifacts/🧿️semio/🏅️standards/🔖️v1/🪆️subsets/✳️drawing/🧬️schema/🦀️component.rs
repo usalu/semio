@@ -22,25 +22,17 @@ pub struct SemioDrawingArtifact {
 }
 
 impl Default for SemioDrawingArtifact {
-    fn default() -> Self { Self::from_snapshot(SemioDrawingSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(SemioDrawingSnapshot::default())
+    }
 }
 
 impl SemioDrawingArtifact {
     pub fn to_snapshot(&self) -> SemioDrawingSnapshot {
-        SemioDrawingSnapshot {
-            schema: self.schema.clone(),
-            canvas: self.canvas,
-            styles: self.styles.clone(),
-            layers: self.layers.clone(),
-        }
+        SemioDrawingSnapshot { schema: self.schema.clone(), canvas: self.canvas, styles: self.styles.clone(), layers: self.layers.clone() }
     }
     pub fn from_snapshot(snapshot: SemioDrawingSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            canvas: snapshot.canvas,
-            styles: snapshot.styles,
-            layers: snapshot.layers,
-        }
+        Self { schema: snapshot.schema, canvas: snapshot.canvas, styles: snapshot.styles, layers: snapshot.layers }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioDrawingSnapshot) {
         self.schema = snapshot.schema;
@@ -85,20 +77,26 @@ pub fn semio_drawing_artifact_schema_descriptor() -> schema::ArtifactSchemaDescr
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
-    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::{SemioDrawingMutation, apply_semio_drawing_mutation};
+    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::{apply_semio_drawing_mutation, SemioDrawingMutation};
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioDrawingBuilderConstruction { snapshot: SemioDrawingSnapshot }
+    pub struct SemioDrawingBuilderConstruction {
+        snapshot: SemioDrawingSnapshot,
+    }
 
     impl ArtifactBuilder for SemioDrawingBuilderConstruction {
         type Snapshot = SemioDrawingSnapshot;
         type Mutation = SemioDrawingMutation;
         type Diff = SemioDrawingDiff;
-        fn empty() -> Self { Self { snapshot: SemioDrawingSnapshot::default() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn empty() -> Self {
+            Self { snapshot: SemioDrawingSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioDrawingSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -113,7 +111,9 @@ pub mod derived_construction {
             self.snapshot = <SemioDrawingDiff as protocol::MutationDiff<SemioDrawingSnapshot>>::apply(&diff, &self.snapshot);
             self
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
     }
 }
 pub use derived_construction::*;
@@ -121,11 +121,13 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
-    pub struct SemioDrawingParts { pub snapshot: Option<SemioDrawingSnapshot> }
+    pub struct SemioDrawingParts {
+        pub snapshot: Option<SemioDrawingSnapshot>,
+    }
 
     pub struct SemioDrawingAnalyzerAnalysis;
 
@@ -137,10 +139,18 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
                 AnalyzeSource::Text(text) => {
-                    if text.contains(STDIO_SEMIODRAWING_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                    if text.contains(STDIO_SEMIODRAWING_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
                 }
             }
         }

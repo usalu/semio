@@ -15,9 +15,9 @@
 pub use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance;
     use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::{diff::TiffDiff, mutations::TiffMutation, snapshot::TiffSnapshot};
+    use crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance;
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     #[derive(Clone, Debug, Default)]
@@ -87,12 +87,10 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
-    use semio_framework_plugin::{AnalyzeSource, Analysis, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::{TiffSnapshot, TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_PHOTOMETRIC, TAG_STRIP_OFFSETS, TAG_TILE_LENGTH, TAG_TILE_WIDTH};
     use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::{TiffAnalyzer as TiffAnyAnalyzer, TiffParts};
-    use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::{
-        TiffSnapshot, TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_PHOTOMETRIC, TAG_STRIP_OFFSETS, TAG_TILE_LENGTH, TAG_TILE_WIDTH,
-    };
+    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("baseline") };
@@ -136,10 +134,7 @@ pub mod derived_analysis {
             (Some(width), Some(height)) => {
                 let expected_len = width as usize * height as usize * 4;
                 if width == 0 || height == 0 || snapshot.pixels.len() != expected_len {
-                    out.push(soft(
-                        CODE_DEGENERATE_RASTER,
-                        format!("raster is degenerate (width={width}, height={height}, pixels.len()={}, expected {expected_len})", snapshot.pixels.len()),
-                    ));
+                    out.push(soft(CODE_DEGENERATE_RASTER, format!("raster is degenerate (width={width}, height={height}, pixels.len()={}, expected {expected_len})", snapshot.pixels.len())));
                 }
             }
             _ => out.push(soft(CODE_DEGENERATE_RASTER, "IFD 0 has no ImageWidth/ImageLength tag".into())),
@@ -211,7 +206,7 @@ pub mod derived_analysis {
                     entries: vec![
                         tag(256, TiffFieldType::Long, TiffValues::Long(vec![width])),
                         tag(257, TiffFieldType::Long, TiffValues::Long(vec![height])),
-                        tag(273, TiffFieldType::Long, TiffValues::Long(vec![8])), // StripOffsets
+                        tag(273, TiffFieldType::Long, TiffValues::Long(vec![8])),   // StripOffsets
                         tag(259, TiffFieldType::Short, TiffValues::Short(vec![1])), // Compression: none
                         tag(262, TiffFieldType::Short, TiffValues::Short(vec![2])), // PhotometricInterpretation: RGB
                         tag(258, TiffFieldType::Short, TiffValues::Short(vec![8])), // BitsPerSample

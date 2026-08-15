@@ -2,10 +2,10 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
-pub use crate::artifacts::tsv::standards::iana::subsets::any::schema::TsvArtifact;
 pub use crate::artifacts::tsv::standards::iana::subsets::any::schema::diff::TsvDiff;
 pub use crate::artifacts::tsv::standards::iana::subsets::any::schema::mutations::TsvMutation;
+pub use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
+pub use crate::artifacts::tsv::standards::iana::subsets::any::schema::TsvArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_TSV_DOCUMENT_SCHEMA: &str = "stdio.tsv";
@@ -62,9 +62,9 @@ pub fn register_pilot_languages() {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::tsv::standards::iana::subsets::any::io::io_registry as std_composer;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -73,10 +73,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("TsvComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("TsvComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

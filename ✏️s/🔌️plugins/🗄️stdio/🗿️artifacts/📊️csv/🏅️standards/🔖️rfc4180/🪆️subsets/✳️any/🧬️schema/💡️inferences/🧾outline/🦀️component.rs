@@ -42,10 +42,7 @@ mod tests {
         let snapshot = CsvSnapshot {
             schema: "stdio.csv".into(),
             has_header: true,
-            records: vec![
-                CsvRecord { fields: vec![CsvField { value: "a".into(), quoted: false }, CsvField { value: "b".into(), quoted: false }] },
-                CsvRecord { fields: vec![CsvField { value: "c".into(), quoted: false }] },
-            ],
+            records: vec![CsvRecord { fields: vec![CsvField { value: "a".into(), quoted: false }, CsvField { value: "b".into(), quoted: false }] }, CsvRecord { fields: vec![CsvField { value: "c".into(), quoted: false }] }],
         };
         let outline = CsvOutline::compute(&snapshot);
         assert_eq!(outline.record_count, 2);

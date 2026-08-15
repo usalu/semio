@@ -20,15 +20,12 @@
 //!   access, matching the gltf engine's own `resolve_document_buffers` precedent for external
 //!   buffer uris.
 
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
-use crate::artifacts::gltf::GltfSnapshot;
-use crate::artifacts::gltf::schema::snapshot::{GltfDocument, GltfImage, GltfPrimitive};
 use crate::artifacts::gltf::engine::{decode_accessor, decode_data_uri, GltfComponentType};
+use crate::artifacts::gltf::schema::snapshot::{GltfDocument, GltfImage, GltfPrimitive};
+use crate::artifacts::gltf::GltfSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{
-    SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology,
-    STDIO_SEMIOMESH_DOCUMENT_SCHEMA,
-};
+use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
@@ -160,28 +157,14 @@ impl ArtifactDeserializer for SemioMeshFromGltf {
                 let pbr = m.pbr_metallic_roughness.clone().unwrap_or_default();
                 SemioMaterial {
                     id: format!("mat-{i}"),
-                    base_color: SemioRgba {
-                        r: pbr.base_color_factor[0] as f32,
-                        g: pbr.base_color_factor[1] as f32,
-                        b: pbr.base_color_factor[2] as f32,
-                        a: pbr.base_color_factor[3] as f32,
-                    },
+                    base_color: SemioRgba { r: pbr.base_color_factor[0] as f32, g: pbr.base_color_factor[1] as f32, b: pbr.base_color_factor[2] as f32, a: pbr.base_color_factor[3] as f32 },
                     metallic: pbr.metallic_factor as f32,
                     roughness: pbr.roughness_factor as f32,
                 }
             })
             .collect();
 
-        let textures: Vec<SemioTexture> = document
-            .images
-            .iter()
-            .enumerate()
-            .map(|(i, img)| SemioTexture {
-                id: format!("tex-{i}"),
-                mime: img.mime_type.clone().unwrap_or_default(),
-                bytes: resolve_image_bytes(document, &from.buffers, img),
-            })
-            .collect();
+        let textures: Vec<SemioTexture> = document.images.iter().enumerate().map(|(i, img)| SemioTexture { id: format!("tex-{i}"), mime: img.mime_type.clone().unwrap_or_default(), bytes: resolve_image_bytes(document, &from.buffers, img) }).collect();
 
         let mut meshes = Vec::with_capacity(document.meshes.len());
         for (mi, gmesh) in document.meshes.iter().enumerate() {
@@ -189,8 +172,7 @@ impl ArtifactDeserializer for SemioMeshFromGltf {
             let mut primitives = Vec::with_capacity(gmesh.primitives.len());
             for (pi, prim) in gmesh.primitives.iter().enumerate() {
                 let material_id = prim.material.map(|idx| format!("mat-{idx}"));
-                let sp = decode_primitive(document, &from.buffers, prim, format!("{mesh_id}-prim-{pi}"), material_id)
-                    .map_err(|e| store::PackError::Schema(format!("SemioMeshFromGltf: mesh {mi} primitive {pi}: {e}")))?;
+                let sp = decode_primitive(document, &from.buffers, prim, format!("{mesh_id}-prim-{pi}"), material_id).map_err(|e| store::PackError::Schema(format!("SemioMeshFromGltf: mesh {mi} primitive {pi}: {e}")))?;
                 primitives.push(sp);
             }
             meshes.push(SemioMesh { id: mesh_id, primitives });
@@ -204,9 +186,9 @@ impl ArtifactDeserializer for SemioMeshFromGltf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gltf::schema::snapshot::{GltfAsset, GltfMaterial, GltfMesh, GltfPbrMetallicRoughness};
     use crate::artifacts::gltf::engine::GltfAccessorType;
     use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView};
+    use crate::artifacts::gltf::schema::snapshot::{GltfAsset, GltfMaterial, GltfMesh, GltfPbrMetallicRoughness};
 
     /// 🏗️ A real-shaped 2-triangle quad (shared POSITION/NORMAL/TEXCOORD_0/COLOR_0/indices) with
     /// one PBR material and one embedded (data-uri) texture — exercises every mapped field.
@@ -260,7 +242,15 @@ mod tests {
         document.materials = vec![GltfMaterial {
             name: Some("red".into()),
             pbr_metallic_roughness: Some(GltfPbrMetallicRoughness { base_color_factor: [0.8, 0.1, 0.1, 1.0], base_color_texture: None, metallic_factor: 0.2, roughness_factor: 0.7, metallic_roughness_texture: None, extensions: None, extras: None }),
-            normal_texture: None, occlusion_texture: None, emissive_texture: None, emissive_factor: [0.0, 0.0, 0.0], alpha_mode: crate::artifacts::gltf::schema::snapshot::GltfAlphaMode::Opaque, alpha_cutoff: 0.5, double_sided: false, extensions: None, extras: None,
+            normal_texture: None,
+            occlusion_texture: None,
+            emissive_texture: None,
+            emissive_factor: [0.0, 0.0, 0.0],
+            alpha_mode: crate::artifacts::gltf::schema::snapshot::GltfAlphaMode::Opaque,
+            alpha_cutoff: 0.5,
+            double_sided: false,
+            extensions: None,
+            extras: None,
         }];
         document.buffer_views = buffer_views;
         document.accessors = accessors;

@@ -10,8 +10,8 @@ use protocol::MutationDiff;
 // trait but the facade wasn't updated — see s1-spine-report.md) so it's reached via the
 // still-public `os_spr::command` path instead of touching that framework facade file.
 use protocol::os_spr::command::DiffAlgebra;
-use serde::{Deserialize, Serialize};
 use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Splice
 /// ✂️ One byte-range edit against the BASE array: replace `[offset, offset+remove_len)` with
@@ -115,12 +115,7 @@ enum Lbl {
 
 fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
     let removed_set: std::collections::HashSet<usize> = removed.iter().copied().collect();
-    let mut survivors: Vec<Lbl> = labels
-        .into_iter()
-        .enumerate()
-        .filter(|(i, _)| !removed_set.contains(i))
-        .map(|(_, l)| l)
-        .collect();
+    let mut survivors: Vec<Lbl> = labels.into_iter().enumerate().filter(|(i, _)| !removed_set.contains(i)).map(|(_, l)| l).collect();
     let mut added_sorted = added.to_vec();
     added_sorted.sort_by_key(|(idx, _)| *idx);
     for (idx, label) in added_sorted {
@@ -295,7 +290,11 @@ mod tests {
         right.absorb(mid);
 
         assert_eq!(left.apply(&base), right.apply(&base));
-        let sequential = { let s1 = d1.apply(&base); let s2 = d2.apply(&s1); d3.apply(&s2) };
+        let sequential = {
+            let s1 = d1.apply(&base);
+            let s2 = d2.apply(&s1);
+            d3.apply(&s2)
+        };
         assert_eq!(left.apply(&base), sequential);
     }
 

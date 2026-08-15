@@ -117,10 +117,7 @@ mod tests {
     fn two_column_snapshot() -> SemioTableSnapshot {
         SemioTableSnapshot {
             schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
-            columns: vec![
-                SemioTableColumn { name: "coin".into(), kind: SemioTableCellKind::Str },
-                SemioTableColumn { name: "always_a".into(), kind: SemioTableCellKind::Str },
-            ],
+            columns: vec![SemioTableColumn { name: "coin".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "always_a".into(), kind: SemioTableCellKind::Str }],
             rows: vec![
                 SemioTableRow { cells: vec![SemioValue::Str { value: "heads".into() }, SemioValue::Str { value: "a".into() }] },
                 SemioTableRow { cells: vec![SemioValue::Str { value: "tails".into() }, SemioValue::Str { value: "a".into() }] },

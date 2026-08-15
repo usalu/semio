@@ -1,8 +1,8 @@
 syntax = "proto3";
 package semio.stdio_svg.mutations_text;
 
-// 📝️ JSON text per the sibling SvgMutation message shape.
+// 📝️ Structured tagged/hex text emitted by SvgMutation::print_op.
 message Artifact {
   string schema = 1;
-  string json_text = 2;
+  string structured_text = 2;
 }

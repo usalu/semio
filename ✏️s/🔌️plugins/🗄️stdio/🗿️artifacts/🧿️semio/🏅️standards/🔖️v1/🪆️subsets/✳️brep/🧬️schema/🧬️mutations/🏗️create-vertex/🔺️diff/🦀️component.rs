@@ -11,9 +11,6 @@ pub fn diff(payload: &CreateVertex, base: &SemioBrepSnapshot) -> SemioBrepDiff {
     if base.vertices.iter().any(|x| x.id == payload.id) {
         return SemioBrepDiff::default();
     }
-    SemioBrepDiff {
-        vertices: Some(NamedTripleDiff { removed: vec![], modified: vec![], added: vec![BrepVertex { id: payload.id.clone(), point: payload.point }] }),
-        ..Default::default()
-    }
+    SemioBrepDiff { vertices: Some(NamedTripleDiff { removed: vec![], modified: vec![], added: vec![BrepVertex { id: payload.id.clone(), point: payload.point }] }), ..Default::default() }
 }
 //#endregion 🔖️Diff

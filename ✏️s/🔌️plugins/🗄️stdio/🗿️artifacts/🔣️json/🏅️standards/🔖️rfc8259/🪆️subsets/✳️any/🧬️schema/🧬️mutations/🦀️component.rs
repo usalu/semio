@@ -4,19 +4,17 @@
 //! and `inverse()` is handcrafted directly against the sparse [`JsonDiff`] shape — never
 //! apply-and-capture.
 
-use crate::artifacts::json::schema::diff::{
-    diff_set_snapshot, JsonArrayAdded, JsonArrayDiff, JsonArrayModified, JsonDiff, JsonObjectAdded, JsonObjectDiff, JsonObjectModified, JsonValueDiff,
-};
 use crate::artifacts::json::schema::diff::{dec_json_value, dec_json_value_bin, dec_str, enc_json_value, enc_json_value_bin, enc_str, parse_usize, read_str_lp, split_top_level, strip_brackets, write_str_lp};
+use crate::artifacts::json::schema::diff::{diff_set_snapshot, JsonArrayAdded, JsonArrayDiff, JsonArrayModified, JsonDiff, JsonObjectAdded, JsonObjectDiff, JsonObjectModified, JsonValueDiff};
 use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
 use crate::artifacts::json::JsonSnapshot;
-use protocol::{Mutation, MutationDiff, OpText};
 #[cfg(test)]
 // 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the
 // trait but the facade wasn't updated — see s1-spine-report.md) so it's reached via the
 // still-public `os_spr::command` path instead of touching that framework facade file. Only the
 // test module below calls `.is_empty()`/`.inverse()` via trait method syntax.
 use protocol::os_spr::command::DiffAlgebra;
+use protocol::{Mutation, MutationDiff, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️JsonPath
@@ -60,19 +58,38 @@ fn resolve<'a>(root: &'a JsonValue, path: &[JsonPathSegment]) -> Option<&'a Json
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum JsonMutation {
     NoMutation,
-    SetSnapshot { snapshot: JsonSnapshot },
+    SetSnapshot {
+        snapshot: JsonSnapshot,
+    },
     /// ➕️ Sets (creating or overwriting) member `key` on the object at `path` to `value`.
-    SetMember { path: JsonPath, key: String, value: JsonValue },
+    SetMember {
+        path: JsonPath,
+        key: String,
+        value: JsonValue,
+    },
     /// ➖️ Removes member `key` from the object at `path`, if present.
-    RemoveMember { path: JsonPath, key: String },
+    RemoveMember {
+        path: JsonPath,
+        key: String,
+    },
     /// ➕️ Inserts `value` into the array at `path` at `index` (ascending-insert-clamped, per the
     /// normative apply contract).
-    InsertArrayElement { path: JsonPath, index: usize, value: JsonValue },
+    InsertArrayElement {
+        path: JsonPath,
+        index: usize,
+        value: JsonValue,
+    },
     /// ➖️ Removes the element at `index` from the array at `path`, if present.
-    RemoveArrayElement { path: JsonPath, index: usize },
+    RemoveArrayElement {
+        path: JsonPath,
+        index: usize,
+    },
     /// 🔁️ Replaces the whole node found at `path` (root, if empty) with `value`, regardless of
     /// its previous kind.
-    SetScalar { path: JsonPath, value: JsonValue },
+    SetScalar {
+        path: JsonPath,
+        value: JsonValue,
+    },
 }
 
 impl Default for JsonMutation {
@@ -93,20 +110,8 @@ fn diff_at_path(path: &[JsonPathSegment], leaf: Option<JsonValueDiff>) -> JsonDi
 fn wrap_at_path(path: &[JsonPathSegment], leaf: JsonValueDiff) -> JsonValueDiff {
     match path.split_first() {
         None => leaf,
-        Some((JsonPathSegment::Key(key), rest)) => JsonValueDiff::Object {
-            diff: JsonObjectDiff {
-                removed: Vec::new(),
-                added: Vec::new(),
-                modified: vec![JsonObjectModified { key: key.clone(), diff: wrap_at_path(rest, leaf) }],
-            },
-        },
-        Some((JsonPathSegment::Index(index), rest)) => JsonValueDiff::Array {
-            diff: JsonArrayDiff {
-                removed: Vec::new(),
-                added: Vec::new(),
-                modified: vec![JsonArrayModified { index: *index, diff: wrap_at_path(rest, leaf) }],
-            },
-        },
+        Some((JsonPathSegment::Key(key), rest)) => JsonValueDiff::Object { diff: JsonObjectDiff { removed: Vec::new(), added: Vec::new(), modified: vec![JsonObjectModified { key: key.clone(), diff: wrap_at_path(rest, leaf) }] } },
+        Some((JsonPathSegment::Index(index), rest)) => JsonValueDiff::Array { diff: JsonArrayDiff { removed: Vec::new(), added: Vec::new(), modified: vec![JsonArrayModified { index: *index, diff: wrap_at_path(rest, leaf) }] } },
     }
 }
 //#endregion 🔖️DiffAtPath
@@ -134,43 +139,27 @@ impl Mutation<JsonSnapshot> for JsonMutation {
                 Some(JsonValue::Object { members }) => match members.iter().find(|m| &m.key == key) {
                     Some(existing) => {
                         let leaf = crate::artifacts::json::schema::diff::value_diff_between(&existing.value, value);
-                        diff_at_path(path, leaf.map(|diff| JsonValueDiff::Object {
-                            diff: JsonObjectDiff { removed: Vec::new(), added: Vec::new(), modified: vec![JsonObjectModified { key: key.clone(), diff }] },
-                        }))
+                        diff_at_path(path, leaf.map(|diff| JsonValueDiff::Object { diff: JsonObjectDiff { removed: Vec::new(), added: Vec::new(), modified: vec![JsonObjectModified { key: key.clone(), diff }] } }))
                     }
-                    None => diff_at_path(path, Some(JsonValueDiff::Object {
-                        diff: JsonObjectDiff {
-                            removed: Vec::new(),
-                            modified: Vec::new(),
-                            added: vec![JsonObjectAdded { index: members.len(), key: key.clone(), item: value.clone() }],
-                        },
-                    })),
+                    None => diff_at_path(path, Some(JsonValueDiff::Object { diff: JsonObjectDiff { removed: Vec::new(), modified: Vec::new(), added: vec![JsonObjectAdded { index: members.len(), key: key.clone(), item: value.clone() }] } })),
                 },
                 _ => JsonDiff::default(),
             },
 
             JsonMutation::RemoveMember { path, key } => match resolve(&base.value, path) {
-                Some(JsonValue::Object { members }) if members.iter().any(|m| &m.key == key) => diff_at_path(path, Some(JsonValueDiff::Object {
-                    diff: JsonObjectDiff { removed: vec![key.clone()], modified: Vec::new(), added: Vec::new() },
-                })),
+                Some(JsonValue::Object { members }) if members.iter().any(|m| &m.key == key) => diff_at_path(path, Some(JsonValueDiff::Object { diff: JsonObjectDiff { removed: vec![key.clone()], modified: Vec::new(), added: Vec::new() } })),
                 _ => JsonDiff::default(),
             },
 
             JsonMutation::InsertArrayElement { path, index, value } => match resolve(&base.value, path) {
-                Some(JsonValue::Array { items }) => diff_at_path(path, Some(JsonValueDiff::Array {
-                    diff: JsonArrayDiff {
-                        removed: Vec::new(),
-                        modified: Vec::new(),
-                        added: vec![JsonArrayAdded { index: (*index).min(items.len()), item: value.clone() }],
-                    },
-                })),
+                Some(JsonValue::Array { items }) => {
+                    diff_at_path(path, Some(JsonValueDiff::Array { diff: JsonArrayDiff { removed: Vec::new(), modified: Vec::new(), added: vec![JsonArrayAdded { index: (*index).min(items.len()), item: value.clone() }] } }))
+                }
                 _ => JsonDiff::default(),
             },
 
             JsonMutation::RemoveArrayElement { path, index } => match resolve(&base.value, path) {
-                Some(JsonValue::Array { items }) if *index < items.len() => diff_at_path(path, Some(JsonValueDiff::Array {
-                    diff: JsonArrayDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() },
-                })),
+                Some(JsonValue::Array { items }) if *index < items.len() => diff_at_path(path, Some(JsonValueDiff::Array { diff: JsonArrayDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() } })),
                 _ => JsonDiff::default(),
             },
 
@@ -208,9 +197,7 @@ impl Mutation<JsonSnapshot> for JsonMutation {
                 Some(JsonValue::Object { members }) => match members.iter().position(|m| &m.key == key) {
                     Some(pos) => {
                         let tail: Vec<JsonMember> = members[pos + 1..].to_vec();
-                        let mut steps: Vec<JsonMutation> = tail.iter().rev()
-                            .map(|m| JsonMutation::RemoveMember { path: path.clone(), key: m.key.clone() })
-                            .collect();
+                        let mut steps: Vec<JsonMutation> = tail.iter().rev().map(|m| JsonMutation::RemoveMember { path: path.clone(), key: m.key.clone() }).collect();
                         steps.push(JsonMutation::SetMember { path: path.clone(), key: key.clone(), value: members[pos].value.clone() });
                         steps.extend(tail.into_iter().map(|m| JsonMutation::SetMember { path: path.clone(), key: m.key, value: m.value }));
                         steps
@@ -297,24 +284,14 @@ fn parse_json_mutation(line: &str) -> Result<JsonMutation, String> {
         return Ok(JsonMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("json mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("json mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("json mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
         "set-snapshot" => Ok(JsonMutation::SetSnapshot { snapshot: dec_json_snapshot(arg("snapshot")?)? }),
         "set-member" => Ok(JsonMutation::SetMember { path: dec_json_path(arg("path")?)?, key: dec_str(arg("key")?)?, value: dec_json_value(arg("value")?)? }),
         "remove-member" => Ok(JsonMutation::RemoveMember { path: dec_json_path(arg("path")?)?, key: dec_str(arg("key")?)? }),
-        "insert-array-element" => Ok(JsonMutation::InsertArrayElement {
-            path: dec_json_path(arg("path")?)?,
-            index: usize_arg("index")?,
-            value: dec_json_value(arg("value")?)?,
-        }),
+        "insert-array-element" => Ok(JsonMutation::InsertArrayElement { path: dec_json_path(arg("path")?)?, index: usize_arg("index")?, value: dec_json_value(arg("value")?)? }),
         "remove-array-element" => Ok(JsonMutation::RemoveArrayElement { path: dec_json_path(arg("path")?)?, index: usize_arg("index")? }),
         "set-scalar" => Ok(JsonMutation::SetScalar { path: dec_json_path(arg("path")?)?, value: dec_json_value(arg("value")?)? }),
         other => Err(format!("json mutation: unknown keyword {other:?}")),
@@ -491,9 +468,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<JsonMutation> {
     let mixed_path = vec![JsonPathSegment::Key("outer".into()), JsonPathSegment::Index(2), JsonPathSegment::Key("inner".into())];
     vec![
         JsonMutation::NoMutation,
-        JsonMutation::SetSnapshot {
-            snapshot: JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: objv(vec![("a", num("1")), ("b", arr(vec![str_("x"), JsonValue::Null, JsonValue::Bool { value: true }]))]) },
-        },
+        JsonMutation::SetSnapshot { snapshot: JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: objv(vec![("a", num("1")), ("b", arr(vec![str_("x"), JsonValue::Null, JsonValue::Bool { value: true }]))]) } },
         JsonMutation::SetMember { path: vec![], key: "a".into(), value: num("2.5e10") },
         JsonMutation::SetMember { path: mixed_path.clone(), key: "k".into(), value: objv(vec![("nested", str_("v"))]) },
         JsonMutation::RemoveMember { path: vec![JsonPathSegment::Key("outer".into())], key: "gone".into() },
@@ -573,11 +548,7 @@ mod tests {
     #[test]
     fn nested_path_targets_inner_member() {
         let base = snap(objv(vec![("outer", objv(vec![("inner", num("1"))]))]));
-        let (result, _) = apply_and_check(&base, JsonMutation::SetMember {
-            path: vec![JsonPathSegment::Key("outer".into())],
-            key: "inner".into(),
-            value: num("42"),
-        });
+        let (result, _) = apply_and_check(&base, JsonMutation::SetMember { path: vec![JsonPathSegment::Key("outer".into())], key: "inner".into(), value: num("42") });
         assert_eq!(result.value, objv(vec![("outer", objv(vec![("inner", num("42"))]))]));
     }
     //#endregion mutation_diff_law

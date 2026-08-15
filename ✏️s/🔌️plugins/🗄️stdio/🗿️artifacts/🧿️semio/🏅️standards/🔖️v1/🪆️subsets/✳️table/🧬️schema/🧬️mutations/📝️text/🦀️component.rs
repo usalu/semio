@@ -11,8 +11,8 @@ pub use crate::artifacts::semio::standards::v1::subsets::table::schema::mutation
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::split_top_level;
 use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::{
-    create_column::mutation::CreateColumn, delete_column::mutation::DeleteColumn, edit_cell::mutation::EditCell, insert_row::mutation::InsertRow,
-    remove_row::mutation::RemoveRow, rename_column::mutation::RenameColumn, reorder_columns::mutation::ReorderColumns, reorder_rows::mutation::ReorderRows,
+    create_column::mutation::CreateColumn, delete_column::mutation::DeleteColumn, edit_cell::mutation::EditCell, insert_row::mutation::InsertRow, remove_row::mutation::RemoveRow, rename_column::mutation::RenameColumn,
+    reorder_columns::mutation::ReorderColumns, reorder_rows::mutation::ReorderRows,
 };
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{dec_cell_kind, dec_row, enc_cell_kind, enc_row};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value, dec_str, enc_semio_value, enc_str};
@@ -24,7 +24,9 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Primitives
-fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+fn parse_usize(s: &str) -> Result<usize, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
 fn enc_opt_usize(v: Option<usize>) -> String {
     match v {
         Some(n) => n.to_string(),
@@ -32,7 +34,11 @@ fn enc_opt_usize(v: Option<usize>) -> String {
     }
 }
 fn dec_opt_usize(s: &str) -> Result<Option<usize>, String> {
-    if s.is_empty() { Ok(None) } else { Ok(Some(parse_usize(s)?)) }
+    if s.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(parse_usize(s)?))
+    }
 }
 //#endregion 🔖️Primitives
 
@@ -89,7 +95,9 @@ fn parse_table_mutation(line: &str) -> Result<SemioTableMutation, String> {
 }
 
 impl protocol::OpText for SemioTableMutation {
-    fn print_op(&self) -> String { print_table_mutation(self) }
+    fn print_op(&self) -> String {
+        print_table_mutation(self)
+    }
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_table_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }

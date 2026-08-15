@@ -1,15 +1,1 @@
-{
-  "$id": "https://semio.tech/schema/s.stdio.dwg/diff.json",
-  "title": "DwgDiff",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "bytes": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    }
-  }
-}
+{"$id":"https://semio.tech/schema/s.stdio.dwg.ac1018/diff.json","title":"DwgDiff","type":"object","properties":{"version":{"type":"string"},"maintenanceVersion":{"type":"integer"},"codepage":{"type":"integer"},"drawing":{"type":"object"},"header":{"type":"object"},"classes":{"type":"array"},"dependencies":{"type":"array"},"summary":{"type":"object"},"application":{"type":"object"},"template":{"type":"object"}}}

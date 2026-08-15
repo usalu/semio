@@ -12,24 +12,20 @@
 //! original relative chunk order.
 
 use crate::artifacts::png::{
-    schema::snapshot::{
-        PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims,
-        PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency,
-    },
+    schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims, PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency},
     PngSnapshot,
 };
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::png::PngSnapshot;
     use crate::artifacts::png::standards::v1_2::subsets::any::schema::PngAnalyzer;
+    use crate::artifacts::png::PngSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
     const DEP_DEFLATE: Dialect = Dialect { artifact_kind: "s.stdio.deflate", standard: StandardId("rfc1950"), subset: SubsetId("*") };
-
 
     pub struct PngComposerComposition;
 
@@ -58,10 +54,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "PngComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = PngAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "PngComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "PngComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -204,7 +197,13 @@ fn paeth(a: u8, b: u8, c: u8) -> u8 {
     let pa = (p - a).abs();
     let pb = (p - b).abs();
     let pc = (p - c).abs();
-    if pa <= pb && pa <= pc { a as u8 } else if pb <= pc { b as u8 } else { c as u8 }
+    if pa <= pb && pa <= pc {
+        a as u8
+    } else if pb <= pc {
+        b as u8
+    } else {
+        c as u8
+    }
 }
 
 fn filter_row(filter_type: u8, cur: &[u8], prev: Option<&[u8]>, bpp: usize) -> Vec<u8> {
@@ -288,15 +287,7 @@ fn defilter_pass(raw: &[u8], mut pos: usize, height: u32, row_bytes: usize, bpp:
 
 //#region Adam7
 /// 🪜 Pass geometry `(start_x, start_y, step_x, step_y)`, PNG spec §8.2.
-const ADAM7: [(u32, u32, u32, u32); 7] = [
-    (0, 0, 8, 8),
-    (4, 0, 8, 8),
-    (0, 4, 4, 8),
-    (2, 0, 4, 4),
-    (0, 2, 2, 4),
-    (1, 0, 2, 2),
-    (0, 1, 1, 2),
-];
+const ADAM7: [(u32, u32, u32, u32); 7] = [(0, 0, 8, 8), (4, 0, 8, 8), (0, 4, 4, 8), (2, 0, 4, 4), (0, 2, 2, 4), (1, 0, 2, 2), (0, 1, 1, 2)];
 
 fn adam7_pass_dims(width: u32, height: u32, pass: usize) -> (u32, u32) {
     let (sx, sy, stx, sty) = ADAM7[pass];
@@ -346,14 +337,7 @@ fn scale_to_8(sample: u32, bit_depth: u8) -> u8 {
 }
 
 /// 🎨 Converts one pixel's raw (unscaled) samples to 8-bit RGBA using PLTE/tRNS as needed.
-fn pixel_to_rgba(
-    samples: &[u32],
-    ihdr: &Ihdr,
-    palette: &[[u8; 3]],
-    palette_alpha: &[u8],
-    gray_trans: Option<u32>,
-    rgb_trans: Option<(u32, u32, u32)>,
-) -> Result<[u8; 4], String> {
+fn pixel_to_rgba(samples: &[u32], ihdr: &Ihdr, palette: &[[u8; 3]], palette_alpha: &[u8], gray_trans: Option<u32>, rgb_trans: Option<(u32, u32, u32)>) -> Result<[u8; 4], String> {
     match ihdr.color_type {
         0 => {
             let g = samples[0];
@@ -377,12 +361,7 @@ fn pixel_to_rgba(
             let a8 = scale_to_8(samples[1], ihdr.bit_depth);
             Ok([g8, g8, g8, a8])
         }
-        6 => Ok([
-            scale_to_8(samples[0], ihdr.bit_depth),
-            scale_to_8(samples[1], ihdr.bit_depth),
-            scale_to_8(samples[2], ihdr.bit_depth),
-            scale_to_8(samples[3], ihdr.bit_depth),
-        ]),
+        6 => Ok([scale_to_8(samples[0], ihdr.bit_depth), scale_to_8(samples[1], ihdr.bit_depth), scale_to_8(samples[2], ihdr.bit_depth), scale_to_8(samples[3], ihdr.bit_depth)]),
         _ => unreachable!("validated in parse_ihdr"),
     }
 }
@@ -663,10 +642,7 @@ pub fn decode_png(data: &[u8]) -> Result<PngSnapshot, String> {
                 return Err("png cHRM: expected 32 bytes".into());
             }
             let v = |i: usize| u32::from_be_bytes([chunk[i], chunk[i + 1], chunk[i + 2], chunk[i + 3]]);
-            chrm_out = Some(PngChromaticities {
-                white_x: v(0), white_y: v(4), red_x: v(8), red_y: v(12),
-                green_x: v(16), green_y: v(20), blue_x: v(24), blue_y: v(28),
-            });
+            chrm_out = Some(PngChromaticities { white_x: v(0), white_y: v(4), red_x: v(8), red_y: v(12), green_x: v(16), green_y: v(20), blue_x: v(24), blue_y: v(28) });
             chunk_order.push(PngChunkMarker::Chrm);
         } else if ty == *b"sRGB" {
             if chunk.len() != 1 {
@@ -678,24 +654,13 @@ pub fn decode_png(data: &[u8]) -> Result<PngSnapshot, String> {
             if chunk.len() != 9 {
                 return Err("png pHYs: expected 9 bytes".into());
             }
-            phys_out = Some(PngPhysicalDims {
-                ppu_x: u32::from_be_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]),
-                ppu_y: u32::from_be_bytes([chunk[4], chunk[5], chunk[6], chunk[7]]),
-                unit_is_meter: chunk[8] == 1,
-            });
+            phys_out = Some(PngPhysicalDims { ppu_x: u32::from_be_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]), ppu_y: u32::from_be_bytes([chunk[4], chunk[5], chunk[6], chunk[7]]), unit_is_meter: chunk[8] == 1 });
             chunk_order.push(PngChunkMarker::Phys);
         } else if ty == *b"tIME" {
             if chunk.len() != 7 {
                 return Err("png tIME: expected 7 bytes".into());
             }
-            time_out = Some(PngTimestamp {
-                year: u16::from_be_bytes([chunk[0], chunk[1]]),
-                month: chunk[2],
-                day: chunk[3],
-                hour: chunk[4],
-                minute: chunk[5],
-                second: chunk[6],
-            });
+            time_out = Some(PngTimestamp { year: u16::from_be_bytes([chunk[0], chunk[1]]), month: chunk[2], day: chunk[3], hour: chunk[4], minute: chunk[5], second: chunk[6] });
             chunk_order.push(PngChunkMarker::Time);
         } else if ty == *b"bKGD" {
             let color_type = ihdr.as_ref().ok_or("png: bKGD before IHDR")?.color_type;
@@ -710,11 +675,7 @@ pub fn decode_png(data: &[u8]) -> Result<PngSnapshot, String> {
                     if chunk.len() != 6 {
                         return Err("png bKGD: expected 6 bytes for truecolor".into());
                     }
-                    PngBackground::Rgb {
-                        r: u16::from_be_bytes([chunk[0], chunk[1]]),
-                        g: u16::from_be_bytes([chunk[2], chunk[3]]),
-                        b: u16::from_be_bytes([chunk[4], chunk[5]]),
-                    }
+                    PngBackground::Rgb { r: u16::from_be_bytes([chunk[0], chunk[1]]), g: u16::from_be_bytes([chunk[2], chunk[3]]), b: u16::from_be_bytes([chunk[4], chunk[5]]) }
                 }
                 3 => {
                     if chunk.len() != 1 {
@@ -823,7 +784,9 @@ pub fn decode_png(data: &[u8]) -> Result<PngSnapshot, String> {
         let mut pos = 0usize;
         for pass in 0..7 {
             let (pw, ph) = adam7_pass_dims(ihdr.width, ihdr.height, pass);
-            if pw == 0 || ph == 0 { continue; }
+            if pw == 0 || ph == 0 {
+                continue;
+            }
             let row_bytes = packed_row_bytes(pw, ihdr.color_type, ihdr.bit_depth);
             let (rows, new_pos) = defilter_pass(&raw, pos, ph, row_bytes, bpp)?;
             pos = new_pos;
@@ -861,9 +824,9 @@ pub fn decode_png(data: &[u8]) -> Result<PngSnapshot, String> {
 //#region 🚪️DerivedIoRegistry
 /// 🚪️ Relocated verbatim from `⚙️engine` (rule 3: `io_registry`/`ComposerEntry` live in `🚪️io/`).
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::png::standards::v1_2::subsets::any::schema::PngComposer as PngRawAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
@@ -959,8 +922,12 @@ mod codec_tests {
         ihdr.extend_from_slice(&height.to_be_bytes());
         ihdr.extend_from_slice(&[bit_depth, color_type, 0, 0, 0]);
         write_chunk(&mut out, b"IHDR", &ihdr);
-        if let Some(p) = plte { write_chunk(&mut out, b"PLTE", p); }
-        if let Some(t) = trns { write_chunk(&mut out, b"tRNS", t); }
+        if let Some(p) = plte {
+            write_chunk(&mut out, b"PLTE", p);
+        }
+        if let Some(t) = trns {
+            write_chunk(&mut out, b"tRNS", t);
+        }
         write_chunk(&mut out, b"IDAT", &compressed);
         write_chunk(&mut out, b"IEND", &[]);
         out
@@ -996,12 +963,7 @@ mod codec_tests {
         let raw = vec![0u8, 1, 2, 0]; // 4x1 indices, bit depth 8
         let bytes = hand_encode(4, 1, 8, 3, Some(&plte), Some(&trns), &raw);
         let snap = decode_png(&bytes).expect("decode palette+trns");
-        assert_eq!(snap.pixels, vec![
-            255, 0, 0, 255,
-            0, 255, 0, 128,
-            0, 0, 255, 0,
-            255, 0, 0, 255,
-        ]);
+        assert_eq!(snap.pixels, vec![255, 0, 0, 255, 0, 255, 0, 128, 0, 0, 255, 0, 255, 0, 0, 255,]);
         assert_eq!(snap.color_type, PngColorType::Palette);
         assert_eq!(snap.plte.as_ref().expect("plte retained").len(), 3);
         assert_eq!(snap.trns, Some(PngTransparency::Indexed { alpha: vec![255, 128, 0] }));
@@ -1010,16 +972,11 @@ mod codec_tests {
     #[test]
     fn color_type_3_sub_byte_indices() {
         // bit depth 2, 4 indices packed into a single byte: 0,1,2,3 -> 0b00_01_10_11 = 0x1B
-        let plte = [0u8,0,0, 64,64,64, 128,128,128, 255,255,255];
+        let plte = [0u8, 0, 0, 64, 64, 64, 128, 128, 128, 255, 255, 255];
         let raw = vec![0b00_01_10_11u8];
         let bytes = hand_encode(4, 1, 2, 3, Some(&plte), None, &raw);
         let snap = decode_png(&bytes).expect("decode 2-bit palette");
-        assert_eq!(snap.pixels, vec![
-            0,0,0,255,
-            64,64,64,255,
-            128,128,128,255,
-            255,255,255,255,
-        ]);
+        assert_eq!(snap.pixels, vec![0, 0, 0, 255, 64, 64, 64, 255, 128, 128, 128, 255, 255, 255, 255, 255,]);
         assert_eq!(snap.bit_depth, 2);
     }
 
@@ -1065,7 +1022,9 @@ mod codec_tests {
         write_chunk(&mut out, b"IHDR", &ihdr);
         write_chunk(&mut out, b"gAMA", &45455u32.to_be_bytes());
         let mut chrm = Vec::new();
-        for v in [31270u32, 32900, 64000, 33000, 30000, 60000, 15000, 6000] { chrm.extend_from_slice(&v.to_be_bytes()); }
+        for v in [31270u32, 32900, 64000, 33000, 30000, 60000, 15000, 6000] {
+            chrm.extend_from_slice(&v.to_be_bytes());
+        }
         write_chunk(&mut out, b"cHRM", &chrm);
         write_chunk(&mut out, b"sRGB", &[0]);
         let mut phys = Vec::new();
@@ -1098,12 +1057,22 @@ mod codec_tests {
         assert_eq!(&snap.unknown_chunks[0].kind, b"prIV");
         assert_eq!(snap.unknown_chunks[0].data, vec![9, 9, 9]);
         // Chunk order must reflect the real on-disk sequence.
-        assert_eq!(snap.chunk_order, vec![
-            PngChunkMarker::Ihdr, PngChunkMarker::Gama, PngChunkMarker::Chrm, PngChunkMarker::Srgb,
-            PngChunkMarker::Phys, PngChunkMarker::Time, PngChunkMarker::Bkgd,
-            PngChunkMarker::Text { index: 0 }, PngChunkMarker::Unknown { index: 0 },
-            PngChunkMarker::Idat, PngChunkMarker::Iend,
-        ]);
+        assert_eq!(
+            snap.chunk_order,
+            vec![
+                PngChunkMarker::Ihdr,
+                PngChunkMarker::Gama,
+                PngChunkMarker::Chrm,
+                PngChunkMarker::Srgb,
+                PngChunkMarker::Phys,
+                PngChunkMarker::Time,
+                PngChunkMarker::Bkgd,
+                PngChunkMarker::Text { index: 0 },
+                PngChunkMarker::Unknown { index: 0 },
+                PngChunkMarker::Idat,
+                PngChunkMarker::Iend,
+            ]
+        );
 
         // Re-encode must still honestly re-emit every ancillary/text/unknown chunk (pixel data
         // canonicalizes per EncodeScopeNote, everything else round-trips).
@@ -1176,7 +1145,9 @@ mod codec_tests {
         let mut idat = Vec::new();
         for pass in 0..7 {
             let (pw, ph) = adam7_pass_dims(width, height, pass);
-            if pw == 0 || ph == 0 { continue; }
+            if pw == 0 || ph == 0 {
+                continue;
+            }
             let (sx, sy, stx, sty) = ADAM7[pass];
             let mut prev: Option<Vec<u8>> = None;
             for j in 0..ph {

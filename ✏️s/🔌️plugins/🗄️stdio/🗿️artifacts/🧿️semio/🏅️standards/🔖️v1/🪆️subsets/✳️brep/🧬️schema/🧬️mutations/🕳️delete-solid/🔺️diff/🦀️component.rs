@@ -14,9 +14,6 @@ pub fn diff(payload: &DeleteSolid, base: &SemioBrepSnapshot) -> SemioBrepDiff {
     if !base.solids.iter().any(|x| x.id == payload.id) {
         return SemioBrepDiff::default();
     }
-    SemioBrepDiff {
-        solids: Some(NamedTripleDiff { removed: vec![payload.id.clone()], modified: vec![], added: vec![] }),
-        ..Default::default()
-    }
+    SemioBrepDiff { solids: Some(NamedTripleDiff { removed: vec![payload.id.clone()], modified: vec![], added: vec![] }), ..Default::default() }
 }
 //#endregion 🔖️Diff

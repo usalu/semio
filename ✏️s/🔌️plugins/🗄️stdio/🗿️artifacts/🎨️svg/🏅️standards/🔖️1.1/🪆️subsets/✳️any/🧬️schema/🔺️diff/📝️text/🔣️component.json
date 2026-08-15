@@ -1,6 +1,6 @@
 {
   "$id": "https://semio.tech/schema/stdio.svg/diff/text.svg",
   "title": "SvgDiffText",
-  "description": "JSON text per the sibling ../🔣️component.json SvgDiff shape.",
+  "description": "Structured tagged/hex text emitted by SvgDiff::print_diff.",
   "type": "string"
 }
