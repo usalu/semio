@@ -26,55 +26,16 @@
 ## Feld 1 · Produkt-/Konformitätsrecht (Bundeskompetenz, gilt uniform in WA und BR)
 
 ### REG-BE-1-001 · CPR 2024/3110 — unmittelbare Geltung ohne belgische Transformation
-- Titel: Verordnung (EU) 2024/3110 zur Festlegung harmonisierter Bedingungen für die Vermarktung von Bauprodukten
-- Fundstelle: gesamte VO, ELI eur-lex.europa.eu/eli/reg/2024/3110/oj
-- A: EU/EEA (unmittelbar auch in WA/BR geltend, keine nationale/regionale Transformation nötig) · B: 1 Produkt-/Konformitätsrecht · C: materialübergreifend · D: EU-VO
-- E: Inverkehrbringen
-- F1 (E3): ermöglichend (VO enthält ausdrückliche Reuse-Bestimmungen, s. EU-Basisdokument) · F2 (E3): schweigend (regionale Vollzugspraxis in WA/BR noch nicht erhoben)
-- G: Erklärung Dritter (G-explizit, E1 — DoP-Systematik)
-- Kernaussage: Die neue CPR gilt ab 2026-01-08 unmittelbar auch in Wallonie und Brüssel; Belgien regelt nur die Marktüberwachung/Sanktionierung national (s. REG-BE-1-002). Vollextraktion der VO selbst liegt bei der EU-Basisschicht (`roh/eu-produkt.md`), hier nur als Ankerobjekt für die Vollständigkeit der WA/BR-Karte geführt.
-- Wortlautbeleg: s. `roh/eu-produkt.md`, kein eigener WA/BR-Wortlaut (EU-Verordnungstext ist keine belgische Quelle)
-- Beleg-Quelle: B0 (bereits in W1 vollextrahiert) · Zugänglichkeit: frei-primär
-- Quelle: Tier 1 · https://eur-lex.europa.eu/eli/reg/2024/3110/oj · Fassung (as-amended) 2024-12-18 · Zugriff 2026-08-11
-- Status: in Kraft ab 2026-01-08 · Datum 2024-11-27 (Erlass)
-- Sub-Ebene: entfällt (A=EU/EEA, unmittelbar wirksam ohne regionale Umsetzung)
-- Relationen: setzt EU-Ebene fort (kein eigenständiges Objekt) · Ermächtigungsbasis für REG-BE-1-002 (Marktüberwachung, alte VO 305/2011)
-- Konfidenz: gesichert
-- **ID-Hinweis aus adversarischer Prüfung 2026-08-11:** Diese ID sowie REG-BE-1-002/-003 sind in `roh/BE-VL.md` ein zweites Mal vergeben (dort für dieselben Bundeskompetenz-Objekte). Vor W4-Synthese zwingend zu dedublizieren/umzunummerieren, da das ID-Schema projektweite Eindeutigkeit voraussetzt.
+Dublette zu REG-BE-1-001 in BE-VL.md, verworfen am 2026-08-14, Grund: dasselbe Bundeskompetenz-Objekt (CPR 2024/3110, unmittelbare Geltung), von beiden Regionalagenten unabhängig für dieselbe föderale Ebene erfasst — bereits bei der adversarischen Prüfung 2026-08-11 selbst als Kollision markiert („Diese ID sowie REG-BE-1-002/-003 sind in roh/BE-VL.md ein zweites Mal vergeben"); BE-VL.md als Erstvorkommen (alphabetisch erste Regionaldatei, gleicher Beleg-Quelle-Stand B0/frei-primär) beibehalten — kein Informationsverlust.
 
 ### REG-BE-1-002 · Wet van 21 december 2013 — Marktüberwachungsgesetz zur alten CPR 305/2011
-- Titel: Wet van 21 december 2013 tot uitvoering van de Verordening Nr. 305/2011 [...] tot vaststelling van geharmoniseerde voorwaarden voor het verhandelen van bouwproducten
-- Fundstelle: gesamtes Gesetz, insb. Art. 15 (Inkrafttreten), Kap. Kontrolle/Sanktionen
-- A: national · B: 1 Produkt-/Konformitätsrecht · C: materialübergreifend · D: Gesetz
-- E: Inverkehrbringen
-- F1 (E3): schweigend (kein Wortlaut zu gebrauchten/wiederaufgearbeiteten Bauprodukten) · F2 (E3): schweigend
-- G: Einzelfallzulassung (G-inferiert, E3 — König ernennt Kontrollbeamte für Inspektion/Probenahme/Verwarnungsgelder)
-- Kernaussage: Föderales Vollzugsgesetz zur alten CPR 305/2011 (Marktüberwachung, Kontrolle, Sanktionen), gilt einheitlich in ganz Belgien inkl. WA/BR. Keine expliziten Bestimmungen zu gebrauchten/wiederaufgearbeiteten Bauprodukten. Ob/wie das Gesetz für die neue CPR 2024/3110 novelliert wurde, ist offen — VO 2024/3110 wird im gelesenen Text nicht erwähnt (Novellierungsstatus = offener Rechercheauftrag).
-- Wortlautbeleg (Original, NL): Titel wörtlich wie oben; Detailwortlaut zu Kontrollbefugnissen im Etaamb-Auszug nicht wörtlich zitiert (Sekundärspiegel)
-- Beleg-Quelle: B2 (Etaamb-Amtsspiegel, kein direkter ejustice-Zugriff dieser Sitzung) · Zugänglichkeit: frei-primär (Etaamb ist offizielles Kopie-Portal, kein privater Anbieter)
-- Quelle: Tier 1 · https://etaamb.openjustice.be/nl/wet-van-21-december-2013_n2014011012.html · Fassung publiziert 2014-01-20 · Zugriff 2026-08-11
-- Status: in Kraft · Datum 2013-12-21
-- Sub-Ebene: entfällt (A=national, uniform in WA+BR)
-- Relationen: setzt um VO 305/2011 (Vorgänger-CPR) · Novellierungsverhältnis zu REG-BE-1-001 (VO 2024/3110) unklar
-- Konfidenz: abgeleitet (Existenz/Zweck gesichert, Novellierungsstatus zu 2024/3110 unklar)
+Dublette zu REG-BE-1-002 in BE-VL.md, verworfen am 2026-08-14, Grund: dasselbe Bundeskompetenz-Objekt (Wet 21.12.2013, föderales CPR-Marktüberwachungsgesetz), von beiden Regionalagenten unabhängig erfasst — bereits bei der adversarischen Prüfung 2026-08-11 selbst als Kollision markiert (s. REG-BE-1-001); BE-VL.md als Erstvorkommen beibehalten, beide B2/frei-primär (Etaamb-Amtsspiegel) — kein Informationsverlust.
 
 ### REG-BE-1-003 · KB 30 september 2014 — Zulassung technische beoordelingsinstanties (TBI/ETA)
-- Titel: Koninklijk besluit van 30 september 2014 betreffende de technische beoordelingsinstanties gemachtigd voor het opstellen van een Europees beoordelingsdocument en voor het verstrekken van een Europese technische beoordeling voor bouwproducten
-- Fundstelle: gesamtes KB
-- A: national · B: 1 Produkt-/Konformitätsrecht (Schnittstelle Feld 2) · C: materialübergreifend · D: RVO (Koninklijk Besluit)
-- E: Inverkehrbringen
-- F1 (E3): schweigend zu Reuse · F2 (E3): schweigend
-- G: Einzelfallzulassung (G-explizit, E1 — Zulassung der TBI selbst ist ein Einzelfallakt)
-- Kernaussage: Föderale Rechtsgrundlage für die Zulassung von "technische beoordelingsinstanties" (TBI), die EAD/ETA nach CPR ausstellen dürfen. BUtgb ist die einzige belgische TBI. Gilt nur für den EU-harmonisierten ETA-Zweig, nicht für rein-nationale ATG-Verfahren ohne EU-Bezug (s. REG-BE-1-004).
-- Wortlautbeleg: nicht wörtlich verifiziert in dieser Sitzung (nur Etaamb-Snippet identifiziert)
-- Beleg-Quelle: B2 (Etaamb-Spiegel per Snippet identifiziert, nicht vollständig im Volltext gelesen) · Zugänglichkeit: frei-primär
-- Quelle: Tier 1 · https://etaamb.openjustice.be/nl/koninklijk-besluit-van-30-september-2014_n2014011560.html · Fassung publiziert 2014-10-13 · Zugriff 2026-08-11
-- Status: in Kraft · Datum 2014-09-30
-- Sub-Ebene: entfällt (A=national, uniform in WA+BR)
-- Relationen: konkretisiert CPR-Vollzug · Ergänzung zu REG-BE-1-004 (ATG)
-- Konfidenz: abgeleitet
+Dublette zu REG-BE-1-003 in BE-VL.md, verworfen am 2026-08-14, Grund: dasselbe Bundeskompetenz-Objekt (KB 30.9.2014, TBI/ETA-Zulassung), von beiden Regionalagenten unabhängig erfasst — bereits bei der adversarischen Prüfung 2026-08-11 selbst als Kollision markiert (s. REG-BE-1-001); BE-VL.md als Erstvorkommen beibehalten, beide B2/frei-primär — kein Informationsverlust.
 
-### REG-BE-1-004 · ATG/BUtgb — belgisches System der Technischen Zulassung
+### REG-BE-1-090 · ATG/BUtgb — belgisches System der Technischen Zulassung
+<!-- Umnummeriert 2026-08-14 von REG-BE-1-004: kollidierte mit BE-VL.md REG-BE-1-004 (Wet productnormen 21.12.1998 — Negativbefund), anderer Regelungsgegenstand, siehe pruefung/korpus-hygiene.md -->
 - Titel: Belgische Unie voor de Technische Goedkeuring in de Bouw / Union Belge pour l'Agrément technique dans la construction (BUtgb-UBAtc), ATG-System
 - Fundstelle: kein einzelnes Gründungsgesetz identifiziert; vzw-Rechtsform seit 2009, System aktiv seit 1970
 - A: national · B: 1 Produkt-/Konformitätsrecht, Schnittstelle B2 · C: materialübergreifend · D: Merkblatt/Branchenprotokoll (parastatales Zertifizierungssystem ohne identifizierten eigenständigen Gesetzesanker für den rein-nationalen Teil) · **Konsistenzhinweis aus adversarischer Prüfung 2026-08-11: `roh/BE-VL.md` REG-BE-2-005 führt dasselbe Objekt (ATG/BUtgb) mit D = Verwaltungsvorschrift statt Merkblatt/Branchenprotokoll — vor Übernahme in W4 zwingend zu vereinheitlichen (Gründungsrechtsgrundlage in keiner Sitzung identifiziert, daher keiner der beiden Werte textbelegt).**
@@ -142,20 +103,20 @@
 - Relationen: funktionsanalog zu REG-BE-2-001 (WA, CoDT) · konkretisiert durch AGRBC 13.11.2008 (Bagatellausnahmen)
 - Konfidenz: gesichert (Existenz/Fundstelle/Genehmigungsgrundprinzip), abgeleitet (kein vollständiger Wortlautabgleich der démolition-Artikel)
 
-### REG-BE-2-003 · ATG (Kreuzverweis Standsicherheit) — s. REG-BE-1-004
-- Titel: s. REG-BE-1-004
-- Fundstelle: s. REG-BE-1-004
+### REG-BE-2-003 · ATG (Kreuzverweis Standsicherheit) — s. REG-BE-1-090
+- Titel: s. REG-BE-1-090
+- Fundstelle: s. REG-BE-1-090
 - A: national · B: 2 (Standsicherheits-/Verwendbarkeitsnachweis-Aspekt) · C: materialübergreifend · D: Merkblatt/Branchenprotokoll
 - E: Planung/Nachweis
 - F1 (E3): schweigend · F2 (E3): schweigend
 - G: Einzelfallzulassung (G-inferiert, E3)
-- Kernaussage: Für den Standsicherheitsnachweis-Aspekt (nicht nur Marktzugang) gilt dasselbe ATG-System wie in REG-BE-1-004 — hier als Feld-2-Aspekt geführt, kein neuer Fund. Frage, ob ATG auf gebrauchte/wiederverwendete Bauteile anwendbar/anwendbar gemacht ist, bleibt offen.
-- Wortlautbeleg: s. REG-BE-1-004
+- Kernaussage: Für den Standsicherheitsnachweis-Aspekt (nicht nur Marktzugang) gilt dasselbe ATG-System wie in REG-BE-1-090 — hier als Feld-2-Aspekt geführt, kein neuer Fund. Frage, ob ATG auf gebrauchte/wiederverwendete Bauteile anwendbar/anwendbar gemacht ist, bleibt offen.
+- Wortlautbeleg: s. REG-BE-1-090
 - Beleg-Quelle: B2 · Zugänglichkeit: frei-primär, inhaltlich unvollständig
 - Quelle: Tier 2 · https://butgb-ubatc.be/nl/ · Zugriff 2026-08-11
 - Status: aktiv
 - Sub-Ebene: entfällt (A=national, uniform in WA+BR)
-- Relationen: identisch mit REG-BE-1-004
+- Relationen: identisch mit REG-BE-1-090
 - Konfidenz: unklar
 
 ---
@@ -260,7 +221,8 @@
 - Relationen: konkretisiert REG-BE-3-001/REG-BE-3-002 (Réemploi-Definition/Hierarchie) · Schnittstelle zu Feld 5b (Förderung)
 - Konfidenz: gesichert (Existenz/Inhalt/aktuelle Geltung — in adversarischer Prüfung 2026-08-11 auf B0 hochgestuft)
 
-### REG-BE-3-007 · Plan wallon des Déchets-Ressources (PWD-R) — Fortgeltungsstatus ungeklärt
+### REG-BE-3-090 · Plan wallon des Déchets-Ressources (PWD-R) — Fortgeltungsstatus ungeklärt
+<!-- Umnummeriert 2026-08-14 von REG-BE-3-007: kollidierte mit BE-VL.md REG-BE-3-007 (Materialendecreet Art. 3 § 1, 15° — Legaldefinition "hergebruik"), anderer Regelungsgegenstand, siehe pruefung/korpus-hygiene.md -->
 - Titel: Plan wallon des Déchets-Ressources (PWD-R), angenommen 2018-03-22
 - Fundstelle: nicht im Volltext eingesehen
 - A: sub-national (Wallonie) · B: 3 Abfall-/Stoffrecht (Rahmenplan) · C: materialübergreifend · D: Merkblatt (strategisches Planungsdokument, vermutlich nicht unmittelbar bindend — nicht abschließend geprüft)
@@ -538,20 +500,20 @@
 - Relationen: Ergänzung zu REG-BE-6-001 (Normungsökosystem)
 - Konfidenz: abgeleitet
 
-### REG-BE-6-003 · ATG/BUtgb (Kreuzverweis Normung) — s. REG-BE-1-004
-- Titel: s. REG-BE-1-004
-- Fundstelle: s. REG-BE-1-004
+### REG-BE-6-003 · ATG/BUtgb (Kreuzverweis Normung) — s. REG-BE-1-090
+- Titel: s. REG-BE-1-090
+- Fundstelle: s. REG-BE-1-090
 - A: national · B: 6 Normen/Regelwerke (Zertifizierungsinstrument) · C: materialübergreifend · D: Merkblatt/Branchenprotokoll
 - E: Planung/Nachweis
 - F1 (E3): schweigend · F2 (E3): schweigend
 - G: entfällt
-- Kernaussage: Identisches Objekt wie REG-BE-1-004/REG-BE-2-003, hier nur als Normungs-/Zertifizierungsinstrument geführt, kein neuer Fund.
-- Wortlautbeleg: s. REG-BE-1-004
+- Kernaussage: Identisches Objekt wie REG-BE-1-090/REG-BE-2-003, hier nur als Normungs-/Zertifizierungsinstrument geführt, kein neuer Fund.
+- Wortlautbeleg: s. REG-BE-1-090
 - Beleg-Quelle: B2 · Zugänglichkeit: frei-primär, inhaltlich unvollständig
 - Quelle: Tier 2 · https://butgb-ubatc.be/nl/ · Zugriff 2026-08-11
 - Status: aktiv
 - Sub-Ebene: entfällt (A=national, uniform in WA+BR)
-- Relationen: identisch mit REG-BE-1-004/REG-BE-2-003
+- Relationen: identisch mit REG-BE-1-090/REG-BE-2-003
 - Konfidenz: unklar
 
 ---

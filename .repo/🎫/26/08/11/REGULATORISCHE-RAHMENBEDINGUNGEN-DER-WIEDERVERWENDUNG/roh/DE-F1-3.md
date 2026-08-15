@@ -9,38 +9,12 @@
 ## Feld 1 · Produkt-/Konformitätsrecht
 
 ### REG-EU-1-001 · CPR 2024/3110 — Anwendungsbereich inkl. gebrauchter Produkte
-- Titel: Verordnung (EU) 2024/3110 des Europäischen Parlaments und des Rates vom 27. November 2024 zur Festlegung harmonisierter Bedingungen für die Vermarktung von Bauprodukten, zur Änderung der Verordnung (EU) 2019/1020 und zur Aufhebung der Verordnung (EU) Nr. 305/2011
-- Fundstelle: Art. 2 Abs. 1–3; Art. 3 Nr. 5, 20, 25; Erwägungsgründe 34–36 (ELI: http://data.europa.eu/eli/reg/2024/3110/oj)
-- A: EU/EEA · B: 1 Produkt-/Konformitätsrecht · C: materialübergreifend · D: EU-VO
-- E: Inverkehrbringen; Bestandserkundung (mittelbar, da „gebrauchtes Produkt" erst nach Ausbau entsteht)
-- F1 (E3): ermöglichend (schafft erstmals ausdrücklichen Rechtsrahmen für Gebraucht-/Wiederaufbereitungsprodukte, statt Schweigen wie unter VO 305/2011) · F2 (E3): schweigend/bedingend (Wirkung hängt von noch zu erlassenden produktspezifischen harmonisierten Spezifikationen ab, s. REG-EU-1-006; zum Stichtag in der Praxis noch kaum spürbar)
-- G: Dokumentenlage (explizit, E1 — Art. 3 Nr. 20/25 verlangen Nachweis, dass kein Abfallstatus vorliegt und welcher Umwandlungsgrad erreicht wurde)
-- Kernaussage: Die Verordnung gilt gemäß Art. 2 Abs. 1 ausdrücklich für Bauprodukte „einschließlich gebrauchter Produkte". Art. 3 Nr. 20 definiert „gebrauchtes Produkt" als ein Produkt, das kein Abfall (RL 2008/98/EG) ist, mindestens einmal in ein Bauwerk eingebaut wurde und keinem über Prüfung/Reinigung/Reparatur hinausgehenden Verfahren unterzogen wurde (oder einem als nicht wesentlich für die Leistung eingestuften Umwandlungsprozess); Art. 3 Nr. 25 definiert davon abgegrenzt das „wiederaufbereitete Produkt" (wesentlicher Umwandlungsprozess).
-- Wortlautbeleg (Originalsprache): "Diese Verordnung gilt für Bauprodukte einschließlich gebrauchter Produkte" (Art. 2 Abs. 1); "‚gebrauchtes Produkt' bezeichnet ein Produkt, das kein Abfall im Sinne der Richtlinie 2008/98/EG ist … und mindestens einmal in ein Bauwerk eingebaut wurde und a) keinem Verfahren unterzogen worden ist, das über Maßnahmen der Prüfung, Reinigung oder Reparatur zum Zwecke der Verwertung hinausgeht … oder b) einem Umwandlungsprozess unterzogen worden ist, der … als nicht wesentlich für die Leistung des Produkts eingestuft ist" (Art. 3 Nr. 20)
-- Beleg-Quelle: B0 · Zugänglichkeit: frei-primär · Bindungsakt: entfällt (unmittelbar geltendes EU-Recht)
-- Quelle: Tier 1 · https://eur-lex.europa.eu/legal-content/DE/TXT/PDF/?uri=OJ:L_202403110 · Fassung(as-amended) 2024-12-18 · Zugriff 2026-08-11
-- Status: in Kraft (punktuell seit 2025-01-07, im Kern seit 2026-01-08) · Datum: 2024-12-18
-- Sub-Ebene: entfällt (A=EU/EEA)
-- Relationen: ersetzt REG-EU-1-007 (mit Restfortgeltung); konkretisiert durch REG-EU-1-002/003/004/005/006
-- Konfidenz: gesichert
+Dublette zu REG-EU-1-001 in eu-produkt.md, verworfen am 2026-08-14, Grund: identischer Regelungsgegenstand (CPR 2024/3110, Anwendungsbereich inkl. gebrauchter Produkte); eu-produkt.md ist die dokumentiert nachfolgende, vollständig B0-verifizierte EU-Basisschicht (Dateikopf eu-produkt.md: „ersetzt/verfeinert roh/pilot-de-produkt.md" und die parallele DE-Länderfassung) — kein Informationsverlust.
 
 ---
 
 ### REG-EU-1-002 · CPR 2024/3110 Art. 26 Abs. 2 — Herstellerfiktion beim Inverkehrbringen gebrauchter/wiederaufbereiteter Produkte
-- Titel: wie REG-EU-1-001
-- Fundstelle: Art. 26 Abs. 1–2 i. V. m. Art. 22 (Herstellerpflichten)
-- A: EU/EEA · B: 1 Produkt-/Konformitätsrecht · C: materialübergreifend · D: EU-VO
-- E: Inverkehrbringen; Planung/Nachweis
-- F1 (E3): hemmend (wer ein gebrauchtes Bauprodukt ohne einschlägige hEN-Gebraucht-Regel oder ein wiederaufbereitetes Produkt in Verkehr bringt, wird rechtlich zum „Hersteller" mit vollen Pflichten aus Art. 22) · F2 (E3): hemmend (Bauteilbörsen/Rückbauunternehmen verfügen i. d. R. nicht über Herstellerinfrastruktur für AVCP-Verfahren und Leistungserklärungen bei heterogenen Rückbauteilen)
-- G: rechnerischer Nachweis + Erklärung Dritter (explizit, E1)
-- Kernaussage: Art. 26 Abs. 1 ordnet an, dass ein Einführer oder Händler unter bestimmten Voraussetzungen (u. a. Inverkehrbringen unter eigenem Namen, wesentliche Änderung des Produkts) als Hersteller gilt und den vollen Herstellerpflichten aus Art. 22 unterliegt; Art. 26 Abs. 2 erstreckt diese Rechtsfolge ausdrücklich auf JEDEN Wirtschaftsteilnehmer (nicht nur Einführer/Händler im engen Sinn von Abs. 1), der (a) ein gebrauchtes Produkt mit einschlägiger Gebraucht-Regel in einer hEN, (b) ein gebrauchtes Produkt ohne solche Regel, das zuvor nicht in der Union in Verkehr gebracht wurde, oder (c) ein wiederaufbereitetes Produkt in Verkehr bringt. Da Spezifikationen mit expliziten Gebraucht-Regeln laut Erwägungsgrund 35 die Ausnahme sind, trifft die Herstellerfiktion faktisch die meisten aktiv vermarktenden Wiederverwendungsakteure.
-- Wortlautbeleg (Originalsprache, per lokalem pdftotext aus dem OJ-PDF am 2026-08-11 gegengeprüft — KORRIGIERT gegenüber Vorfassung, die Abs. 1 und Abs. 2 fälschlich als einen durchgehenden Satz zitierte): Art. 26 Abs. 1 Satz 1: "In den folgenden Fällen gilt ein Einführer oder Händler als Hersteller für die Zwecke dieser Verordnung und unterliegt den Herstellerpflichten gemäß Artikel 22: a) wenn er ein Produkt unter seinem eigenen Namen oder seiner Handelsmarke in Verkehr bringt; b) wenn er ein Produkt vorsätzlich so ändert oder es unabsichtlich so geändert wird, dass die Übereinstimmung der Leistungs- und Konformitätserklärung … beeinträchtigt werden kann; […] e) wenn er entscheidet, die Rolle des Herstellers zu übernehmen." Art. 26 Abs. 2 (separater Satz, eigenständiger Anwendungsbereich): "Absatz 1 gilt auch für Wirtschaftsteilnehmer, die Folgendes in Verkehr bringen: a) ein gebrauchtes Produkt, für das eine harmonisierte technische Spezifikation mit Vorschriften für gebrauchte Produkte gilt, b) ein gebrauchtes Produkt, das nicht unter eine harmonisierte technische Spezifikation mit Bestimmungen für gebrauchte Produkte fällt und zuvor nicht in der Union in Verkehr gebracht wurde, c) ein wiederaufbereitetes Produkt."
-- Beleg-Quelle: B0 (2026-08-11 per pdftotext am EUR-Lex-OJ-PDF gegengeprüft, Zitat entlang der tatsächlichen Absatzgrenzen korrigiert) · Zugänglichkeit: frei-primär · Bindungsakt: entfällt
-- Quelle: Tier 1 · https://eur-lex.europa.eu/legal-content/DE/TXT/PDF/?uri=OJ:L_202403110 · Fassung(as-amended) 2024-12-18 · Zugriff 2026-08-11
-- Status: in Kraft, Wirksamkeit produktfamilienabhängig aufgeschoben (s. REG-EU-1-006) · Datum: 2024-12-18
-- Sub-Ebene: entfällt
-- Relationen: konkretisiert REG-EU-1-001
-- Konfidenz: gesichert (Wortlaut), abgeleitet (Praxiswirkung F2)
+Dublette zu REG-EU-1-002 in eu-produkt.md, verworfen am 2026-08-14, Grund: identischer Regelungsgegenstand (CPR 2024/3110 Art. 26, Herstellerfiktion); eu-produkt.md ist die dokumentiert nachfolgende, vollständig B0-verifizierte EU-Basisschicht — kein Informationsverlust.
 
 ---
 
@@ -64,38 +38,12 @@
 ---
 
 ### REG-EU-1-004 · CPR 2024/3110 Erwägungsgrund 34 — Ausnahme für direkte Wiederverwendung im selben Bauwerk
-- Titel: wie REG-EU-1-001
-- Fundstelle: Erwägungsgrund 34, Satz 3
-- A: EU/EEA · B: 1 Produkt-/Konformitätsrecht · C: materialübergreifend · D: EU-VO (Erwägungsgrund, Auslegungshilfe zu Art. 2/3, keine eigene Bindungswirkung)
-- E: Rückbau/Sicherung; Einbau/Abnahme
-- F1 (E3): ermöglichend (Bauteile, die ohne Marktdurchgang direkt im selben Bauwerk wiederverwendet werden, gelten nicht als erneut in Verkehr gebracht) · F2 (E3): ermöglichend, aber eng (deckt kleinteiligen Bauteilerhalt im eigenen Projekt, nicht die marktvermittelte Bauteilbörsen-Praxis)
-- G: entfällt (Auslegungshinweis zur Reichweite von „Inverkehrbringen")
-- Kernaussage: Produkte, die direkt im selben Bauwerk wiederverwendet werden, gelten nicht als erneut in Verkehr gebracht und unterliegen daher keinen CPR-Maßnahmen. Diese Ausnahme greift nur bei Verbleib im identischen Bauwerk ohne Marktdurchgang — die häufigste Form der Bauteilbörsen-vermittelten Wiederverwendung (Ausbau, Zwischenlagerung, Verkauf an anderes Projekt) fällt NICHT darunter.
-- Wortlautbeleg (Originalsprache): "Produkte, die direkt in einem Bauwerk wiederverwendet werden, sollten jedoch nicht als erneut in Verkehr gebracht gelten und daher keinen Maßnahmen im Rahmen der vorliegenden Verordnung unterliegen." (Erwägungsgrund 34)
-- Beleg-Quelle: B0 · Zugänglichkeit: frei-primär · Bindungsakt: entfällt
-- Quelle: Tier 1 · https://eur-lex.europa.eu/legal-content/DE/TXT/PDF/?uri=OJ:L_202403110 · Fassung(as-amended) 2024-12-18 · Zugriff 2026-08-11
-- Status: in Kraft · Datum: 2024-12-18
-- Sub-Ebene: entfällt
-- Relationen: konkretisiert Art. 3 Nr. 5 (REG-EU-1-001); grenzt REG-EU-1-002 ein
-- Konfidenz: gesichert (Wortlaut), abgeleitet (Reichweiten-Einordnung)
+Dublette zu REG-EU-1-005 in eu-produkt.md, verworfen am 2026-08-14, Grund: identischer Wortlautgegenstand (Erwägungsgrund 34), in eu-produkt.md unter fortlaufender W1-Nummerierung als REG-EU-1-005 geführt, dort zusätzlich um die Ankündigung „langfristiger Harmonisierung" (Satz 1–2) erweitert — kein Informationsverlust.
 
 ---
 
 ### REG-EU-1-005 · CPR 2024/3110 Art. 14/15/18 — Leistungs- und Konformitätserklärung inkl. Sonderregel für gebrauchte Produkte
-- Titel: wie REG-EU-1-001
-- Fundstelle: Art. 14 (Befreiungstatbestände), Art. 15 (Inhalt), Art. 18 Abs. 2 Buchst. a (CE-Kennzeichnungsdatum)
-- A: EU/EEA · B: 1 Produkt-/Konformitätsrecht · C: materialübergreifend · D: EU-VO
-- E: Inverkehrbringen; Planung/Nachweis
-- F1 (E3): bedingend (voraussetzungsreiche Erklärung inkl. Umweltfußabdruck, für gebrauchte Produkte besondere Datumsregel, aber keine inhaltliche Erleichterung) · F2 (E3): hemmend (Aufwand für ein singuläres Rückbauteil ohne Herstellerorganisation unverhältnismäßig; Befreiung Art. 14 erfasst nur Einzelanfertigung im selben Bauwerk unter Bauleitung bzw. Denkmalschutz-Renovierung, nicht marktvermittelte Bauteilwiederverwendung)
-- G: rechnerischer Nachweis + Dokumentenlage (explizit, E1)
-- Kernaussage: Art. 18 Abs. 2 Buchst. a sieht für gebrauchte Produkte eine besondere CE-Datumsangabe vor (Jahr der Demontage gefolgt vom Jahr der Wiederkennzeichnung) — der Verordnungsgeber hat den Fall technisch mitgedacht, löst aber nicht das strukturelle Problem, dass der nach Art. 26 Abs. 2 fingierte „Hersteller" die vollständige Erklärung neu erstellen muss. Art. 14 befreit nur eng umgrenzte Fälle, nicht die typische Bauteilbörsen-Konstellation.
-- Wortlautbeleg (Originalsprache): "die beiden letzten Ziffern des Jahres, in dem die CE-Kennzeichnung erstmals angebracht wurde, oder bei gebrauchten Produkten die beiden letzten Ziffern des Jahres, in dem das Produkt demontiert wurde, gefolgt von den letzten beiden Ziffern des Jahres, in dem die CE-Kennzeichnung an dem gebrauchten Produkt angebracht wurde" (Art. 18 Abs. 2 Buchst. a)
-- Beleg-Quelle: B0 · Zugänglichkeit: frei-primär · Bindungsakt: entfällt
-- Quelle: Tier 1 · https://eur-lex.europa.eu/legal-content/DE/TXT/PDF/?uri=OJ:L_202403110 · Fassung(as-amended) 2024-12-18 · Zugriff 2026-08-11
-- Status: in Kraft (Kernpflichten größtenteils ab 2026-01-08) · Datum: 2024-12-18
-- Sub-Ebene: entfällt
-- Relationen: konkretisiert REG-EU-1-002; setzt REG-EU-1-007 Art. 4 fort/ersetzt sie
-- Konfidenz: gesichert (Wortlaut), abgeleitet (Aufwandsbewertung F2)
+Dublette zu REG-EU-1-006 in eu-produkt.md, verworfen am 2026-08-14, Grund: identischer Regelungsgegenstand (Art. 14/15/16/18 CPR 2024/3110), in eu-produkt.md unter fortlaufender W1-Nummerierung als REG-EU-1-006 geführt, dort zusätzlich um die zeitliche Staffelung der Umweltmerkmale (Anhang II Buchst. a–s) ergänzt — kein Informationsverlust.
 
 ---
 
@@ -119,20 +67,7 @@
 ---
 
 ### REG-EU-1-007 · CPR 305/2011 (auslaufend) — Leistungserklärungspflicht ohne Gebraucht-Regel
-- Titel: Verordnung (EU) Nr. 305/2011 des Europäischen Parlaments und des Rates vom 9. März 2011 zur Festlegung harmonisierter Bedingungen für die Vermarktung von Bauprodukten und zur Aufhebung der Richtlinie 89/106/EWG
-- Fundstelle: Art. 2 (Begriffsbestimmungen), Art. 4 (Erstellung der Leistungserklärung)
-- A: EU/EEA · B: 1 Produkt-/Konformitätsrecht · C: materialübergreifend · D: EU-VO
-- E: Inverkehrbringen
-- F1 (E3): schweigend (unterscheidet an keiner Stelle zwischen neuen und gebrauchten Bauprodukten) · F2 (E3): hemmend (jedes wiederverwendete, hEN-erfasste Bauprodukt musste bislang formal wie ein Neuprodukt behandelt werden)
-- G: rechnerischer Nachweis (explizit, E1)
-- Kernaussage: Nach Art. 4 Abs. 1 erstellt der Hersteller eine Leistungserklärung, wenn ein von einer hEN erfasstes Bauprodukt in Verkehr gebracht wird. Da „Inverkehrbringen" schlicht als erstmalige Marktbereitstellung definiert wird und keine Sonderregel für Ausbau/Wiedereinbau vorgesehen ist, blieb unklar, wie ein gebrauchtes, hEN-erfasstes Bauteil beim Wiederverkauf zu behandeln ist — diese Lücke schließt erst VO 2024/3110.
-- Wortlautbeleg (Originalsprache): "Ist ein Bauprodukt von einer harmonisierten Norm erfasst … so erstellt der Hersteller eine Leistungserklärung, wenn ein solches Produkt in Verkehr gebracht wird." (Art. 4 Abs. 1 — sinngemäß nach Sekundärzitat, im W0-Pilot nicht erneut am B0-Volltext verifiziert; Nacherhebung offen)
-- Beleg-Quelle: B2 amtliche Referenz, Art. 4-Wortlaut selbst nicht im O-Ton nachgelesen (nur Sekundärzitat); Art. 94/95 VO 2024/3110 zur Fortgeltung dagegen B0 · Zugänglichkeit: frei-primär · Bindungsakt: entfällt
-- Quelle: Tier 1 (VO selbst) · https://eur-lex.europa.eu/legal-content/DE/TXT/?uri=CELEX:32011R0305 · Fassung(as-amended) 2011-03-09 · Zugriff 2026-08-11
-- Status: Übergang (Kernvorschriften für Altbestand bis 2040 fortgeltend, ansonsten aufgehoben seit 2026-01-08) · Datum: 2026-01-08
-- Sub-Ebene: entfällt
-- Relationen: ersetzt durch REG-EU-1-001; Restfortgeltung durch REG-EU-1-006
-- Konfidenz: abgeleitet (Art. 4-Wortlaut nicht B0-verifiziert)
+Dublette zu REG-EU-1-007 in eu-produkt.md, verworfen am 2026-08-14, Grund: gleicher Regelungsgegenstand (Fortgeltung/Auslaufen der VO 305/2011); eu-produkt.md REG-EU-1-007 ist B0-vollverifiziert (Art. 94–96) und deckt die hier nur B2/Sekundärzitat-belegte Aussage zu Art. 4 VO 305/2011 inhaltlich mit ab — kein Informationsverlust, da die schwächer belegte Art.-4-Aussage (Konfidenz „abgeleitet") durch die stärker belegte eu-produkt.md-Fassung nicht benötigt wird.
 
 ---
 

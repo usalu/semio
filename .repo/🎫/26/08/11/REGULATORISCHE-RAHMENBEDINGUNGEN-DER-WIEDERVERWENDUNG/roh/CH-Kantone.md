@@ -20,7 +20,7 @@
 
 **0.2 CH ist nicht EEA — MRA statt CPR-Direktgeltung:** Die Schweiz ist nicht EWR-Mitglied; Bauprodukte-Marktzugang läuft über das bilaterale Abkommen vom 21. Juni 1999 zwischen der Schweizerischen Eidgenossenschaft und der EG über die gegenseitige Anerkennung von Konformitätsbewertungen (MRA, SR 0.946.526.81), auf das BauPG Art. 6 Abs. 2 Bst. b ausdrücklich verweist. Die EU-CPR (305/2011 bzw. ab 08.01.2026 2024/3110) gilt in CH **nicht unmittelbar** — A = national für BauPG/BauPV, nicht EU/EEA. Das entspricht der Fallenliste (CH nur bilaterales MRA, nicht EEA).
 
-**0.3 Grundanforderung 7 BauPV enthält explizite Reuse-Sprache — anders als BauPG selbst:** Während das BauPG (Gesetzesebene) schweigt, übernimmt die BauPV (Verordnungsebene, Anhang I) wortgleich die alte EU-CPR-Grundanforderung Nr. 7 "Nachhaltige Nutzung der natürlichen Ressourcen" **inklusive** der Bst.-a-Formulierung zur "Wiederverwendbarkeit und Rezyklierbarkeit des Bauwerks, seiner Baustoffe und Teile nach dem Abriss" (s. REG-CH-1-002). Diese Anforderung betrifft das **Bauwerk als Ganzes nach Abriss**, nicht das einzelne wiederverwendete Bauprodukt beim erneuten Inverkehrbringen — anders akzentuiert als die neue EU-CPR 2024/3110, die (Stand W1-EU-Basisschicht) gezielt Regeln für das Inverkehrbringen bereits gebrauchter Produkte enthält.
+**0.3 Grundanforderung 7 BauPV enthält explizite Reuse-Sprache — anders als BauPG selbst:** Während das BauPG (Gesetzesebene) schweigt, übernimmt die BauPV (Verordnungsebene, Anhang I) wortgleich die alte EU-CPR-Grundanforderung Nr. 7 "Nachhaltige Nutzung der natürlichen Ressourcen" **inklusive** der Bst.-a-Formulierung zur "Wiederverwendbarkeit und Rezyklierbarkeit des Bauwerks, seiner Baustoffe und Teile nach dem Abriss" (s. REG-CH-1-090). Diese Anforderung betrifft das **Bauwerk als Ganzes nach Abriss**, nicht das einzelne wiederverwendete Bauprodukt beim erneuten Inverkehrbringen — anders akzentuiert als die neue EU-CPR 2024/3110, die (Stand W1-EU-Basisschicht) gezielt Regeln für das Inverkehrbringen bereits gebrauchter Produkte enthält.
 
 **0.4 Sub-national bedeutet in CH: 26 eigenständige Baugesetze, keine gemeinsame "Muster"-Ebene wie MBO/DE:** Anders als bei DE (MBO als Vorlage) gibt es in CH kein Bund-Kantone-Mustergesetz für das Baurecht selbst. Die einzigen gesamtschweizerischen Vereinheitlichungsinstrumente sind Konkordate zu **Teilaspekten** (IVHB für Baubegriffe/Messweisen, IVTH für technische Handelshemmnisse/VKF-Brandschutz, MuKEn für Energierecht) — das materielle Baubewilligungsrecht bleibt genuin kantonal, in der Praxis oft weiter an Gemeinden delegiert (hier nicht gesondert erhoben, s. Sub-Ebene-Deklaration).
 
@@ -30,26 +30,10 @@
 
 ### REG-CH-1-001 · BauPG (Bundesgesetz über Bauprodukte)
 
-- Titel: Bundesgesetz vom 21. März 2014 über Bauprodukte (Bauproduktegesetz, BauPG)
-- Fundstelle: Art. 1–10 (Zweck, Begriffe, Grundanforderungen, Leistungserklärung); SR 933.0
-- A: national · A-Ursprung: national (MRA-basiert, keine unmittelbare EU-Geltung) · Downstream-Verifikationsstatus: entfällt (kein Muster-/Bund-Länder-Dokument)
-- B: Primärfeld 1 · Nebenfelder: 2 (Grundanforderung mechanische Festigkeit/Standsicherheit, Art. 3 Abs. 2 Bst. a)
-- C: materialübergreifend
-- D: Gesetz
-- E: Inverkehrbringen · E-Wirkung: durchläuft
-- F1 (E3): schweigend · Bezugsgegenstand: gebrauchte/wiederverwendete Bauprodukte beim erneuten Inverkehrbringen — tatbestandlich nicht erfasst (kein Begriff, keine Ausnahme, keine Erschwerung)
-- F2 (E3): schweigend · Bezugsgegenstand: dieselbe Fallgruppe — Praxis muss auf Analogie zu Art. 5 Abs. 2 (Ausnahmen von der Leistungserklärungspflicht bei Sonderanfertigung/Denkmalschutz) zurückgreifen, ohne dass dies textlich für Reuse vorgesehen ist
-- G: entfällt (die geprüften Art. 1–10 enthalten keinen auf Reuse bezogenen eigenen Nachweistatbestand; die allgemeine Leistungserklärungspflicht nach Art. 5 ist G=1 Dokumentenlage, explizit=E1, aber ohne Reuse-Bezug)
-- Kernaussage: Das BauPG regelt Inverkehrbringen und Bereitstellung von Bauprodukten auf Basis des MRA mit der EU und verweist für Sicherheit auf harmonisierte Normen bzw. das allgemeine Sicherheitsgebot. Der Gesetzestext (Art. 1–10) enthält keinerlei Sonderregel, Begriffsdefinition oder Ausnahme für gebrauchte oder wiederaufgearbeitete Bauprodukte. Einzige textnahe Anknüpfung ist die allgemeine Ausnahme von der Leistungserklärungspflicht für Sonderanfertigungen und denkmalschutzgerechte Renovierung (Art. 5 Abs. 2 Bst. c), die aber nicht auf Reuse zugeschnitten ist.
-- Wortlautbeleg (Originalsprache): "Bauprodukte dürfen nur in Verkehr gebracht oder auf dem Markt bereitgestellt werden, wenn sie im Sinne des Artikels 3 Absatz 1 PrSG sicher sind" (Art. 4 Abs. 1 BauPG)
-- Beleg-Quelle: B0 · Zugänglichkeit: frei-primär · Bindungsakt: entfällt (Bundesgesetz, unmittelbar bindend)
-- Quelle: Tier 1 · https://www.fedlex.admin.ch/eli/cc/2014/495/de (Volltext bezogen über https://www.fedlex.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2014/495/20230901/de/pdf-a/fedlex-data-admin-ch-eli-cc-2014-495-20230901-de-pdf-a.pdf) · Fassung(as-amended) 2023-09-01 · Zugriff 2026-08-11
-- Status: in Kraft · seit 2014, Stand 2023-09-01
-- Sub-Ebene: entfällt (A=national)
-- Relationen: konkretisiert BauPV (REG-CH-1-002), determiniert Anwendbarkeit von REG-CH-1-002
-- Konfidenz: gesichert
+Dublette zu REG-CH-1-001 in CH-F1-3.md, verworfen am 2026-08-14, Grund: identischer Regelungsgegenstand (BauPG, kein Sonderregime für gebrauchte Bauprodukte); beide B0/frei-primär, CH-F1-3.md ist die Bundesebene-Haupterhebung mit präziserer Fundstellenangabe (Art. 1/2 statt Art. 1–10 pauschal) und Normtyp-Flag Grundnorm/Begriffsnorm — kein Informationsverlust.
 
-### REG-CH-1-002 · BauPV Anhang I Grundanforderung 7
+### REG-CH-1-090 · BauPV Anhang I Grundanforderung 7
+<!-- Umnummeriert 2026-08-14 von REG-CH-1-002: kollidierte mit CH-F1-3.md REG-CH-1-002 (BauPG Art. 5 Abs. 2 — Ausnahmen von der Leistungserklärungspflicht), anderer Regelungsgegenstand, siehe pruefung/korpus-hygiene.md -->
 
 - Titel: Verordnung vom 27. August 2014 über Bauprodukte (Bauprodukteverordnung, BauPV), Anhang I Ziff. 7
 - Fundstelle: Anhang I Ziff. 7 "Nachhaltige Nutzung der natürlichen Ressourcen" Bst. a–c (Art. 4 Abs. 1 BauPV); SR 933.01
@@ -75,7 +59,7 @@
 - Titel: Interkantonale Vereinbarung vom 23. Oktober 1998/25. November 2002 zum Abbau technischer Handelshemmnisse (IVTH); SR 172.056.5 (Bundesbeschluss über die Genehmigung); kantonal als Konkordat in Kraft
 - Fundstelle: Vereinbarung insgesamt (Grundlage für IOTH — Interkantonales Organ für technische Handelshemmnisse)
 - A: sub-national · A-Ursprung: sub-national (von den Kantonen selbst über BPUK/vormals Bau-, Planungs- und Umweltdirektoren-Konferenz erarbeitetes Konkordat) · Downstream-Verifikationsstatus: strukturell angenommen, nicht verifiziert (alle 26 Kantone Beitritt sekundärquellenbasiert angenommen, nicht einzeln primärquellenbasiert geprüft)
-- B: Primärfeld 6 · Nebenfelder: 2, 4 (VKF-Brandschutz, s. REG-CH-4-004)
+- B: Primärfeld 6 · Nebenfelder: 2, 4 (VKF-Brandschutz, s. REG-CH-4-090)
 - C: materialübergreifend
 - D: Gesetz (Konkordat, in jedem beigetretenen Kanton als eigener Erlass mit Gesetzesrang ratifiziert — kein eigener D-Wert für Konkordate im Schema; nächstliegende Einordnung analog Muster-/Bund-Länder-Kodierregel, hier aber mit unmittelbarer Bindung ohne weitere Transformation, daher Gesetz statt Muster-/Modellrecht)
 - E: Planung/Nachweis, Einbau/Abnahme · E-Wirkung: durchläuft
@@ -88,10 +72,11 @@
 - Quelle: Tier 1 · https://www.fedlex.admin.ch/eli/cc/2003/25/de · https://www.bpuk.ch/bpuk/konkordate/ivth · Fassung(as-amended) unbekannt (Stand 2003 laut Sekundärquelle, seither ggf. novelliert) · Zugriff 2026-08-11
 - Status: in Kraft · seit 2003-02-03 (laut Sekundärquelle)
 - Sub-Ebene: Stichprobe [nicht einzeln geprüft, s. Downstream-Verifikationsstatus] / nicht erhoben [alle 26 Kantone einzeln auf Beitritt]
-- Relationen: setzt um BauPG/BauPV in kantonaler Zuständigkeit, determiniert Anwendbarkeit von REG-CH-4-004 (VKF-Brandschutzvorschriften)
+- Relationen: setzt um BauPG/BauPV in kantonaler Zuständigkeit, determiniert Anwendbarkeit von REG-CH-4-090 (VKF-Brandschutzvorschriften)
 - Konfidenz: abgeleitet (Primärtext nicht vollständig gelesen)
 
-### REG-CH-4-004 · VKF-Brandschutzvorschriften (Schweizerische Brandschutzvorschriften)
+### REG-CH-4-090 · VKF-Brandschutzvorschriften (Schweizerische Brandschutzvorschriften)
+<!-- Umnummeriert 2026-08-14 von REG-CH-4-004: kollidierte mit CH-F4-7.md REG-CH-4-004 (MuKEn 2025, Graue Energie), anderer Regelungsgegenstand, siehe pruefung/korpus-hygiene.md -->
 
 - Titel: Brandschutznorm und Brandschutzrichtlinien der Vereinigung Kantonaler Feuerversicherungen (VKF), Ausgabe 2015 (mit Nachträgen)
 - Fundstelle: Gesamtwerk, insbesondere Brandschutznorm + Brandschutzrichtlinien ("Ordner A" = rechtsverbindlich für alle Kantone; "Ordner B" = unverbindliche Erläuterungen/Stand der Technik)
@@ -113,19 +98,7 @@
 - Konfidenz: unklar (B3/paywalled-nicht-eingesehen — Bindungsmechanismus gesichert, materieller Reuse-Gehalt nicht)
 
 ### REG-CH-4-005 · MuKEn (Mustervorschriften der Kantone im Energiebereich)
-
-**[Prüfung 2026-08-13 — KORRIGIERT + ID-Kollision:] Das Verabschiedungsdatum war falsch (s. u.). Ausserdem trägt dieses Objekt dieselbe ID `REG-CH-4-004`-Kollision wie unten erklärt, UND behandelt denselben Sachverhalt wie REG-CH-4-004 in `CH-F4-7.md` (dort korrektes Datum 29.08.2025, B1-Beleg per Medienmitteilung-PDF). Für die Synthese (W4) sollte dieses Objekt mit REG-CH-4-004 (CH-F4-7.md) zusammengeführt werden; dort ist die belastbarere Fassung.**
-
-- Titel: Mustervorschriften der Kantone im Energiebereich (MuKEn), aktuellste verabschiedete Fassung MuKEn 2025 (Plenarversammlung EnDK, 29.08.2025 — **korrigiert, s. Prüfvermerk oben; ursprünglich fälschlich "04.04.2025"**)
-- Fundstelle: Gesamtwerk (Modul-Struktur, u. a. Anforderungen an Bauteile/Gebäudehülle)
-- A: sub-national · A-Ursprung: sub-national (erarbeitet von der Konferenz Kantonaler Energiedirektoren, EnDK — selbst ein interkantonales Gremium) · Downstream-Verifikationsstatus: strukturell angenommen, nicht verifiziert (Sekundärquelle: 22 von 26 Kantonen wendeten Vorgängerfassung MuKEn 2014 laut Stand 09/2023 an, 4 in Umsetzung — bezogen auf die alte Fassung, MuKEn-2025-Umsetzungsstand kantonal nicht einzeln geprüft)
-- B: Primärfeld 4 · Nebenfelder: 5b
-- C: materialübergreifend
-- D: Muster-/Modellrecht (unverbindlich, Umsetzung durch Dritte erforderlich)
-- E: Planung/Nachweis · E-Wirkung: durchläuft
-- F1 (E3): schweigend · Bezugsgegenstand: Wiederverwendung von Bauteilen im MuKEn-Regelwerk selbst in dieser Sitzung nicht primärquellenbasiert geprüft (Modultext kostenpflichtig/nicht beschafft) — echte Erhebungslücke
-- F2 (E3): bedingend · Bezugsgegenstand: energetische Anforderungen an die Gebäudehülle (U-Werte) sind ein bekannter Praxis-Gatekeeper für wiederverwendete Fenster/Fassadenelemente, analog zur BE/NL-Diskussion (EPB/MPG) — E3-Einschätzung, nicht CH-textbelegt in dieser Sitzung
-- G: entfällt (kein Primärtext geprüft, kein Nachweistatbestand belastbar zuordenbar)
+Dublette zu REG-CH-4-004 in CH-F4-7.md, verworfen am 2026-08-14, Grund: identischer Regelungsgegenstand (MuKEn 2025, Graue Energie/Energiebereich), in CH-F4-7.md unter der Bezeichnung REG-CH-4-004 mit korrektem Verabschiedungsdatum (29.08.2025) und stärkerem Beleg (B1, Medienmitteilung-PDF) geführt; dort ist die belastbarere Fassung. Bereits bei der adversarischen Prüfung 2026-08-13 als Kollision/Dublette identifiziert; hier auf das verbindliche Verweisformat gebracht — kein Informationsverlust.
 - Kernaussage: MuKEn ist ein von der EnDK erarbeitetes, gesamtschweizerisches Muster für kantonales Energierecht im Gebäudebereich, das erst mit Überführung in kantonales Recht bindend wird — strukturell dem deutschen MBO/MVV-TB-Mechanismus verwandt, aber ohne Bundeskompetenz im Hintergrund (Energierecht im Gebäudebereich ist reine Kantonskompetenz). Die aktuelle Fassung MuKEn 2025 wurde am **29.08.2025** verabschiedet (korrigiert — die ursprünglich hier genannte 04.04.2025 ist per Live-Prüfung der endk.ch-Verabschiedungsmeldung widerlegt); der kantonale Umsetzungsstand wurde in dieser Sitzung nicht einzeln verifiziert.
 - Wortlautbeleg (Originalsprache): "Die Kantone sind gehalten, die MuKEn in ihrem Kanton umzusetzen" (Sekundärquelle EnDK/HEV, Paraphrase — MuKEn-Modultext selbst nicht eingesehen)
 - Beleg-Quelle: B3 · Zugänglichkeit: frei-primär (endk.ch), in dieser Sitzung nicht im Volltext gelesen · Bindungsakt: Bindungsmechanismus existiert (kantonale Umsetzungspflicht strukturell beschrieben), Listung im Einzelfall nicht verifiziert
@@ -174,7 +147,7 @@
 - Quelle: Tier 1 · https://www.fedlex.admin.ch/eli/cc/1984/1122_1122_1122/de (Volltext bezogen über https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1984/1122_1122_1122/20220101/de/pdf-a/fedlex-data-admin-ch-eli-cc-1984-1122_1122_1122-20220101-de-pdf-a-8.pdf) · Fassung(as-amended) 2022-01-01 (in dieser Sitzung gelesene Fassung; genauerer 2026-Stand nicht gegengeprüft) · Zugriff 2026-08-11
 - Status: in Kraft · seit 1985 (Grundfassung), Art. 7 zuletzt novelliert vor Stand 2022
 - Sub-Ebene: entfällt (A=national)
-- Relationen: determiniert Anwendbarkeit von REG-CH-3-008, REG-CH-3-009, REG-CH-3-010
+- Relationen: determiniert Anwendbarkeit von REG-CH-3-008, REG-CH-3-009, REG-CH-3-090
 - Konfidenz: gesichert
 
 ### REG-CH-3-008 · VVEA Art. 12 (Allgemeine Verwertungspflicht)
@@ -219,7 +192,8 @@
 - Relationen: konkretisiert von REG-CH-3-021 (TI RLE Art. 9 lit. n)
 - Konfidenz: gesichert
 
-### REG-CH-3-010 · VVEA Art. 17 (Trennung von Bauabfällen)
+### REG-CH-3-090 · VVEA Art. 17 (Trennung von Bauabfällen)
+<!-- Umnummeriert 2026-08-14 von REG-CH-3-010: kollidierte mit CH-F1-3.md REG-CH-3-010 (USG Art. 7 Abs. 6/6bis — Abfallbegriff), anderer Regelungsgegenstand, siehe pruefung/korpus-hygiene.md -->
 
 - Titel: Abfallverordnung (VVEA), Art. 17
 - Fundstelle: Art. 17 Abs. 1–3; SR 814.600
@@ -236,11 +210,12 @@
 - Beleg-Quelle: B0 · Zugänglichkeit: frei-primär · Bindungsakt: entfällt
 - Quelle: Tier 1 · https://www.fedlex.admin.ch/eli/cc/2015/891/de · Fassung(as-amended) 2022-04-01 · Zugriff 2026-08-11
 - Status: in Kraft · seit 2016-01-01
-- Sub-Ebene: entfällt (Bundesnorm; Gemeinden können laut kantonalem AbfG z. B. ZH § 16a weitergehende Trennung verlangen, s. REG-CH-3-015)
+- Sub-Ebene: entfällt (Bundesnorm; Gemeinden können laut kantonalem AbfG z. B. ZH § 16a weitergehende Trennung verlangen, s. REG-CH-3-091)
 - Relationen: wird kombiniert mit / ergänzt REG-CH-3-009
 - Konfidenz: gesichert
 
-### REG-CH-5a-011 · BöB Art. 29/30 (Zuschlagskriterien und technische Spezifikationen)
+### REG-CH-5a-090 · BöB Art. 29/30 (Zuschlagskriterien und technische Spezifikationen)
+<!-- Umnummeriert 2026-08-14 von REG-CH-5a-011: kollidierte mit CH-F1-3.md REG-CH-5a-011 (IVöB 2019 Art. 29/30 — interkantonales Vergaberecht), anderer Regelungsgegenstand (Bundesgesetz statt Konkordat), siehe pruefung/korpus-hygiene.md -->
 
 - Titel: Bundesgesetz vom 21. Juni 2019 über das öffentliche Beschaffungswesen (BöB), Art. 2, 29 und 30
 - Fundstelle: Art. 2 (Zweck), Art. 29 (Zuschlagskriterien), Art. 30 (Technische Spezifikationen); SR 172.056.1
@@ -332,7 +307,8 @@
 - Relationen: kollidiert mit keiner anderen Norm; strukturelles Analogon zu REG-CH-2-016/-017 (GE LCI Art. 117/118, dort aber ermöglichend statt nur ausnahmsweise)
 - Konfidenz: unklar (Primärtext nicht verifiziert — echte Lücke)
 
-### REG-CH-3-015 · ZH Abfallgesetz § 16a (Bauabfälle)
+### REG-CH-3-091 · ZH Abfallgesetz § 16a (Bauabfälle)
+<!-- Umnummeriert 2026-08-14 von REG-CH-3-015: kollidierte mit CH-F1-3.md REG-CH-3-015 (VeVA — Begleitschein-/Bewilligungspflicht für Sonderabfälle), anderer Regelungsgegenstand, siehe pruefung/korpus-hygiene.md -->
 
 - Titel: Abfallgesetz des Kantons Zürich (AbfG), § 1, § 2, § 16a
 - Fundstelle: § 1 (Zweck), § 16a (Entsorgung von Bauabfällen); LS/Ordnungsnummer 712.1
@@ -341,7 +317,7 @@
 - C: materialübergreifend
 - D: Gesetz
 - E: Rückbau/Sicherung, Aufbereitung/Prüfung · E-Wirkung: durchläuft
-- F1 (E3): bedingend · Bezugsgegenstand: § 16a Abs. 1 erlaubt den Gemeinden, eine über die VVEA-Trennpflicht (REG-CH-3-010) hinausgehende Trennung auf der einzelnen Baustelle zu verlangen — eröffnet kommunalen Spielraum, der Reuse-Trennung im Prinzip einschliessen könnte, ohne sie ausdrücklich zu benennen
+- F1 (E3): bedingend · Bezugsgegenstand: § 16a Abs. 1 erlaubt den Gemeinden, eine über die VVEA-Trennpflicht (REG-CH-3-090) hinausgehende Trennung auf der einzelnen Baustelle zu verlangen — eröffnet kommunalen Spielraum, der Reuse-Trennung im Prinzip einschliessen könnte, ohne sie ausdrücklich zu benennen
 - F2 (E3): schweigend · Bezugsgegenstand: dieselbe Fallgruppe — ob einzelne Zürcher Gemeinden diese Möglichkeit tatsächlich für Reuse-Trennung nutzen, wurde nicht erhoben
 - G: Dokumentenlage (explizit=E1, für § 16a Abs. 2 Nachweispflicht bei Aushub aus belasteten Standorten) / Sichtprüfung (inferiert=E3, für die gemeindliche Trennkontrolle)
 - Kernaussage: Das kantonale Abfallgesetz Zürich regelt die Abfallwirtschaft in Ausführung und Ergänzung der Bundesgesetzgebung (USG/VVEA) und erlaubt den Gemeinden in § 16a, für einzelne Baustellen eine weitergehende Abfalltrennung zu verlangen, als die VVEA bundesrechtlich vorschreibt. Der hier eingesehene Text stammt aus der ursprünglichen Fassung von 1994 (§ 16a mit Fussnotenverweis auf spätere Änderungen) — der aktuelle Stand zum Stichtag 2026-08-11 wurde nicht gegengeprüft, echte Lücke.
@@ -350,7 +326,7 @@
 - Quelle: Tier 1 · https://www.zh.ch/de/politik-staat/gesetze-beschluesse/gesetzessammlung/zhlex-ls/erlass-712_1-1994_09_25-2001_01_01-044.html (Volltext bezogen über http://www2.zhlex.zh.ch/Appl/zhlex_r.nsf/0/4E0BDDA2F59E42DBC125774C0048D57A/$file/712.1_25.9.94_69.pdf) · Fassung(as-amended) **unklar — eingesehene PDF-Fassung trägt Stand 1994 mit punktuellen Fussnoten-Änderungsvermerken bis ca. 2018, kein gesicherter 2026-Stand** · Zugriff 2026-08-11
 - Status: in Kraft · seit 1994, novelliert (Einzeländerungen nicht vollständig nachvollzogen)
 - Sub-Ebene: Stichprobe [ZH] / nicht erhoben [25 übrige Kantone]
-- Relationen: konkretisiert REG-CH-3-010 (VVEA Art. 17)
+- Relationen: konkretisiert REG-CH-3-090 (VVEA Art. 17)
 - Konfidenz: abgeleitet (Fassungsstand unsicher)
 
 ### Genève (GE)

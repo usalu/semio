@@ -3,18 +3,18 @@
 **Projekt:** BBSR/Zukunft Bau „Entwerfen mit Bestand" (Az. 10.08.18.7-25.06, LUH Hannover + UdK Berlin)
 **Auftrag:** Extraktion der Regelungsobjekte für Feld 4 (Schutzziele), 5a (Vergaberecht hart), 5b (Anreize/Förderung), 6 (Normen/Regelwerke), 7 (Haftung/Gewährleistung) für die Jurisdiktion UK, auf Basis der Quellenkarte `UK-quellen.md` sowie eigener Primärquellenprüfung dieser Session.
 **Stichtag/Fassungsstand:** 2026-08-11 · Amtssprache Englisch, Wortlautbelege im Original · alle Zugriffsvermerke „Zugriff 2026-08-11"
-**ID-Schema:** REG-UK-<Feld>-<lfd> (Feld 5a/5b analog zur Taxonomie mit Buchstabensuffix)
+**ID-Schema:** REG-GB-<Feld>-<lfd> (Feld 5a/5b analog zur Taxonomie mit Buchstabensuffix)
 **Primärportale dieser Session:** legislation.gov.uk (Statuszeilen + Volltext einzelner Sections per WebFetch), gov.uk-Guidance/Publications, consultations.hse.gov.uk, gov.scot, knowledge.bsigroup.com, bcsa.org.uk. WebSearch nur zur Auffindung, nie als alleiniger Beleg.
 
-**Wichtiger Korrekturhinweis gegenüber der Quellenkarte:** Bei eigener Primärprüfung dieser Session hat sich das Zurückziehungsdatum von **BS 8905:2011** als **28.01.2026** erwiesen (nicht 08.12.2023, wie in der Quellenkarte unter 6.2 vermerkt) — direkt von knowledge.bsigroup.com abgerufen und zitiert, s. REG-UK-6-002. Die Quellenkarte selbst war zum Zeitpunkt ihrer Erstellung nicht falsch belegt (Sekundärquelle nannte 2023), aber die BSI-Primärseite zeigt jetzt ein anderes Datum — möglicherweise wurde die BSI-Metadatenseite zwischenzeitlich aktualisiert oder das ursprüngliche Datum bezog sich auf einen Entwurfsstatus. Für die geltende Fassung zum Stichtag 2026-08-11 ist das hier neu verifizierte Datum maßgeblich. **Erneut live nachgeprüft (Folgesession):** knowledge.bsigroup.com zeigt weiterhin unverändert „Published: 31 Aug 2011 · Withdrawn: 28 Jan 2026", keine Nachfolgenorm referenziert — Wert bestätigt, keine Änderung nötig.
+**Wichtiger Korrekturhinweis gegenüber der Quellenkarte:** Bei eigener Primärprüfung dieser Session hat sich das Zurückziehungsdatum von **BS 8905:2011** als **28.01.2026** erwiesen (nicht 08.12.2023, wie in der Quellenkarte unter 6.2 vermerkt) — direkt von knowledge.bsigroup.com abgerufen und zitiert, s. REG-GB-6-002. Die Quellenkarte selbst war zum Zeitpunkt ihrer Erstellung nicht falsch belegt (Sekundärquelle nannte 2023), aber die BSI-Primärseite zeigt jetzt ein anderes Datum — möglicherweise wurde die BSI-Metadatenseite zwischenzeitlich aktualisiert oder das ursprüngliche Datum bezog sich auf einen Entwurfsstatus. Für die geltende Fassung zum Stichtag 2026-08-11 ist das hier neu verifizierte Datum maßgeblich. **Erneut live nachgeprüft (Folgesession):** knowledge.bsigroup.com zeigt weiterhin unverändert „Published: 31 Aug 2011 · Withdrawn: 28 Jan 2026", keine Nachfolgenorm referenziert — Wert bestätigt, keine Änderung nötig.
 
-**Nachtrag (Folgesession, Primärquellen-Update REG-UK-4-001):** Die Konsultationsseite `consultations.hse.gov.uk/bsr/review-of-approved-document-b-fire-safety/` wurde erneut per WebFetch geöffnet und diesmal **alle acht nummerierten Proposals im Volltext** eingesehen (zuvor war nur Proposal 4 zitiert) — s. aktualisiertes REG-UK-4-001 unten. Zusätzlich wurde das dort nur als Kernaussage-Vermutung geführte technische Detail zu Proposal 3 (Schwellenwert für brennbare Tragkonstruktionselemente) und zur Laminatglas-Ausnahme (Teil von Proposal 4) über eine gezielte Websuche mit Sekundärquellen-Gegenprüfung präzisiert: Der Schwellenwert liegt bei **11 m** oberhalb der Geländeoberkante, mit Klassifikationsanforderung **A2-s3, d2 oder besser** für tragende Bauteile oberhalb dieser Höhe, sofern kein „full fire engineered approach" gewählt wird (Quelle: Tier-1-Fachpresse-Zusammenfassung, keine direkte PDF-Volltextlesung des Amtstexts selbst — B2, nicht B1). Die Laminatglas-Ausnahme („laminated glass balustrades of certain dimensions and characteristics") ist durch eine Tier-3-Fachpressequelle (usglassmag.com) mit wörtlichem Zitat aus der HSE-Konsultationssprache belegt, ebenfalls **nicht** am PDF-Amtstext selbst gegengelesen — B2/B3, kein Faktum ohne weitere Primärtextprüfung. Beide Zusatzdetails sind entsprechend im aktualisierten Objekt REG-UK-4-001 mit eigenem Beleg-Quelle-Grad ausgewiesen, nicht auf B1 hochgestuft.
+**Nachtrag (Folgesession, Primärquellen-Update REG-GB-4-001):** Die Konsultationsseite `consultations.hse.gov.uk/bsr/review-of-approved-document-b-fire-safety/` wurde erneut per WebFetch geöffnet und diesmal **alle acht nummerierten Proposals im Volltext** eingesehen (zuvor war nur Proposal 4 zitiert) — s. aktualisiertes REG-GB-4-001 unten. Zusätzlich wurde das dort nur als Kernaussage-Vermutung geführte technische Detail zu Proposal 3 (Schwellenwert für brennbare Tragkonstruktionselemente) und zur Laminatglas-Ausnahme (Teil von Proposal 4) über eine gezielte Websuche mit Sekundärquellen-Gegenprüfung präzisiert: Der Schwellenwert liegt bei **11 m** oberhalb der Geländeoberkante, mit Klassifikationsanforderung **A2-s3, d2 oder besser** für tragende Bauteile oberhalb dieser Höhe, sofern kein „full fire engineered approach" gewählt wird (Quelle: Tier-1-Fachpresse-Zusammenfassung, keine direkte PDF-Volltextlesung des Amtstexts selbst — B2, nicht B1). Die Laminatglas-Ausnahme („laminated glass balustrades of certain dimensions and characteristics") ist durch eine Tier-3-Fachpressequelle (usglassmag.com) mit wörtlichem Zitat aus der HSE-Konsultationssprache belegt, ebenfalls **nicht** am PDF-Amtstext selbst gegengelesen — B2/B3, kein Faktum ohne weitere Primärtextprüfung. Beide Zusatzdetails sind entsprechend im aktualisierten Objekt REG-GB-4-001 mit eigenem Beleg-Quelle-Grad ausgewiesen, nicht auf B1 hochgestuft.
 
 ---
 
 ## Feld 4 · Schutzziele (Brand/Energie/Schadstoffe/Gesundheit)
 
-### REG-UK-4-001 · Approved Document B (Fire Safety)
+### REG-GB-4-001 · Approved Document B (Fire Safety)
 - Titel: *Approved Document B: Fire Safety* — Volume 1 (Dwellings), Volume 2 (Buildings other than dwellings); statutory guidance zu Schedule 1 Part B, Building Regulations 2010 (SI 2010/2214), veröffentlicht unter s. 6 Building Act 1984
 - Fundstelle: 2019 edition, konsolidiert mit 2020-, 2022- und 2025-Änderungen (Circular 01/2024, in Kraft 30.09.2026 laut Ankündigungsseite; separate Änderungsrunde in Kraft seit 02.03.2025); laufende Konsultation „Review of Approved Document B: Fire Safety" seit 25.03.2026, geschlossen 01.07.2026. Keine ELI (Approved Documents sind keine Legislation.gov.uk-Instrumente)
 - A: sub-national (England; eigenständige Fassungen für Wales/Schottland/Nordirland, s. Feld-2-Objekte zu den Building Regulations der jeweiligen Sub-Ebene)
@@ -31,10 +31,10 @@
 - Quelle: Tier 1 · https://consultations.hse.gov.uk/bsr/review-of-approved-document-b-fire-safety/ ; https://www.gov.uk/government/publications/approved-document-b-2024-amendments-circular-012024 ; verlinktes PDF https://consultations.hse.gov.uk/bsr/review-of-approved-document-b-fire-safety/user_uploads/2026---adb-proposed-text--section-5-.pdf (Existenz identifiziert, Volltext nicht extrahiert) · Fassung(as-amended) 2025-03-02 / Konsultation 2026-03-25–2026-07-01 · Zugriff 2026-08-11
 - Status: in Kraft, laufend novelliert; Teilaspekt (Verbotsreichweite Außenwände, 11-m-Schwellenwert, Laminatglas-Ausnahme) in Konsultation, geschlossen, Ergebnis offen · Datum letzte Kernänderung 2025-03-02
 - Sub-Ebene: Stichprobe [England] / nicht erhoben [Wales, Schottland, Nordirland — s. Feld-2-Objekte zu den jeweiligen Building Regulations für die dortigen Brandschutz-Pendants]
-- Relationen: konkretisiert Building Regulations 2010 Schedule 1 Part B; Schnittstelle zu REG-UK-2-Objekten (Building Regulations 2010/Approved Document A) bei Fassaden-Reuse
+- Relationen: konkretisiert Building Regulations 2010 Schedule 1 Part B; Schnittstelle zu REG-GB-2-Objekten (Building Regulations 2010/Approved Document A) bei Fassaden-Reuse
 - Konfidenz: gesichert (Kernbefund März 2025, Konsultationsstatus, acht Proposals im Wortlaut), abgeleitet (Reuse-Relevanz F1/F2, da Text selbst nicht reuse-spezifisch), unklar (exakter 11-m-/A2-s3,d2-Wortlaut und Laminatglas-Bedingungen — beide nur sekundärquellenbasiert, PDF-Amtstext „proposed text section 5" in dieser Session nicht selbst extrahiert; vor Synthesestufe zwingend am PDF gegenzulesen)
 
-### REG-UK-4-002 · Control of Asbestos Regulations 2012, Regulation 4 (Duty to Manage)
+### REG-GB-4-002 · Control of Asbestos Regulations 2012, Regulation 4 (Duty to Manage)
 - Titel: *The Control of Asbestos Regulations 2012* (SI 2012/632), Regulation 4 — Duty to manage asbestos in non-domestic premises
 - Fundstelle: Reg. 4, SI 2012/632 · ELI: https://www.legislation.gov.uk/id/uksi/2012/632
 - A: national (Großbritannien; separates, inhaltsgleiches Regime für Nordirland nicht Gegenstand dieser Prüfung)
@@ -54,7 +54,7 @@
 - Relationen: Vorbedingung für Rückbau-/Reuse-Objekte in Feld 2 (Bestandsbewertung) und Feld 3 (Abfallstatus)
 - Konfidenz: gesichert
 
-### REG-UK-4-003 · Approved Document L (Conservation of fuel and power) / Future Homes Standard (AD L 2026)
+### REG-GB-4-003 · Approved Document L (Conservation of fuel and power) / Future Homes Standard (AD L 2026)
 - Titel: *Approved Document L: Conservation of fuel and power*, 2021 edition incorporating 2023 amendments (Volume 1 Dwellings, Volume 2 Buildings other than dwellings); zusätzlich neue Fassung **ADL1 2026** im Rahmen des „Future Homes Standard", veröffentlicht 24.03.2026
 - Fundstelle: gov.uk-Publikationsseite; ELI entfällt (Approved Document, keine Legislation.gov.uk-Nummer)
 - A: sub-national (England)
@@ -71,34 +71,34 @@
 - Quelle: Tier 1 (Existenznachweis) / Tier 3 (Inhaltszusammenfassung) · https://www.gov.uk/government/publications/conservation-of-fuel-and-power-approved-document-l · Fassung(as-amended) 2023-02-02 (aktuell geltend) / 2026-03-24 (neue Fassung, noch nicht verpflichtend) · Zugriff 2026-08-11
 - Status: in Kraft (2021/2023-Fassung); **Entwurf/veröffentlicht, noch nicht verpflichtend** (2026-Fassung, Stufenplan 2027/2028)
 - Sub-Ebene: Stichprobe [England] / nicht erhoben [Wales, Schottland, Nordirland]
-- Relationen: ergänzt REG-UK-2-001 (Building Regulations 2010); potenzielle künftige Kollision mit Reuse-Zielen aus REG-UK-5B-001 (London Plan SI7), da energetische Mindestanforderungen Bestandsbauteile faktisch ausschließen können
+- Relationen: ergänzt REG-GB-2-001 (Building Regulations 2010); potenzielle künftige Kollision mit Reuse-Zielen aus REG-GB-5B-001 (London Plan SI7), da energetische Mindestanforderungen Bestandsbauteile faktisch ausschließen können
 - Konfidenz: gesichert (Status/Termine), abgeleitet (F1/F2-Reuse-Einordnung, da Primärtext nicht Zeile für Zeile geprüft)
 
 ---
 
 ## Feld 5a · Vergaberecht (hart)
 
-### REG-UK-5A-001 · Procurement Act 2023, ss. 11–14 (Principles and objectives) + National Procurement Policy Statement-Bindung
+### REG-GB-5A-001 · Procurement Act 2023, ss. 11–14 (Principles and objectives) + National Procurement Policy Statement-Bindung
 - Titel: *Procurement Act 2023* (c. 54), Part 1 Chapter 1, ss. 11–14
 - Fundstelle: s. 12 (Objectives), s. 13 (National procurement policy statement) · ELI: https://www.legislation.gov.uk/id/ukpga/2023/54
-- A: national (England, Wales, Nordirland; Schottland ausgenommen, s. REG-UK-5A-002)
+- A: national (England, Wales, Nordirland; Schottland ausgenommen, s. REG-GB-5A-002)
 - B: 5a (Vergaberecht, hart)
 - C: materialübergreifend
 - D: Gesetz
 - E: Planung/Nachweis
-- F1 (E3): schweigend — s. 12 nennt „value for money", „maximising public benefit", Transparenz und Integrität als Grundsätze, aber keinen ausdrücklichen Bezug zu Kreislaufwirtschaft, Wiederverwendung oder Materialherkunft; die Bindung an Nachhaltigkeit läuft mittelbar über die „have regard to"-Pflicht zur National Procurement Policy Statement (s. 13, s. REG-UK-5B-002), die selbst ebenfalls keinen expliziten Reuse-Bezug enthält
-- F2 (E3): schweigend bis bedingend — „maximising public benefit" eröffnet Auftraggebern Spielraum, Reuse-Kriterien freiwillig in die Vergabe einzubeziehen (wie in London praktiziert, s. REG-UK-5B-001), zwingt aber nicht dazu
+- F1 (E3): schweigend — s. 12 nennt „value for money", „maximising public benefit", Transparenz und Integrität als Grundsätze, aber keinen ausdrücklichen Bezug zu Kreislaufwirtschaft, Wiederverwendung oder Materialherkunft; die Bindung an Nachhaltigkeit läuft mittelbar über die „have regard to"-Pflicht zur National Procurement Policy Statement (s. 13, s. REG-GB-5B-002), die selbst ebenfalls keinen expliziten Reuse-Bezug enthält
+- F2 (E3): schweigend bis bedingend — „maximising public benefit" eröffnet Auftraggebern Spielraum, Reuse-Kriterien freiwillig in die Vergabe einzubeziehen (wie in London praktiziert, s. REG-GB-5B-001), zwingt aber nicht dazu
 - G: Dokumentenlage (G-inferiert — kein ausdrücklicher Nachweisweg zu Reuse-Anteilen im Gesetzestext selbst)
 - Kernaussage: Der Procurement Act 2023 ersetzt seit 24.02.2025 die Public Contracts Regulations 2015 und weitere Vorgängerregelwerke als zentrales Vergaberecht für England, Wales und Nordirland. Die Zielbestimmungen (s. 12) sind allgemein gehalten (Wertschöpfung, öffentlicher Nutzen, Transparenz, Integrität) und enthalten keinen ausdrücklichen Kreislaufwirtschafts- oder Reuse-Bezug; eine Nachhaltigkeitssteuerung erfolgt nur mittelbar über die National Procurement Policy Statement, der Auftraggeber gemäß s. 13 „have regard to" schulden.
 - Wortlautbeleg (Originalsprache): „In carrying out a covered procurement, a contracting authority must have regard to the importance of— (a) delivering value for money; (b) maximising public benefit; […]" (s. 12(1)); „A contracting authority must have regard to the national procurement policy statement." (s. 13, sinngemäß aus dem per WebFetch eingesehenen Normtext)
 - Beleg-Quelle: B1 (ss. 12 und 13 im Volltext per WebFetch eingesehen und zitiert) · Zugänglichkeit: frei-primär
 - Quelle: Tier 1 · https://www.legislation.gov.uk/ukpga/2023/54/section/12 ; https://www.legislation.gov.uk/ukpga/2023/54/section/13 · Fassung(as-amended) in Kraft seit 2025-02-24 · Zugriff 2026-08-11
 - Status: in Kraft seit 2025-02-24 · Datum
-- Sub-Ebene: Stichprobe [England, Wales, Nordirland] / nicht erhoben [Schottland separat, s. REG-UK-5A-002]
-- Relationen: setzt um/ersetzt Public Contracts Regulations 2015 (SI 2015/102) u. a.; Bindungsnorm für REG-UK-5B-002 (NPPS)
+- Sub-Ebene: Stichprobe [England, Wales, Nordirland] / nicht erhoben [Schottland separat, s. REG-GB-5A-002]
+- Relationen: setzt um/ersetzt Public Contracts Regulations 2015 (SI 2015/102) u. a.; Bindungsnorm für REG-GB-5B-002 (NPPS)
 - Konfidenz: gesichert (Normtext, Status), abgeleitet (Reuse-Schweigen, da nicht die gesamte Act-Struktur auf Kreislaufwirtschaftsklauseln durchsucht wurde)
 
-### REG-UK-5A-002 · Procurement Reform (Scotland) Act 2014, s. 9 (Sustainable Procurement Duty)
+### REG-GB-5A-002 · Procurement Reform (Scotland) Act 2014, s. 9 (Sustainable Procurement Duty)
 - Titel: *Procurement Reform (Scotland) Act 2014* (asp 12), Section 9 — Sustainable procurement duty; operationalisiert durch gov.scot-Statutory-Guidance
 - Fundstelle: s. 9 asp 2014/12 · ELI: https://www.legislation.gov.uk/id/asp/2014/12
 - A: sub-national (Schottland)
@@ -115,14 +115,14 @@
 - Quelle: Tier 1 · https://www.gov.scot/publications/procurement-reform-scotland-act-2014-statutory-guidance/pages/3/ ; Grundnorm https://www.legislation.gov.uk/asp/2014/12/contents · Fassung(as-amended) laufend geltend · Zugriff 2026-08-11
 - Status: in Kraft · Datum Grundnorm 2014 (Inkrafttreten der Duty später, in dieser Session nicht exakt datiert)
 - Sub-Ebene: Stichprobe [Schottland] — einzige erhobene Sub-Ebene für dieses Objekt
-- Relationen: kollidiert nicht, aber divergiert strukturell von REG-UK-5A-001 (separates Regime); vergleichbar mit REG-UK-5B-002 (NPPS) im Befund „Lebenszyklussprache ohne explizite Reuse-Terminologie"
+- Relationen: kollidiert nicht, aber divergiert strukturell von REG-GB-5A-001 (separates Regime); vergleichbar mit REG-GB-5B-002 (NPPS) im Befund „Lebenszyklussprache ohne explizite Reuse-Terminologie"
 - Konfidenz: abgeleitet (Wortlaut über Guidance, nicht direkt am Gesetzestext verifiziert)
 
 ---
 
 ## Feld 5b · Anreize/Förderung (weich)
 
-### REG-UK-5B-001 · London Plan, Policy SI7 + Circular Economy Statement Guidance (Greater London Authority)
+### REG-GB-5B-001 · London Plan, Policy SI7 + Circular Economy Statement Guidance (Greater London Authority)
 - Titel: *The London Plan* (2021, adoptiert), Policy SI7 „Reducing waste and supporting the circular economy"; operationalisiert durch *Circular Economy Statement Guidance* (London Plan Guidance)
 - Fundstelle: Policy SI7 (Kapitel „Sustainable Infrastructure"); Guidance-Fassung März 2022 (aktuell), Entwurfsfassung September 2020 (inhaltlicher Vorläufer, in dieser Session als einzige textlich auswertbare Fassung zugänglich)
 - A: sub-national (Greater London)
@@ -139,10 +139,10 @@
 - Quelle: Tier 1 · https://www.london.gov.uk/sites/default/files/ggbd_circular_economy_statement_guidance_2020_web.pdf ; https://www.london.gov.uk/sites/default/files/circular_economy_statements_lpg_0.pdf (März 2022, Endfassung) · Fassung(as-amended) London Plan 2021 (Policy), Guidance März 2022 · Zugriff 2026-08-11
 - Status: in Kraft · Datum London Plan 2021 (adoptiert), Guidance 2022-03
 - Sub-Ebene: Stichprobe [Greater London] / nicht erhoben [andere englische Kommunen/Regionen — Policy SI7 ist Londonspezifisch]
-- Relationen: konkretisiert Waste Framework Directive-Hierarchie (Vermeidung vor Wiederverwendung vor Recycling, vgl. REG-EU/REG-UK-3-Objekte); Kontrast zu REG-UK-5B-002 (NPPS, national, kein expliziter Reuse-Bezug)
+- Relationen: konkretisiert Waste Framework Directive-Hierarchie (Vermeidung vor Wiederverwendung vor Recycling, vgl. REG-EU/REG-GB-3-Objekte); Kontrast zu REG-GB-5B-002 (NPPS, national, kein expliziter Reuse-Bezug)
 - Konfidenz: gesichert (Zielwert, Kernprinzipien — aus Vorsession primärquellenbasiert, in dieser Session nicht widerlegt), abgeleitet (Fortgeltung identischer Formulierungen in der März-2022-Endfassung — plausibel, aber nicht gegengelesen)
 
-### REG-UK-5B-002 · National Procurement Policy Statement (NPPS), 13.02.2025
+### REG-GB-5B-002 · National Procurement Policy Statement (NPPS), 13.02.2025
 - Titel: *National Procurement Policy Statement*, veröffentlicht 13.02.2025, in Kraft seit 24.02.2025
 - Fundstelle: Statement als Ganzes (kein Artikel-/Absatzgliederung wie bei Gesetzestext) · kein ELI (kein Legislation.gov.uk-Instrument)
 - A: national (England-weit; Anwendungsbereich gekoppelt an Procurement Act 2023, s. dort für Ausnahmen)
@@ -151,7 +151,7 @@
 - D: Verwaltungsvorschrift (ministeriell veröffentlichtes, dem Parlament vorgelegtes Policy Statement mit gesetzlicher Bindungsnorm in s. 13 Procurement Act 2023)
 - E: Planung/Nachweis
 - F1 (E3): schweigend zu Reuse im Speziellen — enthält laut übereinstimmenden Sekundärquellen allgemeine Nachhaltigkeits-/Lebenszyklussprache (Treibhausgasreduktion, Abfallminimierung, „life-cycle of a product, service or works"), aber keinen identifizierten ausdrücklichen Bezug zu Bauteil-Wiederverwendung oder Kreislaufwirtschaft als Begriff
-- F2 (E3): bedingend — die „have regard to"-Pflicht (s. 13 Procurement Act 2023) macht die allgemeine Nachhaltigkeitssprache für alle erfassten öffentlichen Auftraggeber verbindlich zu berücksichtigen, ohne einen konkreten Reuse-Hebel vorzugeben; Wirkung bleibt damit unterhalb von Policy SI7 (REG-UK-5B-001)
+- F2 (E3): bedingend — die „have regard to"-Pflicht (s. 13 Procurement Act 2023) macht die allgemeine Nachhaltigkeitssprache für alle erfassten öffentlichen Auftraggeber verbindlich zu berücksichtigen, ohne einen konkreten Reuse-Hebel vorzugeben; Wirkung bleibt damit unterhalb von Policy SI7 (REG-GB-5B-001)
 - G: Dokumentenlage (G-inferiert)
 - Kernaussage: Die National Procurement Policy Statement ist das zentrale nationale Nachhaltigkeits-Rahmendokument für öffentliche Vergabe in England seit Inkrafttreten des Procurement Act 2023. Öffentliche Auftraggeber müssen sie gemäß s. 13 des Acts „have regard to" berücksichtigen. Ein ausdrücklicher Reuse- oder Kreislaufwirtschafts-Bauteilbezug konnte trotz mehrfacher Recherche in den zugänglichen Auszügen nicht nachgewiesen werden; der Primärtext (PDF) blieb technisch nicht extrahierbar.
 - Wortlautbeleg (Originalsprache): nicht zitierbar — Primärtext (PDF, assets.publishing.service.gov.uk) in mehreren Versuchen dieser und der Vorsession nicht als Text extrahierbar; laut Sekundärquellen (Fieldfisher, CIPS) enthält das Statement Sprache zu „optimising use of public funds by balancing effectiveness, efficiency and economy over the life-cycle of a product, service or works" sowie Treibhausgasreduktions- und Abfallminimierungspflichten für Bieter
@@ -159,14 +159,14 @@
 - Quelle: Tier 1 (Bindungsmechanismus) / Tier 3 (Inhalt) · https://assets.publishing.service.gov.uk/media/67ab330e1a116437c7ed88da/E03274856_National_Procurement_Policy_Statement_Elay.pdf ; https://questions-statements.parliament.uk/written-statements/detail/2025-02-13/hcws449 (Ankündigungs-Statement, in dieser Session HTTP 403) · Fassung(as-amended) 2025-02-13 · Zugriff 2026-08-11
 - Status: in Kraft seit 2025-02-24 · Datum
 - Sub-Ebene: entfällt (A = national)
-- Relationen: Bindungsakt für dieses Objekt ist REG-UK-5A-001 (Procurement Act 2023 s. 13); Kontrastobjekt zu REG-UK-5B-001 (London, expliziter Reuse-Bezug) und REG-UK-5A-002 (Schottland, ähnlicher Befund „Lebenszyklussprache ohne Reuse-Terminologie")
+- Relationen: Bindungsakt für dieses Objekt ist REG-GB-5A-001 (Procurement Act 2023 s. 13); Kontrastobjekt zu REG-GB-5B-001 (London, expliziter Reuse-Bezug) und REG-GB-5A-002 (Schottland, ähnlicher Befund „Lebenszyklussprache ohne Reuse-Terminologie")
 - Konfidenz: unklar (Primärtext nicht gelesen — die Aussage „kein expliziter Reuse-Bezug" ist ein Negativbefund auf Sekundärquellenbasis und in der nächsten Stufe zwingend am Primärtext zu verifizieren, sobald eine funktionierende PDF-Extraktion verfügbar ist)
 
 ---
 
 ## Feld 6 · Normen/Regelwerke
 
-### REG-UK-6-001 · Eurocodes — UK National Annexes (BSI)
+### REG-GB-6-001 · Eurocodes — UK National Annexes (BSI)
 - Titel: BS EN 1990 ff. mit UK National Annex (z. B. NA to BS EN 1990:2002+A1:2005)
 - Fundstelle: BSI-Shop (kostenpflichtig), keine ELI
 - A: national
@@ -179,14 +179,14 @@
 - G: rechnerischer Nachweis (G-explizit für die Bemessung allgemein; G-inferiert für den spezifischen Reuse-Fall, da die Eurocodes selbst keinen gesonderten Nachweisweg für wiederverwendete Bauteile enthalten)
 - Kernaussage: Die Eurocodes mit britischem National Annex bilden die technische Bemessungsgrundlage für Standsicherheitsnachweise in UK, verbindlich gemacht über die Verweisung in den Approved Documents (funktional äquivalent zur deutschen Technischen Baubestimmung). Sie sind kostenpflichtig über BSI vertrieben und enthalten nach bisheriger Prüfung keine eigenständigen Reuse-Bemessungsregeln.
 - Wortlautbeleg (Originalsprache): nicht verfügbar — paywalled, kein Zugang zum Normtext in dieser Recherche
-- Beleg-Quelle: B4 (nur Existenz-/Katalognachweis) · Zugänglichkeit: paywalled-nicht-eingesehen · **Bindungsakt: Approved Documents (s. REG-UK-2-002/2.2 der Feld-2-Erhebung), Verweisungsmechanismus strukturell bestätigt, konkrete Referenzliste nicht verifiziert** — dieses Objekt ist damit ausdrücklich **kein eigenständiges Faktum ohne den genannten Bindungsakt**
+- Beleg-Quelle: B4 (nur Existenz-/Katalognachweis) · Zugänglichkeit: paywalled-nicht-eingesehen · **Bindungsakt: Approved Documents (s. REG-GB-2-002/2.2 der Feld-2-Erhebung), Verweisungsmechanismus strukturell bestätigt, konkrete Referenzliste nicht verifiziert** — dieses Objekt ist damit ausdrücklich **kein eigenständiges Faktum ohne den genannten Bindungsakt**
 - Quelle: Tier 3 (BSI-Shop-Katalogeintrag als Existenznachweis, kein Sachbeleg) · https://shop.bsigroup.com · Fassung(as-amended) diverse, nicht spezifiziert · Zugriff 2026-08-11
 - Status: in Kraft (als Bemessungsgrundlage) · Datum unklar
 - Sub-Ebene: nicht erhoben
-- Relationen: gebunden über REG-UK-4-001 (Approved Document B, für Brandbemessungsklassen) und Feld-2-Objekte (Approved Document A); vgl. REG-UK-2-003/2.3
+- Relationen: gebunden über REG-GB-4-001 (Approved Document B, für Brandbemessungsklassen) und Feld-2-Objekte (Approved Document A); vgl. REG-GB-2-003/2.3
 - Konfidenz: unklar (paywalled, kein Primärtextzugriff)
 
-### REG-UK-6-002 · BS 8905:2011 — Framework for the assessment of the sustainable use of materials (ZURÜCKGEZOGEN)
+### REG-GB-6-002 · BS 8905:2011 — Framework for the assessment of the sustainable use of materials (ZURÜCKGEZOGEN)
 - Titel: *BS 8905:2011, Framework for the assessment of the sustainable use of materials. Guidance*
 - Fundstelle: BSI-Metadatenseite (knowledge.bsigroup.com), keine ELI
 - A: national
@@ -206,7 +206,7 @@
 - Relationen: ersetzt durch — keine Nachfolgenorm identifiziert (offene Lücke); zu prüfen, ob BS 8001:2017 (Circular Economy, laut Recherche in Revision) funktional an ihre Stelle tritt (nicht verifiziert)
 - Konfidenz: gesichert (Zurückziehungsdatum, direkt zitiert), unklar (Nachfolgefrage)
 
-### REG-UK-6-003 · National Structural Steelwork Specification (NSSS), Annex J — Sustainability Specification + Model Specification for the Purchase of Reclaimed Steel Sections
+### REG-GB-6-003 · National Structural Steelwork Specification (NSSS), Annex J — Sustainability Specification + Model Specification for the Purchase of Reclaimed Steel Sections
 - Titel: *National Structural Steelwork Specification for Building Construction*, 8th edition, Annex J — Sustainability Specification (1st edition); begleitend *Model Specification for the Purchase of Reclaimed Steel Sections* (BCSA Pub. No. 65/22)
 - Fundstelle: Annex J zur NSSS, 8th edition; effektiv seit 01.06.2022 (Publikation 10.02.2022), keine ELI
 - A: national
@@ -230,7 +230,7 @@
 
 ## Feld 7 · Haftung/Gewährleistung
 
-### REG-UK-7-001 · Defective Premises Act 1972, s. 1 i. V. m. Building Safety Act 2022, s. 135 (Limitation Periods)
+### REG-GB-7-001 · Defective Premises Act 1972, s. 1 i. V. m. Building Safety Act 2022, s. 135 (Limitation Periods)
 - Titel: *Defective Premises Act 1972* (c. 35), Section 1 (Duty to build dwellings properly); *Building Safety Act 2022* (c. 30), Section 135 (Limitation periods, fügt s. 4B Limitation Act 1980 ein)
 - Fundstelle: DPA 1972 s. 1; BSA 2022 s. 135 · ELI: https://www.legislation.gov.uk/id/ukpga/1972/35 ; https://www.legislation.gov.uk/id/ukpga/2022/30
 - A: national (England und Wales)
@@ -247,10 +247,10 @@
 - Quelle: Tier 1 · https://www.legislation.gov.uk/ukpga/1972/35/section/1 ; https://www.legislation.gov.uk/ukpga/2022/30/section/135 · Fassung(as-amended) DPA 1972 s. 1(5) geändert 2022-06-28; BSA 2022 s. 135 in Kraft seit 2022-06-28 · Zugriff 2026-08-11
 - Status: in Kraft (Grundgesetz 1972, materiell erweitert 2022) · Datum 2022-06-28
 - Sub-Ebene: Stichprobe [England und Wales] / nicht erhoben [Schottland, Nordirland — eigenständige zivilrechtliche Regime]
-- Relationen: erweitert Haftungsfolgen von REG-UK-2-Objekten (Building Regulations, Standsicherheit) und REG-UK-7-003 (Building Safety Act 2022 Part 5)
+- Relationen: erweitert Haftungsfolgen von REG-GB-2-Objekten (Building Regulations, Standsicherheit) und REG-GB-7-003 (Building Safety Act 2022 Part 5)
 - Konfidenz: gesichert (Normtext s. 1), abgeleitet (F2-Reuse-Einordnung; genaue s. 135-Absatzstruktur B2)
 
-### REG-UK-7-002 · Consumer Protection Act 1987, Part I (Produkthaftung)
+### REG-GB-7-002 · Consumer Protection Act 1987, Part I (Produkthaftung)
 - Titel: *Consumer Protection Act 1987* (c. 43), Part I
 - Fundstelle: ss. 1–4, insb. s. 2 (Liability for defective products), s. 4 (Defences) · ELI: https://www.legislation.gov.uk/id/ukpga/1987/43
 - A: national (setzt die **alte** EU-Produkthaftungsrichtlinie 85/374/EWG um; post-Brexit keine automatische Übernahme von VO/RL (EU) 2024/2853)
@@ -267,10 +267,10 @@
 - Quelle: Tier 1 · https://www.legislation.gov.uk/ukpga/1987/43/part/I ; https://www.legislation.gov.uk/ukpga/1987/43/section/4 · Fassung(as-amended) 2024-01-01 („assimilated"-Terminologie) · Zugriff 2026-08-11
 - Status: in Kraft, unverändert im hier relevanten Teil I · Datum
 - Sub-Ebene: nicht erhoben (A = national)
-- Relationen: kollidiert mit/divergiert von der EU-Achse dieses Projekts (VO/RL (EU) 2024/2853, nicht Teil des UK-Rechts); Schnittstelle zu REG-UK-1-Objekten (CPR/CE-Kennzeichnung)
+- Relationen: kollidiert mit/divergiert von der EU-Achse dieses Projekts (VO/RL (EU) 2024/2853, nicht Teil des UK-Rechts); Schnittstelle zu REG-GB-1-Objekten (CPR/CE-Kennzeichnung)
 - Konfidenz: gesichert (Gesetzesstruktur, s. 4-Wortlaut), abgeleitet (Reuse-Relevanz der „relevant time"-Definition — eigene rechtliche Schlussfolgerung dieser Extraktionsstufe, nicht im Gesetzestext selbst als Reuse-Regel benannt)
 
-### REG-UK-7-003 · Building Safety Act 2022, Part 5 (Remediation, Developer Liability, Warranties, Construction Products)
+### REG-GB-7-003 · Building Safety Act 2022, Part 5 (Remediation, Developer Liability, Warranties, Construction Products)
 - Titel: *Building Safety Act 2022* (c. 30), Part 5 — Remediation of certain defects, remediation costs, building industry schemes, prohibitions on development, new homes ombudsman scheme, warranties, construction products, fire safety amendments (ss. 116–ca. 156)
 - Fundstelle: Part 5, ss. 116 ff. · ELI: https://www.legislation.gov.uk/id/ukpga/2022/30
 - A: national (England und Wales, mit Modifikationen)
@@ -287,7 +287,7 @@
 - Quelle: Tier 1 · https://www.legislation.gov.uk/ukpga/2022/30/part/5 · Fassung(as-amended) Kernvorschriften in Kraft seit 2022-06-28, Einzelvorschriften teils prospective · Zugriff 2026-08-11
 - Status: teils in Kraft, teils Übergang (abschnittsweise Commencement) · Datum 2022-06-28 (Kern)
 - Sub-Ebene: Stichprobe [England und Wales] / nicht erhoben [Schottland, Nordirland]
-- Relationen: konkretisiert/erweitert REG-UK-7-001 (DPA 1972/s. 135 Verjährung); Überschneidung mit Feld 1 (construction products, dort ggf. eigenständig als REG-UK-1-003/1.3 zu führen) und REG-UK-4-001 (fire safety amendments)
+- Relationen: konkretisiert/erweitert REG-GB-7-001 (DPA 1972/s. 135 Verjährung); Überschneidung mit Feld 1 (construction products, dort ggf. eigenständig als REG-GB-1-003/1.3 zu führen) und REG-GB-4-001 (fire safety amendments)
 - Konfidenz: gesichert (Struktur/Status), unklar (materieller Inhalt einzelner Sections)
 
 ---

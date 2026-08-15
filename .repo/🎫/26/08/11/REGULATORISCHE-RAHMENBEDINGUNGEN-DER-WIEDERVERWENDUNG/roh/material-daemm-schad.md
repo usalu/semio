@@ -70,7 +70,8 @@
 
 ---
 
-### REG-BE-3-012 · Materialendecreet Art. 33/9 en Art. 33/14 — Asbestinventarisatieplicht (asbestattest) bij overdracht en generieke plicht 2032
+### REG-BE-3-091 · Materialendecreet Art. 33/9 en Art. 33/14 — Asbestinventarisatieplicht (asbestattest) bij overdracht en generieke plicht 2032
+<!-- Umnummeriert 2026-08-14 von REG-BE-3-012: kollidierte mit BE-WA-BR.md REG-BE-3-012 (Ordonnance du 5 juin 1997 relative aux permis d'environnement, Brüssel), anderer Regelungsgegenstand, siehe pruefung/korpus-hygiene.md -->
 
 - Titel: Decreet van 23 december 2011 betreffende het duurzaam beheer van materiaalkringlopen en afvalstoffen (Materialendecreet), Art. 33/9 en 33/14 (ingevoegd/gewijzigd bij het decreet houdende diverse bepalingen inzake omgeving, energie en openbare werken)
 - Fundstelle: Art. 33/9 (generieke plicht uiterlijk 31.12.2031); Art. 33/14 § 1–3 (informatieplicht bij overdracht onder levenden, geldend sinds 23.11.2022); vollzugsrechtlich konkretisiert durch Art. 86 Vlarema-8-wijziging (2 juli 2021) und Ministerieel besluit certificatiereglement asbest (22.04.2022)
