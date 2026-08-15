@@ -9,7 +9,9 @@
 
 ## 0 · Bund: Musterbauordnung (MBO) und Bauministerkonferenz-Beschlusslage
 
-### REG-DE-2-001 · Musterbauordnung (MBO) — Fassung 2002, geändert September 2024
+### REG-DE-2-051 · Musterbauordnung (MBO) — Fassung 2002, geändert September 2024
+<!-- Umnummeriert 2026-08-14 von REG-DE-2-001: kollidierte mit DE-F1-3.md REG-DE-2-001 (aBG/vBG), anderer Regelungsgegenstand, siehe pruefung/w4-dedup-arbeitsmenge.md -->
+<!-- ID-HISTORIE-MARKER — bitte nicht entfernen -->
 - Titel: Musterbauordnung (MBO) — Fassung November 2002, zuletzt geändert durch Beschluss der Bauministerkonferenz (BMK) vom 26./27.09.2024
 - Fundstelle: Gesamttext (83 S.); DIBt-Meldung vom 11.06.2025 nennt als materiellen Änderungsinhalt „Verfahrenserleichterungen für Solaranlagen und Nebenanlagen für Ladeinfrastruktur"
 - A: national (Muster ohne eigene Rechtskraft — Bindung erst über die 16 LBOs, s. u.) · B: 2 (Bautechnische Zulassung/Standsicherheit) · C: materialübergreifend · D: Techn.Baubestimmung-nah, aber eingeordnet als **Merkblatt/Muster** (Projektkonvention: unverbindliches Muster der Bauministerkonferenz, keine RVO/VV)
@@ -26,7 +28,8 @@
 - Relationen: konkretisiert durch → REG-DE-2-002…007 (LBOs der Stichprobe); setzt um → n/a
 - Konfidenz: gesichert (Existenz/Datum), abgeleitet (Reuse-Schweigen — nur Auszug, nicht Volltext eingesehen)
 
-### REG-DE-2-002 · 147. Bauministerkonferenz (20./21.11.2025, Würzburg) — Beschluss „Erleichterungen beim Umbau im Bestand"
+### REG-DE-2-052 · 147. Bauministerkonferenz (20./21.11.2025, Würzburg) — Beschluss „Erleichterungen beim Umbau im Bestand"
+<!-- Umnummeriert 2026-08-14 von REG-DE-2-002 (Kollision mit DE-F1-3.md, s. pruefung/w4-dedup-arbeitsmenge.md) -->
 - Titel: Beschluss der 147. Bauministerkonferenz, Würzburg, unter dem Motto „Einfacher, schneller, kostengünstiger bauen"
 - Fundstelle: Pressemitteilung Bayerisches Staatsministerium für Wohnen, Bau und Verkehr (StMB) vom 21.11.2025
 - A: national (BMK-Beschlussebene, noch keine LBO-Textänderung) · B: 2 · C: materialübergreifend · D: Merkblatt/Beschluss (ARGEBAU-Gremienbeschluss, keine eigene Rechtsform, Vorstufe zu MBO-Textänderung)
@@ -47,7 +50,8 @@
 
 ## 1 · Bayern (BY)
 
-### REG-DE-2-003 · Art. 63 BayBO — Abweichungen (Rechtsgrundlage „Gebäudetyp-e")
+### REG-DE-2-053 · Art. 63 BayBO — Abweichungen (Rechtsgrundlage „Gebäudetyp-e")
+<!-- Umnummeriert 2026-08-14 von REG-DE-2-003 (Kollision mit DE-F1-3.md, s. pruefung/w4-dedup-arbeitsmenge.md) -->
 - Titel: Bayerische Bauordnung (BayBO), Art. 63 Abweichungen
 - Fundstelle: Art. 63 Abs. 1–4 BayBO
 - A: sub-national (Bayern) · B: 2 · C: materialübergreifend · D: Gesetz (Landesgesetz)
@@ -64,7 +68,8 @@
 - Relationen: konkretisiert → REG-DE-2-001 (MBO-Abweichungsmechanismus); setzt um → n/a
 - Konfidenz: gesichert (Norm existiert, Fallgruppen benannt), abgeleitet (Reuse-Nutzung des Mechanismus — aus Sekundärquelle StMB, nicht aus dem Normtext selbst)
 
-### REG-DE-2-004 · Art. 54 BayBO — Bestandsschutz
+### REG-DE-2-060 · Art. 54 BayBO — Bestandsschutz
+<!-- Umnummeriert 2026-08-14 von REG-DE-2-004 (Kollision mit DE-F1-3.md, s. pruefung/w4-dedup-arbeitsmenge.md); zunächst nach REG-DE-2-054 verschoben, das seinerseits mit material-alu.md kollidierte — zweite Korrektur auf REG-DE-2-060 -->
 - Titel: Bayerische Bauordnung (BayBO), Art. 54 Abs. 4–6 (Bestandsschutz bestehender baulicher Anlagen)
 - Fundstelle: Art. 54 Abs. 4, 5, 6 BayBO
 - A: sub-national (Bayern) · B: 2 · C: materialübergreifend · D: Gesetz
@@ -85,7 +90,8 @@
 
 ## 2 · Nordrhein-Westfalen (NRW)
 
-### REG-DE-2-005 · BauO NRW 2018 — Novelle 2026 („Umbauordnung", § 69 Gebäudetyp E)
+### REG-DE-2-055 · BauO NRW 2018 — Novelle 2026 („Umbauordnung", § 69 Gebäudetyp E)
+<!-- Umnummeriert 2026-08-14 von REG-DE-2-005 (Kollision mit DE-F1-3.md, s. pruefung/w4-dedup-arbeitsmenge.md) -->
 - Titel: Bauordnung für das Land Nordrhein-Westfalen (Landesbauordnung 2018 — BauO NRW 2018), Fassung ab 01.09.2026
 - Fundstelle: Ausfertigung 21.07.2018 (GV. NRW. 2018 S. 421); zuletzt geändert durch Gesetz vom 21.07.2026 (GV. NRW. S. 537), Inkrafttreten der Änderung 01.09.2026; einschlägig insbesondere § 69 (Abweichungen) und die als „Umbauordnung" bezeichneten Erleichterungen für Bestandsumbau
 - A: sub-national (Nordrhein-Westfalen) · B: 2 · C: materialübergreifend · D: Gesetz
@@ -106,7 +112,8 @@
 
 ## 3 · Baden-Württemberg (BW)
 
-### REG-DE-2-006 · LBO-Reform Baden-Württemberg 2025 („Schnelles Bauen") — Bestandsschutz-Definition, §§ 27f/28d, §§ 56/73a
+### REG-DE-2-056 · LBO-Reform Baden-Württemberg 2025 („Schnelles Bauen") — Bestandsschutz-Definition, §§ 27f/28d, §§ 56/73a
+<!-- Umnummeriert 2026-08-14 von REG-DE-2-006 (Kollision mit DE-F1-3.md, s. pruefung/w4-dedup-arbeitsmenge.md) -->
 - Titel: Gesetz zur Änderung der Landesbauordnung für Baden-Württemberg — LBO-Reform „Schnelles Bauen"
 - Fundstelle: LBO BW §§ 2 (Begriffe/Bestandsschutz-Definition, neu eingefügt), 27f (Brandschutzanforderungen an tragende/aussteifende/raumabschließende Bauteile bei Nutzungsänderung), 28d (dieselbe Systematik für Rettungswege), 56 (Abweichungen, Ausnahmen, Befreiungen), 73a Abs. 1 (verfahrensfreie Abweichungen für Pilotprojekte)
 - A: sub-national (Baden-Württemberg) · B: 2 · C: materialübergreifend · D: Gesetz
@@ -127,7 +134,8 @@
 
 ## 4 · Hamburg (HH)
 
-### REG-DE-2-007 · Hamburgische Bauordnung (HBauO), Neufassung ab 2026 — Bestandsschutz-Erweiterung, „Hamburg Standard"
+### REG-DE-2-057 · Hamburgische Bauordnung (HBauO), Neufassung ab 2026 — Bestandsschutz-Erweiterung, „Hamburg Standard"
+<!-- Umnummeriert 2026-08-14 von REG-DE-2-007 (Kollision mit DE-F1-3.md, s. pruefung/w4-dedup-arbeitsmenge.md) -->
 - Titel: Hamburgische Bauordnung (HBauO), Neufassung, in Kraft seit 01.01.2026
 - Fundstelle: HmbGVBl. 2025 S. 93 (Verkündung), Änderungen HmbGVBl. 2025 S. 506, 508 (19.08.2025) und S. 679 (18.11.2025); Amtsblatt-Bereich landesrecht-hamburg.de → Gesetze/Verordnungen – 2 Verwaltung – 21 Besondere Verwaltungszweige – 213 Bauwesen – 2131 Bauordnung Bauaufsicht
 - A: sub-national (Hamburg) · B: 2 · C: materialübergreifend · D: Gesetz
@@ -148,7 +156,8 @@
 
 ## 5 · Sachsen (SN)
 
-### REG-DE-2-008 · Sächsische Bauordnung (SächsBO) — Bestandsschutz/Übergangsvorschriften, Abweichungen
+### REG-DE-2-058 · Sächsische Bauordnung (SächsBO) — Bestandsschutz/Übergangsvorschriften, Abweichungen
+<!-- Umnummeriert 2026-08-14 von REG-DE-2-008 (Kollision mit DE-F1-3.md, s. pruefung/w4-dedup-arbeitsmenge.md) -->
 - Titel: Sächsische Bauordnung (SächsBO), Bekanntmachung vom 11.05.2016
 - Fundstelle: §§ 4 Abs. 2 Satz 2 (Ausnahme energetische Nachrüstpflicht bei Bestand), 49 Abs. 2 (wesentliche Änderung steht Errichtung gleich), 67 (Abweichungen), 90 (Übergangsvorschriften)
 - A: sub-national (Sachsen) · B: 2 · C: materialübergreifend · D: Gesetz
@@ -169,7 +178,8 @@
 
 ## 6 · MVV TB — Einführungsstand je Land (Querschnitt zu Feld 1/6)
 
-### REG-DE-2-009 · MVV-TB-Einführungsstand in den 16 Ländern
+### REG-DE-2-059 · MVV-TB-Einführungsstand in den 16 Ländern
+<!-- Umnummeriert 2026-08-14 von REG-DE-2-009 (Kollision mit DE-F1-3.md, s. pruefung/w4-dedup-arbeitsmenge.md) -->
 - Titel: Verwaltungsvorschriften Technische Baubestimmungen (VV TB) der 16 Länder — Umsetzungsstand der jeweiligen MVV-TB-Ausgabe
 - Fundstelle: uneinheitlich, s. u.
 - A: sub-national (alle 16 Länder, uneinheitlich erhoben) · B: 1 (Produkt-/Konformitätsrecht) und 6 (Normen/Regelwerke) zugleich — VV TB ist der Bindungsakt, der DIN-Normen/techn. Regeln für die einzelnen Länder verbindlich macht · C: materialübergreifend · D: Verwaltungsvorschrift
@@ -190,7 +200,8 @@
 
 ## 7 · Bund, Feld 7: zivilrechtliche Flankierung des Gebäudetyp E
 
-### REG-DE-7-001 · Gebäudetyp-E-Gesetz (Arbeitstitel) — zivilrechtliche Erleichterung des Gebäudebaus
+### REG-DE-7-050 · Gebäudetyp-E-Gesetz (Arbeitstitel) — zivilrechtliche Erleichterung des Gebäudebaus
+<!-- Umnummeriert 2026-08-14 von REG-DE-7-001 (Kollision mit DE-F4-7.md REG-DE-7-001 BGB §434, s. pruefung/w4-dedup-arbeitsmenge.md) -->
 - Titel: Gesetz zur zivilrechtlichen Erleichterung des Gebäudebaus (Gebäudetyp-E-Gesetz) — Änderung von § 650a BGB (neuer Abs. 3) und Einfügung eines Kapitels für Verträge des Gebäudetyps E
 - Fundstelle: Regierungsentwurf vom 06.11.2024 (Kabinettsbeschluss); Bundestags-Drucksache 20/13959 vom 27.11.2024; Bundesrats-Drucksache 555/24 vom 08.11.2024
 - A: national (Bund, Zivilrecht — wirkt bundeseinheitlich, ist aber die zivilrechtliche Ergänzung zu den öffentlich-rechtlichen Länder-Gebäudetyp-E-Regelungen REG-DE-2-003/005/007) · B: 7 (Haftung/Gewährleistung) · C: materialübergreifend · D: Gesetz (im Gesetzgebungsverfahren)

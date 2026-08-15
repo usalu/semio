@@ -4,6 +4,7 @@ Recherchestand: 2026-08-11. Alle Primärquellen live geöffnet (WebSearch/WebFet
 
 ---
 
+[VERWORFEN, siehe w4-dedup-arbeitsmenge.md]
 ### REG-DE-2-001 · Bauartgenehmigung (aBG/vBG)
 - Titel: Musterbauordnung (MBO), § 16a Abs. 2 — Bauarten
 - Fundstelle: § 16a Abs. 2 MBO, Fassung November 2002, zuletzt geändert durch Beschluss der Bauministerkonferenz (BMK) vom 26./27.9.2024. Kein ELI ermittelt (Verwaltungsdokument der ARGEBAU, keine Rechtsnorm im engeren Sinn).
@@ -26,6 +27,7 @@ Recherchestand: 2026-08-11. Alle Primärquellen live geöffnet (WebSearch/WebFet
 
 ---
 
+[VERWORFEN, siehe w4-dedup-arbeitsmenge.md]
 ### REG-DE-2-002 · Zustimmung im Einzelfall (ZiE)
 - Titel: Musterbauordnung (MBO), § 20 — Nachweis der Verwendbarkeit von Bauprodukten im Einzelfall
 - Fundstelle: § 20 MBO, Fassung zuletzt geändert 26./27.9.2024, i.V.m. § 17 Abs. 1, § 16b Abs. 1 MBO

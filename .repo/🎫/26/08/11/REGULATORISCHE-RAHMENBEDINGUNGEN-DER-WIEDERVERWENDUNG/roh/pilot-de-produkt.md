@@ -41,6 +41,7 @@ Stichtag: 2026-08-11. Alle Fundstellen am 2026-08-11 im Portal geöffnet/gelesen
 
 ---
 
+[VERWORFEN, siehe w4-dedup-arbeitsmenge.md]
 ### REG-EU-1-003 · CPR 2024/3110 Art. 20 Abs. 1 — Wirtschaftsteilnehmerpflichten nur für hEN-/ETA-Produkte
 - Titel: wie REG-EU-1-001
 - Fundstelle: Art. 20 Abs. 1 (Kapitel III)
@@ -95,6 +96,7 @@ Stichtag: 2026-08-11. Alle Fundstellen am 2026-08-11 im Portal geöffnet/gelesen
 
 ---
 
+[VERWORFEN, siehe w4-dedup-arbeitsmenge.md]
 ### REG-EU-1-006 · CPR 2024/3110 Übergangsregime (Art. 94–96) — Doppelspurigkeit mit VO 305/2011 bis 2040
 - Titel: wie REG-EU-1-001
 - Fundstelle: Art. 94 (Aufhebung), Art. 95 (Ausnahme-/Übergangsregelungen), Art. 96 (Inkrafttreten)
@@ -185,6 +187,7 @@ Stichtag: 2026-08-11. Alle Fundstellen am 2026-08-11 im Portal geöffnet/gelesen
 
 ---
 
+[VERWORFEN, siehe w4-dedup-arbeitsmenge.md]
 ### REG-DE-1-011 · Ü-Zeichen-Grenzen — EuGH C-100/13 und Aufhebung der Bauregellisten
 - Titel: Urteil des Gerichtshofs (Zehnte Kammer) vom 16. Oktober 2014, Rechtssache C-100/13, Europäische Kommission/Bundesrepublik Deutschland; nachfolgend: DIBt-Bekanntmachung "Aufhebung der Bauregellisten A und B und Liste C" (Amtliche Mitteilungen 2019/1)
 - Fundstelle: EuGH-Urteil C-100/13, ECLI:EU:C:2014:2293, Tenor; DIBt Amtliche Mitteilungen 2019/1 vom 2019-03-29

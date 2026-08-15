@@ -23,6 +23,7 @@ Recherchestand: 2026-08-11. Primärquellen ausschließlich gesetze-im-internet.d
 
 ---
 
+[VERWORFEN, siehe w4-dedup-arbeitsmenge.md]
 ### REG-DE-3-002 · KrWG-Abfallende
 - Titel: Kreislaufwirtschaftsgesetz (KrWG)
 - Fundstelle: § 5 Abs. 1, Abs. 2

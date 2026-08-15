@@ -278,7 +278,8 @@
 
 ### Brussels Hoofdstedelijk Gewest / Région de Bruxelles-Capitale (BR)
 
-### REG-BE-3-008 · Ordonnance déchets 14.06.2012 — Legaldefinition réemploi (Art. 3)
+### REG-BE-3-101 · Ordonnance déchets 14.06.2012 — Legaldefinition réemploi (Art. 3)
+<!-- Umnummeriert 2026-08-14 von REG-BE-3-008: kollidierte mit BE-VL.md REG-BE-3-008 (VLAREMA), anderer Regelungsgegenstand (Region Brüssel), s. pruefung/w4-dedup-arbeitsmenge.md -->
 - Titel: Ordonnance du 14 juin 2012 relative aux déchets
 - Fundstelle: Art. 3 (Définitions)
 - A: sub-national (Brüssel) · B: 3 Abfall-/Stoffrecht · C: materialübergreifend · D: nat. Norm (Ordonnance, regionaler Gesetzesrang)
@@ -294,7 +295,8 @@
 - Relationen: textparallel zu REG-BE-3-001 (WA) · konkretisiert durch REG-BE-3-011 (BruDalex)
 - Konfidenz: gesichert
 
-### REG-BE-3-009 · Ordonnance déchets 14.06.2012 — Hierarchie (Art. 6) und Ende der Abfalleigenschaft (Art. 9)
+### REG-BE-3-102 · Ordonnance déchets 14.06.2012 — Hierarchie (Art. 6) und Ende der Abfalleigenschaft (Art. 9)
+<!-- Umnummeriert 2026-08-14 von REG-BE-3-009 (Kollision mit BE-VL.md, s. pruefung/w4-dedup-arbeitsmenge.md) -->
 - Titel: Ordonnance du 14 juin 2012 relative aux déchets
 - Fundstelle: Art. 6 (hiérarchie des déchets), Art. 9 (fin du statut de déchet)
 - A: sub-national (Brüssel) · B: 3 Abfall-/Stoffrecht · C: materialübergreifend · D: nat. Norm
@@ -310,7 +312,8 @@
 - Relationen: parallel zu REG-BE-3-002/REG-BE-3-003 (WA)
 - Konfidenz: gesichert (Struktur), abgeleitet (exakter Wortlaut der Kriterien in dieser Sitzung nicht erneut zitiert)
 
-### REG-BE-3-010 · Ordonnance déchets 14.06.2012 — Fördermaßnahmen (Art. 21–22)
+### REG-BE-3-103 · Ordonnance déchets 14.06.2012 — Fördermaßnahmen (Art. 21–22)
+<!-- Umnummeriert 2026-08-14 von REG-BE-3-010 (Kollision mit BE-VL.md, s. pruefung/w4-dedup-arbeitsmenge.md) -->
 - Titel: Ordonnance du 14 juin 2012 relative aux déchets
 - Fundstelle: Art. 21–22
 - A: sub-national (Brüssel) · B: 3 Abfall-/Stoffrecht (Schnittstelle 5b) · C: materialübergreifend · D: nat. Norm
@@ -326,7 +329,8 @@
 - Relationen: Rechtsgrundlage, auf die REG-BE-5b-002 (Be Circular) aufsetzen könnte (Verhältnis nicht geprüft)
 - Konfidenz: abgeleitet
 
-### REG-BE-3-011 · BruDalex (AGRBC 01.12.2016) — EPR-Zugangsrecht für Réemploi-Vorbereitung (Art. 2.2.7 § 3 / Art. 2.2.8 § 2)
+### REG-BE-3-104 · BruDalex (AGRBC 01.12.2016) — EPR-Zugangsrecht für Réemploi-Vorbereitung (Art. 2.2.7 § 3 / Art. 2.2.8 § 2)
+<!-- Umnummeriert 2026-08-14 von REG-BE-3-011 (Kollision mit BE-VL.md, s. pruefung/w4-dedup-arbeitsmenge.md) -->
 - Titel: Arrêté du Gouvernement de la Région de Bruxelles-Capitale du 1er décembre 2016 relatif à la gestion des déchets ("BruDalex"), konsolidiert u. a. mit AGRBC du 24 octobre 2024
 - Fundstelle: Titre II (responsabilité élargie des producteurs/EPR), Art. 2.2.7 § 3, Art. 2.2.8 § 2
 - A: sub-national (Brüssel) · B: 3 Abfall-/Stoffrecht (EPR-Mechanik) · C: materialübergreifend · D: Verwaltungsvorschrift (Arrêté du Gouvernement)

@@ -44,7 +44,8 @@
 
 ---
 
-### REG-EU-1-003 · CPR 2024/3110 Art. 20 Abs. 1 — Wirtschaftsteilnehmerpflichten nur für hEN-/ETA-Produkte
+### REG-EU-1-060 · CPR 2024/3110 Art. 20 Abs. 1 — Wirtschaftsteilnehmerpflichten nur für hEN-/ETA-Produkte
+<!-- Umnummeriert 2026-08-14 von REG-EU-1-003: kollidierte mit eu-produkt.md REG-EU-1-003 (Art. 21 Abs. 3, anderer Regelungsgegenstand); inhaltlich überlappt mit eu-produkt.md REG-EU-1-004, dort als kanonisch geführt; hier als eigenständiger DE-Kontext-Block erhalten, s. pruefung/w4-dedup-arbeitsmenge.md -->
 - Titel: wie REG-EU-1-001
 - Fundstelle: Art. 20 Abs. 1 (Kapitel III)
 - A: EU/EEA · B: 1 Produkt-/Konformitätsrecht · C: materialübergreifend · D: EU-VO
@@ -98,7 +99,8 @@
 
 ---
 
-### REG-EU-1-006 · CPR 2024/3110 Übergangsregime (Art. 94–96) — Doppelspurigkeit mit VO 305/2011 bis 2040
+### REG-EU-1-061 · CPR 2024/3110 Übergangsregime (Art. 94–96) — Doppelspurigkeit mit VO 305/2011 bis 2040
+<!-- Umnummeriert 2026-08-14 von REG-EU-1-006: kollidierte mit eu-produkt.md REG-EU-1-006 (Art. 14/15/16/18, anderer Regelungsgegenstand); inhaltlich überlappt mit eu-produkt.md REG-EU-1-007, dort als kanonisch geführt; hier als eigenständiger DE-Kontext-Block erhalten, s. pruefung/w4-dedup-arbeitsmenge.md -->
 - Titel: wie REG-EU-1-001
 - Fundstelle: Art. 94 (Aufhebung), Art. 95 (Übergangsregelungen), Art. 96 (Inkrafttreten)
 - A: EU/EEA · B: 1 Produkt-/Konformitätsrecht · C: materialübergreifend · D: EU-VO
