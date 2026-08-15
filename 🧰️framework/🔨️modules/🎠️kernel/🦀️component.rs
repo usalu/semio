@@ -498,6 +498,51 @@ pub enum UiDirtyScope {
     }
 }
 
+/// 🧾️ One host-projectable row in the session command timeline. The payload is deliberately
+/// presentation-neutral: the host owns windowing and retains entries beyond any visible range.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HistoryEntry {
+    pub seq: u64,
+    pub action_id: String,
+    pub label: String,
+    pub kind: String,
+    pub timestamp: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub op_lines: Vec<String>,
+    #[serde(default)]
+    pub applied: bool,
+    #[serde(default)]
+    pub revertible: bool,
+    #[serde(default = "history_entry_count")]
+    pub count: u32,
+}
+
+fn history_entry_count() -> u32 {
+    1
+}
+
+/// 🧾️ Ordered history delta returned in the same response as an accepted interaction.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HistoryPatch {
+    /// Monotonic command-log cursor after applying this patch.
+    pub cursor: u64,
+    /// Upserts, ordered newest-first to match the logical history projection.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub upserts: Vec<HistoryEntry>,
+    #[serde(default)]
+    pub can_undo: bool,
+    #[serde(default)]
+    pub can_redo: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active_alternative_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub current_checkpoint_id: Option<String>,
+    #[serde(default)]
+    pub command_filter: String,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InvocationResult {
@@ -512,6 +557,10 @@ pub struct InvocationResult {
     pub events: Vec<AppEvent>,
     #[serde(default)]
     pub ui_scope: UiDirtyScope,
+    /// 🧾️ Incremental command-history delivery. It is independent from `ui_scope`: history must
+    /// become visible before effects or an unrelated UI refresh can be queued.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub history_patch: Option<HistoryPatch>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

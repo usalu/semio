@@ -4924,15 +4924,15 @@ impl ShellState {
         self.active_utility_by_window.get(window_kind_id).map(String::as_str)
     }
 
-    /// 🖱️ The cursor the active utility requests while the pointer is over the active window's body — maps
+    /// 🖱️ The cursor the active utility requests while the pointer is inside the active window silhouette — maps
     /// `UtilityDefinition.cursor` onto a {@link ui_wgpu::wgpu::SemioCursor} (P5). `None` when no utility/cursor applies.
     pub(crate) fn utility_cursor_override(&self, x: f32, y: f32) -> Option<ui_wgpu::wgpu::SemioCursor> {
         let session = self.session.as_ref()?;
         let window_id = self.active_window_id.as_deref()?;
         let utility_id = self.active_utility_for_window(window_id)?;
         let cursor_name = session.app.utilities.iter().find(|utility| utility.id == utility_id)?.cursor.as_deref()?;
-        let rect = self.window_content_rects.get(window_id)?;
-        rect.contains(x, y).then(|| semio_cursor_from_name(cursor_name))
+        let visible = self.window_silhouettes.get(window_id).map_or_else(|| self.window_content_rects.get(window_id).is_some_and(|rect| rect.contains(x, y)), |silhouette| silhouette.contains(x, y));
+        visible.then(|| semio_cursor_from_name(cursor_name))
     }
 
     /// 🚦️ Whether window-scoped actions stay enabled: `true` when no utility is active or the active utility
@@ -7953,37 +7953,37 @@ impl ShellState {
         let show_fallback = placements.is_empty();
         self.window_content_rects.clear();
         self.window_silhouettes = silhouettes;
-        for (_, content, window_id) in placements {
-            self.window_content_rects.insert(window_id.clone(), content);
+        for (_, safe_body, window_id) in placements {
             let window_kind = session.app.window_kinds.iter().find(|kind| kind.id == window_id).cloned();
             let silhouette = self.window_silhouettes.get(&window_id).cloned();
             let mut window_chip_hits: Vec<(Rect, String)> = Vec::new();
+            let content_viewport = silhouette.as_ref().map(WindowSilhouette::content_bounds).unwrap_or(safe_body);
+            self.window_content_rects.insert(window_id.clone(), content_viewport);
             if let Some(ui) = self.window_ui.get(&window_id).cloned() {
                 let content_layout = window_kind
                     .as_ref()
                     .filter(|kind| Self::window_content_is_edgeless(kind.surface_kind))
                     .and(silhouette.clone())
-                    .map(|silhouette| silhouette.bounds)
-                    .unwrap_or(content);
-                let content_viewport = silhouette.as_ref().map(|silhouette| silhouette.bounds).unwrap_or(content);
-                let clip_rects = silhouette.as_ref().map(WindowSilhouette::content_clip_rects).unwrap_or_else(|| vec![content]);
+                    .map(|silhouette| silhouette.content_bounds())
+                    .unwrap_or(safe_body);
+                let clip_rects = silhouette.as_ref().map(WindowSilhouette::content_clip_rects).unwrap_or_else(|| vec![safe_body]);
                 let hit_regions: Vec<Rect> = clip_rects.iter().filter_map(|clip| Self::intersect_content_rect(*clip, content_viewport)).collect();
                 draw.begin_silhouette_clip(&clip_rects);
                 self.render_window_content(draw, overlay.as_deref_mut(), atlas, icons, input, theme, content_viewport, content_layout, &hit_regions, &ui, &window_id, gpu);
                 draw.end_silhouette_clip();
             }
             if let Some(kind) = window_kind {
-                let measures_outcome = self.render_window_measures_rail(draw, overlay, atlas, icons, input, theme, &content, &window_id, &kind, gpu);
+                let measures_outcome = self.render_window_measures_rail(draw, overlay, atlas, icons, input, theme, &safe_body, &window_id, &kind, gpu);
                 if let Some(hit) = measures_outcome.chip_hit {
                     window_chip_hits.push(hit);
                 }
-                if let Some(hit) = self.render_window_engagement_rail(draw, overlay, atlas, icons, input, theme, &content, &window_id, &kind, measures_outcome.reserve_width, gpu) {
+                if let Some(hit) = self.render_window_engagement_rail(draw, overlay, atlas, icons, input, theme, &safe_body, &window_id, &kind, measures_outcome.reserve_width, gpu) {
                     window_chip_hits.push(hit);
                 }
-                if let Some(hit) = self.render_window_actions_rail(draw, overlay, atlas, icons, input, theme, &content, &window_id, &session.app, &kind) {
+                if let Some(hit) = self.render_window_actions_rail(draw, overlay, atlas, icons, input, theme, &safe_body, &window_id, &session.app, &kind) {
                     window_chip_hits.push(hit);
                 }
-                self.render_utility_options_rail(draw, overlay, atlas, icons, input, theme, &content, &window_id, &kind, gpu);
+                self.render_utility_options_rail(draw, overlay, atlas, icons, input, theme, &safe_body, &window_id, &kind, gpu);
             }
             for (rect, control_id) in window_chip_hits {
                 input.register_hit(HitTarget { rect, event: None, control_id: Some(control_id), kind: HitKind::Button, drag_axis: None, drag_data: None });

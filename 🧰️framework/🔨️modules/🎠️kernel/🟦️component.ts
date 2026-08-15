@@ -432,6 +432,30 @@ export function resolveUiDirtyScope(scope: UiDirtyScope | undefined): UiDirtySco
   return scope ?? { kind: "full" };
 }
 
+/** @emoji 🧾️ One host-projectable command-history row, mirrored from Rust `HistoryEntry`. */
+export type HistoryEntry = {
+  readonly seq: number;
+  readonly actionId: string;
+  readonly label: string;
+  readonly kind: string;
+  readonly timestamp: string;
+  readonly opLines?: readonly string[];
+  readonly applied?: boolean;
+  readonly revertible?: boolean;
+  readonly count?: number;
+};
+
+/** @emoji 🧾️ Ordered history delta carried with an accepted invocation response. */
+export type HistoryPatch = {
+  readonly cursor: number;
+  readonly upserts?: readonly HistoryEntry[];
+  readonly canUndo?: boolean;
+  readonly canRedo?: boolean;
+  readonly activeAlternativeId?: string;
+  readonly currentCheckpointId?: string;
+  readonly commandFilter?: string;
+};
+
 /**
  * @emoji 📤️ Typed result of a plugin `handle-action`/`handle-command` call — mirrors the Rust
  * `InvocationResult`. Replaces the legacy `string[]` JSON-patch shape: operations are now typed
@@ -446,6 +470,7 @@ export type InvocationResponse = {
   readonly requestedEffects?: readonly HostEffect[];
   readonly events?: readonly AppEvent[];
   readonly uiScope?: UiDirtyScope;
+  readonly historyPatch?: HistoryPatch;
 };
 
 // 🐢️ `uiScope` deliberately left unset here (not `{kind: "none"}`) — `resolveUiDirtyScope` treats a

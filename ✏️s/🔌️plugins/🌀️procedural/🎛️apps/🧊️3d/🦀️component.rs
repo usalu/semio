@@ -902,9 +902,13 @@ pub fn procedural3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData)
 /// `📓️w1-mechanism-report.md`'s exhaustive field↔registrar census), so this stays a `.setup()` call
 /// from `🌀️procedural/🦀️component.rs`, flagged loudly as a genuine declaration gap in
 /// `📓️w1b-semio-s-plugin-procedural-report.md` rather than silently dropped.
+#[cfg(not(target_arch = "wasm32"))]
 pub fn register_dwg_mesh_bridge() {
     semio_framework_os::register_mesh_dwg_import_handler("3d.procedural", procedural3d_document_from_mesh);
 }
+
+#[cfg(target_arch = "wasm32")]
+pub fn register_dwg_mesh_bridge() {}
 //#endregion 🔖️MeshBridge
 
 //#region 🔖️ExtensionContributions

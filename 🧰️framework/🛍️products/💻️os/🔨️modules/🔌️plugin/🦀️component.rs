@@ -200,7 +200,7 @@ pub mod app {
     use semio_framework::{
         clipboard_action_definitions, element_id_segment, history_action_definitions, is_element_id,
         kernel::{
-            ActorId, AppEvent, ArtifactDiff, ArtifactHandle, ArtifactKind, ArtifactVersion, CapabilityRequirement, ClipboardError, ClipboardFragment, EditRef, HostEffect, HybridLogicalTimestamp, InverseMutation, InvocationId, InvocationResult,
+            ActorId, AppEvent, ArtifactDiff, ArtifactHandle, ArtifactKind, ArtifactVersion, CapabilityRequirement, ClipboardError, ClipboardFragment, EditRef, HistoryEntry, HistoryPatch, HostEffect, HybridLogicalTimestamp, InverseMutation, InvocationId, InvocationResult,
             KernelMutation, MutationId, PastePlacement, Rights, SchemaId, Scope, UndoGroup, UndoPolicy,
         },
         note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition,
@@ -6293,6 +6293,10 @@ pub mod app {
         fn hydrate_draft_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault>;
         /// 👥️ Packs the typed local presence snapshot and exposes both ephemeral generations.
         fn ephemeral_snapshot(&self) -> (Vec<u8>, u64, u64);
+        /// 🧾️ Returns a complete ordered history projection for initial connection or cursor resync.
+        fn history_snapshot(&mut self) -> Result<HistoryPatch, Fault> {
+            Ok(HistoryPatch::default())
+        }
         /// 🧮️ Object-safe counterpart to `ArtifactApp::Config`'s binary-pack encoding — the config-store
         /// twin of `document_pack` below.
         fn config_pack(&self) -> Result<store::ArtifactPackFiles, Fault>;
@@ -6753,6 +6757,8 @@ pub mod app {
         /// — part of the cache key so a folded ×count bump alone (no store-generation change) still
         /// invalidates a stale render.
         log_generation: u64,
+        /// 🧾️ Sequence ids whose host-projected rows changed since the last invocation response.
+        history_dirty_sequences: HashSet<u64>,
         history_filter: HistoryCommandFilter,
         /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): every owned child's LIVE store, keyed by
         /// `(slot, child_id)` — mirrors how `store`/`config_store`/`draft_store` above each hold one
@@ -6866,6 +6872,7 @@ pub mod app {
                 command_log: Vec::new(),
                 next_command_seq: 0,
                 log_generation: 0,
+                history_dirty_sequences: HashSet::new(),
                 history_filter: HistoryCommandFilter::default(),
                 children: HashMap::new(),
                 pending_child_pins: Vec::new(),
@@ -7056,6 +7063,7 @@ pub mod app {
                 count: 1,
                 inverse,
             });
+            self.history_dirty_sequences.insert(self.next_command_seq);
             self.log_generation += 1;
         }
 
@@ -7087,10 +7095,14 @@ pub mod app {
                 if let Some(id) = config_edit_id {
                     last.config_edit_ids.push(id);
                 }
+                self.history_dirty_sequences.insert(last.seq);
                 self.log_generation += 1;
                 return;
             }
             self.push_log_entry(action_id, label, kind, edit_id, config_edit_id, None, inverse);
+            if matches!(kind, ActionKind::History) {
+                self.history_dirty_sequences.extend(self.command_log.iter().map(|entry| entry.seq));
+            }
         }
 
         /// @emoji 🕰️ Appends a command-log entry for every VCS edit not yet referenced by the log —
@@ -7189,6 +7201,52 @@ pub mod app {
             }
         }
 
+        /// 🧾️ Converts the authoritative command log into a typed host projection patch. Rows are
+        /// never folded or capped here; the host controls its own visible window.
+        fn history_patch(&mut self, snapshot: bool) -> Result<HistoryPatch, Fault> {
+            self.refresh_cache()?;
+            let history = self.cache.as_ref().expect("history cache refreshed").3.clone();
+            let dirty = std::mem::take(&mut self.history_dirty_sequences);
+            let upserts = history
+                .commands
+                .iter()
+                .filter(|entry| snapshot || dirty.contains(&entry.seq))
+                .map(|entry| HistoryEntry {
+                    seq: entry.seq,
+                    action_id: entry.action_id.clone(),
+                    label: entry.label.clone(),
+                    kind: match entry.kind {
+                        ActionKind::Mutation => "mutation",
+                        ActionKind::History => "history",
+                        ActionKind::Clipboard => "clipboard",
+                        ActionKind::View => "view",
+                        ActionKind::Shell => "shell",
+                        ActionKind::Interaction => "interaction",
+                    }
+                    .into(),
+                    timestamp: entry.timestamp.clone(),
+                    op_lines: entry.op_lines.clone(),
+                    applied: entry.applied,
+                    revertible: entry.revertible,
+                    count: entry.count,
+                })
+                .collect();
+            Ok(HistoryPatch {
+                cursor: self.log_generation,
+                upserts,
+                can_undo: history.can_undo,
+                can_redo: history.can_redo,
+                active_alternative_id: history.active_alternative_id,
+                current_checkpoint_id: history.current_checkpoint_id,
+                command_filter: match history.command_filter {
+                    HistoryCommandFilter::All => "all",
+                    HistoryCommandFilter::WithoutMutations => "withoutMutations",
+                    HistoryCommandFilter::OnlyMutations => "onlyMutations",
+                }
+                .into(),
+            })
+        }
+
         /// @emoji 🗂️ Refreshes the snapshot cache if the store advanced, the command log grew/folded, or
         /// the history filter changed since the last materialization. The key is recomputed a SECOND time
         /// after `backfill_command_log` — backfill itself may `push_log_entry` (bumping `log_generation`),
@@ -7243,6 +7301,7 @@ pub mod app {
                 requested_effects: effects,
                 events,
                 ui_scope,
+                history_patch: None,
             }
         }
 
@@ -7312,6 +7371,7 @@ pub mod app {
                 requested_effects: effects,
                 events,
                 ui_scope,
+                history_patch: None,
             }
         }
 
@@ -7615,7 +7675,7 @@ pub mod app {
                 last.child_edit_ids = child_edit_ids;
             }
 
-            Ok(InvocationResult { output: DslValue::Null, mutations, inverse_group: UndoGroup { invocation_id, mutations: mutation_ids, inverse_mutations, member_edits }, diagnostics: Vec::new(), requested_effects: effects, events, ui_scope })
+            Ok(InvocationResult { output: DslValue::Null, mutations, inverse_group: UndoGroup { invocation_id, mutations: mutation_ids, inverse_mutations, member_edits }, diagnostics: Vec::new(), requested_effects: effects, events, ui_scope, history_patch: None })
         }
 
         /// @emoji 🕸️ Re-syncs `self.composition`'s ownership/link graph from the parent's own live
@@ -8256,17 +8316,11 @@ pub mod app {
             Ok(Self::empty_result("configCommand", meta, Vec::new(), Vec::new(), semio_framework::kernel::UiDirtyScope::Full))
         }
 
-        /// @emoji 🕰️ Upgrades `result.ui_scope` to also refresh the framework history panel body whenever
-        /// `dispatch_action`/`dispatch_command`/`dispatch_import_media` actually logged something
-        /// (`log_generation` advanced) — the seam that makes the panel live without every action opting in.
-        fn finish_recorded(&self, log_generation_before: u64, verb: &str, mut result: InvocationResult) -> InvocationResult {
+        /// 🧾️ Attaches the command-log delta directly to the accepted invocation response. History is
+        /// no longer a plugin-rendered panel body, so this deliberately leaves `ui_scope` untouched.
+        fn finish_recorded(&mut self, log_generation_before: u64, _verb: &str, mut result: InvocationResult) -> InvocationResult {
             if self.log_generation != log_generation_before {
-                // 🕹️ `Interaction`-kind rows (the six injected hover/selection verbs) stay out of the
-                // history panel exactly like `View`-kind rows — see `dispatch_interaction_action`'s doc.
-                let skip_history_panel = self.registry.get(verb).is_some_and(|def| matches!(def.kind, ActionKind::View | ActionKind::Interaction));
-                if !skip_history_panel {
-                    result.ui_scope = with_history_panel_scope(result.ui_scope);
-                }
+                result.history_patch = self.history_patch(false).ok();
             }
             result
         }
@@ -8276,24 +8330,6 @@ pub mod app {
     /// undo/redo/checkpoint/alternative command) so it can re-render history-dependent surfaces.
     fn history_changed_event() -> AppEvent {
         AppEvent { kind: "history-changed".into(), payload: DslValue::Null }
-    }
-
-    /// @emoji 🕰️ Upgrades a returned `UiDirtyScope` to also cover the framework history panel body
-    /// (`FRAMEWORK_HISTORY_BODY_KEY`) — `Full` is already maximal and passes through unchanged, `None`
-    /// becomes a `Partial` naming just the history body, and an existing `Partial` gains it alongside
-    /// whatever the app already asked to refresh (idempotent — checks before pushing).
-    fn with_history_panel_scope(scope: semio_framework::kernel::UiDirtyScope) -> semio_framework::kernel::UiDirtyScope {
-        use semio_framework::kernel::UiDirtyScope;
-        match scope {
-            UiDirtyScope::Full => UiDirtyScope::Full,
-            UiDirtyScope::None => UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: vec![FRAMEWORK_HISTORY_BODY_KEY.to_string()], utilities: false, tools: false, engagements: false, measures: false, labels: false },
-            UiDirtyScope::Partial { window_bodies, mut panel_bodies, utilities, tools, engagements, measures, labels } => {
-                if !panel_bodies.iter().any(|key| key == FRAMEWORK_HISTORY_BODY_KEY) {
-                    panel_bodies.push(FRAMEWORK_HISTORY_BODY_KEY.to_string());
-                }
-                UiDirtyScope::Partial { window_bodies, panel_bodies, utilities, tools, engagements, measures, labels }
-            }
-        }
     }
 
     impl<A: ArtifactApp> PluginApp for VcsArtifactApp<A> {
@@ -8355,6 +8391,10 @@ pub mod app {
 
         fn take_last_emit_wire(&mut self) -> Option<(Vec<u8>, Vec<u8>, Vec<u8>)> {
             self.last_emit_wire.take()
+        }
+
+        fn history_snapshot(&mut self) -> Result<HistoryPatch, Fault> {
+            self.history_patch(true)
         }
 
         fn hydrate_document_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault> {
@@ -11635,6 +11675,7 @@ pub mod plugin_runtime {
                         requested_effects: Vec::new(),
                         events: Vec::new(),
                         ui_scope: UiDirtyScope::None,
+                        history_patch: None,
                     })
                 }),
             );

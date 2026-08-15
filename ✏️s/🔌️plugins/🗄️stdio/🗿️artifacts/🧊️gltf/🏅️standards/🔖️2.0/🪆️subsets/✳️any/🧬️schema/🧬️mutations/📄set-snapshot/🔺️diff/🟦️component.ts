@@ -1,3 +1,3 @@
-/** 🔺 Set-snapshot derives a sparse `between(base, snapshot)` diff, never a replacement slot. */
+/** 🔺️ set-snapshot sparse diff. */
 import type { GltfDiff } from '../../../🔺️diff/🟦️component.ts';
-export type GltfSetSnapshotDiff = GltfDiff;
+export type SetSnapshotDiff = GltfDiff;

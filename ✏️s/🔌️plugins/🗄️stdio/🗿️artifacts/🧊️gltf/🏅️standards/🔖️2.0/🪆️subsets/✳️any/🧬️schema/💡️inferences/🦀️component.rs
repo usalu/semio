@@ -1,14 +1,14 @@
 //! 💡️ GltfInference — the fourth schema family alongside snapshot/diff/mutations (ticket
 //! 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Directory shape
-//! mirrors `🧬️mutations/`: this file is the family-root assembly while `📦bounds/` hosts the
-//! authoritative decoded static-pose geometry kernel and its complete typed result contract.
+//! mirrors `🧬️mutations/`: this file is the family-root assembly while semantic components own
+//! shared measures, each indicator group, and aggregate geometry.
 
 use crate::artifacts::gltf::schema::snapshot::GltfSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
 
-use super::bounds::{compute_gltf_geometry, GltfGeometricInference};
+use super::geometry::{compute_gltf_geometry, GltfGeometricInference};
 
 //#region 🔖️Inference
 /// 💡️ Complete universal geometric inference for a glTF snapshot.

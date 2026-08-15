@@ -197,9 +197,10 @@ impl DockState {
             if let Some(node) = node_at(&self.root, path) {
                 let rect = bounds;
                 if let DockNode::Stack { windows, active } = node {
-                    let layout = layout_stack_cap(windows, active, window_labels, atlas, theme, rect, true);
-                    silhouettes.insert(active.clone(), WindowSilhouette::from_measured_top(rect, layout.gap_x - rect.x, rect.x + rect.w - (layout.gap_x + layout.gap_w), theme.control_height));
-                    out.push((path.clone(), stack_body_chrome_rect(rect, theme, windows, &layout), active.clone()));
+                    let layout = layout_stack_cap(windows, window_labels, atlas, theme, rect, true);
+                    let silhouette = stack_window_silhouette(rect, theme, &layout);
+                    out.push((path.clone(), silhouette.safe_body_rect(), active.clone()));
+                    silhouettes.insert(active.clone(), silhouette);
                 }
             }
             return (out, silhouettes);
@@ -1048,20 +1049,33 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
     let focus_w = measure_cap_button(ctx.atlas, theme, focus_icon, focus_label);
     let close_w = measure_cap_button(ctx.atlas, theme, "x", "Close");
     let controls_w = focus_w + close_w;
-    let per_tab_chrome = windows.len() > 1;
     let mut tab_x = cap_rect.x;
-    let mut active_tab_x = cap_rect.x;
-    for (index, window_id) in windows.iter().enumerate() {
+    let mut tabs = Vec::with_capacity(windows.len());
+    for window_id in windows {
         let label = ctx.window_labels.get(window_id).map(String::as_str).unwrap_or(window_id);
         let icon_id = ctx.window_icon_ids.get(window_id).map(String::as_str).unwrap_or("app-window");
         let tw = dock_tab_content_width(ctx.atlas, theme, label);
         let tab_rect = Rect::new(tab_x, cap_y, tw, tab_h);
+        tabs.push((window_id.as_str(), label, icon_id, tab_rect));
+        tab_x += tw;
+    }
+    let gap_x = tab_x;
+    let controls_x = cap_rect.x + cap_rect.w - controls_w;
+    let gap_w = (controls_x - gap_x).max(0.0);
+    let silhouette = WindowSilhouette::from_measured_top(bounds, gap_x - bounds.x, controls_w, tab_h);
+
+    if body_fill {
+        let content_bounds = silhouette.content_bounds();
+        ctx.draw.begin_silhouette_clip(&silhouette.content_clip_rects());
+        ctx.draw.push_solid([content_bounds.x, content_bounds.y, content_bounds.w, content_bounds.h], theme.canvas_clear);
+        render_body(content_bounds, active);
+        ctx.draw.end_silhouette_clip();
+    }
+
+    for (window_id, label, icon_id, tab_rect) in &tabs {
         let tab_glass = ctx.draw.push_glass([tab_rect.x, tab_rect.y, tab_rect.w, tab_rect.h], 0.0, theme.glass(Level::Window));
         ctx.draw.begin_glass_content(tab_glass);
-        let is_active = window_id == active;
-        if is_active {
-            active_tab_x = tab_x;
-        }
+        let is_active = *window_id == active;
         let stack_active_tab = is_active && globally_active;
         let hovered = tab_rect.contains(ctx.input.pointer_x, ctx.input.pointer_y);
         let tint = if stack_active_tab {
@@ -1073,37 +1087,20 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
         };
         let icon_w = paint_dock_tab_icon(ctx, icon_id, tab_rect.x + theme.padding_standard, tab_rect, tint);
         dock_text(ctx, label, tab_rect.x + theme.padding_standard + icon_w, tab_rect.y + (tab_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, tint);
-        ctx.input.register_hit(HitTarget { rect: tab_rect, event: None, control_id: Some(format!("dock.tab.{}.{}", path_str(path), window_id)), kind: HitKind::Window, drag_axis: None, drag_data: None });
+        ctx.input.register_hit(HitTarget { rect: *tab_rect, event: None, control_id: Some(format!("dock.tab.{}.{}", path_str(path), window_id)), kind: HitKind::Window, drag_axis: None, drag_data: None });
         ctx.draw.end_glass_content();
-        tab_x += tw;
     }
-    let gap_x = tab_x;
-    let controls_x = cap_rect.x + cap_rect.w - controls_w;
-    let gap_w = (controls_x - gap_x).max(0.0);
     let controls_rect = Rect::new(controls_x, cap_y, controls_w, tab_h);
     let controls_glass = ctx.draw.push_glass([controls_rect.x, controls_rect.y, controls_rect.w, controls_rect.h], 0.0, theme.glass(Level::Window));
     ctx.draw.begin_glass_content(controls_glass);
     render_cap_action_group(ctx, controls_rect, &[("dock.focus", focus_icon, focus_label), ("dock.close", "x", "Close")], path, false);
     ctx.draw.end_glass_content();
 
-    let body_y = cap_y + tab_h;
-    let body_x = if per_tab_chrome { active_tab_x } else { bounds.x };
-    let body_w = if per_tab_chrome { (gap_x + gap_w - active_tab_x).max(0.0) } else { bounds.w };
-    let body_rect = Rect::new(body_x, body_y, body_w, bounds.h - tab_h);
-    if body_fill {
-        ctx.draw.push_solid([body_rect.x, body_rect.y, body_rect.w, body_rect.h], theme.canvas_clear);
-    }
     // 🪟️ One outline for tabs + glass cutout + controls + body (matches React ModeDockStackSilhouetteBorder).
-    push_window_silhouette_border(ctx.draw, &WindowSilhouette::from_measured_top(bounds, gap_x - bounds.x, controls_w, tab_h), stroke, border);
-
-    if body_fill {
-        let content = body_rect.inset(theme.padding_standard);
-        render_body(content, active);
-    }
+    push_window_silhouette_border(ctx.draw, &silhouette, stroke, border);
 }
 
 struct StackCapLayout {
-    active_tab_x: f32,
     gap_x: f32,
     gap_w: f32,
 }
@@ -1218,6 +1215,21 @@ impl WindowSilhouette {
         regions
     }
 
+    /// 🪟️ Returns the full content coordinate space before silhouette clipping.
+    pub fn content_bounds(&self) -> Rect {
+        self.bounds
+    }
+
+    /// 🪟️ Returns the chrome-safe center band for dock targets and auxiliary rails.
+    pub fn safe_body_rect(&self) -> Rect {
+        Rect::new(
+            self.bounds.x,
+            self.bounds.y + self.top.depth,
+            self.bounds.w,
+            (self.bounds.h - self.top.depth - self.bottom.depth).max(0.0),
+        )
+    }
+
     /// 🪟️ Returns the normalized document-layout clearances `(top, bottom)`.
     pub fn safe_clearances(&self) -> (f32, f32) {
         (self.top.depth, self.bottom.depth)
@@ -1265,39 +1277,26 @@ pub fn push_window_silhouette_border(draw: &mut DrawList, silhouette: &WindowSil
 
 //#endregion WindowSilhouetteGeometry
 
-fn layout_stack_cap(windows: &[String], active: &str, labels: &HashMap<String, String>, atlas: &mut FontAtlas, theme: &Theme, bounds: Rect, maximized: bool) -> StackCapLayout {
+fn layout_stack_cap(windows: &[String], labels: &HashMap<String, String>, atlas: &mut FontAtlas, theme: &Theme, bounds: Rect, maximized: bool) -> StackCapLayout {
     let focus_label = if maximized { "Unfocus" } else { "Focus" };
     let focus_icon = if maximized { "minimize-2" } else { "maximize-2" };
     let focus_w = measure_cap_button(atlas, theme, focus_icon, focus_label);
     let close_w = measure_cap_button(atlas, theme, "x", "Close");
     let controls_w = focus_w + close_w;
     let mut tab_x = bounds.x;
-    let mut active_tab_x = bounds.x;
     for window_id in windows {
         let label = labels.get(window_id).map(String::as_str).unwrap_or(window_id.as_str());
         let tw = dock_tab_content_width(atlas, theme, label);
-        if window_id == active {
-            active_tab_x = tab_x;
-        }
         tab_x += tw;
     }
     let gap_x = tab_x;
     let controls_x = bounds.x + bounds.w - controls_w;
     let gap_w = (controls_x - gap_x).max(0.0);
-    StackCapLayout { active_tab_x, gap_x, gap_w }
+    StackCapLayout { gap_x, gap_w }
 }
 
-fn stack_body_chrome_rect(bounds: Rect, theme: &Theme, windows: &[String], layout: &StackCapLayout) -> Rect {
-    let tab_h = theme.control_height;
-    let per_tab_chrome = windows.len() > 1;
-    let body_x = if per_tab_chrome { layout.active_tab_x } else { bounds.x };
-    let body_w = if per_tab_chrome { (layout.gap_x + layout.gap_w - body_x).max(0.0) } else { bounds.w };
-    Rect::new(body_x, bounds.y + tab_h, body_w, (bounds.h - tab_h).max(0.0))
-}
-
-fn stack_content_rect(bounds: Rect, theme: &Theme, windows: &[String], active: &str, labels: &HashMap<String, String>, atlas: &mut FontAtlas, maximized: bool) -> Rect {
-    let layout = layout_stack_cap(windows, active, labels, atlas, theme, bounds, maximized);
-    stack_body_chrome_rect(bounds, theme, windows, &layout)
+fn stack_window_silhouette(bounds: Rect, theme: &Theme, layout: &StackCapLayout) -> WindowSilhouette {
+    WindowSilhouette::from_measured_top(bounds, layout.gap_x - bounds.x, bounds.x + bounds.w - (layout.gap_x + layout.gap_w), theme.control_height)
 }
 
 fn render_cap_action_group(ctx: &mut DockRenderContext<'_>, rect: Rect, buttons: &[(&str, &str, &str)], path: &[usize], draw_outer_border: bool) {
@@ -1382,9 +1381,10 @@ fn collect_stack_bodies(
         }
         DockNode::Stack { windows, active } => {
             let maximized = state.maximized_stack.as_ref().map(|p| p.as_slice()) == Some(path);
-            let layout = layout_stack_cap(windows, active, window_labels, atlas, theme, bounds, maximized);
-            silhouettes.insert(active.clone(), WindowSilhouette::from_measured_top(bounds, layout.gap_x - bounds.x, bounds.x + bounds.w - (layout.gap_x + layout.gap_w), theme.control_height));
-            out.push((path.to_vec(), stack_body_chrome_rect(bounds, theme, windows, &layout), active.clone()));
+            let layout = layout_stack_cap(windows, window_labels, atlas, theme, bounds, maximized);
+            let silhouette = stack_window_silhouette(bounds, theme, &layout);
+            out.push((path.to_vec(), silhouette.safe_body_rect(), active.clone()));
+            silhouettes.insert(active.clone(), silhouette);
         }
     }
 }
@@ -1565,7 +1565,7 @@ mod tests {
         let mut draw = DrawList::default();
         let labels = HashMap::from([("a".into(), "A".into()), ("b".into(), "B".into())]);
         let icon_ids = HashMap::new();
-        let layout = layout_stack_cap(&["a".into(), "b".into()], "a", &labels, &mut atlas, &theme, bounds, false);
+        let layout = layout_stack_cap(&["a".into(), "b".into()], &labels, &mut atlas, &theme, bounds, false);
         let gap_point = (layout.gap_x + layout.gap_w * 0.5, bounds.y + theme.control_height * 0.5);
         let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
         dock.paint_chrome(&mut ctx, bounds, false);

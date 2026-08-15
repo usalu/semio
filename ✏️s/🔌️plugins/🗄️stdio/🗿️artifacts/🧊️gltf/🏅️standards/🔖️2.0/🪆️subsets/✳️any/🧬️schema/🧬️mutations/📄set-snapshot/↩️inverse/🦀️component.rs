@@ -1,8 +1,9 @@
+//! ↩️ `set-snapshot` semantic inverse.
+
+use super::mutation::SetSnapshot;
 use crate::artifacts::gltf::schema::mutations::GltfMutation;
 use crate::artifacts::gltf::GltfSnapshot;
-use protocol::Mutation;
 
-/// ↩️ Inverse of set-snapshot.
-pub fn inverse(base: &GltfSnapshot, mutation: &GltfMutation) -> Vec<GltfMutation> {
-    <GltfMutation as Mutation<GltfSnapshot>>::inverse(mutation, base)
+pub fn inverse(_payload: &SetSnapshot, base: &GltfSnapshot) -> Vec<GltfMutation> {
+    vec![GltfMutation::SetSnapshot(SetSnapshot { snapshot: base.clone() })]
 }

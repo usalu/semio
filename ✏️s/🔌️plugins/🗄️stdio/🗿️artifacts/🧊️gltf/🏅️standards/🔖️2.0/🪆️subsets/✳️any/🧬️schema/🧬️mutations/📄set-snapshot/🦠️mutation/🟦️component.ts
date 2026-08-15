@@ -1,3 +1,3 @@
-/** 🧩 Complete set-snapshot mutation payload. */
-import type { GltfMutation } from '../../🟦️component.ts';
-export type GltfSetSnapshotMutation = Extract<GltfMutation, { mutation: 'setSnapshot' }>;
+/** 🦠️ set-snapshot payload. */
+import type { GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
+export interface SetSnapshot { snapshot: GltfSnapshot }

@@ -1,0 +1,28 @@
+//! 🦠️ `set-asset` GLTF mutation payload.
+
+use crate::artifacts::gltf::schema::mutations::GltfMutation;
+use crate::artifacts::gltf::schema::snapshot::*;
+use crate::artifacts::gltf::GltfSnapshot;
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetAsset {
+    pub asset: GltfAsset,
+}
+
+impl protocol::MutationKind<GltfSnapshot, GltfMutation> for SetAsset {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "asset", kind: "set-asset", record: "SetAsset" };
+    fn diff(&self, base: &GltfSnapshot) -> <GltfMutation as protocol::Mutation<GltfSnapshot>>::Diff {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &GltfSnapshot) -> Vec<GltfMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        "SetAsset".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec![]
+    }
+}

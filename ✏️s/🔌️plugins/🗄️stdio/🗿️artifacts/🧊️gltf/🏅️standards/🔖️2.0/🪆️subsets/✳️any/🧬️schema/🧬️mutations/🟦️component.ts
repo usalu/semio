@@ -1,5 +1,32 @@
 /** 🧬 Complete semantic glTF mutation vocabulary; binary ordinals are frozen at 0–27. */
-import type { GltfSnapshot, GltfAsset, GltfScene, GltfNode, GltfMesh, GltfAccessor, GltfMaterial, GltfBuffer, GltfAnimation } from '../📸️snapshot/🟦️component.ts';
+import type { NoMutation } from './🚫️no-mutation/🦠️mutation/🟦️component.ts';
+import type { SetSnapshot } from './📄set-snapshot/🦠️mutation/🟦️component.ts';
+import type { SetAsset } from './🏷️set-asset/🦠️mutation/🟦️component.ts';
+import type { InsertScene } from './➕️insert-scene/🦠️mutation/🟦️component.ts';
+import type { RemoveScene } from './➖️remove-scene/🦠️mutation/🟦️component.ts';
+import type { SetScene } from './✏️set-scene/🦠️mutation/🟦️component.ts';
+import type { InsertNode } from './➕️insert-node/🦠️mutation/🟦️component.ts';
+import type { RemoveNode } from './➖️remove-node/🦠️mutation/🟦️component.ts';
+import type { SetNode } from './✏️set-node/🦠️mutation/🟦️component.ts';
+import type { InsertMesh } from './➕️insert-mesh/🦠️mutation/🟦️component.ts';
+import type { RemoveMesh } from './➖️remove-mesh/🦠️mutation/🟦️component.ts';
+import type { SetMesh } from './✏️set-mesh/🦠️mutation/🟦️component.ts';
+import type { InsertAccessor } from './➕️insert-accessor/🦠️mutation/🟦️component.ts';
+import type { RemoveAccessor } from './➖️remove-accessor/🦠️mutation/🟦️component.ts';
+import type { SetAccessor } from './✏️set-accessor/🦠️mutation/🟦️component.ts';
+import type { InsertMaterial } from './➕️insert-material/🦠️mutation/🟦️component.ts';
+import type { RemoveMaterial } from './➖️remove-material/🦠️mutation/🟦️component.ts';
+import type { SetMaterial } from './✏️set-material/🦠️mutation/🟦️component.ts';
+import type { InsertBuffer } from './➕️insert-buffer/🦠️mutation/🟦️component.ts';
+import type { RemoveBuffer } from './➖️remove-buffer/🦠️mutation/🟦️component.ts';
+import type { SetBuffer } from './✏️set-buffer/🦠️mutation/🟦️component.ts';
+import type { InsertAnimation } from './➕️insert-animation/🦠️mutation/🟦️component.ts';
+import type { RemoveAnimation } from './➖️remove-animation/🦠️mutation/🟦️component.ts';
+import type { SetAnimation } from './✏️set-animation/🦠️mutation/🟦️component.ts';
+import type { TransformNode } from './🔄️transform-node/🦠️mutation/🟦️component.ts';
+import type { ReparentNode } from './🌳️reparent-node/🦠️mutation/🟦️component.ts';
+import type { BindNodeMesh } from './🔗️bind-node-mesh/🦠️mutation/🟦️component.ts';
+import type { BindPrimitiveMaterial } from './🔗️bind-primitive-material/🦠️mutation/🟦️component.ts';
 import type { GltfDiff } from '../🔺️diff/🟦️component.ts';
 
 export interface GltfMutationRejection { code: string; path: string; detail: string }
@@ -23,31 +50,31 @@ export const GLTF_STRUCTURAL_REFERENCE_RULES: readonly GltfReferenceRule[] = [
 ];
 
 export type GltfMutation =
-  | { mutation: 'noMutation' }
-  | { mutation: 'setSnapshot'; snapshot: GltfSnapshot }
-  | { mutation: 'setAsset'; asset: GltfAsset }
-  | { mutation: 'insertScene'; index: number; scene: GltfScene }
-  | { mutation: 'removeScene'; index: number }
-  | { mutation: 'setScene'; index: number; scene: GltfScene }
-  | { mutation: 'insertNode'; index: number; node: GltfNode }
-  | { mutation: 'removeNode'; index: number }
-  | { mutation: 'setNode'; index: number; node: GltfNode }
-  | { mutation: 'transformNode'; index: number; matrix?: [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]; translation?: [number, number, number]; rotation?: [number, number, number, number]; scale?: [number, number, number] }
-  | { mutation: 'reparentNode'; index: number; parent?: number; scene?: number; position: number }
-  | { mutation: 'bindNodeMesh'; index: number; mesh?: number }
-  | { mutation: 'insertMesh'; index: number; mesh: GltfMesh }
-  | { mutation: 'removeMesh'; index: number }
-  | { mutation: 'setMesh'; index: number; mesh: GltfMesh }
-  | { mutation: 'insertAccessor'; index: number; accessor: GltfAccessor }
-  | { mutation: 'removeAccessor'; index: number }
-  | { mutation: 'setAccessor'; index: number; accessor: GltfAccessor }
-  | { mutation: 'insertMaterial'; index: number; material: GltfMaterial }
-  | { mutation: 'removeMaterial'; index: number }
-  | { mutation: 'setMaterial'; index: number; material: GltfMaterial }
-  | { mutation: 'bindPrimitiveMaterial'; mesh: number; primitive: number; material?: number }
-  | { mutation: 'insertBuffer'; index: number; buffer: GltfBuffer; bytes: number[] }
-  | { mutation: 'removeBuffer'; index: number }
-  | { mutation: 'setBuffer'; index: number; buffer: GltfBuffer; bytes: number[] }
-  | { mutation: 'insertAnimation'; index: number; animation: GltfAnimation }
-  | { mutation: 'removeAnimation'; index: number }
-  | { mutation: 'setAnimation'; index: number; animation: GltfAnimation };
+  | ({ mutation: 'noMutation' } & NoMutation)
+  | ({ mutation: 'setSnapshot' } & SetSnapshot)
+  | ({ mutation: 'setAsset' } & SetAsset)
+  | ({ mutation: 'insertScene' } & InsertScene)
+  | ({ mutation: 'removeScene' } & RemoveScene)
+  | ({ mutation: 'setScene' } & SetScene)
+  | ({ mutation: 'insertNode' } & InsertNode)
+  | ({ mutation: 'removeNode' } & RemoveNode)
+  | ({ mutation: 'setNode' } & SetNode)
+  | ({ mutation: 'insertMesh' } & InsertMesh)
+  | ({ mutation: 'removeMesh' } & RemoveMesh)
+  | ({ mutation: 'setMesh' } & SetMesh)
+  | ({ mutation: 'insertAccessor' } & InsertAccessor)
+  | ({ mutation: 'removeAccessor' } & RemoveAccessor)
+  | ({ mutation: 'setAccessor' } & SetAccessor)
+  | ({ mutation: 'insertMaterial' } & InsertMaterial)
+  | ({ mutation: 'removeMaterial' } & RemoveMaterial)
+  | ({ mutation: 'setMaterial' } & SetMaterial)
+  | ({ mutation: 'insertBuffer' } & InsertBuffer)
+  | ({ mutation: 'removeBuffer' } & RemoveBuffer)
+  | ({ mutation: 'setBuffer' } & SetBuffer)
+  | ({ mutation: 'insertAnimation' } & InsertAnimation)
+  | ({ mutation: 'removeAnimation' } & RemoveAnimation)
+  | ({ mutation: 'setAnimation' } & SetAnimation)
+  | ({ mutation: 'transformNode' } & TransformNode)
+  | ({ mutation: 'reparentNode' } & ReparentNode)
+  | ({ mutation: 'bindNodeMesh' } & BindNodeMesh)
+  | ({ mutation: 'bindPrimitiveMaterial' } & BindPrimitiveMaterial);

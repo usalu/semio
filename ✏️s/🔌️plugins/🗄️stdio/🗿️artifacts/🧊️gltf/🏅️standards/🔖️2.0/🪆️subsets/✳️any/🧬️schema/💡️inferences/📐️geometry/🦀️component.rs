@@ -1,241 +1,13 @@
-//! 🧮️ Authoritative glTF 2.0 static-pose universal geometric analysis kernel.
+//! 📐️ Authoritative glTF 2.0 static-pose universal geometric analysis.
 
 use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
 use crate::artifacts::gltf::schema::snapshot::GltfSnapshot;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
-//#region 🔖️Contract
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum GltfUnit {
-    Unitless,
-    Metre,
-    SquareMetre,
-    CubicMetre,
-    Radian,
-    InverseMetre,
-    InverseSquareMetre,
-}
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum GltfCoordinateSpace {
-    MeshLocal,
-    NodeLocal,
-    SceneWorld,
-}
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum GltfAvailability {
-    Available,
-    Approximate,
-    Unavailable,
-    InvalidInput,
-    UnsupportedPrimitive,
-    OpenSurface,
-    NonManifold,
-    Degenerate,
-    UnresolvedResource,
-}
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum GltfValidity {
-    Valid,
-    Invalid,
-    Indeterminate,
-}
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum GltfSeverity {
-    Info,
-    Warning,
-    Error,
-}
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum GltfComputationMethod {
-    Exact,
-    DeterministicEstimate,
-}
+use super::{adjacency::*, area_volume::*, clearance::*, compactness::*, concavity::*, curvature::*, mass_distribution::*, measure::*, orientation::*, proportion::*, roughness::*, size::*, symmetry::*, thickness::*, topology::*};
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GltfVec3 {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
-}
-impl GltfVec3 {
-    fn new(v: [f64; 3]) -> Self {
-        Self { x: v[0], y: v[1], z: v[2] }
-    }
-    fn array(self) -> [f64; 3] {
-        [self.x, self.y, self.z]
-    }
-}
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GltfBounds3 {
-    pub min: GltfVec3,
-    pub max: GltfVec3,
-    pub dimensions: GltfVec3,
-}
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GltfHistogram {
-    pub edges: Vec<f64>,
-    pub counts: Vec<u64>,
-    pub weights: Vec<f64>,
-}
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GltfStatistics {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub minimum: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub maximum: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub mean: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub variance: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub standard_deviation: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub median: Option<f64>,
-    pub quantiles: Vec<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub histogram: Option<GltfHistogram>,
-}
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GltfDirectionScore {
-    pub direction: GltfVec3,
-    pub score: f64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub order: Option<u32>,
-}
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GltfPrincipalFrame {
-    pub centroid: GltfVec3,
-    pub axes: [GltfVec3; 3],
-    pub eigenvalues: [f64; 3],
-}
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GltfQuality {
-    pub method: GltfComputationMethod,
-    pub coverage: f64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub absolute_error: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub relative_error: Option<f64>,
-    pub sample_count: u64,
-    pub watertight: bool,
-    pub manifold: bool,
-    pub consistently_oriented: bool,
-    pub warnings: Vec<String>,
-}
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GltfProvenance {
-    pub algorithm: String,
-    pub algorithm_version: u32,
-    pub dependency_fingerprints: Vec<String>,
-    pub coordinate_space: GltfCoordinateSpace,
-    pub tolerance_fingerprint: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub sampling_seed: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub pose: Option<String>,
-}
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GltfMeasure<T> {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub value: Option<T>,
-    pub unit: GltfUnit,
-    pub availability: GltfAvailability,
-    pub validity: GltfValidity,
-    pub diagnostic_ids: Vec<String>,
-    pub quality: GltfQuality,
-    pub provenance: GltfProvenance,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GltfAnalysisPolicy {
-    pub schema_version: u32,
-    pub absolute_length_tolerance: f64,
-    pub relative_tolerance: f64,
-    pub angular_tolerance_radians: f64,
-    pub contact_tolerance: f64,
-    pub sharp_feature_angle_radians: f64,
-    pub histogram_edges: Vec<f64>,
-    pub sampling_budget: u64,
-    pub sampling_seed: String,
-    pub static_pose: bool,
-    pub unit_density: bool,
-    pub fingerprint: String,
-}
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GltfDiagnostic {
-    pub id: String,
-    pub severity: GltfSeverity,
-    pub code: String,
-    pub message: String,
-    pub paths: Vec<String>,
-}
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum GltfEntityScope {
-    Document,
-    Scene,
-    NodeInstance,
-    Mesh,
-    Primitive,
-    Component,
-    SurfaceRegion,
-}
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GltfEntityAddress {
-    pub scope: GltfEntityScope,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub scene: Option<u32>,
-    pub node_path: Vec<u32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub mesh: Option<u32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub primitive: Option<u32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub component: Option<u32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub surface_region: Option<u32>,
-    pub content_fingerprint: String,
-}
-
-macro_rules! group {
-    ($name:ident { $($field:ident : $ty:ty),* $(,)? }) => {
-        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)] #[serde(rename_all = "camelCase")]
-        pub struct $name { $(pub $field: GltfMeasure<$ty>,)* }
-    };
-}
-group!(GltfSizeIndicators { overall_size: f64, axis_aligned_bounds: GltfBounds3, oriented_bounds: GltfBounds3, bounding_box_dimensions: GltfVec3, characteristic_length: f64, footprint_area: f64, projected_area: GltfStatistics });
-group!(GltfAreaVolumeIndicators { surface_area: f64, total_area: f64, exposed_area: f64, contact_area: f64, volume: f64, enclosed_volume: f64, material_volume: f64, void_volume: f64 });
-group!(GltfCompactnessIndicators { compactness: f64, surface_to_volume_ratio: f64, sphericity: f64, compactness_index: f64, hull_fill_ratio: f64 });
-group!(GltfProportionIndicators { aspect_ratios: GltfVec3, slenderness: f64, flatness: f64, elongation: f64 });
-group!(GltfMassIndicators { centroid: GltfVec3, principal_frame: GltfPrincipalFrame, principal_axes: Vec<GltfDirectionScore>, moments_of_inertia: GltfVec3, inertia_tensor: Vec<f64> });
-group!(GltfCurvatureIndicators { mean_curvature: GltfStatistics, gaussian_curvature: GltfStatistics, curvature_histogram: GltfStatistics, sharp_feature_proportion: f64 });
-group!(GltfThicknessIndicators { mean_thickness: f64, minimum_thickness: f64, thickness_variability: f64, thickness_distribution: GltfStatistics });
-group!(GltfConcavityIndicators { convex_hull_gap: f64, reentrant_area: f64, reentrant_volume: f64, concavity_index: f64 });
-group!(GltfClearanceIndicators { minimum_distance_to_neighbors: f64, clearance_distribution: GltfStatistics, interference_volume: f64, overlap_volume: f64 });
-group!(GltfAdjacencyIndicators { number_of_contacts: u64, contact_graph_degree: u64, connected_components: u64 });
-group!(GltfOrientationIndicators { main_axis_direction: GltfVec3, face_normal_distribution: GltfStatistics, orientation_consistency: f64 });
-group!(GltfSymmetryIndicators { reflection_symmetry_score: f64, rotational_symmetry_score: f64, reflection_symmetries: Vec<GltfDirectionScore>, rotational_symmetries: Vec<GltfDirectionScore>, repetition_ratio: f64, modularity_ratio: f64 });
-group!(GltfRoughnessIndicators { deviation_from_ideal: GltfStatistics, deviation_from_smoothed_geometry: GltfStatistics, normal_variation: GltfStatistics, surface_waviness: GltfStatistics, irregularity: f64 });
-group!(GltfTopologyIndicators { holes: u64, handles: u64, boundary_loops: u64, euler_characteristic: i64, genus: u64 });
+//#region 🔖️Aggregate
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -307,7 +79,7 @@ pub struct GltfGeometricInference {
     pub quality: GltfQuality,
     pub provenance: GltfProvenance,
 }
-//#endregion 🔖️Contract
+//#endregion 🔖️Aggregate
 
 //#region 🧮️Kernel
 type V3 = [f64; 3];
@@ -1340,7 +1112,7 @@ fn analyze(points: &[V3], triangles: &[[usize; 3]], policy: &GltfAnalysisPolicy)
     let sphericity = if volume > 1e-15 && surface_area > 0.0 && t.watertight { Some(std::f64::consts::PI.powf(1.0 / 3.0) * (6.0 * volume).powf(2.0 / 3.0) / surface_area) } else { None };
     let sorted = {
         let mut x = oriented_extent;
-        x.sort_by(|a, b| b.total_cmp(a));
+        x.sort_by(|a, b| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal));
         x
     };
     let thickness_values = if t.watertight && t.manifold { thickness_samples(&welded, &faces, policy.sampling_budget as usize, policy.absolute_length_tolerance) } else { Vec::new() };

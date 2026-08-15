@@ -750,11 +750,15 @@ pub const CAD_FORMAT: &str = "cad";
 /// export/import has no artifact-io equivalent to migrate to; adding one means adding a new format
 /// to stdio's manifest, which is out of this wave's write scope (stdio is pending a separate
 /// session's handoff) — reported as a genuine remainder, not silently dropped.
+#[cfg(not(target_arch = "wasm32"))]
 pub fn register_host_io() {
     semio_framework_os::register_mesh_exporter(CAD_KIND, CAD_FORMAT, cad_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
     semio_framework_os::register_mesh_importer(CAD_KIND, cad_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
     semio_framework_os::register_mesh_dwg_export_handler(CAD_KIND, CAD_FORMAT, cad_mesh_from_document);
 }
+
+#[cfg(target_arch = "wasm32")]
+pub fn register_host_io() {}
 //#endregion 🔌️HostIoRegistration
 
 //#region 🧪️Tests

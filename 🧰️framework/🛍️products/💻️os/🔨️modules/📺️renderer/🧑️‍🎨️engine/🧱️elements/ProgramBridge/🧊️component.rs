@@ -143,6 +143,7 @@ mod wasm_program_exchange {
             requested_effects,
             events,
             ui_scope: semio_framework::kernel::UiDirtyScope::default(),
+            history_patch: None,
         })
     }
 
@@ -477,6 +478,7 @@ async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &
             requested_effects: vec![],
             events: vec![],
             ui_scope: semio_framework::kernel::UiDirtyScope::default(),
+            history_patch: None,
         });
     };
     let context_json = serde_json::json!({

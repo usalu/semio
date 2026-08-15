@@ -40,12 +40,12 @@ const groups: Record<string, string[]> = {
   GltfTopologyIndicators: ["holes", "handles", "boundaryLoops", "eulerCharacteristic", "genus"],
 };
 
-const inferenceTs = read("💡️inferences/📦bounds/🟦️component.ts");
+const inferenceTs = walk(path.join(schema, "💡️inferences")).filter((file) => file.endsWith("🟦️component.ts")).map((file) => fs.readFileSync(file, "utf8")).join("\n");
 const inferenceRootTs = read("💡️inferences/🟦️component.ts");
 const inferenceGraphql = read("💡️inferences/🔗️component.graphql");
 const inferenceTextGraphql = read("💡️inferences/📝️text/🔗️component.graphql");
 const inferenceProto = read("💡️inferences/🛰️component.proto");
-const inferenceRust = read("💡️inferences/📦bounds/🦀️component.rs");
+const inferenceRust = walk(path.join(schema, "💡️inferences")).filter((file) => file.endsWith("🦀️component.rs")).map((file) => fs.readFileSync(file, "utf8")).join("\n");
 const inferenceJson = JSON.parse(read("💡️inferences/🔣️component.json"));
 
 for (const [name, expected] of Object.entries(groups)) {
@@ -58,8 +58,8 @@ for (const [name, expected] of Object.entries(groups)) {
   const key = definition[0].toLowerCase() + definition.slice(1);
   same(Object.keys(inferenceJson.$defs[key].properties), expected, `JSON Schema ${name}`);
   same(inferenceJson.$defs[key].required, expected, `JSON Schema required ${name}`);
-  const rust = capture(inferenceRust, new RegExp(`group!\\(${name} \\{([^}]*)\\}\\);`), `Rust ${name}`);
-  same([...rust.matchAll(/([a-z_]+)\s*:/g)].map((match) => camel(match[1])), expected, `Rust ${name}`);
+  const rust = capture(inferenceRust, new RegExp(`pub struct ${name} \\{([^}]*)\\}`), `Rust ${name}`);
+  same([...rust.matchAll(/pub\s+([a-z_]+)\s*:/g)].map((match) => camel(match[1])), expected, `Rust ${name}`);
 }
 
 const indicators = Object.values(groups).flat();
@@ -80,7 +80,7 @@ const mutationGraphql = read("🧬️mutations/🔗️component.graphql");
 const mutationJson = JSON.parse(read("🧬️mutations/🔣️component.json"));
 const mutationProto = read("🧬️mutations/🛰️component.proto");
 const mutationBinaryTs = read("🧬️mutations/💾️binary/🟦️component.ts");
-const mutationRust = read("🧬️mutations/🦀️component.rs");
+const mutationRust = read("🧬️mutations/💾️binary/🦀️component.rs");
 const mutationGrammar = read("🧬️mutations/📝️text/📖️component.grammar.semio");
 const mutationEbnf = read("🧬️mutations/📝️text/🔤️component.ebnf");
 const mutationAntlr = read("🧬️mutations/📝️text/🅰️component.g4");
@@ -95,11 +95,14 @@ for (const [tag, variant] of variants.entries()) {
   if (!new RegExp(`\\b${snake}\\s*=\\s*${tag + 1}\\b`).test(mutationProto)) throw new Error(`Proto ordinal mismatch ${variant}=${tag + 1}`);
   const binary = new RegExp(`\\b${variant}:\\s*${tag}\\b`);
   if (!binary.test(mutationBinaryTs)) throw new Error(`binary tag mismatch ${variant}=${tag}`);
-  if (!new RegExp(`GltfMutation::${variant[0].toUpperCase()}${variant.slice(1)}(?: \\{ \\.\\. \\})? => ${tag},`).test(mutationRust)) throw new Error(`Rust tag mismatch ${variant}=${tag}`);
+  if (!new RegExp(`GltfMutation::${variant[0].toUpperCase()}${variant.slice(1)}\\([^\\n]*=> ${tag},`).test(mutationRust)) throw new Error(`Rust tag mismatch ${variant}=${tag}`);
   if (!mutationGrammar.includes(`"${kebab(variant)}"`)) throw new Error(`Semio grammar missing ${variant}`);
   if (!mutationEbnf.includes(`"${kebab(variant)}"`)) throw new Error(`EBNF missing ${variant}`);
   if (!mutationAntlr.includes(`'${kebab(variant)}'`)) throw new Error(`ANTLR missing ${variant}`);
 }
+const mutationFolders = fs.readdirSync(path.join(schema, "🧬️mutations"), { withFileTypes: true }).filter((entry) => entry.isDirectory() && ["🦠️mutation", "🔺️diff", "↩️inverse"].every((leaf) => fs.existsSync(path.join(schema, "🧬️mutations", entry.name, leaf, "🦀️component.rs")) && fs.existsSync(path.join(schema, "🧬️mutations", entry.name, leaf, "🟦️component.ts"))));
+if (mutationFolders.length !== 28) throw new Error(`mutation taxonomy has ${mutationFolders.length} complete triads, expected 28`);
+if (walk(path.join(schema, "💡️inferences")).some((file) => file.includes("📦bounds"))) throw new Error("legacy GLTF bounds component remains");
 const mutationPrimitive = mutationGrammar.split("\n").find((line) => line.startsWith("primitive-value ="));
 const diffPrimitive = diffGrammar.split("\n").find((line) => line.startsWith("primitive-value ="));
 if (mutationPrimitive !== diffPrimitive || !mutationPrimitive?.includes("morph-target-list")) throw new Error("primitive morph-target grammar parity");

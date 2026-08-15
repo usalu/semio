@@ -1,0 +1,10 @@
+//! 🔺️ `bind-primitive-material` validated sparse diff.
+
+use super::mutation::BindPrimitiveMaterial;
+use crate::artifacts::gltf::schema::diff::GltfDiff;
+use crate::artifacts::gltf::schema::mutations::{plan_gltf_mutation, GltfMutation};
+use crate::artifacts::gltf::GltfSnapshot;
+
+pub fn diff(payload: &BindPrimitiveMaterial, base: &GltfSnapshot) -> GltfDiff {
+    plan_gltf_mutation(base, &GltfMutation::BindPrimitiveMaterial(payload.clone())).unwrap_or_default()
+}

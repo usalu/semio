@@ -1,10 +1,9 @@
-//! 🧩 set_snapshot diff leaf.
+//! 🔺️ `set-snapshot` sparse diff.
 
+use super::mutation::SetSnapshot;
 use crate::artifacts::gltf::schema::diff::{diff_set_snapshot, GltfDiff};
 use crate::artifacts::gltf::GltfSnapshot;
 
-/// 🔺️ Diff helper for set-snapshot — sparse field-by-field `between(base, snapshot)`, never a
-/// full-replace slot.
-pub fn diff(base: &GltfSnapshot, snapshot: &GltfSnapshot) -> GltfDiff {
-    diff_set_snapshot(base, snapshot)
+pub fn diff(payload: &SetSnapshot, base: &GltfSnapshot) -> GltfDiff {
+    diff_set_snapshot(base, &payload.snapshot)
 }
