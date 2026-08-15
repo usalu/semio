@@ -1136,7 +1136,7 @@ describe("framework plugin runtime", () => {
     expect(maxInFlight).toBe(1);
   });
 
-  it("adaptPluginHandle.handleAction round-trips an action through AppCommand::Command and reassembles requestedEffects/uiScope-free InvocationResponse", async () => {
+  it("adaptPluginHandle.handleAction round-trips an action with effects, uiScope, and historyPatch", async () => {
     const { encodeAppFrame, decodeAppCommand, encodePackValue, decodePackValue } = await import("@semio-tech/framework-os");
     const fakeHandle = {
       manifest: async () => encodePackValue({ pluginId: "mock-action", label: "Mock Action", version: "0", apps: [], programs: [], examples: [] }),
@@ -1147,7 +1147,7 @@ describe("framework plugin runtime", () => {
         if (!command || typeof command !== "object" || !("Command" in command)) throw new Error("expected a Command");
         const invocation = decodePackValue(new Uint8Array(command.Command.command));
         return [
-          encodeAppFrame({ Invocation: { in_reply_to: command.Command.seq, output: Array.from(encodePackValue({ echo: invocation })), diagnostics: Array.from(encodePackValue([])) } }),
+          encodeAppFrame({ Invocation: { in_reply_to: command.Command.seq, output: Array.from(encodePackValue({ echo: invocation })), diagnostics: Array.from(encodePackValue([])), ui_scope: Array.from(encodePackValue({ kind: "partial", windowBodies: ["graph"], utilities: false })), history_patch: Array.from(encodePackValue({ cursor: 1, upserts: [] })) } }),
           encodeAppFrame({ Effects: { in_reply_to: command.Command.seq, effects: [Array.from(encodePackValue("requestSync"))] } }),
         ];
       },
@@ -1159,6 +1159,8 @@ describe("framework plugin runtime", () => {
     const response = await handle.handleAction(instanceId, JSON.stringify(invocation), {});
     expect(response.output).toEqual({ echo: invocation });
     expect(response.requestedEffects).toEqual(["requestSync"]);
+    expect(response.uiScope).toEqual({ kind: "partial", windowBodies: ["graph"], utilities: false });
+    expect(response.historyPatch).toEqual({ cursor: 1, upserts: [] });
   });
 
   it("detects jco payload-shaped plugin instance busy errors", async () => {

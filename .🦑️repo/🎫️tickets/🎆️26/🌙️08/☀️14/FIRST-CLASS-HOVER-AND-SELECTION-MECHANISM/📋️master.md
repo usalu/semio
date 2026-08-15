@@ -55,7 +55,7 @@ In `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀�
 `VcsArtifactApp` (`🔌️plugin/🦀️component.rs`) already routes framework-reserved verbs through `dispatch_command_frame`/`dispatch_action` (~:7105) before `A::handle` — verified. Add the interaction verbs there:
 - Topology via new trait method `ArtifactApp::interaction_topology(doc,cfg) -> InteractionTopology` (default empty; wrapper self-derives for Flat/UiTree/PathDelimited).
 - `ArtifactApp::handle` (and `copy_fragment`/`cut_operations`) gain an `interaction: &InteractionView` parameter — read-only accessor (`selection(domain)`, `hover(domain,channel)`). Breaking change applied to SDK + all apps in the sweep.
-- Session command log rows use kind `Interaction` (skips history panel via existing `finish_recorded` kind check ~:7217); `UiDirtyScope` emitted; presence marked dirty.
+- Session command log rows use kind `Interaction`; every accepted semantic interaction allocates one distinct live-history row and is delivered in the invocation's `HistoryPatch`. Raw pointer samples remain telemetry and never create rows. `UiDirtyScope` is emitted without widening it for history; presence is marked dirty.
 - `AppBuilder` gains `.interaction(def)` / `.window_kind_interactions(id, refs)` with build-time validation (unique domains, non-empty granularities, `transitive ⇒ hierarchy != Flat`, method/merge refs declared).
 
 ### UI

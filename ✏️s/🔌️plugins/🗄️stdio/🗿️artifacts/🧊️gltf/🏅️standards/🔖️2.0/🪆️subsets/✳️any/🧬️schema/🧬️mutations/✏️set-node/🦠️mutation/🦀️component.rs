@@ -1,5 +1,6 @@
 //! 🦠️ `set-node` GLTF mutation payload.
 
+use super::super::planning::{check_index, GltfMutationRejection, GltfSemanticMutation};
 use crate::artifacts::gltf::schema::mutations::GltfMutation;
 use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::GltfSnapshot;
@@ -25,5 +26,13 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for SetNode {
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
+    }
+}
+
+impl GltfSemanticMutation for SetNode {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+        check_index("document/nodes", self.index, snapshot.document.nodes.len())?;
+        snapshot.document.nodes[self.index] = self.node.clone();
+        Ok(())
     }
 }

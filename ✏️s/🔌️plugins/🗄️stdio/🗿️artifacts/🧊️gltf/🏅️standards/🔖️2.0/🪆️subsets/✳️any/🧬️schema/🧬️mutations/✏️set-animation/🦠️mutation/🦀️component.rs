@@ -1,5 +1,6 @@
 //! 🦠️ `set-animation` GLTF mutation payload.
 
+use super::super::planning::{check_index, GltfMutationRejection, GltfSemanticMutation};
 use crate::artifacts::gltf::schema::mutations::GltfMutation;
 use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::GltfSnapshot;
@@ -25,5 +26,13 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for SetAnimation {
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
+    }
+}
+
+impl GltfSemanticMutation for SetAnimation {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+        check_index("document/animations", self.index, snapshot.document.animations.len())?;
+        snapshot.document.animations[self.index] = self.animation.clone();
+        Ok(())
     }
 }

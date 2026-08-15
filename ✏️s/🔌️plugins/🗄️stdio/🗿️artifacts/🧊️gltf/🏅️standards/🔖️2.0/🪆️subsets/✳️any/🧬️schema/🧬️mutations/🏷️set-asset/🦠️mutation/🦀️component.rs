@@ -1,5 +1,6 @@
 //! 🦠️ `set-asset` GLTF mutation payload.
 
+use super::super::planning::{GltfMutationRejection, GltfSemanticMutation};
 use crate::artifacts::gltf::schema::mutations::GltfMutation;
 use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::GltfSnapshot;
@@ -24,5 +25,12 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for SetAsset {
     }
     fn target(&self) -> Vec<String> {
         vec![]
+    }
+}
+
+impl GltfSemanticMutation for SetAsset {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+        snapshot.document.asset = self.asset.clone();
+        Ok(())
     }
 }

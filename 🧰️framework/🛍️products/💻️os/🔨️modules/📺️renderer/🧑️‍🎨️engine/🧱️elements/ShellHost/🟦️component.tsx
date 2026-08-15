@@ -46,6 +46,8 @@ import {
   FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
   FRAMEWORK_PANEL_TAB_HISTORY_ID,
   type HostEffect,
+  type HistoryEntry,
+  type HistoryPatch,
   type IntroductionInteraction,
   type LocalizedLabel,
   NamedLayoutStore,
@@ -742,7 +744,17 @@ function FrameworkOsShellInner({
   const defaults = defaultsProp ?? EMPTY_SHELL_DEFAULTS;
   const ephemeral = isEphemeralShellBrand(brand);
   const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks, defaults, storage: scope.storage }));
+  const [historyProjection, setHistoryProjection] = useState<{ readonly cursor: number; readonly entries: Readonly<Record<number, HistoryEntry>>; readonly canUndo: boolean; readonly canRedo: boolean }>({ cursor: 0, entries: {}, canUndo: false, canRedo: false });
   const { loadedPlugins, pluginStatusById, pluginSupervisorById, session, error } = shellState.pluginRuntime;
+  const applyHistoryPatch = useCallback((patch: HistoryPatch | undefined, replace = false) => {
+    if (!patch) return;
+    setHistoryProjection((current) => {
+      if (!replace && patch.cursor <= current.cursor) return current;
+      const entries = replace ? {} as Record<number, HistoryEntry> : { ...current.entries };
+      for (const entry of patch.upserts ?? []) entries[entry.seq] = entry;
+      return { cursor: patch.cursor, entries, canUndo: patch.canUndo ?? false, canRedo: patch.canRedo ?? false };
+    });
+  }, []);
   const hostPlugin = useMemo(() => (hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined), [loadedPlugins, hostConfig]);
   const hostApp = useMemo(() => hostPlugin?.manifest.apps.find((app) => app.id === hostConfig?.hostAppId), [hostPlugin, hostConfig]);
   const landingApp = useMemo(() => hostPlugin?.manifest.apps.find((app) => app.id === hostConfig?.landingAppId) ?? hostPlugin?.manifest.apps[0], [hostPlugin, hostConfig]);
@@ -751,6 +763,18 @@ function FrameworkOsShellInner({
   const hostControllerId = hostApp?.controllerId;
   const landingControllerId = landingApp?.controllerId;
   const hostCatalogueTabId = hostApp?.panelTabs[0] ? panelTabKindId(hostApp.panelTabs[0].kind) : undefined;
+  useEffect(() => {
+    if (!session) return;
+    const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+    if (!plugin) return;
+    let cancelled = false;
+    void plugin.readHistory(session.instanceId).then((snapshot) => {
+      if (!cancelled) applyHistoryPatch(snapshot, true);
+    }).catch((error) => console.error("[DEBUG] history snapshot failed", error));
+    return () => {
+      cancelled = true;
+    };
+  }, [applyHistoryPatch, loadedPlugins, session]);
   const { windowUiByWindowId, windowEngagementsByWindowId, windowMeasuresByWindowId, toolMeasuresByToolId, panelUiByKey, appLabelsOverlay } = shellState.windowUi;
   const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
   const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId, activeToolId } = shellState.actionPane;
@@ -2667,7 +2691,10 @@ function FrameworkOsShellInner({
           const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { utilityId: next } };
           void program
             .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, windowId), viewState)
-            .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope)))
+            .then((response) => {
+              applyHistoryPatch(response.historyPatch);
+              return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope));
+            })
             .catch((utilityError) => console.error("[DEBUG] setActiveUtility failed", utilityError));
         }
         return;
@@ -2691,7 +2718,10 @@ function FrameworkOsShellInner({
           const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { toolId: next } };
           void program
             .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, activeWindowIdRef.current ?? undefined), viewState)
-            .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope)))
+            .then((response) => {
+              applyHistoryPatch(response.historyPatch);
+              return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope));
+            })
             .catch((toolError) => console.error("[DEBUG] setActiveTool failed", toolError));
         }
         return;
@@ -2805,7 +2835,10 @@ function FrameworkOsShellInner({
       if (interactiveAction) beginInteractivePluginAction();
       return plugin
         .handleAction(targetSession.instanceId, encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, extraWindowInstancesRef.current, dispatchWindowId), dispatchViewState)
-        .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
+        .then((response) => {
+          applyHistoryPatch(response.historyPatch);
+          return applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope));
+        })
         .catch((actionError) => {
           console.error("[DEBUG] action failed", action.action, action.args, actionError);
         })
@@ -2815,6 +2848,7 @@ function FrameworkOsShellInner({
     },
     [
       applyHostEffects,
+      applyHistoryPatch,
       attachSyncBackbone,
       clearAllWindowUtilities,
       detachSyncBackbone,
@@ -3985,8 +4019,38 @@ function FrameworkOsShellInner({
     if (!session) return null;
     const tab = session.app.panelTabs.find((candidate) => panelTabKindId(candidate.kind) === FRAMEWORK_PANEL_TAB_HISTORY_ID);
     if (!tab) return null;
-    return panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, 1, appLabelsOverlay, uiTerminology, uiLocale);
-  }, [appLabelsOverlay, onAction, panelUiByKey, session, uiTerminology, uiLocale]);
+    const entries = Object.values(historyProjection.entries).sort((left, right) => right.seq - left.seq);
+    return singleTreeLeaf({
+      id: FRAMEWORK_PANEL_TAB_HISTORY_ID,
+      icon: shellTabIcon("undo"),
+      name: resolvePanelTabLabel(appLabelsOverlay, FRAMEWORK_PANEL_TAB_HISTORY_ID, resolveManifestLabel(tab.label, uiTerminology, uiLocale)),
+      order: 1,
+      tree: {
+        sections: [
+          {
+            id: "framework.history.actions",
+            label: shellLabel("ui.panel.history"),
+            items: [
+              { id: "framework.history.undo", label: "", control: <button type="button" disabled={!historyProjection.canUndo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "undo" })}>Undo</button> },
+              { id: "framework.history.redo", label: "", control: <button type="button" disabled={!historyProjection.canRedo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "redo" })}>Redo</button> },
+              { id: "framework.history.checkpoint", label: "", control: <button type="button" onClick={() => onAction({ controllerId: session.app.controllerId, action: "commitCheckpoint" })}>Checkpoint</button> },
+            ],
+          },
+          {
+            id: "framework.history.commands",
+            label: "Commands",
+            items: entries.map((entry) => ({
+              id: `framework.history.entry.${entry.seq}`,
+              label: entry.count && entry.count > 1 ? `${entry.label} ×${entry.count}` : entry.label,
+              description: entry.opLines?.join(" · "),
+              dimmed: entry.applied === false,
+              control: entry.revertible ? <button type="button" onClick={() => onAction({ controllerId: session.app.controllerId, action: "revertToCommand", args: { entrySeq: entry.seq } })}>↶</button> : undefined,
+            })),
+          },
+        ],
+      },
+    });
+  }, [appLabelsOverlay, historyProjection, onAction, session, uiLocale, uiTerminology]);
   //#endregion 🧰️FooterUtilityLeaves
 
   //#region 🔄️SyncLeaf — bottom-left's sync tab, replacing the old floating footer SyncAttachCard.
@@ -4162,7 +4226,10 @@ function FrameworkOsShellInner({
       const invocation: CommandInvocation = { address, arguments: args ?? {} };
       void plugin
         .handleCommand(session.instanceId, JSON.stringify(invocation), dispatchViewState)
-        .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
+        .then((response) => {
+          applyHistoryPatch(response.historyPatch);
+          return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope));
+        })
         .catch((error) => console.error("Command execution failed", error));
     },
     [applyHostEffects, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session, locks, resolvedCommands, noteShellCommand],

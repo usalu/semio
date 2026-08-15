@@ -4,19 +4,19 @@ overview: Make the plugin-owned command log stream typed incremental history pat
 todos:
   - id: protocol-history-patch
     content: Add schema-first HistoryPatch, history snapshot cursor, and uiScope to Rust/TypeScript invocation frames
-    status: in_progress
+    status: completed
   - id: plugin-history-deltas
     content: Emit one indexed history entry per accepted action and immediate seed/load/ingest backfill deltas
-    status: pending
+    status: completed
   - id: host-history-projection
     content: Apply patches before effects and render the complete windowed history projection in ShellHost
-    status: pending
+    status: completed
   - id: scoped-refresh-faults
     content: Honor partial dirty scopes and isolate per-section refresh faults without clearing windows
-    status: pending
+    status: completed
   - id: interaction-alignment
     content: Update first-class interaction semantics so Interaction actions are distinct live history entries
-    status: pending
+    status: completed
   - id: verify-realtime-history
     content: Extend existing tests and verify monotonic real-time history plus generator fault isolation at runtime
     status: pending

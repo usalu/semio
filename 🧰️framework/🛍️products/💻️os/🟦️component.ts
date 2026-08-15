@@ -1616,12 +1616,13 @@ export type AppCommandValue =
   | { readonly PureCommand: { readonly seq: number; readonly command: readonly number[]; readonly document: readonly number[]; readonly document_spr: readonly number[]; readonly config: readonly number[]; readonly config_spr: readonly number[]; readonly draft: readonly number[]; readonly draft_spr: readonly number[] } }
   | { readonly LoadChildren: { readonly seq: number; readonly entries: readonly ChildPackEntry[] } }
   | { readonly ReadChildren: { readonly seq: number } }
+  | { readonly ReadHistory: { readonly seq: number } }
   | "Bye";
 
 export type AppFrameValue =
   | { readonly Welcome: { readonly channel_version: number; readonly instance: number; readonly manifest: readonly number[] } }
   | { readonly Done: { readonly in_reply_to: number } }
-  | { readonly Invocation: { readonly in_reply_to: number; readonly output: readonly number[]; readonly diagnostics: readonly number[] } }
+  | { readonly Invocation: { readonly in_reply_to: number; readonly output: readonly number[]; readonly diagnostics: readonly number[]; readonly ui_scope: readonly number[]; readonly history_patch: readonly number[] } }
   | { readonly UiSection: { readonly in_reply_to: number | null; readonly kind: number; readonly key: string; readonly hash: number; readonly body: readonly number[] | null } }
   | { readonly Effects: { readonly in_reply_to: number | null; readonly effects: readonly (readonly number[])[] } }
   | { readonly Events: { readonly in_reply_to: number | null; readonly events: readonly (readonly number[])[] } }
@@ -1636,7 +1637,8 @@ export type AppFrameValue =
   | { readonly Emit: { readonly in_reply_to: number; readonly document_ops: readonly number[]; readonly config_ops: readonly number[]; readonly draft_ops: readonly number[]; readonly output: readonly number[]; readonly diagnostics: readonly number[] } }
   | { readonly Draft: { readonly in_reply_to: number; readonly pack: readonly number[]; readonly spr: readonly number[]; readonly ops: string } }
   | { readonly Children: { readonly in_reply_to: number; readonly entries: readonly ChildPackEntry[] } }
-  | { readonly Ephemeral: { readonly presence: readonly number[]; readonly presence_generation: number; readonly transient_generation: number } };
+  | { readonly Ephemeral: { readonly presence: readonly number[]; readonly presence_generation: number; readonly transient_generation: number } }
+  | { readonly HistorySnapshot: { readonly in_reply_to: number; readonly history_patch: readonly number[] } };
 //#endregion 🔖️Types
 
 //#region 🔖️Combinators
@@ -1694,11 +1696,11 @@ function readVecChildPackEntry(bytes: Uint8Array, pos: [number]): ChildPackEntry
 const APP_COMMAND_TAGS = {
   Hello: 0, ConfigCommand: 1, Command: 2, CommandText: 3, RefreshUi: 4, ContextMenu: 5, ArtifactCommand: 6, ApplyEnvelopes: 7,
   LoadDocument: 8, ReadDocument: 9, LoadConfig: 10, ReadConfig: 11, AttachBackbone: 12, DetachBackbone: 13, MediaIn: 14, MediaOut: 15,
-  MediaFingerprint: 16, Bye: 17, PureCommand: 18, LoadChildren: 19, ReadChildren: 20,
+  MediaFingerprint: 16, Bye: 17, PureCommand: 18, LoadChildren: 19, ReadChildren: 20, ReadHistory: 21,
 } as const;
 const APP_FRAME_TAGS = {
   Welcome: 0, Done: 1, Invocation: 2, UiSection: 3, Effects: 4, Events: 5, DocumentChanged: 6, Document: 7,
-  Config: 8, ConfigChanged: 9, ContextMenu: 10, Media: 11, MediaFingerprint: 12, Error: 13, Emit: 14, Draft: 15, Children: 16, Ephemeral: 17,
+  Config: 8, ConfigChanged: 9, ContextMenu: 10, Media: 11, MediaFingerprint: 12, Error: 13, Emit: 14, Draft: 15, Children: 16, Ephemeral: 17, HistorySnapshot: 18,
 } as const;
 
 /** 📤️ `tag u8 | fields` — the TS twin of `protocol_channel::encode_app_command` (agreed contract). */
@@ -1802,6 +1804,9 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
   } else if ("ReadChildren" in cmd) {
     out.push(APP_COMMAND_TAGS.ReadChildren);
     writeVarintU64(out, cmd.ReadChildren.seq);
+  } else if ("ReadHistory" in cmd) {
+    out.push(APP_COMMAND_TAGS.ReadHistory);
+    writeVarintU64(out, cmd.ReadHistory.seq);
   } else {
     throw new Error("encodeAppCommand: unrecognized command variant");
   }
@@ -1886,6 +1891,8 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
       return { LoadChildren: { seq: readVarintU64(bytes, pos), entries: readVecChildPackEntry(bytes, pos) } };
     case APP_COMMAND_TAGS.ReadChildren:
       return { ReadChildren: { seq: readVarintU64(bytes, pos) } };
+    case APP_COMMAND_TAGS.ReadHistory:
+      return { ReadHistory: { seq: readVarintU64(bytes, pos) } };
     case APP_COMMAND_TAGS.Bye:
       return "Bye";
     default:
@@ -1909,6 +1916,8 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     writeVarintU64(out, frame.Invocation.in_reply_to);
     writeBytes(out, frame.Invocation.output);
     writeBytes(out, frame.Invocation.diagnostics);
+    writeBytes(out, frame.Invocation.ui_scope);
+    writeBytes(out, frame.Invocation.history_patch);
   } else if ("UiSection" in frame) {
     out.push(APP_FRAME_TAGS.UiSection);
     writeOptU64(out, frame.UiSection.in_reply_to);
@@ -1986,6 +1995,10 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     writeBytes(out, frame.Ephemeral.presence);
     writeVarintU64(out, frame.Ephemeral.presence_generation);
     writeVarintU64(out, frame.Ephemeral.transient_generation);
+  } else if ("HistorySnapshot" in frame) {
+    out.push(APP_FRAME_TAGS.HistorySnapshot);
+    writeVarintU64(out, frame.HistorySnapshot.in_reply_to);
+    writeBytes(out, frame.HistorySnapshot.history_patch);
   } else {
     throw new Error("encodeAppFrame: unrecognized frame variant");
   }
@@ -2009,7 +2022,9 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
       const in_reply_to = readVarintU64(bytes, pos);
       const output = readBytes(bytes, pos);
       const diagnostics = readBytes(bytes, pos);
-      return { Invocation: { in_reply_to, output, diagnostics } };
+      const ui_scope = readBytes(bytes, pos);
+      const history_patch = readBytes(bytes, pos);
+      return { Invocation: { in_reply_to, output, diagnostics, ui_scope, history_patch } };
     }
     case APP_FRAME_TAGS.UiSection: {
       const in_reply_to = readOptU64(bytes, pos);
@@ -2076,6 +2091,8 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
       return { Children: { in_reply_to: readVarintU64(bytes, pos), entries: readVecChildPackEntry(bytes, pos) } };
     case APP_FRAME_TAGS.Ephemeral:
       return { Ephemeral: { presence: readBytes(bytes, pos), presence_generation: readVarintU64(bytes, pos), transient_generation: readVarintU64(bytes, pos) } };
+    case APP_FRAME_TAGS.HistorySnapshot:
+      return { HistorySnapshot: { in_reply_to: readVarintU64(bytes, pos), history_patch: readBytes(bytes, pos) } };
     default:
       throw new Error(`decodeAppFrame: unknown tag ${bytes[0]}`);
   }
@@ -2106,7 +2123,7 @@ export function faultDisplayMessage(faultBytes: readonly number[], decodePackVal
   return `${code}: ${fault.message}`;
 }
 
-const APP_CHANNEL_VERSION = 7;
+const APP_CHANNEL_VERSION = 8;
 
 /** 📡️ The slice of {@link PluginWasmHandle} {@link AppChannelClient} needs — deliberately narrower
  * than the full handle so a caller can hand in any `exchange`-shaped object (a real handle, a test
@@ -2185,6 +2202,11 @@ export class AppChannelClient {
 
   async loadDocument(pack: Uint8Array, spr: Uint8Array): Promise<AppFrameValue[]> {
     return this.exchangeOne({ LoadDocument: { seq: this.nextSeq(), pack: Array.from(pack), spr: Array.from(spr) } });
+  }
+
+  /** 🧾️ Retrieves the complete history projection for initial load or cursor-gap recovery. */
+  async readHistory(): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ ReadHistory: { seq: this.nextSeq() } });
   }
 
   /** 🔗️ Attaches this instance to a backbone `uri` — the channel twin of the old
@@ -2482,13 +2504,14 @@ if (import.meta.vitest) {
       { PureCommand: { seq: 17, command: [1], document: [2], document_spr: [3], config: [4], config_spr: [5], draft: [6], draft_spr: [7] } },
       { LoadChildren: { seq: 18, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } },
       { ReadChildren: { seq: 19 } },
+      { ReadHistory: { seq: 20 } },
       "Bye",
     ];
 
     const sampleFrames: readonly AppFrameValue[] = [
-      { Welcome: { channel_version: 7, instance: 7, manifest: [1, 2, 3] } },
+      { Welcome: { channel_version: 8, instance: 7, manifest: [1, 2, 3] } },
       { Done: { in_reply_to: 1 } },
-      { Invocation: { in_reply_to: 2, output: [1], diagnostics: [] } },
+      { Invocation: { in_reply_to: 2, output: [1], diagnostics: [], ui_scope: [], history_patch: [] } },
       { UiSection: { in_reply_to: 3, kind: 1, key: "panel-a", hash: 42, body: [1, 2] } },
       { UiSection: { in_reply_to: null, kind: 1, key: "panel-b", hash: 0, body: null } },
       { Effects: { in_reply_to: 4, effects: [[1], [2, 3]] } },
@@ -2505,6 +2528,7 @@ if (import.meta.vitest) {
       { Draft: { in_reply_to: 12, pack: [1], spr: [2], ops: "d" } },
       { Children: { in_reply_to: 13, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } },
       { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4 } },
+      { HistorySnapshot: { in_reply_to: 14, history_patch: [1] } },
     ];
 
     it.each(sampleCommands.map((cmd) => [cmd] as const))("round-trips AppCommand %j", (cmd) => {
@@ -2515,17 +2539,19 @@ if (import.meta.vitest) {
       expect(decodeAppFrame(encodeAppFrame(frame))).toEqual(frame);
     });
 
-    it("tags every AppCommand variant per the agreed contract order (Hello=0 ... ReadChildren=20)", () => {
+    it("tags every AppCommand variant per the agreed contract order (Hello=0 ... ReadHistory=21)", () => {
       expect(encodeAppCommand({ Hello: { channel_version: 0, app_id: "", actor: "", config: [] } })[0]).toBe(0);
       expect(encodeAppCommand({ ConfigCommand: { seq: 0, command: [] } })[0]).toBe(1);
       expect(encodeAppCommand("Bye")[0]).toBe(17);
       expect(encodeAppCommand({ ReadChildren: { seq: 0 } })[0]).toBe(20);
+      expect(encodeAppCommand({ ReadHistory: { seq: 0 } })[0]).toBe(21);
     });
 
-    it("tags every AppFrame variant per the agreed contract order (Welcome=0 ... Ephemeral=17)", () => {
+    it("tags every AppFrame variant per the agreed contract order (Welcome=0 ... HistorySnapshot=18)", () => {
       expect(encodeAppFrame({ Welcome: { channel_version: 0, instance: 0, manifest: [] } })[0]).toBe(0);
       expect(encodeAppFrame({ Error: { in_reply_to: null, fault: [] } })[0]).toBe(13);
       expect(encodeAppFrame({ Ephemeral: { presence: [], presence_generation: 0, transient_generation: 0 } })[0]).toBe(17);
+      expect(encodeAppFrame({ HistorySnapshot: { in_reply_to: 0, history_patch: [] } })[0]).toBe(18);
     });
 
     /**
@@ -2540,7 +2566,7 @@ if (import.meta.vitest) {
      */
     it("matches protocol_channel's own golden hex fixture corpus, byte-for-byte", () => {
             const commandFixtures: readonly (readonly [string, AppCommandValue])[] = [
-        ["Hello", { Hello: { channel_version: 7, app_id: "app", actor: "actor", config: [1, 2] } }],
+        ["Hello", { Hello: { channel_version: 8, app_id: "app", actor: "actor", config: [1, 2] } }],
         ["ConfigCommand", { ConfigCommand: { seq: 1, command: [9] } }],
         ["Command", { Command: { seq: 1, command: [1], view_state: [] } }],
         ["CommandText", { CommandText: { seq: 1, line: "go" } }],
@@ -2561,9 +2587,10 @@ if (import.meta.vitest) {
         ["PureCommand", { PureCommand: { seq: 1, command: [1], document: [2], document_spr: [3], config: [4], config_spr: [5], draft: [6], draft_spr: [7] } }],
         ["LoadChildren", { LoadChildren: { seq: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } }],
         ["ReadChildren", { ReadChildren: { seq: 1 } }],
+        ["ReadHistory", { ReadHistory: { seq: 1 } }],
       ];
             const commandGoldenHex: Readonly<Record<string, string>> = {
-        Hello: "000703617070056163746f72020102",
+        Hello: "000803617070056163746f72020102",
         ConfigCommand: "01010109",
         Command: "0201010100",
         CommandText: "030102676f",
@@ -2584,11 +2611,12 @@ if (import.meta.vitest) {
         PureCommand: "12010101010201030104010501060107",
         LoadChildren: "1301010173016301640101",
         ReadChildren: "1401",
+        ReadHistory: "1501",
       };
             const frameFixtures: readonly (readonly [string, AppFrameValue])[] = [
-        ["Welcome", { Welcome: { channel_version: 7, instance: 1, manifest: [1] } }],
+        ["Welcome", { Welcome: { channel_version: 8, instance: 1, manifest: [1] } }],
         ["Done", { Done: { in_reply_to: 1 } }],
-        ["Invocation", { Invocation: { in_reply_to: 1, output: [1], diagnostics: [] } }],
+        ["Invocation", { Invocation: { in_reply_to: 1, output: [1], diagnostics: [], ui_scope: [], history_patch: [] } }],
         ["UiSection", { UiSection: { in_reply_to: 1, kind: 1, key: "k", hash: 1, body: null } }],
         ["Effects", { Effects: { in_reply_to: null, effects: [[1]] } }],
         ["Events", { Events: { in_reply_to: null, events: [] } }],
@@ -2604,11 +2632,12 @@ if (import.meta.vitest) {
         ["Draft", { Draft: { in_reply_to: 1, pack: [1], spr: [2], ops: "d" } }],
         ["Children", { Children: { in_reply_to: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } }],
         ["Ephemeral", { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4 } }],
+        ["HistorySnapshot", { HistorySnapshot: { in_reply_to: 1, history_patch: [1] } }],
       ];
             const frameGoldenHex: Readonly<Record<string, string>> = {
-        Welcome: "0007010101",
+        Welcome: "0008010101",
         Done: "0101",
-        Invocation: "0201010100",
+        Invocation: "02010101000000",
         UiSection: "03010101016b0100",
         Effects: "0400010101",
         Events: "050000",
@@ -2624,6 +2653,7 @@ if (import.meta.vitest) {
         Draft: "0f01010101020164",
         Children: "1001010173016301640101",
         Ephemeral: "110201020304",
+        HistorySnapshot: "12010101",
       };
       const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
       for (const [label, value] of commandFixtures) expect(hex(encodeAppCommand(value)), `AppCommand::${label}`).toBe(commandGoldenHex[label]);
@@ -2649,12 +2679,12 @@ if (import.meta.vitest) {
       const handle = fakeHandle((instanceId, commands) => {
         seen = commands;
         expect(instanceId).toBe(7);
-        return [{ Welcome: { channel_version: 7, instance: 7, manifest: [9, 9] } }];
+        return [{ Welcome: { channel_version: 8, instance: 7, manifest: [9, 9] } }];
       });
       const client = new AppChannelClient(handle, 7, "app.demo", "actor-1");
       const frame = await client.hello({ mode: "edit" });
-      expect(seen).toEqual([{ Hello: { channel_version: 7, app_id: "app.demo", actor: "actor-1", config: Array.from(encodePackValue({ mode: "edit" })) } }]);
-      expect(frame).toEqual({ Welcome: { channel_version: 7, instance: 7, manifest: [9, 9] } });
+      expect(seen).toEqual([{ Hello: { channel_version: 8, app_id: "app.demo", actor: "actor-1", config: Array.from(encodePackValue({ mode: "edit" })) } }]);
+      expect(frame).toEqual({ Welcome: { channel_version: 8, instance: 7, manifest: [9, 9] } });
     });
 
     it("hello() throws when the exchange returns no frame", async () => {
@@ -2668,7 +2698,7 @@ if (import.meta.vitest) {
         const cmd = commands[0];
         if (cmd && cmd !== "Bye" && "Command" in cmd) seqsSeen.push(cmd.Command.seq);
         return [
-          { Invocation: { in_reply_to: seqsSeen.at(-1) ?? 0, output: [1], diagnostics: [] } },
+          { Invocation: { in_reply_to: seqsSeen.at(-1) ?? 0, output: [1], diagnostics: [], ui_scope: [], history_patch: [] } },
           { Effects: { in_reply_to: seqsSeen.at(-1) ?? 0, effects: [] } },
         ];
       });

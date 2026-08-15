@@ -1,5 +1,6 @@
 //! 🦠️ `no-mutation` GLTF mutation payload.
 
+use super::super::planning::{GltfMutationRejection, GltfSemanticMutation};
 use crate::artifacts::gltf::schema::mutations::GltfMutation;
 use crate::artifacts::gltf::GltfSnapshot;
 use serde::{Deserialize, Serialize};
@@ -21,5 +22,11 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for NoMutation {
     }
     fn target(&self) -> Vec<String> {
         vec![]
+    }
+}
+
+impl GltfSemanticMutation for NoMutation {
+    fn apply(&self, _snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+        Ok(())
     }
 }

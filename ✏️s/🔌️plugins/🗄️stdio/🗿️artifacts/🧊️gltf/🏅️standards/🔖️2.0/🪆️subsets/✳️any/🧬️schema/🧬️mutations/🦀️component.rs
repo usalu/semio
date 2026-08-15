@@ -1,7 +1,9 @@
 //! 🧬️ Closed GLTF mutation command union and command-leaf dispatch.
 
 use crate::artifacts::gltf::schema::diff::GltfDiff;
-use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfAnimation, GltfAsset, GltfBuffer, GltfMaterial, GltfMesh, GltfNode, GltfScene};
+#[cfg(test)]
+use crate::artifacts::gltf::schema::snapshot::GltfScene;
+use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfAnimation, GltfAsset, GltfBuffer, GltfMaterial, GltfMesh, GltfNode};
 use crate::artifacts::gltf::GltfSnapshot;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
@@ -35,8 +37,10 @@ pub use super::set_scene::mutation::SetScene;
 pub use super::set_snapshot::mutation::SetSnapshot;
 pub use super::transform_node::mutation::TransformNode;
 
+pub(crate) use super::planning::locate_node_owner;
+#[cfg(test)]
+pub(crate) use super::planning::semantic_snapshot;
 pub use super::planning::{apply_gltf_mutation, plan_gltf_mutation, validate_gltf_references, GltfMutationRejection};
-pub(crate) use super::planning::{locate_node_owner, semantic_snapshot};
 
 //#region 🔖️Mutations
 /// 📐️ Closed semantic command union for `stdio.gltf`; declaration order follows frozen tags.

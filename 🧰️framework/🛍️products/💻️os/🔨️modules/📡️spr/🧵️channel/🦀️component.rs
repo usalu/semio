@@ -17,7 +17,7 @@
 /// @emoji 🔢️ The channel wire format's own version, advertised by `AppCommand::Hello` and echoed
 /// back by `AppFrame::Welcome` so either side can detect a mismatched build before exchanging any
 /// other frame.
-pub const CHANNEL_VERSION: u32 = 7;
+pub const CHANNEL_VERSION: u32 = 8;
 //#endregion 🔖️Version
 
 //#region 🔖️ChildPackEntry
@@ -155,6 +155,10 @@ pub enum AppCommand {
     ReadChildren {
         seq: u64,
     },
+    /// 🧾️ Reads a complete history projection after initial connection or cursor resynchronization.
+    ReadHistory {
+        seq: u64,
+    },
 }
 //#endregion 🔖️AppCommand
 
@@ -164,7 +168,7 @@ pub enum AppCommand {
 pub enum AppFrame {
     Welcome { channel_version: u32, instance: u32, manifest: Vec<u8> },
     Done { in_reply_to: u64 },
-    Invocation { in_reply_to: u64, output: Vec<u8>, diagnostics: Vec<u8> },
+    Invocation { in_reply_to: u64, output: Vec<u8>, diagnostics: Vec<u8>, ui_scope: Vec<u8>, history_patch: Vec<u8> },
     UiSection { in_reply_to: Option<u64>, kind: u8, key: String, hash: u64, body: Option<Vec<u8>> },
     Effects { in_reply_to: Option<u64>, effects: Vec<Vec<u8>> },
     Events { in_reply_to: Option<u64>, events: Vec<Vec<u8>> },
@@ -207,6 +211,8 @@ pub enum AppFrame {
         presence_generation: u64,
         transient_generation: u64,
     },
+    /// 🧾️ Full history patch for initial host projection and gap recovery.
+    HistorySnapshot { in_reply_to: u64, history_patch: Vec<u8> },
 }
 //#endregion 🔖️AppFrame
 
@@ -417,6 +423,10 @@ pub fn encode_app_command(command: &AppCommand) -> Vec<u8> {
             out.push(20);
             crate::os_spr::write_varint_u64(&mut out, *seq);
         }
+        AppCommand::ReadHistory { seq } => {
+            out.push(21);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+        }
     }
     out
 }
@@ -488,6 +498,7 @@ pub fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate::os_spr::Pro
         },
         19 => AppCommand::LoadChildren { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, entries: read_vec_child_pack(bytes, &mut pos)? },
         20 => AppCommand::ReadChildren { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        21 => AppCommand::ReadHistory { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(command)
@@ -507,11 +518,13 @@ pub fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             out.push(1);
             crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
         }
-        AppFrame::Invocation { in_reply_to, output, diagnostics } => {
+        AppFrame::Invocation { in_reply_to, output, diagnostics, ui_scope, history_patch } => {
             out.push(2);
             crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
             crate::os_spr::write_bytes(&mut out, output);
             crate::os_spr::write_bytes(&mut out, diagnostics);
+            crate::os_spr::write_bytes(&mut out, ui_scope);
+            crate::os_spr::write_bytes(&mut out, history_patch);
         }
         AppFrame::UiSection { in_reply_to, kind, key, hash, body } => {
             out.push(3);
@@ -605,6 +618,11 @@ pub fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             crate::os_spr::write_varint_u64(&mut out, *presence_generation);
             crate::os_spr::write_varint_u64(&mut out, *transient_generation);
         }
+        AppFrame::HistorySnapshot { in_reply_to, history_patch } => {
+            out.push(18);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_bytes(&mut out, history_patch);
+        }
     }
     out
 }
@@ -616,7 +634,7 @@ pub fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::Protoco
     let frame = match tag {
         0 => AppFrame::Welcome { channel_version: crate::os_spr::read_varint_u64(bytes, &mut pos)? as u32, instance: crate::os_spr::read_varint_u64(bytes, &mut pos)? as u32, manifest: crate::os_spr::read_bytes(bytes, &mut pos)? },
         1 => AppFrame::Done { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
-        2 => AppFrame::Invocation { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, output: crate::os_spr::read_bytes(bytes, &mut pos)?, diagnostics: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        2 => AppFrame::Invocation { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, output: crate::os_spr::read_bytes(bytes, &mut pos)?, diagnostics: crate::os_spr::read_bytes(bytes, &mut pos)?, ui_scope: crate::os_spr::read_bytes(bytes, &mut pos)?, history_patch: crate::os_spr::read_bytes(bytes, &mut pos)? },
         3 => {
             let in_reply_to = read_opt_u64(bytes, &mut pos)?;
             let kind = *bytes.get(pos).ok_or_else(|| malformed("channel ui-section kind", pos as u64, "truncated"))?;
@@ -658,6 +676,7 @@ pub fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::Protoco
             presence_generation: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
             transient_generation: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
         },
+        18 => AppFrame::HistorySnapshot { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, history_patch: crate::os_spr::read_bytes(bytes, &mut pos)? },
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(frame)
@@ -826,7 +845,7 @@ mod tests {
 
     #[test]
     fn app_frame_invocation_round_trips() {
-        assert_frame_round_trips(&AppFrame::Invocation { in_reply_to: 2, output: vec![1], diagnostics: vec![2] });
+        assert_frame_round_trips(&AppFrame::Invocation { in_reply_to: 2, output: vec![1], diagnostics: vec![2], ui_scope: vec![3], history_patch: vec![4] });
     }
 
     #[test]
@@ -921,6 +940,7 @@ mod tests {
         assert_command_round_trips(&AppCommand::LoadChildren { seq: 19, entries: sample_child_entries() });
         assert_command_round_trips(&AppCommand::LoadChildren { seq: 20, entries: Vec::new() });
         assert_command_round_trips(&AppCommand::ReadChildren { seq: 21 });
+        assert_command_round_trips(&AppCommand::ReadHistory { seq: 22 });
     }
     //#endregion 🔖️Children
     //#endregion 🔖️AppFrame
@@ -1043,6 +1063,7 @@ mod tests {
             }),
             ("LoadChildren", AppCommand::LoadChildren { seq: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1] }] }),
             ("ReadChildren", AppCommand::ReadChildren { seq: 1 }),
+            ("ReadHistory", AppCommand::ReadHistory { seq: 1 }),
         ]
     }
 
@@ -1051,7 +1072,7 @@ mod tests {
         vec![
             ("Welcome", AppFrame::Welcome { channel_version: CHANNEL_VERSION, instance: 1, manifest: vec![1] }),
             ("Done", AppFrame::Done { in_reply_to: 1 }),
-            ("Invocation", AppFrame::Invocation { in_reply_to: 1, output: vec![1], diagnostics: vec![] }),
+            ("Invocation", AppFrame::Invocation { in_reply_to: 1, output: vec![1], diagnostics: vec![], ui_scope: vec![], history_patch: vec![] }),
             ("UiSection", AppFrame::UiSection { in_reply_to: Some(1), kind: 1, key: "k".to_string(), hash: 1, body: None }),
             ("Effects", AppFrame::Effects { in_reply_to: None, effects: vec![vec![1]] }),
             ("Events", AppFrame::Events { in_reply_to: None, events: vec![] }),
@@ -1074,6 +1095,7 @@ mod tests {
             ("Draft", AppFrame::Draft { in_reply_to: 1, pack: vec![1], spr: vec![2], ops: "d".to_string() }),
             ("Children", AppFrame::Children { in_reply_to: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1] }] }),
             ("Ephemeral", AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4 }),
+            ("HistorySnapshot", AppFrame::HistorySnapshot { in_reply_to: 1, history_patch: vec![1] }),
         ]
     }
 
@@ -1083,7 +1105,7 @@ mod tests {
     /// this test, forcing a deliberate update of both this table and the TS-side twin (WP-0B).
     fn channel_command_fixture_hex(label: &str) -> &'static str {
         match label {
-            "Hello" => "000703617070056163746f72020102",
+            "Hello" => "000803617070056163746f72020102",
             "ConfigCommand" => "01010109",
             "Command" => "0201010100",
             "CommandText" => "030102676f",
@@ -1104,6 +1126,7 @@ mod tests {
             "PureCommand" => "12010101010201030104010501060107",
             "LoadChildren" => "1301010173016301640101",
             "ReadChildren" => "1401",
+            "ReadHistory" => "1501",
             other => panic!("channel_command_fixture_hex: no golden hex registered for label {other:?}"),
         }
     }
@@ -1112,9 +1135,9 @@ mod tests {
     /// `channel_command_fixture_hex`'s docstring for provenance/drift-guard rationale.
     fn channel_frame_fixture_hex(label: &str) -> &'static str {
         match label {
-            "Welcome" => "0007010101",
+            "Welcome" => "0008010101",
             "Done" => "0101",
-            "Invocation" => "0201010100",
+            "Invocation" => "02010101000000",
             "UiSection" => "03010101016b0100",
             "Effects" => "0400010101",
             "Events" => "050000",
@@ -1130,6 +1153,7 @@ mod tests {
             "Draft" => "0f01010101020164",
             "Children" => "1001010173016301640101",
             "Ephemeral" => "110201020304",
+            "HistorySnapshot" => "12010101",
             other => panic!("channel_frame_fixture_hex: no golden hex registered for label {other:?}"),
         }
     }

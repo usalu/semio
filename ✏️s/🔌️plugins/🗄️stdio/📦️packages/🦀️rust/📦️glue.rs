@@ -2213,119 +2213,38 @@ pub mod artifacts {
                             #[path = "."]
                             pub mod inferences {
                                 pub use geometry as bounds;
-                                pub use measure::*;
-                                #[path = "."]
-                                pub mod size {
-                                    use super::*;
-                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️size/🦀️component.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                }
-                                #[path = "."]
-                                pub mod measure {
-                                    use super::*;
-                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾️measure/🦀️component.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                }
-                                #[path = "."]
-                                pub mod area_volume {
-                                    use super::*;
-                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/🦀️component.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                }
-                                #[path = "."]
-                                pub mod compactness {
-                                    use super::*;
-                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚪️compactness/🦀️component.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                }
-                                #[path = "."]
-                                pub mod proportion {
-                                    use super::*;
-                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📏️proportion/🦀️component.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                }
-                                #[path = "."]
-                                pub mod mass_distribution {
-                                    use super::*;
-                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️mass-distribution/🦀️component.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                }
-                                #[path = "."]
-                                pub mod curvature {
-                                    use super::*;
-                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌀️curvature/🦀️component.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                }
-                                #[path = "."]
-                                pub mod thickness {
-                                    use super::*;
-                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/↕️thickness/🦀️component.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                }
-                                #[path = "."]
-                                pub mod concavity {
-                                    use super::*;
-                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕳️concavity/🦀️component.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                }
-                                #[path = "."]
-                                pub mod clearance {
-                                    use super::*;
-                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/↔️clearance/🦀️component.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                }
-                                #[path = "."]
-                                pub mod adjacency {
-                                    use super::*;
-                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔗️adjacency/🦀️component.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                }
-                                #[path = "."]
-                                pub mod orientation {
-                                    use super::*;
-                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭️orientation/🦀️component.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                }
-                                #[path = "."]
-                                pub mod symmetry {
-                                    use super::*;
-                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪞️symmetry/🦀️component.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                }
-                                #[path = "."]
-                                pub mod roughness {
-                                    use super::*;
-                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌊️roughness/🦀️component.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                }
-                                #[path = "."]
-                                pub mod topology {
-                                    use super::*;
-                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/🦀️component.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                }
-                                #[path = "."]
-                                pub mod geometry {
-                                    use super::*;
-                                    #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🦀️component.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                }
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️size/🦀️component.rs"]
+                                pub mod size;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾️measure/🦀️component.rs"]
+                                pub mod measure;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/🦀️component.rs"]
+                                pub mod area_volume;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚪️compactness/🦀️component.rs"]
+                                pub mod compactness;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📏️proportion/🦀️component.rs"]
+                                pub mod proportion;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️mass-distribution/🦀️component.rs"]
+                                pub mod mass_distribution;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌀️curvature/🦀️component.rs"]
+                                pub mod curvature;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/↕️thickness/🦀️component.rs"]
+                                pub mod thickness;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕳️concavity/🦀️component.rs"]
+                                pub mod concavity;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/↔️clearance/🦀️component.rs"]
+                                pub mod clearance;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔗️adjacency/🦀️component.rs"]
+                                pub mod adjacency;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭️orientation/🦀️component.rs"]
+                                pub mod orientation;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪞️symmetry/🦀️component.rs"]
+                                pub mod symmetry;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌊️roughness/🦀️component.rs"]
+                                pub mod roughness;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/🦀️component.rs"]
+                                pub mod topology;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🦀️component.rs"]
+                                pub mod geometry;
                                 #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;

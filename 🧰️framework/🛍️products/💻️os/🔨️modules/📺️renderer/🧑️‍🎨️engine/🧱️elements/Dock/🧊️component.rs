@@ -1061,7 +1061,6 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
     }
     let gap_x = tab_x;
     let controls_x = cap_rect.x + cap_rect.w - controls_w;
-    let gap_w = (controls_x - gap_x).max(0.0);
     let silhouette = WindowSilhouette::from_measured_top(bounds, gap_x - bounds.x, controls_w, tab_h);
 
     if body_fill {
@@ -1522,6 +1521,8 @@ mod tests {
             silhouette.content_clip_rects(),
             vec![Rect::new(10.0, 52.0, 300.0, 168.0), Rect::new(10.0, 20.0, 80.0, 32.0), Rect::new(250.0, 20.0, 60.0, 32.0)]
         );
+        assert_eq!(silhouette.content_bounds(), Rect::new(10.0, 20.0, 300.0, 200.0));
+        assert_eq!(silhouette.safe_body_rect(), Rect::new(10.0, 52.0, 300.0, 168.0));
         assert!(!silhouette.content_clip_rects().iter().any(|rect| rect.contains(150.0, 30.0)));
     }
 
@@ -1572,6 +1573,29 @@ mod tests {
         assert_eq!(draw.glass_regions.len(), 3, "two tab chips plus one controls chip");
         assert!(!draw.glass_regions.iter().any(|region| Rect::new(region.rect[0], region.rect[1], region.rect[2], region.rect[3]).contains(gap_point.0, gap_point.1)));
         assert!(!input.hit_targets.iter().any(|hit| hit.control_id.as_deref().is_some_and(|id| id.starts_with("dock.stack."))));
+    }
+
+    #[test]
+    fn dock_stack_content_fills_full_bounds_through_one_silhouette_clip() {
+        let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
+        dock.root = DockNode::Stack { windows: vec!["a".into(), "b".into()], active: "a".into() };
+        let bounds = Rect::new(10.0, 20.0, 600.0, 400.0);
+        let theme = Theme::default();
+        let mut atlas = FontAtlas::builtin();
+        let icons = IconAtlas::default();
+        let mut input = InputState::<ActionDescriptor>::default();
+        let mut draw = DrawList::default();
+        let labels = HashMap::from([("a".into(), "A".into()), ("b".into(), "B".into())]);
+        let icon_ids = HashMap::new();
+        let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
+        dock.paint_chrome(&mut ctx, bounds, true);
+        let fill = draw
+            .layers
+            .iter()
+            .find(|layer| layer.ui_instances.iter().any(|instance| instance.rect == [bounds.x, bounds.y, bounds.w, bounds.h]))
+            .expect("full silhouette content fill");
+        assert_eq!(fill.clip.as_ref().map(|clip| clip.scissors.len()), Some(3));
+        assert!(!fill.clip.as_ref().is_some_and(|clip| clip.scissors.iter().any(|rect| rect.x <= 300 && 300 < rect.x + rect.w && rect.y <= 30 && 30 < rect.y + rect.h)));
     }
 
     //#endregion SilhouetteContentTests

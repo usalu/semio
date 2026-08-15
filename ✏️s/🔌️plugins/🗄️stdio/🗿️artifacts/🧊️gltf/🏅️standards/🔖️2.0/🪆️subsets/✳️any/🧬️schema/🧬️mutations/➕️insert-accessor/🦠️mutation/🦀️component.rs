@@ -1,5 +1,6 @@
 //! 🦠️ `insert-accessor` GLTF mutation payload.
 
+use super::super::planning::{reject, remap_references, GltfMutationRejection, GltfSemanticMutation, IndexFamily};
 use crate::artifacts::gltf::schema::mutations::GltfMutation;
 use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::GltfSnapshot;
@@ -25,5 +26,17 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for InsertAccessor {
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
+    }
+}
+
+impl GltfSemanticMutation for InsertAccessor {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+        let document = &mut snapshot.document;
+        if self.index > document.accessors.len() {
+            return Err(reject("gltf.mutation.insert-out-of-range", "document/accessors", format!("index {}, length {}", self.index, document.accessors.len())));
+        }
+        remap_references(document, IndexFamily::Accessor, self.index, true);
+        document.accessors.insert(self.index, self.accessor.clone());
+        Ok(())
     }
 }

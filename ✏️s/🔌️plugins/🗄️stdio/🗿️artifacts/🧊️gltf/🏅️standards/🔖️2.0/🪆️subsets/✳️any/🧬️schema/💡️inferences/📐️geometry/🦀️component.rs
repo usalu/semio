@@ -82,26 +82,26 @@ pub struct GltfGeometricInference {
 //#endregion 🔖️Aggregate
 
 //#region 🧮️Kernel
-type V3 = [f64; 3];
+pub(crate) type V3 = [f64; 3];
 type M4 = [f64; 16];
 
 #[derive(Clone)]
-struct RawPart {
-    address: GltfEntityAddress,
-    name: Option<String>,
-    points: Vec<V3>,
-    triangles: Vec<[usize; 3]>,
-    diagnostic_ids: Vec<String>,
+pub(crate) struct RawPart {
+    pub(crate) address: GltfEntityAddress,
+    pub(crate) name: Option<String>,
+    pub(crate) points: Vec<V3>,
+    pub(crate) triangles: Vec<[usize; 3]>,
+    pub(crate) diagnostic_ids: Vec<String>,
 }
 #[derive(Clone, Copy)]
-struct Topology {
-    components: u64,
-    boundary_loops: u64,
-    chi: i64,
-    genus: Option<u64>,
-    manifold: bool,
-    watertight: bool,
-    oriented: bool,
+pub(crate) struct Topology {
+    pub(crate) components: u64,
+    pub(crate) boundary_loops: u64,
+    pub(crate) chi: i64,
+    pub(crate) genus: Option<u64>,
+    pub(crate) manifold: bool,
+    pub(crate) watertight: bool,
+    pub(crate) oriented: bool,
 }
 
 fn policy() -> GltfAnalysisPolicy {
@@ -146,36 +146,36 @@ fn measure<T>(value: T, unit: GltfUnit, method: GltfComputationMethod, n: usize,
         provenance: provenance(GltfCoordinateSpace::SceneWorld),
     }
 }
-fn unavailable<T>(unit: GltfUnit, availability: GltfAvailability, ids: Vec<String>, n: usize, t: Option<Topology>) -> GltfMeasure<T> {
+pub(crate) fn unavailable<T>(unit: GltfUnit, availability: GltfAvailability, ids: Vec<String>, n: usize, t: Option<Topology>) -> GltfMeasure<T> {
     let validity = if availability == GltfAvailability::InvalidInput { GltfValidity::Invalid } else { GltfValidity::Indeterminate };
     GltfMeasure { value: None, unit, availability, validity, diagnostic_ids: ids, quality: quality(GltfComputationMethod::Exact, n, t), provenance: provenance(GltfCoordinateSpace::SceneWorld) }
 }
-fn exact<T>(v: T, u: GltfUnit, n: usize, t: Option<Topology>) -> GltfMeasure<T> {
+pub(crate) fn exact<T>(v: T, u: GltfUnit, n: usize, t: Option<Topology>) -> GltfMeasure<T> {
     measure(v, u, GltfComputationMethod::Exact, n, t)
 }
-fn estimate<T>(v: T, u: GltfUnit, n: usize, t: Option<Topology>) -> GltfMeasure<T> {
+pub(crate) fn estimate<T>(v: T, u: GltfUnit, n: usize, t: Option<Topology>) -> GltfMeasure<T> {
     measure(v, u, GltfComputationMethod::DeterministicEstimate, n, t)
 }
 
-fn add(a: V3, b: V3) -> V3 {
+pub(crate) fn add(a: V3, b: V3) -> V3 {
     [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
 }
-fn sub(a: V3, b: V3) -> V3 {
+pub(crate) fn sub(a: V3, b: V3) -> V3 {
     [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 }
-fn mul(a: V3, s: f64) -> V3 {
+pub(crate) fn mul(a: V3, s: f64) -> V3 {
     [a[0] * s, a[1] * s, a[2] * s]
 }
-fn dot(a: V3, b: V3) -> f64 {
+pub(crate) fn dot(a: V3, b: V3) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
-fn cross(a: V3, b: V3) -> V3 {
+pub(crate) fn cross(a: V3, b: V3) -> V3 {
     [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
-fn norm(a: V3) -> f64 {
+pub(crate) fn norm(a: V3) -> f64 {
     dot(a, a).sqrt()
 }
-fn normalize(a: V3) -> V3 {
+pub(crate) fn normalize(a: V3) -> V3 {
     let n = norm(a);
     if n > 0.0 {
         mul(a, 1.0 / n)
@@ -463,11 +463,11 @@ fn bounds(points: &[V3]) -> Option<(V3, V3, V3)> {
     }
     Some((lo, hi, sub(hi, lo)))
 }
-fn triangle_area(a: V3, b: V3, c: V3) -> f64 {
+pub(crate) fn triangle_area(a: V3, b: V3, c: V3) -> f64 {
     0.5 * norm(cross(sub(b, a), sub(c, a)))
 }
 
-fn convex_hull_metrics(points: &[V3], tolerance: f64) -> Option<(f64, f64, Vec<(V3, f64)>)> {
+pub(crate) fn convex_hull_metrics(points: &[V3], tolerance: f64) -> Option<(f64, f64, Vec<(V3, f64)>)> {
     if points.len() < 4 {
         return None;
     }
@@ -543,7 +543,7 @@ fn convex_hull_metrics(points: &[V3], tolerance: f64) -> Option<(f64, f64, Vec<(
     Some((area, volume.abs(), supporting_planes))
 }
 
-fn hull_sample(points: &[V3], budget: usize) -> Vec<V3> {
+pub(crate) fn hull_sample(points: &[V3], budget: usize) -> Vec<V3> {
     let limit = budget.min(32).max(4);
     if points.len() <= limit {
         return points.to_vec();
@@ -595,7 +595,7 @@ fn ray_triangle(origin: V3, direction: V3, a: V3, b: V3, c: V3, tolerance: f64) 
     }
 }
 
-fn thickness_samples(points: &[V3], faces: &[[usize; 3]], budget: usize, tolerance: f64) -> Vec<f64> {
+pub(crate) fn thickness_samples(points: &[V3], faces: &[[usize; 3]], budget: usize, tolerance: f64) -> Vec<f64> {
     let mut normals = vec![[0.0; 3]; points.len()];
     for f in faces {
         let n = cross(sub(points[f[1]], points[f[0]]), sub(points[f[2]], points[f[0]]));
@@ -630,7 +630,7 @@ fn thickness_samples(points: &[V3], faces: &[[usize; 3]], budget: usize, toleran
     out
 }
 
-fn roughness_samples(points: &[V3], faces: &[[usize; 3]]) -> Vec<f64> {
+pub(crate) fn roughness_samples(points: &[V3], faces: &[[usize; 3]]) -> Vec<f64> {
     let mut neighbors = vec![BTreeSet::new(); points.len()];
     for f in faces {
         for &(a, b) in &[(f[0], f[1]), (f[1], f[2]), (f[2], f[0])] {
@@ -853,7 +853,7 @@ fn shell_material_metrics(points: &[V3], faces: &[[usize; 3]], edge_faces: &BTre
     Some((material, enclosed, (enclosed - material).max(0.0), mul(material_centroid, 1.0 / material)))
 }
 
-fn statistics(values: &[f64], edges: &[f64]) -> GltfStatistics {
+pub(crate) fn statistics(values: &[f64], edges: &[f64]) -> GltfStatistics {
     if values.is_empty() {
         return GltfStatistics::default();
     }
@@ -939,358 +939,125 @@ fn principal_frame(points: &[V3], centroid: V3) -> GltfPrincipalFrame {
     GltfPrincipalFrame { centroid: GltfVec3::new(centroid), axes: e.map(|x| GltfVec3::new(normalize(x.1))), eigenvalues: e.map(|x| x.0.max(0.0)) }
 }
 
-fn empty_indicators(ids: Vec<String>) -> GltfEntityIndicators {
-    let s = || unavailable::<f64>(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.clone(), 0, None);
-    let l = || unavailable::<f64>(GltfUnit::Metre, GltfAvailability::Unavailable, ids.clone(), 0, None);
-    let a = || unavailable::<f64>(GltfUnit::SquareMetre, GltfAvailability::Unavailable, ids.clone(), 0, None);
-    let v = || unavailable::<f64>(GltfUnit::CubicMetre, GltfAvailability::Unavailable, ids.clone(), 0, None);
-    let c = || unavailable::<u64>(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.clone(), 0, None);
-    let st = || unavailable::<GltfStatistics>(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.clone(), 0, None);
-    GltfEntityIndicators {
-        size: GltfSizeIndicators {
-            overall_size: l(),
-            axis_aligned_bounds: unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.clone(), 0, None),
-            oriented_bounds: unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.clone(), 0, None),
-            bounding_box_dimensions: unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.clone(), 0, None),
-            characteristic_length: l(),
-            footprint_area: a(),
-            projected_area: st(),
-        },
-        area_volume: GltfAreaVolumeIndicators { surface_area: a(), total_area: a(), exposed_area: a(), contact_area: a(), volume: v(), enclosed_volume: v(), material_volume: v(), void_volume: v() },
-        compactness: GltfCompactnessIndicators { compactness: s(), surface_to_volume_ratio: unavailable(GltfUnit::InverseMetre, GltfAvailability::Unavailable, ids.clone(), 0, None), sphericity: s(), compactness_index: s(), hull_fill_ratio: s() },
-        proportion: GltfProportionIndicators { aspect_ratios: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.clone(), 0, None), slenderness: s(), flatness: s(), elongation: s() },
-        mass: GltfMassIndicators {
-            centroid: unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.clone(), 0, None),
-            principal_frame: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.clone(), 0, None),
-            principal_axes: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.clone(), 0, None),
-            moments_of_inertia: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.clone(), 0, None),
-            inertia_tensor: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.clone(), 0, None),
-        },
-        curvature: GltfCurvatureIndicators { mean_curvature: st(), gaussian_curvature: st(), curvature_histogram: st(), sharp_feature_proportion: s() },
-        thickness: GltfThicknessIndicators { mean_thickness: l(), minimum_thickness: l(), thickness_variability: l(), thickness_distribution: st() },
-        concavity: GltfConcavityIndicators { convex_hull_gap: v(), reentrant_area: a(), reentrant_volume: v(), concavity_index: s() },
-        clearance: GltfClearanceIndicators { minimum_distance_to_neighbors: l(), clearance_distribution: st(), interference_volume: v(), overlap_volume: v() },
-        adjacency: GltfAdjacencyIndicators { number_of_contacts: c(), contact_graph_degree: c(), connected_components: c() },
-        orientation: GltfOrientationIndicators { main_axis_direction: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.clone(), 0, None), face_normal_distribution: st(), orientation_consistency: s() },
-        symmetry: GltfSymmetryIndicators {
-            reflection_symmetry_score: s(),
-            rotational_symmetry_score: s(),
-            reflection_symmetries: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.clone(), 0, None),
-            rotational_symmetries: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.clone(), 0, None),
-            repetition_ratio: s(),
-            modularity_ratio: s(),
-        },
-        roughness: GltfRoughnessIndicators { deviation_from_ideal: st(), deviation_from_smoothed_geometry: st(), normal_variation: st(), surface_waviness: st(), irregularity: s() },
-        topology: GltfTopologyIndicators { holes: c(), handles: c(), boundary_loops: c(), euler_characteristic: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.clone(), 0, None), genus: c() },
+/// 🧰️ Canonical shared geometry consumed by independent inference stages.
+pub(crate) struct GltfGeometryContext<'a> {
+    pub(crate) policy: &'a GltfAnalysisPolicy,
+    pub(crate) topology: Topology,
+    pub(crate) points: Vec<V3>,
+    pub(crate) faces: Vec<[usize; 3]>,
+    pub(crate) edge_faces: BTreeMap<(usize, usize), Vec<(usize, bool)>>,
+    pub(crate) sample_count: usize,
+    pub(crate) bounds: GltfBounds3,
+    pub(crate) dimensions: V3,
+    pub(crate) diagonal: f64,
+    pub(crate) surface_area: f64,
+    pub(crate) solid: Option<(f64, f64, f64, V3)>,
+    pub(crate) volume: f64,
+    pub(crate) centroid: V3,
+    pub(crate) principal_frame: GltfPrincipalFrame,
+    pub(crate) principal_axes: Vec<GltfDirectionScore>,
+    pub(crate) oriented_bounds: GltfBounds3,
+    pub(crate) oriented_extent: V3,
+    pub(crate) unavailable_volume: GltfAvailability,
+}
+
+impl<'a> GltfGeometryContext<'a> {
+    fn new(points: &[V3], triangles: &[[usize; 3]], policy: &'a GltfAnalysisPolicy) -> Option<Self> {
+        let (topology, points, faces, edge_faces) = topology(points, triangles);
+        let sample_count = points.len();
+        let (lo, hi, dimensions) = bounds(&points)?;
+        let bounds = GltfBounds3 { min: GltfVec3::new(lo), max: GltfVec3::new(hi), dimensions: GltfVec3::new(dimensions) };
+        let diagonal = norm(dimensions);
+        let surface_area = faces.iter().map(|face| triangle_area(points[face[0]], points[face[1]], points[face[2]])).sum::<f64>();
+        let mut surface_centroid = [0.0; 3];
+        for face in &faces {
+            let (a, b, c) = (points[face[0]], points[face[1]], points[face[2]]);
+            let area = triangle_area(a, b, c);
+            surface_centroid = add(surface_centroid, mul(add(add(a, b), c), area / 3.0));
+        }
+        if surface_area > 0.0 {
+            surface_centroid = mul(surface_centroid, 1.0 / surface_area);
+        } else {
+            surface_centroid = mul(points.iter().fold([0.0; 3], |sum, point| add(sum, *point)), 1.0 / sample_count.max(1) as f64);
+        }
+        let tolerance = (diagonal * policy.relative_tolerance).max(policy.absolute_length_tolerance);
+        let solid = if topology.watertight && topology.manifold && topology.oriented { shell_material_metrics(&points, &faces, &edge_faces, tolerance, policy.sampling_budget as usize) } else { None };
+        let volume = solid.map(|metrics| metrics.0).unwrap_or(0.0);
+        let centroid = solid.map(|metrics| metrics.3).unwrap_or(surface_centroid);
+        let principal_frame = principal_frame(&points, centroid);
+        let principal_axes = principal_frame.axes.iter().enumerate().map(|(index, axis)| GltfDirectionScore { direction: *axis, score: principal_frame.eigenvalues[index], order: Some((index + 1) as u32) }).collect::<Vec<_>>();
+        let mut oriented_extent = [0.0; 3];
+        let mut oriented_min = [0.0; 3];
+        let mut oriented_max = [0.0; 3];
+        for (index, axis) in principal_frame.axes.iter().enumerate() {
+            let axis = axis.array();
+            let mut minimum = f64::INFINITY;
+            let mut maximum = f64::NEG_INFINITY;
+            for point in &points {
+                let projection = dot(sub(*point, centroid), axis);
+                minimum = minimum.min(projection);
+                maximum = maximum.max(projection);
+            }
+            oriented_min[index] = minimum;
+            oriented_max[index] = maximum;
+            oriented_extent[index] = maximum - minimum;
+        }
+        let oriented_bounds = GltfBounds3 { min: GltfVec3::new(oriented_min), max: GltfVec3::new(oriented_max), dimensions: GltfVec3::new(oriented_extent) };
+        let unavailable_volume = if !topology.manifold {
+            GltfAvailability::NonManifold
+        } else if !topology.watertight {
+            GltfAvailability::OpenSurface
+        } else {
+            GltfAvailability::InvalidInput
+        };
+        Some(Self { policy, topology, points, faces, edge_faces, sample_count, bounds, dimensions, diagonal, surface_area, solid, volume, centroid, principal_frame, principal_axes, oriented_bounds, oriented_extent, unavailable_volume })
     }
 }
 
-fn symmetry_score(points: &[V3], centroid: V3, axis: V3, scale: f64, rotation: bool, budget: usize) -> f64 {
-    if points.is_empty() || scale <= 0.0 {
-        return 0.0;
+fn empty_indicators(diagnostic_ids: Vec<String>) -> GltfEntityIndicators {
+    GltfEntityIndicators {
+        size: GltfSizeInference::unavailable(&diagnostic_ids),
+        area_volume: GltfAreaVolumeInference::unavailable(&diagnostic_ids),
+        compactness: GltfCompactnessInference::unavailable(&diagnostic_ids),
+        proportion: GltfProportionInference::unavailable(&diagnostic_ids),
+        mass: GltfMassInference::unavailable(&diagnostic_ids),
+        curvature: GltfCurvatureInference::unavailable(&diagnostic_ids),
+        thickness: GltfThicknessInference::unavailable(&diagnostic_ids),
+        concavity: GltfConcavityInference::unavailable(&diagnostic_ids),
+        clearance: GltfClearanceInference::unavailable(&diagnostic_ids),
+        adjacency: GltfAdjacencyInference::unavailable(&diagnostic_ids),
+        orientation: GltfOrientationInference::unavailable(&diagnostic_ids),
+        symmetry: GltfSymmetryInference::unavailable(&diagnostic_ids),
+        roughness: GltfRoughnessInference::unavailable(&diagnostic_ids),
+        topology: GltfTopologyInference::unavailable(&diagnostic_ids),
     }
-    let step = (points.len() * points.len() / budget.max(1)).max(1);
-    let mut error = 0.0;
-    let mut count = 0;
-    for p in points.iter().step_by(step) {
-        let d = sub(*p, centroid);
-        let q = if rotation { add(centroid, sub(mul(axis, 2.0 * dot(d, axis)), d)) } else { sub(*p, mul(axis, 2.0 * dot(d, axis))) };
-        let nearest = points.iter().map(|x| norm(sub(*x, q))).fold(f64::INFINITY, f64::min);
-        error += nearest / scale;
-        count += 1
-    }
-    (1.0 - error / count.max(1) as f64).clamp(0.0, 1.0)
 }
 
 fn analyze(points: &[V3], triangles: &[[usize; 3]], policy: &GltfAnalysisPolicy) -> (GltfEntityIndicators, Topology) {
-    let (t, welded, faces, edge_faces) = topology(points, triangles);
-    let n = welded.len();
-    let Some((lo, hi, dims)) = bounds(&welded) else { return (empty_indicators(Vec::new()), t) };
-    let bbox = GltfBounds3 { min: GltfVec3::new(lo), max: GltfVec3::new(hi), dimensions: GltfVec3::new(dims) };
-    let diagonal = norm(dims);
-    let surface_area = faces.iter().map(|f| triangle_area(welded[f[0]], welded[f[1]], welded[f[2]])).sum::<f64>();
-    let mut surface_centroid = [0.0; 3];
-    for f in &faces {
-        let (a, b, c) = (welded[f[0]], welded[f[1]], welded[f[2]]);
-        let ar = triangle_area(a, b, c);
-        surface_centroid = add(surface_centroid, mul(add(add(a, b), c), ar / 3.0));
-    }
-    if surface_area > 0.0 {
-        surface_centroid = mul(surface_centroid, 1.0 / surface_area)
-    } else {
-        surface_centroid = mul(welded.iter().fold([0.0; 3], |s, p| add(s, *p)), 1.0 / n.max(1) as f64)
-    }
-    let solid = if t.watertight && t.manifold && t.oriented { shell_material_metrics(&welded, &faces, &edge_faces, (diagonal * policy.relative_tolerance).max(policy.absolute_length_tolerance), policy.sampling_budget as usize) } else { None };
-    let volume = solid.map(|metrics| metrics.0).unwrap_or(0.0);
-    let centroid = solid.map(|metrics| metrics.3).unwrap_or(surface_centroid);
-    let frame = principal_frame(&welded, centroid);
-    let axes = frame.axes.iter().enumerate().map(|(i, a)| GltfDirectionScore { direction: *a, score: frame.eigenvalues[i], order: Some((i + 1) as u32) }).collect::<Vec<_>>();
-    let mut oriented_extent = [0.0; 3];
-    let mut oriented_min = [0.0; 3];
-    let mut oriented_max = [0.0; 3];
-    for (i, a) in frame.axes.iter().enumerate() {
-        let axis = a.array();
-        let mut min = f64::INFINITY;
-        let mut max = f64::NEG_INFINITY;
-        for p in &welded {
-            let q = dot(sub(*p, centroid), axis);
-            min = min.min(q);
-            max = max.max(q)
-        }
-        oriented_min[i] = min;
-        oriented_max[i] = max;
-        oriented_extent[i] = max - min
-    }
-    let obb = GltfBounds3 { min: GltfVec3::new(oriented_min), max: GltfVec3::new(oriented_max), dimensions: GltfVec3::new(oriented_extent) };
-    let projected = [
-        faces.iter().map(|f| 0.5 * cross(sub(welded[f[1]], welded[f[0]]), sub(welded[f[2]], welded[f[0]]))[0].abs()).sum(),
-        faces.iter().map(|f| 0.5 * cross(sub(welded[f[1]], welded[f[0]]), sub(welded[f[2]], welded[f[0]]))[1].abs()).sum(),
-        faces.iter().map(|f| 0.5 * cross(sub(welded[f[1]], welded[f[0]]), sub(welded[f[2]], welded[f[0]]))[2].abs()).sum(),
-    ];
-    let mut angles = Vec::new();
-    let mut edge_curvatures = Vec::new();
-    let mut sharp_length = 0.0;
-    let mut edge_length = 0.0;
-    for (&(a, b), fs) in &edge_faces {
-        let len = norm(sub(welded[b], welded[a]));
-        edge_length += len;
-        if fs.len() == 2 {
-            let normal = |fi: usize| {
-                let f = faces[fi];
-                normalize(cross(sub(welded[f[1]], welded[f[0]]), sub(welded[f[2]], welded[f[0]])))
-            };
-            let angle = dot(normal(fs[0].0), normal(fs[1].0)).clamp(-1.0, 1.0).acos();
-            angles.push(angle);
-            if len > 0.0 {
-                edge_curvatures.push(angle / len)
-            }
-            if angle > policy.sharp_feature_angle_radians {
-                sharp_length += len
-            }
-        }
-    }
-    let curvature = statistics(&edge_curvatures, &policy.histogram_edges);
-    let face_angles = statistics(
-        &faces
-            .iter()
-            .map(|f| {
-                let normal = normalize(cross(sub(welded[f[1]], welded[f[0]]), sub(welded[f[2]], welded[f[0]])));
-                dot(normal, frame.axes[0].array()).clamp(-1.0, 1.0).acos()
-            })
-            .collect::<Vec<_>>(),
-        &policy.histogram_edges,
-    );
-    let mut vertex_areas = vec![0.0; n];
-    let mut angle_sums = vec![0.0; n];
-    for f in &faces {
-        let ar = triangle_area(welded[f[0]], welded[f[1]], welded[f[2]]);
-        for corner in 0..3 {
-            let i = f[corner];
-            let a = sub(welded[f[(corner + 1) % 3]], welded[i]);
-            let b = sub(welded[f[(corner + 2) % 3]], welded[i]);
-            angle_sums[i] += dot(normalize(a), normalize(b)).clamp(-1.0, 1.0).acos();
-            vertex_areas[i] += ar / 3.0;
-        }
-    }
-    let boundary_vertices = edge_faces.iter().filter(|(_, f)| f.len() == 1).flat_map(|((a, b), _)| [*a, *b]).collect::<BTreeSet<_>>();
-    let gaussian_values =
-        (0..n).filter_map(|i| if vertex_areas[i] > 0.0 { Some(((if boundary_vertices.contains(&i) { std::f64::consts::PI } else { 2.0 * std::f64::consts::PI }) - angle_sums[i]) / vertex_areas[i]) } else { None }).collect::<Vec<_>>();
-    let gaussian = statistics(&gaussian_values, &policy.histogram_edges);
-    let unavailable_volume = if !t.manifold {
-        GltfAvailability::NonManifold
-    } else if !t.watertight {
-        GltfAvailability::OpenSurface
-    } else if !t.oriented {
-        GltfAvailability::InvalidInput
-    } else {
-        GltfAvailability::InvalidInput
+    let Some(context) = GltfGeometryContext::new(points, triangles, policy) else {
+        return (empty_indicators(Vec::new()), topology(points, triangles).0);
     };
-    let vol = if solid.is_some() { exact(volume, GltfUnit::CubicMetre, n, Some(t)) } else { unavailable(GltfUnit::CubicMetre, unavailable_volume, Vec::new(), n, Some(t)) };
-    let enclosed = if let Some(metrics) = solid { exact(metrics.1, GltfUnit::CubicMetre, n, Some(t)) } else { unavailable(GltfUnit::CubicMetre, unavailable_volume, Vec::new(), n, Some(t)) };
-    let void = if let Some(metrics) = solid { exact(metrics.2, GltfUnit::CubicMetre, n, Some(t)) } else { unavailable(GltfUnit::CubicMetre, unavailable_volume, Vec::new(), n, Some(t)) };
-    let ratio = if volume > 1e-15 && t.watertight && t.manifold && t.oriented { Some(surface_area / volume) } else { None };
-    let sphericity = if volume > 1e-15 && surface_area > 0.0 && t.watertight { Some(std::f64::consts::PI.powf(1.0 / 3.0) * (6.0 * volume).powf(2.0 / 3.0) / surface_area) } else { None };
-    let sorted = {
-        let mut x = oriented_extent;
-        x.sort_by(|a, b| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal));
-        x
-    };
-    let thickness_values = if t.watertight && t.manifold { thickness_samples(&welded, &faces, policy.sampling_budget as usize, policy.absolute_length_tolerance) } else { Vec::new() };
-    let thickness_stats = statistics(&thickness_values, &policy.histogram_edges);
-    let thick_mean = thickness_stats.mean;
-    let thick_min = thickness_stats.minimum;
-    let thick_variability = thickness_stats.standard_deviation;
-    let rough_values = roughness_samples(&welded, &faces);
-    let rough_stats = statistics(&rough_values, &policy.histogram_edges);
-    let rough_irregularity = match (rough_stats.mean, rough_stats.standard_deviation) {
-        (Some(m), Some(s)) if m > 0.0 => Some(s / m),
-        _ => None,
-    };
-    let hull_input = hull_sample(&welded, policy.sampling_budget as usize);
-    let hull_tolerance = (diagonal * policy.relative_tolerance).max(policy.absolute_length_tolerance);
-    let hull = convex_hull_metrics(&hull_input, hull_tolerance);
-    let reentrant_area = hull.as_ref().map(|(_, _, planes)| {
-        faces
-            .iter()
-            .filter(|face| {
-                let centroid = mul(add(add(welded[face[0]], welded[face[1]]), welded[face[2]]), 1.0 / 3.0);
-                !planes.iter().any(|(normal, offset)| (dot(*normal, centroid) - *offset).abs() <= hull_tolerance * 4.0)
-            })
-            .map(|face| triangle_area(welded[face[0]], welded[face[1]], welded[face[2]]))
-            .sum::<f64>()
-    });
-    let moments = GltfVec3::new([frame.eigenvalues[1] + frame.eigenvalues[2], frame.eigenvalues[0] + frame.eigenvalues[2], frame.eigenvalues[0] + frame.eigenvalues[1]]);
-    let tensor = vec![moments.x, 0.0, 0.0, 0.0, moments.y, 0.0, 0.0, 0.0, moments.z];
-    let unavailable_stats = || unavailable::<GltfStatistics>(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), n, Some(t));
+    let topology = context.topology;
     (
         GltfEntityIndicators {
-            size: GltfSizeIndicators {
-                overall_size: exact(diagonal, GltfUnit::Metre, n, Some(t)),
-                axis_aligned_bounds: exact(bbox.clone(), GltfUnit::Metre, n, Some(t)),
-                oriented_bounds: exact(obb, GltfUnit::Metre, n, Some(t)),
-                bounding_box_dimensions: exact(GltfVec3::new(dims), GltfUnit::Metre, n, Some(t)),
-                characteristic_length: exact(if surface_area > 0.0 { surface_area.sqrt() } else { diagonal }, GltfUnit::Metre, n, Some(t)),
-                footprint_area: estimate(projected[2], GltfUnit::SquareMetre, n, Some(t)),
-                projected_area: estimate(statistics(&projected, &policy.histogram_edges), GltfUnit::SquareMetre, n, Some(t)),
-            },
-            area_volume: GltfAreaVolumeIndicators {
-                surface_area: exact(surface_area, GltfUnit::SquareMetre, n, Some(t)),
-                total_area: exact(surface_area, GltfUnit::SquareMetre, n, Some(t)),
-                exposed_area: unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), n, Some(t)),
-                contact_area: unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), n, Some(t)),
-                volume: vol.clone(),
-                enclosed_volume: enclosed,
-                material_volume: vol.clone(),
-                void_volume: void,
-            },
-            compactness: GltfCompactnessIndicators {
-                compactness: if let Some(s) = sphericity { exact(s, GltfUnit::Unitless, n, Some(t)) } else { unavailable(GltfUnit::Unitless, unavailable_volume, Vec::new(), n, Some(t)) },
-                surface_to_volume_ratio: if let Some(r) = ratio { exact(r, GltfUnit::InverseMetre, n, Some(t)) } else { unavailable(GltfUnit::InverseMetre, unavailable_volume, Vec::new(), n, Some(t)) },
-                sphericity: if let Some(s) = sphericity { exact(s, GltfUnit::Unitless, n, Some(t)) } else { unavailable(GltfUnit::Unitless, unavailable_volume, Vec::new(), n, Some(t)) },
-                compactness_index: if let Some(s) = sphericity { exact(s, GltfUnit::Unitless, n, Some(t)) } else { unavailable(GltfUnit::Unitless, unavailable_volume, Vec::new(), n, Some(t)) },
-                hull_fill_ratio: if let Some((_, hv, _)) = hull.as_ref().filter(|(_, v, _)| *v > 0.0) {
-                    if vol.value.is_some() {
-                        estimate((volume / *hv).clamp(0.0, 1.0), GltfUnit::Unitless, n, Some(t))
-                    } else {
-                        unavailable(GltfUnit::Unitless, unavailable_volume, Vec::new(), n, Some(t))
-                    }
-                } else {
-                    unavailable(GltfUnit::Unitless, GltfAvailability::Degenerate, Vec::new(), n, Some(t))
-                },
-            },
-            proportion: GltfProportionIndicators {
-                aspect_ratios: exact(
-                    GltfVec3::new([if sorted[1] > 0.0 { sorted[0] / sorted[1] } else { 0.0 }, if sorted[2] > 0.0 { sorted[1] / sorted[2] } else { 0.0 }, if sorted[2] > 0.0 { sorted[0] / sorted[2] } else { 0.0 }]),
-                    GltfUnit::Unitless,
-                    n,
-                    Some(t),
-                ),
-                slenderness: exact(if sorted[1] > 0.0 { sorted[0] / sorted[1] } else { 0.0 }, GltfUnit::Unitless, n, Some(t)),
-                flatness: exact(if sorted[1] > 0.0 { sorted[2] / sorted[1] } else { 0.0 }, GltfUnit::Unitless, n, Some(t)),
-                elongation: exact(if sorted[0] > 0.0 { sorted[1] / sorted[0] } else { 0.0 }, GltfUnit::Unitless, n, Some(t)),
-            },
-            mass: GltfMassIndicators {
-                centroid: if t.watertight && volume > 1e-15 { exact(GltfVec3::new(centroid), GltfUnit::Metre, n, Some(t)) } else { estimate(GltfVec3::new(centroid), GltfUnit::Metre, n, Some(t)) },
-                principal_frame: estimate(frame.clone(), GltfUnit::Unitless, n, Some(t)),
-                principal_axes: estimate(axes.clone(), GltfUnit::Unitless, n, Some(t)),
-                moments_of_inertia: estimate(moments, GltfUnit::SquareMetre, n, Some(t)),
-                inertia_tensor: estimate(tensor, GltfUnit::SquareMetre, n, Some(t)),
-            },
-            curvature: GltfCurvatureIndicators {
-                mean_curvature: estimate(curvature.clone(), GltfUnit::InverseMetre, edge_curvatures.len(), Some(t)),
-                gaussian_curvature: estimate(gaussian, GltfUnit::InverseSquareMetre, gaussian_values.len(), Some(t)),
-                curvature_histogram: estimate(curvature.clone(), GltfUnit::InverseMetre, edge_curvatures.len(), Some(t)),
-                sharp_feature_proportion: exact(if edge_length > 0.0 { sharp_length / edge_length } else { 0.0 }, GltfUnit::Unitless, n, Some(t)),
-            },
-            thickness: GltfThicknessIndicators {
-                mean_thickness: if let Some(x) = thick_mean { estimate(x, GltfUnit::Metre, n, Some(t)) } else { unavailable(GltfUnit::Metre, unavailable_volume, Vec::new(), n, Some(t)) },
-                minimum_thickness: if let Some(x) = thick_min { estimate(x, GltfUnit::Metre, n, Some(t)) } else { unavailable(GltfUnit::Metre, unavailable_volume, Vec::new(), n, Some(t)) },
-                thickness_variability: if let Some(x) = thick_variability { estimate(x, GltfUnit::Metre, n, Some(t)) } else { unavailable(GltfUnit::Metre, unavailable_volume, Vec::new(), n, Some(t)) },
-                thickness_distribution: if thickness_values.is_empty() { unavailable(GltfUnit::Metre, unavailable_volume, Vec::new(), n, Some(t)) } else { estimate(thickness_stats, GltfUnit::Metre, n, Some(t)) },
-            },
-            concavity: GltfConcavityIndicators {
-                convex_hull_gap: if let Some((_, hv, _)) = hull.as_ref() {
-                    if vol.value.is_some() {
-                        estimate((*hv - volume).max(0.0), GltfUnit::CubicMetre, n, Some(t))
-                    } else {
-                        unavailable(GltfUnit::CubicMetre, unavailable_volume, Vec::new(), n, Some(t))
-                    }
-                } else {
-                    unavailable(GltfUnit::CubicMetre, GltfAvailability::Degenerate, Vec::new(), n, Some(t))
-                },
-                reentrant_area: if let Some(area) = reentrant_area { estimate(area, GltfUnit::SquareMetre, n, Some(t)) } else { unavailable(GltfUnit::SquareMetre, GltfAvailability::Degenerate, Vec::new(), n, Some(t)) },
-                reentrant_volume: if let Some((_, hv, _)) = hull.as_ref() {
-                    if vol.value.is_some() {
-                        estimate((*hv - volume).max(0.0), GltfUnit::CubicMetre, n, Some(t))
-                    } else {
-                        unavailable(GltfUnit::CubicMetre, unavailable_volume, Vec::new(), n, Some(t))
-                    }
-                } else {
-                    unavailable(GltfUnit::CubicMetre, GltfAvailability::Degenerate, Vec::new(), n, Some(t))
-                },
-                concavity_index: if let Some((_, hv, _)) = hull.as_ref().filter(|(_, v, _)| *v > 0.0) {
-                    if vol.value.is_some() {
-                        estimate((1.0 - volume / *hv).clamp(0.0, 1.0), GltfUnit::Unitless, n, Some(t))
-                    } else {
-                        unavailable(GltfUnit::Unitless, unavailable_volume, Vec::new(), n, Some(t))
-                    }
-                } else {
-                    unavailable(GltfUnit::Unitless, GltfAvailability::Degenerate, Vec::new(), n, Some(t))
-                },
-            },
-            clearance: GltfClearanceIndicators {
-                minimum_distance_to_neighbors: unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, Vec::new(), n, Some(t)),
-                clearance_distribution: unavailable_stats(),
-                interference_volume: unavailable(GltfUnit::CubicMetre, GltfAvailability::Unavailable, Vec::new(), n, Some(t)),
-                overlap_volume: unavailable(GltfUnit::CubicMetre, GltfAvailability::Unavailable, Vec::new(), n, Some(t)),
-            },
-            adjacency: GltfAdjacencyIndicators {
-                number_of_contacts: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), n, Some(t)),
-                contact_graph_degree: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), n, Some(t)),
-                connected_components: exact(t.components, GltfUnit::Unitless, n, Some(t)),
-            },
-            orientation: GltfOrientationIndicators {
-                main_axis_direction: estimate(axes[0].direction, GltfUnit::Unitless, n, Some(t)),
-                face_normal_distribution: exact(face_angles, GltfUnit::Radian, faces.len(), Some(t)),
-                orientation_consistency: exact(if t.oriented { 1.0 } else { 0.0 }, GltfUnit::Unitless, n, Some(t)),
-            },
-            symmetry: GltfSymmetryIndicators {
-                reflection_symmetry_score: estimate(symmetry_score(&welded, centroid, frame.axes[0].array(), diagonal, false, policy.sampling_budget as usize), GltfUnit::Unitless, n, Some(t)),
-                rotational_symmetry_score: estimate(symmetry_score(&welded, centroid, frame.axes[0].array(), diagonal, true, policy.sampling_budget as usize), GltfUnit::Unitless, n, Some(t)),
-                reflection_symmetries: estimate(
-                    frame.axes.iter().map(|a| GltfDirectionScore { direction: *a, score: symmetry_score(&welded, centroid, a.array(), diagonal, false, policy.sampling_budget as usize), order: None }).collect(),
-                    GltfUnit::Unitless,
-                    n,
-                    Some(t),
-                ),
-                rotational_symmetries: estimate(
-                    frame.axes.iter().map(|a| GltfDirectionScore { direction: *a, score: symmetry_score(&welded, centroid, a.array(), diagonal, true, policy.sampling_budget as usize), order: Some(2) }).collect(),
-                    GltfUnit::Unitless,
-                    n,
-                    Some(t),
-                ),
-                repetition_ratio: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), n, Some(t)),
-                modularity_ratio: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), n, Some(t)),
-            },
-            roughness: GltfRoughnessIndicators {
-                deviation_from_ideal: unavailable_stats(),
-                deviation_from_smoothed_geometry: estimate(rough_stats.clone(), GltfUnit::Metre, rough_values.len(), Some(t)),
-                normal_variation: exact(statistics(&angles, &policy.histogram_edges), GltfUnit::Radian, n, Some(t)),
-                surface_waviness: estimate(rough_stats, GltfUnit::Metre, rough_values.len(), Some(t)),
-                irregularity: if let Some(x) = rough_irregularity { estimate(x, GltfUnit::Unitless, rough_values.len(), Some(t)) } else { unavailable(GltfUnit::Unitless, GltfAvailability::Degenerate, Vec::new(), n, Some(t)) },
-            },
-            topology: GltfTopologyIndicators {
-                holes: if let Some(g) = t.genus { exact(g, GltfUnit::Unitless, n, Some(t)) } else { unavailable(GltfUnit::Unitless, GltfAvailability::NonManifold, Vec::new(), n, Some(t)) },
-                handles: if let Some(g) = t.genus { exact(g, GltfUnit::Unitless, n, Some(t)) } else { unavailable(GltfUnit::Unitless, GltfAvailability::NonManifold, Vec::new(), n, Some(t)) },
-                boundary_loops: exact(t.boundary_loops, GltfUnit::Unitless, n, Some(t)),
-                euler_characteristic: exact(t.chi, GltfUnit::Unitless, n, Some(t)),
-                genus: if let Some(g) = t.genus { exact(g, GltfUnit::Unitless, n, Some(t)) } else { unavailable(GltfUnit::Unitless, GltfAvailability::NonManifold, Vec::new(), n, Some(t)) },
-            },
+            size: GltfSizeInference::infer(&context),
+            area_volume: GltfAreaVolumeInference::infer(&context),
+            compactness: GltfCompactnessInference::infer(&context),
+            proportion: GltfProportionInference::infer(&context),
+            mass: GltfMassInference::infer(&context),
+            curvature: GltfCurvatureInference::infer(&context),
+            thickness: GltfThicknessInference::infer(&context),
+            concavity: GltfConcavityInference::infer(&context),
+            clearance: GltfClearanceInference::infer(&context),
+            adjacency: GltfAdjacencyInference::infer(&context),
+            orientation: GltfOrientationInference::infer(&context),
+            symmetry: GltfSymmetryInference::infer(&context),
+            roughness: GltfRoughnessInference::infer(&context),
+            topology: GltfTopologyInference::infer(&context),
         },
-        t,
+        topology,
     )
 }
-
 fn point_triangle_distance(p: V3, a: V3, b: V3, c: V3) -> f64 {
     let ab = sub(b, a);
     let ac = sub(c, a);
@@ -1424,7 +1191,18 @@ fn pair_overlap_volume(a: &RawPart, b: &RawPart, policy: &GltfAnalysisPolicy) ->
     Some((dimensions[0] * dimensions[1] * dimensions[2] * inside as f64 / samples as f64, samples))
 }
 
-fn analyze_pair(a: &RawPart, b: &RawPart, p: &GltfAnalysisPolicy) -> Option<GltfPairInference> {
+/// 🧷️ Shared pair geometry interpreted by independent pair-inference leaves.
+pub(crate) struct GltfPairGeometry {
+    pub(crate) first: GltfEntityAddress,
+    pub(crate) second: GltfEntityAddress,
+    pub(crate) minimum_distance: f64,
+    pub(crate) contact_area: Option<f64>,
+    pub(crate) overlap: Option<(f64, usize)>,
+    pub(crate) adjacent: bool,
+    pub(crate) sample_count: usize,
+}
+
+fn pair_geometry(a: &RawPart, b: &RawPart, p: &GltfAnalysisPolicy) -> Option<GltfPairGeometry> {
     let (alo, ahi, _) = bounds(&a.points)?;
     let (blo, bhi, _) = bounds(&b.points)?;
     let mut distance = f64::INFINITY;
@@ -1474,22 +1252,20 @@ fn analyze_pair(a: &RawPart, b: &RawPart, p: &GltfAnalysisPolicy) -> Option<Gltf
     let adjacent = distance <= p.contact_tolerance;
     let n = a.points.len() + b.points.len();
     let overlap = pair_overlap_volume(a, b, p);
-    Some(GltfPairInference {
+    Some(GltfPairGeometry {
         first: a.address.clone(),
         second: b.address.clone(),
-        minimum_distance: estimate(distance, GltfUnit::Metre, n, None),
-        clearance_distribution: estimate(statistics(&[distance], &p.histogram_edges), GltfUnit::Metre, n, None),
+        minimum_distance: distance,
         contact_area: if coincident_contact {
-            estimate(contact_area, GltfUnit::SquareMetre, n, None)
+            Some(contact_area)
         } else if aabb_separation > p.contact_tolerance {
-            exact(0.0, GltfUnit::SquareMetre, n, None)
+            Some(0.0)
         } else {
-            unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), n, None)
+            None
         },
-        interference_volume: if let Some((volume, samples)) = overlap { estimate(volume, GltfUnit::CubicMetre, samples, None) } else { unavailable(GltfUnit::CubicMetre, GltfAvailability::Unavailable, Vec::new(), n, None) },
-        overlap_volume: if let Some((volume, samples)) = overlap { estimate(volume, GltfUnit::CubicMetre, samples, None) } else { unavailable(GltfUnit::CubicMetre, GltfAvailability::Unavailable, Vec::new(), n, None) },
-        adjacent: estimate(adjacent, GltfUnit::Unitless, n, None),
-        orientation_consistency: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), n, None),
+        overlap,
+        adjacent,
+        sample_count: n,
     })
 }
 
@@ -1513,72 +1289,37 @@ pub fn compute_gltf_geometry(snapshot: &GltfSnapshot) -> GltfGeometricInference 
         component_count += t.components;
         parts.push(GltfPartInference { address: raw.address.clone(), name: raw.name.clone(), indicators, diagnostic_ids: raw.diagnostic_ids.clone() })
     }
-    let signature = |part: &GltfPartInference| {
-        let dimensions = part.indicators.size.oriented_bounds.value.as_ref().map(|x| x.dimensions.array()).unwrap_or([0.0; 3]);
-        let mut dimensions = dimensions;
-        dimensions.sort_by(f64::total_cmp);
-        let quantum = p.absolute_length_tolerance.max(1e-9);
-        let area_quantum = quantum * quantum;
-        let volume_quantum = area_quantum * quantum;
-        format!(
-            "{},{},{},{},{}",
-            (dimensions[0] / quantum).round() as i64,
-            (dimensions[1] / quantum).round() as i64,
-            (dimensions[2] / quantum).round() as i64,
-            (part.indicators.area_volume.surface_area.value.unwrap_or(0.0) / area_quantum).round() as i64,
-            (part.indicators.area_volume.volume.value.unwrap_or(0.0) / volume_quantum).round() as i64
-        )
-    };
-    let mut signatures = BTreeMap::<String, usize>::new();
-    for part in &parts {
-        *signatures.entry(signature(part)).or_default() += 1
-    }
-    if !parts.is_empty() {
-        let repeated_members = signatures.values().filter(|count| **count > 1).sum::<usize>();
-        let repeated_excess = signatures.values().map(|count| count.saturating_sub(1)).sum::<usize>();
-        overall.symmetry.repetition_ratio = estimate(repeated_excess as f64 / parts.len() as f64, GltfUnit::Unitless, parts.len(), Some(overall_topology));
-        overall.symmetry.modularity_ratio = estimate(repeated_members as f64 / parts.len() as f64, GltfUnit::Unitless, parts.len(), Some(overall_topology));
-    }
+    GltfSymmetryInference::infer_assembly(&mut overall.symmetry, &parts, &p, overall_topology);
     let mut pairs = Vec::new();
-    for i in 0..raw_parts.len() {
-        for j in i + 1..raw_parts.len() {
-            if let Some(pair) = analyze_pair(&raw_parts[i], &raw_parts[j], &p) {
-                pairs.push(pair)
+    for first in 0..raw_parts.len() {
+        for second in first + 1..raw_parts.len() {
+            if let Some(pair) = pair_geometry(&raw_parts[first], &raw_parts[second], &p) {
+                let (minimum_distance, clearance_distribution, interference_volume, overlap_volume) = GltfClearanceInference::infer_pair(&pair, &p);
+                pairs.push(GltfPairInference {
+                    first: pair.first.clone(),
+                    second: pair.second.clone(),
+                    minimum_distance,
+                    clearance_distribution,
+                    contact_area: GltfAreaVolumeInference::infer_pair_contact(&pair),
+                    interference_volume,
+                    overlap_volume,
+                    adjacent: GltfAdjacencyInference::infer_pair(&pair),
+                    orientation_consistency: GltfOrientationInference::infer_pair(&pair),
+                });
             }
         }
     }
-    let distances = pairs.iter().filter_map(|x| x.minimum_distance.value).collect::<Vec<_>>();
-    let contact_area = pairs.iter().filter_map(|x| x.contact_area.value).sum::<f64>();
+    let distances = pairs.iter().filter_map(|pair| pair.minimum_distance.value).collect::<Vec<_>>();
+    let contact_area = pairs.iter().filter_map(|pair| pair.contact_area.value).sum::<f64>();
     let contact_area_complete = pairs.iter().all(|pair| pair.contact_area.value.is_some());
     let overlap_volume = pairs.iter().filter_map(|pair| pair.overlap_volume.value).sum::<f64>();
     let overlap_complete = pairs.iter().all(|pair| pair.overlap_volume.value.is_some());
-    let contacts = pairs.iter().filter(|x| x.adjacent.value == Some(true)).count() as u64;
-    let sample = all_points.len();
-    if raw_parts.len() <= 1 {
-        overall.area_volume.exposed_area = overall.area_volume.surface_area.clone();
-        overall.area_volume.contact_area = exact(0.0, GltfUnit::SquareMetre, sample, Some(overall_topology));
-        overall.adjacency.number_of_contacts = exact(0, GltfUnit::Unitless, sample, Some(overall_topology));
-        overall.adjacency.contact_graph_degree = exact(0, GltfUnit::Unitless, sample, Some(overall_topology));
-    } else {
-        if contact_area_complete {
-            overall.area_volume.contact_area = estimate(contact_area, GltfUnit::SquareMetre, sample, Some(overall_topology));
-            overall.area_volume.exposed_area = estimate((overall.area_volume.surface_area.value.unwrap_or(0.0) - 2.0 * contact_area).max(0.0), GltfUnit::SquareMetre, sample, Some(overall_topology));
-        } else {
-            overall.area_volume.contact_area = unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), sample, Some(overall_topology));
-            overall.area_volume.exposed_area = unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), sample, Some(overall_topology));
-        }
-        overall.adjacency.number_of_contacts = estimate(contacts, GltfUnit::Unitless, sample, Some(overall_topology));
-        overall.adjacency.contact_graph_degree = estimate(if raw_parts.is_empty() { 0 } else { 2 * contacts / raw_parts.len() as u64 }, GltfUnit::Unitless, sample, Some(overall_topology));
-        overall.orientation.orientation_consistency = unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), sample, Some(overall_topology));
-    }
-    if !distances.is_empty() {
-        overall.clearance.minimum_distance_to_neighbors = estimate(distances.iter().copied().fold(f64::INFINITY, f64::min), GltfUnit::Metre, sample, Some(overall_topology));
-        overall.clearance.clearance_distribution = estimate(statistics(&distances, &p.histogram_edges), GltfUnit::Metre, sample, Some(overall_topology));
-    }
-    if !pairs.is_empty() && overlap_complete {
-        overall.clearance.interference_volume = estimate(overlap_volume, GltfUnit::CubicMetre, sample, Some(overall_topology));
-        overall.clearance.overlap_volume = estimate(overlap_volume, GltfUnit::CubicMetre, sample, Some(overall_topology));
-    }
+    let contacts = pairs.iter().filter(|pair| pair.adjacent.value == Some(true)).count() as u64;
+    let sample_count = all_points.len();
+    GltfAreaVolumeInference::infer_assembly(&mut overall.area_volume, raw_parts.len(), contact_area, contact_area_complete, sample_count, overall_topology);
+    GltfAdjacencyInference::infer_assembly(&mut overall.adjacency, raw_parts.len(), contacts, sample_count, overall_topology);
+    GltfOrientationInference::infer_assembly(&mut overall.orientation, raw_parts.len(), sample_count, overall_topology);
+    GltfClearanceInference::infer_assembly(&mut overall.clearance, &distances, overlap_volume, overlap_complete, pairs.len(), &p, sample_count, overall_topology);
     let valid = raw_parts.iter().filter(|part| !part.triangles.is_empty()).count() as u64;
     let invalid = raw_parts.iter().filter(|part| part.triangles.is_empty()).count() as u64 + diagnostics.iter().filter(|d| d.severity == GltfSeverity::Error).count() as u64;
     let authored_primitives = snapshot.document.meshes.iter().map(|mesh| mesh.primitives.len() as u64).sum();

@@ -7082,23 +7082,6 @@ pub mod app {
                 .or_else(|| self.registry.get(action_id).map(|def| def.label.resolve(Terminology::Native, Locale::En).to_string()))
                 .or_else(|| self.registry.get_command(action_id).map(|def| def.label.resolve(Terminology::Native, Locale::En).to_string()))
                 .unwrap_or_else(|| action_id.to_string());
-            let folds = edit_id.is_none() && matches!(kind, ActionKind::View | ActionKind::Shell) && self.command_log.last().is_some_and(|last| last.action_id == action_id && last.kind == kind && last.edit_id.is_none());
-            if folds {
-                let last = self.command_log.last_mut().expect("checked above");
-                last.count += 1;
-                last.label = label;
-                last.timestamp = store::now_iso();
-                // 🧮️ APPEND (never overwrite) — a folded row accumulates one distinct config edit per
-                // tick (each tick's config dispatch is a plain `Apply`, not an `AmendLast`); overwriting
-                // would drop earlier ticks' edit ids from `config_edit_ids`, making `backfill_command_log`
-                // wrongly think they were never logged and re-append them as phantom rows.
-                if let Some(id) = config_edit_id {
-                    last.config_edit_ids.push(id);
-                }
-                self.history_dirty_sequences.insert(last.seq);
-                self.log_generation += 1;
-                return;
-            }
             self.push_log_entry(action_id, label, kind, edit_id, config_edit_id, None, inverse);
             if matches!(kind, ActionKind::History) {
                 self.history_dirty_sequences.extend(self.command_log.iter().map(|entry| entry.seq));
@@ -8111,6 +8094,8 @@ pub mod app {
                     "onlyMutations" => HistoryCommandFilter::OnlyMutations,
                     _ => HistoryCommandFilter::All,
                 };
+                self.log_generation += 1;
+                self.history_dirty_sequences.extend(self.command_log.iter().map(|entry| entry.seq));
                 // 🗂️ Deliberately UNLOGGED — the panel operating its own filter chrome shouldn't fill the
                 // very list it's filtering. No explicit cache invalidation either: `history_filter` is part
                 // of `refresh_cache`'s key tuple now, so the next refresh naturally rebuilds.
@@ -9546,7 +9531,13 @@ pub mod plugin_runtime {
                             mutated = true;
                             let output = encode_wire_serialized(&result.output);
                             let diagnostics = encode_wire_serialized(&result.diagnostics);
-                            frames.push(protocol::AppFrame::Invocation { in_reply_to: seq, output, diagnostics });
+                            frames.push(protocol::AppFrame::Invocation {
+                                in_reply_to: seq,
+                                output,
+                                diagnostics,
+                                ui_scope: encode_wire_serialized(&result.ui_scope),
+                                history_patch: encode_wire_serialized(&result.history_patch),
+                            });
                             push_invocation_side_frames(&mut frames, seq, &result);
                         }
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
@@ -9562,16 +9553,24 @@ pub mod plugin_runtime {
                         let instance = find_instance(list, instance_id)?;
                         let mut section_frames = Vec::new();
                         for probe in &sections {
-                            let (hash, body) = match probe.kind {
+                            let section = match probe.kind {
                                 SECTION_KIND_WINDOW | SECTION_KIND_PANEL => {
-                                    let node = instance.app.render(&probe.key, None, &view_state)?;
-                                    channel_refresh_section(&node, probe.hash)
+                                    instance.app.render(&probe.key, None, &view_state).map(|node| channel_refresh_section(&node, probe.hash))
                                 }
-                                SECTION_KIND_ENGAGEMENTS => channel_refresh_section(&instance.app.window_engagements(), probe.hash),
-                                SECTION_KIND_MEASURES => channel_refresh_section(&instance.app.window_measures(), probe.hash),
-                                SECTION_KIND_TOOLS => channel_refresh_section(&instance.app.tool_measures(), probe.hash),
-                                SECTION_KIND_LABELS => (0u64, None),
-                                _ => (0u64, None),
+                                SECTION_KIND_ENGAGEMENTS => Ok(channel_refresh_section(&instance.app.window_engagements(), probe.hash)),
+                                SECTION_KIND_MEASURES => Ok(channel_refresh_section(&instance.app.window_measures(), probe.hash)),
+                                SECTION_KIND_TOOLS => Ok(channel_refresh_section(&instance.app.tool_measures(), probe.hash)),
+                                SECTION_KIND_LABELS => Ok((0u64, None)),
+                                _ => Ok((0u64, None)),
+                            };
+                            let (hash, body) = match section {
+                                Ok(section) => section,
+                                // Keep the host's last-known-good body for this one failed surface.
+                                // Continuing the loop lets unrelated windows and the history projection
+                                // advance even while a generator-owned section is temporarily faulty.
+                                Err(_fault) => {
+                                    (probe.hash.unwrap_or_default(), None)
+                                }
                             };
                             section_frames.push(protocol::AppFrame::UiSection { in_reply_to: Some(seq), kind: probe.kind, key: probe.key.clone(), hash, body: body.map(|value| encode_wire_serialized(&value)) });
                         }
@@ -9682,6 +9681,16 @@ pub mod plugin_runtime {
                     });
                     match read {
                         Ok(entries) => frames.push(protocol::AppFrame::Children { in_reply_to: seq, entries }),
+                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
+                    }
+                }
+                protocol::AppCommand::ReadHistory { seq } => {
+                    let snapshot = with_instances_mut(|list| {
+                        let instance = find_instance(list, instance_id)?;
+                        instance.app.history_snapshot()
+                    });
+                    match snapshot {
+                        Ok(history_patch) => frames.push(protocol::AppFrame::HistorySnapshot { in_reply_to: seq, history_patch: encode_wire_serialized(&history_patch) }),
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
                     }
                 }
@@ -11261,33 +11270,31 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn consecutive_identical_view_dispatches_fold_into_one_entry_with_a_growing_count() {
+        fn consecutive_identical_view_dispatches_are_distinct_history_entries() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             for id in ["node-1", "node-2", "node-3"] {
                 app.dispatch_typed(TestCommand::Select { id: Some(id.into()) }, &meta()).expect("select");
             }
             let history = app.test_history();
-            assert_eq!(history.commands.len(), 1, "folding must not grow the log");
-            assert_eq!(history.commands[0].count, 3);
+            assert_eq!(history.commands.len(), 3);
+            assert!(history.commands.iter().all(|entry| entry.count == 1));
         }
 
         #[test]
-        fn folding_breaks_across_an_interleaved_different_entry() {
+        fn view_dispatches_remain_distinct_across_interleaved_entries() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta()).expect("select a");
             app.dispatch_typed(TestCommand::Select { id: Some("b".into()) }, &meta()).expect("select b");
             app.dispatch_typed(TestCommand::Increment, &meta()).expect("increment");
             app.dispatch_typed(TestCommand::Select { id: Some("c".into()) }, &meta()).expect("select c");
             let history = app.test_history();
-            assert_eq!(history.commands.len(), 3, "folded select x2, one increment, one fresh select — the interleaved operation breaks the fold");
+            assert_eq!(history.commands.len(), 4);
             let select_counts: Vec<u32> = history.commands.iter().filter(|entry| entry.action_id == "select").map(|entry| entry.count).collect();
-            assert_eq!(select_counts.len(), 2, "two distinct select entries, not one");
-            assert!(select_counts.contains(&2), "the first two selects folded together");
-            assert!(select_counts.contains(&1), "the select after the interleaved increment starts a fresh entry");
+            assert_eq!(select_counts, vec![1, 1, 1]);
         }
 
         #[test]
-        fn note_shell_command_is_intercepted_before_the_app_and_folds_on_repeat() {
+        fn note_shell_command_is_intercepted_before_the_app_and_records_each_repeat() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let args = json!({ "commandId": "os.setThemeId", "label": "Set Theme", "detail": "dark" });
             app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &meta()).expect("noteShellCommand");
@@ -11302,25 +11309,24 @@ pub mod plugin_runtime {
             app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &meta()).expect("noteShellCommand again");
             assert!(app.test_app().received_actions.borrow().is_empty());
             let history = app.test_history();
-            assert_eq!(history.commands.len(), 1, "the same commandId folds instead of appending");
-            assert_eq!(history.commands[0].count, 2);
+            assert_eq!(history.commands.len(), 2);
+            assert!(history.commands.iter().all(|entry| entry.count == 1));
         }
 
         #[test]
-        fn scope_upgrade_none_becomes_partial_naming_the_history_body() {
+        fn history_delivery_does_not_widen_a_none_ui_scope() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let result = app.dispatch_typed(TestCommand::ViewNoScope, &meta()).expect("viewNoScope");
-            let UiDirtyScope::Partial { panel_bodies, .. } = result.ui_scope else { panic!("expected an upgraded Partial scope") };
-            assert!(panel_bodies.iter().any(|key| key == FRAMEWORK_HISTORY_BODY_KEY));
+            assert_eq!(result.ui_scope, UiDirtyScope::None);
         }
 
         #[test]
-        fn scope_upgrade_partial_keeps_window_bodies_and_gains_the_history_body() {
+        fn history_delivery_preserves_partial_ui_scope() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let result = app.dispatch_typed(TestCommand::ViewPartialScope, &meta()).expect("viewPartialScope");
             let UiDirtyScope::Partial { window_bodies, panel_bodies, .. } = result.ui_scope else { panic!("expected a Partial scope") };
-            assert_eq!(window_bodies, vec!["some.window".to_string()], "the app's own window_bodies must survive the upgrade");
-            assert!(panel_bodies.iter().any(|key| key == FRAMEWORK_HISTORY_BODY_KEY));
+            assert_eq!(window_bodies, vec!["some.window".to_string()]);
+            assert!(panel_bodies.is_empty());
         }
 
         #[test]

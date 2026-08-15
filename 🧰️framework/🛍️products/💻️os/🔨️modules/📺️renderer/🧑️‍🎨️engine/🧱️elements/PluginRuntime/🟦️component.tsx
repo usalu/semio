@@ -12,6 +12,7 @@
 import {
   type ContextMenuItemSpec,
   type HostEffect,
+  type HistoryPatch,
   type InvocationResponse,
   type PluginContextMenuRequest,
   type PluginModuleLease,
@@ -47,6 +48,8 @@ export type PluginWasmHandle = {
   readonly handleCommand?: (instanceId: number, commandJson: string, viewState: ViewModel) => Promise<InvocationResponse>;
   readonly refreshUi: (instanceId: number, request: PluginUiRefreshRequest) => Promise<PluginUiRefreshResponse>;
   readonly contextMenu: (instanceId: number, request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
+  /** 🧾️ Complete projection used to seed or resynchronize host-owned history state. */
+  readonly readHistory: (instanceId: number) => Promise<HistoryPatch>;
   /** 🔗️ The `DocumentApp` document-sync surface (WS-D) — optional since not every program has migrated onto it yet (WS-F).
    * 🚧️ Wave 1 gap (documented, not silently dropped): `protocol_channel::AppCommand` only carries
    * binary `pack`/`spr` document-container bytes (`LoadDocument`/`ReadDocument`, backed by
@@ -115,8 +118,8 @@ function hashWireToHex(value: number): string {
  * `inverseGroup` stay at their empty defaults — Wave 1's `AppFrame::Invocation` carries only
  * `output`/`diagnostics` (see `plugin_exchange`'s `AppCommand::Command` arm); no call site in this
  * file reads either field (only `.requestedEffects`/`.uiScope`), confirmed by grep before this
- * adapter was written. `uiScope` stays `undefined` too (not sent over the wire yet), which
- * `resolveUiDirtyScope` already treats as `full` — the safe default. */
+ * adapter was written. The invocation frame now carries the authoritative `uiScope` and optional
+ * `historyPatch`, so consumers can apply history before any effects schedule refresh work. */
 /** 🎯️ DslValue serde encodes Rust enums as `{ kind, value }` (struct) / plain string (unit). Shell
  * `HostEffect` consumers expect serde externally-tagged JSON (`{ navigate: { uri } }` / `"requestSync"`). */
 /** 🎯️ DslValue may ship `Vec<u8>` as a number array, a Uint8Array, or a `{ kind:"bytes", value }` object. */
@@ -163,11 +166,16 @@ async function performInvocation(client: AppChannelClient, invocation: unknown, 
   let diagnostics: InvocationResponse["diagnostics"] = [];
   let requestedEffects: HostEffect[] = [];
   let events: InvocationResponse["events"] = [];
+  let uiScope: InvocationResponse["uiScope"];
+  let historyPatch: InvocationResponse["historyPatch"];
   for (const frame of frames) {
     if ("Invocation" in frame) {
       output = decodePackValue(new Uint8Array(frame.Invocation.output));
       const decodedDiagnostics = decodePackValue(new Uint8Array(frame.Invocation.diagnostics));
       diagnostics = Array.isArray(decodedDiagnostics) ? (decodedDiagnostics as InvocationResponse["diagnostics"]) : [];
+      uiScope = decodePackValue(new Uint8Array(frame.Invocation.ui_scope)) as InvocationResponse["uiScope"];
+      const decodedHistoryPatch = decodePackValue(new Uint8Array(frame.Invocation.history_patch));
+      historyPatch = decodedHistoryPatch && typeof decodedHistoryPatch === "object" ? (decodedHistoryPatch as InvocationResponse["historyPatch"]) : undefined;
     } else if ("Effects" in frame) {
       requestedEffects = frame.Effects.effects.map((bytes) => normalizeWireHostEffect(decodePackValue(new Uint8Array(bytes))));
     } else if ("Events" in frame) {
@@ -185,6 +193,8 @@ async function performInvocation(client: AppChannelClient, invocation: unknown, 
     diagnostics,
     requestedEffects,
     events,
+    uiScope,
+    historyPatch,
   };
 }
 
@@ -314,6 +324,12 @@ export async function adaptPluginHandle(pluginId: string, lease: PluginModuleLea
     handleCommand: (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), JSON.parse(commandJson), "command", viewState),
     refreshUi: (instanceId, request) => performRefreshUi(requireChannel(instanceId), request),
     contextMenu: (instanceId, request) => performContextMenu(requireChannel(instanceId), request),
+    readHistory: async (instanceId) => {
+      const frames = await requireChannel(instanceId).readHistory();
+      const frame = frames.find((candidate): candidate is Extract<AppFrameValue, { readonly HistorySnapshot: unknown }> => "HistorySnapshot" in candidate);
+      if (!frame) throw new Error("[DEBUG] readHistory: missing HistorySnapshot frame");
+      return decodePackValue(new Uint8Array(frame.HistorySnapshot.history_patch)) as HistoryPatch;
+    },
     applyMutations: async (instanceId, mutationsPack) => {
       const envelopes = decodeMutationEnvelopesPack(mutationsPack);
       const frames = await requireChannel(instanceId).applyEnvelopes(envelopes);

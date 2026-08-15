@@ -1,5 +1,6 @@
 //! 🦠️ `remove-material` GLTF mutation payload.
 
+use super::super::planning::{remap_references, remove_checked, GltfMutationRejection, GltfSemanticMutation, IndexFamily};
 use crate::artifacts::gltf::schema::mutations::GltfMutation;
 use crate::artifacts::gltf::GltfSnapshot;
 use serde::{Deserialize, Serialize};
@@ -23,5 +24,15 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for RemoveMaterial {
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
+    }
+}
+
+impl GltfSemanticMutation for RemoveMaterial {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+        let document = &mut snapshot.document;
+        let frozen = document.clone();
+        remove_checked(&mut document.materials, IndexFamily::Material, self.index, &frozen, "document/materials")?;
+        remap_references(document, IndexFamily::Material, self.index, false);
+        Ok(())
     }
 }

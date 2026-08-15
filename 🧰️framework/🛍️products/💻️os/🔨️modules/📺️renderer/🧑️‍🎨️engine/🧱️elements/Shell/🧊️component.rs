@@ -499,8 +499,8 @@ pub struct ShellState {
     pub window_measures: HashMap<String, Vec<WindowMeasure>>,
     pub utility_collection_expanded: HashMap<String, bool>,
     pub contributor_instances: HashMap<String, u32>,
-    /// 🖱️ Last-rendered window body rects per window id — used to apply the active utility's cursor while
-    /// the pointer is over that window's content (Architecture Decision 8, P5).
+    /// 🖱️ Last-rendered full window content bounds per window id — used to apply the active utility's
+    /// cursor while the pointer is inside that window's silhouette (Architecture Decision 8, P5).
     pub window_content_rects: HashMap<String, Rect>,
     /// 🪟️ Last-rendered dock-stack silhouette per active window id (tabs + gap cutout + controls + body).
     pub window_silhouettes: HashMap<String, WindowSilhouette>,
@@ -4081,15 +4081,6 @@ mod shell_input_tests {
     }
 
     //#region SilhouetteContentTests
-
-    #[test]
-    fn only_known_scene_and_canvas_surfaces_start_at_full_silhouette_bounds() {
-        assert!(ShellState::window_content_is_edgeless(ui_wgpu::wgpu::SurfaceKind::World3d));
-        assert!(ShellState::window_content_is_edgeless(ui_wgpu::wgpu::SurfaceKind::Canvas2d));
-        assert!(ShellState::window_content_is_edgeless(ui_wgpu::wgpu::SurfaceKind::NodeGraph));
-        assert!(!ShellState::window_content_is_edgeless(ui_wgpu::wgpu::SurfaceKind::TextEditor));
-        assert!(!ShellState::window_content_is_edgeless(ui_wgpu::wgpu::SurfaceKind::Table));
-    }
 
     #[test]
     fn silhouette_hit_intersections_leave_the_cap_gap_empty() {
@@ -7960,12 +7951,7 @@ impl ShellState {
             let content_viewport = silhouette.as_ref().map(WindowSilhouette::content_bounds).unwrap_or(safe_body);
             self.window_content_rects.insert(window_id.clone(), content_viewport);
             if let Some(ui) = self.window_ui.get(&window_id).cloned() {
-                let content_layout = window_kind
-                    .as_ref()
-                    .filter(|kind| Self::window_content_is_edgeless(kind.surface_kind))
-                    .and(silhouette.clone())
-                    .map(|silhouette| silhouette.content_bounds())
-                    .unwrap_or(safe_body);
+                let content_layout = content_viewport;
                 let clip_rects = silhouette.as_ref().map(WindowSilhouette::content_clip_rects).unwrap_or_else(|| vec![safe_body]);
                 let hit_regions: Vec<Rect> = clip_rects.iter().filter_map(|clip| Self::intersect_content_rect(*clip, content_viewport)).collect();
                 draw.begin_silhouette_clip(&clip_rects);
@@ -8048,21 +8034,6 @@ impl ShellState {
     }
 
     //#region SilhouetteContent
-
-    fn window_content_is_edgeless(kind: ui_wgpu::wgpu::SurfaceKind) -> bool {
-        matches!(
-            kind,
-            ui_wgpu::wgpu::SurfaceKind::Canvas2d
-                | ui_wgpu::wgpu::SurfaceKind::World3d
-                | ui_wgpu::wgpu::SurfaceKind::NodeGraph
-                | ui_wgpu::wgpu::SurfaceKind::Paint2d
-                | ui_wgpu::wgpu::SurfaceKind::TiledMap
-                | ui_wgpu::wgpu::SurfaceKind::Board2d
-                | ui_wgpu::wgpu::SurfaceKind::IconRender
-                | ui_wgpu::wgpu::SurfaceKind::InkCanvas
-                | ui_wgpu::wgpu::SurfaceKind::GraphTimeline
-        )
-    }
 
     fn intersect_content_rect(left: Rect, right: Rect) -> Option<Rect> {
         let x = left.x.max(right.x);

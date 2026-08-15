@@ -1,5 +1,6 @@
 //! 🦠️ `set-material` GLTF mutation payload.
 
+use super::super::planning::{check_index, GltfMutationRejection, GltfSemanticMutation};
 use crate::artifacts::gltf::schema::mutations::GltfMutation;
 use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::GltfSnapshot;
@@ -25,5 +26,13 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for SetMaterial {
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
+    }
+}
+
+impl GltfSemanticMutation for SetMaterial {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+        check_index("document/materials", self.index, snapshot.document.materials.len())?;
+        snapshot.document.materials[self.index] = self.material.clone();
+        Ok(())
     }
 }

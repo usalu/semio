@@ -1,5 +1,6 @@
 //! 🦠️ `insert-mesh` GLTF mutation payload.
 
+use super::super::planning::{reject, remap_references, GltfMutationRejection, GltfSemanticMutation, IndexFamily};
 use crate::artifacts::gltf::schema::mutations::GltfMutation;
 use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::GltfSnapshot;
@@ -25,5 +26,17 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for InsertMesh {
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
+    }
+}
+
+impl GltfSemanticMutation for InsertMesh {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+        let document = &mut snapshot.document;
+        if self.index > document.meshes.len() {
+            return Err(reject("gltf.mutation.insert-out-of-range", "document/meshes", format!("index {}, length {}", self.index, document.meshes.len())));
+        }
+        remap_references(document, IndexFamily::Mesh, self.index, true);
+        document.meshes.insert(self.index, self.mesh.clone());
+        Ok(())
     }
 }

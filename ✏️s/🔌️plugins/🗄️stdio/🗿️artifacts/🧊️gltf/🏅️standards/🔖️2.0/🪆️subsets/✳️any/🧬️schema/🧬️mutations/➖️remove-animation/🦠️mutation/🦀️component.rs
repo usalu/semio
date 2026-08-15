@@ -1,5 +1,6 @@
 //! 🦠️ `remove-animation` GLTF mutation payload.
 
+use super::super::planning::{check_index, GltfMutationRejection, GltfSemanticMutation};
 use crate::artifacts::gltf::schema::mutations::GltfMutation;
 use crate::artifacts::gltf::GltfSnapshot;
 use serde::{Deserialize, Serialize};
@@ -23,5 +24,13 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for RemoveAnimation {
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
+    }
+}
+
+impl GltfSemanticMutation for RemoveAnimation {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+        check_index("document/animations", self.index, snapshot.document.animations.len())?;
+        snapshot.document.animations.remove(self.index);
+        Ok(())
     }
 }

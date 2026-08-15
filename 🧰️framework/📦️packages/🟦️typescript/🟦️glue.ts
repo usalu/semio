@@ -631,8 +631,10 @@ if (import.meta.vitest) {
   class PlayerEvent implements StatechartEvent {
     private static readonly IDS = { open: 0, pause: 1, play: 2, stop: 3, resume: 4 } as const;
     private static readonly NAMES = ["Open", "Pause", "Play", "Stop", "Resume"];
-    readonly eventCount = 5;
-    constructor(readonly type: keyof typeof PlayerEvent.IDS) {}
+    readonly type: keyof typeof PlayerEvent.IDS;
+    constructor(type: keyof typeof PlayerEvent.IDS) {
+      this.type = type;
+    }
     eventId(): EventId {
       return EventId(PlayerEvent.IDS[this.type]);
     }
@@ -676,8 +678,10 @@ if (import.meta.vitest) {
   class RecorderEvent implements StatechartEvent {
     private static readonly IDS = { start: 0, audioStop: 1, videoStop: 2 } as const;
     private static readonly NAMES = ["Start", "AudioStop", "VideoStop"];
-    readonly eventCount = 3;
-    constructor(readonly type: keyof typeof RecorderEvent.IDS) {}
+    readonly type: keyof typeof RecorderEvent.IDS;
+    constructor(type: keyof typeof RecorderEvent.IDS) {
+      this.type = type;
+    }
     eventId(): EventId {
       return EventId(RecorderEvent.IDS[this.type]);
     }
@@ -724,7 +728,10 @@ if (import.meta.vitest) {
     private static readonly IDS = { confirm: 0, selectMethod: 1, paymentSucceeded: 2, paymentFailed: 3, retry: 4, cancel: 5, resume: 6, shipDone: 7, invoiceDone: 8 } as const;
     private static readonly NAMES = ["Confirm", "SelectMethod", "PaymentSucceeded", "PaymentFailed", "Retry", "Cancel", "Resume", "ShipDone", "InvoiceDone"];
     readonly eventCount = 9;
-    constructor(readonly type: keyof typeof CheckoutEvent.IDS) {}
+    readonly type: keyof typeof CheckoutEvent.IDS;
+    constructor(type: keyof typeof CheckoutEvent.IDS) {
+      this.type = type;
+    }
     eventId(): EventId {
       return EventId(CheckoutEvent.IDS[this.type]);
     }

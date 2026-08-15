@@ -228,3 +228,11 @@ pub struct GltfEntityAddress {
     pub surface_region: Option<u32>,
     pub content_fingerprint: String,
 }
+
+/// 🧩️ Executable inference leaf with its own available and unavailable semantics.
+pub(crate) trait GltfInferenceStage<Context> {
+    type Output;
+
+    fn infer(context: &Context) -> Self::Output;
+    fn unavailable(diagnostic_ids: &[String]) -> Self::Output;
+}

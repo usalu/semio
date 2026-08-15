@@ -1,5 +1,6 @@
 //! 🦠️ `set-snapshot` GLTF mutation payload.
 
+use super::super::planning::{GltfMutationRejection, GltfSemanticMutation};
 use crate::artifacts::gltf::schema::mutations::GltfMutation;
 use crate::artifacts::gltf::GltfSnapshot;
 use serde::{Deserialize, Serialize};
@@ -23,5 +24,12 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for SetSnapshot {
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl GltfSemanticMutation for SetSnapshot {
+    fn apply(&self, target: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+        *target = self.snapshot.clone();
+        Ok(())
     }
 }

@@ -20,11 +20,11 @@ impl std::fmt::Display for GltfMutationRejection {
     }
 }
 
-fn reject(code: &str, path: impl Into<String>, detail: impl Into<String>) -> GltfMutationRejection {
+pub(crate) fn reject(code: &str, path: impl Into<String>, detail: impl Into<String>) -> GltfMutationRejection {
     GltfMutationRejection { code: code.into(), path: path.into(), detail: detail.into() }
 }
 
-fn check_index(path: impl Into<String>, index: usize, len: usize) -> Result<(), GltfMutationRejection> {
+pub(crate) fn check_index(path: impl Into<String>, index: usize, len: usize) -> Result<(), GltfMutationRejection> {
     let path = path.into();
     (index < len).then_some(()).ok_or_else(|| reject("gltf.reference.out-of-range", path, format!("index {index}, length {len}")))
 }
@@ -192,7 +192,7 @@ pub fn validate_gltf_references(snapshot: &GltfSnapshot) -> Result<(), GltfMutat
 }
 
 #[derive(Clone, Copy)]
-enum IndexFamily {
+pub(crate) enum IndexFamily {
     Scene,
     Node,
     Mesh,
@@ -201,7 +201,7 @@ enum IndexFamily {
     Buffer,
 }
 
-fn shift_insert(index: &mut usize, at: usize) {
+pub(crate) fn shift_insert(index: &mut usize, at: usize) {
     if *index >= at {
         *index += 1;
     }
@@ -213,7 +213,7 @@ fn shift_remove(index: &mut usize, at: usize) {
     }
 }
 
-fn remap_references(doc: &mut GltfDocument, family: IndexFamily, at: usize, inserting: bool) {
+pub(crate) fn remap_references(doc: &mut GltfDocument, family: IndexFamily, at: usize, inserting: bool) {
     let remap = |index: &mut usize| if inserting { shift_insert(index, at) } else { shift_remove(index, at) };
     match family {
         IndexFamily::Scene => {
@@ -370,7 +370,7 @@ fn reference_to(doc: &GltfDocument, family: IndexFamily, target: usize) -> Optio
     }
 }
 
-fn remove_checked<T>(items: &mut Vec<T>, family: IndexFamily, index: usize, doc: &GltfDocument, path: &str) -> Result<T, GltfMutationRejection> {
+pub(crate) fn remove_checked<T>(items: &mut Vec<T>, family: IndexFamily, index: usize, doc: &GltfDocument, path: &str) -> Result<T, GltfMutationRejection> {
     check_index(path, index, items.len())?;
     if let Some(reference) = reference_to(doc, family, index) {
         return Err(reject("gltf.reference.in-use", path, format!("referenced by {reference}")));
@@ -400,195 +400,58 @@ pub(crate) fn locate_node_owner(doc: &GltfDocument, target: usize) -> Result<(Op
     Ok(owners.into_iter().next().unwrap_or((None, None, 0)))
 }
 
+/// 🧩️ Executable semantic command owned by its mutation leaf.
+pub(crate) trait GltfSemanticMutation {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection>;
+
+    fn plan(&self, base: &GltfSnapshot) -> Result<GltfDiff, GltfMutationRejection> {
+        validate_gltf_references(base).map_err(|error| reject("gltf.mutation.invalid-base", error.path.clone(), error.to_string()))?;
+        let mut next = base.clone();
+        self.apply(&mut next)?;
+        validate_gltf_references(&next)?;
+        Ok(<GltfDiff as protocol::os_spr::command::DiffAlgebra<GltfSnapshot>>::between(base, &next))
+    }
+}
+
+impl GltfSemanticMutation for GltfMutation {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+        match self {
+            GltfMutation::NoMutation(payload) => payload.apply(snapshot),
+            GltfMutation::SetSnapshot(payload) => payload.apply(snapshot),
+            GltfMutation::SetAsset(payload) => payload.apply(snapshot),
+            GltfMutation::InsertScene(payload) => payload.apply(snapshot),
+            GltfMutation::RemoveScene(payload) => payload.apply(snapshot),
+            GltfMutation::SetScene(payload) => payload.apply(snapshot),
+            GltfMutation::InsertNode(payload) => payload.apply(snapshot),
+            GltfMutation::RemoveNode(payload) => payload.apply(snapshot),
+            GltfMutation::SetNode(payload) => payload.apply(snapshot),
+            GltfMutation::InsertMesh(payload) => payload.apply(snapshot),
+            GltfMutation::RemoveMesh(payload) => payload.apply(snapshot),
+            GltfMutation::SetMesh(payload) => payload.apply(snapshot),
+            GltfMutation::InsertAccessor(payload) => payload.apply(snapshot),
+            GltfMutation::RemoveAccessor(payload) => payload.apply(snapshot),
+            GltfMutation::SetAccessor(payload) => payload.apply(snapshot),
+            GltfMutation::InsertMaterial(payload) => payload.apply(snapshot),
+            GltfMutation::RemoveMaterial(payload) => payload.apply(snapshot),
+            GltfMutation::SetMaterial(payload) => payload.apply(snapshot),
+            GltfMutation::InsertBuffer(payload) => payload.apply(snapshot),
+            GltfMutation::RemoveBuffer(payload) => payload.apply(snapshot),
+            GltfMutation::SetBuffer(payload) => payload.apply(snapshot),
+            GltfMutation::InsertAnimation(payload) => payload.apply(snapshot),
+            GltfMutation::RemoveAnimation(payload) => payload.apply(snapshot),
+            GltfMutation::SetAnimation(payload) => payload.apply(snapshot),
+            GltfMutation::TransformNode(payload) => payload.apply(snapshot),
+            GltfMutation::ReparentNode(payload) => payload.apply(snapshot),
+            GltfMutation::BindNodeMesh(payload) => payload.apply(snapshot),
+            GltfMutation::BindPrimitiveMaterial(payload) => payload.apply(snapshot),
+        }
+    }
+}
+
 pub(crate) fn semantic_snapshot(base: &GltfSnapshot, mutation: &GltfMutation) -> Result<GltfSnapshot, GltfMutationRejection> {
     validate_gltf_references(base).map_err(|error| reject("gltf.mutation.invalid-base", error.path.clone(), error.to_string()))?;
     let mut next = base.clone();
-    let doc = &mut next.document;
-    match mutation {
-        GltfMutation::NoMutation(NoMutation {}) => return Ok(next),
-        GltfMutation::SetSnapshot(SetSnapshot { snapshot }) => {
-            validate_gltf_references(snapshot)?;
-            return Ok(snapshot.clone());
-        }
-        GltfMutation::SetAsset(SetAsset { asset }) => doc.asset = asset.clone(),
-        GltfMutation::InsertScene(InsertScene { index, scene }) => {
-            if *index > doc.scenes.len() {
-                return Err(reject("gltf.mutation.insert-out-of-range", "document/scenes", format!("index {index}, length {}", doc.scenes.len())));
-            }
-            remap_references(doc, IndexFamily::Scene, *index, true);
-            doc.scenes.insert(*index, scene.clone());
-        }
-        GltfMutation::RemoveScene(RemoveScene { index }) => {
-            let frozen = doc.clone();
-            remove_checked(&mut doc.scenes, IndexFamily::Scene, *index, &frozen, "document/scenes")?;
-            remap_references(doc, IndexFamily::Scene, *index, false);
-        }
-        GltfMutation::SetScene(SetScene { index, scene }) => {
-            check_index("document/scenes", *index, doc.scenes.len())?;
-            doc.scenes[*index] = scene.clone();
-        }
-        GltfMutation::InsertNode(InsertNode { index, node }) => {
-            if *index > doc.nodes.len() {
-                return Err(reject("gltf.mutation.insert-out-of-range", "document/nodes", format!("index {index}, length {}", doc.nodes.len())));
-            }
-            remap_references(doc, IndexFamily::Node, *index, true);
-            let mut node = node.clone();
-            node.children.iter_mut().for_each(|child| shift_insert(child, *index));
-            doc.nodes.insert(*index, node);
-        }
-        GltfMutation::RemoveNode(RemoveNode { index }) => {
-            let frozen = doc.clone();
-            remove_checked(&mut doc.nodes, IndexFamily::Node, *index, &frozen, "document/nodes")?;
-            remap_references(doc, IndexFamily::Node, *index, false);
-        }
-        GltfMutation::SetNode(SetNode { index, node }) => {
-            check_index("document/nodes", *index, doc.nodes.len())?;
-            doc.nodes[*index] = node.clone();
-        }
-        GltfMutation::TransformNode(TransformNode { index, matrix, translation, rotation, scale }) => {
-            check_index("document/nodes", *index, doc.nodes.len())?;
-            if matrix.is_some() && (translation.is_some() || rotation.is_some() || scale.is_some()) {
-                return Err(reject("gltf.node.transform-exclusive", format!("document/nodes/{index}"), "matrix and TRS cannot coexist"));
-            }
-            if matrix.iter().flatten().chain(translation.iter().flatten()).chain(rotation.iter().flatten()).chain(scale.iter().flatten()).any(|value| !value.is_finite()) {
-                return Err(reject("gltf.node.transform-nonfinite", format!("document/nodes/{index}"), "transform contains a non-finite number"));
-            }
-            let node = &mut doc.nodes[*index];
-            node.matrix = *matrix;
-            node.translation = *translation;
-            node.rotation = *rotation;
-            node.scale = *scale;
-        }
-        GltfMutation::ReparentNode(ReparentNode { index, parent, scene, position }) => {
-            check_index("document/nodes", *index, doc.nodes.len())?;
-            if parent.is_some() && scene.is_some() {
-                return Err(reject("gltf.node.owner-exclusive", format!("document/nodes/{index}"), "parent and scene cannot both be selected"));
-            }
-            if let Some(parent) = parent {
-                check_index("document/nodes", *parent, doc.nodes.len())?;
-                if *parent == *index {
-                    return Err(reject("gltf.node.self-parent", format!("document/nodes/{index}"), "node cannot parent itself"));
-                }
-            }
-            if let Some(scene) = scene {
-                check_index("document/scenes", *scene, doc.scenes.len())?;
-            }
-            locate_node_owner(doc, *index)?;
-            for node in &mut doc.nodes {
-                node.children.retain(|child| *child != *index);
-            }
-            for root in &mut doc.scenes {
-                root.nodes.retain(|node| *node != *index);
-            }
-            if let Some(parent) = parent {
-                if *position > doc.nodes[*parent].children.len() {
-                    return Err(reject("gltf.mutation.insert-out-of-range", format!("document/nodes/{parent}/children"), format!("position {position}, length {}", doc.nodes[*parent].children.len())));
-                }
-                doc.nodes[*parent].children.insert(*position, *index);
-            } else if let Some(scene) = scene {
-                if *position > doc.scenes[*scene].nodes.len() {
-                    return Err(reject("gltf.mutation.insert-out-of-range", format!("document/scenes/{scene}/nodes"), format!("position {position}, length {}", doc.scenes[*scene].nodes.len())));
-                }
-                doc.scenes[*scene].nodes.insert(*position, *index);
-            }
-        }
-        GltfMutation::BindNodeMesh(BindNodeMesh { index, mesh }) => {
-            check_index("document/nodes", *index, doc.nodes.len())?;
-            if let Some(mesh) = mesh {
-                check_index("document/meshes", *mesh, doc.meshes.len())?;
-            }
-            doc.nodes[*index].mesh = *mesh;
-        }
-        GltfMutation::InsertMesh(InsertMesh { index, mesh }) => {
-            if *index > doc.meshes.len() {
-                return Err(reject("gltf.mutation.insert-out-of-range", "document/meshes", format!("index {index}, length {}", doc.meshes.len())));
-            }
-            remap_references(doc, IndexFamily::Mesh, *index, true);
-            doc.meshes.insert(*index, mesh.clone());
-        }
-        GltfMutation::RemoveMesh(RemoveMesh { index }) => {
-            let frozen = doc.clone();
-            remove_checked(&mut doc.meshes, IndexFamily::Mesh, *index, &frozen, "document/meshes")?;
-            remap_references(doc, IndexFamily::Mesh, *index, false);
-        }
-        GltfMutation::SetMesh(SetMesh { index, mesh }) => {
-            check_index("document/meshes", *index, doc.meshes.len())?;
-            doc.meshes[*index] = mesh.clone();
-        }
-        GltfMutation::InsertAccessor(InsertAccessor { index, accessor }) => {
-            if *index > doc.accessors.len() {
-                return Err(reject("gltf.mutation.insert-out-of-range", "document/accessors", format!("index {index}, length {}", doc.accessors.len())));
-            }
-            remap_references(doc, IndexFamily::Accessor, *index, true);
-            doc.accessors.insert(*index, accessor.clone());
-        }
-        GltfMutation::RemoveAccessor(RemoveAccessor { index }) => {
-            let frozen = doc.clone();
-            remove_checked(&mut doc.accessors, IndexFamily::Accessor, *index, &frozen, "document/accessors")?;
-            remap_references(doc, IndexFamily::Accessor, *index, false);
-        }
-        GltfMutation::SetAccessor(SetAccessor { index, accessor }) => {
-            check_index("document/accessors", *index, doc.accessors.len())?;
-            doc.accessors[*index] = accessor.clone();
-        }
-        GltfMutation::InsertMaterial(InsertMaterial { index, material }) => {
-            if *index > doc.materials.len() {
-                return Err(reject("gltf.mutation.insert-out-of-range", "document/materials", format!("index {index}, length {}", doc.materials.len())));
-            }
-            remap_references(doc, IndexFamily::Material, *index, true);
-            doc.materials.insert(*index, material.clone());
-        }
-        GltfMutation::RemoveMaterial(RemoveMaterial { index }) => {
-            let frozen = doc.clone();
-            remove_checked(&mut doc.materials, IndexFamily::Material, *index, &frozen, "document/materials")?;
-            remap_references(doc, IndexFamily::Material, *index, false);
-        }
-        GltfMutation::SetMaterial(SetMaterial { index, material }) => {
-            check_index("document/materials", *index, doc.materials.len())?;
-            doc.materials[*index] = material.clone();
-        }
-        GltfMutation::BindPrimitiveMaterial(BindPrimitiveMaterial { mesh, primitive, material }) => {
-            check_index("document/meshes", *mesh, doc.meshes.len())?;
-            check_index(format!("document/meshes/{mesh}/primitives"), *primitive, doc.meshes[*mesh].primitives.len())?;
-            if let Some(material) = material {
-                check_index("document/materials", *material, doc.materials.len())?;
-            }
-            doc.meshes[*mesh].primitives[*primitive].material = *material;
-        }
-        GltfMutation::InsertBuffer(InsertBuffer { index, buffer, bytes }) => {
-            if *index > doc.buffers.len() {
-                return Err(reject("gltf.mutation.insert-out-of-range", "document/buffers", format!("index {index}, length {}", doc.buffers.len())));
-            }
-            remap_references(doc, IndexFamily::Buffer, *index, true);
-            doc.buffers.insert(*index, buffer.clone());
-            next.buffers.insert(*index, bytes.clone());
-        }
-        GltfMutation::RemoveBuffer(RemoveBuffer { index }) => {
-            let frozen = doc.clone();
-            remove_checked(&mut doc.buffers, IndexFamily::Buffer, *index, &frozen, "document/buffers")?;
-            next.buffers.remove(*index);
-            remap_references(doc, IndexFamily::Buffer, *index, false);
-        }
-        GltfMutation::SetBuffer(SetBuffer { index, buffer, bytes }) => {
-            check_index("document/buffers", *index, doc.buffers.len())?;
-            doc.buffers[*index] = buffer.clone();
-            next.buffers[*index] = bytes.clone();
-        }
-        GltfMutation::InsertAnimation(InsertAnimation { index, animation }) => {
-            if *index > doc.animations.len() {
-                return Err(reject("gltf.mutation.insert-out-of-range", "document/animations", format!("index {index}, length {}", doc.animations.len())));
-            }
-            doc.animations.insert(*index, animation.clone());
-        }
-        GltfMutation::RemoveAnimation(RemoveAnimation { index }) => {
-            check_index("document/animations", *index, doc.animations.len())?;
-            doc.animations.remove(*index);
-        }
-        GltfMutation::SetAnimation(SetAnimation { index, animation }) => {
-            check_index("document/animations", *index, doc.animations.len())?;
-            doc.animations[*index] = animation.clone();
-        }
-    }
+    mutation.apply(&mut next)?;
     validate_gltf_references(&next)?;
     Ok(next)
 }

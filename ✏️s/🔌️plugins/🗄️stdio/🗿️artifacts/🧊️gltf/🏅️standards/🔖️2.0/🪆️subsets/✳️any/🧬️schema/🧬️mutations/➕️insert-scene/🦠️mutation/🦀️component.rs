@@ -1,5 +1,6 @@
 //! 🦠️ `insert-scene` GLTF mutation payload.
 
+use super::super::planning::{reject, remap_references, GltfMutationRejection, GltfSemanticMutation, IndexFamily};
 use crate::artifacts::gltf::schema::mutations::GltfMutation;
 use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::GltfSnapshot;
@@ -25,5 +26,17 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for InsertScene {
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
+    }
+}
+
+impl GltfSemanticMutation for InsertScene {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+        let document = &mut snapshot.document;
+        if self.index > document.scenes.len() {
+            return Err(reject("gltf.mutation.insert-out-of-range", "document/scenes", format!("index {}, length {}", self.index, document.scenes.len())));
+        }
+        remap_references(document, IndexFamily::Scene, self.index, true);
+        document.scenes.insert(self.index, self.scene.clone());
+        Ok(())
     }
 }

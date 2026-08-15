@@ -1,5 +1,6 @@
 //! 🦠️ `set-mesh` GLTF mutation payload.
 
+use super::super::planning::{check_index, GltfMutationRejection, GltfSemanticMutation};
 use crate::artifacts::gltf::schema::mutations::GltfMutation;
 use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::GltfSnapshot;
@@ -25,5 +26,13 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for SetMesh {
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
+    }
+}
+
+impl GltfSemanticMutation for SetMesh {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+        check_index("document/meshes", self.index, snapshot.document.meshes.len())?;
+        snapshot.document.meshes[self.index] = self.mesh.clone();
+        Ok(())
     }
 }

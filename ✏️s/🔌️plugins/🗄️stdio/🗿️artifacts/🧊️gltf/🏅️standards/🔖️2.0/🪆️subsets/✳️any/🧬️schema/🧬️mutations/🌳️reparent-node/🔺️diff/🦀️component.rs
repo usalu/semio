@@ -1,10 +1,10 @@
 //! 🔺️ `reparent-node` validated sparse diff.
 
+use super::super::planning::GltfSemanticMutation;
 use super::mutation::ReparentNode;
 use crate::artifacts::gltf::schema::diff::GltfDiff;
-use crate::artifacts::gltf::schema::mutations::{plan_gltf_mutation, GltfMutation};
 use crate::artifacts::gltf::GltfSnapshot;
 
 pub fn diff(payload: &ReparentNode, base: &GltfSnapshot) -> GltfDiff {
-    plan_gltf_mutation(base, &GltfMutation::ReparentNode(payload.clone())).unwrap_or_default()
+    payload.plan(base).unwrap_or_default()
 }

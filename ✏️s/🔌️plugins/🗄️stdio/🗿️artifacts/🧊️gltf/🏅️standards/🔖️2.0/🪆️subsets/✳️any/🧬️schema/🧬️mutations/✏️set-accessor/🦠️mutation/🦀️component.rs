@@ -1,5 +1,6 @@
 //! 🦠️ `set-accessor` GLTF mutation payload.
 
+use super::super::planning::{check_index, GltfMutationRejection, GltfSemanticMutation};
 use crate::artifacts::gltf::schema::mutations::GltfMutation;
 use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::GltfSnapshot;
@@ -25,5 +26,13 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for SetAccessor {
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
+    }
+}
+
+impl GltfSemanticMutation for SetAccessor {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+        check_index("document/accessors", self.index, snapshot.document.accessors.len())?;
+        snapshot.document.accessors[self.index] = self.accessor.clone();
+        Ok(())
     }
 }

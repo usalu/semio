@@ -1,5 +1,6 @@
 //! 🦠️ `insert-animation` GLTF mutation payload.
 
+use super::super::planning::{reject, GltfMutationRejection, GltfSemanticMutation};
 use crate::artifacts::gltf::schema::mutations::GltfMutation;
 use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::GltfSnapshot;
@@ -25,5 +26,15 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for InsertAnimation {
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
+    }
+}
+
+impl GltfSemanticMutation for InsertAnimation {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+        if self.index > snapshot.document.animations.len() {
+            return Err(reject("gltf.mutation.insert-out-of-range", "document/animations", format!("index {}, length {}", self.index, snapshot.document.animations.len())));
+        }
+        snapshot.document.animations.insert(self.index, self.animation.clone());
+        Ok(())
     }
 }

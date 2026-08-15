@@ -1,5 +1,6 @@
 //! 🦠️ `remove-scene` GLTF mutation payload.
 
+use super::super::planning::{remap_references, remove_checked, GltfMutationRejection, GltfSemanticMutation, IndexFamily};
 use crate::artifacts::gltf::schema::mutations::GltfMutation;
 use crate::artifacts::gltf::GltfSnapshot;
 use serde::{Deserialize, Serialize};
@@ -23,5 +24,15 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for RemoveScene {
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
+    }
+}
+
+impl GltfSemanticMutation for RemoveScene {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+        let document = &mut snapshot.document;
+        let frozen = document.clone();
+        remove_checked(&mut document.scenes, IndexFamily::Scene, self.index, &frozen, "document/scenes")?;
+        remap_references(document, IndexFamily::Scene, self.index, false);
+        Ok(())
     }
 }

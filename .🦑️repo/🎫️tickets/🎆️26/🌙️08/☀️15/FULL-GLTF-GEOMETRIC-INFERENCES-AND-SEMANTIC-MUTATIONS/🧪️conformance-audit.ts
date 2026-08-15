@@ -61,6 +61,30 @@ for (const [name, expected] of Object.entries(groups)) {
   const rust = capture(inferenceRust, new RegExp(`pub struct ${name} \\{([^}]*)\\}`), `Rust ${name}`);
   same([...rust.matchAll(/pub\s+([a-z_]+)\s*:/g)].map((match) => camel(match[1])), expected, `Rust ${name}`);
 }
+const inferenceStages: Record<string, string> = {
+  "📦️size": "GltfSizeInference",
+  "🧱️area-volume": "GltfAreaVolumeInference",
+  "⚪️compactness": "GltfCompactnessInference",
+  "📏️proportion": "GltfProportionInference",
+  "⚖️mass-distribution": "GltfMassInference",
+  "🌀️curvature": "GltfCurvatureInference",
+  "↕️thickness": "GltfThicknessInference",
+  "🕳️concavity": "GltfConcavityInference",
+  "↔️clearance": "GltfClearanceInference",
+  "🔗️adjacency": "GltfAdjacencyInference",
+  "🧭️orientation": "GltfOrientationInference",
+  "🪞️symmetry": "GltfSymmetryInference",
+  "🌊️roughness": "GltfRoughnessInference",
+  "🕸️topology": "GltfTopologyInference",
+};
+for (const [folder, stage] of Object.entries(inferenceStages)) {
+  const source = read(`💡️inferences/${folder}/🦀️component.rs`);
+  if (!source.includes(`impl GltfInferenceStage<GltfGeometryContext<'_>> for ${stage}`) || !source.includes("fn infer(context: &GltfGeometryContext<'_>)") || !source.includes("fn unavailable(diagnostic_ids: &[String])")) {
+    throw new Error(`inference leaf is not executable: ${folder}`);
+  }
+}
+const geometryKernel = read("💡️inferences/📐️geometry/🦀️component.rs");
+for (const name of Object.keys(groups)) if (geometryKernel.includes(`${name} {`)) throw new Error(`geometry kernel constructs ${name} instead of composing its leaf`);
 
 const indicators = Object.values(groups).flat();
 if (indicators.length !== 67 || new Set(indicators).size !== 67) throw new Error("indicator taxonomy is not 67 unique fields");
@@ -102,6 +126,16 @@ for (const [tag, variant] of variants.entries()) {
 }
 const mutationFolders = fs.readdirSync(path.join(schema, "🧬️mutations"), { withFileTypes: true }).filter((entry) => entry.isDirectory() && ["🦠️mutation", "🔺️diff", "↩️inverse"].every((leaf) => fs.existsSync(path.join(schema, "🧬️mutations", entry.name, leaf, "🦀️component.rs")) && fs.existsSync(path.join(schema, "🧬️mutations", entry.name, leaf, "🟦️component.ts"))));
 if (mutationFolders.length !== 28) throw new Error(`mutation taxonomy has ${mutationFolders.length} complete triads, expected 28`);
+for (const folder of mutationFolders) {
+  const mutation = read(`🧬️mutations/${folder.name}/🦠️mutation/🦀️component.rs`);
+  const diff = read(`🧬️mutations/${folder.name}/🔺️diff/🦀️component.rs`);
+  const inverse = read(`🧬️mutations/${folder.name}/↩️inverse/🦀️component.rs`);
+  if (!mutation.includes("impl GltfSemanticMutation for")) throw new Error(`mutation leaf is not executable: ${folder.name}`);
+  if (!diff.includes("payload.plan(base)") && !diff.includes("diff_set_snapshot(base")) throw new Error(`diff leaf delegates through the command union: ${folder.name}`);
+  if (!inverse.includes("pub fn inverse(")) throw new Error(`inverse leaf is not executable: ${folder.name}`);
+}
+const mutationPlanning = read("🧬️mutations/🧭️planning/🦀️component.rs");
+if (/GltfMutation::\w+\([^)]*\{/.test(mutationPlanning)) throw new Error("semantic planner owns command-specific destructuring");
 if (walk(path.join(schema, "💡️inferences")).some((file) => file.includes("📦bounds"))) throw new Error("legacy GLTF bounds component remains");
 const mutationPrimitive = mutationGrammar.split("\n").find((line) => line.startsWith("primitive-value ="));
 const diffPrimitive = diffGrammar.split("\n").find((line) => line.startsWith("primitive-value ="));
@@ -178,4 +212,4 @@ for (const relative of ["🧬️mutations/🛰️component.proto", "🔺️diff/
   }
 }
 
-console.log(`PASS indicators=67 groups=14 inference-roots=geometry-only mutations=28 tags=0..27 diff-fields=21 proto-imports=resolved morph-target-grammar=7-fields ts=${facetFiles.filter((file) => file.endsWith(".ts")).length} json=${facetFiles.filter((file) => file.endsWith(".json")).length} ksy=${facetFiles.filter((file) => file.endsWith(".ksy")).length} accepted-rejection=typed inference-envelope=parity`);
+console.log(`PASS indicators=67 groups=14 inference-stages=14 geometry=composition-only mutations=28 semantic-commands=28 tags=0..27 diff-fields=21 proto-imports=resolved morph-target-grammar=7-fields ts=${facetFiles.filter((file) => file.endsWith(".ts")).length} json=${facetFiles.filter((file) => file.endsWith(".json")).length} ksy=${facetFiles.filter((file) => file.endsWith(".ksy")).length} accepted-rejection=typed inference-envelope=parity`);

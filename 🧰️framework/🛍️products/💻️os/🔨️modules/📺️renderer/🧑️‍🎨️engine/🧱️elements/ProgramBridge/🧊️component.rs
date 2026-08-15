@@ -112,7 +112,7 @@ mod wasm_program_exchange {
         let mut saw_invocation = false;
         for frame in frames {
             match frame {
-                AppFrame::Invocation { in_reply_to, output: out_bytes, diagnostics: diag_bytes } if *in_reply_to == seq => {
+                AppFrame::Invocation { in_reply_to, output: out_bytes, diagnostics: diag_bytes, .. } if *in_reply_to == seq => {
                     output = decode_wire::<DslValue>(out_bytes)?;
                     diagnostics = decode_wire(diag_bytes).unwrap_or_default();
                     saw_invocation = true;
