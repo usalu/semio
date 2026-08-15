@@ -5,6 +5,10 @@ import type {
   GltfTexture, GltfImage, GltfSampler, GltfSkin, GltfAnimation, GltfCamera, GltfJson, GltfSourceForm,
 } from '../📸️snapshot/🟦️component.ts';
 
+export type GltfTouchedRegion = 'asset' | 'scene' | 'scenes' | 'nodes' | 'meshes' | 'accessors' | 'bufferViews' | 'buffers' | 'bufferBytes' | 'materials' | 'textures' | 'images' | 'samplers' | 'skins' | 'animations' | 'cameras' | 'extensionsUsed' | 'extensionsRequired' | 'extensions' | 'extras' | 'sourceForm';
+/** ↩️ Law: `inverse.apply(forward.apply(base)) === base`; paths are sorted and deduplicated. */
+export interface GltfDiffDerivation { forward: GltfDiff; inverse: GltfDiff; touchedPaths: string[]; touchedRegions: GltfTouchedRegion[] }
+
 export interface GltfModified<D> { index: number; diff: D }
 export interface GltfAdded<T> { index: number; item: T }
 export interface GltfCollectionDiff<T, D> {

@@ -1,31 +1,28 @@
 //! 💡️ GltfInference — the fourth schema family alongside snapshot/diff/mutations (ticket
 //! 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Directory shape
-//! mirrors `🧬️mutations/`: this file is the family-root assembly (never mod's/includes the slug
-//! dirs directly — `📦️glue.rs` is the sole mounting mechanism, same as mutations); each named
-//! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`, honestly derivable from
-//! every `document.meshes[].primitives[]`'s own `POSITION` accessor alone).
+//! mirrors `🧬️mutations/`: this file is the family-root assembly while `📦bounds/` hosts the
+//! authoritative decoded static-pose geometry kernel and its complete typed result contract.
 
 use crate::artifacts::gltf::schema::snapshot::GltfSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
 
-use super::bounds::{compute_gltf_bounds, GltfBounds};
+use super::bounds::{compute_gltf_geometry, GltfGeometricInference};
 
 //#region 🔖️Inference
-/// 💡️ Everything inferable from a gltf snapshot. One field per named inference under
-/// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).
+/// 💡️ Complete universal geometric inference for a glTF snapshot.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gltf.inference")]
 pub struct GltfInference {
     #[derived]
-    pub bounds: GltfBounds,
+    pub geometry: GltfGeometricInference,
 }
 
 impl protocol::Inference<GltfSnapshot> for GltfInference {
     fn infer(snapshot: &GltfSnapshot) -> Self {
-        Self { bounds: compute_gltf_bounds(snapshot) }
+        Self { geometry: compute_gltf_geometry(snapshot) }
     }
 }
 
@@ -42,20 +39,51 @@ impl protocol::InferenceSpec<GltfSnapshot> for GltfInference {
         "s.stdio.gltf.inference"
     }
     fn schema_version() -> u32 {
-        1
+        2
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.bounds", reads: &["document"] }]
+        GLTF_INFERENCE_FIELDS
     }
+}
+
+pub const GLTF_INFERENCE_FIELDS: &[protocol::InferenceFieldSpec] = &[
+    protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.geometry.resources", reads: &["document/buffers", "buffers"] },
+    protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.geometry.accessors", reads: &["document/accessors", "document/bufferViews", "document/buffers", "buffers"] },
+    protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.geometry.primitives", reads: &["document/meshes", "document/accessors", "document/bufferViews", "document/buffers", "buffers"] },
+    protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.geometry.instances", reads: &["document/scene", "document/scenes", "document/nodes", "document/meshes"] },
+    protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.geometry.materials", reads: &["document/materials", "document/textures", "document/images", "document/samplers"] },
+    protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.geometry.relations", reads: &["document/scene", "document/scenes", "document/nodes", "document/meshes", "document/accessors", "document/bufferViews", "document/buffers", "buffers"] },
+    protocol::InferenceFieldSpec {
+        id: "s.stdio.gltf.inference.geometry.aggregate",
+        reads: &[
+            "document/scene",
+            "document/scenes",
+            "document/nodes",
+            "document/meshes",
+            "document/accessors",
+            "document/bufferViews",
+            "document/buffers",
+            "buffers",
+            "document/materials",
+            "document/textures",
+            "document/images",
+            "document/samplers",
+            "document/skins",
+            "document/animations",
+        ],
+    },
+];
+
+/// 🧠️ Returns stable DAG field IDs invalidated by touched authored regions. `None` means a
+/// cold/unknown change set and therefore invalidates every field; an empty set invalidates none.
+pub fn invalidated_gltf_inference_fields(touched: Option<&protocol::TouchedPaths>) -> Vec<&'static str> {
+    GLTF_INFERENCE_FIELDS.iter().filter(|field| touched.is_none_or(|paths| paths.intersects_any(field.reads))).map(|field| field.id).collect()
 }
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `bounds` is a single min/max fold over every mesh primitive's own
-/// `POSITION` accessor `min`/`max` (plus a `count`/mesh/primitive tally), already O(n) in total
-/// mesh-primitive count with no honest per-entity incremental decomposition (a merkle dep-chain
-/// over this flat mesh/primitive/accessor walk costs more than the fold it would cache) — the
-/// default `infer_cached` passthrough is exact.
+/// 💡️ The kernel owns deterministic region-level dependency fingerprints; framework-level
+/// inference caching therefore safely treats `geometry` as one derived field over document and buffers.
 impl ArtifactInferrer for crate::artifacts::gltf::standards::v2_0::subsets::any::schema::GltfBuilder {
     type Snapshot = GltfSnapshot;
     type Inference = GltfInference;
@@ -83,7 +111,7 @@ pub fn gltf_artifact_inference_descriptor() -> schema::ArtifactInferenceDescript
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use protocol::Inference;
+    use protocol::{DiffRegions as _, Inference};
 
     #[test]
     fn inference_determinism_law() {
@@ -94,6 +122,33 @@ mod tests {
     #[test]
     fn inference_default_law() {
         assert_eq!(GltfInference::infer(&GltfSnapshot::default()), GltfInference::default());
+    }
+
+    #[test]
+    fn dependency_contract_covers_document_and_resolved_buffers() {
+        let reads: Vec<_> = GLTF_INFERENCE_FIELDS.iter().flat_map(|field| field.reads.iter().copied()).collect();
+        assert!(reads.iter().any(|path| path.starts_with("document/")));
+        assert!(reads.contains(&"buffers"));
+        assert_eq!(invalidated_gltf_inference_fields(None).len(), GLTF_INFERENCE_FIELDS.len());
+    }
+
+    #[test]
+    fn node_transform_reuses_resource_accessor_and_primitive_stages() {
+        let diff = crate::artifacts::gltf::schema::diff::GltfDiff {
+            nodes: Some(crate::artifacts::gltf::schema::diff::GltfNodesDiff {
+                modified: vec![crate::artifacts::gltf::schema::diff::GltfModified { index: 0, diff: crate::artifacts::gltf::schema::diff::GltfNodeDiff { translation: Some(Some([1.0, 2.0, 3.0])), ..Default::default() } }],
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        let touched = diff.touches();
+        let invalidated = invalidated_gltf_inference_fields(Some(&touched));
+        assert!(!invalidated.contains(&"s.stdio.gltf.inference.geometry.resources"));
+        assert!(!invalidated.contains(&"s.stdio.gltf.inference.geometry.accessors"));
+        assert!(!invalidated.contains(&"s.stdio.gltf.inference.geometry.primitives"));
+        assert!(invalidated.contains(&"s.stdio.gltf.inference.geometry.instances"));
+        assert!(invalidated.contains(&"s.stdio.gltf.inference.geometry.relations"));
+        assert!(invalidated.contains(&"s.stdio.gltf.inference.geometry.aggregate"));
     }
 }
 //#endregion 🧪️Tests

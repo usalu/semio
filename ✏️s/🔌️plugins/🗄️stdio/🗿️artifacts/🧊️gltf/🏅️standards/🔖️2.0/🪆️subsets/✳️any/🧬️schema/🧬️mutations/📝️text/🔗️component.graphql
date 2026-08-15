@@ -1,3 +1,2 @@
-# stdio.gltf mutations text grammar schema
-scalar Bytes
-type Document { schema: String! payload: String! }
+# 📝 Canonical one-line mutation text maps one-to-one to the complete root union.
+type GltfMutationTextDocument { text: String! value: GltfMutation rejection: GltfMutationRejection }

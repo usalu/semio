@@ -305,6 +305,11 @@ pub struct GltfNode {
 //#endregion 🔖️Node
 
 //#region 🔖️Mesh
+/// 🎭 One `meshes[i].primitives[j].targets[k]` morph-target attribute map (§5.19.4).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct GltfMorphTarget(#[serde(with = "ordered_attr_map")] pub Vec<(String, usize)>);
+
 /// 🔺 `meshes[i].primitives[j]` (§5.19.4).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -317,6 +322,8 @@ pub struct GltfPrimitive {
     pub material: Option<usize>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mode: Option<u64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub targets: Vec<GltfMorphTarget>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

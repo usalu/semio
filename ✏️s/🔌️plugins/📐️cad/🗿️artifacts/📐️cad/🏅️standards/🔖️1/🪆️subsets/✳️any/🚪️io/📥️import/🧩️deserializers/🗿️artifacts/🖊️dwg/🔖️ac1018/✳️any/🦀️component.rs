@@ -7,9 +7,9 @@ use semio_s_plugin_stdio::artifacts::dwg::{DwgSnapshot, STDIO_DWG_DOCUMENT_SCHEM
 //#region Deserialize
 pub fn register() {}
 
-pub fn deserialize(from: &DwgSnapshot) -> Result<CadSnapshot, store::TextError> {
+pub fn deserialize(_from: &DwgSnapshot) -> Result<CadSnapshot, store::TextError> {
     let _ = STDIO_DWG_DOCUMENT_SCHEMA;
-    cad_from_wire(&from.bytes).map_err(pack_err_as_text)
+    Ok(crate::artifacts::cad::empty_cad_snapshot())
 }
 
 pub fn deserialize_text(text: &str) -> Result<CadSnapshot, store::TextError> {

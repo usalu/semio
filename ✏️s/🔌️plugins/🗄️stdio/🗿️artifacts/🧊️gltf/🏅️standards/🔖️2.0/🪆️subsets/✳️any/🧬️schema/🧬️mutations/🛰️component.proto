@@ -1,7 +1,8 @@
 syntax = "proto3";
 package semio.s_stdio_gltf.mutation;
 
-import "snapshot.proto";
+import "../📸️snapshot/🛰️component.proto";
+import "../🔺️diff/🛰️component.proto";
 
 message GltfMutation {
   oneof mutation {
@@ -29,6 +30,10 @@ message GltfMutation {
     GltfInsertAnimation insert_animation = 22;
     GltfIndexOnly remove_animation = 23;
     GltfSetAnimation set_animation = 24;
+    GltfTransformNode transform_node = 25;
+    GltfReparentNode reparent_node = 26;
+    GltfBindNodeMesh bind_node_mesh = 27;
+    GltfBindPrimitiveMaterial bind_primitive_material = 28;
   }
 }
 
@@ -37,13 +42,23 @@ message GltfInsertScene { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfScen
 message GltfSetScene { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfScene scene = 2; }
 message GltfInsertNode { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfNode node = 2; }
 message GltfSetNode { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfNode node = 2; }
+message GltfDoubleArray { repeated double values = 1; }
+message GltfTransformNode { uint64 index = 1; optional GltfDoubleArray matrix = 2; optional GltfDoubleArray translation = 3; optional GltfDoubleArray rotation = 4; optional GltfDoubleArray scale = 5; }
+message GltfReparentNode { uint64 index = 1; optional uint64 parent = 2; optional uint64 scene = 3; uint64 position = 4; }
+message GltfBindNodeMesh { uint64 index = 1; optional uint64 mesh = 2; }
 message GltfInsertMesh { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfMesh mesh = 2; }
 message GltfSetMesh { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfMesh mesh = 2; }
 message GltfInsertAccessor { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfAccessor accessor = 2; }
 message GltfSetAccessor { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfAccessor accessor = 2; }
 message GltfInsertMaterial { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfMaterial material = 2; }
 message GltfSetMaterial { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfMaterial material = 2; }
+message GltfBindPrimitiveMaterial { uint64 mesh = 1; uint64 primitive = 2; optional uint64 material = 3; }
 message GltfInsertBuffer { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfBuffer buffer = 2; bytes bytes_payload = 3; }
 message GltfSetBuffer { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfBuffer buffer = 2; bytes bytes_payload = 3; }
 message GltfInsertAnimation { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfAnimation animation = 2; }
 message GltfSetAnimation { uint64 index = 1; semio.s_stdio_gltf.snapshot.GltfAnimation animation = 2; }
+message GltfMutationRejection { string code = 1; string path = 2; string detail = 3; }
+message GltfMutationApplication { oneof result { semio.s_stdio_gltf.diff.GltfDiff diff = 1; GltfMutationRejection rejection = 2; } }
+enum GltfReferenceFamily { REFERENCE_FAMILY_UNSPECIFIED = 0; SCENE = 1; NODE = 2; MESH = 3; ACCESSOR = 4; MATERIAL = 5; BUFFER = 6; }
+message GltfReferenceRule { GltfReferenceFamily family = 1; string path_pattern = 2; bool validate = 3; bool remap_on_insert = 4; bool remap_on_remove = 5; }
+message GltfMutationDerivation { GltfMutation mutation = 1; semio.s_stdio_gltf.diff.GltfDiff diff = 2; GltfMutation inverse = 3; repeated string touched_paths = 4; repeated semio.s_stdio_gltf.diff.GltfTouchedRegion touched_regions = 5; repeated GltfReferenceRule reference_rules = 6; }

@@ -57,6 +57,13 @@ interface plugin {
   /// forwarding) — never falls through to `host.io-compose` itself, to keep cross-plugin routing
   /// one hop.
   artifact-compose: func(key: list<u8>, sources: list<u8>) -> result<list<u8>, plugin-error>;
+  /// 💡️ Deterministic JSON wire roster of this plugin's executable artifact inference services.
+  /// The host calls this once at plugin load and rejects conflicting ownership/version metadata.
+  list-artifact-inferences: func() -> result<list<u8>, plugin-error>;
+  /// 💡️ Versioned artifact inference request/result envelopes. The semantic result inside the
+  /// response is the inference schema's canonical binary encoding; the outer bytes only carry
+  /// owner/schema/revision/generation/policy/session metadata across the component boundary.
+  artifact-infer: func(request: list<u8>) -> result<list<u8>, plugin-error>;
 }
 
 interface extension {

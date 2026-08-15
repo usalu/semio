@@ -1,3 +1,2 @@
-# stdio.gltf diff text grammar schema
-scalar Bytes
-type Document { schema: String! payload: String! }
+# 📝 Canonical sparse diff text and exact inverse/touched derivation.
+type GltfDiffTextDocument { text: String! value: GltfDiff! derivation: GltfDiffDerivation! }

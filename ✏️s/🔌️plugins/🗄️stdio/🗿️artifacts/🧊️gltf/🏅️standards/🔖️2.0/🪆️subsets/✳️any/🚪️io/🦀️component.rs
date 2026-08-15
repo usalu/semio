@@ -213,9 +213,8 @@ impl<'de> Deserialize<'de> for GltfAccessorType {
 }
 //#endregion 🔖️AccessorModelSerde
 
-/// 📦️ One decoded accessor: flat row-major `count * accessor_type.components()` values, every
-/// component already widened to `f64` regardless of source `componentType` -- real enough for a
-/// downstream mesh-view/analyzer to consume actual vertex data instead of opaque bytes.
+/// 📦️ One decoded accessor: flat row-major `count * accessor_type.components()` values, widened
+/// to `f64` and normalized when requested by the accessor before any consumer observes them.
 #[derive(Clone, Debug, PartialEq)]
 pub struct GltfDecodedAccessor {
     pub component_type: GltfComponentType,
@@ -240,6 +239,23 @@ fn read_elements(bytes: &[u8], base_offset: usize, component_type: GltfComponent
         }
     }
     Ok(out)
+}
+
+/// 🎚️ Applies glTF 2.0 accessor normalization after dense and sparse values have been
+/// assembled, preserving the exact signed lower-bound rule from §3.6.2.2.
+fn normalize_components(component_type: GltfComponentType, components: &mut [f64]) -> Result<(), String> {
+    let (scale, signed) = match component_type {
+        GltfComponentType::Byte => (127.0, true),
+        GltfComponentType::UnsignedByte => (255.0, false),
+        GltfComponentType::Short => (32_767.0, true),
+        GltfComponentType::UnsignedShort => (65_535.0, false),
+        GltfComponentType::UnsignedInt => (4_294_967_295.0, false),
+        GltfComponentType::Float => return Err("normalized FLOAT accessor is invalid glTF 2.0".into()),
+    };
+    for value in components {
+        *value = if signed { (*value / scale).max(-1.0) } else { *value / scale };
+    }
+    Ok(())
 }
 
 /// 🧩️ Decodes `document.accessors[accessor_index]` against `buffers` (index-aligned with
@@ -272,6 +288,10 @@ pub fn decode_accessor(document: &GltfDocument, buffers: &[Vec<u8>], accessor_in
             }
             components[dst..dst + nc].copy_from_slice(&values[i * nc..i * nc + nc]);
         }
+    }
+
+    if normalized {
+        normalize_components(component_type, &mut components)?;
     }
 
     Ok(GltfDecodedAccessor { component_type, accessor_type, count, normalized, components })
@@ -652,6 +672,48 @@ mod tests {
     }
 
     #[test]
+    fn decode_accessor_applies_spec_normalization_after_sparse_overlay() {
+        let document = GltfDocument {
+            buffers: vec![GltfBuffer { byte_length: 7, uri: None, name: None, extensions: None, extras: None }],
+            buffer_views: vec![buffer_view(0, 0, None), buffer_view(0, 3, None)],
+            accessors: vec![GltfAccessor {
+                buffer_view: None,
+                byte_offset: 0,
+                component_type: GltfComponentType::Byte,
+                normalized: true,
+                count: 4,
+                kind: GltfAccessorType::Scalar,
+                max: None,
+                min: None,
+                sparse: Some(GltfSparseAccessor { count: 3, indices: GltfSparseIndices { buffer_view: 0, byte_offset: 0, component_type: GltfComponentType::UnsignedByte }, values: GltfSparseValues { buffer_view: 1, byte_offset: 0 } }),
+                name: None,
+                extensions: None,
+                extras: None,
+            }],
+            ..GltfDocument::default()
+        };
+        let buffers = vec![vec![0, 2, 3, 128, 64, 127, 0]];
+        let acc = decode_accessor(&document, &buffers, 0).unwrap();
+        assert_eq!(acc.components, vec![-1.0, 0.0, 64.0 / 127.0, 1.0]);
+    }
+
+    #[test]
+    fn accessor_normalization_covers_every_legal_integer_component_type() {
+        let cases = [
+            (GltfComponentType::Byte, vec![-128.0, 127.0], vec![-1.0, 1.0]),
+            (GltfComponentType::UnsignedByte, vec![0.0, 255.0], vec![0.0, 1.0]),
+            (GltfComponentType::Short, vec![-32_768.0, 32_767.0], vec![-1.0, 1.0]),
+            (GltfComponentType::UnsignedShort, vec![0.0, 65_535.0], vec![0.0, 1.0]),
+            (GltfComponentType::UnsignedInt, vec![0.0, 4_294_967_295.0], vec![0.0, 1.0]),
+        ];
+        for (component_type, mut actual, expected) in cases {
+            normalize_components(component_type, &mut actual).unwrap();
+            assert_eq!(actual, expected);
+        }
+        assert!(normalize_components(GltfComponentType::Float, &mut [1.0]).is_err());
+    }
+
+    #[test]
     fn decode_accessor_applies_sparse_substitution_over_zero_base() {
         let document = GltfDocument {
             buffers: vec![GltfBuffer { byte_length: 100, uri: None, name: None, extensions: None, extras: None }],
@@ -692,6 +754,17 @@ mod tests {
         let snap = parse_gltf_document(text).expect("scene-only document must parse leniently");
         assert_eq!(snap.document.asset.version, "2.0");
         assert!(snap.buffers.is_empty());
+    }
+
+    #[test]
+    fn parse_gltf_document_preserves_morph_target_maps() {
+        let text = br#"{"asset":{"version":"2.0"},"meshes":[{"primitives":[{"attributes":{"POSITION":0},"targets":[{"POSITION":1,"NORMAL":2}]}]}]}"#;
+        let snap = parse_gltf_document(text).expect("morph targets are core glTF 2.0 data");
+        let target = &snap.document.meshes[0].primitives[0].targets[0].0;
+        assert_eq!(target, &vec![("POSITION".into(), 1), ("NORMAL".into(), 2)]);
+        let encoded = serialize_gltf_document(&snap);
+        let reparsed = parse_gltf_document(&encoded).expect("serialized morph target must remain valid");
+        assert_eq!(reparsed.document.meshes[0].primitives[0].targets, snap.document.meshes[0].primitives[0].targets);
     }
 
     #[test]
@@ -834,6 +907,10 @@ mod tests {
         fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
+            let mutation_primitive = mutations::text::COMPONENT_GRAMMAR_SEMIO.lines().find(|line| line.starts_with("primitive-value =")).expect("mutations primitive grammar");
+            let diff_primitive = diff::text::COMPONENT_GRAMMAR_SEMIO.lines().find(|line| line.starts_with("primitive-value =")).expect("diff primitive grammar");
+            assert_eq!(mutation_primitive, diff_primitive, "mutation and diff primitive tuple shapes diverged");
+            assert!(mutation_primitive.contains("morph-target-list"), "primitive tuple omitted morph targets");
             for mutation in mutations::demo_mutation_cases() {
                 let printed = mutation.print_op();
                 assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");

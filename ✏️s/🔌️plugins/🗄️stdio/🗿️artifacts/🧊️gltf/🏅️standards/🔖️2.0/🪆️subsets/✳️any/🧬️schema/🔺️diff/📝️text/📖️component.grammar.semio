@@ -82,7 +82,8 @@ node-diff-value = "[" usize-list-opt "," tri-int "," tri-int "," tri-int "," f64
 #endregion
 
 #region MeshAccessorMaterial
-primitive-value = "[" attr-pairs "," int-opt "," int-opt "," int-opt "," json-opt "," json-opt "]"
+morph-target-list = "[" "]" | "[" attr-pairs {"," attr-pairs}* "]"
+primitive-value = "[" attr-pairs "," int-opt "," int-opt "," int-opt "," morph-target-list "," json-opt "," json-opt "]"
 primitive-list = "[" "]" | "[" primitive-value {"," primitive-value}* "]"
 primitive-list-opt = "[" "0" "]" | "[" "1" "," primitive-list "]"
 mesh-value = "[" primitive-list "," f64-list "," str-opt "," json-opt "," json-opt "]"

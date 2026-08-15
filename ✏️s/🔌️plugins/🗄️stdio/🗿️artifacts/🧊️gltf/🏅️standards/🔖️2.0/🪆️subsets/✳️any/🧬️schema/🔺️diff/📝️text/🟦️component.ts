@@ -1,2 +1,4 @@
-/** 📝️ Text representation for `stdio.gltf` (diff). */
+/** 📝 Canonical sparse diff text and its derived inverse/touched regions. */
+import type { GltfDiff, GltfDiffDerivation } from '../🟦️component.ts';
+export interface GltfDiffTextDocument { text: string; value: GltfDiff; derivation: GltfDiffDerivation }
 export type GltfDiffText = string;

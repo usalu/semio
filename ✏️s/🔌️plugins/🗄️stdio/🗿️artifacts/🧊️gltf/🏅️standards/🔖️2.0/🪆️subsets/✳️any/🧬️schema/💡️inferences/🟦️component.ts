@@ -1,14 +1,7 @@
-/** 💡️ Gltf inference schema — mesh-primitive POSITION-accessor-derived bounding box. */
-
-export interface GltfBounds {
-  min: [number, number, number];
-  max: [number, number, number];
-  vertexCount: number;
-  meshCount: number;
-  primitiveCount: number;
-}
-
+/** 💡 Universal glTF geometric inference schema. */
+export * from './📦bounds/🟦️component.ts';
+import type { GltfGeometricInference } from './📦bounds/🟦️component.ts';
 export interface GltfInference {
   /** @derived */
-  bounds: GltfBounds;
+  geometry: GltfGeometricInference;
 }

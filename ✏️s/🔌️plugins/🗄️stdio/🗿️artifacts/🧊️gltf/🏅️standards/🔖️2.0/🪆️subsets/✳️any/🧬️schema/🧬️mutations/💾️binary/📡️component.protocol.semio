@@ -8,7 +8,8 @@ start op
 # `GltfMutation` — upgraded from the F6-era `print_op().into_bytes()` text-as-binary shortcut (18
 # standards, gltf among them, were still on this shortcut per the P2-W0 census). `format u8` (the
 # repo-wide `store::pack_rt::OP_BINARY_FORMAT` convention byte) + `tag u8` (this variant's own
-# ordinal, `GltfMutation`'s declaration order — `NoMutation`=0 .. `SetAnimation`=23) are the two
+# ordinal, with frozen tags `NoMutation`=0 .. `SetAnimation`=23 and semantic additions
+# `TransformNode`=24, `ReparentNode`=25, `BindNodeMesh`=26, `BindPrimitiveMaterial`=27) are the two
 # REAL fixed leading fields, individually, genuinely protocol-walkable — §2.5's recursive/opaque-
 # tail pattern for a data-carrying enum whose PAYLOAD shape varies per variant (`Prim::Ref` to a
 # nested struct/enum still unconditionally errors at walk time, `protocol-prim-ref-recursion`, and

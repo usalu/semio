@@ -48,6 +48,7 @@ message GltfNode {
 }
 
 message GltfAttribute { string semantic = 1; uint64 accessor = 2; }
+message GltfMorphTarget { repeated GltfAttribute attributes = 1; }
 message GltfPrimitive {
   repeated GltfAttribute attributes = 1;
   optional uint64 indices = 2;
@@ -55,6 +56,7 @@ message GltfPrimitive {
   optional uint64 mode = 4;
   optional GltfJsonValue extensions = 5;
   optional GltfJsonValue extras = 6;
+  repeated GltfMorphTarget targets = 7;
 }
 message GltfMesh {
   repeated GltfPrimitive primitives = 1;

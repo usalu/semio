@@ -4,7 +4,7 @@ use semio_framework::{
     kernel::{ArtifactKind, CapabilityRequirement, Rights, Scope},
     PluginManifest, TopicContribution, ViewModel,
 };
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use ui_wgpu::wgpu::{UtilityNode, WindowEngagement, WindowMeasure};
@@ -160,8 +160,7 @@ impl IoRouter {
     /// shared route table. Call once per plugin, after `WasmPluginRuntime::load` succeeds.
     pub fn register_plugin(&self, plugin_id: &str, runtime: Arc<WasmPluginRuntime>) -> Result<(), PluginHostError> {
         let wire_bytes = runtime.list_artifact_dialects()?;
-        let entries: Vec<(semio_framework::ArtifactDialect, Vec<semio_framework::ArtifactDialect>)> =
-            serde_json::from_slice(&wire_bytes).map_err(PluginHostError::Json)?;
+        let entries: Vec<(semio_framework::ArtifactDialect, Vec<semio_framework::ArtifactDialect>)> = serde_json::from_slice(&wire_bytes).map_err(PluginHostError::Json)?;
         let mut routes = self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("io router routes"))?;
         for (writes, reads) in entries {
             for read in &reads {
@@ -253,6 +252,119 @@ impl Default for IoRouter {
     }
 }
 //#endregion 🔖️IoRouter
+
+//#region 💡️InferenceRouter
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct GuestArtifactInferenceMetadata {
+    pub owner: String,
+    pub artifact_kind: String,
+    pub artifact_schema: String,
+    pub artifact_schema_version: u32,
+    pub document_schema: String,
+    pub document_schema_version: u32,
+    pub inference_schema: String,
+    pub inference_schema_version: u32,
+    pub algorithm_version: u32,
+    pub policy_version: u32,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct InferenceRouteRequest {
+    artifact_kind: String,
+    inference_schema: String,
+    revision: u64,
+    generation: u64,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct InferenceRouteResult {
+    artifact_kind: String,
+    inference_schema: String,
+    revision: u64,
+    generation: u64,
+    inference_binary: Vec<u8>,
+    complete: bool,
+}
+
+pub struct ArtifactInferenceRouter {
+    routes: Mutex<BTreeMap<(String, String), (String, GuestArtifactInferenceMetadata)>>,
+    runtimes: Mutex<HashMap<String, Arc<WasmPluginRuntime>>>,
+}
+
+impl ArtifactInferenceRouter {
+    pub fn new() -> Self {
+        Self { routes: Mutex::new(BTreeMap::new()), runtimes: Mutex::new(HashMap::new()) }
+    }
+
+    pub fn register_plugin(&self, plugin_id: &str, runtime: Arc<WasmPluginRuntime>) -> Result<(), PluginHostError> {
+        let metadata: Vec<GuestArtifactInferenceMetadata> = serde_json::from_slice(&runtime.list_artifact_inferences()?)?;
+        let mut routes = self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference routes"))?;
+        for item in metadata {
+            let key = (item.artifact_kind.clone(), item.inference_schema.clone());
+            if let Some((existing_plugin, existing)) = routes.get(&key) {
+                if existing_plugin == plugin_id && existing == &item {
+                    continue;
+                }
+                return Err(PluginHostError::Plugin(format!("conflicting artifact inference owner for {}/{}: {} {:?}, incoming {} {:?}", key.0, key.1, existing_plugin, existing, plugin_id, item)));
+            }
+            routes.insert(key, (plugin_id.to_string(), item));
+        }
+        drop(routes);
+        self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference runtimes"))?.insert(plugin_id.to_string(), runtime);
+        Ok(())
+    }
+
+    pub fn metadata(&self) -> Result<Vec<GuestArtifactInferenceMetadata>, PluginHostError> {
+        Ok(self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference routes"))?.values().map(|(_, item)| item.clone()).collect())
+    }
+
+    pub fn infer(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+        let route: InferenceRouteRequest = serde_json::from_slice(request)?;
+        let owner = self
+            .routes
+            .lock()
+            .map_err(|_| PluginHostError::LockPoisoned("artifact inference routes"))?
+            .get(&(route.artifact_kind.clone(), route.inference_schema.clone()))
+            .map(|(plugin_id, _)| plugin_id.clone())
+            .ok_or_else(|| PluginHostError::Plugin(format!("no guest inference route for {}/{}", route.artifact_kind, route.inference_schema)))?;
+        let runtime = self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference runtimes"))?.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("inference owner `{owner}` is not loaded")))?;
+        let result = runtime.artifact_infer(request)?;
+        let echoed: InferenceRouteResult = serde_json::from_slice(&result)?;
+        validate_inference_echo(&route, &echoed)?;
+        Ok(result)
+    }
+}
+
+fn validate_inference_echo(request: &InferenceRouteRequest, result: &InferenceRouteResult) -> Result<(), PluginHostError> {
+    if result.artifact_kind != request.artifact_kind || result.inference_schema != request.inference_schema || result.revision != request.revision || result.generation != request.generation || !result.complete || result.inference_binary.is_empty() {
+        return Err(PluginHostError::Plugin("guest inference result did not echo the requested schema/revision/generation or was incomplete".into()));
+    }
+    Ok(())
+}
+
+impl Default for ArtifactInferenceRouter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod artifact_inference_router_tests {
+    use super::*;
+
+    #[test]
+    fn stale_or_empty_guest_results_are_never_publishable() {
+        let request = InferenceRouteRequest { artifact_kind: "s.test".into(), inference_schema: "s.test.inference".into(), revision: 7, generation: 9 };
+        let valid = InferenceRouteResult { artifact_kind: request.artifact_kind.clone(), inference_schema: request.inference_schema.clone(), revision: 7, generation: 9, inference_binary: vec![1], complete: true };
+        assert!(validate_inference_echo(&request, &valid).is_ok());
+        let stale = InferenceRouteResult { generation: 8, ..valid };
+        assert!(matches!(validate_inference_echo(&request, &stale), Err(PluginHostError::Plugin(_))));
+    }
+}
+//#endregion 💡️InferenceRouter
 
 //#region 🔖️HostState
 struct HostState {
@@ -393,10 +505,7 @@ impl semio::framework::host::Host for HostState {
         if !self.has_engine_access(Rights::Invoke) {
             return Err(host_fault_bytes("os.host.engine-derive", "engine invoke capability missing"));
         }
-        let handle = self
-            .engines
-            .derive(&engine_id, &input)
-            .map_err(|error| host_fault_bytes("os.host.engine-derive", error.to_string()))?;
+        let handle = self.engines.derive(&engine_id, &input).map_err(|error| host_fault_bytes("os.host.engine-derive", error.to_string()))?;
         Ok(handle.key.0.to_vec())
     }
 
@@ -414,17 +523,9 @@ impl semio::framework::host::Host for HostState {
         if !self.has_engine_access(Rights::Read) {
             return Err(host_fault_bytes("os.host.engine-read", "engine read capability missing"));
         }
-        let key_bytes: [u8; 32] = key
-            .as_slice()
-            .try_into()
-            .map_err(|_| host_fault_bytes("os.host.engine-read", format!("engine key must be 32 bytes, got {}", key.len())))?;
-        let handle = store::EngineHandle {
-            key: store::EngineKey(key_bytes),
-            engine_id,
-        };
-        self.engines
-            .read(&handle)
-            .map_err(|error| host_fault_bytes("os.host.engine-read", error.to_string()))
+        let key_bytes: [u8; 32] = key.as_slice().try_into().map_err(|_| host_fault_bytes("os.host.engine-read", format!("engine key must be 32 bytes, got {}", key.len())))?;
+        let handle = store::EngineHandle { key: store::EngineKey(key_bytes), engine_id };
+        self.engines.read(&handle).map_err(|error| host_fault_bytes("os.host.engine-read", error.to_string()))
     }
 
     /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): stub passthrough — the WIT signature's error is
@@ -586,13 +687,7 @@ impl WasmPluginRuntime {
     }
 
     /// Bind document/config/draft schema ids so Emit can fold through ArtifactCodec.
-    pub fn bind_session_schemas(
-        &self,
-        instance_id: u32,
-        document_schema: impl Into<Option<String>>,
-        config_schema: impl Into<Option<String>>,
-        draft_schema: impl Into<Option<String>>,
-    ) {
+    pub fn bind_session_schemas(&self, instance_id: u32, document_schema: impl Into<Option<String>>, config_schema: impl Into<Option<String>>, draft_schema: impl Into<Option<String>>) {
         if let Ok(mut store) = self.store_guard() {
             let session = store.data_mut().ensure_session(instance_id);
             session.document_schema = document_schema.into();
@@ -726,10 +821,7 @@ impl WasmPluginRuntime {
                 }
                 AppFrame::Emit { document_ops, config_ops, draft_ops, .. } => {
                     let session = host.ensure_session(instance_id);
-                    let document_schema = session
-                        .document_schema
-                        .clone()
-                        .or_else(|| store::lane_schema_from_spr(&session.document.spr));
+                    let document_schema = session.document_schema.clone().or_else(|| store::lane_schema_from_spr(&session.document.spr));
                     let config_schema = session.config_schema.clone().or_else(|| store::lane_schema_from_spr(&session.config.spr));
                     let draft_schema = session.draft_schema.clone().or_else(|| store::lane_schema_from_spr(&session.draft.spr));
                     session.document.apply_emit_ops(document_schema.as_deref(), document_ops);
@@ -790,6 +882,25 @@ impl WasmPluginRuntime {
         let bindings = self.bindings_guard()?;
         Self::prepare_call(&mut store);
         let result = bindings.semio_framework_plugin().call_artifact_compose(&mut *store, key, sources).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Self::plugin_result(result)
+    }
+
+    /// 💡️ Reads this guest's deterministic executable inference roster once at load time.
+    pub fn list_artifact_inferences(&self) -> Result<Vec<u8>, PluginHostError> {
+        let mut store = self.store_guard()?;
+        let bindings = self.bindings_guard()?;
+        Self::prepare_call(&mut store);
+        let result = bindings.semio_framework_plugin().call_list_artifact_inferences(&mut *store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Self::plugin_result(result)
+    }
+
+    /// 💡️ Executes one serialized guest inference call. Holding the runtime's store mutex for
+    /// the complete call applies the same single-flight/reentrancy boundary as every other export.
+    pub fn artifact_infer(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+        let mut store = self.store_guard()?;
+        let bindings = self.bindings_guard()?;
+        Self::prepare_call(&mut store);
+        let result = bindings.semio_framework_plugin().call_artifact_infer(&mut *store, request).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         Self::plugin_result(result)
     }
 
@@ -1044,8 +1155,7 @@ impl ExtensionRuntime {
         let component = Component::from_binary(&self.engine, wasm_bytes).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let mut store = Store::new(&self.engine, Self::host_state("bootstrap"));
         Self::prepare_call(&mut store);
-        let (bindings, _instance) =
-            extension_bindings::ExtensionWorld::instantiate(&mut store, &component, &self.linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let (bindings, _instance) = extension_bindings::ExtensionWorld::instantiate(&mut store, &component, &self.linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let manifest = Self::decode_manifest(&mut store, &bindings)?;
         store.data_mut().extension_id = manifest.extension_id.clone();
         Self::prepare_call(&mut store);
@@ -1085,18 +1195,11 @@ impl ExtensionRuntime {
     pub fn extension_invoke(&self, extension_id: &str, capability: &str, request: &[u8]) -> Result<Vec<u8>, dsl::Fault> {
         let loaded = {
             let instances = self.instances.lock().map_err(|_| dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new("extension.lock-poisoned"), "extension instances lock poisoned"))?;
-            instances
-                .get(extension_id)
-                .cloned()
-                .ok_or_else(|| dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new("extension.unknown"), format!("no extension loaded with id `{extension_id}`")))?
+            instances.get(extension_id).cloned().ok_or_else(|| dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new("extension.unknown"), format!("no extension loaded with id `{extension_id}`")))?
         };
         let mut store = loaded.store.lock().map_err(|_| dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new("extension.lock-poisoned"), "extension store lock poisoned"))?;
         Self::prepare_call(&mut store);
-        let result = loaded
-            .bindings
-            .semio_framework_extension()
-            .call_invoke(&mut *store, capability, request)
-            .map_err(|error| dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new("extension.wasmtime"), error.to_string()))?;
+        let result = loaded.bindings.semio_framework_extension().call_invoke(&mut *store, capability, request).map_err(|error| dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new("extension.wasmtime"), error.to_string()))?;
         result.map_err(|error| match error {
             extension_bindings::semio::framework::types::PluginError::Fault(bytes) => dsl::decode_fault_bytes(&bytes),
         })
@@ -1169,8 +1272,7 @@ mod tests {
         assert_eq!(plugins, 2, "both real plugins must be registered with the shared router");
         assert!(keys > 0, "both plugins' real composer rosters must have produced at least one route");
 
-        let fixture_text = std::fs::read_to_string("✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio")
-            .expect("real cad demo fixture must be on disk");
+        let fixture_text = std::fs::read_to_string("✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio").expect("real cad demo fixture must be on disk");
 
         // 🗝️ Owned ONLY by cad's registry (`s.cad` is never a dialect `stdio` registers) -- routing
         // this with `calling_plugin_id = stdio` is the real cross-instance test: stdio's own guest

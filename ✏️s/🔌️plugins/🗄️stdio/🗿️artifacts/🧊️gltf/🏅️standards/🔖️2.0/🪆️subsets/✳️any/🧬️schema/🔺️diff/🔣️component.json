@@ -3,6 +3,7 @@
   "title": "GltfDiff",
   "description": "Sparse per-field diff. Index-keyed collection triples per top-level array; no full-replace snapshot slot.",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "asset": { "type": "object", "description": "Sparse GltfAssetDiff" },
     "scene": { "type": ["integer", "null"] },
@@ -27,6 +28,8 @@
     "sourceForm": { "enum": ["json", "glb"] }
   },
   "$defs": {
+    "touchedRegion": { "enum": ["asset", "scene", "scenes", "nodes", "meshes", "accessors", "bufferViews", "buffers", "bufferBytes", "materials", "textures", "images", "samplers", "skins", "animations", "cameras", "extensionsUsed", "extensionsRequired", "extensions", "extras", "sourceForm"] },
+    "derivation": { "type": "object", "additionalProperties": false, "required": ["forward", "inverse", "touchedPaths", "touchedRegions"], "properties": { "forward": { "$ref": "#" }, "inverse": { "$ref": "#" }, "touchedPaths": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }, "touchedRegions": { "type": "array", "items": { "$ref": "#/$defs/touchedRegion" }, "uniqueItems": true } } },
     "collectionDiff": {
       "type": "object",
       "properties": {

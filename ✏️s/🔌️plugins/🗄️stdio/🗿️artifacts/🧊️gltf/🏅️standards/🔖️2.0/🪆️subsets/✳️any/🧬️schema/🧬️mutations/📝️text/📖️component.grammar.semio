@@ -15,7 +15,7 @@ comment none
 # grammar's own shapes (the same precedent zip's OPC family, gif89a's mutations-vs-diff split, and
 # svg's own planned xml-restatement all already establish) -- kept byte-for-byte identical to the
 # sibling file, not reinvented.
-op = no-mutation-op | set-snapshot-op | set-asset-op | insert-scene-op | remove-scene-op | set-scene-op | insert-node-op | remove-node-op | set-node-op | insert-mesh-op | remove-mesh-op | set-mesh-op | insert-accessor-op | remove-accessor-op | set-accessor-op | insert-material-op | remove-material-op | set-material-op | insert-buffer-op | remove-buffer-op | set-buffer-op | insert-animation-op | remove-animation-op | set-animation-op
+op = no-mutation-op | set-snapshot-op | set-asset-op | insert-scene-op | remove-scene-op | set-scene-op | insert-node-op | remove-node-op | set-node-op | transform-node-op | reparent-node-op | bind-node-mesh-op | insert-mesh-op | remove-mesh-op | set-mesh-op | insert-accessor-op | remove-accessor-op | set-accessor-op | insert-material-op | remove-material-op | set-material-op | bind-primitive-material-op | insert-buffer-op | remove-buffer-op | set-buffer-op | insert-animation-op | remove-animation-op | set-animation-op
 
 no-mutation-op = "no-mutation"
 set-snapshot-op = "set-snapshot" "snapshot" "=" gltf-snapshot-value
@@ -28,6 +28,9 @@ set-scene-op = "set-scene" "index" "=" INT "scene" "=" scene-value
 insert-node-op = "insert-node" "index" "=" INT "node" "=" node-value
 remove-node-op = "remove-node" "index" "=" INT
 set-node-op = "set-node" "index" "=" INT "node" "=" node-value
+transform-node-op = "transform-node" "index" "=" INT "matrix" "=" matrix-opt "translation" "=" vec3-opt "rotation" "=" vec4-opt "scale" "=" vec3-opt
+reparent-node-op = "reparent-node" "index" "=" INT "parent" "=" index-dash-opt "scene" "=" index-dash-opt "position" "=" INT
+bind-node-mesh-op = "bind-node-mesh" "index" "=" INT "mesh" "=" index-dash-opt
 
 insert-mesh-op = "insert-mesh" "index" "=" INT "mesh" "=" mesh-value
 remove-mesh-op = "remove-mesh" "index" "=" INT
@@ -40,6 +43,7 @@ set-accessor-op = "set-accessor" "index" "=" INT "accessor" "=" accessor-value
 insert-material-op = "insert-material" "index" "=" INT "material" "=" material-value
 remove-material-op = "remove-material" "index" "=" INT
 set-material-op = "set-material" "index" "=" INT "material" "=" material-value
+bind-primitive-material-op = "bind-primitive-material" "mesh" "=" INT "primitive" "=" INT "material" "=" index-dash-opt
 
 # `InsertBuffer`/`SetBuffer` couple BOTH `document.buffers[index]` metadata AND the raw
 # `GltfSnapshot::buffers[index]` payload bytes together (recipe's explicit "buffers: Vec<Vec<u8>>
@@ -54,6 +58,10 @@ set-animation-op = "set-animation" "index" "=" INT "animation" "=" animation-val
 
 #region Primitives
 bit = "0" | "1"
+index-dash-opt = "-" | INT
+matrix-opt = "-" | INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT
+vec3-opt = "-" | INT "," INT "," INT
+vec4-opt = "-" | INT "," INT "," INT "," INT
 gltf-f64 = INT | FLOAT
 int-opt = "[" "0" "]" | "[" "1" "," INT "]"
 str-opt = "[" "0" "]" | "[" "1" "," hex "]"
@@ -90,7 +98,8 @@ node-value = "[" usize-list "," int-opt "," int-opt "," int-opt "," f64-list-opt
 #endregion
 
 #region MeshAccessorMaterial
-primitive-value = "[" attr-pairs "," int-opt "," int-opt "," int-opt "," json-opt "," json-opt "]"
+morph-target-list = "[" "]" | "[" attr-pairs {"," attr-pairs}* "]"
+primitive-value = "[" attr-pairs "," int-opt "," int-opt "," int-opt "," morph-target-list "," json-opt "," json-opt "]"
 primitive-list = "[" "]" | "[" primitive-value {"," primitive-value}* "]"
 mesh-value = "[" primitive-list "," f64-list "," str-opt "," json-opt "," json-opt "]"
 

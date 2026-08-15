@@ -130,7 +130,7 @@ impl ArtifactSerializer for SemioMeshToGltf {
                     None => None,
                 };
 
-                gprims.push(GltfPrimitive { attributes, indices, material, mode: Some(topology_to_gltf_mode(prim.topology)), extensions: None, extras: None });
+                gprims.push(GltfPrimitive { attributes, indices, material, mode: Some(topology_to_gltf_mode(prim.topology)), targets: Vec::new(), extensions: None, extras: None });
             }
             gltf_meshes.push(GltfMesh { primitives: gprims, weights: Vec::new(), name: Some(mesh.id.clone()), extensions: None, extras: None });
         }

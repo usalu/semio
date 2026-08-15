@@ -1,3 +1,4 @@
 syntax = "proto3";
 package semio.stdio_gltf.mutations_text;
-message Artifact { string schema = 1; bytes payload = 2; }
+import "../🛰️component.proto";
+message GltfMutationTextDocument { string text = 1; semio.s_stdio_gltf.mutation.GltfMutation value = 2; optional semio.s_stdio_gltf.mutation.GltfMutationRejection rejection = 3; }

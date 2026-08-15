@@ -1,11 +1,216 @@
-//! 📡️ s.stdio.gltf.inference — the normative handcrafted binary protocol for this facet. Same
-//! declaration-only shape as the sibling `📝️text` leaf: inference values are only ever computed
-//! and (optionally) cached, never decoded from an authored binary document, so there is no
-//! `encode`/`decode` pair here — just the protocol spec text every other representation leaf
-//! declares for its own facet.
+//! 📡️ Deterministic binary transport for `s.stdio.gltf.inference`.
+
+use std::fmt;
+
+use super::{text, GltfInference};
 
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
+
+//#region 📨️Envelope
+pub const GLTF_INFERENCE_BINARY_MAGIC: [u8; 8] = [0x89, 0x53, 0xf8, 0x3f, 0x7d, 0x34, 0x0d, 0x0b];
+pub const GLTF_INFERENCE_BINARY_HEADER_LENGTH: usize = 40;
+pub const GLTF_INFERENCE_BINARY_FORMAT_MAJOR: u16 = 1;
+pub const GLTF_INFERENCE_BINARY_FORMAT_MINOR: u16 = 0;
+pub const GLTF_INFERENCE_BINARY_SCHEMA_VERSION: u32 = 2;
+pub const GLTF_INFERENCE_BINARY_FLAGS: u32 = 1;
+pub const GLTF_INFERENCE_BINARY_SCHEMA_CRC32: u32 = 0x6b25_7ae0;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum GltfInferenceBinaryError {
+    Payload(text::GltfInferenceTextError),
+    TooShort { actual: usize },
+    Magic { actual: [u8; 8] },
+    FormatMajor { actual: u16 },
+    FormatMinor { actual: u16 },
+    SchemaVersion { actual: u32 },
+    Flags { actual: u32 },
+    SchemaCrc32 { actual: u32 },
+    PayloadLengthOverflow { declared: u64 },
+    LengthMismatch { declared: u64, actual: usize },
+    PayloadChecksum { declared: u32, actual: u32 },
+    HeaderChecksum { declared: u32, actual: u32 },
+}
+
+impl fmt::Display for GltfInferenceBinaryError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Payload(error) => write!(formatter, "invalid canonical payload: {error}"),
+            Self::TooShort { actual } => write!(formatter, "binary envelope is shorter than 40 bytes: {actual}"),
+            Self::Magic { actual } => write!(formatter, "invalid binary magic: {actual:02x?}"),
+            Self::FormatMajor { actual } => write!(formatter, "unsupported binary format major: {actual}"),
+            Self::FormatMinor { actual } => write!(formatter, "unsupported binary format minor: {actual}"),
+            Self::SchemaVersion { actual } => write!(formatter, "unsupported inference schema version: {actual}"),
+            Self::Flags { actual } => write!(formatter, "unsupported binary flags: {actual:#010x}"),
+            Self::SchemaCrc32 { actual } => write!(formatter, "inference schema CRC mismatch: {actual:08x}"),
+            Self::PayloadLengthOverflow { declared } => write!(formatter, "payload length does not fit this platform: {declared}"),
+            Self::LengthMismatch { declared, actual } => write!(formatter, "binary length mismatch: declared payload {declared}, total bytes {actual}"),
+            Self::PayloadChecksum { declared, actual } => write!(formatter, "payload CRC mismatch: declared {declared:08x}, got {actual:08x}"),
+            Self::HeaderChecksum { declared, actual } => write!(formatter, "header CRC mismatch: declared {declared:08x}, got {actual:08x}"),
+        }
+    }
+}
+
+impl std::error::Error for GltfInferenceBinaryError {}
+
+impl From<text::GltfInferenceTextError> for GltfInferenceBinaryError {
+    fn from(error: text::GltfInferenceTextError) -> Self {
+        Self::Payload(error)
+    }
+}
+
+pub fn encode_gltf_inference_binary(value: &GltfInference) -> Result<Vec<u8>, GltfInferenceBinaryError> {
+    let payload = text::canonical_json_bytes(value)?;
+    let length = u64::try_from(payload.len()).map_err(|_| GltfInferenceBinaryError::PayloadLengthOverflow { declared: u64::MAX })?;
+    let mut output = Vec::with_capacity(GLTF_INFERENCE_BINARY_HEADER_LENGTH + payload.len());
+    output.extend_from_slice(&GLTF_INFERENCE_BINARY_MAGIC);
+    output.extend_from_slice(&GLTF_INFERENCE_BINARY_FORMAT_MAJOR.to_le_bytes());
+    output.extend_from_slice(&GLTF_INFERENCE_BINARY_FORMAT_MINOR.to_le_bytes());
+    output.extend_from_slice(&GLTF_INFERENCE_BINARY_SCHEMA_VERSION.to_le_bytes());
+    output.extend_from_slice(&GLTF_INFERENCE_BINARY_FLAGS.to_le_bytes());
+    output.extend_from_slice(&GLTF_INFERENCE_BINARY_SCHEMA_CRC32.to_le_bytes());
+    output.extend_from_slice(&length.to_le_bytes());
+    output.extend_from_slice(&text::crc32_iso_hdlc(&payload).to_le_bytes());
+    output.extend_from_slice(&text::crc32_iso_hdlc(&output).to_le_bytes());
+    output.extend_from_slice(&payload);
+    Ok(output)
+}
+
+pub fn decode_gltf_inference_binary(input: &[u8]) -> Result<GltfInference, GltfInferenceBinaryError> {
+    if input.len() < GLTF_INFERENCE_BINARY_HEADER_LENGTH {
+        return Err(GltfInferenceBinaryError::TooShort { actual: input.len() });
+    }
+    let actual_magic: [u8; 8] = input[0..8].try_into().expect("fixed header slice");
+    if actual_magic != GLTF_INFERENCE_BINARY_MAGIC {
+        return Err(GltfInferenceBinaryError::Magic { actual: actual_magic });
+    }
+    let format_major = read_u16(input, 8);
+    if format_major != GLTF_INFERENCE_BINARY_FORMAT_MAJOR {
+        return Err(GltfInferenceBinaryError::FormatMajor { actual: format_major });
+    }
+    let format_minor = read_u16(input, 10);
+    if format_minor != GLTF_INFERENCE_BINARY_FORMAT_MINOR {
+        return Err(GltfInferenceBinaryError::FormatMinor { actual: format_minor });
+    }
+    let schema_version = read_u32(input, 12);
+    if schema_version != GLTF_INFERENCE_BINARY_SCHEMA_VERSION {
+        return Err(GltfInferenceBinaryError::SchemaVersion { actual: schema_version });
+    }
+    let flags = read_u32(input, 16);
+    if flags != GLTF_INFERENCE_BINARY_FLAGS {
+        return Err(GltfInferenceBinaryError::Flags { actual: flags });
+    }
+    let schema_crc = read_u32(input, 20);
+    if schema_crc != GLTF_INFERENCE_BINARY_SCHEMA_CRC32 {
+        return Err(GltfInferenceBinaryError::SchemaCrc32 { actual: schema_crc });
+    }
+    let declared_length = read_u64(input, 24);
+    let payload_length = usize::try_from(declared_length).map_err(|_| GltfInferenceBinaryError::PayloadLengthOverflow { declared: declared_length })?;
+    let expected_length = GLTF_INFERENCE_BINARY_HEADER_LENGTH.checked_add(payload_length).ok_or(GltfInferenceBinaryError::PayloadLengthOverflow { declared: declared_length })?;
+    if expected_length != input.len() {
+        return Err(GltfInferenceBinaryError::LengthMismatch { declared: declared_length, actual: input.len() });
+    }
+    let declared_header_crc = read_u32(input, 36);
+    let actual_header_crc = text::crc32_iso_hdlc(&input[..36]);
+    if declared_header_crc != actual_header_crc {
+        return Err(GltfInferenceBinaryError::HeaderChecksum { declared: declared_header_crc, actual: actual_header_crc });
+    }
+    let payload = &input[GLTF_INFERENCE_BINARY_HEADER_LENGTH..];
+    let declared_payload_crc = read_u32(input, 32);
+    let actual_payload_crc = text::crc32_iso_hdlc(payload);
+    if declared_payload_crc != actual_payload_crc {
+        return Err(GltfInferenceBinaryError::PayloadChecksum { declared: declared_payload_crc, actual: actual_payload_crc });
+    }
+    Ok(text::decode_canonical_json(payload)?)
+}
+
+fn read_u16(input: &[u8], offset: usize) -> u16 {
+    u16::from_le_bytes(input[offset..offset + 2].try_into().expect("fixed header slice"))
+}
+fn read_u32(input: &[u8], offset: usize) -> u32 {
+    u32::from_le_bytes(input[offset..offset + 4].try_into().expect("fixed header slice"))
+}
+fn read_u64(input: &[u8], offset: usize) -> u64 {
+    u64::from_le_bytes(input[offset..offset + 8].try_into().expect("fixed header slice"))
+}
+//#endregion 📨️Envelope
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn refresh_header_crc(bytes: &mut [u8]) {
+        let crc = text::crc32_iso_hdlc(&bytes[..36]);
+        bytes[36..40].copy_from_slice(&crc.to_le_bytes());
+    }
+
+    #[test]
+    fn deterministic_roundtrip_and_exact_header() {
+        let value = GltfInference::default();
+        let encoded = encode_gltf_inference_binary(&value).unwrap();
+        assert_eq!(encoded, encode_gltf_inference_binary(&value).unwrap());
+        assert_eq!(&encoded[..8], &GLTF_INFERENCE_BINARY_MAGIC);
+        assert_eq!(read_u16(&encoded, 8), 1);
+        assert_eq!(read_u16(&encoded, 10), 0);
+        assert_eq!(read_u32(&encoded, 12), 2);
+        assert_eq!(read_u32(&encoded, 16), 1);
+        assert_eq!(read_u32(&encoded, 20), 0x6b25_7ae0);
+        assert_eq!(read_u64(&encoded, 24) as usize, encoded.len() - 40);
+        assert_eq!(read_u32(&encoded, 32), text::crc32_iso_hdlc(&encoded[40..]));
+        assert_eq!(read_u32(&encoded, 36), text::crc32_iso_hdlc(&encoded[..36]));
+        assert_eq!(decode_gltf_inference_binary(&encoded).unwrap(), value);
+    }
+
+    #[test]
+    fn rejects_every_header_corruption_and_trailing_bytes() {
+        let encoded = encode_gltf_inference_binary(&GltfInference::default()).unwrap();
+        assert!(matches!(decode_gltf_inference_binary(&encoded[..39]), Err(GltfInferenceBinaryError::TooShort { .. })));
+        let mut corrupt = encoded.clone();
+        corrupt[0] ^= 1;
+        assert!(matches!(decode_gltf_inference_binary(&corrupt), Err(GltfInferenceBinaryError::Magic { .. })));
+        let mut corrupt = encoded.clone();
+        corrupt[8..10].copy_from_slice(&2u16.to_le_bytes());
+        refresh_header_crc(&mut corrupt);
+        assert!(matches!(decode_gltf_inference_binary(&corrupt), Err(GltfInferenceBinaryError::FormatMajor { .. })));
+        let mut corrupt = encoded.clone();
+        corrupt[10..12].copy_from_slice(&1u16.to_le_bytes());
+        refresh_header_crc(&mut corrupt);
+        assert!(matches!(decode_gltf_inference_binary(&corrupt), Err(GltfInferenceBinaryError::FormatMinor { .. })));
+        let mut corrupt = encoded.clone();
+        corrupt[12..16].copy_from_slice(&3u32.to_le_bytes());
+        refresh_header_crc(&mut corrupt);
+        assert!(matches!(decode_gltf_inference_binary(&corrupt), Err(GltfInferenceBinaryError::SchemaVersion { .. })));
+        let mut corrupt = encoded.clone();
+        corrupt[16..20].copy_from_slice(&3u32.to_le_bytes());
+        refresh_header_crc(&mut corrupt);
+        assert!(matches!(decode_gltf_inference_binary(&corrupt), Err(GltfInferenceBinaryError::Flags { .. })));
+        let mut corrupt = encoded.clone();
+        corrupt[20..24].copy_from_slice(&0u32.to_le_bytes());
+        refresh_header_crc(&mut corrupt);
+        assert!(matches!(decode_gltf_inference_binary(&corrupt), Err(GltfInferenceBinaryError::SchemaCrc32 { .. })));
+        let mut corrupt = encoded.clone();
+        corrupt[36] ^= 1;
+        assert!(matches!(decode_gltf_inference_binary(&corrupt), Err(GltfInferenceBinaryError::HeaderChecksum { .. })));
+        let mut corrupt = encoded.clone();
+        corrupt[40] ^= 1;
+        assert!(matches!(decode_gltf_inference_binary(&corrupt), Err(GltfInferenceBinaryError::PayloadChecksum { .. })));
+        let mut corrupt = encoded.clone();
+        corrupt.push(0);
+        assert!(matches!(decode_gltf_inference_binary(&corrupt), Err(GltfInferenceBinaryError::LengthMismatch { .. })));
+    }
+
+    #[test]
+    fn rejects_noncanonical_payload_with_valid_checksums() {
+        let mut encoded = encode_gltf_inference_binary(&GltfInference::default()).unwrap();
+        encoded.insert(40, b' ');
+        let payload_length = (encoded.len() - 40) as u64;
+        encoded[24..32].copy_from_slice(&payload_length.to_le_bytes());
+        let payload_crc = text::crc32_iso_hdlc(&encoded[40..]);
+        encoded[32..36].copy_from_slice(&payload_crc.to_le_bytes());
+        refresh_header_crc(&mut encoded);
+        assert_eq!(decode_gltf_inference_binary(&encoded), Err(GltfInferenceBinaryError::Payload(text::GltfInferenceTextError::NonCanonical)));
+    }
+}

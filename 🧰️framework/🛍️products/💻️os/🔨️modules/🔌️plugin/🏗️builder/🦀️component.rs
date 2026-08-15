@@ -120,16 +120,7 @@ impl PluginBuilder<Ready> {
     /// 🎲️ Declares local backbone read+write at plugin scope.
     pub fn local_backbone_storage(self) -> Self {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
-        self.capability(CapabilityRequirement {
-            artifact: ArtifactKind::Backbone,
-            rights: Rights::Read,
-            scope: Scope::Plugin,
-        })
-        .capability(CapabilityRequirement {
-            artifact: ArtifactKind::Backbone,
-            rights: Rights::Write,
-            scope: Scope::Plugin,
-        })
+        self.capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Read, scope: Scope::Plugin }).capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Write, scope: Scope::Plugin })
     }
 
     /// 🎮️ Declares a plugin-owned command and its program-level handler.
@@ -153,8 +144,7 @@ impl PluginBuilder<Ready> {
             ::semio_framework_schema::register_app_schema_descriptor(descriptor);
         }
         let registry = crate::app::AppActionRegistry::from_definition(&app.definition);
-        let factory: Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static> =
-            Box::new(move || Box::new(crate::app::VcsArtifactApp::with_registry(A::default(), registry.clone())));
+        let factory: Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static> = Box::new(move || Box::new(crate::app::VcsArtifactApp::with_registry(A::default(), registry.clone())));
         self.app_defs.push((app, factory));
         self
     }
@@ -177,11 +167,7 @@ impl PluginBuilder<Ready> {
             setup();
         }
         let plugin_id = self.plugin_id.clone();
-        let mut plugin = Plugin::new(
-            self.plugin_id,
-            self.label.expect("typestate Ready implies label"),
-            self.version.expect("typestate Ready implies version"),
-        );
+        let mut plugin = Plugin::new(self.plugin_id, self.label.expect("typestate Ready implies label"), self.version.expect("typestate Ready implies version"));
         for declaration in self.artifacts {
             plugin = declaration.register_all(&plugin_id, plugin);
         }

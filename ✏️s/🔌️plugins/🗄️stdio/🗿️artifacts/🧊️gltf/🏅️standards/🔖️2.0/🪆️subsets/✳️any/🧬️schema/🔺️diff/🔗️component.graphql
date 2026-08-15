@@ -1,5 +1,6 @@
 # 🔺️ GltfDiff — sparse per-field diff, index-keyed collection triples per top-level array.
 scalar GltfJson
+enum GltfTouchedRegion { ASSET SCENE SCENES NODES MESHES ACCESSORS BUFFER_VIEWS BUFFERS BUFFER_BYTES MATERIALS TEXTURES IMAGES SAMPLERS SKINS ANIMATIONS CAMERAS EXTENSIONS_USED EXTENSIONS_REQUIRED EXTENSIONS EXTRAS SOURCE_FORM }
 
 type GltfAssetDiff { version: String generator: String copyright: String minVersion: String extensions: GltfJson extras: GltfJson }
 type GltfSceneModified { index: Int! diff: GltfSceneDiff! }
@@ -126,3 +127,4 @@ type GltfDiff {
   extras: GltfJson @state(class: ARTIFACT)
   sourceForm: GltfSourceForm @state(class: ARTIFACT)
 }
+type GltfDiffDerivation { forward: GltfDiff! inverse: GltfDiff! touchedPaths: [String!]! touchedRegions: [GltfTouchedRegion!]! }

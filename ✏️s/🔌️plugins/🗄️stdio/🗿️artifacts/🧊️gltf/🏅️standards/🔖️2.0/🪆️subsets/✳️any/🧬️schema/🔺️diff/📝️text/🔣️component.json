@@ -1,5 +1,9 @@
 {
-  "$id": "https://semio.tech/schema/stdio.gltf/diff/text.gltf",
-  "title": "GltfDiffText",
-  "type": "object"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/stdio.gltf/diff/text.json",
+  "title": "GltfDiffTextDocument",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["text", "value", "derivation"],
+  "properties": { "text": { "type": "string" }, "value": { "$ref": "https://semio.tech/schema/s.stdio.gltf/diff.json" }, "derivation": { "$ref": "https://semio.tech/schema/s.stdio.gltf/diff.json#/$defs/derivation" } }
 }

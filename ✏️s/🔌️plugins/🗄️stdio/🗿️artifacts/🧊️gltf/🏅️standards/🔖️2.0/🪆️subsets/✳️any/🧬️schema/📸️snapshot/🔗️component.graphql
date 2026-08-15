@@ -33,11 +33,13 @@ type GltfNode {
 }
 
 type GltfAttribute { semantic: String! accessor: Int! }
+type GltfMorphTarget { attributes: [GltfAttribute!]! }
 type GltfPrimitive {
   attributes: [GltfAttribute!]!
   indices: Int
   material: Int
   mode: Int
+  targets: [GltfMorphTarget!]!
   extensions: GltfJson
   extras: GltfJson
 }

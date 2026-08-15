@@ -128,7 +128,7 @@ semio-framework-graph = { path = "🧰️framework/🔨️modules/🕸️graph/�
 # resolution). Deps below the ~10-manifest survey bar are left alone (see ticket report).
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
-flate2 = { version = "=1.1.9", default-features = false, features = ["zlib"] }
+flate2 = { version = "=1.1.9", default-features = false, features = ["rust_backend"] }
 libz-sys = "=1.1.29"
 wasm-bindgen = "0.2.106"
 thiserror = "2.0.18"

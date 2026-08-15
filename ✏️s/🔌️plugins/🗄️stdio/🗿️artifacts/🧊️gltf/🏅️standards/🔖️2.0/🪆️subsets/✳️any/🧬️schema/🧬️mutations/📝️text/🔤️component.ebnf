@@ -1,7 +1,12 @@
-(* ebnf stdio.gltf mutations -- internally tagged JSON on "mutation". *)
-document = ws , mutation object , ws ;
-mutation object = "{" , ws , "\"mutation\"" , ws , ":" , ws , variant tag , ( ws , "," , ws , member )* , ws , "}" ;
-variant tag = string ; (* one of the 24 GltfMutation variant names, camelCase *)
-member = string , ws , ":" , ws , value ;
-value = object | array | string | number | "true" | "false" | "null" ;
-ws = { " " | "\t" | "\n" | "\r" } ;
+(* 🧬 Canonical one-line semantic mutation: kebab-case keyword plus ordered name=value tokens. *)
+document = operation ;
+operation = no-mutation | parameterized-operation ;
+no-mutation = "no-mutation" ;
+parameterized-operation = keyword, { space, argument } ;
+keyword = "set-snapshot" | "set-asset" | "insert-scene" | "remove-scene" | "set-scene" | "insert-node" | "remove-node" | "set-node" | "transform-node" | "reparent-node" | "bind-node-mesh" | "insert-mesh" | "remove-mesh" | "set-mesh" | "insert-accessor" | "remove-accessor" | "set-accessor" | "insert-material" | "remove-material" | "set-material" | "bind-primitive-material" | "insert-buffer" | "remove-buffer" | "set-buffer" | "insert-animation" | "remove-animation" | "set-animation" ;
+argument = name, "=", token ;
+name = letter, { letter | digit | "-" } ;
+token = ? one or more non-whitespace Unicode scalars other than equals sign ? ;
+space = " " ;
+letter = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" ;
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;

@@ -45,6 +45,7 @@ export interface GltfPrimitive {
   indices?: number;
   material?: number;
   mode?: number;
+  targets: Record<string, number>[];
   extensions?: GltfJson;
   extras?: GltfJson;
 }

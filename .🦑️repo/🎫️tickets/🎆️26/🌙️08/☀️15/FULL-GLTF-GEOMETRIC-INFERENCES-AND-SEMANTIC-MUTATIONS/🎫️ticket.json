@@ -1,0 +1,14 @@
+{
+  "title": "Full GLTF Geometric Inferences and Semantic Mutations",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "Implement a complete schema-first GLTF 2.0 inference and semantic mutation subsystem for universal geometric indicators. Replace the current ad hoc GLTF inference and mutation implementation end to end. Cover size, axis-aligned and oriented bounds, characteristic length, footprint and projections, surface and contact areas, solid/material/void volumes, compactness and sphericity, aspect/principal-axis proportions, centroid and inertia, curvature and sharp features, thickness, concavity and convex hull gaps, neighbor clearances and overlap, contacts/connectivity, orientation distributions and consistency, symmetry and modularity, roughness/deviation, and topology including holes, boundary loops, Euler characteristic, and genus. Provide deterministic tolerances, units, provenance, validity/quality states, mesh normalization, scene transforms, instancing, primitive modes, non-manifold and degenerate handling, multi-part aggregation, dependency-aware inference caching, semantic handcrafted mutations with diffs and inverses, generated/schema representations, runtime integration, localized accessible UI exposure where the existing architecture exposes inference, analytic fixtures, exhaustive tests, performance coverage, nx verification, and runtime evidence. Plan and execute with the maximum parallel agent workforce.",
+  "summary": "Implemented the complete schema-first GLTF geometric inference and semantic mutation subsystem end to end: 67 typed indicators in 14 groups, decoded scene/world geometry with morph targets and normalized accessors, validated reference-safe semantic mutations with sparse diffs/inverses/touched regions, canonical versioned text/binary inference transports, dependency-aware invalidation, native inference registry, and WIT host/guest routing. Combined GLTF Nx gate passes 91/91; runtime evidence and exhaustive conformance reports are retained in the ticket. The unfiltered stdio gate still stops only at the pre-existing BCF fixture honesty mismatch documented in the baseline.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2556"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪cbb45a9e611c49fc9fa815c99e935913"
+  ]
+}

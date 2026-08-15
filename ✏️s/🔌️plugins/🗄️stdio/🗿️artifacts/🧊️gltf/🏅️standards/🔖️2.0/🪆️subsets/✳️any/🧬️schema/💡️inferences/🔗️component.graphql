@@ -1,13 +1,40 @@
-# 💡️ Gltf inference schema — mesh-primitive POSITION-accessor-derived bounding box.
-
-type GltfInference {
-  bounds: GltfBounds! @derived
-}
-
-type GltfBounds {
-  min: [Float!]!
-  max: [Float!]!
-  vertexCount: Int!
-  meshCount: Int!
-  primitiveCount: Int!
-}
+# 💡 Universal glTF geometric inference schema.
+type GltfInference { geometry: GltfGeometricInference! @derived }
+enum GltfUnit { UNITLESS METRE SQUARE_METRE CUBIC_METRE RADIAN INVERSE_METRE INVERSE_SQUARE_METRE }
+enum GltfCoordinateSpace { MESH_LOCAL NODE_LOCAL SCENE_WORLD }
+enum GltfAvailability { AVAILABLE APPROXIMATE UNAVAILABLE INVALID_INPUT UNSUPPORTED_PRIMITIVE OPEN_SURFACE NON_MANIFOLD DEGENERATE UNRESOLVED_RESOURCE }
+enum GltfValidity { VALID INVALID INDETERMINATE }
+enum GltfSeverity { INFO WARNING ERROR }
+enum GltfComputationMethod { EXACT DETERMINISTIC_ESTIMATE }
+enum GltfEntityScope { DOCUMENT SCENE NODE_INSTANCE MESH PRIMITIVE COMPONENT SURFACE_REGION }
+type GltfVec3 { x: Float! y: Float! z: Float! }
+type GltfBounds3 { min: GltfVec3! max: GltfVec3! dimensions: GltfVec3! }
+type GltfHistogram { edges: [Float!]! counts: [Int!]! weights: [Float!]! }
+type GltfStatistics { minimum: Float maximum: Float mean: Float variance: Float standardDeviation: Float median: Float quantiles: [Float!]! histogram: GltfHistogram }
+type GltfDirectionScore { direction: GltfVec3! score: Float! order: Int }
+type GltfPrincipalFrame { centroid: GltfVec3! axes: [GltfVec3!]! eigenvalues: [Float!]! }
+type GltfQuality { method: GltfComputationMethod! coverage: Float! absoluteError: Float relativeError: Float sampleCount: Int! watertight: Boolean! manifold: Boolean! consistentlyOriented: Boolean! warnings: [String!]! }
+type GltfProvenance { algorithm: String! algorithmVersion: Int! dependencyFingerprints: [String!]! coordinateSpace: GltfCoordinateSpace! toleranceFingerprint: String! samplingSeed: String pose: String }
+type GltfMeasure { scalar: Float count: Int boolean: Boolean vector: GltfVec3 bounds: GltfBounds3 statistics: GltfStatistics principalFrame: GltfPrincipalFrame tensor: [Float!] directions: [GltfDirectionScore!] unit: GltfUnit! availability: GltfAvailability! validity: GltfValidity! diagnosticIds: [String!]! quality: GltfQuality! provenance: GltfProvenance! }
+type GltfAnalysisPolicy { schemaVersion: Int! absoluteLengthTolerance: Float! relativeTolerance: Float! angularToleranceRadians: Float! contactTolerance: Float! sharpFeatureAngleRadians: Float! histogramEdges: [Float!]! samplingBudget: Int! samplingSeed: String! staticPose: Boolean! unitDensity: Boolean! fingerprint: String! }
+type GltfDiagnostic { id: String! severity: GltfSeverity! code: String! message: String! paths: [String!]! }
+type GltfEntityAddress { scope: GltfEntityScope! scene: Int nodePath: [Int!]! mesh: Int primitive: Int component: Int surfaceRegion: Int contentFingerprint: String! }
+type GltfSizeIndicators { overallSize: GltfMeasure! axisAlignedBounds: GltfMeasure! orientedBounds: GltfMeasure! boundingBoxDimensions: GltfMeasure! characteristicLength: GltfMeasure! footprintArea: GltfMeasure! projectedArea: GltfMeasure! }
+type GltfAreaVolumeIndicators { surfaceArea: GltfMeasure! totalArea: GltfMeasure! exposedArea: GltfMeasure! contactArea: GltfMeasure! volume: GltfMeasure! enclosedVolume: GltfMeasure! materialVolume: GltfMeasure! voidVolume: GltfMeasure! }
+type GltfCompactnessIndicators { compactness: GltfMeasure! surfaceToVolumeRatio: GltfMeasure! sphericity: GltfMeasure! compactnessIndex: GltfMeasure! hullFillRatio: GltfMeasure! }
+type GltfProportionIndicators { aspectRatios: GltfMeasure! slenderness: GltfMeasure! flatness: GltfMeasure! elongation: GltfMeasure! }
+type GltfMassIndicators { centroid: GltfMeasure! principalFrame: GltfMeasure! principalAxes: GltfMeasure! momentsOfInertia: GltfMeasure! inertiaTensor: GltfMeasure! }
+type GltfCurvatureIndicators { meanCurvature: GltfMeasure! gaussianCurvature: GltfMeasure! curvatureHistogram: GltfMeasure! sharpFeatureProportion: GltfMeasure! }
+type GltfThicknessIndicators { meanThickness: GltfMeasure! minimumThickness: GltfMeasure! thicknessVariability: GltfMeasure! thicknessDistribution: GltfMeasure! }
+type GltfConcavityIndicators { convexHullGap: GltfMeasure! reentrantArea: GltfMeasure! reentrantVolume: GltfMeasure! concavityIndex: GltfMeasure! }
+type GltfClearanceIndicators { minimumDistanceToNeighbors: GltfMeasure! clearanceDistribution: GltfMeasure! interferenceVolume: GltfMeasure! overlapVolume: GltfMeasure! }
+type GltfAdjacencyIndicators { numberOfContacts: GltfMeasure! contactGraphDegree: GltfMeasure! connectedComponents: GltfMeasure! }
+type GltfOrientationIndicators { mainAxisDirection: GltfMeasure! faceNormalDistribution: GltfMeasure! orientationConsistency: GltfMeasure! }
+type GltfSymmetryIndicators { reflectionSymmetryScore: GltfMeasure! rotationalSymmetryScore: GltfMeasure! reflectionSymmetries: GltfMeasure! rotationalSymmetries: GltfMeasure! repetitionRatio: GltfMeasure! modularityRatio: GltfMeasure! }
+type GltfRoughnessIndicators { deviationFromIdeal: GltfMeasure! deviationFromSmoothedGeometry: GltfMeasure! normalVariation: GltfMeasure! surfaceWaviness: GltfMeasure! irregularity: GltfMeasure! }
+type GltfTopologyIndicators { holes: GltfMeasure! handles: GltfMeasure! boundaryLoops: GltfMeasure! eulerCharacteristic: GltfMeasure! genus: GltfMeasure! }
+type GltfEntityIndicators { size: GltfSizeIndicators! areaVolume: GltfAreaVolumeIndicators! compactness: GltfCompactnessIndicators! proportion: GltfProportionIndicators! mass: GltfMassIndicators! curvature: GltfCurvatureIndicators! thickness: GltfThicknessIndicators! concavity: GltfConcavityIndicators! clearance: GltfClearanceIndicators! adjacency: GltfAdjacencyIndicators! orientation: GltfOrientationIndicators! symmetry: GltfSymmetryIndicators! roughness: GltfRoughnessIndicators! topology: GltfTopologyIndicators! }
+type GltfPartInference { address: GltfEntityAddress! name: String indicators: GltfEntityIndicators! diagnosticIds: [String!]! }
+type GltfPairInference { first: GltfEntityAddress! second: GltfEntityAddress! minimumDistance: GltfMeasure! clearanceDistribution: GltfMeasure! contactArea: GltfMeasure! interferenceVolume: GltfMeasure! overlapVolume: GltfMeasure! adjacent: GltfMeasure! orientationConsistency: GltfMeasure! }
+type GltfInferenceCounts { sceneCount: Int! nodeInstanceCount: Int! meshCount: Int! primitiveCount: Int! vertexCount: Int! triangleCount: Int! componentCount: Int! surfaceRegionCount: Int! pairCount: Int! validPartCount: Int! invalidPartCount: Int! }
+type GltfGeometricInference { schema: String! schemaVersion: Int! policy: GltfAnalysisPolicy! counts: GltfInferenceCounts! overall: GltfEntityIndicators! parts: [GltfPartInference!]! pairs: [GltfPairInference!]! diagnostics: [GltfDiagnostic!]! validity: GltfValidity! quality: GltfQuality! provenance: GltfProvenance! }

@@ -231,6 +231,7 @@ mod tests {
                 indices: Some(index_idx),
                 material: Some(0),
                 mode: Some(4),
+                targets: Vec::new(),
                 extensions: None,
                 extras: None,
             }],

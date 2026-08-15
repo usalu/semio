@@ -1,3 +1,4 @@
 syntax = "proto3";
 package semio.stdio_gltf.diff_text;
-message Artifact { string schema = 1; bytes payload = 2; }
+import "../🛰️component.proto";
+message GltfDiffTextDocument { string text = 1; semio.s_stdio_gltf.diff.GltfDiff value = 2; semio.s_stdio_gltf.diff.GltfDiffDerivation derivation = 3; }

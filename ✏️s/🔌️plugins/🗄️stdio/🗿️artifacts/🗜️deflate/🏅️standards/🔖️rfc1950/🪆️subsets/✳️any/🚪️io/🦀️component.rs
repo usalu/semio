@@ -442,6 +442,7 @@ pub fn deflate_raw(data: &[u8]) -> Vec<u8> {
     bw.finish()
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 fn deflate_raw_tuned(data: &[u8], memory: i32, good: i32, lazy: i32, nice: i32, chain: i32, sync: bool) -> Result<Vec<u8>, String> {
     let input_len = u32::try_from(data.len()).map_err(|_| "raw DEFLATE input exceeds 4 GiB".to_string())?;
     let mut stream = libz_sys::z_stream {
@@ -494,6 +495,14 @@ fn deflate_raw_tuned(data: &[u8], memory: i32, good: i32, lazy: i32, nice: i32, 
         output.truncate(written);
         Ok(output)
     }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn deflate_raw_tuned(data: &[u8], _memory: i32, _good: i32, _lazy: i32, _nice: i32, _chain: i32, _sync: bool) -> Result<Vec<u8>, String> {
+    use std::io::Write;
+    let mut encoder = flate2::write::DeflateEncoder::new(Vec::new(), flate2::Compression::default());
+    encoder.write_all(data).map_err(|error| error.to_string())?;
+    encoder.finish().map_err(|error| error.to_string())
 }
 
 /// 🎯 Deterministic Office-compatible raw DEFLATE materialization for container formats.
@@ -654,6 +663,7 @@ pub fn zlib_compress_deterministic(data: &[u8]) -> Result<Vec<u8>, String> {
     encoder.finish().map_err(|error| error.to_string())
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 unsafe extern "C" fn illustrator_zlib_allocate(_opaque: *mut std::ffi::c_void, items: libz_sys::uInt, item_size: libz_sys::uInt) -> *mut std::ffi::c_void {
     let Some(size) = (items as usize).checked_mul(item_size as usize) else {
         return std::ptr::null_mut();
@@ -676,6 +686,7 @@ unsafe extern "C" fn illustrator_zlib_allocate(_opaque: *mut std::ffi::c_void, i
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 unsafe extern "C" fn illustrator_zlib_free(_opaque: *mut std::ffi::c_void, address: *mut std::ffi::c_void) {
     if address.is_null() {
         return;
@@ -690,6 +701,7 @@ unsafe extern "C" fn illustrator_zlib_free(_opaque: *mut std::ffi::c_void, addre
 
 /// 🎨 Deterministic Adobe Illustrator Flate materialization: its PDF producer uses a 4 KiB
 /// window and closes a level-six stream with a partial flush before the final block.
+#[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn zlib_compress_illustrator(data: &[u8]) -> Result<Vec<u8>, String> {
     let input_length = libz_sys::uInt::try_from(data.len()).map_err(|_| "zlib input exceeds uInt".to_string())?;
     let mut stream = libz_sys::z_stream {
@@ -736,6 +748,11 @@ pub(crate) fn zlib_compress_illustrator(data: &[u8]) -> Result<Vec<u8>, String> 
     }
     output.truncate(result?);
     Ok(output)
+}
+
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn zlib_compress_illustrator(data: &[u8]) -> Result<Vec<u8>, String> {
+    zlib_compress_deterministic(data)
 }
 
 /// 🗜️ Zlib unwrap + inflate + Adler32 verify.

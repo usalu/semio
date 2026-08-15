@@ -44,8 +44,6 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - You MUST register all executable commands there by following the existing order, grouping and naming.
 - You MUST work simultaneously with others on the same files.
   - You MUST NOT use any modifying git command such as `git commit`, `git stash`, `git stash pop`, `git checkout`, … because others will lose their work.
-  - You MUST edit the existing files.
-  - You MUST NOT create new files for broken files.
   - You MUST NOT use git worktrees.
 - You are working on a greenfield repo.
   - The codebase is under design and development and not used in production yet.
@@ -74,17 +72,13 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - You MUST reopen a ticket with `ticket_reopen` if an existing ticket is already covering the same task.
   - If no existing ticket is covering the same task then you MUST create a new ticket with mcp tool `ticket_open`. This creates a ticket folder `.🦑️repo/🎫️tickets/🎆YY/🌙MM/☀️DD/TICKETSLUG`.
   - You MUST NOT delete all temporary files, logs, scripts, … inside the ticket folder after you are done.
-  - You MUST NOT create any additional folders or files outside the ticket folder.
-  - You MUST add code to existing files using regions and subregions for structuring. Regions organize code into collapsible sections (e.g., `#region RegionName` / `#endregion` in C#, or `//#region RegionName` / `//#endregion` in JavaScript/TypeScript, or `pub mod` in Rust). Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
-    - You MUST NOT create additional test files for new tests but you MUST extend the existing test files to cover everything.
-    - You MUST NOT create additional example files and you MUST implement it directly in the dependent parts.
+  - You MUST use regions and subregions for structuring files. Regions organize code into collapsible sections (e.g., `#region RegionName` / `#endregion` in C#, or `//#region RegionName` / `//#endregion` in JavaScript/TypeScript, or `pub mod` in Rust). Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
   - You MUST close the ticket once you are done with the mcp tool `ticket_close` to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat most likely it is related to the old task and you MAY reopen the same ticket with mcp tool `ticket_reopen`.
   - You MUST NOT open, close or reopen goals without the explicit instructions from the dev.
   - The due date is a date in the format `YYYY-MM-DD`.
   - A ticket id is `YYYY/MM/DD/TICKETSLUG`.
   - A goal id is `GOALSLUG/SUBGOALSLUG/...`.
   - A title MUST be titleized (e.g. "Some Title on Something") and MUST NOT be a slug or MUST NOT be all caps.
-  - Available LLMs are: `opus-4-7`, `opus-4-6`, `opus-4-5`, `sonnet-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-5`, `gpt-5-4`, `gpt-5-3-codex`, `gpt-5-2-codex`, `swe-1-5`, `gpt-5-mini`.
   - Available Clients are: `copilot-chat`, `windsurf-chat`, `cursor-chat`, `antigravity-chat`, `claude-code`, `codex`, `droid`, `kiro-cli`.
 - You MUST NOT assume and you MUST validate your assumptions.
   - You MUST NOT say that a test is passing when you didn't run it.

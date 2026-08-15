@@ -1,3 +1,20 @@
-(* ebnf s.stdio.gltf.inference *)
-document = header, body ;
-header = 'schema', space, 's.stdio.gltf.inference', newline ;
+(* 📝 UTF-8, LF-only canonical envelope; payload is RFC 8785 JSON and checksum is CRC-32/ISO-HDLC. *)
+document = schema-header, version-header, length-header, checksum-header, inference ;
+schema-header = "schema s.stdio.gltf.inference", newline ;
+version-header = "version 2", newline ;
+length-header = "length ", unsigned-integer, newline ;
+checksum-header = "checksum ", hex, hex, hex, hex, hex, hex, hex, hex, newline ;
+inference = "{", '"geometry"', ":", object, "}" ;
+value = object | array | string | number | "true" | "false" | "null" ;
+object = "{", [ member, { ",", member } ], "}" ;
+member = string, ":", value ;
+array = "[", [ value, { ",", value } ], "]" ;
+string = '"', { character | escape }, '"' ;
+escape = "\\", ('"' | "\\" | "/" | "b" | "f" | "n" | "r" | "t" | ("u", hex, hex, hex, hex)) ;
+number = [ "-" ], ("0" | nonzero-digit, { digit }), [ ".", digit, { digit } ], [ ("e" | "E"), [ "+" | "-" ], digit, { digit } ] ;
+unsigned-integer = "0" | nonzero-digit, { digit } ;
+character = ? any Unicode scalar other than quotation mark, reverse solidus, or U+0000..U+001F ? ;
+digit = "0" | nonzero-digit ;
+nonzero-digit = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+hex = digit | "a" | "b" | "c" | "d" | "e" | "f" ;
+newline = ? U+000A ? ;

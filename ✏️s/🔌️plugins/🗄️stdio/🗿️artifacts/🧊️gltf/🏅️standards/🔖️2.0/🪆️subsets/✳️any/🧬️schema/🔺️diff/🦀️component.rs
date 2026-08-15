@@ -17,8 +17,8 @@
 use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
 use crate::artifacts::gltf::schema::snapshot::{
     GltfAccessor, GltfAlphaMode, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAnimationSampler, GltfAsset, GltfBuffer, GltfBufferView, GltfCamera, GltfCameraProjection, GltfDocument, GltfImage,
-    GltfInterpolation, GltfJson, GltfMaterial, GltfMesh, GltfNode, GltfNormalTextureInfo, GltfOcclusionTextureInfo, GltfOrthographic, GltfPbrMetallicRoughness, GltfPerspective, GltfPrimitive, GltfSampler, GltfScene, GltfSkin, GltfSnapshot,
-    GltfSourceForm, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues, GltfTexture, GltfTextureInfo,
+    GltfInterpolation, GltfJson, GltfMaterial, GltfMesh, GltfMorphTarget, GltfNode, GltfNormalTextureInfo, GltfOcclusionTextureInfo, GltfOrthographic, GltfPbrMetallicRoughness, GltfPerspective, GltfPrimitive, GltfSampler, GltfScene, GltfSkin,
+    GltfSnapshot, GltfSourceForm, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues, GltfTexture, GltfTextureInfo,
 };
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -1149,6 +1149,127 @@ impl GltfDiff {
     }
 }
 
+//#region 🗺️TouchedRegions
+impl protocol::DiffRegions for GltfDiff {
+    fn touches(&self) -> protocol::TouchedPaths {
+        let mut paths = Vec::new();
+        if self.asset.as_ref().is_some_and(|diff| !diff.is_empty()) {
+            paths.push("document/asset".to_string());
+        }
+        if self.scene.is_some() {
+            paths.push("document/scene".to_string());
+        }
+        macro_rules! collection_paths {
+            ($field:ident, $name:literal) => {
+                if let Some(diff) = &self.$field {
+                    if !diff.removed.is_empty() || !diff.added.is_empty() {
+                        paths.push(concat!("document/", $name).to_string());
+                    } else {
+                        paths.extend(diff.modified.iter().map(|entry| format!(concat!("document/", $name, "/{}"), entry.index)));
+                    }
+                }
+            };
+        }
+        collection_paths!(scenes, "scenes");
+        if let Some(diff) = &self.nodes {
+            if !diff.removed.is_empty() || !diff.added.is_empty() {
+                paths.push("document/nodes".to_string());
+            } else {
+                for entry in &diff.modified {
+                    let root = format!("document/nodes/{}", entry.index);
+                    if entry.diff.children.is_some() {
+                        paths.push(format!("{root}/hierarchy"));
+                    }
+                    if entry.diff.matrix.is_some() || entry.diff.translation.is_some() || entry.diff.rotation.is_some() || entry.diff.scale.is_some() {
+                        paths.push(format!("{root}/transform"));
+                    }
+                    if entry.diff.mesh.is_some() {
+                        paths.push(format!("{root}/mesh"));
+                    }
+                    if entry.diff.skin.is_some() {
+                        paths.push(format!("{root}/skin"));
+                    }
+                    if entry.diff.weights.is_some() {
+                        paths.push(format!("{root}/weights"));
+                    }
+                    if entry.diff.camera.is_some() {
+                        paths.push(format!("{root}/camera"));
+                    }
+                    if entry.diff.name.is_some() {
+                        paths.push(format!("{root}/name"));
+                    }
+                    if entry.diff.extensions.is_some() {
+                        paths.push(format!("{root}/extensions"));
+                    }
+                    if entry.diff.extras.is_some() {
+                        paths.push(format!("{root}/extras"));
+                    }
+                }
+            }
+        }
+        if let Some(diff) = &self.meshes {
+            if !diff.removed.is_empty() || !diff.added.is_empty() {
+                paths.push("document/meshes".to_string());
+            } else {
+                for entry in &diff.modified {
+                    let root = format!("document/meshes/{}", entry.index);
+                    if entry.diff.primitives.is_some() {
+                        paths.push(format!("{root}/primitives"));
+                    }
+                    if entry.diff.weights.is_some() {
+                        paths.push(format!("{root}/weights"));
+                    }
+                    if entry.diff.name.is_some() {
+                        paths.push(format!("{root}/name"));
+                    }
+                    if entry.diff.extensions.is_some() {
+                        paths.push(format!("{root}/extensions"));
+                    }
+                    if entry.diff.extras.is_some() {
+                        paths.push(format!("{root}/extras"));
+                    }
+                }
+            }
+        }
+        collection_paths!(accessors, "accessors");
+        collection_paths!(buffer_views, "bufferViews");
+        collection_paths!(buffers, "buffers");
+        if let Some(diff) = &self.buffer_bytes {
+            if !diff.removed.is_empty() || !diff.added.is_empty() {
+                paths.push("buffers".to_string());
+            } else {
+                paths.extend(diff.modified.iter().map(|entry| format!("buffers/{}", entry.index)));
+            }
+        }
+        collection_paths!(materials, "materials");
+        collection_paths!(textures, "textures");
+        collection_paths!(images, "images");
+        collection_paths!(samplers, "samplers");
+        collection_paths!(skins, "skins");
+        collection_paths!(animations, "animations");
+        collection_paths!(cameras, "cameras");
+        if self.extensions_used.is_some() {
+            paths.push("document/extensionsUsed".to_string());
+        }
+        if self.extensions_required.is_some() {
+            paths.push("document/extensionsRequired".to_string());
+        }
+        if self.extensions.is_some() {
+            paths.push("document/extensions".to_string());
+        }
+        if self.extras.is_some() {
+            paths.push("document/extras".to_string());
+        }
+        if self.source_form.is_some() {
+            paths.push("sourceForm".to_string());
+        }
+        paths.sort();
+        paths.dedup();
+        protocol::TouchedPaths { paths }
+    }
+}
+//#endregion 🗺️TouchedRegions
+
 impl MutationDiff<GltfSnapshot> for GltfDiff {
     fn apply(&self, base: &GltfSnapshot) -> GltfSnapshot {
         let mut next = base.clone();
@@ -1831,25 +1952,27 @@ pub(crate) fn dec_node_diff(s: &str) -> Result<GltfNodeDiff, String> {
 //#region 🔖️MeshAccessorMaterialGroupCodecs
 pub(crate) fn enc_primitive(p: &GltfPrimitive) -> String {
     format!(
-        "[{},{},{},{},{},{}]",
+        "[{},{},{},{},{},{},{}]",
         enc_attr_pairs(&p.attributes),
         encode_option(&p.indices, |v| v.to_string()),
         encode_option(&p.material, |v| v.to_string()),
         encode_option(&p.mode, |v| enc_u64(*v)),
+        format!("[{}]", p.targets.iter().map(|target| enc_attr_pairs(&target.0)).collect::<Vec<_>>().join(",")),
         encode_option(&p.extensions, enc_json),
         encode_option(&p.extras, enc_json),
     )
 }
 pub(crate) fn dec_primitive(s: &str) -> Result<GltfPrimitive, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [attributes, indices, material, mode, extensions, extras] = parts.as_slice() else {
-        return Err(format!("primitive: expected 6 fields, got {}", parts.len()));
+    let [attributes, indices, material, mode, targets, extensions, extras] = parts.as_slice() else {
+        return Err(format!("primitive: expected 7 fields, got {}", parts.len()));
     };
     Ok(GltfPrimitive {
         attributes: dec_attr_pairs(attributes)?,
         indices: decode_option(indices, parse_usize)?,
         material: decode_option(material, parse_usize)?,
         mode: decode_option(mode, dec_u64)?,
+        targets: split_top_level(strip_brackets(targets)?, ',').into_iter().filter(|value| !value.is_empty()).map(|value| dec_attr_pairs(&value).map(GltfMorphTarget)).collect::<Result<Vec<_>, _>>()?,
         extensions: decode_option(extensions, dec_json)?,
         extras: decode_option(extras, dec_json)?,
     })
@@ -2866,6 +2989,7 @@ pub(crate) fn write_bin_primitive(w: &mut dsl::ByteWriter, p: &GltfPrimitive) {
     write_bin_option(w, &p.indices, |w, v| w.write_varint_u64(*v as u64));
     write_bin_option(w, &p.material, |w, v| w.write_varint_u64(*v as u64));
     write_bin_option(w, &p.mode, |w, v| w.write_varint_u64(*v));
+    write_bin_vec(w, &p.targets, |w, target| write_bin_attr_pairs(w, &target.0));
     write_bin_json_opt(w, &p.extensions);
     write_bin_json_opt(w, &p.extras);
 }
@@ -2875,6 +2999,7 @@ pub(crate) fn read_bin_primitive(r: &mut dsl::ByteReader) -> Result<GltfPrimitiv
         indices: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
         material: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
         mode: read_bin_option(r, |r| r.read_varint_u64())?,
+        targets: read_bin_vec(r, |r| read_bin_attr_pairs(r).map(GltfMorphTarget))?,
         extensions: read_bin_json_opt(r)?,
         extras: read_bin_json_opt(r)?,
     })
@@ -4048,6 +4173,19 @@ mod tests {
         assert!(!cameras_ba.removed.is_empty(), "reverse direction must exercise a removed camera");
 
         assert!(<GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&sweep_a, &sweep_a).is_empty());
+    }
+
+    #[test]
+    fn touched_regions_are_stable_precise_for_modification_and_conservative_for_transport() {
+        use protocol::DiffRegions as _;
+        let modified = GltfDiff {
+            nodes: Some(GltfNodesDiff { modified: vec![GltfModified { index: 3, diff: GltfNodeDiff { translation: Some(Some([1.0, 2.0, 3.0])), ..Default::default() } }], ..Default::default() }),
+            buffer_bytes: Some(GltfBufferBytesDiff { modified: vec![GltfModified { index: 2, diff: vec![1, 2] }], ..Default::default() }),
+            ..Default::default()
+        };
+        assert_eq!(modified.touches().paths, vec!["buffers/2", "document/nodes/3/transform"]);
+        let structural = GltfDiff { nodes: Some(GltfNodesDiff { removed: vec![1], ..Default::default() }), ..Default::default() };
+        assert_eq!(structural.touches().paths, vec!["document/nodes"]);
     }
     //#endregion 🔖️FieldSweep
 }

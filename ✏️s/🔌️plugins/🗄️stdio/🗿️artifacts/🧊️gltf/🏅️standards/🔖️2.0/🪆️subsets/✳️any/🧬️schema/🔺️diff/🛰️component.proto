@@ -1,9 +1,12 @@
 syntax = "proto3";
 package semio.s_stdio_gltf.diff;
 
-import "snapshot.proto"; // GltfAsset, GltfScene, GltfNode, GltfMesh, GltfAccessor, GltfBufferView,
-                          // GltfBuffer, GltfMaterial, GltfTexture, GltfImage, GltfSampler, GltfSkin,
-                          // GltfAnimation, GltfCamera, GltfJsonValue, GltfSparseAccessor
+enum GltfTouchedRegion { TOUCHED_REGION_UNSPECIFIED = 0; ASSET = 1; SCENE = 2; SCENES = 3; NODES = 4; MESHES = 5; ACCESSORS = 6; BUFFER_VIEWS = 7; BUFFERS = 8; BUFFER_BYTES = 9; MATERIALS = 10; TEXTURES = 11; IMAGES = 12; SAMPLERS = 13; SKINS = 14; ANIMATIONS = 15; CAMERAS = 16; EXTENSIONS_USED = 17; EXTENSIONS_REQUIRED = 18; EXTENSIONS = 19; EXTRAS = 20; SOURCE_FORM = 21; }
+
+import "../📸️snapshot/🛰️component.proto";
+// GltfAsset, GltfScene, GltfNode, GltfMesh, GltfAccessor, GltfBufferView, GltfBuffer,
+// GltfMaterial, GltfTexture, GltfImage, GltfSampler, GltfSkin, GltfAnimation, GltfCamera,
+// GltfJsonValue, GltfSparseAccessor.
 
 message GltfAssetDiff {
   optional string version = 1;
@@ -141,3 +144,4 @@ message GltfDiff {
   optional semio.s_stdio_gltf.snapshot.GltfJsonValue extras = 20;
   optional string source_form = 21;
 }
+message GltfDiffDerivation { GltfDiff forward = 1; GltfDiff inverse = 2; repeated string touched_paths = 3; repeated GltfTouchedRegion touched_regions = 4; }

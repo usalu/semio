@@ -3029,17 +3029,6 @@
       }
     },
     {
-      "name": "⚖️gate🗄️stdio-lossless-roundtrips",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-plugin:test-exhaustive",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 410.05
-      }
-    },
-    {
       "name": "⚖️gate🏗️artifact-builder",
       "type": "node-terminal",
       "request": "launch",

@@ -116,8 +116,13 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<GltfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
-            let diff = crate::artifacts::gltf::schema::mutations::apply_gltf_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            match crate::artifacts::gltf::schema::mutations::apply_gltf_mutation(&mut self.snapshot, &mutation) {
+                Ok(diff) => (self, diff),
+                Err(error) => {
+                    self.diagnostics.push(dsl::Diagnostic::error("stdio.gltf.mutation-rejected", dsl::TextSpan::at(1, 1), error.to_string()));
+                    (self, GltfDiff::default())
+                }
+            }
         }
         fn absorb(mut self, diff: Self::Diff) -> Self {
             self.snapshot = <GltfDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&diff, &self.snapshot);
@@ -236,7 +241,7 @@ pub mod derived_construction {
         /// pairs (e.g. `("POSITION", 0)`), `indices`/`material` are optional accessor/material
         /// indices, `mode` is the primitive topology (defaults to `4` TRIANGLES per spec when unset).
         pub fn add_mesh_primitive(&mut self, mesh: usize, attributes: &[(&str, usize)], indices: Option<usize>, material: Option<usize>, mode: Option<u64>) {
-            let primitive = GltfPrimitive { attributes: attributes.iter().map(|(name, idx)| ((*name).to_string(), *idx)).collect(), indices, material, mode, extensions: None, extras: None };
+            let primitive = GltfPrimitive { attributes: attributes.iter().map(|(name, idx)| ((*name).to_string(), *idx)).collect(), indices, material, mode, targets: Vec::new(), extensions: None, extras: None };
             let mesh_entry = self.snapshot.document.meshes.get_mut(mesh).expect("mesh index out of range -- call add_mesh first");
             mesh_entry.primitives.push(primitive);
         }
@@ -493,7 +498,7 @@ pub fn demo_gltf_snapshot() -> GltfSnapshot {
         scene: Some(0),
         scenes: vec![GltfScene { nodes: vec![0], name: Some("root-scene".into()), ..GltfScene::default() }],
         nodes: vec![GltfNode { mesh: Some(0), camera: Some(0), name: Some("root-node".into()), ..GltfNode::default() }],
-        meshes: vec![GltfMesh { primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), 0)], indices: None, material: Some(0), mode: Some(4), extensions: None, extras: None }], ..GltfMesh::default() }],
+        meshes: vec![GltfMesh { primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), 0)], indices: None, material: Some(0), mode: Some(4), targets: Vec::new(), extensions: None, extras: None }], ..GltfMesh::default() }],
         accessors: vec![GltfAccessor {
             buffer_view: Some(0),
             byte_offset: 0,

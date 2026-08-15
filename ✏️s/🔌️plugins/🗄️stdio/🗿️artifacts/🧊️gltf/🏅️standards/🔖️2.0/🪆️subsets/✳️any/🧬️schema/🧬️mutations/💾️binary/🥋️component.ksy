@@ -1,12 +1,16 @@
 meta:
   id: stdio_gltf_mutation_wire
   title: stdio.gltf mutation binary encoding
-  encoding: UTF-8
 doc: |
-  `GltfMutation`'s binary wire form is its own internally-tagged JSON text (see
-  `📝️text/📖️component.grammar.semio`) encoded as UTF-8 bytes -- `OpBinary::encode_op`/`decode_op`
-  in `🧬️mutations/component.rs` delegate straight to `serde_json`. No separate binary framing
-  exists; this is the honest boundary.
+  Structured OpBinary frame. Tags 0..23 retain their original meanings; tags 24..27 are
+  TransformNode, ReparentNode, BindNodeMesh, and BindPrimitiveMaterial.
 seq:
-  - id: json_utf8_text
+  - id: format
+    type: u1
+    valid: 1
+  - id: tag
+    type: u1
+    valid:
+      max: 27
+  - id: variant_payload
     size-eos: true

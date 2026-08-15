@@ -5,16 +5,21 @@
 ---
 
 Extend/Refactor/Change clean mechanisms to properly achieve this.
-Exhaustively plan for a workforce of parallel agents /workflows.
+Exhaustively plan for a workforce of parallel agents.
 Everything end to end.
-
----
-
 Use a single Fable agent for creating the plan, a single Opus 5 agent for main plan coordination, multiple Sonnet 5 agents for task execution, multiple Haiku 4.5 agents for read-only exploration.
 
 ---
 
+Extend/Refactor/Change clean mechanisms to properly achieve this.
+Exhaustively plan for a workforce of parallel agents.
+Everything end to end.
 Use a single Opus 5 agent for creating the plan, a single Cursor Grok 4.6 High agent for main plan coordination, multiple Composer 2.5 agents for task execution, multiple Composer 2.5 agents for read-only exploration.
+
+---
+
+Exhaustively plan for a workforce of as many parallel agents as you can.
+Use a single GPT 5.6 Sol Ultra agent for creating the plan, a single GPT 5.6 Sol Extra-High agent for main plan coordination, multiple GPT 5.6 Terra Extra-High agents for task execution, multiple GPT 5.6 Luna Extra-High agents for read-only exploration.
 
 ---
 
@@ -373,7 +378,37 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
-
+```
+<artifact>
+  schema
+    mutations
+      <mutation>
+        dependencies
+          read
+            snapshot
+              dependencies
+                <dependency> e.g. name
+                  component.rs
+                <inference> e.g. flatPosition
+                  component.rs
+                  …
+          write
+            snapshot
+              dependencies
+                <dependency> e.g. name
+                  component.rs
+                <inference> e.g. flatPosition
+                  component.rs
+                  …
+    compaction
+      component.rs
+      examples
+        assets
+          <assetfile>
+        tests
+          component.rs
+        
+```
 
 ---
 
