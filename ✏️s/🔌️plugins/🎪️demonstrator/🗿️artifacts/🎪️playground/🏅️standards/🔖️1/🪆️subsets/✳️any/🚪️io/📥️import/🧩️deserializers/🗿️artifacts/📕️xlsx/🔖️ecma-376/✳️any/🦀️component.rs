@@ -1,8 +1,6 @@
 //! playground <- xlsx
-use crate::artifacts::playground::PlaygroundSnapshot;
+use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use semio_s_plugin_stdio::artifacts::xlsx::{XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
-
-pub fn register() {}
 
 pub fn deserialize(from: &XlsxSnapshot) -> Result<PlaygroundSnapshot, store::TextError> {
     let _ = STDIO_XLSX_DOCUMENT_SCHEMA;

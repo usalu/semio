@@ -51,12 +51,6 @@ pub mod artifacts {
                                 pub mod text;
                                 #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
                                 pub mod binary;
-                                #[path = "."]
-                                pub mod topology {
-                                    #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️component.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                }
                             }
                             #[path = "."]
                             pub mod snapshot {
@@ -123,18 +117,6 @@ pub mod artifacts {
                                             }
                                         }
                                         #[path = "."]
-                                        pub mod txt {
-                                            #[path = "."]
-                                            pub mod v_utf_8 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
                                         pub mod csv {
                                             #[path = "."]
                                             pub mod v_rfc4180 {
@@ -192,18 +174,6 @@ pub mod artifacts {
                                             }
                                         }
                                         #[path = "."]
-                                        pub mod txt {
-                                            #[path = "."]
-                                            pub mod v_utf_8 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
                                         pub mod csv {
                                             #[path = "."]
                                             pub mod v_rfc4180 {
@@ -247,22 +217,6 @@ pub mod artifacts {
                 }
             }
         }
-
-        // ---- Shims: keep pre-migration module paths resolving for external callers ----
-        pub mod schema {
-            pub use super::standards::v1::subsets::any::schema::*;
-        }
-        pub mod io {
-            pub use super::standards::v1::subsets::any::io::*;
-        }
-        pub mod op { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::text::*; }
-        pub mod dsl { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::text::*; }
-        pub mod spr { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::binary::*; }
-        pub mod diff { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::diff::*; pub mod schema { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::diff::text::*; } pub mod pack { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::diff::binary::*; } pub mod binary { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::diff::binary::*; } }
-        pub mod mutations { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::*; pub mod schema { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::*; } pub mod text { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::text::*; } pub mod pack { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::binary::*; } pub mod binary { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::binary::*; } }
-        pub mod snapshot { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::*; pub mod schema { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::*; } pub mod text { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::text::*; } pub mod pack { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::binary::*; } pub mod binary { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::binary::*; } }
-
-
         #[path = "."]
         pub mod examples {
             #[path = "."]
@@ -278,23 +232,12 @@ pub mod artifacts {
 }
 //#endregion 🗿️Artifacts
 
-//#region 🎛️Apps
-// 🎪️ Ticket 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION D3 dissolved the
-// seven-file `🎪️panes/` facet into this single `🎛️apps` component — see its module doc for why the
-// panes were NOT relocated into the source plugins' `🎛️apps/<app>/📌️panels/`.
-#[path = "."]
-pub mod apps {
-    #[path = "../../🎛️apps/🦀️component.rs"]
-    mod component;
-    pub use component::*;
-}
-//#endregion 🎛️Apps
-
-//#region 🔖️Manifest
-#[path = "../../🦀️component.rs"]
-mod plugin;
-semio_framework_plugin::plugin_exports!(plugin::plugin);
-//#endregion 🔖️Manifest
+//#region 🛂️Manifest
+#[path = "../../🛂️manifest/🎪️demonstrator/🦀️component.rs"]
+mod manifest;
+#[cfg(feature = "plugin-entry")]
+semio_framework_plugin::plugin_exports!(manifest::plugin);
+//#endregion 🛂️Manifest
 
 //#region 📚️Examples
 #[path = "."]

@@ -35,7 +35,7 @@ pub fn render(document: &WiresSnapshot) -> UiNode {
     let extension = DefaultWiresExtension::from_fixture_json(&fixture_json_string(&document.wires_fixture)).ok();
     ui_stack_vertical(vec![
         ui_text(Label::data(format!("Schema: {MINDMAP_WIRES_SCHEMA}"))),
-        ui_text(Label::data(format!("Identities: {}", extension.as_ref().map_or(0, |ext| ext.mindmap.topics.len())))),
+        ui_text(Label::data(format!("Identities: {}", extension.as_ref().map_or(0, |ext| ext.topics.len())))),
         ui_text(Label::data(format!("Relationships: {}", extension.as_ref().map_or(0, |ext| ext.relationships.len())))),
         ui_text(Label::data(format!("Board nodes: {}", fixture_nodes(&board).len()))),
     ])
@@ -50,7 +50,8 @@ pub fn render(document: &WiresSnapshot) -> UiNode {
 /// artifact, one with exactly one consumer lives in that consumer's own file).
 pub use infinite_board_normal_undirected as graph;
 pub use infinite_canvas as canvas;
-pub use semio_s_mindmap as mindmap;
+
+pub type TopicId = canvas::board::NodeId;
 
 //#region ⚠️ Errors
 /// 🧯️ WIRES extension errors — fixture (de)serialization and fixed-identity-set validation failures.
@@ -67,7 +68,7 @@ pub enum WiresError {
     #[error("relationships array missing")]
     RelationshipsMissing,
     #[error("identity {0} is not in the fixed WIRES identity set")]
-    IdentityNotAllowed(mindmap::TopicId),
+    IdentityNotAllowed(TopicId),
 }
 //#endregion ⚠️ Errors
 
@@ -99,17 +100,18 @@ impl RelationshipKind {
 
 // #region 🔖️WiresExtensionTrait
 /// 🔗️ WIRES semantics over a mindmap (normal undirected graph).
-pub trait WiresExtension: mindmap::MindmapExtension {
+pub trait WiresExtension: canvas::board::GraphExtension {
+    fn topic_label(&self, topic_id: TopicId) -> Option<&str>;
     fn relationship_kind_label(&self, relationship_id: graph::EdgeId) -> Option<&str>;
-    fn validate_identity_set(&self, identities: &[mindmap::TopicId]) -> Result<(), WiresError>;
+    fn validate_identity_set(&self, identities: &[TopicId]) -> Result<(), WiresError>;
 }
 
 /// 🧭️ Default WIRES extension with fixed identity vocabulary and relationship kinds.
 #[derive(Clone, Debug, Default)]
 pub struct DefaultWiresExtension {
-    pub mindmap: mindmap::DefaultMindmapExtension,
+    pub topics: std::collections::BTreeMap<TopicId, String>,
     pub relationships: std::collections::BTreeMap<graph::EdgeId, RelationshipKind>,
-    pub allowed_identities: std::collections::BTreeSet<mindmap::TopicId>,
+    pub allowed_identities: std::collections::BTreeSet<TopicId>,
 }
 
 impl canvas::CanvasExtension for DefaultWiresExtension {
@@ -120,13 +122,7 @@ impl canvas::CanvasExtension for DefaultWiresExtension {
 
 impl graph::GraphExtension for DefaultWiresExtension {}
 
-impl mindmap::GraphExtension for DefaultWiresExtension {}
-
-impl mindmap::MindmapExtension for DefaultWiresExtension {
-    fn topic_label(&self, node_id: mindmap::TopicId) -> Option<&str> {
-        self.mindmap.topic_label(node_id)
-    }
-}
+impl canvas::board::GraphExtension for DefaultWiresExtension {}
 
 impl DefaultWiresExtension {
     /// 🔗️ Hydrate extension state from `reasoning.wires.fixture` JSON.
@@ -150,7 +146,7 @@ impl DefaultWiresExtension {
                 continue;
             };
             let label = row.get("label").and_then(|v| v.as_str()).unwrap_or("").to_string();
-            ext.mindmap.topics.insert(identity_id, label);
+            ext.topics.insert(identity_id, label);
             ext.allowed_identities.insert(identity_id);
         }
         let Some(relationships) = obj.get("relationships").and_then(|v| v.as_array()) else {
@@ -177,11 +173,15 @@ impl DefaultWiresExtension {
 }
 
 impl WiresExtension for DefaultWiresExtension {
+    fn topic_label(&self, topic_id: TopicId) -> Option<&str> {
+        self.topics.get(&topic_id).map(String::as_str)
+    }
+
     fn relationship_kind_label(&self, relationship_id: graph::EdgeId) -> Option<&str> {
         self.relationships.get(&relationship_id).map(|r| r.label())
     }
 
-    fn validate_identity_set(&self, identities: &[mindmap::TopicId]) -> Result<(), WiresError> {
+    fn validate_identity_set(&self, identities: &[TopicId]) -> Result<(), WiresError> {
         if self.allowed_identities.is_empty() {
             return Ok(());
         }
@@ -236,6 +236,13 @@ mod tests {
         let mut ext = DefaultWiresExtension::default();
         ext.relationships.insert(7, RelationshipKind::References);
         assert_eq!(ext.relationship_kind_label(7), Some("references"));
+    }
+
+    #[test]
+    fn topic_lookup_stays_local_to_the_wires_extension() {
+        let mut ext = DefaultWiresExtension::default();
+        ext.topics.insert(7, "Context".into());
+        assert_eq!(ext.topic_label(7), Some("Context"));
     }
 
     #[test]

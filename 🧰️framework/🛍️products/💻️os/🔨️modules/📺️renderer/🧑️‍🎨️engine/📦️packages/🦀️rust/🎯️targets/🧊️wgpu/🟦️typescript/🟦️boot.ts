@@ -50,10 +50,16 @@ class PluginWorkerClient {
   private worker: Worker | null = null;
   private readonly pending = new Map<string, { resolve: (value: unknown) => void; reject: (error: Error) => void; timer: number }>();
 
+  private readonly pluginId: string;
+  private readonly moduleUrl: string;
+
   constructor(
-    private readonly pluginId: string,
-    private readonly moduleUrl: string,
-  ) {}
+    pluginId: string,
+    moduleUrl: string,
+  ) {
+    this.pluginId = pluginId;
+    this.moduleUrl = moduleUrl;
+  }
 
   private clearPending(error: Error): void {
     for (const [requestId, entry] of this.pending) {

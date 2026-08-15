@@ -1,0 +1,20 @@
+dialect grammar
+grammar stdio.gltf.inference.io.text
+extension gltf.inference
+start document
+
+document = schema-header version-header length-header checksum-header inference
+schema-header = "schema" SP "s.stdio.gltf.inference" NL
+version-header = "version" SP "2" NL
+length-header = "length" SP UINT NL
+checksum-header = "checksum" SP HEX HEX HEX HEX HEX HEX HEX HEX NL
+inference = "{" "\"geometricAnalysis\"" ":" object "}"
+value = object | array | STRING | NUMBER | "true" | "false" | "null"
+object = "{" (member ("," member)*)? "}"
+member = STRING ":" value
+array = "[" (value ("," value)*)? "]"
+
+# canonical utf8 lf-only
+# canonical json rfc8785
+# constraint length equals utf8-byte-length inference
+# constraint checksum equals crc32-iso-hdlc inference

@@ -1,7 +1,8 @@
 //! 🌊 GLTF roughness indicators.
 
-use super::geometry::{cross, dot, estimate, exact, norm, normalize, roughness_samples, statistics, sub, unavailable, GltfGeometryContext};
-use super::measure::*;
+use super::geometric_analysis::{GltfGeometryContext, roughness_samples, statistics};
+use super::super::super::modules::{inference_measures::{estimate, exact, unavailable}, vector_operations::{cross, dot, norm, normalize, sub}};
+use super::super::super::modules::measurement_contracts::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

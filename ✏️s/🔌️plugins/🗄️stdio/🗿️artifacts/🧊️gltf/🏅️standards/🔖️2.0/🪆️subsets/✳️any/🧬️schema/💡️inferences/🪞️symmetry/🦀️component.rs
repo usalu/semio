@@ -1,7 +1,8 @@
 //! 🪞 GLTF symmetry indicators.
 
-use super::geometry::{estimate, unavailable, GltfGeometryContext};
-use super::measure::*;
+use super::geometric_analysis::{GltfGeometryContext};
+use super::super::super::modules::{inference_measures::{estimate, unavailable}, mesh_topology::Topology};
+use super::super::super::modules::measurement_contracts::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -47,11 +48,11 @@ fn symmetry_score(points: &[[f64; 3]], centroid: [f64; 3], axis: [f64; 3], scale
 pub struct GltfSymmetryInference;
 
 impl GltfSymmetryInference {
-    pub(crate) fn infer_assembly(indicators: &mut GltfSymmetryIndicators, parts: &[super::geometry::GltfPartInference], policy: &GltfAnalysisPolicy, topology: super::geometry::Topology) {
+    pub(crate) fn infer_assembly(indicators: &mut GltfSymmetryIndicators, parts: &[super::geometric_analysis::GltfPartInference], policy: &GltfAnalysisPolicy, topology: Topology) {
         if parts.is_empty() {
             return;
         }
-        let signature = |part: &super::geometry::GltfPartInference| {
+        let signature = |part: &super::geometric_analysis::GltfPartInference| {
             let mut dimensions = part.indicators.size.oriented_bounds.value.as_ref().map(|bounds| bounds.dimensions.array()).unwrap_or([0.0; 3]);
             dimensions.sort_by(f64::total_cmp);
             let quantum = policy.absolute_length_tolerance.max(1e-9);

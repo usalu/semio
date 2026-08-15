@@ -1,5 +1,4 @@
 /** 💡 Universal glTF geometric inference schema. */
-export * from './🧾️measure/🟦️component.ts';
 export * from './📦️size/🟦️component.ts';
 export * from './🧱️area-volume/🟦️component.ts';
 export * from './⚪️compactness/🟦️component.ts';
@@ -14,9 +13,9 @@ export * from './🧭️orientation/🟦️component.ts';
 export * from './🪞️symmetry/🟦️component.ts';
 export * from './🌊️roughness/🟦️component.ts';
 export * from './🕸️topology/🟦️component.ts';
-export * from './📐️geometry/🟦️component.ts';
-import type { GltfGeometricInference } from './📐️geometry/🟦️component.ts';
+export * from './🧮️geometric-analysis/🟦️component.ts';
+import type { GltfGeometricInference } from './🧮️geometric-analysis/🟦️component.ts';
 export interface GltfInference {
   /** @derived */
-  geometry: GltfGeometricInference;
+  geometricAnalysis: GltfGeometricInference;
 }

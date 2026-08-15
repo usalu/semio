@@ -4,12 +4,27 @@
 //! slug dirs directly — `📦️glue.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::artifacts::playground::PlaygroundSnapshot;
+use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
-use super::topology::{compute_playground_topology, PlaygroundTopology};
+//#region 🧭️Topology
+/// 🧭️ Playground topology is honestly empty because its snapshot owns only schema metadata.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlaygroundTopology {
+    pub topo_order: Vec<String>,
+    pub depth: BTreeMap<String, u32>,
+    pub cycle_free: bool,
+    pub node_count: u32,
+}
+
+fn infer_topology(_snapshot: &PlaygroundSnapshot) -> PlaygroundTopology {
+    PlaygroundTopology { topo_order: Vec::new(), depth: BTreeMap::new(), cycle_free: true, node_count: 0 }
+}
+//#endregion 🧭️Topology
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a playground snapshot. One field per named inference under
@@ -26,7 +41,7 @@ pub struct PlaygroundInference {
 
 impl protocol::Inference<PlaygroundSnapshot> for PlaygroundInference {
     fn infer(snapshot: &PlaygroundSnapshot) -> Self {
-        Self { topology: compute_playground_topology(snapshot) }
+        Self { topology: infer_topology(snapshot) }
     }
 }
 
@@ -90,6 +105,15 @@ mod tests {
     #[test]
     fn inference_default_law() {
         assert_eq!(PlaygroundInference::infer(&PlaygroundSnapshot::default()), PlaygroundInference::default());
+    }
+
+    #[test]
+    fn topology_is_the_vacuous_empty_graph() {
+        let topology = infer_topology(&PlaygroundSnapshot::default());
+        assert!(topology.topo_order.is_empty());
+        assert!(topology.depth.is_empty());
+        assert!(topology.cycle_free);
+        assert_eq!(topology.node_count, 0);
     }
 }
 //#endregion 🧪️Tests

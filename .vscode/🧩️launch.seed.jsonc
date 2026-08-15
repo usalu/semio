@@ -2106,6 +2106,61 @@
       }
     },
     {
+      "name": "📦️generate🧩️taxonomy📊️census",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:generate-taxonomy-census -- --ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 207
+      }
+    },
+    {
+      "name": "📦️generate🧩️taxonomy🧬️duplicates",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:generate-taxonomy-duplicates -- --ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 208
+      }
+    },
+    {
+      "name": "📦️verify🧩️taxonomy📋️report",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify-taxonomy-report",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 209
+      }
+    },
+    {
+      "name": "📦️verify🧩️taxonomy🚦️enforce",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify-taxonomy-enforce",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 209.1
+      }
+    },
+    {
+      "name": "📦️verify🏛️workspace🚦️gate",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify-gate",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 209.2
+      }
+    },
+    {
       "name": "📦️build🖱️ui🏪️assets",
       "type": "node-terminal",
       "request": "launch",

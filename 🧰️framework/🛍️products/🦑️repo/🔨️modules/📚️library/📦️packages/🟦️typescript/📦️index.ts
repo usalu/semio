@@ -163,10 +163,16 @@ export type GraphNode = Record<string, unknown> & { __typename?: string };
 
 /** 🧷️BaseLinter holds shared repo-root + graphql helpers for lint scripts. */
 export abstract class BaseLinter {
+  readonly entityId: string;
+  protected readonly repoRoot: string;
+
   constructor(
-    readonly entityId: string,
-    protected readonly repoRoot: string = getWorkspaceRoot(),
-  ) {}
+    entityId: string,
+    repoRoot: string = getWorkspaceRoot(),
+  ) {
+    this.entityId = entityId;
+    this.repoRoot = repoRoot;
+  }
 
   protected gql<T = unknown>(query: string, variables: Record<string, unknown> = {}): T {
     return runCliGraphql(query, variables, { repoRoot: this.repoRoot }) as T;
@@ -768,10 +774,16 @@ export async function dispatchPolicyArgv(segments: string[], scriptUrl: string):
 //#region 🔖️Script
 /** 🧭️Bundle command; `run` receives argv segments after the subcommand (e.g. `dev mcp` → `["mcp"]`). */
 export abstract class Script {
+  protected readonly root: string;
+  protected readonly repoRoot: string;
+
   constructor(
-    protected readonly root: string,
-    protected readonly repoRoot: string,
-  ) {}
+    root: string,
+    repoRoot: string,
+  ) {
+    this.root = root;
+    this.repoRoot = repoRoot;
+  }
   abstract run(segments: string[]): void | Promise<void>;
 }
 
@@ -789,11 +801,16 @@ export type ScriptCommand = new (root: string, repoRoot: string) => Script;
 /** 🧭️Declarative subcommand registry for a single `script.ts`. */
 export class ScriptRouter {
   private readonly commands = new Map<string, ScriptCommand>();
+  readonly bundleRoot: string;
+  readonly repoRoot: string;
 
   constructor(
-    readonly bundleRoot: string,
-    readonly repoRoot: string = findRepoRoot(bundleRoot),
-  ) {}
+    bundleRoot: string,
+    repoRoot: string = findRepoRoot(bundleRoot),
+  ) {
+    this.bundleRoot = bundleRoot;
+    this.repoRoot = repoRoot;
+  }
 
   /** 📌️Registers a subcommand implemented by a `Script` subclass. */
   register(name: string, Command: ScriptCommand): this {

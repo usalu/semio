@@ -989,14 +989,28 @@ class StepInspector<M extends MachineSpec> implements Inspector<M> {
  * touched twice within one macrostep appears twice, because that is what happened. `active` is the
  * settled configuration and is the field to project from. */
 export class MachineStep<M extends MachineSpec> {
+  readonly entered: readonly string[];
+  readonly exited: readonly string[];
+  readonly active: readonly string[];
+  readonly commands: readonly Command<M>[];
+  readonly report: StepReport;
+  readonly persisted: PersistedSnapshot;
+
   constructor(
-    readonly entered: readonly string[],
-    readonly exited: readonly string[],
-    readonly active: readonly string[],
-    readonly commands: readonly Command<M>[],
-    readonly report: StepReport,
-    readonly persisted: PersistedSnapshot,
-  ) {}
+    entered: readonly string[],
+    exited: readonly string[],
+    active: readonly string[],
+    commands: readonly Command<M>[],
+    report: StepReport,
+    persisted: PersistedSnapshot,
+  ) {
+    this.entered = entered;
+    this.exited = exited;
+    this.active = active;
+    this.commands = commands;
+    this.report = report;
+    this.persisted = persisted;
+  }
 
   /** 🔎 Whether the settled configuration contains the state with this stable id. */
   isActive(stableId: string): boolean {
@@ -1042,7 +1056,10 @@ export function step<M extends MachineSpec>(
 //#region 🧭️Testing
 /** 🧭 A set of representative events tried from every reachable configuration. */
 export class Model<M extends MachineSpec> {
-  constructor(readonly events: readonly M["Event"][]) {}
+  readonly events: readonly M["Event"][];
+  constructor(events: readonly M["Event"][]) {
+    this.events = events;
+  }
 }
 
 /** 🧭 What a BFS {@link explore} found: distinct configurations visited and every stable state id

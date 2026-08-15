@@ -1,4 +1,3 @@
 /** ↔️ GltfClearanceIndicators. */
-import type { GltfScalarMeasure, GltfStatisticsMeasure } from '../🧾️measure/🟦️component.ts';
+import type { GltfScalarMeasure, GltfStatisticsMeasure } from '../../../🔨️modules/🧾️measurement-contracts/🟦️component.ts';
 export interface GltfClearanceIndicators { minimumDistanceToNeighbors: GltfScalarMeasure; clearanceDistribution: GltfStatisticsMeasure; interferenceVolume: GltfScalarMeasure; overlapVolume: GltfScalarMeasure }
-

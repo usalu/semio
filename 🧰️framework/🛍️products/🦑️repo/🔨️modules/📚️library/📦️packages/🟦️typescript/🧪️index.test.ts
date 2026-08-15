@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyCanonicalArtifactKindBreaches, policyChildSlotKindDagBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
 import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { defineLint, type FileLinter } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
@@ -18,6 +18,7 @@ import {
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts";
 import { areaOf, clearDiscoveryCache, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadTaxonomy, readSemioMarker, validateTaxonomy } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { artifactFacetPathIsDeclared, buildSemanticCensus, renderSemanticCensusJson, resolveRustPathAttributes, type Taxonomy } from "../../🔍️discovery/🟦️component.ts";
 import { computeWorkspaces, diffWorkspaces } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -1475,6 +1476,15 @@ describe("validateTaxonomy", () => {
     expect(validateTaxonomy()).toEqual([]);
   });
 
+  test("declares canonical semantic collection and module ownership contracts", () => {
+    const taxonomy = loadTaxonomy();
+    expect(taxonomy.semanticManifestFilename).toBe("🔣️component.json");
+    expect(taxonomy.semanticExtensionKey).toBe("x-semio");
+    expect(taxonomy.semanticConsumerMinimum).toBe(2);
+    expect(taxonomy.semanticCollections["🔨️modules"]?.kind).toBe("module");
+    expect(taxonomy.semanticCollections["💡️inferences"]?.kind).toBe("inference");
+  });
+
   test("reports an area state outside the declared enum", () => {
     const taxonomy = loadTaxonomy();
     const broken = { ...taxonomy, areas: { ...taxonomy.areas, "🧰️framework": "taxonomy" as never } };
@@ -1629,6 +1639,141 @@ describe("validateTaxonomy", () => {
     expect(validateTaxonomy(broken).some((problem) => problem.includes("artifactSchemaSpecFilenames"))).toBe(true);
   });
 });
+
+//#region 🧩️SemanticCollections
+function semanticFixture(options: { readonly secondProductionConsumer?: boolean; readonly rootBehavior?: boolean; readonly rustRelativeConsumers?: boolean; readonly glueConsumer?: boolean } = {}): { readonly root: string; readonly taxonomy: Taxonomy } {
+  const root = mkdtempSync(join(tmpdir(), "semio-semantic-census-"));
+  const taxonomy = loadTaxonomy();
+  const write = (path: string, content: string): void => {
+    const absolute = join(root, path);
+    mkdirSync(join(absolute, ".."), { recursive: true });
+    writeFileSync(absolute, content);
+  };
+  write("🧰️framework/🔨️modules/📏measure/🟦️component.ts", "export const measure = (value: number) => value;\n");
+  if (options.rustRelativeConsumers || options.glueConsumer) write("🧰️framework/🔨️modules/📏measure/🦀️component.rs", "pub fn measure(value: u32) -> u32 { value }\n");
+  write("🧰️framework/🔨️modules/🔣️component.json", JSON.stringify({ "x-semio": { kind: "collection", members: [{ directory: "📏measure", id: "measure", kind: "module", responsibility: "exact and stable numeric measurement", module: { productionConsumers: options.secondProductionConsumer ? ["height", "width"] : ["width"] } }] } }));
+  write("🧰️framework/💡️inferences/📏width/🟦️component.ts", 'import { measure } from "../../🔨️modules/📏measure/🟦️component.ts";\nexport const width = measure(1);\n');
+  if (options.secondProductionConsumer) write("🧰️framework/💡️inferences/↕️height/🟦️component.ts", 'import { measure } from "../../🔨️modules/📏measure/🟦️component.ts";\nexport const height = measure(1);\n');
+  if (options.rustRelativeConsumers) {
+    write("🧰️framework/💡️inferences/📏width/🦀️component.rs", "use super::super::modules::measure::measure;\npub fn width() -> u32 { measure(1) }\n");
+    if (options.secondProductionConsumer) write("🧰️framework/💡️inferences/↕️height/🦀️component.rs", "use super::super::modules::measure::measure;\npub fn height() -> u32 { measure(1) }\n");
+  }
+  if (options.glueConsumer) write("🧰️framework/💡️inferences/📏width/📦️packages/🦀️rust/📦️glue.rs", '#[path = "../../../../🔨️modules/📏measure/🦀️component.rs"]\npub mod measure;\n');
+  write("🧰️framework/💡️inferences/🔣️component.json", JSON.stringify({ "x-semio": { kind: "collection", members: [
+    { directory: "📏width", id: "width", kind: "inference", responsibility: "derived width", inference: { inputs: ["value"], target: "width" } },
+    ...(options.secondProductionConsumer ? [{ directory: "↕️height", id: "height", kind: "inference", responsibility: "derived height", inference: { inputs: ["value"], target: "height" } }] : []),
+  ] } }));
+  if (options.rootBehavior) write("🧰️framework/💡️inferences/🟦️component.ts", "export function analyze() { return 1; }\n");
+  return { root, taxonomy };
+}
+
+describe("semantic collection census", () => {
+  test("accepts a genuine two-production-component module at its lowest common owner", () => {
+    const fixture = semanticFixture({ secondProductionConsumer: true });
+    try {
+      const census = buildSemanticCensus(fixture.root, {}, fixture.taxonomy);
+      expect(census.problems).toEqual([]);
+      expect(census.records.find((record) => record.id === "measure")?.productionConsumers).toEqual(["height", "width"]);
+      expect(census.records.find((record) => record.id === "measure")?.computedLowestCommonOwner).toBe("🧰️framework");
+      expect(renderSemanticCensusJson(census)).toBe(renderSemanticCensusJson(buildSemanticCensus(fixture.root, {}, fixture.taxonomy)));
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("resolves relative Rust and TypeScript imports to terminal production components", () => {
+    const fixture = semanticFixture({ secondProductionConsumer: true, rustRelativeConsumers: true });
+    try {
+      const census = buildSemanticCensus(fixture.root, {}, fixture.taxonomy);
+      const imports = census.graph.edges.filter((edge) => edge.to === "measure" && edge.mechanism === "static-import");
+      expect(imports.map((edge) => edge.from)).toEqual(["height", "height", "width", "width"]);
+      expect(imports.map((edge) => edge.target.endsWith("🦀️component.rs") || edge.target.endsWith("🟦️component.ts"))).toEqual([true, true, true, true]);
+      expect(census.records.find((record) => record.id === "measure")?.productionConsumers).toEqual(["height", "width"]);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects a one-consumer module and authored list-root behavior", () => {
+    const fixture = semanticFixture({ rootBehavior: true });
+    try {
+      const codes = buildSemanticCensus(fixture.root, {}, fixture.taxonomy).problems.map((problem) => problem.code);
+      expect(codes).toContain("module-consumer-minimum");
+      expect(codes).toContain("module-production-consumer-minimum");
+      expect(codes).toContain("collection-authored-behavior");
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("does not count a test call site as a second production component", () => {
+    const fixture = semanticFixture();
+    try {
+      const testPath = join(fixture.root, "🧰️framework/💡️inferences/📏width/🧪️tests/🟦️component.ts");
+      mkdirSync(join(testPath, ".."), { recursive: true });
+      writeFileSync(testPath, 'import { measure } from "../../../🔨️modules/📏measure/🟦️component.ts";\nexport const checked = measure(1);\n');
+      const module = buildSemanticCensus(fixture.root, {}, fixture.taxonomy).records.find((record) => record.id === "measure");
+      expect(module?.productionConsumers).toEqual(["width"]);
+      expect(module?.excludedConsumers).toEqual(["width"]);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("does not count a package glue mount as a production consumer", () => {
+    const fixture = semanticFixture({ glueConsumer: true });
+    try {
+      const census = buildSemanticCensus(fixture.root, {}, fixture.taxonomy);
+      const glueEdge = census.graph.edges.find((edge) => edge.source.endsWith("📦️glue.rs") && edge.to === "measure");
+      expect(glueEdge?.production).toBe(false);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects missing manifest members, stale declarations, and generic stems", () => {
+    const fixture = semanticFixture();
+    try {
+      const collection = join(fixture.root, "🧰️framework/💡️inferences");
+      mkdirSync(join(collection, "🧪️orphan"), { recursive: true });
+      writeFileSync(join(collection, "🧪️orphan/🟦️component.ts"), "export const orphan = true;\n");
+      const manifest = JSON.parse(readFileSync(join(collection, "🔣️component.json"), "utf8"));
+      manifest["x-semio"].members.push({ directory: "🧹️stale", id: "stale", kind: "inference", responsibility: "stale result", inference: { inputs: ["x"], target: "stale" } });
+      manifest["x-semio"].members[0].directory = "🧪️shared";
+      writeFileSync(join(collection, "🔣️component.json"), JSON.stringify(manifest));
+      const codes = buildSemanticCensus(fixture.root, {}, fixture.taxonomy).problems.map((problem) => problem.code);
+      expect(codes).toContain("manifest-child-missing");
+      expect(codes).toContain("manifest-child-extra");
+      expect(codes).toContain("member-generic-stem");
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("resolves cumulative nested Rust path attributes", () => {
+    const root = join(tmpdir(), "semantic-rust-path");
+    const source = [
+      '#[path = "../../."]',
+      "pub mod gltf {",
+      '  #[path = "."]',
+      "  pub mod schema {",
+      '    #[path = "metrics/🦀️component.rs"]',
+      "    pub mod metric;",
+      "  }",
+      "}",
+    ].join("\n");
+    expect(resolveRustPathAttributes(join(root, "📦️glue.rs"), source).at(-1)?.target).toBe(resolve(root, "../../metrics/🦀️component.rs"));
+  });
+
+  test("places inference codecs below I/O rather than the inference result collection", () => {
+    const taxonomy = loadTaxonomy();
+    expect(artifactFacetPathIsDeclared("🚪️io/💡️inferences/📝️text", taxonomy)).toBe(true);
+    expect(artifactFacetPathIsDeclared("🚪️io/💡️inferences/💾️binary", taxonomy)).toBe(true);
+    expect(artifactFacetPathIsDeclared("🧬️schema/💡️inferences/📝️text", taxonomy)).toBe(false);
+    expect(artifactFacetPathIsDeclared("🧬️schema/💡️inferences/💾️binary", taxonomy)).toBe(false);
+  });
+});
+//#endregion 🧩️SemanticCollections
 
 describe("areaOf", () => {
   test("longest-prefix matches a plugin path to its declared area", () => {

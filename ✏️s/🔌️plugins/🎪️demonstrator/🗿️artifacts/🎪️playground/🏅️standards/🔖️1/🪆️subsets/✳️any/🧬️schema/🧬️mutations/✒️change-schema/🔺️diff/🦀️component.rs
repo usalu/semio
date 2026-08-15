@@ -1,7 +1,10 @@
 //! 🔺️ `change-schema` — sparse diff construction.
 
 use super::mutation::ChangeSchema;
-use crate::artifacts::playground::{PlaygroundDiff, PlaygroundSnapshot};
+use crate::artifacts::playground::standards::v1::subsets::any::schema::{
+    diff::PlaygroundDiff,
+    snapshot::PlaygroundSnapshot,
+};
 
 //#region 🔖️Diff
 /// 🔺️ The `schema` slot is the only sparse field this payload ever touches.

@@ -12,7 +12,8 @@
 //! their glue mounts have been removed outright (no call site in this plugin ever constructed
 //! either retired variant).
 
-use crate::artifacts::playground::{PlaygroundDiff, PlaygroundSnapshot};
+use crate::artifacts::playground::standards::v1::subsets::any::schema::diff::PlaygroundDiff;
+use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -27,7 +28,6 @@ pub enum PlaygroundMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::playground::schema;
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     #[test]
@@ -35,7 +35,7 @@ mod tests {
         let mut store = store::ArtifactStore::<PlaygroundSnapshot, PlaygroundMutation>::new(store::create_document_envelope(
             "playground.document",
             "playground",
-            schema::empty_playground_snapshot(),
+            crate::artifacts::playground::standards::v1::subsets::any::schema::empty_playground_snapshot(),
             None,
         ));
         store

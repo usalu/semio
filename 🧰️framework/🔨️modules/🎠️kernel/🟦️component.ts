@@ -617,10 +617,16 @@ class PluginWorkerClient {
   private readonly pending = new Map<string, { resolve: (value: Record<string, unknown>) => void; reject: (error: Error) => void; watchdog: number }>();
   onBackboneOutbound?: (uri: string, message: Uint8Array) => void;
 
+  private readonly pluginId: string;
+  private readonly moduleUrl: string;
+
   constructor(
-    private readonly pluginId: string,
-    private readonly moduleUrl: string,
-  ) {}
+    pluginId: string,
+    moduleUrl: string,
+  ) {
+    this.pluginId = pluginId;
+    this.moduleUrl = moduleUrl;
+  }
 
   private clearPending(error: Error): void {
     for (const [requestId, entry] of this.pending) {

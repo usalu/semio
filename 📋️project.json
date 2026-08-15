@@ -253,6 +253,22 @@
         "forwardAllArgs": true
       }
     },
+    "generate-taxonomy-census": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts generate taxonomy census",
+        "forwardAllArgs": true
+      }
+    },
+    "generate-taxonomy-duplicates": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts generate taxonomy duplicates",
+        "forwardAllArgs": true
+      }
+    },
     "lint": {
       "executor": "nx:run-commands",
       "dependsOn": [],
@@ -338,6 +354,22 @@
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts verify gate"
+      }
+    },
+    "verify-taxonomy-report": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts verify taxonomy report",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-taxonomy-enforce": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts verify taxonomy enforce",
+        "forwardAllArgs": true
       }
     },
     "build": {

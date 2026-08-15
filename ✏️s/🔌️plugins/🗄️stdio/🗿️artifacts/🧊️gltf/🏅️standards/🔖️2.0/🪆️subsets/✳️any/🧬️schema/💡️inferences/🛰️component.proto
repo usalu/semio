@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.stdio.gltf.inference;
 // 💡 Universal glTF geometric inference schema.
-message GltfInference { GltfGeometricInference geometry = 1; }
+message GltfInference { GltfGeometricInference geometric_analysis = 1; }
 enum GltfUnit { UNIT_UNSPECIFIED = 0; UNITLESS = 1; METRE = 2; SQUARE_METRE = 3; CUBIC_METRE = 4; RADIAN = 5; INVERSE_METRE = 6; INVERSE_SQUARE_METRE = 7; }
 enum GltfCoordinateSpace { COORDINATE_SPACE_UNSPECIFIED = 0; MESH_LOCAL = 1; NODE_LOCAL = 2; SCENE_WORLD = 3; }
 enum GltfAvailability { AVAILABILITY_UNSPECIFIED = 0; AVAILABLE = 1; APPROXIMATE = 2; UNAVAILABLE = 3; INVALID_INPUT = 4; UNSUPPORTED_PRIMITIVE = 5; OPEN_SURFACE = 6; NON_MANIFOLD = 7; DEGENERATE = 8; UNRESOLVED_RESOURCE = 9; }

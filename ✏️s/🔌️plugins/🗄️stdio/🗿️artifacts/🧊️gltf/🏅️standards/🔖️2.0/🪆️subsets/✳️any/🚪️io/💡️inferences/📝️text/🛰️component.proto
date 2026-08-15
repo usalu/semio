@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.s.stdio.gltf.inference.io.text;
+import "../../../🧬️schema/💡️inferences/🛰️component.proto";
+message GltfInferenceTextDocument {
+  string schema = 1;
+  uint32 version = 2;
+  uint64 payload_length = 3;
+  string checksum = 4;
+  semio.s.stdio.gltf.inference.GltfInference value = 5;
+}

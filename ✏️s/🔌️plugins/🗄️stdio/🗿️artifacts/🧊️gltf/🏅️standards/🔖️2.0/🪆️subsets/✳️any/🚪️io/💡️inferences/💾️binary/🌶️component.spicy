@@ -1,0 +1,13 @@
+module Stdio_gltf_inference_io;
+type Document = unit {
+    magic: bytes &size=8;
+    format_major: uint16 &byte-order=spicy::ByteOrder::Little;
+    format_minor: uint16 &byte-order=spicy::ByteOrder::Little;
+    schema_version: uint32 &byte-order=spicy::ByteOrder::Little;
+    flags: uint32 &byte-order=spicy::ByteOrder::Little;
+    schema_crc32: uint32 &byte-order=spicy::ByteOrder::Little;
+    payload_length: uint64 &byte-order=spicy::ByteOrder::Little;
+    payload_crc32: uint32 &byte-order=spicy::ByteOrder::Little;
+    header_crc32: uint32 &byte-order=spicy::ByteOrder::Little;
+    payload: bytes &size=self.payload_length;
+};

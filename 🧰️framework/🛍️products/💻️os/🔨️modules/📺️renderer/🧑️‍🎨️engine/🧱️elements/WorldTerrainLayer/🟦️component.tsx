@@ -111,10 +111,16 @@ class TerrainTileRenderer {
   private refreshInFlight: Promise<void> | null = null;
   private readonly geometries = new Map<string, BufferGeometry>();
 
+  private readonly style: WorldTerrainStyle;
+  private readonly onGeometriesChanged: (geometries: Map<string, BufferGeometry>) => void;
+
   constructor(
-    private readonly style: WorldTerrainStyle,
-    private readonly onGeometriesChanged: (geometries: Map<string, BufferGeometry>) => void,
-  ) {}
+    style: WorldTerrainStyle,
+    onGeometriesChanged: (geometries: Map<string, BufferGeometry>) => void,
+  ) {
+    this.style = style;
+    this.onGeometriesChanged = onGeometriesChanged;
+  }
 
   async init(): Promise<void> {
     const session = await createTerrainSession();

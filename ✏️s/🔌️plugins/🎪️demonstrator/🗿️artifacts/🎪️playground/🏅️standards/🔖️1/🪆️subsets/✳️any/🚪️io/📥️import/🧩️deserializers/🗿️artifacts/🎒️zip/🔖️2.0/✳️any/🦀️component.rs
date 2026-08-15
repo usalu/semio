@@ -1,8 +1,6 @@
 //! playground <- zip
-use crate::artifacts::playground::PlaygroundSnapshot;
+use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use semio_s_plugin_stdio::artifacts::zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
-
-pub fn register() {}
 
 pub fn deserialize(from: &ZipSnapshot) -> Result<PlaygroundSnapshot, store::TextError> {
     let _ = STDIO_ZIP_DOCUMENT_SCHEMA;

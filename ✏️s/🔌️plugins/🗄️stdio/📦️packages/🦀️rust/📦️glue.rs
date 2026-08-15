@@ -2212,11 +2212,8 @@ pub mod artifacts {
                             }
                             #[path = "."]
                             pub mod inferences {
-                                pub use geometry as bounds;
                                 #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️size/🦀️component.rs"]
                                 pub mod size;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾️measure/🦀️component.rs"]
-                                pub mod measure;
                                 #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/🦀️component.rs"]
                                 pub mod area_volume;
                                 #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚪️compactness/🦀️component.rs"]
@@ -2243,15 +2240,11 @@ pub mod artifacts {
                                 pub mod roughness;
                                 #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/🦀️component.rs"]
                                 pub mod topology;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🦀️component.rs"]
-                                pub mod geometry;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧮️geometric-analysis/🦀️component.rs"]
+                                pub mod geometric_analysis;
                                 #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
-                                pub mod binary;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
-                                pub mod text;
                             }
                             #[path = "."]
                             pub mod mutations {
@@ -2519,10 +2512,28 @@ pub mod artifacts {
                             }
                         }
                         #[path = "."]
+                        pub mod modules {
+                            #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔨️modules/🧾️measurement-contracts/🦀️component.rs"]
+                            pub mod measurement_contracts;
+                            #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔨️modules/🧮️vector-operations/🦀️component.rs"]
+                            pub mod vector_operations;
+                            #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔨️modules/🕸️mesh-topology/🦀️component.rs"]
+                            pub mod mesh_topology;
+                            #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔨️modules/💡️inference-measures/🦀️component.rs"]
+                            pub mod inference_measures;
+                        }
+                        #[path = "."]
                         pub mod io {
                             #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
                             mod component;
                             pub use component::*;
+                            #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                            }
                             #[path = "."]
                             pub mod import {
                                 #[path = "."]

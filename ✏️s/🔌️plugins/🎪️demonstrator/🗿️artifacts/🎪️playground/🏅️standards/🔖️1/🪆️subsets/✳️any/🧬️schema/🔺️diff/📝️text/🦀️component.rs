@@ -1,7 +1,7 @@
 //! 🔺️ Playground artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::playground::schema::PlaygroundArtifact;
-use crate::artifacts::playground::PlaygroundSnapshot;
+use crate::artifacts::playground::standards::v1::subsets::any::schema::PlaygroundArtifact;
+use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::playground::schema::diff::*;
+use crate::artifacts::playground::standards::v1::subsets::any::schema::diff::*;
 
 
 //#region 🔖️Apply
@@ -69,7 +69,7 @@ mod tests {
 
     #[test]
     fn empty_diff_is_a_no_operation() {
-        let base = crate::artifacts::playground::schema::empty_playground_snapshot();
+        let base = crate::artifacts::playground::standards::v1::subsets::any::schema::empty_playground_snapshot();
         let diff = PlaygroundDiff::default();
         assert_eq!(diff.apply(&base), base);
     }

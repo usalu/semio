@@ -1,7 +1,8 @@
 //! ⚖️ GLTF mass-distribution indicators.
 
-use super::geometry::{estimate, exact, unavailable, GltfGeometryContext};
-use super::measure::*;
+use super::geometric_analysis::{GltfGeometryContext};
+use super::super::super::modules::{inference_measures::{estimate, exact, unavailable}};
+use super::super::super::modules::measurement_contracts::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

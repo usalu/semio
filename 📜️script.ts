@@ -49,8 +49,16 @@ import {
   type LcovFileRecord,
   type TestLevel,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import {
+  buildSemanticCensus,
+  renderSemanticCensusJson,
+  renderSemanticCensusMarkdown,
+  renderSemanticDuplicatesJson,
+  renderSemanticDuplicatesMarkdown,
+  renderSemanticTaxonomyReport,
+} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts";
 import { createHash } from "node:crypto";
-import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, extname, join, relative, resolve } from "node:path";
 import { createServer } from "node:net";
@@ -606,8 +614,33 @@ export class NxScript extends Script {
 //#endregion 🔖️NxScript
 
 //#region 🔖️GenerateScript
+function taxonomyOption(args: readonly string[], name: string): string | undefined {
+  const index = args.indexOf(name);
+  return index >= 0 ? args[index + 1] : undefined;
+}
+
+/** 🎫️ Resolves a ticket id through actual Unicode directory entries instead of constructing emoji mounts. */
+function taxonomyTicketDirectory(repoRoot: string, ticketId: string): string {
+  const parts = ticketId.split("/").filter(Boolean);
+  if (parts.length !== 4) throw new Error(`[taxonomy] ticket id must be YYYY/MM/DD/TICKETSLUG, got ${JSON.stringify(ticketId)}.`);
+  let current = realpathSync(join(repoRoot, ".🦑️repo", "🎫️tickets"));
+  for (const part of parts) {
+    const entry = readdirSync(current, { withFileTypes: true })
+      .filter((candidate) => candidate.isDirectory())
+      .sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
+      .find((candidate) => candidate.name === part || candidate.name.replace(/^\p{Extended_Pictographic}\uFE0F?/u, "") === part);
+    if (!entry) throw new Error(`[taxonomy] ticket segment ${JSON.stringify(part)} does not exist below ${current}.`);
+    current = realpathSync(join(current, entry.name));
+  }
+  return current;
+}
+
 export class GenerateScript extends Script {
   run(segments: string[]): void {
+    if (segments[0] === "taxonomy") {
+      this.generateTaxonomy(segments.slice(1));
+      return;
+    }
     if (segments[0] === "neo4j") {
       new Neo4jCypherExport(this.root).runFromArgv(segments.slice(1));
       return;
@@ -642,6 +675,24 @@ export class GenerateScript extends Script {
       console.error(`[generate] partial success (${successes} ok, ${failures} failed).`);
     }
     console.log(`[generate] Neo4j Cypher export finished (${successes} ok, ${failures} skipped/failed) under .🦑️repo/🛂️manifest.`);
+  }
+
+  /** 🧩️ Writes deterministic census or duplicate evidence with its Markdown companion. */
+  private generateTaxonomy(args: string[]): void {
+    const operation = args[0];
+    if (operation !== "census" && operation !== "duplicates") throw new Error(`[generate taxonomy] expected census or duplicates, got ${JSON.stringify(operation)}.`);
+    const ticketId = taxonomyOption(args, "--ticket");
+    if (!ticketId) throw new Error(`[generate taxonomy ${operation}] --ticket <ticket-id> is required.`);
+    const ticketDir = taxonomyTicketDirectory(this.root, ticketId);
+    const census = buildSemanticCensus(this.root);
+    if (operation === "census") {
+      writeFileSync(join(ticketDir, "📊️semantic-census.json"), renderSemanticCensusJson(census));
+      writeFileSync(join(ticketDir, "📓️semantic-census.md"), renderSemanticCensusMarkdown(census));
+    } else {
+      writeFileSync(join(ticketDir, "📊️semantic-duplicates.json"), renderSemanticDuplicatesJson(census));
+      writeFileSync(join(ticketDir, "📓️semantic-duplicates.md"), renderSemanticDuplicatesMarkdown(census));
+    }
+    console.log(`[generate taxonomy ${operation}] ${census.records.length} components, ${census.problems.length} findings -> ${ticketDir}`);
   }
 
   /** 🧬️ Emit deterministic #[path] wiring comments for subset/example modules (dry by default). */
@@ -699,9 +750,23 @@ export class LintScript extends Script {
 /** 🧪️Aggregates lint + generated-catalog freshness + region/host-contract script lints (`gate`, the cheap pre-`ticket_close` step every refactor session runs), plus the full test suite for the top-level `verify` verb. */
 export class VerifyScript extends Script {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "taxonomy") {
+      this.runTaxonomy(segments.slice(1));
+      return;
+    }
     await this.runGate();
     if (segments[0] === "gate") return;
     runCmd("bun", ["nx", "run-many", "-t", "test", "--all", "--exclude", "workspace"], { cwd: this.root, ...orchestratorBudgetOpts() });
+  }
+
+  /** 🚦️ Reports findings without failing, or enforces the identical structured result. */
+  private runTaxonomy(args: string[]): void {
+    const mode = args[0];
+    if (mode !== "report" && mode !== "enforce") throw new Error(`[verify taxonomy] expected report or enforce, got ${JSON.stringify(mode)}.`);
+    const scope = taxonomyOption(args, "--scope");
+    const census = buildSemanticCensus(this.root, { scope });
+    process.stdout.write(renderSemanticTaxonomyReport(census, scope));
+    if (mode === "enforce" && census.problems.some((problem) => problem.severity === "error")) throw new Error(`[verify taxonomy enforce] ${census.problems.filter((problem) => problem.severity === "error").length} error finding(s).`);
   }
 
   private async runGate(): Promise<void> {
@@ -7606,13 +7671,13 @@ function policyMutationArtifactEngineBreaches(repoRoot: string): BreachRecord[] 
 /**
  * 💡️ Wave P3 inference-family scanners (INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
  * Mirrors 🔧️PolicyRuleMutationArtifactEngines's structure and idioms one region up: `💡️inferences` is the
- * fourth schema family (alongside `📸️snapshot` / `🔺️diff` / `🧬️mutations`), same slug-dir shape, same
- * `📝️text`/`💾️binary` codec-dir reservation, same report-mode discipline. REPORT MODE IS LOAD-BEARING:
+ * fourth schema family (alongside `📸️snapshot` / `🔺️diff` / `🧬️mutations`), with codecs owned by the
+ * sibling `🚪️io/💡️inferences/` collection, same report-mode discipline. REPORT MODE IS LOAD-BEARING:
  * every breach below carries `priority: "medium"` or `"low"`, never `"high"` — registered only at
  * `VerifyScript.runGate`'s `dissolveBreaches` block (which filters to `priority === "high"` before
  * throwing), never the earlier `osBreaches` block (which throws on ANY breach regardless of priority).
- * All 112 owning subsets carry `💡️inferences/`; per-family completeness (root leaves, `📝️text`/`💾️binary`
- * spec leaves, emoji hygiene) still varies wave to wave as fan-out continues. None of that can gate:
+ * All 112 owning subsets carry `💡️inferences/`; per-family completeness (root leaves and emoji hygiene)
+ * still varies wave to wave as fan-out continues. None of that can gate:
  * every rule here walks only `💡️inferences` dirs that already exist on disk
  * (`policyFindAllInferencesDirs`), never requires the facet's presence, so an unauthored subset — were
  * one to exist — would produce zero breaches rather than a hard block; real incompleteness reports
@@ -7620,9 +7685,9 @@ function policyMutationArtifactEngineBreaches(repoRoot: string): BreachRecord[] 
  */
 const POLICY_INFERENCES_FACET = "💡️inferences";
 
-/** 🔎️Inference-specific slug dirs under `💡️inferences/` (skips leaf files and reserved codec/example dirs — same reservation `policyListMutationDirs` uses for `🧬️mutations/`, minus the mutation triad names since inferences have no triad). */
+/** 🔎️Inference-specific slug dirs under `💡️inferences/` (skips leaf files and examples; codecs are I/O components). */
 function policyListInferenceDirs(repoRoot: string, inferencesRel: string): string[] {
-  const reserved = new Set<string>(["📚️examples", "💾️binary", "📝️text"]);
+  const reserved = new Set<string>(["📚️examples"]);
   return policyReaddirSafe(repoRoot, inferencesRel)
     .filter((e) => e.isDirectory && !reserved.has(e.name) && !e.name.startsWith("."))
     .map((e) => e.name)
@@ -7659,15 +7724,12 @@ function policyArtifactRootOfInferencesDir(inferencesRel: string): string {
 /**
  * 📏️Family-root leaf completeness: every existing `💡️inferences/` must carry the 5 `schemaFormats`
  * root leaves (`🔣️taxonomy.json`'s `schemaFormats` — same SSOT `policyArtifactSchemaFacetCompletenessBreaches`
- * reads for `🧬️schema`/`📸️snapshot`/`🔺️diff`) plus the 8 `textSpecFilenames` under `📝️text/` and the 6
- * `binarySpecFilenames` under `💾️binary/` — never a hardcoded list, so a taxonomy change (adding a sixth
- * schema format, say) updates this rule for free.
+ * reads for `🧬️schema`/`📸️snapshot`/`🔺️diff`). Format codecs have their own `🚪️io/💡️inferences/` semantic
+ * collection and do not belong below the inference result collection.
  */
 function policyInferenceFamilyRootCompletenessBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
   const rootLeaves = Object.values(taxonomy.schemaFormats ?? {}).map((f) => f.leafFilename);
-  const textLeaves = taxonomy.textSpecFilenames ?? [];
-  const binaryLeaves = taxonomy.binarySpecFilenames ?? [];
   const breaches: BreachRecord[] = [];
   for (const inferencesRel of policyFindAllInferencesDirs(repoRoot)) {
     const artRel = policyArtifactRootOfInferencesDir(inferencesRel);
@@ -7681,32 +7743,6 @@ function policyInferenceFamilyRootCompletenessBreaches(repoRoot: string): Breach
         scope: artRel,
         priority: "medium",
         reason: "Every 💡️inferences facet root must carry all five schemaFormats leaves (🔣️taxonomy.json), same as 🧬️schema/📸️snapshot/🔺️diff.",
-        solution: `Add handcrafted ${rel}.`,
-      });
-    }
-    for (const leaf of textLeaves) {
-      const rel = `${inferencesRel}/📝️text/${leaf}`;
-      if (existsSync(join(repoRoot, rel))) continue;
-      breaches.push({
-        id: `inference-family-text-leaf-missing-${rel}`,
-        summary: `"${inferencesRel}/📝️text" is missing spec leaf ${leaf}`,
-        kind: "inference-migration/family-root-completeness",
-        scope: artRel,
-        priority: "medium",
-        reason: "Every 💡️inferences/📝️text/ must carry all textSpecFilenames leaves (🔣️taxonomy.json), same as every other representation node.",
-        solution: `Add handcrafted ${rel}.`,
-      });
-    }
-    for (const leaf of binaryLeaves) {
-      const rel = `${inferencesRel}/💾️binary/${leaf}`;
-      if (existsSync(join(repoRoot, rel))) continue;
-      breaches.push({
-        id: `inference-family-binary-leaf-missing-${rel}`,
-        summary: `"${inferencesRel}/💾️binary" is missing spec leaf ${leaf}`,
-        kind: "inference-migration/family-root-completeness",
-        scope: artRel,
-        priority: "medium",
-        reason: "Every 💡️inferences/💾️binary/ must carry all binarySpecFilenames leaves (🔣️taxonomy.json), same as every other representation node.",
         solution: `Add handcrafted ${rel}.`,
       });
     }

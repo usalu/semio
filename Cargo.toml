@@ -10,7 +10,6 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust",
-    "✏️s/🔨️modules/💭️mindmap/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust",
@@ -179,7 +178,6 @@ semio-framework-surface = { path = "🧰️framework/🔨️modules/🗺️surfa
 # ---- plugin (62) ----
 semio-framework-2d = { path = "🧰️framework/🔨️modules/◻2d/📦️packages/🦀️rust" }
 semio-framework-3d = { path = "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
-semio-s-mindmap = { path = "✏️s/🔨️modules/💭️mindmap/📦️packages/🦀️rust" }
 semio-s-imperative = { path = "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust" }
 semio-s-plugin-animate = { path = "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust" }
 semio-s-plugin-cad = { path = "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust" }

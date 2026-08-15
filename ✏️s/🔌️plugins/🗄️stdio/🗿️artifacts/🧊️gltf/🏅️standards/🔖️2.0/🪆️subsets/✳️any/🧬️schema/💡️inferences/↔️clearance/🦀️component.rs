@@ -1,7 +1,8 @@
 //! ↔️ GLTF clearance indicators.
 
-use super::geometry::{estimate, statistics, unavailable, GltfGeometryContext, GltfPairGeometry, Topology};
-use super::measure::*;
+use super::geometric_analysis::{GltfGeometryContext, GltfPairGeometry, statistics};
+use super::super::super::modules::{inference_measures::{estimate, unavailable}, mesh_topology::Topology};
+use super::super::super::modules::measurement_contracts::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

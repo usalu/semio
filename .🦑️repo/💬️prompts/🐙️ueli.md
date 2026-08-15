@@ -412,6 +412,19 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Extract and refactor all modules in the repo.
+The repo must follow the <semantic or list>/<specific>
+e.g. inferences/<inference>/component.rs
+e.g. mutations/<mutation>/component.rs
+etc
+Every shared code must be in modules. Avoid modules and onyl introduce when two components would otherwise repeat the same code.
+models can be on framework level, product level, plugin level, app level, etc.
+Always as specific as it can be.
+
+e.g. this is not an inference: /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🦀️component.rs
+
+---
+
 Achieve the following end to end:
 
 - A running hub with

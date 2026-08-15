@@ -246,8 +246,10 @@ function emptyOsShellConfig(): OsShellConfigSnapshot {
  * latest complete document before applying a projection update, preserving sibling projections
  * when several store views share a browser origin. */
 export class OsShellConfig extends Store<OsShellConfigSnapshot> {
-  constructor(private readonly storage: StoragePort) {
+  private readonly storage: StoragePort;
+  constructor(storage: StoragePort) {
     super();
+    this.storage = storage;
   }
 
   getSnapshot(): OsShellConfigSnapshot {
@@ -285,12 +287,14 @@ export class OsShellConfig extends Store<OsShellConfigSnapshot> {
 export class NamedLayoutStore extends Store<readonly NamedLayout[]> {
   private layouts: NamedLayout[] = [];
   private readonly config: OsShellConfig;
+  private readonly appId: string;
 
   constructor(
-    private readonly appId: string,
+    appId: string,
     storage: StoragePort,
   ) {
     super();
+    this.appId = appId;
     this.config = new OsShellConfig(storage);
     this.layouts = this.readPersisted();
   }
@@ -355,12 +359,14 @@ function validDockSkeleton(value: unknown): value is DockSkeleton {
 /** 🐳️ Persists the dock panel arrangement across an "os" layer (global default across all apps) and an optional per-app layer that wins when present — `save(null)`/`saveOs(null)` remove rather than persist a JSON `"null"`. */
 export class DockLayoutStore extends Store<DockSkeleton | null> {
   private readonly config: OsShellConfig;
+  private readonly appId?: string;
 
   constructor(
     storage: StoragePort,
-    private readonly appId?: string,
+    appId?: string,
   ) {
     super();
+    this.appId = appId;
     this.config = new OsShellConfig(storage);
   }
 
@@ -429,12 +435,14 @@ function validDockUiState(value: unknown): value is DockUiState {
 /** 🌱️ Persists panel visibility/size/path, drill-down memory, and tree expansion across an "os" layer (global default) and an optional per-app layer that wins when present — `save(null)`/`saveOs(null)` remove rather than persist a JSON `"null"`. */
 export class DockUiStateStore extends Store<DockUiState | null> {
   private readonly config: OsShellConfig;
+  private readonly appId?: string;
 
   constructor(
     storage: StoragePort,
-    private readonly appId?: string,
+    appId?: string,
   ) {
     super();
+    this.appId = appId;
     this.config = new OsShellConfig(storage);
   }
 
@@ -501,12 +509,14 @@ function validWindowPaneUiState(value: unknown): value is WindowPaneUiState {
 /** 🪟️ Persists window-pane anchor/fold/size across an "os" layer (global default across all apps) and an optional per-app layer that wins when present — `save(null)`/`saveOs(null)` remove rather than persist a JSON `"null"`. */
 export class WindowPaneStateStore extends Store<WindowPaneUiState | null> {
   private readonly config: OsShellConfig;
+  private readonly appId?: string;
 
   constructor(
     storage: StoragePort,
-    private readonly appId?: string,
+    appId?: string,
   ) {
     super();
+    this.appId = appId;
     this.config = new OsShellConfig(storage);
   }
 

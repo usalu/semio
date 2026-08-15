@@ -1,18 +1,15 @@
 //! 🚪️ IO s.playground (1/✳️any) — registration now flows through `ArtifactDeclaration::register_all`
 //! (`.composers(engine::io_registry::entries())` on the artifact root's `declaration()`), not per-leaf register().
-pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"] }
-pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"] }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::playground::PlaygroundSnapshot;
+    use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
     use crate::artifacts::playground::standards::v1::subsets::any::schema::PlaygroundAnalyzer;
     use semio_framework_plugin::ArtifactAnalyzer as _;
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.playground", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_CSV: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
     const DEP_XLSX: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
     const DEP_ZIP: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
 
@@ -24,7 +21,7 @@ pub mod derived_composition {
         const WRITES: Dialect = DIALECT;
 
         fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_CSV, DEP_JSON, DEP_TXT, DEP_XLSX, DEP_ZIP]
+            &[DIALECT, DEP_CSV, DEP_JSON, DEP_XLSX, DEP_ZIP]
         }
 
         fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
@@ -44,7 +41,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::artifacts::playground::io::import::deserializers::artifacts::csv::v_rfc4180::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::artifacts::playground::standards::v1::subsets::any::io::import::deserializers::artifacts::csv::v_rfc4180::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -53,16 +50,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::artifacts::playground::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_TXT {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::playground::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::artifacts::playground::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -71,7 +59,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::artifacts::playground::io::import::deserializers::artifacts::xlsx::v_ecma_376::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::artifacts::playground::standards::v1::subsets::any::io::import::deserializers::artifacts::xlsx::v_ecma_376::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -80,7 +68,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::artifacts::playground::io::import::deserializers::artifacts::zip::v2_0::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::artifacts::playground::standards::v1::subsets::any::io::import::deserializers::artifacts::zip::v2_0::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -90,7 +78,6 @@ pub mod derived_composition {
         }
     }
 }
-pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🚪️DerivedIoRegistry
@@ -116,7 +103,7 @@ pub mod io_registry {
     const PLAYGROUND_DIALECT: Dialect = Dialect { artifact_kind: "s.playground", standard: StandardId("1"), subset: SubsetId("*") };
     const PLAYGROUND_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::playground::PlaygroundSnapshot, ComposeError> {
+    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == PLAYGROUND_DIALECT) {
             let builder = match &source.payload {
                 IoPayload::Text(t) => PlaygroundAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
@@ -132,7 +119,7 @@ pub mod io_registry {
                 IoPayload::Text(t) => t.as_bytes().to_vec(),
                 IoPayload::Binary(b) => b.clone(),
             };
-            return crate::artifacts::playground::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
+            return crate::artifacts::playground::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
         }
         Err(ComposeError { message: "PlaygroundComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
     }
@@ -140,25 +127,25 @@ pub mod io_registry {
     const EXPORT_ZIP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
     fn compose_export_zip(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::playground::io::export::serializers::artifacts::zip::v2_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+        let bytes = crate::artifacts::playground::standards::v1::subsets::any::io::export::serializers::artifacts::zip::v2_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
         Ok(ComposedArtifact { dialect: EXPORT_ZIP_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
     }
     const EXPORT_CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
     fn compose_export_csv(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::playground::io::export::serializers::artifacts::csv::v_rfc4180::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+        let bytes = crate::artifacts::playground::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
         Ok(ComposedArtifact { dialect: EXPORT_CSV_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
     }
     const EXPORT_XLSX_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
     fn compose_export_xlsx(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::playground::io::export::serializers::artifacts::xlsx::v_ecma_376::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+        let bytes = crate::artifacts::playground::standards::v1::subsets::any::io::export::serializers::artifacts::xlsx::v_ecma_376::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
         Ok(ComposedArtifact { dialect: EXPORT_XLSX_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
     }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     fn compose_export_json(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::playground::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+        let bytes = crate::artifacts::playground::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
         Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
     }
     //#endregion 🔖️ExportEntries

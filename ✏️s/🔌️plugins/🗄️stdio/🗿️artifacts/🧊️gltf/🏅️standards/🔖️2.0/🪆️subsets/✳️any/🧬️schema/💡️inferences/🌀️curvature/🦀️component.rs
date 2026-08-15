@@ -1,7 +1,8 @@
 //! 🌀 GLTF curvature indicators.
 
-use super::geometry::{cross, dot, estimate, exact, norm, normalize, statistics, sub, unavailable, GltfGeometryContext};
-use super::measure::*;
+use super::geometric_analysis::{GltfGeometryContext, statistics};
+use super::super::super::modules::{inference_measures::{estimate, exact, unavailable}, vector_operations::{cross, dot, norm, normalize, sub}};
+use super::super::super::modules::measurement_contracts::*;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
@@ -44,7 +45,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfCurvatureInference {
         let mut vertex_areas = vec![0.0; context.sample_count];
         let mut angle_sums = vec![0.0; context.sample_count];
         for face in &context.faces {
-            let area = super::geometry::triangle_area(context.points[face[0]], context.points[face[1]], context.points[face[2]]);
+            let area = super::geometric_analysis::triangle_area(context.points[face[0]], context.points[face[1]], context.points[face[2]]);
             for corner in 0..3 {
                 let vertex = face[corner];
                 let first = sub(context.points[face[(corner + 1) % 3]], context.points[vertex]);

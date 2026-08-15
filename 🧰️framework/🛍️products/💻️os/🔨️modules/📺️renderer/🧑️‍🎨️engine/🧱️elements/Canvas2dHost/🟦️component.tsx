@@ -394,12 +394,22 @@ class JsonLayersCanvasSession implements GraphWasmSession {
   private panCameraStart = { x: 0, y: 0 };
   private activeUtility = "selectDirect";
 
+  private readonly layersJson: string;
+  private camera: CanvasCamera;
+  private readonly onCameraChange: (camera: CanvasCamera) => void;
+  private readonly onPointer?: (action: string, args?: Record<string, unknown>) => void;
+
   constructor(
-    private readonly layersJson: string,
-    private camera: CanvasCamera,
-    private readonly onCameraChange: (camera: CanvasCamera) => void,
-    private readonly onPointer?: (action: string, args?: Record<string, unknown>) => void,
-  ) {}
+    layersJson: string,
+    camera: CanvasCamera,
+    onCameraChange: (camera: CanvasCamera) => void,
+    onPointer?: (action: string, args?: Record<string, unknown>) => void,
+  ) {
+    this.layersJson = layersJson;
+    this.camera = camera;
+    this.onCameraChange = onCameraChange;
+    this.onPointer = onPointer;
+  }
 
   async attachCanvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown> {
     this.canvas = canvas;

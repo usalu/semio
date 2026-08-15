@@ -67,7 +67,7 @@ pub fn gltf_inference_service() -> ArtifactInferenceService {
 fn infer_gltf_cold(snapshot_pack: &[u8]) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
     let snapshot = <GltfSnapshot as store::ArtifactPack>::decode_pack(snapshot_pack).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.snapshot-decode", error.to_string()))?;
     let inference = <crate::artifacts::gltf::schema::GltfBuilder as ArtifactInferrer>::infer(&snapshot);
-    crate::artifacts::gltf::schema::inferences::binary::encode_gltf_inference_binary(&inference).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.binary-encode", error.to_string()))
+    crate::artifacts::gltf::io::inferences::binary::encode_gltf_inference_binary(&inference).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.binary-encode", error.to_string()))
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built
@@ -189,7 +189,7 @@ mod tests {
         let mut registry = ArtifactInferenceServiceRegistry::new();
         registry.register(gltf_inference_service()).unwrap();
         let bytes = registry.infer_cold(GLTF_ARTIFACT_KIND_ID, GLTF_INFERENCE_SCHEMA_ID, &snapshot_pack).unwrap();
-        let decoded = crate::artifacts::gltf::schema::inferences::binary::decode_gltf_inference_binary(&bytes).unwrap();
+        let decoded = crate::artifacts::gltf::io::inferences::binary::decode_gltf_inference_binary(&bytes).unwrap();
         let direct = <crate::artifacts::gltf::schema::GltfBuilder as ArtifactInferrer>::infer(&snapshot);
         assert_eq!(decoded, direct);
         assert_eq!(bytes, gltf_inference_service().infer_cold(&snapshot_pack).unwrap());

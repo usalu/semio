@@ -1,5 +1,5 @@
 # 💡 Universal glTF geometric inference schema.
-type GltfInference { geometry: GltfGeometricInference! @derived }
+type GltfInference { geometricAnalysis: GltfGeometricInference! @derived }
 enum GltfUnit { UNITLESS METRE SQUARE_METRE CUBIC_METRE RADIAN INVERSE_METRE INVERSE_SQUARE_METRE }
 enum GltfCoordinateSpace { MESH_LOCAL NODE_LOCAL SCENE_WORLD }
 enum GltfAvailability { AVAILABLE APPROXIMATE UNAVAILABLE INVALID_INPUT UNSUPPORTED_PRIMITIVE OPEN_SURFACE NON_MANIFOLD DEGENERATE UNRESOLVED_RESOURCE }

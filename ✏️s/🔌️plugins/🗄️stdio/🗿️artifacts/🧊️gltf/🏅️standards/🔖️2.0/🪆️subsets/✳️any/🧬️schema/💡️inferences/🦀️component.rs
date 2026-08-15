@@ -1,14 +1,14 @@
 //! 💡️ GltfInference — the fourth schema family alongside snapshot/diff/mutations (ticket
 //! 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Directory shape
 //! mirrors `🧬️mutations/`: this file is the family-root assembly while semantic components own
-//! shared measures, each indicator group, and aggregate geometry.
+//! shared measures, each indicator group, and aggregate geometric analysis.
 
 use crate::artifacts::gltf::schema::snapshot::GltfSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
 
-use super::geometry::{compute_gltf_geometry, GltfGeometricInference};
+use super::geometric_analysis::{compute_gltf_geometry, GltfGeometricInference};
 
 //#region 🔖️Inference
 /// 💡️ Complete universal geometric inference for a glTF snapshot.
@@ -17,12 +17,12 @@ use super::geometry::{compute_gltf_geometry, GltfGeometricInference};
 #[artifact_schema(id = "s.stdio.gltf.inference")]
 pub struct GltfInference {
     #[derived]
-    pub geometry: GltfGeometricInference,
+    pub geometric_analysis: GltfGeometricInference,
 }
 
 impl protocol::Inference<GltfSnapshot> for GltfInference {
     fn infer(snapshot: &GltfSnapshot) -> Self {
-        Self { geometry: compute_gltf_geometry(snapshot) }
+        Self { geometric_analysis: compute_gltf_geometry(snapshot) }
     }
 }
 
@@ -47,14 +47,14 @@ impl protocol::InferenceSpec<GltfSnapshot> for GltfInference {
 }
 
 pub const GLTF_INFERENCE_FIELDS: &[protocol::InferenceFieldSpec] = &[
-    protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.geometry.resources", reads: &["document/buffers", "buffers"] },
-    protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.geometry.accessors", reads: &["document/accessors", "document/bufferViews", "document/buffers", "buffers"] },
-    protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.geometry.primitives", reads: &["document/meshes", "document/accessors", "document/bufferViews", "document/buffers", "buffers"] },
-    protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.geometry.instances", reads: &["document/scene", "document/scenes", "document/nodes", "document/meshes"] },
-    protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.geometry.materials", reads: &["document/materials", "document/textures", "document/images", "document/samplers"] },
-    protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.geometry.relations", reads: &["document/scene", "document/scenes", "document/nodes", "document/meshes", "document/accessors", "document/bufferViews", "document/buffers", "buffers"] },
+    protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.geometricAnalysis.resources", reads: &["document/buffers", "buffers"] },
+    protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.geometricAnalysis.accessors", reads: &["document/accessors", "document/bufferViews", "document/buffers", "buffers"] },
+    protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.geometricAnalysis.primitives", reads: &["document/meshes", "document/accessors", "document/bufferViews", "document/buffers", "buffers"] },
+    protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.geometricAnalysis.instances", reads: &["document/scene", "document/scenes", "document/nodes", "document/meshes"] },
+    protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.geometricAnalysis.materials", reads: &["document/materials", "document/textures", "document/images", "document/samplers"] },
+    protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.geometricAnalysis.relations", reads: &["document/scene", "document/scenes", "document/nodes", "document/meshes", "document/accessors", "document/bufferViews", "document/buffers", "buffers"] },
     protocol::InferenceFieldSpec {
-        id: "s.stdio.gltf.inference.geometry.aggregate",
+        id: "s.stdio.gltf.inference.geometricAnalysis.aggregate",
         reads: &[
             "document/scene",
             "document/scenes",
@@ -83,7 +83,7 @@ pub fn invalidated_gltf_inference_fields(touched: Option<&protocol::TouchedPaths
 
 //#region 🔖️ArtifactInferrer
 /// 💡️ The kernel owns deterministic region-level dependency fingerprints; framework-level
-/// inference caching therefore safely treats `geometry` as one derived field over document and buffers.
+/// inference caching therefore safely treats `geometricAnalysis` as one derived field over document and buffers.
 impl ArtifactInferrer for crate::artifacts::gltf::standards::v2_0::subsets::any::schema::GltfBuilder {
     type Snapshot = GltfSnapshot;
     type Inference = GltfInference;
@@ -143,12 +143,12 @@ mod tests {
         };
         let touched = diff.touches();
         let invalidated = invalidated_gltf_inference_fields(Some(&touched));
-        assert!(!invalidated.contains(&"s.stdio.gltf.inference.geometry.resources"));
-        assert!(!invalidated.contains(&"s.stdio.gltf.inference.geometry.accessors"));
-        assert!(!invalidated.contains(&"s.stdio.gltf.inference.geometry.primitives"));
-        assert!(invalidated.contains(&"s.stdio.gltf.inference.geometry.instances"));
-        assert!(invalidated.contains(&"s.stdio.gltf.inference.geometry.relations"));
-        assert!(invalidated.contains(&"s.stdio.gltf.inference.geometry.aggregate"));
+        assert!(!invalidated.contains(&"s.stdio.gltf.inference.geometricAnalysis.resources"));
+        assert!(!invalidated.contains(&"s.stdio.gltf.inference.geometricAnalysis.accessors"));
+        assert!(!invalidated.contains(&"s.stdio.gltf.inference.geometricAnalysis.primitives"));
+        assert!(invalidated.contains(&"s.stdio.gltf.inference.geometricAnalysis.instances"));
+        assert!(invalidated.contains(&"s.stdio.gltf.inference.geometricAnalysis.relations"));
+        assert!(invalidated.contains(&"s.stdio.gltf.inference.geometricAnalysis.aggregate"));
     }
 }
 //#endregion 🧪️Tests

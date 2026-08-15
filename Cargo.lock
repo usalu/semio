@@ -7078,14 +7078,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-mindmap"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-infinite",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "semio-s-plugin-animate"
 version = "0.1.0"
 dependencies = [
@@ -7776,7 +7768,6 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
- "semio-s-mindmap",
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
@@ -7812,7 +7803,6 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
- "semio-s-mindmap",
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",

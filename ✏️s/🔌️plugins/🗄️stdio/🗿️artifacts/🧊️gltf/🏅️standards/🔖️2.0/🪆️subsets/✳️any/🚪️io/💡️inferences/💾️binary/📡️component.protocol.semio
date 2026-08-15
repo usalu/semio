@@ -1,0 +1,20 @@
+dialect protocol
+protocol gltf.inference.io.binary
+version 1
+schema s.stdio.gltf.inference
+start frame
+# canonical payload is RFC 8785 JSON for GltfInference
+# fixed-width integers are little-endian; magic bytes are 89:53:f8:3f:7d:34:0d:0b
+# schema_crc32 is CRC-32/ISO-HDLC of the UTF-8 schema identifier
+# header_crc32 covers bytes 0..35; payload_crc32 covers exactly payload_length bytes
+framing magic 0x8953f83f7d340d0b
+header fixed 32
+field format_major u16
+field format_minor u16
+field schema_version u32
+field flags u32
+field schema_crc32 u32
+field payload_length u64
+field payload_crc32 u32
+field header_crc32 u32
+segment payload Array(u8, Field(payload_length))

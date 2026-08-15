@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protoc
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::playground::schema::mutations::text::PlaygroundMutation;
+use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `PlaygroundMutation` to its binary state-patch form.
@@ -26,7 +26,7 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        use crate::artifacts::playground::schema::mutations::change_schema::mutation::ChangeSchema;
+        use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::change_schema::mutation::ChangeSchema;
         let operation = PlaygroundMutation::ChangeSchema(ChangeSchema { new_schema: "playground.custom".into() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");

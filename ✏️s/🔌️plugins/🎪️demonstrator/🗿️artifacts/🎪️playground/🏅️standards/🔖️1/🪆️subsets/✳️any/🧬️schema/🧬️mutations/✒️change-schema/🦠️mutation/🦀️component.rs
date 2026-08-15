@@ -3,7 +3,10 @@
 //! structured content today) — see `📓️derivation-rules.md`'s metadata-only-mutation allowance for
 //! a trivial snapshot.
 
-use crate::artifacts::playground::{PlaygroundMutation, PlaygroundSnapshot};
+use crate::artifacts::playground::standards::v1::subsets::any::schema::{
+    mutations::PlaygroundMutation,
+    snapshot::PlaygroundSnapshot,
+};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload

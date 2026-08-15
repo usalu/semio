@@ -3,9 +3,8 @@
 //! `../🦀️component.rs`'s `🔖️Mutations` region) — the wire-text/wire-binary codecs stay handcrafted
 //! here, one keyword per semantic verb, grammar `keyword key1=value1 ...`.
 
-pub use crate::artifacts::playground::schema::mutations::PlaygroundMutation;
-
-use crate::artifacts::playground::schema::mutations::change_schema::mutation::ChangeSchema;
+use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
+use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::change_schema::mutation::ChangeSchema;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
