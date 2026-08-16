@@ -49,15 +49,20 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// files' own private `validator_entry()` caches (neither is `pub`) — same erasure helper, fresh
 /// instances, same registry effect. `⚙️engine` itself is untouched — this only REFERENCES what it
 /// already exposes.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(SVG_ARTIFACT_SCHEMA_ID)
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("svg", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::svg::standards::v1_1::subsets::any::schema::svg_artifact_schema_descriptor())
         .inferences([crate::artifacts::svg::standards::v1_1::subsets::any::schema::inferences::svg_artifact_inference_descriptor()])
         .composers(crate::artifacts::svg::standards::v1_1::engine::io_registry::entries())
         .subset_validators(declared_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 🛡️ Re-derives the ✳️tiny and ✳️basic subsets' `SubsetValidatorEntry`s — see `declaration()`'s own

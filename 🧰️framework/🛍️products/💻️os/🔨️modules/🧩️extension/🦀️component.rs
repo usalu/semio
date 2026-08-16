@@ -53,6 +53,20 @@ pub const EXTENSION_PACKAGE_FORMAT: u16 = 1;
 //#endregion 🔖️Constants
 
 //#region 🔖️Manifest
+/// 🔗️ Package-manifest-local mirror of `semio_framework::PluginDependency` — this crate
+/// (`semio-framework-os-kernel`) must never depend on `semio-framework` (contract freeze §0
+/// dependency edge law: `semio-framework` depends on `semio-framework-os-kernel`, never the
+/// reverse), so the `.sxt` wire shape is duplicated here byte-identically instead of imported.
+/// `version` is the plain `VersionReq` display string (`=X.Y.Z`/`^X.Y.Z`/`~X.Y.Z`/`>=X.Y.Z`/`*`,
+/// contract freeze §3) — round-trips losslessly through `semio_framework::VersionReq::parse` at
+/// any call site that does depend on that crate (e.g. the guest `ExtensionManifest`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PackagePluginDependency {
+    pub plugin_id: String,
+    pub version: String,
+}
+
 /// 📦️ On-disk package manifest carried as `🛂️manifest.semio` inside the zip payload.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -62,8 +76,32 @@ pub struct ExtensionPackageManifest {
     pub version: String,
     pub extends: String,
     pub capabilities: Vec<String>,
+    /// 🗂️ Open plugin contributions (mirrors the guest `ExtensionManifest.topic_contributions`) —
+    /// renamed from the former bare `contributions` field to free that name for the typed
+    /// artifact-kind contribution roster below (contract freeze §3/§4).
+    pub topic_contributions: serde_json::Value,
+    /// 🔗️ Direct plugin dependencies this extension requires — see `PackagePluginDependency`.
+    #[serde(default)]
+    pub dependencies: Vec<PackagePluginDependency>,
+    /// 🗂️ Artifact-kind contributions (mutations/inferences) this extension contributes onto
+    /// artifact kinds it depends on — a raw JSON array of
+    /// `semio_framework::ArtifactContributionDescriptor`, kept untyped here for the same
+    /// dependency-edge-law reason as `PackagePluginDependency` above.
+    #[serde(default)]
     pub contributions: serde_json::Value,
     pub package_format: u16,
+}
+
+impl ExtensionPackageManifest {
+    /// ✅️ Contract freeze §4 registration gate: `extends` must equal the first declared
+    /// dependency's plugin id (vacuously true when both are empty — an extension that declares no
+    /// host and no dependencies yet).
+    pub fn extends_matches_primary_dependency(&self) -> bool {
+        match self.dependencies.first() {
+            Some(dependency) => dependency.plugin_id == self.extends,
+            None => self.extends.is_empty(),
+        }
+    }
 }
 //#endregion 🔖️Manifest
 
@@ -229,10 +267,56 @@ mod tests {
             version: "0.1.0".into(),
             extends: "flow".into(),
             capabilities: vec!["flow.operator".into()],
-            contributions: serde_json::json!([{ "kind": "flowExtension", "id": "math.add" }]),
+            topic_contributions: serde_json::json!([{ "kind": "flowExtension", "id": "math.add" }]),
+            dependencies: vec![PackagePluginDependency { plugin_id: "flow".into(), version: "^1.0.0".into() }],
+            contributions: serde_json::json!([]),
             package_format: EXTENSION_PACKAGE_FORMAT,
         }
     }
+
+    //#region 🔖️DependencyAndContributionTests
+    #[test]
+    fn extends_matches_primary_dependency_holds_for_the_sample_and_the_vacuous_case() {
+        assert!(sample_manifest().extends_matches_primary_dependency());
+
+        let vacuous = ExtensionPackageManifest { extends: String::new(), dependencies: Vec::new(), ..sample_manifest() };
+        assert!(vacuous.extends_matches_primary_dependency());
+    }
+
+    #[test]
+    fn extends_matches_primary_dependency_rejects_mismatch_and_missing_dependency() {
+        let mismatched = ExtensionPackageManifest { extends: "cad".into(), ..sample_manifest() };
+        assert!(!mismatched.extends_matches_primary_dependency());
+
+        let no_dependencies = ExtensionPackageManifest { dependencies: Vec::new(), ..sample_manifest() };
+        assert!(!no_dependencies.extends_matches_primary_dependency(), "non-empty extends with no dependencies is inconsistent");
+    }
+
+    #[test]
+    fn dependencies_default_absent_on_the_wire() {
+        let bare = serde_json::json!({
+            "extensionId": "flow.math",
+            "label": "Flow Math",
+            "version": "0.1.0",
+            "extends": "",
+            "capabilities": [],
+            "topicContributions": [],
+            "packageFormat": EXTENSION_PACKAGE_FORMAT,
+        });
+        let parsed: ExtensionPackageManifest = serde_json::from_value(bare).unwrap();
+        assert!(parsed.dependencies.is_empty());
+        assert_eq!(parsed.contributions, serde_json::Value::Null);
+    }
+
+    #[test]
+    fn package_plugin_dependency_round_trips_as_a_plain_string_pair() {
+        let dependency = PackagePluginDependency { plugin_id: "cad".into(), version: "^1.0.0".into() };
+        let json = serde_json::to_value(&dependency).unwrap();
+        assert_eq!(json, serde_json::json!({ "pluginId": "cad", "version": "^1.0.0" }));
+        let round_tripped: PackagePluginDependency = serde_json::from_value(json).unwrap();
+        assert_eq!(round_tripped, dependency);
+    }
+    //#endregion 🔖️DependencyAndContributionTests
 
     #[test]
     fn pack_unpack_verify_round_trip() {

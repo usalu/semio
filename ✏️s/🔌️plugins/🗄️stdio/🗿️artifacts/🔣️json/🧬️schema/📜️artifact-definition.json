@@ -40,8 +40,11 @@
       "id": "s.stdio.json.standard.rfc8259.representation.document",
       "standard": "s.stdio.json.standard.rfc8259",
       "representation": "document",
-      "mime": "application/json",
-      "extension": ".json",
+      "mimes": ["application/json"],
+      "extensions": [".json"],
+      "is_binary": false,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -73,7 +76,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.json.conformance.public-corpus",
+      "id": "s.stdio.json.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }

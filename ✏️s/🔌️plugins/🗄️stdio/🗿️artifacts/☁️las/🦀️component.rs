@@ -33,14 +33,19 @@ pub const LAS_ARTIFACT_SCHEMA_ID: &str = "s.stdio.las";
 /// `.setup(crate::artifacts::las::engine::register_schema_specs)` alongside this declaration's
 /// `.artifact(...)`, exactly this ticket's own W1d precedent (puzzle's B2 OS-media-bridge case) for
 /// a genuine, narrowly scoped registration gap.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(LAS_ARTIFACT_SCHEMA_ID)
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("las", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::las::schema::las_artifact_schema_descriptor())
         .inferences([crate::artifacts::las::schema::inferences::las_artifact_inference_descriptor()])
         .composers(crate::artifacts::las::engine::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<LasSnapshot, LasMutation>(STDIO_LAS_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built

@@ -1,0 +1,223 @@
+{
+  "x-semio": {
+    "kind": "collection",
+    "members": [
+      {
+        "directory": "☁️las",
+        "id": "s.stdio.las",
+        "kind": "artifact",
+        "responsibility": "LAS Point Cloud artifact definition."
+      },
+      {
+        "directory": "☁️ply",
+        "id": "s.stdio.ply",
+        "kind": "artifact",
+        "responsibility": "Polygon File Format artifact definition."
+      },
+      {
+        "directory": "🌐️html",
+        "id": "s.stdio.html",
+        "kind": "artifact",
+        "responsibility": "Hypertext Markup Language artifact definition."
+      },
+      {
+        "directory": "🌦️epw",
+        "id": "s.stdio.epw",
+        "kind": "artifact",
+        "responsibility": "EnergyPlus Weather artifact definition."
+      },
+      {
+        "directory": "🎒️zip",
+        "id": "s.stdio.zip",
+        "kind": "artifact",
+        "responsibility": "ZIP Archive artifact definition."
+      },
+      {
+        "directory": "🎞️gif",
+        "id": "s.stdio.gif",
+        "kind": "artifact",
+        "responsibility": "Graphics Interchange Format artifact definition."
+      },
+      {
+        "directory": "🎞️pptx",
+        "id": "s.stdio.pptx",
+        "kind": "artifact",
+        "responsibility": "PowerPoint Presentation artifact definition."
+      },
+      {
+        "directory": "🎥️mp4",
+        "id": "s.stdio.mp4",
+        "kind": "artifact",
+        "responsibility": "MPEG-4 Part 14 artifact definition."
+      },
+      {
+        "directory": "🎨️svg",
+        "id": "s.stdio.svg",
+        "kind": "artifact",
+        "responsibility": "Scalable Vector Graphics artifact definition."
+      },
+      {
+        "directory": "🎵️mp3",
+        "id": "s.stdio.mp3",
+        "kind": "artifact",
+        "responsibility": "MPEG Audio Layer III artifact definition."
+      },
+      {
+        "directory": "🏗️ifc",
+        "id": "s.stdio.ifc",
+        "kind": "artifact",
+        "responsibility": "Industry Foundation Classes artifact definition."
+      },
+      {
+        "directory": "💬️bcf",
+        "id": "s.stdio.bcf",
+        "kind": "artifact",
+        "responsibility": "BIM Collaboration Format artifact definition."
+      },
+      {
+        "directory": "💾️binary",
+        "id": "s.stdio.binary",
+        "kind": "artifact",
+        "responsibility": "Binary artifact definition."
+      },
+      {
+        "directory": "📄️pdf",
+        "id": "s.stdio.pdf",
+        "kind": "artifact",
+        "responsibility": "Portable Document Format artifact definition."
+      },
+      {
+        "directory": "📄txt",
+        "id": "s.stdio.txt",
+        "kind": "artifact",
+        "responsibility": "Plain Text artifact definition."
+      },
+      {
+        "directory": "📊️csv",
+        "id": "s.stdio.csv",
+        "kind": "artifact",
+        "responsibility": "Comma-Separated Values artifact definition."
+      },
+      {
+        "directory": "📐️step",
+        "id": "s.stdio.step",
+        "kind": "artifact",
+        "responsibility": "ISO 10303 STEP artifact definition."
+      },
+      {
+        "directory": "📑️tsv",
+        "id": "s.stdio.tsv",
+        "kind": "artifact",
+        "responsibility": "Tab-Separated Values artifact definition."
+      },
+      {
+        "directory": "📕️xlsx",
+        "id": "s.stdio.xlsx",
+        "kind": "artifact",
+        "responsibility": "Excel Workbook artifact definition."
+      },
+      {
+        "directory": "📜️docx",
+        "id": "s.stdio.docx",
+        "kind": "artifact",
+        "responsibility": "Word Document artifact definition."
+      },
+      {
+        "directory": "📝️md",
+        "id": "s.stdio.md",
+        "kind": "artifact",
+        "responsibility": "Markdown artifact definition."
+      },
+      {
+        "directory": "📰xml",
+        "id": "s.stdio.xml",
+        "kind": "artifact",
+        "responsibility": "Extensible Markup Language artifact definition."
+      },
+      {
+        "directory": "📷️jpg",
+        "id": "s.stdio.jpg",
+        "kind": "artifact",
+        "responsibility": "JPEG artifact definition."
+      },
+      {
+        "directory": "📷️png",
+        "id": "s.stdio.png",
+        "kind": "artifact",
+        "responsibility": "Portable Network Graphics artifact definition."
+      },
+      {
+        "directory": "📼️avi",
+        "id": "s.stdio.avi",
+        "kind": "artifact",
+        "responsibility": "Audio Video Interleave artifact definition."
+      },
+      {
+        "directory": "🔊️wav",
+        "id": "s.stdio.wav",
+        "kind": "artifact",
+        "responsibility": "Waveform Audio artifact definition."
+      },
+      {
+        "directory": "🔣️json",
+        "id": "s.stdio.json",
+        "kind": "artifact",
+        "responsibility": "JavaScript Object Notation artifact definition."
+      },
+      {
+        "directory": "🖊️dwg",
+        "id": "s.stdio.dwg",
+        "kind": "artifact",
+        "responsibility": "Drawing artifact definition."
+      },
+      {
+        "directory": "🖊️dxf",
+        "id": "s.stdio.dxf",
+        "kind": "artifact",
+        "responsibility": "Drawing Exchange Format artifact definition."
+      },
+      {
+        "directory": "🖼️bmp",
+        "id": "s.stdio.bmp",
+        "kind": "artifact",
+        "responsibility": "Bitmap artifact definition."
+      },
+      {
+        "directory": "🖼️tiff",
+        "id": "s.stdio.tiff",
+        "kind": "artifact",
+        "responsibility": "Tagged Image File Format artifact definition."
+      },
+      {
+        "directory": "🗜️deflate",
+        "id": "s.stdio.deflate",
+        "kind": "artifact",
+        "responsibility": "Zlib Deflate Stream artifact definition."
+      },
+      {
+        "directory": "🟪️stl",
+        "id": "s.stdio.stl",
+        "kind": "artifact",
+        "responsibility": "Stereolithography artifact definition."
+      },
+      {
+        "directory": "🧊️gltf",
+        "id": "s.stdio.gltf",
+        "kind": "artifact",
+        "responsibility": "glTF artifact definition."
+      },
+      {
+        "directory": "🧊️obj",
+        "id": "s.stdio.obj",
+        "kind": "artifact",
+        "responsibility": "Wavefront OBJ artifact definition."
+      },
+      {
+        "directory": "🧿️semio",
+        "id": "s.stdio.semio",
+        "kind": "artifact",
+        "responsibility": "Semio artifact definition."
+      }
+    ]
+  }
+}

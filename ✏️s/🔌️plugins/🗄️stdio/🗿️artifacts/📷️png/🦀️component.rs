@@ -46,14 +46,19 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `🖼️tiff`/`📷️jpg`/`🎨️svg`, png's `register()` never registered a subset validator (no baseline
 /// subset here) and never called `register_schema_specs()` — nothing left uncovered. `⚙️engine`
 /// itself is untouched — this only REFERENCES what it already exposes.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(PNG_ARTIFACT_SCHEMA_ID)
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("png", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::png::standards::v1_2::subsets::any::schema::png_artifact_schema_descriptor())
         .inferences([crate::artifacts::png::standards::v1_2::subsets::any::schema::inferences::png_artifact_inference_descriptor()])
         .composers(crate::artifacts::png::standards::v1_2::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — moved

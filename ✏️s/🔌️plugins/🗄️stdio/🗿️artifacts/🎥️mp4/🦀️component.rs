@@ -43,13 +43,18 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `subsets::any::io::register()`'s `store::register_document_codec(store::ArtifactCodec::of::<..>())`
 /// call did — mp4 is a headless stdio artifact with no `ArtifactApp` to bind `.document_codec::<A>()`
 /// to.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(MP4_ARTIFACT_SCHEMA_ID)
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("mp4", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor())
         .inferences([crate::artifacts::mp4::standards::isobmff::subsets::any::schema::inferences::mp4_artifact_inference_descriptor()])
         .composers(crate::artifacts::mp4::standards::isobmff::subsets::any::io::io_registry::entries())
         .document_codec_bare::<Mp4Snapshot, Mp4Mutation>(STDIO_MP4_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 //#endregion 🔖️Declaration
 //#region 🚪️DerivedIoRegistry

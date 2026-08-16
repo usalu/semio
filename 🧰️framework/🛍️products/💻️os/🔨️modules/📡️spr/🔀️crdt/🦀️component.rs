@@ -187,6 +187,7 @@ mod tests {
             semantic_kind: None,
             label: None,
             group_id: None,
+            origin: crate::os_spr::command::MutationOrigin::Owner,
         }
     }
 

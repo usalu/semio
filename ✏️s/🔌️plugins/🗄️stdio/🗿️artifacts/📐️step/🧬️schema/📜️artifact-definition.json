@@ -40,8 +40,11 @@
       "id": "s.stdio.step.standard.ap214.representation.document",
       "standard": "s.stdio.step.standard.ap214",
       "representation": "document",
-      "mime": "model/step",
-      "extension": ".step",
+      "mimes": ["model/step"],
+      "extensions": [".step"],
+      "is_binary": false,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -73,7 +76,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.step.conformance.public-corpus",
+      "id": "s.stdio.step.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }

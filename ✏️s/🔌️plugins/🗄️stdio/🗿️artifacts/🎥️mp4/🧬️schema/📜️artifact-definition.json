@@ -40,8 +40,11 @@
       "id": "s.stdio.mp4.standard.isobmff.representation.document",
       "standard": "s.stdio.mp4.standard.isobmff",
       "representation": "document",
-      "mime": "video/mp4",
-      "extension": ".mp4",
+      "mimes": ["video/mp4"],
+      "extensions": [".mp4"],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -73,7 +76,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.mp4.conformance.public-corpus",
+      "id": "s.stdio.mp4.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }

@@ -996,6 +996,7 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
     let mut semantics_arms = Vec::new();
     let mut label_arms = Vec::new();
     let mut target_arms = Vec::new();
+    let mut foreign_steps_arms = Vec::new();
     let mut kind_consts = Vec::new();
     let mut const_asserts = Vec::new();
     let mut register_calls = Vec::new();
@@ -1033,6 +1034,9 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
         target_arms.push(quote! {
             #name::#variant_ident(payload) => <#payload_ty as ::protocol::MutationKind<#snapshot_ty, #name>>::target(payload)
         });
+        foreign_steps_arms.push(quote! {
+            #name::#variant_ident(payload) => <#payload_ty as ::protocol::MutationKind<#snapshot_ty, #name>>::foreign_steps(payload, base)
+        });
         kind_consts.push(quote! {
             <#payload_ty as ::protocol::MutationKind<#snapshot_ty, #name>>::SEMANTICS
         });
@@ -1066,6 +1070,9 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
             fn inverse(&self, base: &#snapshot_ty) -> Vec<Self> {
                 match self { #(#inverse_arms),* }
             }
+            fn foreign_steps(&self, base: &#snapshot_ty) -> Vec<::protocol::ForeignStep> {
+                match self { #(#foreign_steps_arms),* }
+            }
         }
 
         impl ::protocol::SemanticMutation<#snapshot_ty> for #name {
@@ -1093,6 +1100,87 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
     expanded.into()
 }
 //#endregion 🔖️Mutations
+
+//#region 🔖️CompositeMutation
+/// @emoji 🌉️ `#[composite(snapshot = ..., op = ...)]` container attrs for
+/// `#[derive(CompositeMutation)]` — see that macro's doc.
+#[derive(Default)]
+struct CompositeAttrs {
+    snapshot: Option<Type>,
+    op: Option<Type>,
+}
+
+fn parse_composite_attrs(input: &DeriveInput) -> CompositeAttrs {
+    let mut out = CompositeAttrs::default();
+    for attr in &input.attrs {
+        if !attr.path().is_ident("composite") {
+            continue;
+        }
+        let _ = attr.parse_nested_meta(|meta| {
+            if meta.path.is_ident("snapshot") {
+                out.snapshot = Some(meta.value()?.parse()?);
+            } else if meta.path.is_ident("op") {
+                out.op = Some(meta.value()?.parse()?);
+            }
+            Ok(())
+        });
+    }
+    out
+}
+
+/// @emoji 🌉️ Wires a composite mutation kind's delegating `::protocol::MutationKind` impl from its
+/// handcrafted `::protocol::CompositeMutationKind` impl — `#[composite(snapshot = YourSnapshot, op =
+/// YourOpEnum)]` on the payload struct that already `impl CompositeMutationKind<YourSnapshot,
+/// YourOpEnum> for` itself. `diff`/`inverse`/`foreign_steps` delegate to the free
+/// `::protocol::fold_plan_diff`/`fold_plan_inverse`/`plan_foreign_steps` helpers — deliberately NOT
+/// a blanket `impl<T: CompositeMutationKind> MutationKind for T`, which coherence rejects against
+/// the ~200 concrete `impl MutationKind` in the tree (see
+/// `.🦑️repo/🎫️tickets/26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/📋️contract-freeze.md`
+/// §1). Emits the same kind/verb `const _: () = assert!(..)` checks `#[derive(Mutations)]` emits,
+/// checked against the struct's OWN kebab name (a composite kind is never wrapped in an enum
+/// variant the way a handcrafted `MutationKind` payload is).
+#[proc_macro_derive(CompositeMutation, attributes(composite))]
+pub fn derive_composite_mutation(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = input.ident.clone();
+    let attrs = parse_composite_attrs(&input);
+    let (Some(snapshot_ty), Some(op_ty)) = (attrs.snapshot, attrs.op) else {
+        return syn::Error::new_spanned(&input, "#[derive(CompositeMutation)] requires #[composite(snapshot = YourSnapshot, op = YourOp)]").to_compile_error().into();
+    };
+
+    let expected_kebab = to_kebab(&name.to_string());
+    let assert_kind_message = format!("#[derive(CompositeMutation)]: {}'s CompositeMutationKind::SEMANTICS.kind must equal \"{}\" (its own kebab form)", name, expected_kebab);
+    let assert_verb_message = format!("#[derive(CompositeMutation)]: {}'s CompositeMutationKind::SEMANTICS.verb must be one of protocol::APPROVED_VERBS", name);
+
+    let expanded = quote! {
+        const _: () = assert!(::protocol::str_eq(<#name as ::protocol::CompositeMutationKind<#snapshot_ty, #op_ty>>::SEMANTICS.kind, #expected_kebab), #assert_kind_message);
+        const _: () = assert!(::protocol::is_approved_verb(<#name as ::protocol::CompositeMutationKind<#snapshot_ty, #op_ty>>::SEMANTICS.verb), #assert_verb_message);
+
+        impl ::protocol::MutationKind<#snapshot_ty, #op_ty> for #name {
+            const SEMANTICS: ::protocol::SemanticDescriptor = <#name as ::protocol::CompositeMutationKind<#snapshot_ty, #op_ty>>::SEMANTICS;
+            fn diff(&self, base: &#snapshot_ty) -> <#op_ty as ::protocol::Mutation<#snapshot_ty>>::Diff {
+                ::protocol::fold_plan_diff(self, base)
+            }
+            fn inverse(&self, base: &#snapshot_ty) -> Vec<#op_ty> {
+                ::protocol::fold_plan_inverse(self, base)
+            }
+            fn label(&self) -> String {
+                ::protocol::CompositeMutationKind::label(self)
+            }
+            fn target(&self) -> Vec<String> {
+                ::protocol::CompositeMutationKind::target(self)
+            }
+            fn validate(&self, base: &#snapshot_ty) -> Result<(), String> {
+                ::protocol::CompositeMutationKind::validate(self, base)
+            }
+            fn foreign_steps(&self, base: &#snapshot_ty) -> Vec<::protocol::ForeignStep> {
+                ::protocol::plan_foreign_steps(self, base)
+            }
+        }
+    };
+    expanded.into()
+}
+//#endregion 🔖️CompositeMutation
 
 //#region 🔖️VariantHelpers
 /// @emoji 🔡️ Converts a Rust identifier (`PascalCase`/`camelCase`/`snake_case`, any mix) into

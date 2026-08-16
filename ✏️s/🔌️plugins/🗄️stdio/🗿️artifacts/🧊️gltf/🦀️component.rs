@@ -34,15 +34,20 @@ pub const GLTF_INFERENCE_POLICY_VERSION: u32 = 1;
 /// silently rebind under a bare call (this ticket's "SILENT REBIND" hazard). gltf's own
 /// `register()` had no `register_schema_specs()` call, so every registration `engine::register()`
 /// performed is covered by a declaration field — no `.setup()` survivor needed.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(GLTF_ARTIFACT_KIND_ID)
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("gltf", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::gltf::schema::gltf_artifact_schema_descriptor())
         .inferences([crate::artifacts::gltf::schema::inferences::geometric_analysis::gltf_artifact_inference_descriptor()])
         .inference_services([gltf_inference_service()])
         .composers(crate::artifacts::gltf::engine::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<GltfSnapshot, GltfMutation>(STDIO_GLTF_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 🧠️ Native cold GLTF inference service registered by this artifact declaration.

@@ -445,7 +445,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 ///
 /// **W1d update.** `register_app_schemas()` is GONE — it was never a genuine coverage gap, just
 /// category-1 app-scope schema under a different name; `Puzzle2dPlayApp::app_schema()` (see that
-/// impl's own doc) now covers it, auto-registered by `.register_document_app()` on the plugin root.
+/// impl's own doc) now covers it, declared by `.document_app()` on the plugin root.
 /// `register_media_io()` (`register_2d_export_handlers`/`register_dwg_import_handler`, now on
 /// `crate::apps::puzzle2d::register_media_io` — ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
 /// W1e moved it off the deleted `⚙️engine` to the app that owns its callback bodies) is a genuinely

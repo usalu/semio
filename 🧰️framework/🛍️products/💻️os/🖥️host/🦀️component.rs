@@ -621,7 +621,7 @@ pub mod host {
         pub fn new(document: OsWorkflowArtifactDocument) -> Self {
             let applied_edit_ids = document.applied_edit_ids.clone();
             let envelope = ArtifactEnvelope { schema: document.schema, id: document.id, vcs: document.vcs, backbone: document.backbone, active_alternative_id: None, cursor: None, dialect: None, migrated_from: None, owner: None, lanes: std::collections::BTreeMap::new() };
-            let mut inner = ArtifactStore::new(envelope);
+            let mut inner = ArtifactStore::new(envelope).expect("failed to create workflow store");
             if !applied_edit_ids.is_empty() {
                 let snapshot = inner.envelope().clone();
                 inner.reset(snapshot, applied_edit_ids, Vec::new()).expect("reset snapshot");
@@ -1023,6 +1023,8 @@ pub mod host {
                 topic_contributions: vec![],
                 examples: vec![],
                 commands: vec![],
+                dependencies: vec![],
+                contributions: vec![],
             };
             host.load_plugin(LoadedProgram { plugin_id: "draw".into(), manifest, artifact_uri: "program://draw".into() });
             assert_eq!(host.apps().len(), 1);
@@ -1121,14 +1123,14 @@ pub mod host {
             };
             host.load_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: LocalizedLabel::data("Draw"), version: "0.1.0".into(), apps: vec![draw_app.clone()], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: LocalizedLabel::data("Draw"), version: "0.1.0".into(), apps: vec![draw_app.clone()], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![], dependencies: vec![], contributions: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
             let generation_before = host.instance(instance_id).expect("instance").generation;
             let event = host.hot_swap_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: LocalizedLabel::data("Draw"), version: "0.2.0".into(), apps: vec![draw_app, note_app], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: LocalizedLabel::data("Draw"), version: "0.2.0".into(), apps: vec![draw_app, note_app], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![], dependencies: vec![], contributions: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             assert_eq!(event.added_apps, vec!["note-play".to_string()]);
@@ -1188,14 +1190,14 @@ pub mod host {
             };
             host.load_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: LocalizedLabel::data("Draw"), version: "0.1.0".into(), apps: vec![draw_app], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: LocalizedLabel::data("Draw"), version: "0.1.0".into(), apps: vec![draw_app], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![], dependencies: vec![], contributions: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
             let generation_before = host.instance(instance_id).expect("instance").generation;
             let event = host.hot_swap_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: LocalizedLabel::data("Draw"), version: "".into(), apps: vec![], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: LocalizedLabel::data("Draw"), version: "".into(), apps: vec![], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![], dependencies: vec![], contributions: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             assert_eq!(event.plugin_id, "draw");
@@ -1232,7 +1234,9 @@ pub mod host {
                     topic_contributions: vec![topic_contribution.clone()],
                     examples: vec![],
                     commands: vec![],
-                 artifact_kinds: vec![] },
+                    artifact_kinds: vec![],
+                    dependencies: vec![],
+                    contributions: vec![] },
                 artifact_uri: "program://playbook-module-procedural".into(),
             });
             assert_eq!(host.contributions().len(), 1);
@@ -1248,7 +1252,9 @@ pub mod host {
                     topic_contributions: vec![],
                     examples: vec![],
                     commands: vec![],
-                 artifact_kinds: vec![] },
+                    artifact_kinds: vec![],
+                    dependencies: vec![],
+                    contributions: vec![] },
                 artifact_uri: "program://playbook-module-procedural".into(),
             });
             assert!(host.contributions().is_empty());

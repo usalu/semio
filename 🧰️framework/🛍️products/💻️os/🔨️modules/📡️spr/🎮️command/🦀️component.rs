@@ -99,6 +99,13 @@ pub trait Mutation<P>: Clone + serde::Serialize + serde::de::DeserializeOwned {
     fn validate(&self, _snapshot: &P) -> Result<(), String> {
         Ok(())
     }
+    /// @emoji 🌐️ Foreign steps this operation additionally dispatches to OTHER artifacts — empty
+    /// for every ordinary single-artifact operation. Defaults to `Vec::new()` so no existing
+    /// `impl Mutation` breaks; only a composite mutation's delegating `MutationKind::foreign_steps`
+    /// (see `🔖️Composite` below, `plan_foreign_steps`) ever returns anything here.
+    fn foreign_steps(&self, _base: &P) -> Vec<ForeignStep> {
+        Vec::new()
+    }
 }
 
 /// @emoji 📋️ One `reconcile` finding.
@@ -316,6 +323,12 @@ where
     fn validate(&self, _base: &P) -> Result<(), String> {
         Ok(())
     }
+    /// @emoji 🌐️ Foreign steps this kind additionally dispatches to OTHER artifacts. Defaults to
+    /// `Vec::new()` so no existing handcrafted `impl MutationKind` breaks; `#[derive(Mutations)]`
+    /// gains a per-variant delegating arm (see `🗣️dsl/✨️derive/🦀️component.rs` `🔖️Mutations`).
+    fn foreign_steps(&self, _base: &P) -> Vec<ForeignStep> {
+        Vec::new()
+    }
 }
 
 /// @emoji 🗣️ Refinement of [`Mutation`] for an enum whose every variant is a [`MutationKind`].
@@ -380,6 +393,7 @@ pub trait DiffCodec: Sized {
 //#endregion 🔖️DiffCodec
 
 //#region 🔖️Meta
+
 /// @emoji 🧾️ Per-operation causal/undo metadata attached to one `Edit` slot. Moved from
 /// `crate::os_store::MutationMeta` (was `vcs/rs/lib.rs` L59) with the id-flavored fields upgraded from bare
 /// `String`/`Option<String>` to the `protocol_core` newtypes and `timestamp` upgraded from
@@ -422,6 +436,15 @@ pub struct MutationMeta {
     /// `📡️spr/📜️history/🦀️component.rs`) so it survives persistence and sync.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub group_id: Option<String>,
+    /// @emoji 🔀️ Provenance of this operation: `Owner` (default, omitted from wire — the
+    /// overwhelming common case, an edit authored by the artifact's own owner logic), `Contributed`
+    /// (synthesized by a contributor plugin's `contributor.artifact-mutation-plan` response), or
+    /// `Transaction` (applied as one member of a cross-artifact composite gesture initiated
+    /// elsewhere). Additive, mirrors `group_id`/`semantic_kind`/`label` above — see
+    /// `.🦑️repo/🎫️tickets/26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/📋️contract-freeze.md`
+    /// §1.
+    #[serde(default, skip_serializing_if = "MutationOrigin::is_owner")]
+    pub origin: MutationOrigin,
 }
 
 /// @emoji 📝️ One coalesced batch of operations, forward and backward, plus their causal metadata.
@@ -556,7 +579,7 @@ where
 //#region 🔖️Descriptor
 /// @emoji 🪪️ A registered operation kind's runtime descriptor: schema identity/version, its
 /// `StateClass`/`ConflictRule`, and a content-addressed `fingerprint` over those four fields.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize)]
 pub struct MutationDescriptor {
     pub id: crate::os_spr::ids::SchemaId,
     pub schema_version: crate::os_spr::ids::SchemaVersion,
@@ -570,6 +593,14 @@ pub struct MutationDescriptor {
     pub verb: Option<&'static str>,
     pub entity: Option<&'static str>,
     pub record: Option<&'static str>,
+    /// @emoji 🔌️ Contributing plugin id, present iff this descriptor was registered by a
+    /// contributor rather than the artifact's own owner. Not part of `fingerprint`.
+    #[serde(default)]
+    pub contributor: Option<String>,
+    /// @emoji 🎯️ Target artifact kind this contributed descriptor's mutation/inference applies to.
+    /// Not part of `fingerprint`.
+    #[serde(default)]
+    pub artifact_kind: Option<String>,
 }
 
 impl MutationDescriptor {
@@ -579,7 +610,7 @@ impl MutationDescriptor {
     /// hashed with blake3 — stable across process runs and platforms, pinned by a golden test below.
     pub fn new(id: crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: crate::os_spr::StateClass, conflict_rule: crate::os_spr::ConflictRule) -> Self {
         let fingerprint = descriptor_fingerprint(&id, schema_version, state_class, conflict_rule);
-        Self { id, schema_version, state_class, conflict_rule, fingerprint, verb: None, entity: None, record: None }
+        Self { id, schema_version, state_class, conflict_rule, fingerprint, verb: None, entity: None, record: None, contributor: None, artifact_kind: None }
     }
 
     /// @emoji 🗣️ Attaches semantic identity (`SemanticDescriptor`'s fields) to an already-built
@@ -588,6 +619,21 @@ impl MutationDescriptor {
         self.verb = Some(semantics.verb);
         self.entity = Some(semantics.entity);
         self.record = Some(semantics.record);
+        self
+    }
+
+    /// @emoji 🔌️ Attaches the contributing plugin's id — set when this descriptor was registered
+    /// via a contribution (`contributor.list-artifact-mutations`/`list-artifact-inferences`) rather
+    /// than by the artifact's own owner. Not part of `fingerprint` (see `with_semantics` above).
+    pub fn with_contributor(mut self, contributor: impl Into<String>) -> Self {
+        self.contributor = Some(contributor.into());
+        self
+    }
+
+    /// @emoji 🎯️ Attaches the target artifact kind this contributed descriptor's mutation/inference
+    /// applies to. Not part of `fingerprint`.
+    pub fn with_artifact_kind(mut self, artifact_kind: impl Into<String>) -> Self {
+        self.artifact_kind = Some(artifact_kind.into());
         self
     }
 }
@@ -655,6 +701,238 @@ pub struct CommandOutcome<Diff> {
     pub effects: Vec<MutationEvent>,
 }
 //#endregion 🔖️Outcome
+
+//#region 🔖️Composite
+/// @emoji 🌉️ A mutation step aimed at an artifact OTHER than the one being mutated. Cross-boundary
+/// identity travels as plain strings, never `semio_framework::*`/`io::*` types — see the
+/// dependency-edge law at `.🦑️repo/🎫️tickets/26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/📋️contract-freeze.md`
+/// §0.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ForeignTarget {
+    pub artifact_id: String,
+    pub artifact_kind: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dialect: Option<String>,
+}
+
+/// @emoji 🪜️ One foreign hop of a [`Planner`]'s plan: the target artifact, the mutation/contributed
+/// id it dispatches, its already-encoded payload, and a human label.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ForeignStep {
+    pub target: ForeignTarget,
+    pub mutation_id: crate::os_spr::ids::SchemaId,
+    pub payload: Vec<u8>,
+    pub label: String,
+}
+
+/// @emoji 🪆️ One step of a [`Planner`]'s plan: either a concrete `Op` applied to the composite's
+/// own snapshot, or a [`ForeignStep`] dispatched elsewhere.
+#[derive(Clone, Debug, PartialEq)]
+pub enum PlanStep<Op> {
+    Local(Op),
+    Foreign(ForeignStep),
+}
+
+/// @emoji 🔀️ Provenance of one [`MutationMeta`]-described operation. `Owner` is the default (and
+/// the overwhelming common case), omitted from wire by `MutationMeta.origin`'s
+/// `skip_serializing_if`.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", tag = "kind")]
+pub enum MutationOrigin {
+    Owner,
+    Contributed { plugin_id: String, mutation_id: crate::os_spr::ids::SchemaId, payload_hash: crate::os_spr::ids::PayloadHash },
+    Transaction { initiator: ForeignTarget },
+}
+impl Default for MutationOrigin {
+    fn default() -> Self {
+        Self::Owner
+    }
+}
+impl MutationOrigin {
+    /// 🕳️ Whether this is the (wire-omitted) default owner origin.
+    pub fn is_owner(&self) -> bool {
+        matches!(self, Self::Owner)
+    }
+}
+
+/// @emoji 🛑️ A composite plan's recursion ceiling — mirrors `MAX_TXN_DEPTH` in the transaction
+/// protocol (§5 of the contract freeze), since a `Planner`'s foreign-step chain is exactly what a
+/// transaction later replays hop by hop.
+pub const MAX_PLAN_DEPTH: u8 = 8;
+
+/// @emoji 🚧️ Typed failure of composite-mutation planning — never a panic, per the purity law on
+/// [`CompositeMutationKind::plan`].
+#[derive(Clone, Debug, PartialEq, thiserror::Error)]
+pub enum PlanError {
+    #[error("plan depth {0} exceeds MAX_PLAN_DEPTH")]
+    DepthExceeded(u8),
+    #[error("plan cycle on {0}")]
+    Cycle(String),
+    #[error("step rejected: {0}")]
+    StepRejected(String),
+    #[error("{0}")]
+    Invalid(String),
+}
+
+/// @emoji 🧮️ Accumulates a [`CompositeMutationKind::plan`]'s steps against a snapshot that starts
+/// at `base` and advances by every `call`ed local op — so a later step's `validate`/`diff` sees the
+/// snapshot as it would exist after every step planned before it, exactly like sequential apply.
+/// Foreign-hop depth/cycle bookkeeping lives here (`call_foreign`), keyed on `(mutation_id,
+/// blake3(payload))` — the same pair a replayed `TransactionPrepare` (§5 of the contract freeze)
+/// would use to detect a step it has already prepared.
+pub struct Planner<P, Op: Mutation<P>> {
+    base: P,
+    steps: Vec<PlanStep<Op>>,
+    depth: u8,
+    seen: Vec<(String, [u8; 32])>,
+}
+
+impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
+    pub fn new(base: &P) -> Self {
+        Self { base: base.clone(), steps: Vec::new(), depth: 0, seen: Vec::new() }
+    }
+
+    /// 🪞️ The snapshot as it stands after every step `call`ed so far.
+    pub fn base(&self) -> &P {
+        &self.base
+    }
+
+    /// ▶️ Validates `op` against the current `base`, records it as a [`PlanStep::Local`], then
+    /// advances `base` by `op.diff(base).apply(base)` — so the NEXT `call`/`call_foreign` sees the
+    /// post-state, matching what sequential application of the resulting plan would do.
+    pub fn call(&mut self, op: Op) -> Result<(), PlanError> {
+        op.validate(&self.base).map_err(PlanError::StepRejected)?;
+        let diff = op.diff(&self.base);
+        self.base = diff.apply(&self.base);
+        self.steps.push(PlanStep::Local(op));
+        Ok(())
+    }
+
+    /// 🪜️ Records a hop to another artifact, enforcing [`MAX_PLAN_DEPTH`] and rejecting a repeated
+    /// `(mutation_id, payload hash)` pair as a cycle — both typed [`PlanError`]s, never a panic.
+    /// Deliberately does NOT advance `base` (a foreign step's effect is on a DIFFERENT snapshot).
+    pub fn call_foreign(&mut self, step: ForeignStep) -> Result<(), PlanError> {
+        let next_depth = self.depth.checked_add(1).filter(|depth| *depth <= MAX_PLAN_DEPTH).ok_or(PlanError::DepthExceeded(MAX_PLAN_DEPTH))?;
+        let key = (step.mutation_id.0.clone(), *blake3::hash(&step.payload).as_bytes());
+        if self.seen.contains(&key) {
+            return Err(PlanError::Cycle(step.target.artifact_id.clone()));
+        }
+        self.depth = next_depth;
+        self.seen.push(key);
+        self.steps.push(PlanStep::Foreign(step));
+        Ok(())
+    }
+
+    pub fn steps(&self) -> &[PlanStep<Op>] {
+        &self.steps
+    }
+
+    pub fn into_steps(self) -> Vec<PlanStep<Op>> {
+        self.steps
+    }
+}
+
+/// @emoji 🕸️ A mutation kind whose effect is a PLAN over one-or-more concrete `Op`s (this
+/// artifact's own) and/or [`ForeignStep`]s (other artifacts') rather than a single direct diff.
+/// Implemented once per composite kind, exactly like [`MutationKind`] is implemented once per
+/// handcrafted kind — `#[derive(CompositeMutation)]` (`🗣️dsl/✨️derive/🦀️component.rs`
+/// `🔖️CompositeMutation`) wires the delegating `MutationKind` impl from it via the free helpers
+/// below.
+///
+/// LAW (purity): `plan` reads only `base` (never mutates outside state) and drives `planner`
+/// exclusively through `call`/`call_foreign` — the free helpers below are the ONLY supported way to
+/// fold a plan into a diff/inverse/foreign-step list, so every composite kind observes identical
+/// semantics regardless of who calls it.
+pub trait CompositeMutationKind<P, Op: Mutation<P>>: Clone + serde::Serialize + serde::de::DeserializeOwned {
+    const SEMANTICS: SemanticDescriptor;
+    fn plan(&self, base: &P, planner: &mut Planner<P, Op>) -> Result<(), PlanError>;
+    fn label(&self) -> String;
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+    fn validate(&self, _base: &P) -> Result<(), String> {
+        Ok(())
+    }
+}
+
+/// @emoji 🏗️ Runs `kind.plan` against a fresh [`Planner`] seeded at `base`, first rejecting via
+/// [`CompositeMutationKind::validate`]. NOT a blanket `impl<T: CompositeMutationKind> MutationKind
+/// for T` — coherence rejects that against the ~200 concrete `impl MutationKind` in the tree — so
+/// every other free helper here, and the `#[derive(CompositeMutation)]` delegation, is built on top
+/// of this one instead.
+pub fn plan_of<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Result<Vec<PlanStep<Op>>, PlanError> {
+    kind.validate(base).map_err(PlanError::StepRejected)?;
+    let mut planner = Planner::new(base);
+    kind.plan(base, &mut planner)?;
+    Ok(planner.into_steps())
+}
+
+/// @emoji 🧬️ Folds a composite's LOCAL steps into one diff via [`MutationDiff::absorb`], applying
+/// each step against the snapshot as it stood right before that step (matching [`Planner::call`]'s
+/// own advance-as-you-go semantics) — so `fold_plan_diff(k, b).apply(&b)` equals sequential
+/// application of the plan's local steps. Foreign steps never contribute (LAW 5 of the contract
+/// freeze). A planning failure folds to `Default::default()` (the algebra's identity element) rather
+/// than propagating `Result`, matching this fn's frozen non-`Result` signature — never a panic.
+pub fn fold_plan_diff<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> <Op as Mutation<P>>::Diff {
+    let Ok(steps) = plan_of(kind, base) else {
+        return <Op as Mutation<P>>::Diff::default();
+    };
+    let mut current = base.clone();
+    let mut folded = <Op as Mutation<P>>::Diff::default();
+    for step in steps {
+        if let PlanStep::Local(op) = step {
+            let diff = op.diff(&current);
+            current = diff.apply(&current);
+            folded.absorb(diff);
+        }
+    }
+    folded
+}
+
+/// @emoji ↩️ The inverse of [`fold_plan_diff`]'s effect: each local step's `Mutation::inverse` is
+/// computed against the snapshot state right BEFORE that step applied, then the whole sequence is
+/// reversed — the same "collect per-op inverses, then reverse the batch" shape
+/// `🏪️store/🦀️component.rs`'s own replay/rewrite paths already use — so applying the composite
+/// then this restores `base`. A planning failure folds to `Vec::new()`, never a panic.
+pub fn fold_plan_inverse<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Vec<Op> {
+    let Ok(steps) = plan_of(kind, base) else {
+        return Vec::new();
+    };
+    let mut current = base.clone();
+    let mut local_steps: Vec<(Op, P)> = Vec::new();
+    for step in steps {
+        if let PlanStep::Local(op) = step {
+            let pre_state = current.clone();
+            let diff = op.diff(&current);
+            current = diff.apply(&current);
+            local_steps.push((op, pre_state));
+        }
+    }
+    let mut inverses = Vec::new();
+    for (op, pre_state) in local_steps.into_iter().rev() {
+        inverses.extend(op.inverse(&pre_state));
+    }
+    inverses
+}
+
+/// @emoji 🌐️ The [`ForeignStep`]s of a composite's plan, in discovery order — what
+/// `#[derive(CompositeMutation)]`'s generated `MutationKind::foreign_steps` delegates to. A
+/// planning failure folds to `Vec::new()`, never a panic.
+pub fn plan_foreign_steps<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Vec<ForeignStep> {
+    let Ok(steps) = plan_of(kind, base) else {
+        return Vec::new();
+    };
+    steps
+        .into_iter()
+        .filter_map(|step| match step {
+            PlanStep::Foreign(foreign) => Some(foreign),
+            PlanStep::Local(_) => None,
+        })
+        .collect()
+}
+//#endregion 🔖️Composite
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -726,6 +1004,75 @@ mod tests {
     }
     //#endregion 🧸️Fixtures
 
+    //#region 🧸️CompositeFixtures
+    // Composite fixtures reuse the same (P=i64, Op=AddOp) pair as the plain Mutation laws above.
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    struct DoubleAdd {
+        delta: i64,
+    }
+    impl CompositeMutationKind<i64, AddOp> for DoubleAdd {
+        const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "double-add", record: "DoubleAdded" };
+        fn plan(&self, _base: &i64, planner: &mut Planner<i64, AddOp>) -> Result<(), PlanError> {
+            planner.call(AddOp { delta: self.delta })?;
+            planner.call(AddOp { delta: self.delta })?;
+            Ok(())
+        }
+        fn label(&self) -> String {
+            format!("Add {} twice", self.delta)
+        }
+    }
+
+    // 🪆️ Composite-of-composite: embeds `DoubleAdd` twice by calling its `plan` directly against
+    // the SAME shared `planner` — the mechanism `#[derive(CompositeMutation)]` relies on to make
+    // nesting fold identically to a flattened plan (Law 3).
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    struct QuadAdd {
+        delta: i64,
+    }
+    impl CompositeMutationKind<i64, AddOp> for QuadAdd {
+        const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "quad-add", record: "QuadAdded" };
+        fn plan(&self, base: &i64, planner: &mut Planner<i64, AddOp>) -> Result<(), PlanError> {
+            DoubleAdd { delta: self.delta }.plan(base, planner)?;
+            let mid = *planner.base();
+            DoubleAdd { delta: self.delta }.plan(&mid, planner)?;
+            Ok(())
+        }
+        fn label(&self) -> String {
+            format!("Add {} four times", self.delta)
+        }
+    }
+
+    fn foreign_step_fixture(n: u8) -> ForeignStep {
+        ForeignStep {
+            target: ForeignTarget { artifact_id: format!("artifact-{n}"), artifact_kind: "s.demo.widget".into(), dialect: None },
+            mutation_id: crate::os_spr::ids::SchemaId("widget.doc#set-color".into()),
+            payload: vec![n],
+            label: format!("Recolor widget {n}"),
+        }
+    }
+
+    // 🌐️ A local `add` plus N distinct foreign hops — proves foreign steps are excluded from
+    // `fold_plan_diff` (Law 5) and exercises `Planner::call_foreign`'s depth/cycle bookkeeping.
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    struct AddThenNotifyForeign {
+        delta: i64,
+        foreign_count: u8,
+    }
+    impl CompositeMutationKind<i64, AddOp> for AddThenNotifyForeign {
+        const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "add-then-notify-foreign", record: "AddedThenNotifiedForeign" };
+        fn plan(&self, _base: &i64, planner: &mut Planner<i64, AddOp>) -> Result<(), PlanError> {
+            planner.call(AddOp { delta: self.delta })?;
+            for n in 0..self.foreign_count {
+                planner.call_foreign(foreign_step_fixture(n))?;
+            }
+            Ok(())
+        }
+        fn label(&self) -> String {
+            "Add then notify foreign".into()
+        }
+    }
+    //#endregion 🧸️CompositeFixtures
+
     //#region 🧪️MutationLaws
     #[test]
     fn operation_diff_apply_matches_backwards_inverse() {
@@ -795,6 +1142,7 @@ mod tests {
             semantic_kind: None,
             label: None,
             group_id: Some("invocation-1".to_string()),
+            origin: MutationOrigin::Owner,
         };
         let json = serde_json::to_string(&meta).expect("serialize");
         assert!(json.contains("\"group_id\":\"invocation-1\""), "group_id must serialize under its own field name (MutationMeta has no rename_all), got {json}");
@@ -826,6 +1174,7 @@ mod tests {
                 semantic_kind: None,
                 label: None,
                 group_id: None,
+                origin: MutationOrigin::Owner,
             }],
             description: Some("two adds".into()),
             coalesce_key: None,
@@ -1230,5 +1579,130 @@ mod tests {
         assert_eq!(round_tripped, event);
     }
     //#endregion 🧪️OutcomeLaws
+
+    //#region 🧪️CompositeLaws
+    #[test]
+    fn fold_plan_diff_equals_sequential_apply() {
+        let base: i64 = 10;
+        let kind = DoubleAdd { delta: 3 };
+        let diff = fold_plan_diff(&kind, &base);
+        assert_eq!(diff.apply(&base), 16);
+
+        let steps = plan_of(&kind, &base).expect("plan succeeds");
+        let mut sequential = base;
+        for step in &steps {
+            if let PlanStep::Local(op) = step {
+                sequential = op.diff(&sequential).apply(&sequential);
+            }
+        }
+        assert_eq!(diff.apply(&base), sequential, "fold_plan_diff must equal sequential application of the plan's local steps");
+    }
+
+    #[test]
+    fn fold_plan_inverse_restores_base() {
+        let base: i64 = 10;
+        let kind = DoubleAdd { delta: 3 };
+        let forward = fold_plan_diff(&kind, &base).apply(&base);
+        assert_ne!(forward, base);
+        let inverses = fold_plan_inverse(&kind, &base);
+        let mut restored = forward;
+        for op in &inverses {
+            restored = op.diff(&restored).apply(&restored);
+        }
+        assert_eq!(restored, base, "fold_plan_inverse applied after the composite must restore base");
+    }
+
+    #[test]
+    fn composite_of_composite_nests_and_folds_identically_to_flattened_plan() {
+        let base: i64 = 0;
+        let quad = QuadAdd { delta: 2 };
+        let diff = fold_plan_diff(&quad, &base);
+        assert_eq!(diff.apply(&base), 8, "two nested DoubleAdd{{delta:2}} embeds must fold to +8");
+
+        let steps = plan_of(&quad, &base).expect("plan succeeds");
+        let local_deltas: Vec<i64> = steps
+            .iter()
+            .filter_map(|step| match step {
+                PlanStep::Local(op) => Some(op.delta),
+                PlanStep::Foreign(_) => None,
+            })
+            .collect();
+        assert_eq!(local_deltas, vec![2, 2, 2, 2], "nesting must flatten to four local steps, identical to the un-nested plan");
+
+        let inverses = fold_plan_inverse(&quad, &base);
+        let mut restored = diff.apply(&base);
+        for op in &inverses {
+            restored = op.diff(&restored).apply(&restored);
+        }
+        assert_eq!(restored, base);
+    }
+
+    #[test]
+    fn plan_depth_beyond_max_is_typed_error_never_panics() {
+        let base: i64 = 0;
+        let kind = AddThenNotifyForeign { delta: 1, foreign_count: MAX_PLAN_DEPTH + 1 };
+        let error = plan_of(&kind, &base).expect_err("a plan with more foreign hops than MAX_PLAN_DEPTH must be rejected, not panic");
+        assert_eq!(error, PlanError::DepthExceeded(MAX_PLAN_DEPTH));
+    }
+
+    #[test]
+    fn plan_cycle_is_typed_error_never_panics() {
+        let base: i64 = 0;
+        let mut planner: Planner<i64, AddOp> = Planner::new(&base);
+        planner.call_foreign(foreign_step_fixture(0)).expect("first hop to a fresh target succeeds");
+        let error = planner.call_foreign(foreign_step_fixture(0)).expect_err("repeating the identical (mutation_id, payload) pair must be rejected as a cycle, not panic");
+        assert_eq!(error, PlanError::Cycle("artifact-0".to_string()));
+    }
+
+    #[test]
+    fn foreign_steps_are_excluded_from_fold_plan_diff() {
+        let base: i64 = 5;
+        let kind = AddThenNotifyForeign { delta: 4, foreign_count: 2 };
+        let diff = fold_plan_diff(&kind, &base);
+        assert_eq!(diff.apply(&base), 9, "only the local AddOp{{delta:4}} may contribute to the folded diff");
+
+        let foreign = plan_foreign_steps(&kind, &base);
+        assert_eq!(foreign.len(), 2);
+        assert_eq!(foreign[0].target.artifact_id, "artifact-0");
+        assert_eq!(foreign[1].target.artifact_id, "artifact-1");
+    }
+
+    // 🌉️ Smallest possible end-to-end proof that `#[derive(dsl_derive::CompositeMutation)]`
+    // (`🗣️dsl/✨️derive/🦀️component.rs`'s `🔖️CompositeMutation` region) wires a handcrafted
+    // `CompositeMutationKind` impl into a working `MutationKind` — mirrors
+    // `derive_mutations_wires_mutation_and_semantic_mutation` above, one region down.
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl_derive::CompositeMutation)]
+    #[composite(snapshot = i64, op = AddOp)]
+    struct DerivedDoubleAdd {
+        delta: i64,
+    }
+    impl CompositeMutationKind<i64, AddOp> for DerivedDoubleAdd {
+        const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "derived-double-add", record: "DerivedDoubleAdded" };
+        fn plan(&self, _base: &i64, planner: &mut Planner<i64, AddOp>) -> Result<(), PlanError> {
+            planner.call(AddOp { delta: self.delta })?;
+            planner.call(AddOp { delta: self.delta })?;
+            Ok(())
+        }
+        fn label(&self) -> String {
+            format!("Add {} twice (derived)", self.delta)
+        }
+    }
+
+    #[test]
+    fn derive_composite_mutation_wires_delegating_mutation_kind() {
+        let base: i64 = 1;
+        let kind = DerivedDoubleAdd { delta: 5 };
+        let diff = MutationKind::<i64, AddOp>::diff(&kind, &base);
+        assert_eq!(diff.apply(&base), 11);
+        let inverse = MutationKind::<i64, AddOp>::inverse(&kind, &base);
+        let mut restored = diff.apply(&base);
+        for op in &inverse {
+            restored = op.diff(&restored).apply(&restored);
+        }
+        assert_eq!(restored, base);
+        assert_eq!(<DerivedDoubleAdd as MutationKind<i64, AddOp>>::SEMANTICS.kind, "derived-double-add");
+        assert!(MutationKind::<i64, AddOp>::foreign_steps(&kind, &base).is_empty());
+    }
+    //#endregion 🧪️CompositeLaws
 }
 //#endregion 🧪️Tests

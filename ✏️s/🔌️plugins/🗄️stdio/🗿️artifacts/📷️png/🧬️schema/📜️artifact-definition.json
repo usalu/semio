@@ -9,8 +9,8 @@
   ],
   "standards": [
     {
-      "id": "s.stdio.png.standard.1.2",
-      "revision": "1.2",
+      "id": "s.stdio.png.standard.1-2",
+      "revision": "1-2",
       "normative_source": null,
       "publication_date": null,
       "source_checksum": null,
@@ -21,16 +21,16 @@
   ],
   "profiles": [
     {
-      "id": "s.stdio.png.standard.1.2.profile.any",
-      "standard": "s.stdio.png.standard.1.2",
+      "id": "s.stdio.png.standard.1-2.profile.any",
+      "standard": "s.stdio.png.standard.1-2",
       "profile": "any",
       "status": "unimplemented"
     }
   ],
   "source_dialects": [
     {
-      "id": "s.stdio.png.standard.1.2.dialect.source",
-      "standard": "s.stdio.png.standard.1.2",
+      "id": "s.stdio.png.standard.1-2.dialect.source",
+      "standard": "s.stdio.png.standard.1-2",
       "dialect": "source",
       "registered_code_points": [],
       "status": "unimplemented"
@@ -38,11 +38,14 @@
   ],
   "representations": [
     {
-      "id": "s.stdio.png.standard.1.2.representation.document",
-      "standard": "s.stdio.png.standard.1.2",
+      "id": "s.stdio.png.standard.1-2.representation.document",
+      "standard": "s.stdio.png.standard.1-2",
       "representation": "document",
-      "mime": "image/png",
-      "extension": ".png",
+      "mimes": ["image/png"],
+      "extensions": [".png"],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -74,7 +77,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.png.conformance.public-corpus",
+      "id": "s.stdio.png.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }
@@ -86,7 +89,7 @@
     "redistribution_status": "unknown",
     "clauses_or_features": [],
     "profiles": [
-      "s.stdio.png.standard.1.2.profile.any"
+      "s.stdio.png.standard.1-2.profile.any"
     ],
     "registered_code_points": [],
     "read": "unimplemented",

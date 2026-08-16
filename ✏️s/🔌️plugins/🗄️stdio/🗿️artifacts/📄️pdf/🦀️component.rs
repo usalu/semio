@@ -14,68 +14,32 @@ pub const STDIO_PDF_DOCUMENT_SCHEMA: &str = "stdio.pdf";
 pub const PDF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.pdf";
 
 //#region 🔖️Declaration
-/// 🔖️ TWO declarations for ONE `ArtifactKindSpec` (ticket
-/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g2) — investigated per this ticket's own
-/// instruction ("pdf registers twice in the root — check what each does before assuming one
-/// declaration covers both"), NOT assumed. `stdio.pdf` has always been two functionally
-/// independent artifacts sharing one `Dialect.artifact_kind` ("s.stdio.pdf", for IO/composition
-/// dispatch) and one user-facing `ArtifactKindSpec` (`artifact_kind()` below, `id: "stdio.pdf"`),
-/// but DISTINCT everywhere else that matters: `declaration()` (this fn, canonical — the `📦️glue.rs`
-/// `engine`/`schema` shims already call 1.7 "canonical here", S-6 twin note) is PdfSnapshot/
-/// PdfMutation from `standards::v1_7` under schema id `"stdio.pdf.1.7"` / artifact-schema id
-/// `"s.stdio.pdf.1.7"`; `declaration_1_4()` below is the frozen 87-line `PageDoc` stub from
-/// `standards::v1_4` under schema id `"stdio.pdf"` / artifact-schema id `"s.stdio.pdf"`. Each
-/// field pair (schema id, document-codec schema, language ids) is independently namespaced, so
-/// `ArtifactDeclaration`'s single-slot `schema`/`document_codec` fields never collide between the
-/// two declarations — `register_artifact_schema_descriptor`/`register_document_codec` are keyed by
-/// the id/schema string each call carries, not by `self.kind`, confirmed by reading
-/// `ArtifactDeclaration::register_all`'s own body (only composers/subset_validators/migrations are
-/// ownership-checked against `self.kind`).
+/// 🔖️ One declaration owns the one `s.stdio.pdf` definition. Its plural schema, inference,
+/// composer, validator, language, and document-codec facets retain the independent 1.4 and 1.7
+/// registrations without duplicating the artifact identity.
 ///
-/// **Composers, split cleanly instead of replicated**: the old plugin root called the (now
-/// dissolved, ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) `⚙️engine` shim's own
-/// local `register()` override, which called BOTH 1.4's and 1.7's own `register()` THEN 1.7's
-/// AGAIN — 1.7 was registered twice (composers only once, via 1.4's own call into the combined
-/// `crate::artifacts::pdf::io_registry` which the glob-shim's own `io_registry` did NOT reach —
-/// that shim aliased 1.7's OWN `io_registry` only). Read closely: the double 1.7 execution was
-/// accidental redundancy (harmless only because every registry below is idempotent-by-key), not a
-/// deliberate second registration — preserving it here would require inventing a "run twice"
-/// declaration shape that doesn't exist. Each declaration below supplies its OWN standard's
-/// composers exactly once (`standards::v1_4::subsets::any::io::io_registry::entries()` /
-/// `standards::v1_7::subsets::any::io::io_registry::entries()`, both already `&'static
-/// [ComposerEntry]` — owned rows, no combining/cloning needed), which is BOTH declarations
-/// combined equal to the old combined-and-doubled call's net effect, with the accidental
-/// double-execution removed.
-///
-/// **NOT covered by any field** (1.4 only): `register_schema_specs()` (`dsl::registry::
-/// register_schema_spec` for `"stdio.pdf"`/`"stdio.pdf#diff"` — the P2-M3 `FullResolver` insertion
-/// API, distinct from `.languages()`). 1.7 never called this (no derivable `RecordSpec` — see its
-/// own `register_pilot_languages` doc comment). Not invented, not dropped — survives on the plugin
-/// root's `.setup(...)`, this ticket's own W1d precedent (puzzle's B2 case).
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(PDF_ARTIFACT_SCHEMA_ID)
-        .schema(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::pdf_artifact_schema_descriptor())
-        .inferences([crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::pdf17_artifact_inference_descriptor()])
-        .composers(crate::artifacts::pdf::standards::v1_7::subsets::any::io::io_registry::entries())
-        .subset_validators(pdf_1_7_subset_validators())
-        .languages(pilot_languages_1_7())
-        .document_codec_bare::<PdfSnapshot, PdfMutation>(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA)
-        .build()
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("pdf", definition, declaration)
 }
 
-/// 🔖️ The frozen `standards::v1_4` `PageDoc` stub's declaration — see `declaration()`'s own doc for
-/// why this artifact needs two. Kind is the SAME `"s.stdio.pdf"` as `declaration()` (both
-/// standards' composers/subset-validators write/validate that one shared `Dialect.artifact_kind`);
-/// schema id/document-codec schema/language ids are 1.4's own, distinct from 1.7's.
-pub fn declaration_1_4() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(PDF_ARTIFACT_SCHEMA_ID)
-        .schema(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::pdf_artifact_schema_descriptor())
-        .inferences([crate::artifacts::pdf::standards::v1_4::subsets::any::schema::inferences::pdf_artifact_inference_descriptor()])
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+        .schema(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::pdf_artifact_schema_descriptor())
+        .schemas([crate::artifacts::pdf::standards::v1_4::subsets::any::schema::pdf_artifact_schema_descriptor()])
+        .inferences([
+            crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::pdf17_artifact_inference_descriptor(),
+            crate::artifacts::pdf::standards::v1_4::subsets::any::schema::inferences::pdf_artifact_inference_descriptor(),
+        ])
+        .composers(crate::artifacts::pdf::standards::v1_7::subsets::any::io::io_registry::entries())
         .composers(crate::artifacts::pdf::standards::v1_4::subsets::any::io::io_registry::entries())
+        .subset_validators(pdf_1_7_subset_validators())
         .subset_validators(pdf_1_4_subset_validators())
+        .languages(pilot_languages_1_7())
         .languages(pilot_languages_1_4())
+        .document_codec_bare::<PdfSnapshot, PdfMutation>(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA)
         .document_codec_bare::<crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot, crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 🛡️ `standards::v1_7`'s six real subsets (`a`/`x`/`e`/`ua`/`vt`/`h`), re-derived (not moved) from

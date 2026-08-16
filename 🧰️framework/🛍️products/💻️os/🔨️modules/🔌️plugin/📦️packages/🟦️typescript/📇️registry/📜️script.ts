@@ -819,6 +819,15 @@ function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[], repoRoot: st
  * hand-maintained copy, which is exactly the drift `🔣️taxonomy.json` exists to prevent). */
 const TAXONOMY_ARTIFACT_COMPONENTS = TAXONOMY.artifactComponentDirs;
 const TAXONOMY_MUTATION_CHILD_DIRS = TAXONOMY.mutationChildDirs ?? [];
+/** @emoji 🧩️ Children of a COMPOSITE mutation dir — payload plus plan. A composite folds its diff and
+ * inverse from that plan, so requiring the leaf triad of it would demand two competing sources of the
+ * same semantics; `mutationDirChildDirs` below picks the right set per dir. */
+const TAXONOMY_COMPOSITE_MUTATION_CHILD_DIRS = TAXONOMY.compositeMutationChildDirs ?? [];
+const TAXONOMY_MUTATION_PLAN_DIR = "🧩️plan";
+/** @emoji 🧬️ The child dirs one mutation dir must own, selected by whether it declares itself composite. */
+function mutationDirChildDirs(mutationDir: string): readonly string[] {
+  return existsSync(join(mutationDir, TAXONOMY_MUTATION_PLAN_DIR)) ? TAXONOMY_COMPOSITE_MUTATION_CHILD_DIRS : TAXONOMY_MUTATION_CHILD_DIRS;
+}
 const TAXONOMY_SCHEMA_CHILD_DIRS = TAXONOMY.schemaChildDirs ?? [];
 const TAXONOMY_REPRESENTATION_DIRS = TAXONOMY.representationDirs ?? [];
 const TAXONOMY_CONFIG_CHILD_DIRS = TAXONOMY.configChildDirs ?? [];
@@ -931,8 +940,8 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
           for (const rep of listDirs(childDir)) {
             if (TAXONOMY_REPRESENTATION_DIRS.includes(rep)) continue;
             if (child === MUTATIONS_FACET_DIR) {
-              // mutation slug — require triad when present
-              for (const kind of TAXONOMY_MUTATION_CHILD_DIRS) {
+              // mutation slug — require the leaf triad, or the composite pair when a 🧩️plan is present
+              for (const kind of mutationDirChildDirs(join(childDir, rep))) {
                 const kindDir = join(childDir, rep, kind);
                 if (!existsSync(kindDir)) continue;
                 if (!existsSync(join(kindDir, TAXONOMY_LEAF_FILENAME))) {
@@ -984,7 +993,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
     if (existsSync(mutationsRoot)) {
       for (const mutation of listDirs(mutationsRoot)) {
         if (mutation === TAXONOMY.packagesDirName) continue;
-        for (const kind of TAXONOMY_MUTATION_CHILD_DIRS) {
+        for (const kind of mutationDirChildDirs(join(mutationsRoot, mutation))) {
           const kindDir = join(mutationsRoot, mutation, kind);
           if (!existsSync(join(kindDir, TAXONOMY_LEAF_FILENAME))) {
             findings.push(`${pluginId}: artifact "${artifact}" mutation "${mutation}" is missing ${MUTATIONS_FACET_DIR}/${mutation}/${kind}/${TAXONOMY_LEAF_FILENAME}`);
@@ -1114,6 +1123,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
     ...TAXONOMY_ARTIFACT_COMPONENTS,
     ...TAXONOMY_WINDOW_CHILDREN,
     ...TAXONOMY_MUTATION_CHILD_DIRS,
+    ...TAXONOMY_COMPOSITE_MUTATION_CHILD_DIRS,
     ...TAXONOMY_SCHEMA_CHILD_DIRS,
     ...TAXONOMY_REPRESENTATION_DIRS,
     ...taxonomyIoChildDirs,

@@ -35,15 +35,20 @@ pub const ZIP_ARTIFACT_SCHEMA_ID: &str = "s.stdio.zip";
 /// in the first place (`ZipSnapshot`/`ZipDiff` are hand-rolled, no derivable `RecordSpec` — see
 /// the deleted `register_pilot_languages`' own doc comment), so this artifact converts cleanly with
 /// zero residual `.setup()` calls.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(ZIP_ARTIFACT_SCHEMA_ID)
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("zip", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::zip::schema::zip_artifact_schema_descriptor())
         .inferences([crate::artifacts::zip::schema::inferences::zip_artifact_inference_descriptor()])
         .composers(crate::artifacts::zip::standards::v2_0::subsets::any::io::io_registry::entries())
         .subset_validators(zip_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<ZipSnapshot, ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 🛡️ The `✳️iso21320` subset's `SubsetValidatorEntry`, re-derived (not moved) from the same

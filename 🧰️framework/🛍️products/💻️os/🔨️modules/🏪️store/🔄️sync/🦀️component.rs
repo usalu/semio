@@ -386,6 +386,10 @@ fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_spr::His
             // never a recognized composite-gesture member; group undo degrades it to a foreign/
             // solitary edit, matching how this whole envelope is already `undo_policy: 0`-flattened.
             group_id: None,
+            // 🔀️ A remote-ingested envelope carries no provenance of its own: the authoring peer
+            // already resolved any contribution or transaction locally and shipped the resulting
+            // OWNER ops, so this side records exactly what it receives — an owner edit.
+            origin: crate::os_spr::command::MutationOrigin::Owner,
         }]),
     }
 }

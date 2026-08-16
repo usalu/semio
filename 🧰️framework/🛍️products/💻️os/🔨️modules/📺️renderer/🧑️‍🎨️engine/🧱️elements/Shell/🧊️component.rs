@@ -5663,7 +5663,9 @@ mod command_registry_tests {
             capabilities: vec![],
             topic_contributions: vec![],
             commands: vec![CommandDefinition::new_catalog("doThing", LocalizedLabel::data("Do Thing"), "plugin", ActionKind::Shell)],
-         artifact_kinds: vec![] };
+            artifact_kinds: vec![],
+            dependencies: vec![],
+            contributions: vec![] };
         let resolved = resolve_commands(os_commands, Some(&plugin_manifest), "plugin", &app, "default");
         let sources: Vec<(&str, CommandOwnerAddress)> = resolved.iter().map(|entry| (entry.definition.id.as_str(), entry.address.owner.clone())).collect();
         assert_eq!(sources, vec![
@@ -5691,6 +5693,8 @@ mod command_registry_tests {
             topic_contributions: vec![],
             commands: vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh Plugin"), "plugin", ActionKind::View)],
             artifact_kinds: vec![],
+            dependencies: vec![],
+            contributions: vec![],
         };
         let resolved = resolve_commands(
             vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh Shell"), "general", ActionKind::Shell)],

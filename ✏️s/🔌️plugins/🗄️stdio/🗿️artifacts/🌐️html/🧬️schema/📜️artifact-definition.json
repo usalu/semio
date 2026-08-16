@@ -41,8 +41,11 @@
       "id": "s.stdio.html.standard.5.representation.document",
       "standard": "s.stdio.html.standard.5",
       "representation": "document",
-      "mime": "text/html",
-      "extension": ".html",
+      "mimes": ["text/html"],
+      "extensions": [".html"],
+      "is_binary": false,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -74,7 +77,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.html.conformance.public-corpus",
+      "id": "s.stdio.html.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }

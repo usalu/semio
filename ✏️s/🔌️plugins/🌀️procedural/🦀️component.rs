@@ -27,14 +27,14 @@ fn register_exports() {
 }
 
 /// 🔌️ Builds the plugin surface for host registration.
-pub fn plugin() -> Plugin {
+pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("procedural")
         .label("Procedural")
         .version("0.1.0")
         .setup(register_exports)
         .artifact(crate::artifacts::procedural2d::declaration())
         .artifact(crate::artifacts::procedural3d::declaration())
-        .register_document_app::<crate::apps::procedural2d::Procedural2dPlayApp>(crate::apps::procedural2d::create_procedural2d_app())
-        .register_document_app::<crate::apps::procedural3d::Procedural3dPlayApp>(crate::apps::procedural3d::create_procedural3d_app())
-        .build()
+        .document_app::<crate::apps::procedural2d::Procedural2dPlayApp>(crate::apps::procedural2d::create_procedural2d_app())
+        .document_app::<crate::apps::procedural3d::Procedural3dPlayApp>(crate::apps::procedural3d::create_procedural3d_app())
+        .try_build()
 }

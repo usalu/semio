@@ -17,7 +17,7 @@
 /// @emoji 🔢️ The channel wire format's own version, advertised by `AppCommand::Hello` and echoed
 /// back by `AppFrame::Welcome` so either side can detect a mismatched build before exchanging any
 /// other frame.
-pub const CHANNEL_VERSION: u32 = 8;
+pub const CHANNEL_VERSION: u32 = 9;
 //#endregion 🔖️Version
 
 //#region 🔖️ChildPackEntry
@@ -159,6 +159,40 @@ pub enum AppCommand {
     ReadHistory {
         seq: u64,
     },
+    /// 🤝️ Phase-1 prepare for one transaction member — flat fields carry EITHER the owner-mutation
+    /// form (`mutation_id`+`payload` set, `prepared_ops` empty) OR the pre-planned form
+    /// (`prepared_ops`+`label`+`origin` set, `mutation_id` empty); see contract-freeze.md §2 of
+    /// `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/`.
+    /// CHANNEL_VERSION 9 wire addition.
+    TransactionPrepare {
+        seq: u64,
+        txn_id: String,
+        mutation_id: String,
+        payload: Vec<u8>,
+        prepared_ops: Vec<Vec<u8>>,
+        label: String,
+        origin: Vec<u8>,
+    },
+    /// ✅️ Phase-2 commit for one transaction member. CHANNEL_VERSION 9 wire addition.
+    TransactionCommit {
+        seq: u64,
+        txn_id: String,
+    },
+    /// ↩️ Aborts a not-yet-committed transaction member. CHANNEL_VERSION 9 wire addition.
+    TransactionRollback {
+        seq: u64,
+        txn_id: String,
+    },
+    /// ⏪️ Fans a group undo out to one already-committed transaction member. CHANNEL_VERSION 9 wire addition.
+    TransactionUndo {
+        seq: u64,
+        group_id: String,
+    },
+    /// ⏩️ Fans a group redo out to one already-committed transaction member. CHANNEL_VERSION 9 wire addition.
+    TransactionRedo {
+        seq: u64,
+        group_id: String,
+    },
 }
 //#endregion 🔖️AppCommand
 
@@ -213,6 +247,33 @@ pub enum AppFrame {
     },
     /// 🧾️ Full history patch for initial host projection and gap recovery.
     HistorySnapshot { in_reply_to: u64, history_patch: Vec<u8> },
+    /// 📣️ A guest's dispatch touched a foreign artifact — the host mints `txn_id`, resolves each
+    /// opaque `ForeignStep` in `foreign` (one `store::pack_rt::encode_wire_value`-encoded serde
+    /// form per element; not decoded at this layer), and drives the transaction protocol (contract
+    /// freeze §5). CHANNEL_VERSION 9 wire addition.
+    TransactionProposal {
+        in_reply_to: u64,
+        proposal_id: String,
+        local_ops: Vec<Vec<u8>>,
+        description: String,
+        coalesce_key: String,
+        foreign: Vec<Vec<u8>>,
+    },
+    /// 🤝️ Phase-1 reply — empty `rejection` means the member is prepared. CHANNEL_VERSION 9 wire addition.
+    TransactionPrepared {
+        txn_id: String,
+        foreign: Vec<Vec<u8>>,
+        rejection: Vec<u8>,
+    },
+    /// ✅️ Phase-2 commit succeeded for a member. CHANNEL_VERSION 9 wire addition.
+    TransactionCommitted {
+        txn_id: String,
+        edit_id: String,
+    },
+    /// ↩️ A member rolled back its not-yet-committed transaction. CHANNEL_VERSION 9 wire addition.
+    TransactionRolledBack {
+        txn_id: String,
+    },
 }
 //#endregion 🔖️AppFrame
 
@@ -427,6 +488,36 @@ pub fn encode_app_command(command: &AppCommand) -> Vec<u8> {
             out.push(21);
             crate::os_spr::write_varint_u64(&mut out, *seq);
         }
+        AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops, label, origin } => {
+            out.push(22);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, txn_id);
+            crate::os_spr::write_str(&mut out, mutation_id);
+            crate::os_spr::write_bytes(&mut out, payload);
+            write_vec_bytes(&mut out, prepared_ops);
+            crate::os_spr::write_str(&mut out, label);
+            crate::os_spr::write_bytes(&mut out, origin);
+        }
+        AppCommand::TransactionCommit { seq, txn_id } => {
+            out.push(23);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, txn_id);
+        }
+        AppCommand::TransactionRollback { seq, txn_id } => {
+            out.push(24);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, txn_id);
+        }
+        AppCommand::TransactionUndo { seq, group_id } => {
+            out.push(25);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, group_id);
+        }
+        AppCommand::TransactionRedo { seq, group_id } => {
+            out.push(26);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, group_id);
+        }
     }
     out
 }
@@ -499,6 +590,19 @@ pub fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate::os_spr::Pro
         19 => AppCommand::LoadChildren { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, entries: read_vec_child_pack(bytes, &mut pos)? },
         20 => AppCommand::ReadChildren { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         21 => AppCommand::ReadHistory { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        22 => AppCommand::TransactionPrepare {
+            seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            txn_id: crate::os_spr::read_str(bytes, &mut pos)?,
+            mutation_id: crate::os_spr::read_str(bytes, &mut pos)?,
+            payload: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            prepared_ops: read_vec_bytes(bytes, &mut pos)?,
+            label: crate::os_spr::read_str(bytes, &mut pos)?,
+            origin: crate::os_spr::read_bytes(bytes, &mut pos)?,
+        },
+        23 => AppCommand::TransactionCommit { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, txn_id: crate::os_spr::read_str(bytes, &mut pos)? },
+        24 => AppCommand::TransactionRollback { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, txn_id: crate::os_spr::read_str(bytes, &mut pos)? },
+        25 => AppCommand::TransactionUndo { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, group_id: crate::os_spr::read_str(bytes, &mut pos)? },
+        26 => AppCommand::TransactionRedo { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, group_id: crate::os_spr::read_str(bytes, &mut pos)? },
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(command)
@@ -623,6 +727,30 @@ pub fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
             crate::os_spr::write_bytes(&mut out, history_patch);
         }
+        AppFrame::TransactionProposal { in_reply_to, proposal_id, local_ops, description, coalesce_key, foreign } => {
+            out.push(19);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_str(&mut out, proposal_id);
+            write_vec_bytes(&mut out, local_ops);
+            crate::os_spr::write_str(&mut out, description);
+            crate::os_spr::write_str(&mut out, coalesce_key);
+            write_vec_bytes(&mut out, foreign);
+        }
+        AppFrame::TransactionPrepared { txn_id, foreign, rejection } => {
+            out.push(20);
+            crate::os_spr::write_str(&mut out, txn_id);
+            write_vec_bytes(&mut out, foreign);
+            crate::os_spr::write_bytes(&mut out, rejection);
+        }
+        AppFrame::TransactionCommitted { txn_id, edit_id } => {
+            out.push(21);
+            crate::os_spr::write_str(&mut out, txn_id);
+            crate::os_spr::write_str(&mut out, edit_id);
+        }
+        AppFrame::TransactionRolledBack { txn_id } => {
+            out.push(22);
+            crate::os_spr::write_str(&mut out, txn_id);
+        }
     }
     out
 }
@@ -677,6 +805,21 @@ pub fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::Protoco
             transient_generation: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
         },
         18 => AppFrame::HistorySnapshot { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, history_patch: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        19 => AppFrame::TransactionProposal {
+            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            proposal_id: crate::os_spr::read_str(bytes, &mut pos)?,
+            local_ops: read_vec_bytes(bytes, &mut pos)?,
+            description: crate::os_spr::read_str(bytes, &mut pos)?,
+            coalesce_key: crate::os_spr::read_str(bytes, &mut pos)?,
+            foreign: read_vec_bytes(bytes, &mut pos)?,
+        },
+        20 => AppFrame::TransactionPrepared {
+            txn_id: crate::os_spr::read_str(bytes, &mut pos)?,
+            foreign: read_vec_bytes(bytes, &mut pos)?,
+            rejection: crate::os_spr::read_bytes(bytes, &mut pos)?,
+        },
+        21 => AppFrame::TransactionCommitted { txn_id: crate::os_spr::read_str(bytes, &mut pos)?, edit_id: crate::os_spr::read_str(bytes, &mut pos)? },
+        22 => AppFrame::TransactionRolledBack { txn_id: crate::os_spr::read_str(bytes, &mut pos)? },
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(frame)
@@ -824,6 +967,50 @@ mod tests {
             draft_spr: vec![7],
         });
     }
+
+    //#region 🔖️Transaction
+    #[test]
+    fn app_command_transaction_prepare_round_trips_owner_and_preplanned_forms() {
+        assert_command_round_trips(&AppCommand::TransactionPrepare {
+            seq: 1,
+            txn_id: "t".to_string(),
+            mutation_id: "m".to_string(),
+            payload: vec![9],
+            prepared_ops: Vec::new(),
+            label: String::new(),
+            origin: Vec::new(),
+        });
+        assert_command_round_trips(&AppCommand::TransactionPrepare {
+            seq: 2,
+            txn_id: "t".to_string(),
+            mutation_id: String::new(),
+            payload: Vec::new(),
+            prepared_ops: vec![vec![1], vec![2, 2]],
+            label: "l".to_string(),
+            origin: vec![9],
+        });
+    }
+
+    #[test]
+    fn app_command_transaction_commit_round_trips() {
+        assert_command_round_trips(&AppCommand::TransactionCommit { seq: 3, txn_id: "t".to_string() });
+    }
+
+    #[test]
+    fn app_command_transaction_rollback_round_trips() {
+        assert_command_round_trips(&AppCommand::TransactionRollback { seq: 4, txn_id: "t".to_string() });
+    }
+
+    #[test]
+    fn app_command_transaction_undo_round_trips() {
+        assert_command_round_trips(&AppCommand::TransactionUndo { seq: 5, group_id: "g".to_string() });
+    }
+
+    #[test]
+    fn app_command_transaction_redo_round_trips() {
+        assert_command_round_trips(&AppCommand::TransactionRedo { seq: 6, group_id: "g".to_string() });
+    }
+    //#endregion 🔖️Transaction
     //#endregion 🔖️AppCommand
 
     //#region 🔖️AppFrame
@@ -943,6 +1130,36 @@ mod tests {
         assert_command_round_trips(&AppCommand::ReadHistory { seq: 22 });
     }
     //#endregion 🔖️Children
+
+    //#region 🔖️Transaction
+    #[test]
+    fn app_frame_transaction_proposal_round_trips() {
+        assert_frame_round_trips(&AppFrame::TransactionProposal {
+            in_reply_to: 1,
+            proposal_id: "p".to_string(),
+            local_ops: vec![vec![1]],
+            description: "d".to_string(),
+            coalesce_key: "k".to_string(),
+            foreign: Vec::new(),
+        });
+    }
+
+    #[test]
+    fn app_frame_transaction_prepared_round_trips_with_and_without_rejection() {
+        assert_frame_round_trips(&AppFrame::TransactionPrepared { txn_id: "t".to_string(), foreign: vec![vec![1]], rejection: Vec::new() });
+        assert_frame_round_trips(&AppFrame::TransactionPrepared { txn_id: "t".to_string(), foreign: Vec::new(), rejection: b"rejected".to_vec() });
+    }
+
+    #[test]
+    fn app_frame_transaction_committed_round_trips() {
+        assert_frame_round_trips(&AppFrame::TransactionCommitted { txn_id: "t".to_string(), edit_id: "e".to_string() });
+    }
+
+    #[test]
+    fn app_frame_transaction_rolled_back_round_trips() {
+        assert_frame_round_trips(&AppFrame::TransactionRolledBack { txn_id: "t".to_string() });
+    }
+    //#endregion 🔖️Transaction
     //#endregion 🔖️AppFrame
 
     //#region 🔖️SectionProbe
@@ -1064,6 +1281,28 @@ mod tests {
             ("LoadChildren", AppCommand::LoadChildren { seq: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1] }] }),
             ("ReadChildren", AppCommand::ReadChildren { seq: 1 }),
             ("ReadHistory", AppCommand::ReadHistory { seq: 1 }),
+            ("TransactionPrepareOwner", AppCommand::TransactionPrepare {
+                seq: 1,
+                txn_id: "t".to_string(),
+                mutation_id: "m".to_string(),
+                payload: vec![9],
+                prepared_ops: Vec::new(),
+                label: String::new(),
+                origin: Vec::new(),
+            }),
+            ("TransactionPreparePrePlanned", AppCommand::TransactionPrepare {
+                seq: 2,
+                txn_id: "t".to_string(),
+                mutation_id: String::new(),
+                payload: Vec::new(),
+                prepared_ops: vec![vec![1], vec![2, 2]],
+                label: "l".to_string(),
+                origin: vec![9],
+            }),
+            ("TransactionCommit", AppCommand::TransactionCommit { seq: 3, txn_id: "t".to_string() }),
+            ("TransactionRollback", AppCommand::TransactionRollback { seq: 4, txn_id: "t".to_string() }),
+            ("TransactionUndo", AppCommand::TransactionUndo { seq: 5, group_id: "g".to_string() }),
+            ("TransactionRedo", AppCommand::TransactionRedo { seq: 6, group_id: "g".to_string() }),
         ]
     }
 
@@ -1096,6 +1335,17 @@ mod tests {
             ("Children", AppFrame::Children { in_reply_to: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1] }] }),
             ("Ephemeral", AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4 }),
             ("HistorySnapshot", AppFrame::HistorySnapshot { in_reply_to: 1, history_patch: vec![1] }),
+            ("TransactionProposal", AppFrame::TransactionProposal {
+                in_reply_to: 1,
+                proposal_id: "p".to_string(),
+                local_ops: vec![vec![1]],
+                description: "d".to_string(),
+                coalesce_key: "k".to_string(),
+                foreign: Vec::new(),
+            }),
+            ("TransactionPrepared", AppFrame::TransactionPrepared { txn_id: "t".to_string(), foreign: vec![vec![1]], rejection: Vec::new() }),
+            ("TransactionCommitted", AppFrame::TransactionCommitted { txn_id: "t".to_string(), edit_id: "e".to_string() }),
+            ("TransactionRolledBack", AppFrame::TransactionRolledBack { txn_id: "t".to_string() }),
         ]
     }
 
@@ -1127,6 +1377,12 @@ mod tests {
             "LoadChildren" => "1301010173016301640101",
             "ReadChildren" => "1401",
             "ReadHistory" => "1501",
+            "TransactionPrepareOwner" => "16010174016d0109000000",
+            "TransactionPreparePrePlanned" => "160201740000020101020202016c0109",
+            "TransactionCommit" => "17030174",
+            "TransactionRollback" => "18040174",
+            "TransactionUndo" => "19050167",
+            "TransactionRedo" => "1a060167",
             other => panic!("channel_command_fixture_hex: no golden hex registered for label {other:?}"),
         }
     }
@@ -1154,6 +1410,10 @@ mod tests {
             "Children" => "1001010173016301640101",
             "Ephemeral" => "110201020304",
             "HistorySnapshot" => "12010101",
+            "TransactionProposal" => "130101700101010164016b00",
+            "TransactionPrepared" => "14017401010100",
+            "TransactionCommitted" => "1501740165",
+            "TransactionRolledBack" => "160174",
             other => panic!("channel_frame_fixture_hex: no golden hex registered for label {other:?}"),
         }
     }
@@ -1175,6 +1435,33 @@ mod tests {
             assert_eq!(actual, channel_frame_fixture_hex(label), "{label}'s encoding drifted from its committed golden hex");
             let decoded = decode_app_frame(&encode_app_frame(&value)).unwrap();
             assert_eq!(decoded, value, "{label} must round-trip");
+        }
+    }
+
+    /// @emoji 🔗️ Cross-language drift guard for the M2 transaction variants (tags 22-26/19-22): the
+    /// two JSON files under `🧫️fixtures/📡️channel/` are the single source of truth this codec's TS
+    /// twin (`🟦️component.ts`'s `AppChannelCodec` `🧪️Tests` region) loads and asserts against too —
+    /// a change to either side's encode/decode that shifts these bytes fails on exactly one side.
+    #[test]
+    fn channel_transaction_fixtures_match_shared_cross_language_json_vectors() {
+        let command_json = include_str!("../../../🧫️fixtures/📡️channel/app-command-transaction.json");
+        let frame_json = include_str!("../../../🧫️fixtures/📡️channel/app-frame-transaction.json");
+        let command_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(command_json).expect("app-command-transaction.json must parse");
+        let frame_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(frame_json).expect("app-frame-transaction.json must parse");
+        assert_eq!(command_vectors.len(), 6, "app-command-transaction.json vector count changed");
+        assert_eq!(frame_vectors.len(), 4, "app-frame-transaction.json vector count changed");
+
+        for (label, value) in channel_command_fixture_corpus() {
+            if let Some(expected) = command_vectors.get(label) {
+                let actual = hex_encode(&encode_app_command(&value));
+                assert_eq!(&actual, expected, "AppCommand::{label} drifted from the shared cross-language fixture");
+            }
+        }
+        for (label, value) in channel_frame_fixture_corpus() {
+            if let Some(expected) = frame_vectors.get(label) {
+                let actual = hex_encode(&encode_app_frame(&value));
+                assert_eq!(&actual, expected, "AppFrame::{label} drifted from the shared cross-language fixture");
+            }
         }
     }
     //#endregion 🔖️Corpus

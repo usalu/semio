@@ -1231,18 +1231,6 @@ export class TestScript extends Script {
 //#endregion 🔖️TestScript
 
 //#region 🔖️StdioLedgerScript
-type StdioCatalogEntry = Readonly<{
-  dir: string;
-  mime: string | null;
-  ext: string;
-  depends: readonly string[];
-}>;
-
-type StdioCatalog = Readonly<{
-  stdio_roster: Record<string, StdioCatalogEntry>;
-  stdio_dag_edges: readonly Readonly<{ from: string; to: string }>[];
-}>;
-
 type StdioDialectDefinition = Readonly<{
   id: string;
   artifact: string;
@@ -1256,21 +1244,20 @@ type StdioDialectDefinition = Readonly<{
 
 type StdioCodecDefinition = Readonly<{
   id: string;
-  direction: "native" | "import" | "export";
+  status: string;
   from: string;
   to: string;
-  source: string;
+  executable_registration: boolean;
 }>;
 
 type StdioArtifactDefinition = Readonly<{
   id: string;
   kind: string;
   directory: string;
-  extension: string;
-  registeredMime: string | null;
   depends: readonly string[];
   component: string;
   dialects: readonly StdioDialectDefinition[];
+  representations: StdioSchemaDefinition["representations"];
   codecs: readonly StdioCodecDefinition[];
   support: StdioSupportLedger;
 }>;
@@ -1303,7 +1290,7 @@ type StdioSchemaDefinition = Readonly<{
   standards: readonly Readonly<{ id: string; revision: string; status: string }>[];
   profiles: readonly Readonly<{ id: string; standard: string; profile: string; status: string }>[];
   source_dialects: readonly Readonly<{ id: string; standard: string; dialect: string; registered_code_points: readonly string[]; status: string }>[];
-  representations: readonly Readonly<{ id: string; standard: string; representation: string; mime: string | null; extension: string; status: string }>[];
+  representations: readonly Readonly<{ id: string; standard: string; representation: string; mimes: readonly string[]; extensions: readonly string[]; is_binary: boolean; aliases: readonly string[]; neutral: boolean; status: string }>[];
   codecs: readonly StdioCodecDefinition[];
   mutations: readonly Readonly<{ id: string; status: string }>[];
   inferences: readonly Readonly<{ id: string; status: string }>[];
@@ -1323,23 +1310,9 @@ const STDIO_ARTIFACTS_DIR = "🗿️artifacts";
 const STDIO_CATALOG_REL = join(STDIO_ROOT_REL, "📇️registry", "📇️catalog.json");
 const STDIO_COMPONENT_TS = "🟦️component.ts";
 const STDIO_COMPONENT_RS = "🦀️component.rs";
-const STDIO_STANDARDS_DIR = "🏅️standards";
-const STDIO_SUBSETS_DIR = "🪆️subsets";
-const STDIO_SCHEMA_DIR = "🧬️schema";
-const STDIO_IO_DIR = "🚪️io";
-const STDIO_MUTATIONS_DIR = "🧬️mutations";
-const STDIO_INFERENCES_DIR = "💡️inferences";
-const STDIO_EXTERNALLY_OWNED_ARTIFACTS = new Set(["gltf"]);
 
 function stdioRel(workspaceRoot: string, path: string): string {
   return relative(workspaceRoot, path).split("\\").join("/");
-}
-
-function stdioDirectoryNames(path: string): string[] {
-  return readdirSync(path, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name)
-    .sort((a, b) => a.localeCompare(b));
 }
 
 function stdioWalkFiles(path: string, files: string[] = []): string[] {
@@ -1351,188 +1324,9 @@ function stdioWalkFiles(path: string, files: string[] = []): string[] {
   return files;
 }
 
-function stdioTaxonomyId(name: string): string {
-  const id = name.replace(/^[^\p{L}\p{N}]+/u, "");
-  if (!id) throw new Error(`[stdio] taxonomy name ${JSON.stringify(name)} has no semantic id.`);
-  return id;
-}
-
 function stdioAssertUnique(label: string, values: readonly string[]): void {
   const duplicateValues = [...new Set(values.filter((value, index) => values.indexOf(value) !== index))];
   if (duplicateValues.length > 0) throw new Error(`[stdio] duplicate ${label}: ${duplicateValues.sort().join(", ")}`);
-}
-
-function stdioReadJsonString(source: string, start: number): Readonly<{ value: string; next: number }> {
-  if (source[start] !== '"') throw new Error(`[stdio] expected JSON string at offset ${start}.`);
-  let next = start + 1;
-  while (next < source.length) {
-    if (source[next] === "\\") {
-      next += 2;
-      continue;
-    }
-    if (source[next] === '"') return { value: JSON.parse(source.slice(start, next + 1)) as string, next: next + 1 };
-    next += 1;
-  }
-  throw new Error("[stdio] unterminated JSON string.");
-}
-
-function stdioSkipJsonValue(source: string, start: number): number {
-  let next = start;
-  while (/\s/u.test(source[next] ?? "")) next += 1;
-  if (source[next] === '"') return stdioReadJsonString(source, next).next;
-  if (source[next] !== "{" && source[next] !== "[") {
-    while (next < source.length && !/[\s,}\]]/u.test(source[next]!)) next += 1;
-    return next;
-  }
-  const opener = source[next]!;
-  const closer = opener === "{" ? "}" : "]";
-  let depth = 0;
-  while (next < source.length) {
-    if (source[next] === '"') {
-      next = stdioReadJsonString(source, next).next;
-      continue;
-    }
-    if (source[next] === opener) depth += 1;
-    if (source[next] === closer && --depth === 0) return next + 1;
-    next += 1;
-  }
-  throw new Error("[stdio] unterminated JSON value.");
-}
-
-function stdioRawRosterKeys(source: string): string[] {
-  const roster = source.indexOf('"stdio_roster"');
-  if (roster < 0) throw new Error("[stdio] catalog has no stdio_roster.");
-  let next = source.indexOf("{", roster);
-  if (next < 0) throw new Error("[stdio] stdio_roster is not an object.");
-  next += 1;
-  const keys: string[] = [];
-  while (next < source.length) {
-    while (/\s/u.test(source[next] ?? "")) next += 1;
-    if (source[next] === "}") return keys;
-    const key = stdioReadJsonString(source, next);
-    keys.push(key.value);
-    next = key.next;
-    while (/\s/u.test(source[next] ?? "")) next += 1;
-    if (source[next] !== ":") throw new Error(`[stdio] catalog key ${JSON.stringify(key.value)} has no value.`);
-    next = stdioSkipJsonValue(source, next + 1);
-    while (/\s/u.test(source[next] ?? "")) next += 1;
-    if (source[next] === "}") return keys;
-    if (source[next] !== ",") throw new Error(`[stdio] catalog key ${JSON.stringify(key.value)} is not object-delimited.`);
-    next += 1;
-  }
-  throw new Error("[stdio] unterminated stdio_roster object.");
-}
-
-function stdioCatalog(workspaceRoot: string): StdioCatalog {
-  const source = readFileSync(join(workspaceRoot, STDIO_CATALOG_REL), "utf8");
-  stdioAssertUnique("catalog artifact id", stdioRawRosterKeys(source));
-  const catalog = JSON.parse(source) as StdioCatalog;
-  for (const [id, entry] of Object.entries(catalog.stdio_roster)) {
-    if (!entry.dir || !entry.ext.startsWith(".")) throw new Error(`[stdio] invalid catalog entry ${id}.`);
-    if (entry.mime !== null && typeof entry.mime !== "string") throw new Error(`[stdio] catalog MIME for ${id} must be a string or null.`);
-    if (!entry.depends.every((dependency) => dependency in catalog.stdio_roster)) throw new Error(`[stdio] catalog dependency of ${id} is not a catalog artifact.`);
-  }
-  const expectedEdges = Object.entries(catalog.stdio_roster)
-    .flatMap(([id, entry]) => entry.depends.map((dependency) => `${id}->${dependency}`))
-    .sort();
-  const actualEdges = catalog.stdio_dag_edges.map((edge) => `${edge.from}->${edge.to}`).sort();
-  stdioAssertUnique("catalog dependency edge", actualEdges);
-  if (expectedEdges.join("\n") !== actualEdges.join("\n")) throw new Error("[stdio] stdio_dag_edges is not derived from stdio_roster dependencies.");
-  return catalog;
-}
-
-function stdioCodecDefinitions(workspaceRoot: string, ioRoot: string, owner: StdioDialectDefinition, catalogByDirectory: ReadonlyMap<string, string>): StdioCodecDefinition[] {
-  if (!existsSync(ioRoot)) return [];
-  const codecs: StdioCodecDefinition[] = [];
-  for (const file of stdioWalkFiles(ioRoot)) {
-    if (!file.endsWith(STDIO_COMPONENT_RS)) continue;
-    const segments = stdioRel(workspaceRoot, file).split("/");
-    const importIndex = segments.indexOf("📥️import");
-    const exportIndex = segments.indexOf("📤️export");
-    const direction = importIndex >= 0 ? "import" : exportIndex >= 0 ? "export" : undefined;
-    if (!direction) continue;
-    const foreignArtifactIndex = segments.lastIndexOf(STDIO_ARTIFACTS_DIR);
-    if (foreignArtifactIndex <= Math.max(importIndex, exportIndex) || foreignArtifactIndex + 3 >= segments.length) continue;
-    const foreignArtifact = catalogByDirectory.get(segments[foreignArtifactIndex + 1]!);
-    if (!foreignArtifact) throw new Error(`[stdio] codec ${stdioRel(workspaceRoot, file)} references an unknown artifact directory.`);
-    const foreignDialect = `stdio.${foreignArtifact}/${stdioTaxonomyId(segments[foreignArtifactIndex + 2]!)}/${stdioTaxonomyId(segments[foreignArtifactIndex + 3]!)}`;
-    const from = direction === "import" ? foreignDialect : owner.id;
-    const to = direction === "import" ? owner.id : foreignDialect;
-    codecs.push({ id: `${direction}:${from}->${to}`, direction, from, to, source: stdioRel(workspaceRoot, file) });
-  }
-  return codecs.sort((a, b) => a.id.localeCompare(b.id) || a.source.localeCompare(b.source));
-}
-
-function stdioRetiredFilesystemArtifactLedger(workspaceRoot: string): StdioArtifactLedger {
-  const catalog = stdioCatalog(workspaceRoot);
-  const stdioRoot = join(workspaceRoot, STDIO_ROOT_REL);
-  const artifactsRoot = join(stdioRoot, STDIO_ARTIFACTS_DIR);
-  const catalogByDirectory = new Map(Object.entries(catalog.stdio_roster).map(([id, entry]) => [entry.dir, id]));
-  stdioAssertUnique("catalog artifact directory", [...catalogByDirectory.keys()]);
-  const artifacts: StdioArtifactDefinition[] = [];
-  for (const [id, entry] of Object.entries(catalog.stdio_roster)) {
-    const artifactRoot = join(artifactsRoot, entry.dir);
-    const component = join(artifactRoot, STDIO_COMPONENT_TS);
-    if (!existsSync(component)) throw new Error(`[stdio] catalog artifact ${id} has no TypeScript component.`);
-    const dialects: StdioDialectDefinition[] = [];
-    const codecs: StdioCodecDefinition[] = [];
-    const standardsRoot = join(artifactRoot, STDIO_STANDARDS_DIR);
-    if (!existsSync(standardsRoot)) throw new Error(`[stdio] catalog artifact ${id} has no standards taxonomy.`);
-    for (const standardDir of stdioDirectoryNames(standardsRoot)) {
-      const subsetsRoot = join(standardsRoot, standardDir, STDIO_SUBSETS_DIR);
-      if (!existsSync(subsetsRoot)) throw new Error(`[stdio] artifact ${id} standard ${standardDir} has no subsets taxonomy.`);
-      for (const subsetDir of stdioDirectoryNames(subsetsRoot)) {
-        const subsetRoot = join(subsetsRoot, subsetDir);
-        const dialect: StdioDialectDefinition = {
-          id: `stdio.${id}/${stdioTaxonomyId(standardDir)}/${stdioTaxonomyId(subsetDir)}`,
-          artifact: id,
-          standard: stdioTaxonomyId(standardDir),
-          subset: stdioTaxonomyId(subsetDir),
-          schema: stdioRel(workspaceRoot, join(subsetRoot, STDIO_SCHEMA_DIR)),
-          io: stdioRel(workspaceRoot, join(subsetRoot, STDIO_IO_DIR)),
-          mutations: existsSync(join(subsetRoot, STDIO_SCHEMA_DIR, STDIO_MUTATIONS_DIR)) ? stdioRel(workspaceRoot, join(subsetRoot, STDIO_SCHEMA_DIR, STDIO_MUTATIONS_DIR)) : null,
-          inferences: existsSync(join(subsetRoot, STDIO_SCHEMA_DIR, STDIO_INFERENCES_DIR)) ? stdioRel(workspaceRoot, join(subsetRoot, STDIO_SCHEMA_DIR, STDIO_INFERENCES_DIR)) : null,
-        };
-        dialects.push(dialect);
-        const ioRoot = join(subsetRoot, STDIO_IO_DIR);
-        const nativeCodec = join(ioRoot, STDIO_COMPONENT_RS);
-        if (existsSync(nativeCodec)) codecs.push({ id: `native:${dialect.id}`, direction: "native", from: dialect.id, to: dialect.id, source: stdioRel(workspaceRoot, nativeCodec) });
-        codecs.push(...stdioCodecDefinitions(workspaceRoot, ioRoot, dialect, catalogByDirectory));
-      }
-    }
-    if (dialects.length === 0) throw new Error(`[stdio] catalog artifact ${id} has no dialect definitions.`);
-    artifacts.push({
-      id,
-      kind: `stdio.${id}`,
-      directory: entry.dir,
-      extension: entry.ext,
-      registeredMime: entry.mime,
-      depends: [...entry.depends],
-      component: stdioRel(workspaceRoot, component),
-      dialects,
-      codecs,
-    });
-  }
-  const genericSchemaRoot = join(artifactsRoot, STDIO_SCHEMA_DIR);
-  if (existsSync(genericSchemaRoot)) throw new Error(`[stdio] ${stdioRel(workspaceRoot, genericSchemaRoot)} is not a catalog artifact definition.`);
-  stdioAssertUnique("artifact id", artifacts.map((artifact) => artifact.id));
-  stdioAssertUnique("registered MIME", artifacts.flatMap((artifact) => (artifact.registeredMime ? [artifact.registeredMime] : [])));
-  stdioAssertUnique("extension", artifacts.map((artifact) => artifact.extension));
-  stdioAssertUnique("dialect", artifacts.flatMap((artifact) => artifact.dialects.map((dialect) => dialect.id)));
-  stdioAssertUnique("codec", artifacts.flatMap((artifact) => artifact.codecs.map((codec) => codec.id)));
-  const knownDialects = new Set(artifacts.flatMap((artifact) => artifact.dialects.map((dialect) => dialect.id)));
-  for (const codec of artifacts.flatMap((artifact) => artifact.codecs)) {
-    if (!knownDialects.has(codec.from) || !knownDialects.has(codec.to)) throw new Error(`[stdio] codec ${codec.id} references an unregistered dialect.`);
-  }
-  return {
-    artifacts,
-    counts: {
-      artifacts: artifacts.length,
-      registeredMimes: artifacts.filter((artifact) => artifact.registeredMime !== null).length,
-      dialects: artifacts.reduce((count, artifact) => count + artifact.dialects.length, 0),
-      codecs: artifacts.reduce((count, artifact) => count + artifact.codecs.length, 0),
-    },
-  };
 }
 
 function stdioDefinitionIdentity(id: string, suffix = ""): void {
@@ -1540,9 +1334,42 @@ function stdioDefinitionIdentity(id: string, suffix = ""): void {
   if (suffix && !id.includes(suffix)) throw new Error(`[stdio] definition identity ${JSON.stringify(id)} is missing ${suffix}.`);
 }
 
+function stdioRecord(value: unknown, label: string): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`[stdio] ${label} must be an object.`);
+  return value as Record<string, unknown>;
+}
+
+function stdioExactFields(value: unknown, label: string, fields: readonly string[]): Record<string, unknown> {
+  const record = stdioRecord(value, label);
+  const missing = fields.filter((field) => !(field in record));
+  const unknown = Object.keys(record).filter((field) => !fields.includes(field));
+  if (missing.length > 0 || unknown.length > 0) throw new Error(`[stdio] ${label} has ${missing.length ? `missing fields ${missing.join(", ")}` : ""}${missing.length && unknown.length ? "; " : ""}${unknown.length ? `unknown fields ${unknown.join(", ")}` : ""}.`);
+  return record;
+}
+
+function stdioString(value: unknown, label: string): string {
+  if (typeof value !== "string" || !value) throw new Error(`[stdio] ${label} must be a non-empty string.`);
+  return value;
+}
+
+function stdioStringArray(value: unknown, label: string): readonly string[] {
+  if (!Array.isArray(value) || !value.every((item) => typeof item === "string" && item)) throw new Error(`[stdio] ${label} must be a string array.`);
+  return value;
+}
+
+function stdioNullableString(value: unknown, label: string): string | null {
+  if (value === null || typeof value === "string") return value;
+  throw new Error(`[stdio] ${label} must be a string or null.`);
+}
+
+function stdioArray(value: unknown, label: string): readonly unknown[] {
+  if (!Array.isArray(value)) throw new Error(`[stdio] ${label} must be an array.`);
+  return value;
+}
+
 function stdioDefinitionCatalog(workspaceRoot: string): readonly StdioSchemaDefinition[] {
   const catalogPath = join(workspaceRoot, STDIO_CATALOG_REL);
-  const catalog = JSON.parse(readFileSync(catalogPath, "utf8")) as { artifact_definition_paths?: unknown };
+  const catalog = stdioExactFields(JSON.parse(readFileSync(catalogPath, "utf8")), "definition catalog", ["artifact_definition_paths"]);
   if (!Array.isArray(catalog.artifact_definition_paths)) throw new Error("[stdio] catalog must contain artifact_definition_paths.");
   const paths = catalog.artifact_definition_paths;
   if (!paths.every((path): path is string => typeof path === "string" && path.endsWith("📜️artifact-definition.json"))) throw new Error("[stdio] catalog paths must target artifact definition leaves.");
@@ -1552,7 +1379,7 @@ function stdioDefinitionCatalog(workspaceRoot: string): readonly StdioSchemaDefi
     const artifactsRoot = resolve(workspaceRoot, STDIO_ROOT_REL, STDIO_ARTIFACTS_DIR);
     if (!absolute.startsWith(`${artifactsRoot}/`)) throw new Error(`[stdio] artifact definition escapes the stdio artifact root: ${definitionPath}.`);
     if (!existsSync(absolute)) throw new Error(`[stdio] artifact definition is missing: ${definitionPath}.`);
-    return JSON.parse(readFileSync(absolute, "utf8")) as StdioSchemaDefinition;
+    return JSON.parse(readFileSync(absolute, "utf8"));
   });
   const artifactRoot = join(workspaceRoot, STDIO_ROOT_REL, STDIO_ARTIFACTS_DIR);
   const discovered = stdioWalkFiles(artifactRoot)
@@ -1561,48 +1388,171 @@ function stdioDefinitionCatalog(workspaceRoot: string): readonly StdioSchemaDefi
     .sort();
   if (discovered.join("\n") !== [...paths].sort().join("\n")) throw new Error("[stdio] catalog definition paths are not the complete schema-owned artifact definition set.");
   if (definitions.length !== 36) throw new Error(`[stdio] expected 36 artifact definitions, got ${definitions.length}.`);
-  return definitions;
+  definitions.forEach(stdioAssertDefinition);
+  return definitions as readonly StdioSchemaDefinition[];
 }
 
-function stdioAssertDefinition(definition: StdioSchemaDefinition): void {
+function stdioAssertDefinition(value: unknown): asserts value is StdioSchemaDefinition {
+  const definition = stdioExactFields(value, "artifact definition", ["definition_version", "id", "artifact", "directory", "dependencies", "standards", "profiles", "source_dialects", "representations", "codecs", "mutations", "inferences", "resources", "localized_descriptors", "conformance_suites", "support_ledger"]);
+  if (definition.definition_version !== 1) throw new Error("[stdio] artifact definition_version must equal 1.");
+  const artifact = stdioString(definition.artifact, "artifact slug");
+  const id = stdioString(definition.id, "artifact definition id");
   const artifactId = `s.stdio.${definition.artifact}`;
-  if (definition.id !== artifactId) throw new Error(`[stdio] definition ${definition.id} does not own ${artifactId}.`);
-  stdioDefinitionIdentity(definition.id);
-  if (!/^[a-z0-9_-]+$/u.test(definition.artifact)) throw new Error(`[stdio] invalid artifact slug ${JSON.stringify(definition.artifact)}.`);
-  if (!definition.directory || !Array.isArray(definition.standards) || !Array.isArray(definition.profiles) || !Array.isArray(definition.source_dialects) || !Array.isArray(definition.representations) || !Array.isArray(definition.codecs) || !Array.isArray(definition.mutations) || !Array.isArray(definition.inferences) || !Array.isArray(definition.resources) || !Array.isArray(definition.localized_descriptors) || !Array.isArray(definition.conformance_suites)) {
-    throw new Error(`[stdio] ${definition.id} omits a required plural definition collection.`);
-  }
-  for (const standard of definition.standards) {
+  if (id !== artifactId) throw new Error(`[stdio] definition ${id} does not own ${artifactId}.`);
+  stdioDefinitionIdentity(id);
+  if (!/^[a-z0-9_-]+$/u.test(artifact)) throw new Error(`[stdio] invalid artifact slug ${JSON.stringify(artifact)}.`);
+  stdioString(definition.directory, `${id}.directory`);
+  stdioStringArray(definition.dependencies, `${id}.dependencies`);
+  const standards = stdioArray(definition.standards, `${id}.standards`).map((standard, index) => {
+    const record = stdioExactFields(standard, `${id}.standards[${index}]`, ["id", "revision", "normative_source", "publication_date", "source_checksum", "redistribution_status", "clauses_or_features", "status"]);
+    stdioString(record.id, `${id}.standards[${index}].id`);
+    const revision = stdioString(record.revision, `${id}.standards[${index}].revision`);
+    if (!/^[a-z0-9_-]+(?:\.[a-z0-9_-]+)*$/u.test(revision)) throw new Error(`[stdio] ${id} standard revision ${JSON.stringify(revision)} is not a canonical identity fragment.`);
+    stdioNullableString(record.normative_source, `${id}.standards[${index}].normative_source`);
+    stdioNullableString(record.publication_date, `${id}.standards[${index}].publication_date`);
+    stdioNullableString(record.source_checksum, `${id}.standards[${index}].source_checksum`);
+    stdioString(record.redistribution_status, `${id}.standards[${index}].redistribution_status`);
+    stdioStringArray(record.clauses_or_features, `${id}.standards[${index}].clauses_or_features`);
+    stdioString(record.status, `${id}.standards[${index}].status`);
+    return record as unknown as StdioSchemaDefinition["standards"][number];
+  });
+  if (standards.length === 0) throw new Error(`[stdio] ${id} has no standards.`);
+  for (const standard of standards) {
     const id = `${artifactId}.standard.${standard.revision}`;
     if (standard.id !== id) throw new Error(`[stdio] standard ${standard.id} must be ${id}.`);
     stdioDefinitionIdentity(standard.id, ".standard.");
   }
-  const standards = new Set(definition.standards.map((standard) => standard.id));
-  for (const profile of definition.profiles) {
-    if (!standards.has(profile.standard) || profile.id !== `${profile.standard}.profile.${profile.profile}`) throw new Error(`[stdio] invalid profile identity ${profile.id}.`);
+  const standardIds = new Set(standards.map((standard) => standard.id));
+  const profiles = stdioArray(definition.profiles, `${artifactId}.profiles`).map((profile, index) => {
+    const record = stdioExactFields(profile, `${artifactId}.profiles[${index}]`, ["id", "standard", "profile", "status"]);
+    stdioString(record.id, `${artifactId}.profiles[${index}].id`);
+    stdioString(record.standard, `${artifactId}.profiles[${index}].standard`);
+    stdioString(record.profile, `${artifactId}.profiles[${index}].profile`);
+    stdioString(record.status, `${artifactId}.profiles[${index}].status`);
+    return record as unknown as StdioSchemaDefinition["profiles"][number];
+  });
+  if (profiles.length === 0) throw new Error(`[stdio] ${artifactId} has no profiles.`);
+  for (const profile of profiles) {
+    if (!standardIds.has(profile.standard) || profile.id !== `${profile.standard}.profile.${profile.profile}`) throw new Error(`[stdio] invalid profile identity ${profile.id}.`);
     stdioDefinitionIdentity(profile.id, ".profile.");
   }
-  for (const dialect of definition.source_dialects) {
-    if (!standards.has(dialect.standard) || dialect.id !== `${dialect.standard}.dialect.${dialect.dialect}`) throw new Error(`[stdio] invalid source dialect identity ${dialect.id}.`);
+  const dialects = stdioArray(definition.source_dialects, `${artifactId}.source_dialects`).map((dialect, index) => {
+    const record = stdioExactFields(dialect, `${artifactId}.source_dialects[${index}]`, ["id", "standard", "dialect", "registered_code_points", "status"]);
+    stdioString(record.id, `${artifactId}.source_dialects[${index}].id`);
+    stdioString(record.standard, `${artifactId}.source_dialects[${index}].standard`);
+    stdioString(record.dialect, `${artifactId}.source_dialects[${index}].dialect`);
+    stdioStringArray(record.registered_code_points, `${artifactId}.source_dialects[${index}].registered_code_points`);
+    stdioString(record.status, `${artifactId}.source_dialects[${index}].status`);
+    return record as unknown as StdioSchemaDefinition["source_dialects"][number];
+  });
+  if (dialects.length === 0) throw new Error(`[stdio] ${artifactId} has no source dialects.`);
+  for (const dialect of dialects) {
+    if (!standardIds.has(dialect.standard) || dialect.id !== `${dialect.standard}.dialect.${dialect.dialect}`) throw new Error(`[stdio] invalid source dialect identity ${dialect.id}.`);
     stdioDefinitionIdentity(dialect.id, ".dialect.");
   }
-  for (const representation of definition.representations) {
-    if (!standards.has(representation.standard) || representation.id !== `${representation.standard}.representation.${representation.representation}`) throw new Error(`[stdio] invalid representation identity ${representation.id}.`);
-    if (!representation.extension.startsWith(".")) throw new Error(`[stdio] ${representation.id} has no file extension.`);
+  const representations = stdioArray(definition.representations, `${artifactId}.representations`).map((representation, index) => {
+    const record = stdioExactFields(representation, `${artifactId}.representations[${index}]`, ["id", "standard", "representation", "mimes", "extensions", "is_binary", "aliases", "neutral", "status"]);
+    stdioString(record.id, `${artifactId}.representations[${index}].id`);
+    stdioString(record.standard, `${artifactId}.representations[${index}].standard`);
+    stdioString(record.representation, `${artifactId}.representations[${index}].representation`);
+    stdioStringArray(record.mimes, `${artifactId}.representations[${index}].mimes`);
+    stdioStringArray(record.extensions, `${artifactId}.representations[${index}].extensions`);
+    if (typeof record.is_binary !== "boolean") throw new Error(`[stdio] ${artifactId}.representations[${index}].is_binary must be boolean.`);
+    stdioStringArray(record.aliases, `${artifactId}.representations[${index}].aliases`);
+    if (typeof record.neutral !== "boolean") throw new Error(`[stdio] ${artifactId}.representations[${index}].neutral must be boolean.`);
+    stdioString(record.status, `${artifactId}.representations[${index}].status`);
+    return record as unknown as StdioSchemaDefinition["representations"][number];
+  });
+  if (representations.length === 0) throw new Error(`[stdio] ${artifactId} has no representations.`);
+  for (const representation of representations) {
+    if (!standardIds.has(representation.standard) || representation.id !== `${representation.standard}.representation.${representation.representation}`) throw new Error(`[stdio] invalid representation identity ${representation.id}.`);
+    if (representation.extensions.length === 0 || representation.extensions.some((extension) => !extension.startsWith("."))) throw new Error(`[stdio] ${representation.id} has no file extension.`);
+    stdioAssertUnique(`MIME claim for ${representation.id}`, representation.mimes);
+    stdioAssertUnique(`extension claim for ${representation.id}`, representation.extensions);
     stdioDefinitionIdentity(representation.id, ".representation.");
   }
-  for (const codec of definition.codecs) stdioDefinitionIdentity(codec.id, ".codec.");
-  for (const mutation of definition.mutations) {
-    if (!new RegExp(`^${artifactId.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}\\.mutation\\.[a-z0-9_-]+\\.v[0-9]+$`, "u").test(mutation.id)) throw new Error(`[stdio] invalid mutation identity ${mutation.id}.`);
+  const codecs = stdioArray(definition.codecs, `${artifactId}.codecs`).map((codec, index) => {
+    const record = stdioExactFields(codec, `${artifactId}.codecs[${index}]`, ["id", "status", "from", "to", "executable_registration"]);
+    stdioString(record.id, `${artifactId}.codecs[${index}].id`);
+    stdioString(record.status, `${artifactId}.codecs[${index}].status`);
+    stdioString(record.from, `${artifactId}.codecs[${index}].from`);
+    stdioString(record.to, `${artifactId}.codecs[${index}].to`);
+    if (typeof record.executable_registration !== "boolean") throw new Error(`[stdio] ${artifactId}.codecs[${index}].executable_registration must be boolean.`);
+    return record as unknown as StdioCodecDefinition & { executable_registration: boolean };
+  });
+  for (const codec of codecs) {
+    if (!codec.executable_registration) throw new Error(`[stdio] codec ${codec.id} is not executable-registered.`);
   }
-  for (const inference of definition.inferences) {
-    if (!new RegExp(`^${artifactId.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}\\.inference\\.[a-z0-9_-]+\\.v[0-9]+$`, "u").test(inference.id)) throw new Error(`[stdio] invalid inference identity ${inference.id}.`);
+  const mutations = stdioArray(definition.mutations, `${artifactId}.mutations`).map((mutation, index) => {
+    const record = stdioExactFields(mutation, `${artifactId}.mutations[${index}]`, ["id", "status", "executable_registration"]);
+    stdioString(record.id, `${artifactId}.mutations[${index}].id`);
+    stdioString(record.status, `${artifactId}.mutations[${index}].status`);
+    if (typeof record.executable_registration !== "boolean") throw new Error(`[stdio] ${artifactId}.mutations[${index}].executable_registration must be boolean.`);
+    return record as unknown as StdioSchemaDefinition["mutations"][number] & { executable_registration: boolean };
+  });
+  for (const mutation of mutations) {
+    if (!mutation.executable_registration) throw new Error(`[stdio] mutation ${mutation.id} is not executable-registered.`);
   }
+  const inferences = stdioArray(definition.inferences, `${artifactId}.inferences`).map((inference, index) => {
+    const record = stdioExactFields(inference, `${artifactId}.inferences[${index}]`, ["id", "status", "executable_registration"]);
+    stdioString(record.id, `${artifactId}.inferences[${index}].id`);
+    stdioString(record.status, `${artifactId}.inferences[${index}].status`);
+    if (typeof record.executable_registration !== "boolean") throw new Error(`[stdio] ${artifactId}.inferences[${index}].executable_registration must be boolean.`);
+    return record as unknown as StdioSchemaDefinition["inferences"][number] & { executable_registration: boolean };
+  });
+  for (const inference of inferences) {
+    if (!inference.executable_registration) throw new Error(`[stdio] inference ${inference.id} is not executable-registered.`);
+  }
+  const resources = stdioArray(definition.resources, `${artifactId}.resources`).map((resource, index) => {
+    const record = stdioExactFields(resource, `${artifactId}.resources[${index}]`, ["id", "external_reference_policy", "status"]);
+    stdioString(record.id, `${artifactId}.resources[${index}].id`);
+    stdioString(record.external_reference_policy, `${artifactId}.resources[${index}].external_reference_policy`);
+    stdioString(record.status, `${artifactId}.resources[${index}].status`);
+    return record as unknown as StdioSchemaDefinition["resources"][number];
+  });
+  const descriptors = stdioArray(definition.localized_descriptors, `${artifactId}.localized_descriptors`).map((descriptor, index) => {
+    const record = stdioExactFields(descriptor, `${artifactId}.localized_descriptors[${index}]`, ["id", "locale", "name", "description", "status"]);
+    const locale = stdioString(record.locale, `${artifactId}.localized_descriptors[${index}].locale`);
+    if (locale !== "en" && locale !== "de") throw new Error(`[stdio] ${artifactId} has unsupported locale ${locale}.`);
+    stdioString(record.id, `${artifactId}.localized_descriptors[${index}].id`);
+    stdioString(record.name, `${artifactId}.localized_descriptors[${index}].name`);
+    stdioString(record.description, `${artifactId}.localized_descriptors[${index}].description`);
+    stdioString(record.status, `${artifactId}.localized_descriptors[${index}].status`);
+    return record as unknown as StdioSchemaDefinition["localized_descriptors"][number];
+  });
   const expectedLocales = ["en", "de"];
-  if (definition.localized_descriptors.length !== expectedLocales.length || definition.localized_descriptors.some((descriptor) => !expectedLocales.includes(descriptor.locale) || !descriptor.name || !descriptor.description)) throw new Error(`[stdio] ${definition.id} must own exactly one non-empty English and German descriptor.`);
-  const ledger = definition.support_ledger;
+  if (descriptors.length !== expectedLocales.length || descriptors.some((descriptor) => descriptor.id !== `${artifactId}.localization.${descriptor.locale}`) || expectedLocales.some((locale) => descriptors.filter((descriptor) => descriptor.locale === locale).length !== 1)) throw new Error(`[stdio] ${artifactId} must own exactly one English and German descriptor.`);
+  const suites = stdioArray(definition.conformance_suites, `${artifactId}.conformance_suites`).map((suite, index) => {
+    const record = stdioExactFields(suite, `${artifactId}.conformance_suites[${index}]`, ["id", "status", "fixtures"]);
+    stdioString(record.id, `${artifactId}.conformance_suites[${index}].id`);
+    stdioString(record.status, `${artifactId}.conformance_suites[${index}].status`);
+    stdioStringArray(record.fixtures, `${artifactId}.conformance_suites[${index}].fixtures`);
+    return record as unknown as StdioSchemaDefinition["conformance_suites"][number];
+  });
+  if (resources.length === 0 || suites.length === 0) throw new Error(`[stdio] ${artifactId} must own resources and conformance suites.`);
+  const ledger = stdioExactFields(definition.support_ledger, `${artifactId}.support_ledger`, ["normative_source", "publication_date", "source_checksum", "redistribution_status", "clauses_or_features", "profiles", "registered_code_points", "read", "write", "lossless", "canonical", "validators", "mutations", "inferences", "fixtures"]);
+  stdioNullableString(ledger.normative_source, `${artifactId}.support_ledger.normative_source`);
+  stdioNullableString(ledger.publication_date, `${artifactId}.support_ledger.publication_date`);
+  stdioNullableString(ledger.source_checksum, `${artifactId}.support_ledger.source_checksum`);
+  stdioString(ledger.redistribution_status, `${artifactId}.support_ledger.redistribution_status`);
+  for (const field of ["clauses_or_features", "profiles", "registered_code_points", "validators", "mutations", "inferences", "fixtures"] as const) stdioStringArray(ledger[field], `${artifactId}.support_ledger.${field}`);
   if (!ledger || !["unimplemented", "opaque", "implemented"].includes(ledger.read) || !["unimplemented", "opaque", "implemented"].includes(ledger.write) || !["unimplemented", "opaque", "implemented"].includes(ledger.lossless) || !["unimplemented", "opaque", "implemented"].includes(ledger.canonical)) throw new Error(`[stdio] ${definition.id} has an invalid support ledger.`);
+  const implemented = [ledger.read, ledger.write, ledger.lossless, ledger.canonical].includes("implemented");
+  if (implemented && (!ledger.normative_source || !ledger.publication_date || !ledger.source_checksum || ledger.redistribution_status === "unknown" || ledger.clauses_or_features.length === 0 || ledger.validators.length === 0 || ledger.fixtures.length === 0)) throw new Error(`[stdio] ${artifactId} claims implemented support without normative, validator, and fixture evidence.`);
   const IDs = [
+    id, ...standards.map((item) => item.id), ...profiles.map((item) => item.id), ...dialects.map((item) => item.id), ...representations.map((item) => item.id), ...codecs.map((item) => item.id), ...mutations.map((item) => item.id), ...inferences.map((item) => item.id), ...resources.map((item) => item.id), ...descriptors.map((item) => item.id), ...suites.map((item) => item.id),
+  ];
+  for (const id of IDs) stdioDefinitionIdentity(id);
+  stdioAssertUnique(`definition identity for ${artifactId}`, IDs);
+}
+
+function stdioArtifactLedger(workspaceRoot: string): StdioArtifactLedger {
+  const definitions = stdioDefinitionCatalog(workspaceRoot);
+  stdioAssertUnique("artifact identity", definitions.map((definition) => definition.id));
+  stdioAssertUnique("artifact directory", definitions.map((definition) => definition.directory));
+  const knownArtifacts = new Set(definitions.map((definition) => definition.id));
+  const knownDialectIds = new Set(definitions.flatMap((definition) => definition.source_dialects.map((dialect) => dialect.id)));
+  const knownIdentityIds = new Set(definitions.flatMap((definition) => [
     definition.id,
     ...definition.standards.map((item) => item.id),
     ...definition.profiles.map((item) => item.id),
@@ -1613,22 +1563,43 @@ function stdioAssertDefinition(definition: StdioSchemaDefinition): void {
     ...definition.inferences.map((item) => item.id),
     ...definition.resources.map((item) => item.id),
     ...definition.localized_descriptors.map((item) => item.id),
-    ...definition.conformance_suites.map((item) => item.id),
-  ];
-  for (const id of IDs) stdioDefinitionIdentity(id);
-  stdioAssertUnique(`definition identity for ${definition.id}`, IDs);
-}
-
-function stdioArtifactLedger(workspaceRoot: string): StdioArtifactLedger {
-  const definitions = stdioDefinitionCatalog(workspaceRoot);
-  definitions.forEach(stdioAssertDefinition);
-  stdioAssertUnique("artifact identity", definitions.map((definition) => definition.id));
-  stdioAssertUnique("artifact directory", definitions.map((definition) => definition.directory));
-  const knownArtifacts = new Set(definitions.map((definition) => definition.id));
+    ...definition.conformance_suites.flatMap((item) => [item.id, ...item.fixtures]),
+  ]));
+  const equalIdSets = (left: readonly string[], right: readonly string[]): boolean => [...new Set(left)].sort().join("\n") === [...new Set(right)].sort().join("\n");
   for (const definition of definitions) {
     stdioAssertUnique(`dependency for ${definition.id}`, definition.dependencies);
     for (const dependency of definition.dependencies) {
       if (!knownArtifacts.has(dependency) || dependency === definition.id) throw new Error(`[stdio] ${definition.id} has an invalid dependency ${dependency}.`);
+    }
+    const localIds = new Set([
+      definition.id,
+      ...definition.standards.map((item) => item.id),
+      ...definition.profiles.map((item) => item.id),
+      ...definition.source_dialects.map((item) => item.id),
+      ...definition.representations.map((item) => item.id),
+      ...definition.codecs.map((item) => item.id),
+      ...definition.mutations.map((item) => item.id),
+      ...definition.inferences.map((item) => item.id),
+      ...definition.resources.map((item) => item.id),
+      ...definition.localized_descriptors.map((item) => item.id),
+      ...definition.conformance_suites.flatMap((item) => [item.id, ...item.fixtures]),
+    ]);
+    for (const fixture of definition.conformance_suites.flatMap((suite) => suite.fixtures)) {
+      stdioDefinitionIdentity(fixture);
+      if (!localIds.has(fixture)) throw new Error(`[stdio] ${definition.id} fixture ${fixture} does not resolve locally.`);
+    }
+    const ledger = definition.support_ledger;
+    const declaredCodePoints = definition.source_dialects.flatMap((dialect) => dialect.registered_code_points);
+    if (!equalIdSets(ledger.profiles, definition.profiles.map((profile) => profile.id))) throw new Error(`[stdio] ${definition.id} support ledger profiles diverge from schema profiles.`);
+    if (!equalIdSets(ledger.registered_code_points, declaredCodePoints)) throw new Error(`[stdio] ${definition.id} support ledger code points diverge from source dialects.`);
+    if (!equalIdSets(ledger.mutations, definition.mutations.map((mutation) => mutation.id))) throw new Error(`[stdio] ${definition.id} support ledger mutations diverge from definitions.`);
+    if (!equalIdSets(ledger.inferences, definition.inferences.map((inference) => inference.id))) throw new Error(`[stdio] ${definition.id} support ledger inferences diverge from definitions.`);
+    if (!equalIdSets(ledger.fixtures, definition.conformance_suites.flatMap((suite) => suite.fixtures))) throw new Error(`[stdio] ${definition.id} support ledger fixtures diverge from conformance suites.`);
+    for (const reference of [...ledger.validators, ...ledger.mutations, ...ledger.inferences, ...ledger.fixtures]) {
+      if (!localIds.has(reference) || !knownIdentityIds.has(reference)) throw new Error(`[stdio] ${definition.id} support ledger reference ${reference} does not resolve.`);
+    }
+    for (const codec of definition.codecs) {
+      if (!codec.from || !codec.to || !knownDialectIds.has(codec.from) || !knownDialectIds.has(codec.to)) throw new Error(`[stdio] ${definition.id} codec ${codec.id} references an unknown source dialect.`);
     }
   }
   const visiting = new Set<string>();
@@ -1643,35 +1614,31 @@ function stdioArtifactLedger(workspaceRoot: string): StdioArtifactLedger {
     visited.add(id);
   };
   definitions.forEach((definition) => visit(definition.id));
-  const artifacts = definitions.map((definition) => {
-    const representation = definition.representations[0];
-    if (!representation) throw new Error(`[stdio] ${definition.id} has no declared representation.`);
-    return {
+  const artifacts = definitions.map((definition) => ({
       id: definition.artifact,
       kind: definition.id,
       directory: definition.directory,
-      extension: representation.extension,
-      registeredMime: representation.mime,
       depends: definition.dependencies.map((dependency) => dependency.slice("s.stdio.".length)),
       component: stdioRel(workspaceRoot, join(workspaceRoot, STDIO_ROOT_REL, STDIO_ARTIFACTS_DIR, definition.directory, STDIO_COMPONENT_TS)),
       dialects: definition.source_dialects.map((dialect) => ({ id: dialect.id, artifact: definition.artifact, standard: dialect.standard, subset: dialect.dialect, schema: "", io: "", mutations: null, inferences: null })),
+      representations: definition.representations,
       codecs: [...definition.codecs],
       support: definition.support_ledger,
-    } satisfies StdioArtifactDefinition;
-  });
-  stdioAssertUnique("registered MIME", artifacts.flatMap((artifact) => artifact.registeredMime === null ? [] : [artifact.registeredMime]));
-  stdioAssertUnique("file extension", artifacts.map((artifact) => artifact.extension));
+    } satisfies StdioArtifactDefinition));
+  const representations = definitions.flatMap((definition) => definition.representations);
+  stdioAssertUnique("registered MIME", representations.flatMap((representation) => representation.mimes));
+  stdioAssertUnique("file extension", representations.flatMap((representation) => representation.extensions));
   stdioAssertUnique("source dialect", artifacts.flatMap((artifact) => artifact.dialects.map((dialect) => dialect.id)));
   stdioAssertUnique("codec", artifacts.flatMap((artifact) => artifact.codecs.map((codec) => codec.id)));
   const epw = artifacts.find((artifact) => artifact.id === "epw");
-  if (!epw || epw.registeredMime !== null) throw new Error("[stdio] EPW must remain MIME-unregistered.");
+  if (!epw || epw.representations.some((representation) => representation.mimes.length !== 0)) throw new Error("[stdio] EPW must remain MIME-unregistered.");
   const txt = artifacts.find((artifact) => artifact.id === "txt");
-  if (!txt || txt.registeredMime !== "text/plain") throw new Error("[stdio] TXT must be the sole text/plain registrant.");
+  if (!txt || !txt.representations.some((representation) => representation.mimes.includes("text/plain"))) throw new Error("[stdio] TXT must own text/plain.");
   return {
     artifacts,
     counts: {
       artifacts: artifacts.length,
-      registeredMimes: artifacts.filter((artifact) => artifact.registeredMime !== null).length,
+      registeredMimes: representations.reduce((count, representation) => count + representation.mimes.length, 0),
       standards: definitions.reduce((count, definition) => count + definition.standards.length, 0),
       profiles: definitions.reduce((count, definition) => count + definition.profiles.length, 0),
       dialects: definitions.reduce((count, definition) => count + definition.source_dialects.length, 0),
@@ -1682,61 +1649,6 @@ function stdioArtifactLedger(workspaceRoot: string): StdioArtifactLedger {
       conformanceSuites: definitions.reduce((count, definition) => count + definition.conformance_suites.length, 0),
     },
   };
-}
-
-function stdioAssertPath(workspaceRoot: string, path: string, label: string): void {
-  if (!existsSync(join(workspaceRoot, path))) throw new Error(`[stdio] ${label} is missing: ${path}`);
-}
-
-function stdioRetiredTypeScriptExportNames(workspaceRoot: string, ledger: StdioArtifactLedger): void {
-  const barrel = readFileSync(join(workspaceRoot, STDIO_ROOT_REL, "📦️packages", "🟦️typescript", "📦️index.ts"), "utf8");
-  const exports = [...barrel.matchAll(/^export \* as (\w+) from /gmu)].map((match) => match[1]!);
-  stdioAssertUnique("TypeScript export", exports);
-  const expected = ledger.artifacts.map((artifact) => artifact.id).sort();
-  if (exports.sort().join("\n") !== expected.join("\n")) throw new Error("[stdio] TypeScript exports are not catalog-complete.");
-}
-
-function stdioRetiredManifestAssembly(workspaceRoot: string, ledger: StdioArtifactLedger): void {
-  const manifest = readFileSync(join(workspaceRoot, STDIO_ROOT_REL, "🛂️manifest", STDIO_COMPONENT_RS), "utf8");
-  const ids = [...manifest.matchAll(/short_id: "([^"]+)"/g)].map((match) => match[1]!);
-  stdioAssertUnique("manifest descriptor id", ids);
-  const expected = ledger.artifacts.map((artifact) => artifact.id).sort();
-  if (ids.sort().join("\n") !== expected.join("\n")) throw new Error("[stdio] manifest descriptors are not catalog-complete.");
-  const epw = ledger.artifacts.find((artifact) => artifact.id === "epw");
-  if (!epw || epw.registeredMime !== null) throw new Error("[stdio] EPW must remain MIME-unregistered in the schema ledger.");
-  if (!/short_id: "epw"[\s\S]*?mime: ""\.into\(\)/.test(manifest)) throw new Error("[stdio] EPW must cross the legacy manifest boundary as an empty MIME.");
-}
-
-function stdioRetiredFilesystemGate(workspaceRoot: string, gate: "quick" | "schema-parity" | "standards-coverage" | "codec" | "mutation-law" | "inference"): StdioArtifactLedger {
-  const ledger = stdioArtifactLedger(workspaceRoot);
-  stdioAssertTypeScriptExports(workspaceRoot, ledger);
-  stdioAssertManifestAssembly(workspaceRoot, ledger);
-  if (gate === "quick") return ledger;
-  for (const artifact of ledger.artifacts) {
-    if (STDIO_EXTERNALLY_OWNED_ARTIFACTS.has(artifact.id)) continue;
-    for (const dialect of artifact.dialects) {
-      if (gate === "schema-parity" || gate === "standards-coverage") {
-        stdioAssertPath(workspaceRoot, dialect.schema, `schema for ${dialect.id}`);
-        stdioAssertPath(workspaceRoot, join(dialect.schema, STDIO_COMPONENT_RS), `Rust schema for ${dialect.id}`);
-        stdioAssertPath(workspaceRoot, join(dialect.schema, STDIO_COMPONENT_TS), `TypeScript schema for ${dialect.id}`);
-      }
-      if (gate === "standards-coverage") stdioAssertPath(workspaceRoot, dialect.io, `IO taxonomy for ${dialect.id}`);
-      if (gate === "codec") stdioAssertPath(workspaceRoot, join(dialect.io, STDIO_COMPONENT_RS), `Rust codec for ${dialect.id}`);
-      if (gate === "mutation-law") {
-        if (!dialect.mutations) continue;
-        stdioAssertPath(workspaceRoot, dialect.mutations, `mutation taxonomy for ${dialect.id}`);
-        stdioAssertPath(workspaceRoot, join(dialect.mutations, STDIO_COMPONENT_RS), `Rust mutations for ${dialect.id}`);
-        stdioAssertPath(workspaceRoot, join(dialect.mutations, STDIO_COMPONENT_TS), `TypeScript mutations for ${dialect.id}`);
-      }
-      if (gate === "inference") {
-        if (!dialect.inferences) continue;
-        stdioAssertPath(workspaceRoot, dialect.inferences, `inference taxonomy for ${dialect.id}`);
-        stdioAssertPath(workspaceRoot, join(dialect.inferences, STDIO_COMPONENT_RS), `Rust inferences for ${dialect.id}`);
-        stdioAssertPath(workspaceRoot, join(dialect.inferences, STDIO_COMPONENT_TS), `TypeScript inferences for ${dialect.id}`);
-      }
-    }
-  }
-  return ledger;
 }
 
 /** 🗄️ Runs schema-derived stdio catalog, support-ledger, and runtime gates. */
@@ -1757,7 +1669,7 @@ function stdioAssertManifestAssembly(workspaceRoot: string, ledger: StdioArtifac
   if (!manifest.includes("crate::registry::format_descriptors()")) throw new Error("[stdio] manifest must derive descriptors from schema-owned definitions.");
   if (!manifest.includes("crate::registry::artifact_definitions()")) throw new Error("[stdio] manifest must expose the schema-owned artifact definition assembly.");
   const epw = ledger.artifacts.find((artifact) => artifact.id === "epw");
-  if (!epw || epw.registeredMime !== null) throw new Error("[stdio] EPW must remain MIME-unregistered in the schema ledger.");
+  if (!epw || epw.representations.some((representation) => representation.mimes.length !== 0)) throw new Error("[stdio] EPW must remain MIME-unregistered in the schema ledger.");
 }
 
 function stdioRequireClosed(ledger: StdioArtifactLedger, gate: string): never {
@@ -1796,21 +1708,15 @@ export class StdioScript extends Script {
       return;
     }
     if (gate === "runtime") {
-      stdioRunStructuralGate(this.root, "quick");
-      runCmd("bun", ["nx", "run-many", "-t", "test-quick", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      stdioRequireClosed(stdioRunStructuralGate(this.root, "quick"), "runtime");
       return;
     }
     if (gate === "fuzz") {
-      stdioRunStructuralGate(this.root, "codec");
-      runCmd("bun", ["nx", "run", "@semio-tech/stdio-plugin:test-exhaustive"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      stdioRequireClosed(stdioRunStructuralGate(this.root, "quick"), "fuzz");
       return;
     }
     if (gate === "cross-platform") {
-      const ledger = stdioRunStructuralGate(this.root, "schema-parity");
-      for (const codec of ledger.artifacts.flatMap((artifact) => artifact.codecs)) {
-        if (codec.source.includes("\\")) throw new Error(`[stdio] platform-specific codec path: ${codec.source}`);
-      }
-      runCmd("bun", ["nx", "run-many", "-t", "test-quick", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      stdioRequireClosed(stdioRunStructuralGate(this.root, "quick"), "cross-platform");
       return;
     }
     throw new Error(`[stdio] expected ledger|quick|long|exhaustive|schema-parity|standards-coverage|codec|mutation-law|inference|runtime|fuzz|cross-platform, got ${JSON.stringify(gate)}.`);
@@ -3100,6 +3006,9 @@ const POLICY_TS_FACADE_CONSTITUTIONAL_FACETS = new Set<string>([
   "⚙️engine",
 ]);
 const POLICY_MUTATION_TRIAD_DIRS = ["🦠️mutation", "🔺️diff", "↩️inverse"] as const;
+/** 🧩️A COMPOSITE mutation owns its payload plus a plan; its diff and inverse are folded from that plan, so it owns neither `🔺️diff` nor `↩️inverse`. */
+const POLICY_MUTATION_COMPOSITE_DIRS = ["🦠️mutation", "🧩️plan"] as const;
+const POLICY_MUTATION_PLAN_DIR = "🧩️plan";
 const POLICY_MUTATIONS_FACET = "🧬️mutations";
 const POLICY_ENGINE_FACET = "⚙️engine";
 const POLICY_OP_FACET = "🔧️op";
@@ -7469,16 +7378,24 @@ function policyListMutationDirs(repoRoot: string, mutationsRel: string): string[
   // should. They were harmless while the callers walked a shallow path that matched nothing on
   // disk; the moment the mutation rules were repointed at the real deep taxonomy they became 672
   // false "missing triad kind" highs. Reserved here, once, so every caller inherits the exclusion.
-  const reserved = new Set<string>([...POLICY_MUTATION_TRIAD_DIRS, "📚️examples", "💾️binary", "📝️text"]);
+  const reserved = new Set<string>([...POLICY_MUTATION_TRIAD_DIRS, POLICY_MUTATION_PLAN_DIR, "📚️examples", "💾️binary", "📝️text"]);
   return policyReaddirSafe(repoRoot, mutationsRel)
     .filter((e) => e.isDirectory && !reserved.has(e.name) && !e.name.startsWith("."))
     .map((e) => e.name)
     .sort();
 }
 
+/** 🧩️Whether a mutation dir declares itself COMPOSITE by owning a `🧩️plan` child. */
+function policyIsCompositeMutationDir(repoRoot: string, mutRel: string): boolean {
+  return existsSync(join(repoRoot, `${mutRel}/${POLICY_MUTATION_PLAN_DIR}`));
+}
+
 /**
- * 📏️Every artifact must own `🧬️mutations/`; each concrete mutation dir must carry the triad
- * `🦠️mutation` / `🔺️diff` / `↩️inverse` (leaves optional until fan-out — directory presence is the gate).
+ * 📏️Every artifact must own `🧬️mutations/`; each concrete mutation dir must carry EITHER the leaf
+ * triad `🦠️mutation` / `🔺️diff` / `↩️inverse` OR the composite pair `🦠️mutation` / `🧩️plan` — never a
+ * mix (leaves optional until fan-out — directory presence is the gate). A composite folds its diff
+ * and inverse from its plan, so owning `🔺️diff` or `↩️inverse` next to `🧩️plan` means two competing
+ * sources of the same semantics.
  */
 function policyMutationTriadCompletenessBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -7499,17 +7416,34 @@ function policyMutationTriadCompletenessBreaches(repoRoot: string): BreachRecord
     }
     for (const mutName of mutDirs) {
       const mutRel = `${mutationsRel}/${mutName}`;
-      for (const kind of POLICY_MUTATION_TRIAD_DIRS) {
+      const composite = policyIsCompositeMutationDir(repoRoot, mutRel);
+      for (const kind of composite ? POLICY_MUTATION_COMPOSITE_DIRS : POLICY_MUTATION_TRIAD_DIRS) {
         const kindRel = `${mutRel}/${kind}`;
         if (existsSync(join(repoRoot, kindRel))) continue;
         breaches.push({
           id: `mutation-triad-missing-${kindRel}`,
-          summary: `"${mutRel}" is missing triad kind ${kind}/`,
+          summary: composite ? `"${mutRel}" is a composite but is missing ${kind}/` : `"${mutRel}" is missing triad kind ${kind}/`,
           kind: "mutation-migration/triad-completeness",
           scope: artRel,
           priority: "high",
-          reason: "Each concrete mutation must expose 🦠️mutation + 🔺️diff + ↩️inverse directories.",
+          reason: composite
+            ? "A composite mutation must expose 🦠️mutation + 🧩️plan directories."
+            : "Each concrete leaf mutation must expose 🦠️mutation + 🔺️diff + ↩️inverse directories.",
           solution: `Create ${kindRel}/ with 🦀️component.rs (and 🟦️component.ts stub if needed).`,
+        });
+      }
+      if (!composite) continue;
+      for (const derived of ["🔺️diff", "↩️inverse"] as const) {
+        const derivedRel = `${mutRel}/${derived}`;
+        if (!existsSync(join(repoRoot, derivedRel))) continue;
+        breaches.push({
+          id: `mutation-composite-derived-${derivedRel}`,
+          summary: `"${mutRel}" owns both 🧩️plan and ${derived}/`,
+          kind: "mutation-migration/triad-completeness",
+          scope: artRel,
+          priority: "high",
+          reason: "A composite folds its diff and inverse from its plan — a handwritten one is a second, competing source of the same semantics.",
+          solution: `Delete ${derivedRel}/ (composite) or delete ${mutRel}/${POLICY_MUTATION_PLAN_DIR}/ (leaf triad).`,
         });
       }
     }
@@ -7524,22 +7458,145 @@ function policyMutationTriadCompletenessBreaches(repoRoot: string): BreachRecord
 function policyMutationImplPresenceBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const implPattern = /\bimpl\b[^\n{]*\bMutation\s*</;
+  const compositeImplPattern = /\bimpl\b[^\n{]*\bCompositeMutationKind\s*</;
   for (const mutationsRel of policyFindAllMutationsDirs(repoRoot)) {
     const artRel = policyArtifactRootOfMutationsDir(mutationsRel);
     for (const mutName of policyListMutationDirs(repoRoot, mutationsRel)) {
-      const rsRel = `${mutationsRel}/${mutName}/🦠️mutation/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+      const mutRel = `${mutationsRel}/${mutName}`;
+      const rsRel = `${mutRel}/🦠️mutation/${POLICY_RS_COMPONENT_LEAF_NAME}`;
       const abs = join(repoRoot, rsRel);
       if (!existsSync(abs)) continue;
       const content = readFileSync(abs, "utf8");
-      if (implPattern.test(content)) continue;
+      const composite = policyIsCompositeMutationDir(repoRoot, mutRel);
+      if (composite ? compositeImplPattern.test(content) : implPattern.test(content)) continue;
       breaches.push({
         id: `mutation-impl-missing-${rsRel}`,
-        summary: `"${rsRel}" does not yet implement Mutation<…>`,
+        summary: composite ? `"${rsRel}" does not yet implement CompositeMutationKind<…>` : `"${rsRel}" does not yet implement Mutation<…>`,
         kind: "mutation-migration/impl-presence",
         scope: artRel,
         priority: "medium",
-        reason: "Each concrete mutation struct must implement Mutation<P> (or a helper the dispatch enum delegates to).",
-        solution: `Add impl Mutation<Snapshot> for the mutation struct in ${rsRel}.`,
+        reason: composite
+          ? "A composite mutation struct must implement CompositeMutationKind<Snapshot, Op> so its diff and inverse fold from its plan."
+          : "Each concrete mutation struct must implement Mutation<P> (or a helper the dispatch enum delegates to).",
+        solution: composite ? `Add impl CompositeMutationKind<Snapshot, Op> for the mutation struct in ${rsRel}.` : `Add impl Mutation<Snapshot> for the mutation struct in ${rsRel}.`,
+      });
+    }
+  }
+  return breaches;
+}
+
+/** 🔗️Plugin roots that may declare runtime dependencies: `✏️s/🔌️plugins/<plugin>` and its `🧩️extensions/<ext>`. */
+function policyDependencyOwnerRoots(repoRoot: string): readonly string[] {
+  const roots: string[] = [];
+  for (const plugin of policyReaddirSafe(repoRoot, "✏️s/🔌️plugins").filter((e) => e.isDirectory && !e.name.startsWith("."))) {
+    const pluginRel = `✏️s/🔌️plugins/${plugin.name}`;
+    roots.push(pluginRel);
+    for (const ext of policyReaddirSafe(repoRoot, `${pluginRel}/🧩️extensions`).filter((e) => e.isDirectory && !e.name.startsWith("."))) {
+      roots.push(`${pluginRel}/🧩️extensions/${ext.name}`);
+    }
+  }
+  return roots;
+}
+
+/** 🔗️Every `semio-s-plugin-<id>` entry in an owner's Cargo manifests, mapped to the plugin id it names. */
+function policyCargoPluginDependencyIds(repoRoot: string, ownerRel: string): Set<string> {
+  const ids = new Set<string>();
+  const manifest = policyReadFileSafe(repoRoot, `${ownerRel}/📦️packages/🦀️rust/Cargo.toml`);
+  for (const match of manifest.matchAll(/(?:^|\n)\s*(?:[\w-]+\s*=\s*\{[^}]*?)?package\s*=\s*"semio-s-plugin-([a-z0-9-]+)"/g)) {
+    ids.add(match[1]!);
+  }
+  for (const match of manifest.matchAll(/(?:^|\n)\s*semio-s-plugin-([a-z0-9-]+)\s*=/g)) {
+    ids.add(match[1]!);
+  }
+  return ids;
+}
+
+/**
+ * 📏️A runtime plugin dependency (`.depends_on("x", …)` in the owner's `🦀️component.rs` tree) must be
+ * backed by a real Cargo dependency on `semio-s-plugin-x`, and vice versa — a contributor needs the
+ * dependency crate's snapshot/mutation types to plan against, and the host refuses to load a plugin
+ * whose declared dependency is absent. Both directions are checked so neither half can drift.
+ */
+function policyPluginDependencyParityBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const ownerRel of policyDependencyOwnerRoots(repoRoot)) {
+    const declared = new Set<string>();
+    for (const relPath of policyWalkRelFiles(repoRoot, [ownerRel], (_relPath, name) => name === POLICY_RS_COMPONENT_LEAF_NAME)) {
+      for (const match of policyReadFileSafe(repoRoot, relPath).matchAll(/\.depends_on\s*\(\s*"([a-z0-9-]+)"/g)) {
+        declared.add(match[1]!);
+      }
+    }
+    const cargo = policyCargoPluginDependencyIds(repoRoot, ownerRel);
+    const ownId = policyStripEmoji(ownerRel.split("/").pop() ?? "");
+    for (const id of declared) {
+      if (cargo.has(id)) continue;
+      breaches.push({
+        id: `plugin-dependency-missing-cargo-${ownerRel}-${id}`,
+        summary: `"${ownerRel}" declares .depends_on("${id}") with no Cargo dependency on semio-s-plugin-${id}`,
+        kind: "plugin-dependency/parity",
+        scope: ownerRel,
+        priority: "high",
+        reason: "A runtime dependency must be backed by the crate dependency that supplies the target's snapshot and mutation types.",
+        solution: `Add semio-s-plugin-${id} (default-features = false) to ${ownerRel}/📦️packages/🦀️rust/Cargo.toml.`,
+      });
+    }
+    for (const id of cargo) {
+      if (id === ownId || declared.has(id)) continue;
+      breaches.push({
+        id: `plugin-dependency-undeclared-runtime-${ownerRel}-${id}`,
+        summary: `"${ownerRel}" Cargo-depends on semio-s-plugin-${id} without declaring .depends_on("${id}")`,
+        kind: "plugin-dependency/parity",
+        scope: ownerRel,
+        // 🎫️ Held at "medium" while the runtime-dependency API rolls out: every plugin that already
+        // links a sibling crate (demonstrator, procedural, …) reports here until it adopts
+        // `.depends_on`, which is the migration this ticket tracks rather than a defect to gate on.
+        priority: "medium",
+        reason: "The host builds its load order, version checks and contribution gates from the runtime manifest — a crate dependency the manifest never mentions is invisible to all three.",
+        solution: `Add .depends_on("${id}", …) to the plugin/extension builder in ${ownerRel}.`,
+      });
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️Every `ArtifactContribution::builder("s.<owner>.<artifact>")` must target an artifact whose
+ * owning plugin the contributor declares as a direct dependency — contributing onto a plugin you do
+ * not depend on is exactly the unowned-registration this ticket's contract forbids.
+ */
+function policyContributionTargetBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const ownerRel of policyDependencyOwnerRoots(repoRoot)) {
+    const declared = new Set<string>();
+    const targets = new Map<string, string>();
+    for (const relPath of policyWalkRelFiles(repoRoot, [ownerRel], (_relPath, name) => name === POLICY_RS_COMPONENT_LEAF_NAME)) {
+      const content = policyReadFileSafe(repoRoot, relPath);
+      for (const match of content.matchAll(/\.depends_on\s*\(\s*"([a-z0-9-]+)"/g)) declared.add(match[1]!);
+      for (const match of content.matchAll(/ArtifactContribution::builder\s*\(\s*"([^"]+)"/g)) targets.set(match[1]!, relPath);
+    }
+    for (const [kind, relPath] of targets) {
+      const owner = kind.split(".")[1];
+      if (!owner) {
+        breaches.push({
+          id: `contribution-target-ungrammatical-${relPath}-${kind}`,
+          summary: `"${relPath}" contributes to "${kind}", which is not a canonical s.<plugin>.<artifact> kind`,
+          kind: "plugin-dependency/contribution-target",
+          scope: ownerRel,
+          priority: "high",
+          reason: "A contribution target must name its owning plugin so the dependency gate can resolve it.",
+          solution: `Use the canonical kind id of the target artifact in ${relPath}.`,
+        });
+        continue;
+      }
+      if (declared.has(owner)) continue;
+      breaches.push({
+        id: `contribution-target-undeclared-${ownerRel}-${kind}`,
+        summary: `"${ownerRel}" contributes to "${kind}" without declaring .depends_on("${owner}")`,
+        kind: "plugin-dependency/contribution-target",
+        scope: ownerRel,
+        priority: "high",
+        reason: "Mutations and inferences may only be registered onto artifacts of a directly declared dependency.",
+        solution: `Add .depends_on("${owner}", …) to the plugin/extension builder in ${ownerRel}.`,
       });
     }
   }
@@ -9900,7 +9957,7 @@ export function policyAppSchemaBreaches(repoRoot: string): BreachRecord[] {
 //#endregion 🔧️PolicyRuleAppSchemas
 
 //#region 🔧️PolicyRuleArtifactIo
-/** 🎫 Normative owner table for stdio roster, DAG, and curated IO matrix — SSOT lives under the 🗄️stdio plugin's own registry, since this is product-shaped data about ✏️s plugins, not generic framework data. */
+/** 🧾 Schema-derived stdio definition view for policy checks. */
 const POLICY_STDIO_OWNER_TABLE_REL = "✏️s/🔌️plugins/🗄️stdio/📇️registry/📇️catalog.json";
 const POLICY_STDIO_PLUGIN_REL = "✏️s/🔌️plugins/🗄️stdio";
 const POLICY_STDIO_ARTIFACTS_REL = `${POLICY_STDIO_PLUGIN_REL}/🗿️artifacts`;
@@ -9935,9 +9992,9 @@ const POLICY_STDIO_BINARY_SPEC_LEAVES = [
 ] as const;
 const POLICY_STDIO_CODEC_BANNED_MARKERS = ["SRAS", "IFCCARTOONMESH", "b\"minimal\"", "stub codec", "minimal stub codec"] as const;
 
-type PolicyStdioOwnerTable = {
-  stdio_roster: Record<string, { dir: string; depends: string[] }>;
-  stdio_dag_edges: { from: string; to: string }[];
+type PolicyStdioDefinitionTable = {
+  artifacts: Record<string, { dir: string; depends: string[] }>;
+  dependency_edges: { from: string; to: string }[];
   owners: Array<{
     path: string;
     stdio_artifacts: string[];
@@ -9947,10 +10004,14 @@ type PolicyStdioOwnerTable = {
   counts?: { stdio_artifacts?: number };
 };
 
-function policyLoadStdioOwnerTable(repoRoot: string): PolicyStdioOwnerTable | null {
-  const abs = join(repoRoot, POLICY_STDIO_OWNER_TABLE_REL);
-  if (existsSync(abs)) return JSON.parse(readFileSync(abs, "utf8")) as PolicyStdioOwnerTable;
-  return null;
+function policyLoadStdioOwnerTable(repoRoot: string): PolicyStdioDefinitionTable | null {
+  try {
+    const ledger = stdioArtifactLedger(repoRoot);
+    const artifacts = Object.fromEntries(ledger.artifacts.map((artifact) => [artifact.id, { dir: artifact.directory, depends: [...artifact.depends] }]));
+    return { artifacts, dependency_edges: ledger.artifacts.flatMap((artifact) => artifact.depends.map((to) => ({ from: artifact.id, to }))), owners: [], counts: { stdio_artifacts: ledger.counts.artifacts } };
+  } catch {
+    return null;
+  }
 }
 
 function policyStdioArtifactFacets(taxonomy: ReturnType<typeof loadTaxonomy>): string[] {
@@ -9973,8 +10034,8 @@ function policyStdioRepresentationDirs(taxonomy: ReturnType<typeof loadTaxonomy>
   return from?.length ? [...from] : [...POLICY_STDIO_REPRESENTATION_FALLBACK];
 }
 
-function policyStdioFormatDir(roster: PolicyStdioOwnerTable["stdio_roster"], formatId: string): string | undefined {
-  return roster[formatId]?.dir;
+function policyStdioFormatDir(artifacts: PolicyStdioDefinitionTable["artifacts"], formatId: string): string | undefined {
+  return artifacts[formatId]?.dir;
 }
 
 function policyStdioArtifactsDirName(): string {
@@ -10143,16 +10204,16 @@ export function policyStdioCatalogBreaches(repoRoot: string): BreachRecord[] {
     return breaches;
   }
   const expectedCount = table.counts?.stdio_artifacts ?? 36;
-  const rosterIds = Object.keys(table.stdio_roster ?? {});
+  const rosterIds = Object.keys(table.artifacts);
   if (rosterIds.length !== expectedCount) {
     breaches.push({
       id: "stdio-catalog-roster-count",
-      summary: `stdio_roster has ${rosterIds.length} entries but normative count is ${expectedCount}`,
+      summary: `schema-derived artifact definitions have ${rosterIds.length} entries but normative count is ${expectedCount}`,
       kind: "stdio-artifacts/catalog",
       scope: POLICY_STDIO_PLUGIN_REL,
       priority: "high",
       reason: "The closed stdio catalog must list exactly 36 format artifacts.",
-      solution: `Fix stdio_roster in ${POLICY_STDIO_OWNER_TABLE_REL}.`,
+      solution: `Fix schema-owned definitions under ${POLICY_STDIO_OWNER_TABLE_REL}.`,
     });
   }
   const pluginRoot = join(repoRoot, POLICY_STDIO_PLUGIN_REL);
@@ -10171,7 +10232,7 @@ export function policyStdioCatalogBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
   const requiredFacets = policyStdioArtifactFacets(taxonomy);
   for (const formatId of rosterIds) {
-    const entry = table.stdio_roster[formatId]!;
+    const entry = table.artifacts[formatId]!;
     const artRel = `${POLICY_STDIO_ARTIFACTS_REL}/${entry.dir}`;
     const scope = `🗄️stdio/${entry.dir}`;
     if (!existsSync(join(repoRoot, artRel))) {
@@ -10830,7 +10891,7 @@ export function policyIoMatrixMigratedBreaches(repoRoot: string): BreachRecord[]
   const breaches: BreachRecord[] = [];
   const table = policyLoadStdioOwnerTable(repoRoot);
   if (!table) return breaches;
-  const roster = table.stdio_roster ?? {};
+  const roster = table.artifacts;
   const artifactsDir = policyStdioArtifactsDirName();
   const dialectsByArt = new Map<string, PolicyArtifactDialect[]>();
   for (const d of policyListArtifactDialectDirs(repoRoot)) {
@@ -10870,7 +10931,7 @@ export function policyIoSerializerMatrixBreaches(repoRoot: string): BreachRecord
   const breaches: BreachRecord[] = [];
   const table = policyLoadStdioOwnerTable(repoRoot);
   if (!table) return breaches;
-  const roster = table.stdio_roster ?? {};
+  const roster = table.artifacts;
   const artifactsDir = policyStdioArtifactsDirName();
   for (const owner of table.owners ?? []) {
     const scope = owner.path;
@@ -10903,7 +10964,7 @@ export function policyIoSerializerMatrixBreaches(repoRoot: string): BreachRecord
             kind: "stdio-artifacts/io-matrix",
             scope,
             priority: "high",
-            reason: "Matrix format ids must exist in stdio_roster.",
+            reason: "Matrix format ids must exist in the schema-owned definition set.",
             solution: `Fix ${label} list for ${scope} in ${POLICY_STDIO_OWNER_TABLE_REL}.`,
           });
           continue;
@@ -10935,20 +10996,20 @@ export function policyIoTerminalityBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const table = policyLoadStdioOwnerTable(repoRoot);
   if (!table) return breaches;
-  const roster = table.stdio_roster ?? {};
+  const roster = table.artifacts;
   const nodes = new Set(Object.keys(roster));
   const adj = new Map<string, Set<string>>();
   for (const id of nodes) adj.set(id, new Set(roster[id]?.depends ?? []));
-  for (const edge of table.stdio_dag_edges ?? []) {
+  for (const edge of table.dependency_edges) {
     if (!nodes.has(edge.from) || !nodes.has(edge.to)) {
       breaches.push({
         id: `stdio-dag-unknown-${edge.from}-${edge.to}`,
-        summary: `stdio_dag_edges references unknown node (${edge.from} → ${edge.to})`,
+        summary: `schema-derived dependency edge references unknown node (${edge.from} → ${edge.to})`,
         kind: "stdio-artifacts/io-terminality",
         scope: POLICY_STDIO_PLUGIN_REL,
         priority: "high",
-        reason: "DAG edges must only connect roster format ids.",
-        solution: `Align stdio_dag_edges with stdio_roster in ${POLICY_STDIO_OWNER_TABLE_REL}.`,
+        reason: "Dependency edges must only connect schema-defined format ids.",
+        solution: `Align schema dependencies in ${POLICY_STDIO_OWNER_TABLE_REL}.`,
       });
       continue;
     }
@@ -10956,13 +11017,13 @@ export function policyIoTerminalityBreaches(repoRoot: string): BreachRecord[] {
     const rosterDeps = new Set(roster[edge.from]?.depends ?? []);
     if (!rosterDeps.has(edge.to)) {
       breaches.push({
-        id: `stdio-dag-roster-edge-${edge.from}-${edge.to}`,
-        summary: `stdio_dag_edges has ${edge.from}→${edge.to} but stdio_roster.depends omits "${edge.to}"`,
+        id: `stdio-dag-definition-edge-${edge.from}-${edge.to}`,
+        summary: `schema-derived dependency edge ${edge.from}→${edge.to} is absent from its definition`,
         kind: "stdio-artifacts/io-terminality",
         scope: POLICY_STDIO_PLUGIN_REL,
         priority: "high",
-        reason: "stdio_dag_edges must mirror stdio_roster depends arrays.",
-        solution: `Add "${edge.to}" to stdio_roster.${edge.from}.depends or remove the edge.`,
+        reason: "Derived dependency edges must mirror definition dependencies.",
+        solution: `Fix dependencies for ${edge.from} in ${POLICY_STDIO_OWNER_TABLE_REL}.`,
       });
     }
   }
@@ -10997,7 +11058,7 @@ export function policyIoTerminalityBreaches(repoRoot: string): BreachRecord[] {
       scope: POLICY_STDIO_PLUGIN_REL,
       priority: "high",
       reason: "Stdio codec dependencies must form a DAG.",
-      solution: "Remove cyclic depends entries from stdio_roster.",
+      solution: "Remove cyclic schema definition dependencies.",
     });
     break;
   }
@@ -11027,7 +11088,7 @@ export function policyIoTerminalityBreaches(repoRoot: string): BreachRecord[] {
       scope: POLICY_STDIO_PLUGIN_REL,
       priority: "high",
       reason: "Every stdio artifact dependency chain must eventually reach the binary root.",
-      solution: `Fix depends for "${n}" in stdio_roster until binary is reachable.`,
+      solution: `Fix dependencies for "${n}" until binary is reachable.`,
     });
   }
   return breaches;
@@ -11091,7 +11152,7 @@ function policyDialectLiteralPathBreaches(repoRoot: string): BreachRecord[] {
   const subsetAnyDirName = (taxonomy as any).subsetAnyDirName ?? "✳️any";
   const subsetDirPrefix = (taxonomy as any).subsetDirPrefix ?? "✳️";
   const dirToKey = new Map<string, string>();
-  for (const [key, entry] of Object.entries(table.stdio_roster ?? {})) {
+  for (const [key, entry] of Object.entries(table.artifacts)) {
     dirToKey.set(entry.dir, key);
   }
   const artifactsPrefix = `${POLICY_STDIO_ARTIFACTS_REL}/`;
@@ -11347,7 +11408,7 @@ function policyComposerDependencyBreaches(repoRoot: string): BreachRecord[] {
   const table = policyLoadStdioOwnerTable(repoRoot);
   if (!table) return breaches;
   const dirByKey = new Map<string, string>();
-  for (const [key, entry] of Object.entries(table.stdio_roster ?? {})) {
+  for (const [key, entry] of Object.entries(table.artifacts)) {
     dirByKey.set(key, entry.dir);
   }
   for (const relPath of policyAllRustFiles(repoRoot)) {
@@ -13533,6 +13594,8 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyProtocolFileBreaches(repoRoot));
   breaches.push(...policyTsFacadeBreaches(repoRoot));
   breaches.push(...policyMutationArtifactEngineBreaches(repoRoot));
+  breaches.push(...policyPluginDependencyParityBreaches(repoRoot));
+  breaches.push(...policyContributionTargetBreaches(repoRoot));
   breaches.push(...policyInferenceFamilyBreaches(repoRoot));
   breaches.push(...policySchemaOverhaulS2Breaches(repoRoot));
   breaches.push(...policySchemaOverhaulPCBreaches(repoRoot));

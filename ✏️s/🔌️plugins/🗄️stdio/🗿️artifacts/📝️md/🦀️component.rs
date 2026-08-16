@@ -51,14 +51,19 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `register_schema_spec` is "deliberately NOT called here" — so unlike `📄txt`/`💾️binary` there is no
 /// uncovered call left behind. `standards::v_commonmark::engine::register()` itself is left in place,
 /// now orphaned/uncalled — deleting it means editing `⚙️engine/`, off-limits here.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.stdio.md")
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("md", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::md::schema::md_artifact_schema_descriptor())
         .inferences([crate::artifacts::md::standards::v_commonmark::subsets::any::schema::inferences::md_artifact_inference_descriptor()])
         .composers(crate::artifacts::md::standards::v_commonmark::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<MdSnapshot, MdMutation>(STDIO_MD_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once

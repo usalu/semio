@@ -85,11 +85,11 @@ pub use io::{
     AnalyzeSource, Confidence as IoConfidence, Analysis, ComposeSource, Composition, ComposeError,
     IoPayload, ErasedComposeSource, ComposedArtifact, ComposerEntry,
     IoDirection, IoKey, IoResolveError,
-    register_composer_entries, resolve as io_resolve, dialects_for as io_dialects_for,
+    register_composer_entries, register_composer_entry_refs, preflight_composer_entry_refs, resolve as io_resolve, dialects_for as io_dialects_for,
     io_keys_for, list_composer_entries, io_dispatch, set_io_fallback_dispatcher,
     WireComposeSource, WireComposedArtifact, wire_list_composer_entries, wire_artifact_compose, wire_decode_composed_artifact,
-    SubsetValidator, SubsetValidatorEntry, subset_validator_entry_of, register_subset_validator,
-    FormatDescriptor, register_format_descriptors, format_descriptor, normalize_format_kind, format_accept_filter, formats_csv,
+    SubsetValidator, SubsetValidatorEntry, subset_validator_entry_of, register_subset_validator, register_subset_validators, preflight_subset_validators,
+    FormatDescriptor, register_format_descriptors, preflight_format_descriptors, format_descriptor, normalize_format_kind, format_accept_filter, formats_csv,
 };
 pub use platform::{PanelVisibility, Platform, PlatformSpec};
 pub use workflow::*;

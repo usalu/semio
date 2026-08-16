@@ -28,6 +28,7 @@ pub use crate::os_spr::command::{
     DiffCodec, Edit, Identified, IndexedTripleDiff, ItemPatch, MutationKind, NamedTripleDiff, OpBinary, OpText, Mutation, MutationDescriptor, MutationDiff, MutationEvent, MutationMeta, MutationUpcaster, Patchable, ReconcileReport, ReconcileSeverity,
     SemanticDescriptor, SemanticMutation, APPROVED_VERBS,
     DiffRegions, Inference, InferenceFieldSpec, InferenceSpec, TouchedPaths,
+    fold_plan_diff, fold_plan_inverse, plan_foreign_steps, plan_of, CompositeMutationKind, ForeignStep, ForeignTarget, MutationOrigin, PlanError, PlanStep, Planner, MAX_PLAN_DEPTH,
 };
 pub use crate::os_spr::wire::{ActorId, ConflictRule, ArtifactId, ArtifactVersion, HybridLogicalTimestamp, MergeStrategyKind, MutationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64};
 pub use crate::os_spr::crdt::merge_concurrent_diffs;

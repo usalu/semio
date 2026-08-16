@@ -1,0 +1,27 @@
+bun ./📜️script.ts policy — 2026-08-16, after W0-I taxonomy + policy additions
+total breaches: 31353
+
+gates added by this ticket:
+  plugin-dependency/parity: 0  (expected 0 — no .depends_on call sites exist yet)
+  plugin-dependency/contribution-target: 0  (expected 0 — no .depends_on call sites exist yet)
+
+gates modified by this ticket (composite shape):
+  mutation-migration/triad-completeness: 85  (unchanged baseline — no 🧩️plan dir exists yet, so the composite branch is inert)
+  mutation-migration/impl-presence: 1430  (unchanged baseline — no 🧩️plan dir exists yet, so the composite branch is inert)
+
+top 15 pre-existing breach kinds (context only, not this ticket's):
+   22079  handcrafted-grammar/spec-distinctness
+    1430  mutation-migration/impl-presence
+    1277  mutation-migration/ts-mirror
+     690  taxonomy/plugin-registration-violation
+     612  mutation-migration/semantic-vocabulary
+     526  stdio-artifacts/grammar-honesty
+     465  taxonomy/emoji-prefix-uniqueness
+     417  artifact-schema/facet-completeness
+     334  os-state-authority/item-scope-global
+     253  taxonomy/dead-example-leaf
+     248  inference-migration/assembly-coverage
+     244  inference-migration/emoji-uniqueness
+     241  inference-migration/impl-presence
+     222  taxonomy/command-folder-semantic
+     121  taxonomy/plugin-dependency-allowlist

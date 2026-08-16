@@ -1,17 +1,18 @@
 #!/usr/bin/env bun
 /** 🗄️ stdio TypeScript package */
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     resolveTestLevel(segments);
-    const catalog = JSON.parse(readFileSync(join(this.root, "../../📇️registry/📇️catalog.json"), "utf8")) as { stdio_roster: Record<string, unknown> };
     const facade = await import("./📦️index.ts");
-    const missing = Object.keys(catalog.stdio_roster).filter((id) => !(id in facade));
-    if (missing.length > 0) throw new Error(`[stdio] missing TypeScript artifact exports: ${missing.join(", ")}`);
-    console.log(`[stdio] TypeScript facade exposes ${Object.keys(catalog.stdio_roster).length} catalog artifacts.`);
+    const entries = Object.entries(facade);
+    if (entries.length !== 36) throw new Error(`[stdio] expected 36 TypeScript definitions, got ${entries.length}.`);
+    for (const [artifact, namespace] of entries) {
+      const definition = (namespace as { definition?: { id?: string } }).definition;
+      if (!definition || definition.id !== `s.stdio.${artifact}`) throw new Error(`[stdio] ${artifact} does not export its schema-owned ArtifactDefinition.`);
+    }
+    console.log(`[stdio] TypeScript facade exposes ${entries.length} schema-owned artifact definitions.`);
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);

@@ -56,14 +56,19 @@ pub const DWG_ARTIFACT_SCHEMA_ID: &str = "s.stdio.dwg";
 /// it is not invented and the call is not dropped — it must survive on the plugin root's
 /// `.setup(crate::artifacts::dwg::engine::register_schema_specs)` alongside this declaration's
 /// `.artifact(...)`, exactly this ticket's own W1d precedent (puzzle's B2 OS-media-bridge case).
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(DWG_ARTIFACT_SCHEMA_ID)
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("dwg", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::dwg::schema::dwg_artifact_schema_descriptor())
         .inferences([crate::artifacts::dwg::schema::inferences::dwg_artifact_inference_descriptor()])
         .composers(dwg_combined_composer_entries())
         .languages(pilot_languages())
         .document_codec_bare::<DwgSnapshot, DwgMutation>(STDIO_DWG_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 🎹️ `ac1018` + `ac1024` engine composer entries, re-materialized as one owned `&'static

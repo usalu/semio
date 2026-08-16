@@ -41,8 +41,11 @@
       "id": "s.stdio.docx.standard.ecma-376.representation.document",
       "standard": "s.stdio.docx.standard.ecma-376",
       "representation": "document",
-      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "extension": ".docx",
+      "mimes": ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+      "extensions": [".docx"],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -74,7 +77,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.docx.conformance.public-corpus",
+      "id": "s.stdio.docx.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }

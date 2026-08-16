@@ -44,13 +44,18 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `subsets::any::io::register()`'s `store::register_document_codec(store::ArtifactCodec::of::<..>())`
 /// call did — mp3 is a headless stdio artifact with no `ArtifactApp` to bind `.document_codec::<A>()`
 /// to.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(MP3_ARTIFACT_SCHEMA_ID)
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("mp3", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor())
         .inferences([crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::inferences::mp3_artifact_inference_descriptor()])
         .composers(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::io_registry::entries())
         .document_codec_bare::<Mp3Snapshot, Mp3Mutation>(STDIO_MP3_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 //#endregion 🔖️Declaration
 //#region 🚪️DerivedIoRegistry

@@ -55,15 +55,20 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `validator_entry()` OnceLock (left untouched — same pattern `🔣️json`'s `declaration()` establishes
 /// for this field). `standards::v1_0::subsets::any::engine::register()` itself is left in place, now
 /// orphaned/uncalled — deleting it means editing `⚙️engine/`, off-limits here.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.stdio.xml")
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("xml", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::xml::schema::xml_artifact_schema_descriptor())
         .inferences([crate::artifacts::xml::standards::v1_0::subsets::any::schema::inferences::xml_artifact_inference_descriptor()])
         .composers(crate::artifacts::xml::standards::v1_0::subsets::any::io::io_registry::entries())
         .subset_validators(pilot_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<XmlSnapshot, XmlMutation>(STDIO_XML_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 🛡️ The ✳️valid subset's `SubsetValidatorEntry`, built once — see `declaration()`'s own doc for why

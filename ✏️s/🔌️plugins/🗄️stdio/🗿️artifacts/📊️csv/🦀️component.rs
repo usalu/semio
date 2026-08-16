@@ -46,14 +46,19 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `CsvSnapshot`/`CsvDiff` don't carry the `#[derive(dsl::DslRecord)]`/`#[derive(dsl::DslDiff)]`
 /// `register_schema_specs` needs, per txt's own doc ("unlike json/csv...") — so there is no
 /// uncovered call left behind here.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.stdio.csv")
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("csv", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::csv::schema::csv_artifact_schema_descriptor())
         .inferences([crate::artifacts::csv::standards::v_rfc4180::subsets::any::schema::inferences::csv_artifact_inference_descriptor()])
         .composers(crate::artifacts::csv::standards::v_rfc4180::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<CsvSnapshot, CsvMutation>(STDIO_CSV_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once

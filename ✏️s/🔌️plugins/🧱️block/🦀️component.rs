@@ -143,16 +143,16 @@ pub struct BlockMeta {
 /// `ArtifactApp::app_schema()` (ticket W1c) instead — an app-scope concern `ArtifactDeclaration`
 /// has no field for by design (see that struct's doc) — so `.setup()` is gone from this plugin
 /// entirely.
-pub fn plugin() -> Plugin {
+pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("block")
         .label("Block")
         .version("0.1.0")
         .artifact(crate::artifacts::block2d::declaration())
         .artifact(crate::artifacts::block3d::declaration())
         .artifact(crate::artifacts::block5d::declaration())
-        .register_document_app::<crate::apps::block2d::Block2dPlayApp>(crate::apps::block2d::create_block2d_app())
-        .register_document_app::<crate::apps::block3d::Block3dPlayApp>(crate::apps::block3d::create_block3d_app())
-        .register_document_app::<crate::apps::block5d::Block5dPlayApp>(crate::apps::block5d::create_block5d_app())
-        .build()
+        .document_app::<crate::apps::block2d::Block2dPlayApp>(crate::apps::block2d::create_block2d_app())
+        .document_app::<crate::apps::block3d::Block3dPlayApp>(crate::apps::block3d::create_block3d_app())
+        .document_app::<crate::apps::block5d::Block5dPlayApp>(crate::apps::block5d::create_block5d_app())
+        .try_build()
 }
 //#endregion 🔌️Registration

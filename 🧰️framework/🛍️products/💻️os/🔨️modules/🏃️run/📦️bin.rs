@@ -10,7 +10,7 @@
 // `as workflow;` aliases the lib's own `📦️glue.rs` declares, so this binary needs its own copies
 // (this was always true; it was only ever masked because the lib itself failed to compile first,
 // so cargo never got far enough to check this file — see the lib's own W1 fix history).
-extern crate semio_framework_os_kernel as store;
+extern crate semio_framework as store;
 extern crate semio_framework as workflow;
 
 use semio_framework_os_run::{plan, register_builtin_converters, RunSink, SpaceBundle, SpaceRunner, WasmtimeNodeHost};
@@ -169,7 +169,7 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     // `workflow::WorkflowSnapshot`/`WorkflowMutation` pair (the `s.workflow` artifact document)
     // instead — only the typed decode target moved, wiring the root slot to a real
     // `space::SpaceSnapshot` manifest is later-wave work.
-    let parsed: store::ParsedDocumentText<semio_framework_os::WorkflowSnapshot, semio_framework_os::WorkflowMutation> = store::parse_document_pack(&space_pack, &space_spr).map_err(|error| error.to_string())?;
+    let parsed: store::ParsedDocumentText<workflow::WorkflowSnapshot, workflow::WorkflowMutation> = store::parse_document_pack(&space_pack, &space_spr).map_err(|error| error.to_string())?;
     let snapshot = parsed.snapshot;
 
     let mut graph = snapshot.graph.clone();

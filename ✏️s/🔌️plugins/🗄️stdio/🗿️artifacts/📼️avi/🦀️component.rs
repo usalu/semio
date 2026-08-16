@@ -43,13 +43,18 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `subsets::any::io::register()`'s `store::register_document_codec(store::ArtifactCodec::of::<..>())`
 /// call did — avi is a headless stdio artifact with no `ArtifactApp` to bind `.document_codec::<A>()`
 /// to.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(AVI_ARTIFACT_SCHEMA_ID)
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("avi", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::avi::standards::v1_0::subsets::any::schema::avi_artifact_schema_descriptor())
         .inferences([crate::artifacts::avi::standards::v1_0::subsets::any::schema::inferences::avi_artifact_inference_descriptor()])
         .composers(crate::artifacts::avi::standards::v1_0::subsets::any::io::io_registry::entries())
         .document_codec_bare::<AviSnapshot, AviMutation>(STDIO_AVI_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 //#endregion 🔖️Declaration
 //#region 🚪️DerivedIoRegistry

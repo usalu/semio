@@ -30,14 +30,19 @@ pub const BCF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.bcf";
 /// (`BcfSnapshot`/`BcfDiff`/`BcfMutation` are all hand-rolled, no derivable `RecordSpec` — see the
 /// deleted `register_pilot_languages`' own doc comment), so this artifact converts cleanly with
 /// zero residual `.setup()` calls.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(BCF_ARTIFACT_SCHEMA_ID)
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("bcf", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::bcf::schema::bcf_artifact_schema_descriptor())
         .inferences([crate::artifacts::bcf::standards::v2_1::subsets::any::schema::inferences::bcf_artifact_inference_descriptor()])
         .composers(crate::artifacts::bcf::standards::v2_1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<BcfSnapshot, BcfMutation>(STDIO_BCF_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary), copied verbatim (five

@@ -10,7 +10,7 @@ use semio_framework_plugin::Plugin;
 /// **W1d update.** The app-schema half of the old `.setup()` callback is GONE:
 /// `register_app_schemas()` was never actually a distinct `ArtifactDeclaration` coverage gap — it
 /// was category-1 app-scope schema wearing a different name. `Puzzle2dPlayApp`/`Puzzle3dPlayApp`/
-/// `Puzzle5dPlayApp` now each override `ArtifactApp::app_schema()`, so `.register_document_app()`
+/// `Puzzle5dPlayApp` now each override `ArtifactApp::app_schema()`, so `.document_app()`
 /// below auto-registers all three, exactly like `🗒️note`'s exemplar — see each app's own
 /// `app_schema` override doc.
 ///
@@ -33,7 +33,7 @@ use semio_framework_plugin::Plugin;
 /// the OS bridge's own live consumer — the OS-level export/import dispatch this file does not own —
 /// was not traced this pass) — deleting on inference alone risks silently breaking real export/import
 /// UI functionality, which this ticket's "get everything working" rule forbids doing speculatively.
-pub fn plugin() -> Plugin {
+pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("puzzle")
         .label("Puzzle")
         .version("0.1.0")
@@ -41,10 +41,10 @@ pub fn plugin() -> Plugin {
         .artifact(crate::artifacts::puzzle2d::declaration())
         .artifact(crate::artifacts::puzzle3d::declaration())
         .artifact(crate::artifacts::puzzle5d::declaration())
-        .register_document_app::<crate::apps::puzzle2d::Puzzle2dPlayApp>(crate::apps::puzzle2d::create_puzzle2d_app())
-        .register_document_app::<crate::apps::puzzle3d::Puzzle3dPlayApp>(crate::apps::puzzle3d::create_puzzle3d_app())
-        .register_document_app::<crate::apps::puzzle5d::Puzzle5dPlayApp>(crate::apps::puzzle5d::create_puzzle5d_app())
-        .build()
+        .document_app::<crate::apps::puzzle2d::Puzzle2dPlayApp>(crate::apps::puzzle2d::create_puzzle2d_app())
+        .document_app::<crate::apps::puzzle3d::Puzzle3dPlayApp>(crate::apps::puzzle3d::create_puzzle3d_app())
+        .document_app::<crate::apps::puzzle5d::Puzzle5dPlayApp>(crate::apps::puzzle5d::create_puzzle5d_app())
+        .try_build()
 }
 
 /// 🔧️ The OS media-host export/import bridges — see `plugin()`'s own doc for why these, and only

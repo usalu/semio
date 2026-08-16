@@ -15,6 +15,10 @@ pub const TXT_ARTIFACT_SCHEMA_ID: &str = "s.stdio.txt";
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::definition_only_assembly("txt", definition)
+}
+
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.txt".into(),

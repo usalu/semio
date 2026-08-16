@@ -63,8 +63,11 @@
       "id": "s.stdio.ifc.standard.2x3.representation.document",
       "standard": "s.stdio.ifc.standard.2x3",
       "representation": "document",
-      "mime": "application/x-ifc",
-      "extension": ".ifc",
+      "mimes": ["application/x-ifc"],
+      "extensions": [".ifc"],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -96,7 +99,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.ifc.conformance.public-corpus",
+      "id": "s.stdio.ifc.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }

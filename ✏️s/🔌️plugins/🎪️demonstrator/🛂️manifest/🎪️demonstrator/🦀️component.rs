@@ -21,7 +21,7 @@ const PLUGIN_VERSION: &str = "0.1.0";
 //#region 🔌️Plugin
 /// 🔌️ Builds the concrete demonstrator bundle, declaring its owned playground artifact before
 /// registering the six foreign document surfaces in their preserved order.
-pub fn plugin() -> Plugin {
+pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     assemble(
         Plugin::builder(PLUGIN_ID)
             .label(PLUGIN_LABEL)
@@ -39,12 +39,12 @@ fn assemble(bundle: Plugin) -> Plugin {
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Process3dPlayApp>(PROCESS_3D_SCHEMA);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Gis2dPlayApp>(GIS_MAP_SCHEMA);
     bundle
-        .register_document_app::<Procedural3dPlayApp>(create_procedural3d_app())
-        .register_document_app::<CadPlayApp>(create_cad_app())
-        .register_document_app::<Puzzle3dPlayApp>(create_puzzle3d_app())
-        .register_document_app::<SourcingCurateApp>(create_sourcing_curate_app())
-        .register_document_app::<Process3dPlayApp>(create_process3d_app())
-        .register_document_app::<Gis2dPlayApp>(create_gis2d_app())
+        .document_app::<Procedural3dPlayApp>(create_procedural3d_app())
+        .document_app::<CadPlayApp>(create_cad_app())
+        .document_app::<Puzzle3dPlayApp>(create_puzzle3d_app())
+        .document_app::<SourcingCurateApp>(create_sourcing_curate_app())
+        .document_app::<Process3dPlayApp>(create_process3d_app())
+        .document_app::<Gis2dPlayApp>(create_gis2d_app())
 }
 //#endregion 🔌️Plugin
 

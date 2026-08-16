@@ -2883,6 +2883,250 @@ impl TopicContribution {
 }
 //#endregion 🔖️TopicContribution
 
+//#region 🔖️PluginDependency
+/// 🔢️ A frozen `major.minor.patch` version triple — no external semver crate (contract freeze
+/// `26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS` §3). `Ord` is
+/// derived field-in-order (major, then minor, then patch), which is exactly semver precedence.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(into = "String", try_from = "String")]
+pub struct Version {
+    pub major: u64,
+    pub minor: u64,
+    pub patch: u64,
+}
+
+/// 🚧️ Failure parsing a `Version` (`major.minor.patch`, all-numeric segments) or a `VersionReq`.
+#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+pub enum VersionParseError {
+    #[error("expected `major.minor.patch`, got {0:?}")]
+    Malformed(String),
+    #[error("non-numeric version segment {1:?} in {0:?}")]
+    NonNumeric(String, String),
+}
+
+impl Version {
+    pub fn new(major: u64, minor: u64, patch: u64) -> Self {
+        Self { major, minor, patch }
+    }
+
+    /// 🔢️ Parses a strict `major.minor.patch` triple — no pre-release/build metadata, no leniency.
+    pub fn parse(input: &str) -> Result<Self, VersionParseError> {
+        let mut segments = input.split('.');
+        let (Some(major), Some(minor), Some(patch), None) = (segments.next(), segments.next(), segments.next(), segments.next()) else {
+            return Err(VersionParseError::Malformed(input.to_string()));
+        };
+        let segment = |raw: &str| raw.parse::<u64>().map_err(|_| VersionParseError::NonNumeric(input.to_string(), raw.to_string()));
+        Ok(Self { major: segment(major)?, minor: segment(minor)?, patch: segment(patch)? })
+    }
+}
+
+impl std::fmt::Display for Version {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}.{}.{}", self.major, self.minor, self.patch)
+    }
+}
+
+impl std::str::FromStr for Version {
+    type Err = VersionParseError;
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        Version::parse(input)
+    }
+}
+
+impl From<Version> for String {
+    fn from(version: Version) -> Self {
+        version.to_string()
+    }
+}
+
+impl TryFrom<String> for Version {
+    type Error = VersionParseError;
+    fn try_from(raw: String) -> Result<Self, Self::Error> {
+        Version::parse(&raw)
+    }
+}
+
+/// 🔢️ A dependency version requirement — the frozen grammar `=X.Y.Z` / `^X.Y.Z` / `~X.Y.Z` /
+/// `>=X.Y.Z` / `*` (contract freeze §3). `^`/`~` follow standard semver caret/tilde precedence:
+/// caret allows any change that does not bump the leftmost nonzero component, tilde allows only
+/// patch-level movement within the same `major.minor`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum VersionReq {
+    Any,
+    Exact(Version),
+    Caret(Version),
+    Tilde(Version),
+    AtLeast(Version),
+}
+
+impl VersionReq {
+    /// 🔢️ Parses one of the five frozen grammar forms.
+    pub fn parse(input: &str) -> Result<Self, VersionReqParseError> {
+        let trimmed = input.trim();
+        if trimmed == "*" {
+            return Ok(VersionReq::Any);
+        }
+        if let Some(rest) = trimmed.strip_prefix(">=") {
+            return Ok(VersionReq::AtLeast(Version::parse(rest)?));
+        }
+        if let Some(rest) = trimmed.strip_prefix('^') {
+            return Ok(VersionReq::Caret(Version::parse(rest)?));
+        }
+        if let Some(rest) = trimmed.strip_prefix('~') {
+            return Ok(VersionReq::Tilde(Version::parse(rest)?));
+        }
+        if let Some(rest) = trimmed.strip_prefix('=') {
+            return Ok(VersionReq::Exact(Version::parse(rest)?));
+        }
+        Err(VersionReqParseError::UnknownOperator(trimmed.to_string()))
+    }
+
+    /// ✅️ Whether `version` satisfies this requirement.
+    pub fn matches(&self, version: &Version) -> bool {
+        match self {
+            VersionReq::Any => true,
+            VersionReq::Exact(required) => version == required,
+            VersionReq::AtLeast(required) => version >= required,
+            VersionReq::Caret(required) => {
+                if required.major != 0 {
+                    version.major == required.major && version >= required
+                } else if required.minor != 0 {
+                    version.major == 0 && version.minor == required.minor && version >= required
+                } else {
+                    version.major == 0 && version.minor == 0 && version.patch == required.patch
+                }
+            }
+            VersionReq::Tilde(required) => version.major == required.major && version.minor == required.minor && version.patch >= required.patch,
+        }
+    }
+
+    /// ✅️ Convenience for the dependency graph: parses `raw` and matches, treating an unparsable
+    /// target version as non-matching (except `*`, which never needs to parse its target).
+    pub fn matches_raw(&self, raw: &str) -> bool {
+        match self {
+            VersionReq::Any => true,
+            _ => Version::parse(raw).map(|version| self.matches(&version)).unwrap_or(false),
+        }
+    }
+}
+
+impl std::fmt::Display for VersionReq {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            VersionReq::Any => write!(f, "*"),
+            VersionReq::Exact(v) => write!(f, "={v}"),
+            VersionReq::Caret(v) => write!(f, "^{v}"),
+            VersionReq::Tilde(v) => write!(f, "~{v}"),
+            VersionReq::AtLeast(v) => write!(f, ">={v}"),
+        }
+    }
+}
+
+/// 🚧️ Failure parsing a `VersionReq` string.
+#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+pub enum VersionReqParseError {
+    #[error("unknown version requirement operator in {0:?} (expected one of `=`,`^`,`~`,`>=`,`*`)")]
+    UnknownOperator(String),
+    #[error(transparent)]
+    Version(#[from] VersionParseError),
+}
+
+impl Serialize for VersionReq {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(&self.to_string())
+    }
+}
+
+impl<'de> Deserialize<'de> for VersionReq {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let raw = String::deserialize(deserializer)?;
+        VersionReq::parse(&raw).map_err(serde::de::Error::custom)
+    }
+}
+
+/// 🔗️ One direct plugin dependency: the depended-on plugin id plus the version requirement it must
+/// satisfy — see `resolve_load_order`/`validate_dependency_graph`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct PluginDependency {
+    pub plugin_id: String,
+    #[cfg_attr(feature = "typegen", ts(type = "string"))]
+    pub version: VersionReq,
+}
+
+impl PluginDependency {
+    pub fn new(plugin_id: impl Into<String>, version: VersionReq) -> Self {
+        Self { plugin_id: plugin_id.into(), version }
+    }
+}
+//#endregion 🔖️PluginDependency
+
+//#region 🔖️ArtifactContribution
+/// 🗂️ The `verb`/`entity`/`kind`/`record` semantic identity of one contributed mutation, carried as
+/// owned strings on the wire (the native `SemanticDescriptor` this mirrors lives in the os-kernel
+/// protocol crate, which `semio-framework` must not require plugin manifests to link against).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ContributedMutationSemantics {
+    pub verb: String,
+    pub entity: String,
+    pub kind: String,
+    pub record: String,
+}
+
+/// 🗂️ One mutation a plugin contributes onto an artifact kind it depends on — the manifest-declared
+/// counterpart of a `contributor.list-artifact-mutations` roster entry (contract freeze §3/§6).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ContributedMutationMetadata {
+    /// 🪪️ `"<target-document-schema>#<contributor-plugin-id>:<kebab-kind>"` (contract freeze §3).
+    pub mutation_id: String,
+    pub semantics: ContributedMutationSemantics,
+    pub schema_version: u32,
+    pub algorithm_version: u32,
+}
+
+/// 💡️ One inference a plugin contributes onto an artifact kind it depends on — mirrors the native
+/// `ArtifactInferenceServiceMetadata` fields (owned strings instead of `&'static str`, since this
+/// travels over the wire in a manifest), plus `contributor`/`depends_on` for the contribution's own
+/// identity and ordering (contract freeze §4: `owner == contributor`, `artifact_kind == target`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ContributedInferenceMetadata {
+    pub owner: String,
+    pub artifact_kind: String,
+    pub artifact_schema: String,
+    pub artifact_schema_version: u32,
+    pub document_schema: String,
+    pub document_schema_version: u32,
+    pub inference_schema: String,
+    pub inference_schema_version: u32,
+    pub algorithm_version: u32,
+    pub policy_version: u32,
+    pub contributor: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub depends_on: Vec<String>,
+}
+
+/// 🗂️ Everything one plugin contributes onto one artifact kind it depends on — see the registration
+/// gates in contract freeze §4 (accepted only when `artifact_kind`'s owner is a direct
+/// `PluginManifest.dependencies` entry).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ArtifactContributionDescriptor {
+    pub artifact_kind: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub mutations: Vec<ContributedMutationMetadata>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub inferences: Vec<ContributedInferenceMetadata>,
+}
+//#endregion 🔖️ArtifactContribution
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -2903,6 +3147,410 @@ pub struct PluginManifest {
     /// 🗂️ Plugin-level artifact kinds (library plugins with zero apps declare kinds here).
     #[serde(default)]
     pub artifact_kinds: Vec<ArtifactKindSpec>,
+    /// 🔗️ Direct plugin dependencies this plugin requires to load — see `PluginDependency`/
+    /// `resolve_load_order`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub dependencies: Vec<PluginDependency>,
+    /// 🗂️ Artifact-kind contributions (mutations/inferences) this plugin contributes onto artifact
+    /// kinds it depends on — see `ArtifactContributionDescriptor`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub contributions: Vec<ArtifactContributionDescriptor>,
+}
+
+//#region 🔖️DependencyGraph
+/// 🚧️ Typed dependency-graph validation failures — contract freeze §4/§5: missing dependency,
+/// version mismatch, or a cycle (naming every plugin id on the cycle, in traversal order).
+#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+pub enum DependencyGraphError {
+    #[error("plugin `{plugin_id}` depends on unknown plugin `{depends_on}`")]
+    MissingDependency { plugin_id: String, depends_on: String },
+    #[error("plugin `{plugin_id}` requires `{depends_on}` `{required}` but the loaded version is `{actual}`")]
+    VersionMismatch { plugin_id: String, depends_on: String, required: String, actual: String },
+    #[error("dependency cycle among plugins: {}", .members.join(" -> "))]
+    Cycle { members: Vec<String> },
+}
+
+/// ✅️ Checks every declared dependency resolves to a loaded plugin at a satisfying version —
+/// deterministic: manifests are checked in input order, each manifest's dependencies in declaration
+/// order, so the first violation found is always the same for the same input.
+pub fn validate_dependency_graph(manifests: &[PluginManifest]) -> Result<(), DependencyGraphError> {
+    let by_id: BTreeMap<&str, &PluginManifest> = manifests.iter().map(|manifest| (manifest.plugin_id.as_str(), manifest)).collect();
+    for manifest in manifests {
+        for dependency in &manifest.dependencies {
+            let Some(target) = by_id.get(dependency.plugin_id.as_str()) else {
+                return Err(DependencyGraphError::MissingDependency { plugin_id: manifest.plugin_id.clone(), depends_on: dependency.plugin_id.clone() });
+            };
+            if !dependency.version.matches_raw(&target.version) {
+                return Err(DependencyGraphError::VersionMismatch {
+                    plugin_id: manifest.plugin_id.clone(),
+                    depends_on: dependency.plugin_id.clone(),
+                    required: dependency.version.to_string(),
+                    actual: target.version.clone(),
+                });
+            }
+        }
+    }
+    Ok(())
+}
+
+/// 🧭️ Kahn toposort of the plugin dependency graph: a dependency always precedes its dependents,
+/// and among several simultaneously-ready plugins the lexicographically smallest id is always
+/// picked next, so the returned order is a pure, deterministic function of the input set. Runs
+/// `validate_dependency_graph` first, so a missing dependency or version mismatch is reported
+/// before any cycle would be detected.
+pub fn resolve_load_order(manifests: &[PluginManifest]) -> Result<Vec<String>, DependencyGraphError> {
+    validate_dependency_graph(manifests)?;
+
+    let mut in_degree: BTreeMap<&str, usize> = manifests.iter().map(|manifest| (manifest.plugin_id.as_str(), 0)).collect();
+    let mut dependents_of: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
+    for manifest in manifests {
+        for dependency in &manifest.dependencies {
+            *in_degree.get_mut(manifest.plugin_id.as_str()).expect("validated above") += 1;
+            dependents_of.entry(dependency.plugin_id.as_str()).or_default().push(manifest.plugin_id.as_str());
+        }
+    }
+
+    let mut ready: std::collections::BTreeSet<&str> = in_degree.iter().filter(|(_, degree)| **degree == 0).map(|(id, _)| *id).collect();
+    let mut order: Vec<String> = Vec::with_capacity(manifests.len());
+    while let Some(next) = ready.iter().next().copied() {
+        ready.remove(next);
+        order.push(next.to_string());
+        if let Some(dependents) = dependents_of.get(next) {
+            let mut sorted_dependents = dependents.clone();
+            sorted_dependents.sort_unstable();
+            for dependent in sorted_dependents {
+                let degree = in_degree.get_mut(dependent).expect("validated above");
+                *degree -= 1;
+                if *degree == 0 {
+                    ready.insert(dependent);
+                }
+            }
+        }
+    }
+
+    if order.len() != manifests.len() {
+        let resolved: std::collections::BTreeSet<&str> = order.iter().map(String::as_str).collect();
+        let leftover: std::collections::BTreeSet<String> = manifests
+            .iter()
+            .map(|manifest| manifest.plugin_id.as_str())
+            .filter(|id| !resolved.contains(id))
+            .map(str::to_string)
+            .collect();
+        return Err(DependencyGraphError::Cycle { members: find_cycle_members(manifests, &leftover) });
+    }
+    Ok(order)
+}
+
+/// 🔁️ Walks the leftover (never-ready) subgraph depth-first from its lexicographically smallest
+/// node, following each plugin's first declared dependency that is also leftover, until a node
+/// repeats — the repeated slice of the walked path is the named cycle.
+fn find_cycle_members(manifests: &[PluginManifest], leftover: &std::collections::BTreeSet<String>) -> Vec<String> {
+    let by_id: BTreeMap<&str, &PluginManifest> = manifests.iter().map(|manifest| (manifest.plugin_id.as_str(), manifest)).collect();
+    let mut visited: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+    for start in leftover {
+        if visited.contains(start) {
+            continue;
+        }
+        let mut path: Vec<String> = Vec::new();
+        let mut on_path: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+        let mut node = start.clone();
+        loop {
+            if on_path.contains(&node) {
+                let cycle_start = path.iter().position(|id| id == &node).expect("on_path implies present in path");
+                return path[cycle_start..].to_vec();
+            }
+            if visited.contains(&node) {
+                break;
+            }
+            visited.insert(node.clone());
+            on_path.insert(node.clone());
+            path.push(node.clone());
+            let next = by_id
+                .get(node.as_str())
+                .and_then(|manifest| manifest.dependencies.iter().map(|dependency| dependency.plugin_id.clone()).find(|id| leftover.contains(id)));
+            match next {
+                Some(next_node) => node = next_node,
+                None => break,
+            }
+        }
+    }
+    leftover.iter().cloned().collect()
+}
+
+/// 🔎️ Every plugin (direct dependents only, not transitive) that declares `plugin_id` as a
+/// dependency, sorted for determinism — used to refuse unload/hot-reload while dependents are
+/// loaded (contract freeze §4).
+pub fn dependents(manifests: &[PluginManifest], plugin_id: &str) -> Vec<String> {
+    let mut result: Vec<String> = manifests
+        .iter()
+        .filter(|manifest| manifest.dependencies.iter().any(|dependency| dependency.plugin_id == plugin_id))
+        .map(|manifest| manifest.plugin_id.clone())
+        .collect();
+    result.sort_unstable();
+    result
+}
+//#endregion 🔖️DependencyGraph
+
+#[cfg(test)]
+mod plugin_dependency_tests {
+    //! 🔗️ Ticket 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS
+    //! lane W0-C: `Version`/`VersionReq` parse+match matrix, dependency-graph toposort/cycle/
+    //! validation, and manifest serde round-trips (absent-field defaults included).
+    use super::*;
+
+    fn manifest(plugin_id: &str, version: &str, dependencies: Vec<PluginDependency>) -> PluginManifest {
+        PluginManifest {
+            plugin_id: plugin_id.into(),
+            label: plugin_id.into(),
+            version: version.into(),
+            apps: Vec::new(),
+            examples: Vec::new(),
+            capabilities: Vec::new(),
+            topic_contributions: Vec::new(),
+            commands: Vec::new(),
+            artifact_kinds: Vec::new(),
+            dependencies,
+            contributions: Vec::new(),
+        }
+    }
+
+    //#region 🔖️VersionAndVersionReq
+    #[test]
+    fn version_parses_valid_triples_and_rejects_malformed_input() {
+        assert_eq!(Version::parse("1.2.3").unwrap(), Version::new(1, 2, 3));
+        assert_eq!(Version::parse("0.0.0").unwrap(), Version::new(0, 0, 0));
+        assert!(matches!(Version::parse("1.2").unwrap_err(), VersionParseError::Malformed(_)));
+        assert!(matches!(Version::parse("1.2.3.4").unwrap_err(), VersionParseError::Malformed(_)));
+        assert!(matches!(Version::parse("1.x.3").unwrap_err(), VersionParseError::NonNumeric(_, seg) if seg == "x"));
+        assert_eq!(Version::new(1, 2, 3).to_string(), "1.2.3");
+    }
+
+    #[test]
+    fn version_ord_matches_semver_precedence() {
+        assert!(Version::new(1, 0, 0) < Version::new(1, 0, 1));
+        assert!(Version::new(1, 0, 0) < Version::new(1, 1, 0));
+        assert!(Version::new(1, 0, 0) < Version::new(2, 0, 0));
+        assert!(Version::new(1, 9, 9) < Version::new(2, 0, 0));
+    }
+
+    #[test]
+    fn version_req_parses_all_five_grammar_forms_and_rejects_unknown_operators() {
+        assert_eq!(VersionReq::parse("*").unwrap(), VersionReq::Any);
+        assert_eq!(VersionReq::parse("=1.2.3").unwrap(), VersionReq::Exact(Version::new(1, 2, 3)));
+        assert_eq!(VersionReq::parse("^1.2.3").unwrap(), VersionReq::Caret(Version::new(1, 2, 3)));
+        assert_eq!(VersionReq::parse("~1.2.3").unwrap(), VersionReq::Tilde(Version::new(1, 2, 3)));
+        assert_eq!(VersionReq::parse(">=1.2.3").unwrap(), VersionReq::AtLeast(Version::new(1, 2, 3)));
+        assert!(matches!(VersionReq::parse("1.2.3").unwrap_err(), VersionReqParseError::UnknownOperator(_)));
+        assert!(matches!(VersionReq::parse("^1.x.3").unwrap_err(), VersionReqParseError::Version(_)));
+    }
+
+    #[test]
+    fn version_req_display_round_trips_through_parse() {
+        for raw in ["*", "=1.2.3", "^1.2.3", "~1.2.3", ">=1.2.3"] {
+            let parsed = VersionReq::parse(raw).unwrap();
+            assert_eq!(parsed.to_string(), raw);
+            assert_eq!(VersionReq::parse(&parsed.to_string()).unwrap(), parsed);
+        }
+    }
+
+    #[test]
+    fn version_req_matches_exact_and_at_least() {
+        let exact = VersionReq::parse("=1.2.3").unwrap();
+        assert!(exact.matches(&Version::new(1, 2, 3)));
+        assert!(!exact.matches(&Version::new(1, 2, 4)));
+
+        let at_least = VersionReq::parse(">=1.2.3").unwrap();
+        assert!(at_least.matches(&Version::new(1, 2, 3)));
+        assert!(at_least.matches(&Version::new(2, 0, 0)));
+        assert!(!at_least.matches(&Version::new(1, 2, 2)));
+
+        assert!(VersionReq::Any.matches(&Version::new(0, 0, 0)));
+    }
+
+    #[test]
+    fn version_req_matches_caret_semantics_across_leading_zero_tiers() {
+        let caret_major = VersionReq::parse("^1.2.3").unwrap();
+        assert!(caret_major.matches(&Version::new(1, 2, 3)));
+        assert!(caret_major.matches(&Version::new(1, 9, 0)), "caret allows minor/patch bumps under the same major");
+        assert!(!caret_major.matches(&Version::new(1, 2, 2)), "caret forbids going below the required version");
+        assert!(!caret_major.matches(&Version::new(2, 0, 0)), "caret forbids a major bump");
+
+        let caret_zero_major = VersionReq::parse("^0.2.3").unwrap();
+        assert!(caret_zero_major.matches(&Version::new(0, 2, 3)));
+        assert!(caret_zero_major.matches(&Version::new(0, 2, 9)), "0.x caret allows patch bumps within the same minor");
+        assert!(!caret_zero_major.matches(&Version::new(0, 3, 0)), "0.x caret forbids a minor bump");
+
+        let caret_zero_minor = VersionReq::parse("^0.0.3").unwrap();
+        assert!(caret_zero_minor.matches(&Version::new(0, 0, 3)));
+        assert!(!caret_zero_minor.matches(&Version::new(0, 0, 4)), "0.0.x caret pins the exact patch");
+    }
+
+    #[test]
+    fn version_req_matches_tilde_semantics() {
+        let tilde = VersionReq::parse("~1.2.3").unwrap();
+        assert!(tilde.matches(&Version::new(1, 2, 3)));
+        assert!(tilde.matches(&Version::new(1, 2, 9)), "tilde allows patch bumps");
+        assert!(!tilde.matches(&Version::new(1, 3, 0)), "tilde forbids a minor bump");
+        assert!(!tilde.matches(&Version::new(1, 2, 2)), "tilde forbids going below the required patch");
+    }
+
+    #[test]
+    fn plugin_dependency_serde_round_trips_as_a_plain_string() {
+        let dependency = PluginDependency::new("cad", VersionReq::parse("^1.0.0").unwrap());
+        let json = serde_json::to_value(&dependency).unwrap();
+        assert_eq!(json, serde_json::json!({ "pluginId": "cad", "version": "^1.0.0" }));
+        let round_tripped: PluginDependency = serde_json::from_value(json).unwrap();
+        assert_eq!(round_tripped, dependency);
+    }
+    //#endregion 🔖️VersionAndVersionReq
+
+    //#region 🔖️DependencyGraphTests
+    #[test]
+    fn resolve_load_order_toposorts_a_diamond() {
+        // base <- {left, right} <- top: two valid topological orders exist; the tie-break must
+        // deterministically pick `left` before `right`.
+        let manifests = vec![
+            manifest("top", "1.0.0", vec![PluginDependency::new("left", VersionReq::Any), PluginDependency::new("right", VersionReq::Any)]),
+            manifest("left", "1.0.0", vec![PluginDependency::new("base", VersionReq::Any)]),
+            manifest("right", "1.0.0", vec![PluginDependency::new("base", VersionReq::Any)]),
+            manifest("base", "1.0.0", vec![]),
+        ];
+        let order = resolve_load_order(&manifests).unwrap();
+        assert_eq!(order, vec!["base", "left", "right", "top"]);
+    }
+
+    #[test]
+    fn resolve_load_order_is_deterministic_regardless_of_input_order() {
+        let forward = vec![
+            manifest("a", "1.0.0", vec![]),
+            manifest("b", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]),
+            manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]),
+        ];
+        let mut shuffled = forward.clone();
+        shuffled.reverse();
+        assert_eq!(resolve_load_order(&forward).unwrap(), resolve_load_order(&shuffled).unwrap());
+        assert_eq!(resolve_load_order(&forward).unwrap(), vec!["a", "b", "c"]);
+    }
+
+    #[test]
+    fn resolve_load_order_reports_missing_dependency() {
+        let manifests = vec![manifest("a", "1.0.0", vec![PluginDependency::new("ghost", VersionReq::Any)])];
+        let error = resolve_load_order(&manifests).unwrap_err();
+        assert_eq!(error, DependencyGraphError::MissingDependency { plugin_id: "a".into(), depends_on: "ghost".into() });
+    }
+
+    #[test]
+    fn resolve_load_order_reports_version_mismatch() {
+        let manifests = vec![
+            manifest("a", "1.0.0", vec![PluginDependency::new("b", VersionReq::parse("^2.0.0").unwrap())]),
+            manifest("b", "1.0.0", vec![]),
+        ];
+        let error = resolve_load_order(&manifests).unwrap_err();
+        assert_eq!(
+            error,
+            DependencyGraphError::VersionMismatch { plugin_id: "a".into(), depends_on: "b".into(), required: "^2.0.0".into(), actual: "1.0.0".into() }
+        );
+    }
+
+    #[test]
+    fn resolve_load_order_names_every_member_of_a_cycle() {
+        let manifests = vec![
+            manifest("a", "1.0.0", vec![PluginDependency::new("b", VersionReq::Any)]),
+            manifest("b", "1.0.0", vec![PluginDependency::new("c", VersionReq::Any)]),
+            manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]),
+        ];
+        let error = resolve_load_order(&manifests).unwrap_err();
+        match error {
+            DependencyGraphError::Cycle { members } => {
+                let mut sorted = members.clone();
+                sorted.sort();
+                assert_eq!(sorted, vec!["a".to_string(), "b".to_string(), "c".to_string()]);
+                assert_eq!(members.len(), 3, "every plugin on the 3-cycle must be named");
+            }
+            other => panic!("expected a Cycle error, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn resolve_load_order_accepts_a_self_satisfying_empty_graph() {
+        assert_eq!(resolve_load_order(&[]).unwrap(), Vec::<String>::new());
+    }
+
+    #[test]
+    fn dependents_returns_direct_dependents_sorted() {
+        let manifests = vec![
+            manifest("a", "1.0.0", vec![]),
+            manifest("b", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]),
+            manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]),
+            manifest("d", "1.0.0", vec![PluginDependency::new("b", VersionReq::Any)]),
+        ];
+        assert_eq!(dependents(&manifests, "a"), vec!["b".to_string(), "c".to_string()]);
+        assert_eq!(dependents(&manifests, "b"), vec!["d".to_string()]);
+        assert!(dependents(&manifests, "d").is_empty());
+    }
+    //#endregion 🔖️DependencyGraphTests
+
+    //#region 🔖️ManifestSerdeTests
+    #[test]
+    fn plugin_manifest_dependencies_and_contributions_default_absent_on_the_wire() {
+        let bare = serde_json::json!({
+            "pluginId": "flow",
+            "label": "Flow",
+            "version": "1.0.0",
+            "apps": [],
+            "examples": [],
+        });
+        let parsed: PluginManifest = serde_json::from_value(bare).unwrap();
+        assert!(parsed.dependencies.is_empty());
+        assert!(parsed.contributions.is_empty());
+
+        let serialized = serde_json::to_value(&parsed).unwrap();
+        assert!(serialized.get("dependencies").is_none(), "empty dependencies must be skipped, not emitted as []");
+        assert!(serialized.get("contributions").is_none(), "empty contributions must be skipped, not emitted as []");
+    }
+
+    #[test]
+    fn artifact_contribution_descriptor_round_trips() {
+        let descriptor = ArtifactContributionDescriptor {
+            artifact_kind: "s.cad.building".into(),
+            mutations: vec![ContributedMutationMetadata {
+                mutation_id: "s.cad.building#aec-building:add-floor".into(),
+                semantics: ContributedMutationSemantics { verb: "add".into(), entity: "floor".into(), kind: "structural".into(), record: "aec.floor".into() },
+                schema_version: 1,
+                algorithm_version: 1,
+            }],
+            inferences: vec![ContributedInferenceMetadata {
+                owner: "aec-building".into(),
+                artifact_kind: "s.cad.building".into(),
+                artifact_schema: "s.cad.building".into(),
+                artifact_schema_version: 1,
+                document_schema: "s.cad.document".into(),
+                document_schema_version: 1,
+                inference_schema: "s.aec-building.load-path".into(),
+                inference_schema_version: 1,
+                algorithm_version: 1,
+                policy_version: 1,
+                contributor: "aec-building".into(),
+                depends_on: vec!["s.cad.building#topology".into()],
+            }],
+        };
+        let json = serde_json::to_value(&descriptor).unwrap();
+        let round_tripped: ArtifactContributionDescriptor = serde_json::from_value(json).unwrap();
+        assert_eq!(round_tripped, descriptor);
+    }
+
+    #[test]
+    fn plugin_manifest_with_dependencies_and_contributions_round_trips() {
+        let manifest = PluginManifest {
+            dependencies: vec![PluginDependency::new("cad", VersionReq::parse("^1.0.0").unwrap())],
+            contributions: vec![ArtifactContributionDescriptor { artifact_kind: "s.cad.building".into(), mutations: Vec::new(), inferences: Vec::new() }],
+            ..manifest("aec-building", "0.1.0", Vec::new())
+        };
+        let json = serde_json::to_value(&manifest).unwrap();
+        let round_tripped: PluginManifest = serde_json::from_value(json).unwrap();
+        assert_eq!(round_tripped, manifest);
+    }
+    //#endregion 🔖️ManifestSerdeTests
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -4987,6 +5635,11 @@ mod app_label_tests {
         crate::ui::ExampleDefinition::export().unwrap();
         crate::ui::ProgramContributionEntry::export().unwrap();
         crate::ui::PluginManifest::export().unwrap();
+        crate::ui::PluginDependency::export().unwrap();
+        crate::ui::ContributedMutationSemantics::export().unwrap();
+        crate::ui::ContributedMutationMetadata::export().unwrap();
+        crate::ui::ContributedInferenceMetadata::export().unwrap();
+        crate::ui::ArtifactContributionDescriptor::export().unwrap();
         crate::ui::ViewWindowInstance::export().unwrap();
         crate::ui::ViewModel::export().unwrap();
         // 🎗️ `AppLabelsOverlay` deleted — see the region comment at its former definition site.

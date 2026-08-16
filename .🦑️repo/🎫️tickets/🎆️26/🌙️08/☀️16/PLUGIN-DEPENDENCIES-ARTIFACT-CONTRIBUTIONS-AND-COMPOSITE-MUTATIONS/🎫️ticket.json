@@ -1,0 +1,13 @@
+{
+  "title": "Plugin Dependencies, Artifact Contributions and Composite Mutations",
+  "emoji": "🔗️",
+  "status": "open",
+  "description": "Make mutations able to call other mutations (same artifact, other artifacts, other plugins) as one atomic undoable transaction; make plugins able to depend on other plugins (manifest dependencies, load-order graph, version requirements, dependents-aware hot reload); make plugins and extensions able to register mutations and inferences on artifacts defined by other plugins (contributions, host-side mutation router mirroring the inference router). Keep the two-tier extensibility (plugin tier + extension tier), unify the mechanisms underneath. Composite mutations are pure plans; foreign steps are driven host-side via a two-phase transaction protocol on the existing exchange channel, with parity across the Rust wasmtime host and the TypeScript browser host. Master plan: 📋️master-plan.md in this ticket folder.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2558"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪4ded73ca8890484481b1c53572352f87"
+  ]
+}

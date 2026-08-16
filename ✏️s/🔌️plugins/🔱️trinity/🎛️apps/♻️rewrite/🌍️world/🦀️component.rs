@@ -299,7 +299,7 @@ pub struct TrinityBridge {
 impl TrinityBridge {
     pub fn from_graph(graph: &Graph) -> Self {
         let fixture = graph.to_fixture();
-        let store = crate::artifacts::jack::op::TrinityGraphStore::new(crate::artifacts::jack::op::create_trinity_graph_envelope("trinity-host", fixture));
+        let store = crate::artifacts::jack::op::TrinityGraphStore::new(crate::artifacts::jack::op::create_trinity_graph_envelope("trinity-host", fixture)).expect("failed to create trinity graph store");
         let graph = Graph::from_fixture(store.snapshot().expect("projection")).expect("graph");
         let mut host = Self {
             graph,

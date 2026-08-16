@@ -32,15 +32,20 @@ pub const PPTX_ARTIFACT_SCHEMA_ID: &str = "s.stdio.pptx";
 /// (`PptxSnapshot`/`PptxDiff`/`PptxMutation` are hand-rolled, no derivable `RecordSpec` — see the
 /// deleted `register_pilot_languages`' own doc comment), so this artifact converts cleanly with
 /// zero residual `.setup()` calls.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(PPTX_ARTIFACT_SCHEMA_ID)
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("pptx", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::pptx::schema::pptx_artifact_schema_descriptor())
         .inferences([crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::inferences::pptx_artifact_inference_descriptor()])
         .composers(crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::io_registry::entries())
         .subset_validators(pptx_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 🛡️ The `✳️strict`/`✳️transitional` subsets' `SubsetValidatorEntry` rows, re-derived (not moved)

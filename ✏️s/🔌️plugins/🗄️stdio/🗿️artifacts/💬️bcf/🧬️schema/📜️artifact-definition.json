@@ -9,8 +9,8 @@
   ],
   "standards": [
     {
-      "id": "s.stdio.bcf.standard.2.1",
-      "revision": "2.1",
+      "id": "s.stdio.bcf.standard.2-1",
+      "revision": "2-1",
       "normative_source": null,
       "publication_date": null,
       "source_checksum": null,
@@ -21,16 +21,16 @@
   ],
   "profiles": [
     {
-      "id": "s.stdio.bcf.standard.2.1.profile.any",
-      "standard": "s.stdio.bcf.standard.2.1",
+      "id": "s.stdio.bcf.standard.2-1.profile.any",
+      "standard": "s.stdio.bcf.standard.2-1",
       "profile": "any",
       "status": "unimplemented"
     }
   ],
   "source_dialects": [
     {
-      "id": "s.stdio.bcf.standard.2.1.dialect.source",
-      "standard": "s.stdio.bcf.standard.2.1",
+      "id": "s.stdio.bcf.standard.2-1.dialect.source",
+      "standard": "s.stdio.bcf.standard.2-1",
       "dialect": "source",
       "registered_code_points": [],
       "status": "unimplemented"
@@ -38,11 +38,14 @@
   ],
   "representations": [
     {
-      "id": "s.stdio.bcf.standard.2.1.representation.document",
-      "standard": "s.stdio.bcf.standard.2.1",
+      "id": "s.stdio.bcf.standard.2-1.representation.document",
+      "standard": "s.stdio.bcf.standard.2-1",
       "representation": "document",
-      "mime": "application/vnd.bcf+xml",
-      "extension": ".bcf",
+      "mimes": ["application/vnd.bcf+xml"],
+      "extensions": [".bcf"],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -74,7 +77,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.bcf.conformance.public-corpus",
+      "id": "s.stdio.bcf.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }
@@ -86,7 +89,7 @@
     "redistribution_status": "unknown",
     "clauses_or_features": [],
     "profiles": [
-      "s.stdio.bcf.standard.2.1.profile.any"
+      "s.stdio.bcf.standard.2-1.profile.any"
     ],
     "registered_code_points": [],
     "read": "unimplemented",

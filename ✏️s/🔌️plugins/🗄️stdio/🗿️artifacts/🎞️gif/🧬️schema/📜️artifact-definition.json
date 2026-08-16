@@ -63,8 +63,11 @@
       "id": "s.stdio.gif.standard.87a.representation.document",
       "standard": "s.stdio.gif.standard.87a",
       "representation": "document",
-      "mime": "image/gif",
-      "extension": ".gif",
+      "mimes": ["image/gif"],
+      "extensions": [".gif"],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -96,7 +99,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.gif.conformance.public-corpus",
+      "id": "s.stdio.gif.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }

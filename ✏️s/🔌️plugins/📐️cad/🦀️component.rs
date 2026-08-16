@@ -18,12 +18,12 @@ fn register_exports() {
 /// escape hatch for everything `ArtifactDeclaration` can express; `CadPlayApp::app_schema()` is
 /// registered automatically by `register_document_app` below. `.setup()` carries only the host IO
 /// registration `ArtifactDeclaration` still cannot model — see `register_exports`.
-pub fn plugin() -> Plugin {
+pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("cad")
         .label("CAD")
         .version("0.1.0")
         .setup(register_exports)
         .artifact(crate::artifacts::cad::declaration())
-        .register_document_app::<crate::apps::cad::CadPlayApp>(crate::apps::cad::create_cad_app())
-        .build()
+        .document_app::<crate::apps::cad::CadPlayApp>(crate::apps::cad::create_cad_app())
+        .try_build()
 }

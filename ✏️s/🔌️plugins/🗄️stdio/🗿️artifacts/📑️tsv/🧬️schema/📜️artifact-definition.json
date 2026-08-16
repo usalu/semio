@@ -40,8 +40,11 @@
       "id": "s.stdio.tsv.standard.iana.representation.document",
       "standard": "s.stdio.tsv.standard.iana",
       "representation": "document",
-      "mime": "text/tab-separated-values",
-      "extension": ".tsv",
+      "mimes": ["text/tab-separated-values"],
+      "extensions": [".tsv"],
+      "is_binary": false,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -73,7 +76,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.tsv.conformance.public-corpus",
+      "id": "s.stdio.tsv.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }

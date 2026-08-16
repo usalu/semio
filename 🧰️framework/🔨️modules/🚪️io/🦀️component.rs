@@ -234,6 +234,9 @@ pub struct AnchoredSyntax {
 impl AnchoredSyntax {
     /// 🔎️ Confirms an anchor retains exactly the source range it claims.
     pub fn validate(&self) -> Result<(), CodecFailure> {
+        if self.anchor.trim().is_empty() {
+            return Err(CodecFailure::error("io.codec.empty-anchor", "source anchor is empty"));
+        }
         self.span.validate().map_err(|error| CodecFailure::error("io.codec.invalid-source-span", format!("invalid anchor {:?}: {error:?}", self.anchor)))?;
         let width = self.span.byte_end - self.span.byte_start;
         if width != self.bytes.len() as u64 {
@@ -268,11 +271,16 @@ impl<T> ArtifactCodecResult<T> {
             }
             anchor.validate()?;
         }
+        let mut opaque_extensions = std::collections::BTreeSet::new();
         for extension in &self.opaque_extensions {
             if extension.kind.trim().is_empty() {
                 return Err(CodecFailure::error("io.codec.empty-opaque-kind", "opaque extension kind is empty"));
             }
             extension.source.validate()?;
+            let key = (extension.kind.as_str(), extension.source.anchor.as_str(), extension.source.span.byte_start, extension.source.span.byte_end);
+            if !opaque_extensions.insert(key) {
+                return Err(CodecFailure::error("io.codec.duplicate-opaque-extension", format!("duplicate opaque extension {:?} at {:?}", extension.kind, extension.source.anchor)));
+            }
         }
         Ok(())
     }
@@ -280,8 +288,30 @@ impl<T> ArtifactCodecResult<T> {
     /// 📏️ Orders retained opaque records independently of insertion or registry order.
     pub fn canonical_opaque_extensions(&self) -> Vec<&OpaqueExtension> {
         let mut extensions = self.opaque_extensions.iter().collect::<Vec<_>>();
-        extensions.sort_by(|left, right| (&left.kind, &left.source.anchor, left.source.span.byte_start, left.source.span.byte_end).cmp(&(&right.kind, &right.source.anchor, right.source.span.byte_start, right.source.span.byte_end)));
+        extensions.sort_by(|a, b| (a.kind.as_str(), a.source.anchor.as_str(), a.source.span.byte_start, a.source.span.byte_end).cmp(&(b.kind.as_str(), b.source.anchor.as_str(), b.source.span.byte_start, b.source.span.byte_end)));
         extensions
+    }
+
+    /// 🧭️ Applies the deterministic source-record order required by canonical codec output.
+    pub fn canonicalize(&mut self) {
+        self.anchors.sort_by(|a, b| (a.anchor.as_str(), a.span.byte_start, a.span.byte_end).cmp(&(b.anchor.as_str(), b.span.byte_start, b.span.byte_end)));
+        self.opaque_extensions.sort_by(|a, b| (a.kind.as_str(), a.source.anchor.as_str(), a.source.span.byte_start, a.source.span.byte_end).cmp(&(b.kind.as_str(), b.source.anchor.as_str(), b.source.span.byte_start, b.source.span.byte_end)));
+    }
+
+    /// 🧭️ Verifies the representation promise attached to a completed codec result.
+    pub fn validate_representation(&self, representation: CodecRepresentation) -> Result<(), CodecFailure> {
+        self.validate_lossless()?;
+        if representation == CodecRepresentation::Canonical {
+            let mut canonical = self.anchors.iter().collect::<Vec<_>>();
+            canonical.sort_by_key(|anchor| (anchor.anchor.as_str(), anchor.span.byte_start, anchor.span.byte_end));
+            if canonical != self.anchors.iter().collect::<Vec<_>>() {
+                return Err(CodecFailure::error("io.codec.noncanonical-anchors", "canonical result anchors are not deterministically ordered"));
+            }
+            if self.canonical_opaque_extensions() != self.opaque_extensions.iter().collect::<Vec<_>>() {
+                return Err(CodecFailure::error("io.codec.noncanonical-opaque-extensions", "canonical opaque extensions are not deterministically ordered"));
+            }
+        }
+        Ok(())
     }
 }
 
@@ -524,6 +554,16 @@ impl DecodeContext {
         let resolver = self.resolver.clone().ok_or_else(|| CodecFailure::error("io.codec.resource-resolver-unavailable", "decode context has no resource resolver"))?;
         resolver.resolve_decode(request, self)
     }
+
+    /// ✅️ Finalizes a decode result only when its requested representation is valid.
+    pub fn finalize_result<T>(&mut self, mut result: ArtifactCodecResult<T>) -> CodecResult<ArtifactCodecResult<T>> {
+        self.budget.charge_work(1)?;
+        if self.policy.representation == CodecRepresentation::Canonical {
+            result.canonicalize();
+        }
+        result.validate_representation(self.policy.representation)?;
+        Ok(CodecOutput { value: result, diagnostics: Vec::new() })
+    }
 }
 
 /// 🔍️ Encode invocation state; codecs charge it instead of owning hidden global limits.
@@ -558,6 +598,16 @@ impl EncodeContext {
         self.budget.ensure_active()?;
         let resolver = self.resolver.clone().ok_or_else(|| CodecFailure::error("io.codec.resource-resolver-unavailable", "encode context has no resource resolver"))?;
         resolver.resolve_encode(request, self)
+    }
+
+    /// ✅️ Finalizes an encode result only when host policy has made it canonical or lossless-valid.
+    pub fn finalize_result<T>(&mut self, mut result: ArtifactCodecResult<T>) -> CodecResult<ArtifactCodecResult<T>> {
+        self.budget.charge_work(1)?;
+        if self.policy.representation == CodecRepresentation::Canonical {
+            result.canonicalize();
+        }
+        result.validate_representation(self.policy.representation)?;
+        Ok(CodecOutput { value: result, diagnostics: Vec::new() })
     }
 }
 //#endregion ⏱️Policies
@@ -629,7 +679,7 @@ impl BoundedRandomAccessPayload<'_> {
         self.context.budget.ensure_active()?;
         self.context.budget.charge_work(1)?;
         let remaining = self.context.policy.limits.max_read_bytes.saturating_sub(self.context.budget.consumption().read_bytes);
-        let permitted = requested.min(usize::try_from(remaining).unwrap_or(usize::MAX));
+        let permitted = if remaining > usize::MAX as u64 { requested } else { requested.min(remaining as usize) };
         if requested > 0 && permitted == 0 {
             return Err(CodecFailure::error("io.codec.budget-exhausted", "read-bytes budget exhausted"));
         }
@@ -669,7 +719,7 @@ impl BoundedPayloadSource<'_> {
         self.context.budget.ensure_active()?;
         self.context.budget.charge_work(1)?;
         let remaining = self.context.policy.limits.max_read_bytes.saturating_sub(self.context.budget.consumption().read_bytes);
-        let permitted = requested.min(usize::try_from(remaining).unwrap_or(usize::MAX));
+        let permitted = if remaining > usize::MAX as u64 { requested } else { requested.min(remaining as usize) };
         if requested > 0 && permitted == 0 {
             return Err(CodecFailure::error("io.codec.budget-exhausted", "read-bytes budget exhausted"));
         }
@@ -862,15 +912,22 @@ pub enum IoRegistryRegistrationError {
     Unavailable(IoRegistryUnavailable),
 }
 
+impl std::fmt::Display for IoRegistryRegistrationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Conflict(conflict) => write!(f, "io registry conflict for key {:?}", conflict.key),
+            Self::Unavailable(unavail) => write!(f, "io registry unavailable: {}", unavail.registry),
+        }
+    }
+}
+impl std::error::Error for IoRegistryRegistrationError {}
+
 fn same_composer_entry(left: &ComposerEntry, right: &ComposerEntry) -> bool {
     left.writes == right.writes && left.reads == right.reads && std::ptr::fn_addr_eq(left.compose, right.compose)
 }
 
-/// 📌️ Registers one artifact's composer entries atomically. Re-registering the exact static entry
-/// is idempotent; a different entry for any exact key fails and leaves the registry unchanged.
-#[must_use]
-pub fn register_composer_entries(entries: &'static [ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
-    let mut proposed: BTreeMap<IoKey, &'static ComposerEntry> = BTreeMap::new();
+fn composer_entries_by_key<'entry>(entries: impl IntoIterator<Item = &'entry ComposerEntry>) -> Result<BTreeMap<IoKey, &'entry ComposerEntry>, IoRegistryRegistrationError> {
+    let mut proposed: BTreeMap<IoKey, &'entry ComposerEntry> = BTreeMap::new();
     for entry in entries {
         for &source in entry.reads {
             for key in [IoKey::from_owner_counterpart(entry.writes, source, IoDirection::Import), IoKey::from_owner_counterpart(source, entry.writes, IoDirection::Export)] {
@@ -884,14 +941,47 @@ pub fn register_composer_entries(entries: &'static [ComposerEntry]) -> Result<()
             }
         }
     }
-    let mut reg = io_registry().write().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))?;
-    for (key, entry) in &proposed {
-        if let Some(existing) = reg.get(key) {
+    Ok(proposed)
+}
+
+fn validate_composer_entries(registry: &BTreeMap<IoKey, &'static ComposerEntry>, proposed: &BTreeMap<IoKey, &'static ComposerEntry>) -> Result<(), IoRegistryRegistrationError> {
+    for (key, entry) in proposed {
+        if let Some(existing) = registry.get(key) {
             if !same_composer_entry(existing, entry) {
                 return Err(IoRegistryRegistrationError::Conflict(IoRegistryConflict { key: key.clone() }));
             }
         }
     }
+    Ok(())
+}
+
+/// 🔬️ Verifies a static composer table against all established keys without mutating the registry.
+#[must_use]
+pub fn preflight_composer_entries(entries: &'static [ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
+    preflight_composer_entry_refs(&entries.iter().collect::<Vec<_>>())
+}
+
+/// 🔬️ Verifies independently declared static composers as one atomic candidate set.
+#[must_use]
+pub fn preflight_composer_entry_refs(entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
+    let proposed = composer_entries_by_key(entries.iter().copied())?;
+    let registry = io_registry().read().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))?;
+    validate_composer_entries(&registry, &proposed)
+}
+
+/// 📌️ Registers one artifact's composer entries atomically. Re-registering the exact static entry
+/// is idempotent; a different entry for any exact key fails and leaves the registry unchanged.
+#[must_use]
+pub fn register_composer_entries(entries: &'static [ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
+    register_composer_entry_refs(&entries.iter().collect::<Vec<_>>())
+}
+
+/// 📌️ Registers independently declared static composers as one all-or-nothing candidate set.
+#[must_use]
+pub fn register_composer_entry_refs(entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
+    let proposed = composer_entries_by_key(entries.iter().copied())?;
+    let mut reg = io_registry().write().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))?;
+    validate_composer_entries(&reg, &proposed)?;
     for (key, entry) in proposed {
         reg.entry(key).or_insert(entry);
     }
@@ -909,11 +999,7 @@ pub struct IoResolveError {
 /// format/standard/subset) coordinate. No silent defaulting — callers with a partially-specified
 /// query (unknown standard/subset) must enumerate `dialects_for` first and choose explicitly.
 pub fn resolve(key: &IoKey) -> Result<&'static ComposerEntry, IoResolveError> {
-    let reg = io_registry().read().map_err(|_| IoResolveError {
-        message: "io composer registry unavailable".to_string(),
-        candidates: Vec::new(),
-        unavailable: Some(IoRegistryUnavailable { registry: "io-composer" }),
-    })?;
+    let reg = io_registry().read().map_err(|_| IoResolveError { message: "io composer registry unavailable".to_string(), candidates: Vec::new(), unavailable: Some(IoRegistryUnavailable { registry: "io-composer" }) })?;
     reg.get(key).copied().ok_or_else(|| IoResolveError {
         message: format!("no composer registered for {}/{}/{} {:?} {}/{}/{}", key.artifact_kind, key.standard, key.subset, key.direction, key.format_kind, key.format_standard, key.format_subset),
         candidates: reg.keys().filter(|k| k.artifact_kind == key.artifact_kind).cloned().collect(),
@@ -921,22 +1007,24 @@ pub fn resolve(key: &IoKey) -> Result<&'static ComposerEntry, IoResolveError> {
     })
 }
 
-/// 📚️ Every dialect one artifact can move data through in a given direction.
-pub fn dialects_for(artifact_kind: &str, direction: IoDirection) -> Vec<Dialect> {
-    let reg = io_registry().read().expect("io registry poisoned");
+/// 📚️ Lists every dialect one artifact can move data through in a given direction.
+#[must_use]
+pub fn dialects_for(artifact_kind: &str, direction: IoDirection) -> Result<Vec<Dialect>, IoRegistryUnavailable> {
+    let reg = io_registry().read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
     let mut dialects: Vec<Dialect> = reg.iter().filter(|(k, _)| k.artifact_kind == artifact_kind && k.direction == direction).map(|(_, entry)| entry.writes).collect();
     dialects.sort_by_key(|dialect| ArtifactDialect::from(*dialect).to_coordinate());
     dialects.dedup();
-    dialects
+    Ok(dialects)
 }
 
 /// 🗝️ Every registered `IoKey` for one artifact_kind + direction, WITH the owner's real
 /// standard/subset (not a hardcoded default) -- callers that used to build a key by hand and
 /// guess `standard: "1", subset: "*"` should enumerate this instead and pick explicitly, the same
 /// "no silent defaulting" policy `resolve` already documents.
-pub fn io_keys_for(artifact_kind: &str, direction: IoDirection) -> Vec<IoKey> {
-    let reg = io_registry().read().expect("io registry poisoned");
-    reg.keys().filter(|k| k.artifact_kind == artifact_kind && k.direction == direction).cloned().collect()
+#[must_use]
+pub fn io_keys_for(artifact_kind: &str, direction: IoDirection) -> Result<Vec<IoKey>, IoRegistryUnavailable> {
+    let reg = io_registry().read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
+    Ok(reg.keys().filter(|key| key.artifact_kind == artifact_kind && key.direction == direction).cloned().collect())
 }
 
 /// 📇️ Every registered composer entry, erased to owned dialects -- the shape the WIT
@@ -982,9 +1070,8 @@ pub struct IoFallbackRegistrationError {
 }
 
 /// 🔌️ Install the fallback dispatcher. Call exactly once, before any `io_dispatch` call that
-/// should reach it (host boot / guest `ensure_plugin_initialized`). A second call is a no-op
-/// (logged, not panicking) -- boot ordering across concurrent plugin loads shouldn't be able to
-/// crash the process over a registration race.
+/// should reach it (host boot / guest `ensure_plugin_initialized`). Re-registration is idempotent
+/// only for the same descriptor and executable identity; every other race is a typed conflict.
 #[must_use]
 pub fn set_io_fallback_dispatcher(dispatcher: IoFallbackDispatcher) -> Result<(), IoFallbackRegistrationError> {
     match IO_FALLBACK.get() {
@@ -1088,6 +1175,16 @@ pub enum SubsetValidatorRegistryError {
     Unavailable(IoRegistryUnavailable),
 }
 
+impl std::fmt::Display for SubsetValidatorRegistryError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Conflict(conflict) => write!(f, "subset validator conflict for dialect {:?}", conflict.dialect),
+            Self::Unavailable(unavail) => write!(f, "subset validator registry unavailable: {}", unavail.registry),
+        }
+    }
+}
+impl std::error::Error for SubsetValidatorRegistryError {}
+
 /// 🚫️ A subset validation cannot execute because its registry is unavailable or incomplete.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SubsetValidationError {
@@ -1102,22 +1199,57 @@ fn same_subset_validator_entry(left: &SubsetValidatorEntry, right: &SubsetValida
 /// 📌️ Registers one subset validator without replacing an established dialect owner.
 #[must_use]
 pub fn register_subset_validator(entry: &'static SubsetValidatorEntry) -> Result<(), SubsetValidatorRegistryError> {
-    let mut reg = subset_validator_registry().write().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
-    let dialect = ArtifactDialect::from(entry.dialect);
-    match reg.get(&dialect) {
-        Some(existing) if same_subset_validator_entry(existing, entry) => Ok(()),
-        Some(_) => Err(SubsetValidatorRegistryError::Conflict(SubsetValidatorRegistryConflict { dialect })),
-        None => {
-            reg.insert(dialect, entry);
-            Ok(())
+    register_subset_validators(&[entry])
+}
+
+fn validate_subset_validators(registry: &BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry>, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
+    let mut proposed: BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry> = BTreeMap::new();
+    for entry in entries {
+        let dialect = ArtifactDialect::from(entry.dialect);
+        match proposed.get(&dialect) {
+            Some(existing) if same_subset_validator_entry(existing, entry) => {}
+            Some(_) => return Err(SubsetValidatorRegistryError::Conflict(SubsetValidatorRegistryConflict { dialect })),
+            None => {
+                proposed.insert(dialect, entry);
+            }
         }
     }
+    for (dialect, entry) in proposed {
+        match registry.get(&dialect) {
+            Some(existing) if same_subset_validator_entry(existing, entry) => {}
+            Some(_) => return Err(SubsetValidatorRegistryError::Conflict(SubsetValidatorRegistryConflict { dialect })),
+            None => {}
+        }
+    }
+    Ok(())
+}
+
+/// 🔬️ Verifies subset-validator entries without changing their established owners.
+#[must_use]
+pub fn preflight_subset_validators(entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
+    let registry = subset_validator_registry().read().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
+    validate_subset_validators(&registry, entries)
+}
+
+/// 📌️ Registers subset-validator entries only when the entire candidate set is conflict-free.
+#[must_use]
+pub fn register_subset_validators(entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
+    let mut reg = subset_validator_registry().write().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
+    validate_subset_validators(&reg, entries)?;
+    for entry in entries {
+        let dialect = ArtifactDialect::from(entry.dialect);
+        if !reg.contains_key(&dialect) {
+            reg.insert(dialect, entry);
+        }
+    }
+    Ok(())
 }
 
 /// 📚️ Every dialect key currently registered in `SUBSET_VALIDATOR_REGISTRY`.
-pub fn list_registered_subset_validator_dialects() -> Vec<Dialect> {
-    let Ok(reg) = subset_validator_registry().read() else { return Vec::new() };
-    reg.values().map(|entry| entry.dialect).collect()
+#[must_use]
+pub fn list_registered_subset_validator_dialects() -> Result<Vec<Dialect>, SubsetValidatorRegistryError> {
+    let registry = subset_validator_registry().read().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
+    Ok(registry.values().map(|entry| entry.dialect).collect())
 }
 
 /// 🛡️ The generic validate-on-build hook (D5): if `dialect.subset` is anything other than
@@ -1379,7 +1511,7 @@ pub fn wire_artifact_compose(key_bytes: &[u8], sources_bytes: &[u8]) -> Result<V
 //#endregion 🔖️Wire
 
 //#region 🔖️FormatCatalog
-/// 🗄️ One string-keyed format's metadata — kind id, mime, extension, folder slug. Generic
+/// 🗄️ One representation's plural MIME and extension claims with canonical identity metadata. Generic
 /// successor to the closed, `🔺️mesh`-local `StdioFormatEntry`/`STDIO_FORMAT_CATALOG` (ticket
 /// 26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT wave 2): where `mesh`'s catalog is a single
 /// hardcoded `const` slice only `stdio` can ever contribute to, this registry is additive and
@@ -1393,21 +1525,13 @@ pub struct FormatDescriptor {
     pub kind_id: String,
     pub short_id: String,
     pub aliases: Vec<String>,
-    pub mime: String,
-    pub extension: String,
+    pub mimes: Vec<String>,
+    pub extensions: Vec<String>,
     pub name: String,
     pub full_name: String,
     pub neutral: bool,
     pub dir_name: String,
     pub is_binary: bool,
-}
-
-impl FormatDescriptor {
-    /// 🏷️ Returns a registered MIME claim; blank manifest-boundary values intentionally mean none.
-    pub fn registered_mime(&self) -> Option<&str> {
-        let mime = self.mime.trim();
-        (!mime.is_empty()).then_some(mime)
-    }
 }
 
 /// ⚠️ A format registry identity, extension, or MIME ownership collision.
@@ -1416,7 +1540,38 @@ pub enum FormatRegistryConflict {
     Identity { key: String, established_kind_id: String, conflicting_kind_id: String },
     Extension { extension: String, established_kind_id: String, conflicting_kind_id: String },
     Mime { mime: String, established_kind_id: String, conflicting_kind_id: String },
+    Invalid { kind_id: String, detail: String },
 }
+
+impl std::fmt::Display for FormatRegistryConflict {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Identity { key, established_kind_id, conflicting_kind_id } => write!(f, "format conflict on key '{key}': established {established_kind_id}, conflicting {conflicting_kind_id}"),
+            Self::Extension { extension, established_kind_id, conflicting_kind_id } => write!(f, "format conflict on extension '{extension}': established {established_kind_id}, conflicting {conflicting_kind_id}"),
+            Self::Mime { mime, established_kind_id, conflicting_kind_id } => write!(f, "format conflict on mime '{mime}': established {established_kind_id}, conflicting {conflicting_kind_id}"),
+            Self::Invalid { kind_id, detail } => write!(f, "invalid format descriptor {kind_id}: {detail}"),
+        }
+    }
+}
+impl std::error::Error for FormatRegistryConflict {}
+
+/// 🚫️ A format registration or inspection could not acquire its authoritative catalog.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum FormatRegistryError {
+    Conflict(FormatRegistryConflict),
+    Unavailable(IoRegistryUnavailable),
+}
+
+impl std::fmt::Display for FormatRegistryError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Conflict(error) => error.fmt(formatter),
+            Self::Unavailable(error) => write!(formatter, "format registry unavailable: {}", error.registry),
+        }
+    }
+}
+
+impl std::error::Error for FormatRegistryError {}
 
 static FORMAT_CATALOG: std::sync::OnceLock<RwLock<BTreeMap<String, FormatDescriptor>>> = std::sync::OnceLock::new();
 
@@ -1426,10 +1581,30 @@ fn format_catalog() -> &'static RwLock<BTreeMap<String, FormatDescriptor>> {
 
 /// 📌️ Registers format rows atomically. Identity, extension, and non-empty MIME claims are each
 /// globally singular; equal duplicate rows are idempotent and never replace an established owner.
-pub fn register_format_descriptors(rows: Vec<FormatDescriptor>) -> Result<(), FormatRegistryConflict> {
+#[must_use]
+pub fn register_format_descriptors(descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(), FormatRegistryError> {
+    let (proposed, proposed_by_kind) = index_format_descriptors(descriptors).map_err(FormatRegistryError::Conflict)?;
+    let mut registry = format_catalog().write().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
+    validate_format_descriptors(&registry, &proposed, &proposed_by_kind).map_err(FormatRegistryError::Conflict)?;
+    for (key, descriptor) in proposed {
+        registry.entry(key).or_insert(descriptor);
+    }
+    Ok(())
+}
+
+/// 🔬️ Verifies format rows against the catalog without mutating their global ownership.
+#[must_use]
+pub fn preflight_format_descriptors(rows: &[FormatDescriptor]) -> Result<(), FormatRegistryError> {
+    let (proposed, proposed_by_kind) = index_format_descriptors(rows.iter().cloned()).map_err(FormatRegistryError::Conflict)?;
+    let registry = format_catalog().read().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
+    validate_format_descriptors(&registry, &proposed, &proposed_by_kind).map_err(FormatRegistryError::Conflict)
+}
+
+fn index_format_descriptors(descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(BTreeMap<String, FormatDescriptor>, BTreeMap<String, FormatDescriptor>), FormatRegistryConflict> {
     let mut proposed: BTreeMap<String, FormatDescriptor> = BTreeMap::new();
     let mut proposed_by_kind: BTreeMap<String, FormatDescriptor> = BTreeMap::new();
-    for row in rows {
+    for row in descriptors {
+        let row = canonicalize_format_descriptor(row)?;
         for key in format_descriptor_keys(&row) {
             if let Some(existing) = proposed.get(&key) {
                 if existing != &row {
@@ -1447,9 +1622,55 @@ pub fn register_format_descriptors(rows: Vec<FormatDescriptor>) -> Result<(), Fo
             proposed_by_kind.insert(row.kind_id.clone(), row);
         }
     }
-    let mut reg = format_catalog().write().expect("format catalog poisoned");
+    Ok((proposed, proposed_by_kind))
+}
+
+fn canonicalize_format_descriptor(mut row: FormatDescriptor) -> Result<FormatDescriptor, FormatRegistryConflict> {
+    row.kind_id = row.kind_id.trim().to_string();
+    row.short_id = row.short_id.trim().to_string();
+    if row.kind_id.is_empty() || row.short_id.is_empty() {
+        return Err(FormatRegistryConflict::Invalid { kind_id: row.kind_id.clone(), detail: "kind_id and short_id must both be non-empty".to_string() });
+    }
+    for extension in &mut row.extensions {
+        *extension = extension.trim().to_ascii_lowercase();
+    }
+    if row.extensions.iter().any(String::is_empty) || row.extensions.is_empty() {
+        return Err(FormatRegistryConflict::Invalid { kind_id: row.kind_id.clone(), detail: "at least one non-empty extension claim is required".to_string() });
+    }
+    row.extensions.sort();
+    if row.extensions.windows(2).any(|claims| claims[0] == claims[1]) {
+        return Err(FormatRegistryConflict::Invalid { kind_id: row.kind_id.clone(), detail: "extension claims must be distinct".to_string() });
+    }
+    for mime in &mut row.mimes {
+        *mime = mime.trim().to_ascii_lowercase();
+    }
+    if row.mimes.iter().any(String::is_empty) {
+        return Err(FormatRegistryConflict::Invalid { kind_id: row.kind_id.clone(), detail: "MIME claims must be non-empty; omit unclaimed MIME values".to_string() });
+    }
+    row.mimes.sort();
+    if row.mimes.windows(2).any(|claims| claims[0] == claims[1]) {
+        return Err(FormatRegistryConflict::Invalid { kind_id: row.kind_id.clone(), detail: "MIME claims must be distinct".to_string() });
+    }
+    for alias in &mut row.aliases {
+        *alias = alias.trim().to_string();
+    }
+    if row.aliases.iter().any(String::is_empty) || row.aliases.iter().any(|alias| alias == &row.kind_id || alias == &row.short_id) {
+        return Err(FormatRegistryConflict::Invalid { kind_id: row.kind_id.clone(), detail: "aliases must be non-empty and distinct from kind_id and short_id".to_string() });
+    }
+    row.aliases.sort();
+    if row.aliases.windows(2).any(|aliases| aliases[0] == aliases[1]) {
+        return Err(FormatRegistryConflict::Invalid { kind_id: row.kind_id.clone(), detail: "aliases must be distinct".to_string() });
+    }
+    Ok(row)
+}
+
+fn format_mimes(row: &FormatDescriptor) -> impl Iterator<Item = &str> {
+    row.mimes.iter().map(String::as_str)
+}
+
+fn validate_format_descriptors(registry: &BTreeMap<String, FormatDescriptor>, proposed: &BTreeMap<String, FormatDescriptor>, proposed_by_kind: &BTreeMap<String, FormatDescriptor>) -> Result<(), FormatRegistryConflict> {
     let mut established_by_kind: BTreeMap<String, &FormatDescriptor> = BTreeMap::new();
-    for descriptor in reg.values() {
+    for descriptor in registry.values() {
         established_by_kind.entry(descriptor.kind_id.clone()).or_insert(descriptor);
     }
     for row in proposed_by_kind.values() {
@@ -1457,26 +1678,27 @@ pub fn register_format_descriptors(rows: Vec<FormatDescriptor>) -> Result<(), Fo
             if existing.kind_id == row.kind_id {
                 continue;
             }
-            if existing.extension == row.extension {
-                return Err(FormatRegistryConflict::Extension { extension: row.extension.clone(), established_kind_id: existing.kind_id.clone(), conflicting_kind_id: row.kind_id.clone() });
+            for existing_ext in &existing.extensions {
+                for row_ext in &row.extensions {
+                    if existing_ext == row_ext {
+                        return Err(FormatRegistryConflict::Extension { extension: row_ext.clone(), established_kind_id: existing.kind_id.clone(), conflicting_kind_id: row.kind_id.clone() });
+                    }
+                }
             }
-            if let (Some(existing_mime), Some(row_mime)) = (existing.registered_mime(), row.registered_mime()) {
-                if existing_mime == row_mime {
-                    return Err(FormatRegistryConflict::Mime { mime: row_mime.to_string(), established_kind_id: existing.kind_id.clone(), conflicting_kind_id: row.kind_id.clone() });
+            for existing_mime in format_mimes(existing) {
+                for row_mime in format_mimes(row) {
+                    if existing_mime == row_mime {
+                        return Err(FormatRegistryConflict::Mime { mime: row_mime.to_string(), established_kind_id: existing.kind_id.clone(), conflicting_kind_id: row.kind_id.clone() });
+                    }
                 }
             }
         }
     }
     for (key, row) in proposed {
-        if let Some(existing) = reg.get(&key) {
-            if existing != &row {
-                return Err(FormatRegistryConflict::Identity { key, established_kind_id: existing.kind_id.clone(), conflicting_kind_id: row.kind_id });
+        if let Some(existing) = registry.get(key) {
+            if existing != row {
+                return Err(FormatRegistryConflict::Identity { key: key.clone(), established_kind_id: existing.kind_id.clone(), conflicting_kind_id: row.kind_id.clone() });
             }
-        }
-    }
-    for row in proposed_by_kind.values() {
-        for key in format_descriptor_keys(row) {
-            reg.entry(key).or_insert_with(|| row.clone());
         }
     }
     Ok(())
@@ -1486,49 +1708,60 @@ fn format_descriptor_keys(row: &FormatDescriptor) -> impl Iterator<Item = String
     std::iter::once(row.kind_id.clone()).chain(std::iter::once(row.short_id.clone())).chain(row.aliases.iter().cloned())
 }
 
-/// 🔎️ Resolve a format by its `kind_id`, `short_id`, or any registered alias.
-pub fn format_descriptor(kind_or_short_or_alias: &str) -> Option<FormatDescriptor> {
-    format_catalog().read().expect("format catalog poisoned").get(kind_or_short_or_alias).cloned()
+/// 🔎️ Resolves a format by its `kind_id`, `short_id`, or registered alias.
+#[must_use]
+pub fn format_descriptor(kind_or_short_or_alias: &str) -> Result<Option<FormatDescriptor>, FormatRegistryError> {
+    let registry = format_catalog().read().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
+    Ok(registry.get(kind_or_short_or_alias).cloned())
 }
 
 /// 🏷️ Normalize any recognized form (kind id, short id, alias) to the canonical `kind_id`.
-pub fn normalize_format_kind(input: &str) -> Option<String> {
-    format_descriptor(input).map(|d| d.kind_id)
+#[must_use]
+pub fn normalize_format_kind(input: &str) -> Result<Option<String>, FormatRegistryError> {
+    Ok(format_descriptor(input)?.map(|descriptor| descriptor.kind_id))
 }
 
 /// 🗂️ File-picker `accept` filter (comma-joined extensions) for a list of kind/short/alias
 /// strings -- the generic successor to `mesh::stdio_accept_filter`.
-pub fn format_accept_filter(kind_ids: &[&str]) -> String {
-    kind_ids.iter().filter_map(|k| format_descriptor(k)).map(|d| d.extension).collect::<Vec<_>>().join(",")
+#[must_use]
+pub fn format_accept_filter(kind_ids: &[&str]) -> Result<String, FormatRegistryError> {
+    let registry = format_catalog().read().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
+    Ok(kind_ids.iter().filter_map(|kind| registry.get(*kind)).flat_map(|descriptor| descriptor.extensions.iter()).cloned().collect::<Vec<_>>().join(","))
 }
 
 /// 📋️ Serialize every distinct registered format as a `mimes.csv`-shaped body (header + one row
 /// per distinct `kind_id`, sorted for determinism) -- the generic successor to
 /// `mesh::stdio_mimes_csv`.
-pub fn formats_csv() -> String {
-    let reg = format_catalog().read().expect("format catalog poisoned");
+#[must_use]
+pub fn formats_csv() -> Result<String, FormatRegistryError> {
+    let reg = format_catalog().read().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
     let mut seen: BTreeMap<&str, &FormatDescriptor> = BTreeMap::new();
     for row in reg.values() {
         seen.entry(row.kind_id.as_str()).or_insert(row);
     }
     let mut out = String::from("MIME,Extension,Name,FullName,Neutral,Dir,Kind\n");
     for row in seen.into_values() {
-        out.push_str(&row.mime);
-        out.push(',');
-        out.push_str(&row.extension);
-        out.push(',');
-        out.push_str(&row.name);
-        out.push(',');
-        out.push_str(&row.full_name);
-        out.push(',');
-        out.push_str(if row.neutral { "true" } else { "false" });
-        out.push(',');
-        out.push_str(&row.dir_name);
-        out.push(',');
-        out.push_str(&row.kind_id);
-        out.push('\n');
+        let mimes = format_mimes(row).collect::<Vec<_>>();
+        for extension in &row.extensions {
+            for mime in mimes.iter().copied().chain(std::iter::once("").take(usize::from(mimes.is_empty()))) {
+                out.push_str(mime);
+                out.push(',');
+                out.push_str(extension);
+                out.push(',');
+                out.push_str(&row.name);
+                out.push(',');
+                out.push_str(&row.full_name);
+                out.push(',');
+                out.push_str(if row.neutral { "true" } else { "false" });
+                out.push(',');
+                out.push_str(&row.dir_name);
+                out.push(',');
+                out.push_str(&row.kind_id);
+                out.push('\n');
+            }
+        }
     }
-    out
+    Ok(out)
 }
 //#endregion 🔖️FormatCatalog
 //#endregion 🔖️ErasedRegistry
@@ -1613,19 +1846,23 @@ mod tests {
     #[test]
     fn io_registry_rejects_a_conflicting_key_without_replacing_the_first_entry() {
         register_composer_entries(std::slice::from_ref(&CONFLICT_FIRST)).expect("first owner registers");
-        let conflict = register_composer_entries(std::slice::from_ref(&CONFLICT_SECOND)).expect_err("a second owner for the same IO key must fail");
+        assert!(matches!(preflight_composer_entry_refs(&[&CONFLICT_SECOND]), Err(IoRegistryRegistrationError::Conflict(_))), "preflight must expose the same conflict before any later assembly mutation");
+        let conflict = match register_composer_entries(std::slice::from_ref(&CONFLICT_SECOND)).expect_err("a second owner for the same IO key must fail") {
+            IoRegistryRegistrationError::Conflict(conflict) => conflict,
+            IoRegistryRegistrationError::Unavailable(error) => panic!("registry unavailable: {error:?}"),
+        };
         assert_eq!(conflict.key, IoKey::from_owner_counterpart(CONFLICT_INTO, CONFLICT_FROM, IoDirection::Import));
         let resolved = resolve(&conflict.key).expect("first owner remains resolvable");
         assert!(std::ptr::eq(resolved, &CONFLICT_FIRST));
     }
 
-    fn format_descriptor_fixture(kind_id: &str, short_id: &str, mime: &str, extension: &str) -> FormatDescriptor {
+    fn format_descriptor_fixture(kind_id: &str, short_id: &str, mimes: &[&str], extensions: &[&str]) -> FormatDescriptor {
         FormatDescriptor {
             kind_id: kind_id.to_string(),
             short_id: short_id.to_string(),
             aliases: Vec::new(),
-            mime: mime.to_string(),
-            extension: extension.to_string(),
+            mimes: mimes.iter().map(|mime| (*mime).to_string()).collect(),
+            extensions: extensions.iter().map(|extension| (*extension).to_string()).collect(),
             name: short_id.to_string(),
             full_name: kind_id.to_string(),
             neutral: true,
@@ -1636,26 +1873,37 @@ mod tests {
 
     #[test]
     fn format_registry_allows_an_unregistered_mime_and_rejects_duplicate_claims() {
-        let txt = format_descriptor_fixture("test.format.txt", "txt", "text/plain", ".txt");
-        let epw = format_descriptor_fixture("test.format.epw", "epw", "", ".epw");
+        let txt = format_descriptor_fixture("test.format.txt", "txt", &["text/plain"], &[".txt"]);
+        let epw = format_descriptor_fixture("test.format.epw", "epw", &[], &[".epw"]);
+        preflight_format_descriptors(&[txt.clone(), epw.clone()]).expect("preflight accepts unclaimed distinct format metadata without mutation");
+        assert!(format_descriptor("test.format.epw").expect("catalog availability").is_none(), "preflight must not publish a descriptor");
         register_format_descriptors(vec![txt.clone(), epw.clone()]).expect("txt MIME and EPW's absent MIME are unambiguous");
-        assert_eq!(epw.registered_mime(), None);
-        assert_eq!(format_descriptor("test.format.epw").expect("EPW descriptor").registered_mime(), None);
+        assert!(format_mimes(&epw).next().is_none());
+        assert!(format_mimes(&format_descriptor("test.format.epw").expect("catalog availability").expect("EPW descriptor")).next().is_none());
 
-        let first = format_descriptor_fixture("test.format.mime-first", "mime-first", "application/x-wave0-conflict", ".first");
-        let second = format_descriptor_fixture("test.format.mime-second", "mime-second", "application/x-wave0-conflict", ".second");
+        let duplicate_step = format_descriptor_fixture("test.format.step-duplicate", "step-duplicate", &["application/step", "APPLICATION/STEP"], &[".step", ".stp", ".STEP"]);
+        assert!(
+            matches!(register_format_descriptors(vec![duplicate_step]), Err(FormatRegistryError::Conflict(FormatRegistryConflict::Invalid { .. }))),
+            "claims that normalize to the same MIME or extension must reject instead of being silently deduplicated"
+        );
+        let step = format_descriptor_fixture("test.format.step", "step", &["application/step"], &[".step", ".stp"]);
+        register_format_descriptors(vec![step]).expect("plural representation claims register when each identity is distinct");
+        let step = format_descriptor("test.format.step").expect("catalog availability").expect("STEP descriptor");
+        assert_eq!(step.mimes, ["application/step"]);
+        assert_eq!(step.extensions, [".step", ".stp"]);
+        assert_eq!(format_accept_filter(&["test.format.step"]).expect("catalog availability"), ".step,.stp");
+        assert!(formats_csv().expect("catalog availability").contains("application/step,.step"));
+
+        let first = format_descriptor_fixture("test.format.mime-first", "mime-first", &["application/x-wave0-conflict"], &[".first"]);
+        let second = format_descriptor_fixture("test.format.mime-second", "mime-second", &["application/x-wave0-conflict"], &[".second"]);
         register_format_descriptors(vec![first]).expect("first MIME owner registers");
-        assert!(matches!(register_format_descriptors(vec![second]), Err(FormatRegistryConflict::Mime { mime, .. }) if mime == "application/x-wave0-conflict"));
+        assert!(matches!(register_format_descriptors(vec![second]), Err(FormatRegistryError::Conflict(FormatRegistryConflict::Mime { mime, .. })) if mime == "application/x-wave0-conflict"));
     }
 
     #[test]
     fn codec_budget_enforces_limits_and_shared_cancellation() {
         let cancellation = CancellationToken::new();
-        let policy = DecodePolicy {
-            representation: CodecRepresentation::Lossless,
-            limits: CodecLimits { max_read_bytes: 4, max_written_bytes: 4, max_work_units: 2, max_allocations: 1, max_recursion_depth: 1 },
-            cancellation: cancellation.clone(),
-        };
+        let policy = DecodePolicy { representation: CodecRepresentation::Lossless, limits: CodecLimits { max_read_bytes: 4, max_written_bytes: 4, max_work_units: 2, max_allocations: 1, max_recursion_depth: 1 }, cancellation: cancellation.clone() };
         let mut context = DecodeContext::new(policy);
         assert_eq!(context.policy.representation, CodecRepresentation::Lossless);
         context.budget.charge_read(4).expect("limit edge is allowed");
@@ -1663,6 +1911,124 @@ mod tests {
         context.budget.charge_allocation(1).expect("allocation limit edge is allowed");
         cancellation.cancel();
         assert!(context.budget.charge_read(1).is_err(), "shared cancellation must stop later work");
+    }
+
+    struct TestPayload {
+        bytes: Vec<u8>,
+        cursor: usize,
+        span: SourceSpan,
+    }
+
+    impl TestPayload {
+        fn new(bytes: &[u8], resource: &str) -> Self {
+            Self { bytes: bytes.to_vec(), cursor: 0, span: SourceSpan { resource: resource.to_string(), byte_start: 0, byte_end: bytes.len() as u64, line: Some(1), column: Some(1) } }
+        }
+    }
+
+    impl RandomAccessPayload for TestPayload {
+        fn len(&self) -> CodecResult<u64> {
+            Ok(CodecOutput { value: self.bytes.len() as u64, diagnostics: Vec::new() })
+        }
+
+        fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize> {
+            let start = usize::try_from(offset).map_err(|_| CodecFailure::error("test.offset", "offset does not fit usize"))?;
+            let available = match self.bytes.get(start..) {
+                Some(available) => available,
+                None => &[],
+            };
+            let count = available.len().min(output.len());
+            output[..count].copy_from_slice(&available[..count]);
+            Ok(CodecOutput { value: count, diagnostics: Vec::new() })
+        }
+    }
+
+    impl PayloadSource for TestPayload {
+        fn span(&self) -> SourceSpan {
+            self.span.clone()
+        }
+
+        fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize> {
+            let available = &self.bytes[self.cursor..];
+            let count = available.len().min(output.len());
+            output[..count].copy_from_slice(&available[..count]);
+            self.cursor += count;
+            Ok(CodecOutput { value: count, diagnostics: Vec::new() })
+        }
+
+        fn random_access(&self) -> Option<&dyn RandomAccessPayload> {
+            Some(self)
+        }
+    }
+
+    struct TestSink;
+
+    impl PayloadSink for TestSink {
+        fn write_chunk(&mut self, _input: &[u8]) -> CodecResult<()> {
+            Ok(CodecOutput { value: (), diagnostics: Vec::new() })
+        }
+    }
+
+    struct TestResolver;
+
+    impl ResourceResolver for TestResolver {
+        fn resolve_decode(&self, _request: &ResourceRequest, _context: &mut DecodeContext) -> CodecResult<Box<dyn PayloadSource>> {
+            Ok(CodecOutput { value: Box::new(TestPayload::new(b"resolved", "resolver://decode")), diagnostics: Vec::new() })
+        }
+
+        fn resolve_encode(&self, _request: &ResourceRequest, _context: &mut EncodeContext) -> CodecResult<Box<dyn PayloadSink>> {
+            Ok(CodecOutput { value: Box::new(TestSink), diagnostics: Vec::new() })
+        }
+    }
+
+    #[test]
+    fn codec_context_bounds_streaming_random_access_recursion_and_resolved_resources() {
+        let limits = CodecLimits { max_read_bytes: 4, max_written_bytes: 4, max_work_units: 16, max_allocations: 4, max_recursion_depth: 1 };
+        let resolver = std::sync::Arc::new(TestResolver);
+        let mut decode = DecodeContext::with_resolver(DecodePolicy { representation: CodecRepresentation::Lossless, limits: limits.clone(), cancellation: CancellationToken::new() }, resolver.clone());
+        let request = ResourceRequest { locator: "resolver://document".to_string(), expected_media_type: None };
+        let mut payload = decode.resolve(&request).expect("decode resource resolves").value;
+        let mut output = [0u8; 3];
+        let mut source = decode.source(&mut *payload).expect("source span is valid").value;
+        assert_eq!(source.read_chunk(&mut output).expect("bounded stream read").value, 3);
+        let mut random = source.random_access().expect("random access is available");
+        assert_eq!(random.read_at(0, &mut [0u8; 2]).expect("remaining bounded random read").value, 1);
+        assert!(random.read_at(0, &mut [0u8; 1]).is_err(), "random access cannot bypass the shared read budget");
+        drop(random);
+        drop(source);
+        decode.budget.enter_recursion().expect("first recursion frame");
+        assert!(decode.budget.enter_recursion().is_err(), "recursion limit is finite");
+        decode.budget.leave_recursion().expect("leave recursion frame");
+
+        let mut encode = EncodeContext::with_resolver(EncodePolicy { representation: CodecRepresentation::Canonical, limits, cancellation: CancellationToken::new() }, resolver);
+        let mut sink = encode.resolve(&request).expect("encode resource resolves").value;
+        encode.sink(&mut *sink).expect("bounded sink").value.write_chunk(b"four").expect("bounded write");
+        assert!(encode.sink(&mut *sink).expect("bounded sink").value.write_chunk(b"x").is_err(), "writes cannot bypass the output budget");
+    }
+
+    #[test]
+    fn codec_result_requires_valid_owned_spans_and_deterministic_opaque_order() {
+        let invalid = SourceSpan { resource: String::new(), byte_start: 3, byte_end: 2, line: Some(1), column: None };
+        assert!(invalid.validate().is_err());
+        let result = ArtifactCodecResult {
+            semantic: (),
+            anchors: vec![AnchoredSyntax { anchor: "root".to_string(), span: SourceSpan { resource: "memory://source".to_string(), byte_start: 0, byte_end: 2, line: Some(1), column: Some(1) }, bytes: b"ok".to_vec() }],
+            opaque_extensions: vec![
+                OpaqueExtension {
+                    kind: "z".to_string(),
+                    source: AnchoredSyntax { anchor: "z".to_string(), span: SourceSpan { resource: "memory://source".to_string(), byte_start: 2, byte_end: 3, line: Some(1), column: Some(3) }, bytes: b"z".to_vec() },
+                },
+                OpaqueExtension {
+                    kind: "a".to_string(),
+                    source: AnchoredSyntax { anchor: "a".to_string(), span: SourceSpan { resource: "memory://source".to_string(), byte_start: 3, byte_end: 4, line: Some(1), column: Some(4) }, bytes: b"a".to_vec() },
+                },
+            ],
+        };
+        result.validate_lossless().expect("owned anchored result is lossless-valid");
+        assert!(result.validate_representation(CodecRepresentation::Canonical).is_err(), "a canonical result cannot merely declare a canonical policy while retaining insertion order");
+        let mut context = EncodeContext::new(EncodePolicy::default());
+        let finalized = context.finalize_result(result).expect("host finalization canonicalizes an owned result").value;
+        assert_eq!(finalized.canonical_opaque_extensions().iter().map(|extension| extension.kind.as_str()).collect::<Vec<_>>(), vec!["a", "z"]);
+        finalized.validate_representation(CodecRepresentation::Canonical).expect("finalized canonical result is executable-policy-valid");
     }
 
     /// ✅️ Accept table for `is_canonical_artifact_kind`/`ArtifactKindId::parse`: exactly three

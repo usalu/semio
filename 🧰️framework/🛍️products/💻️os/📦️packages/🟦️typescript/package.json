@@ -13,6 +13,9 @@
     "@semio-tech/framework": "workspace:*",
     "@semio-tech/framework-math-js": "workspace:*"
   },
+  "scripts": {
+    "test": "bun nx run @semio-tech/framework-os:test"
+  },
   "devDependencies": {
     "typescript": "^5.9.3",
     "vitest": "^4.0.17"

@@ -34,14 +34,19 @@ pub const DEFLATE_ARTIFACT_SCHEMA_ID: &str = "s.stdio.deflate";
 /// `standards::v_rfc1950::subsets::any::io`. No field here closes it, so it is not invented and the
 /// call is not dropped — it survives on the plugin root's `.setup(...)`, repointed at this new
 /// location by the dissolution.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(DEFLATE_ARTIFACT_SCHEMA_ID)
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("deflate", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::deflate::schema::deflate_artifact_schema_descriptor())
         .inferences([crate::artifacts::deflate::schema::inferences::deflate_artifact_inference_descriptor()])
         .composers(crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<DeflateSnapshot, DeflateMutation>(STDIO_DEFLATE_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built

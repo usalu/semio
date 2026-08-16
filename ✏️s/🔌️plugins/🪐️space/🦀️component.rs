@@ -59,22 +59,22 @@ pub fn demo_space_projection() -> WorkflowSnapshot {
 /// pre-call for everything artifact-scoped (`🏠️home`'s schema/inferences/composers/languages/document
 /// codec). Both apps' config/presence schema (ticket W1c) moved off `.setup()` onto
 /// `ArtifactApp::app_schema()` overrides on `HomeApp`/`SpaceApp`, auto-registered by
-/// `.register_document_app::<A>()` below. `.setup()` survives narrowed to exactly ONE residue item:
+/// `.document_app::<A>()` below. `.setup()` survives narrowed to exactly ONE residue item:
 /// `SpaceApp`'s own document codec — `🪐️space`'s app wraps the kernel-owned `WorkflowSnapshot` and owns
 /// no `🗿️artifacts` node of its own in this plugin (see this file's own module doc), and the codec is
 /// keyed by a foreign kind (`OS_SPACE_SCHEMA`/`"os.space"`, owned by framework/os's `SpaceSnapshot`,
 /// not by any type this plugin declares) — see `📦️glue.rs::register_s_exports()`'s own doc for why
 /// `.document_codec_bare()` cannot honestly close this gap, and
 /// `📓️w1d-semio-s-plugin-space-report.md` for the full writeup.
-pub fn plugin() -> Plugin {
+pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("s")
         .label("S Studio")
         .version("0.1.0")
         .local_backbone_storage()
         .setup(crate::register_s_exports)
         .artifact(crate::artifacts::home::declaration())
-        .register_document_app::<crate::apps::home::HomeApp>(crate::apps::home::create_home_app())
-        .register_document_app::<crate::apps::space::SpaceApp>(crate::apps::space::create_space_app())
-        .build()
+        .document_app::<crate::apps::home::HomeApp>(crate::apps::home::create_home_app())
+        .document_app::<crate::apps::space::SpaceApp>(crate::apps::space::create_space_app())
+        .try_build()
 }
 //#endregion 🔌️Registration

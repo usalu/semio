@@ -155,7 +155,7 @@ directive @link(roles: [String!]) on FIELD_DEFINITION\
 
 //#region 🔖️ArtifactSchemaDescriptor
 /// 🍃 Five handcrafted leaf bodies for one facet (`include_str!` at each artifact's registration site).
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FacetLeaves {
     pub rust: &'static str,
     pub typescript: &'static str,
@@ -165,7 +165,7 @@ pub struct FacetLeaves {
 }
 
 /// 🧬️ Registered descriptor for one artifact's four schema facets.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ArtifactSchemaDescriptor {
     pub id: &'static str,
     pub artifact: FacetLeaves,
@@ -221,6 +221,21 @@ use semio_framework_os_kernel::{
     with_kernel_app_schema_catalog, with_kernel_artifact_inference_catalog, with_kernel_artifact_schema_catalog, KernelAppSchemaDescriptor,
     KernelArtifactInferenceDescriptor, KernelArtifactSchemaDescriptor, KernelFacetLeaves,
 };
+
+/// ⚠️ Schema descriptor registration rejects a conflicting established or batch descriptor.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SchemaDescriptorRegistryError {
+    pub registry: &'static str,
+    pub id: String,
+}
+
+impl std::fmt::Display for SchemaDescriptorRegistryError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "{} descriptor conflicts for {}", self.registry, self.id)
+    }
+}
+
+impl std::error::Error for SchemaDescriptorRegistryError {}
 
 fn facet_leaves_to_kernel(leaves: FacetLeaves) -> KernelFacetLeaves {
     KernelFacetLeaves {
@@ -280,6 +295,41 @@ pub fn register_artifact_schema_descriptor(descriptor: ArtifactSchemaDescriptor)
     register_kernel_artifact_schema_descriptor(descriptor_to_kernel(descriptor));
 }
 
+/// 🔬️ Verifies artifact schema descriptors against the established catalog without mutation.
+#[must_use]
+pub fn preflight_artifact_schema_descriptors(descriptors: &[ArtifactSchemaDescriptor]) -> Result<(), SchemaDescriptorRegistryError> {
+    let mut proposed = HashMap::new();
+    for descriptor in descriptors {
+        match proposed.insert(descriptor.id, descriptor) {
+            Some(existing) if existing == descriptor => {}
+            Some(_) => return Err(SchemaDescriptorRegistryError { registry: "artifact-schema", id: descriptor.id.to_string() }),
+            None => {}
+        }
+    }
+    with_artifact_schema_registry(|registry| {
+        for descriptor in descriptors {
+            if let Some(existing) = registry.get(descriptor.id) {
+                if existing != descriptor {
+                    return Err(SchemaDescriptorRegistryError { registry: "artifact-schema", id: descriptor.id.to_string() });
+                }
+            }
+        }
+        Ok(())
+    })
+}
+
+/// 📌️ Registers an atomically prevalidated artifact schema batch.
+#[must_use]
+pub fn register_artifact_schema_descriptors(descriptors: Vec<ArtifactSchemaDescriptor>) -> Result<(), SchemaDescriptorRegistryError> {
+    preflight_artifact_schema_descriptors(&descriptors)?;
+    for descriptor in descriptors {
+        if !artifact_schema_descriptor_registered(descriptor.id) {
+            register_artifact_schema_descriptor(descriptor);
+        }
+    }
+    Ok(())
+}
+
 /// 🔎 Whether `id` is present in the OS-wide descriptor registry.
 pub fn artifact_schema_descriptor_registered(id: &str) -> bool {
     semio_framework_os_kernel::kernel_artifact_schema_descriptor_registered(id)
@@ -335,7 +385,7 @@ pub fn artifact_schema_graphql_sdl(key: &str) -> Option<String> {
 /// 💡️ Registered descriptor for one artifact's 💡️inference schema facet — a SIBLING to
 /// [`ArtifactSchemaDescriptor`], not a field on it (see [`KernelArtifactInferenceDescriptor`]'s own
 /// doc for why). `id` is the inference schema's own id, `"{artifact_id}.inference"`.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ArtifactInferenceDescriptor {
     pub id: &'static str,
     pub inference: FacetLeaves,
@@ -392,6 +442,41 @@ pub fn register_artifact_inference_descriptor(descriptor: ArtifactInferenceDescr
     register_kernel_artifact_inference_descriptor(inference_descriptor_to_kernel(descriptor));
 }
 
+/// 🔬️ Verifies inference schema descriptors against the established catalog without mutation.
+#[must_use]
+pub fn preflight_artifact_inference_descriptors(descriptors: &[ArtifactInferenceDescriptor]) -> Result<(), SchemaDescriptorRegistryError> {
+    let mut proposed = HashMap::new();
+    for descriptor in descriptors {
+        match proposed.insert(descriptor.id, descriptor) {
+            Some(existing) if existing == descriptor => {}
+            Some(_) => return Err(SchemaDescriptorRegistryError { registry: "artifact-inference", id: descriptor.id.to_string() }),
+            None => {}
+        }
+    }
+    with_artifact_inference_registry(|registry| {
+        for descriptor in descriptors {
+            if let Some(existing) = registry.get(descriptor.id) {
+                if existing != descriptor {
+                    return Err(SchemaDescriptorRegistryError { registry: "artifact-inference", id: descriptor.id.to_string() });
+                }
+            }
+        }
+        Ok(())
+    })
+}
+
+/// 📌️ Registers an atomically prevalidated inference schema batch.
+#[must_use]
+pub fn register_artifact_inference_descriptors(descriptors: Vec<ArtifactInferenceDescriptor>) -> Result<(), SchemaDescriptorRegistryError> {
+    preflight_artifact_inference_descriptors(&descriptors)?;
+    for descriptor in descriptors {
+        if !artifact_inference_descriptor_registered(descriptor.id) {
+            register_artifact_inference_descriptor(descriptor);
+        }
+    }
+    Ok(())
+}
+
 /// 🔎 Whether `id` (the inference schema id) is present in the OS-wide inference descriptor registry.
 pub fn artifact_inference_descriptor_registered(id: &str) -> bool {
     semio_framework_os_kernel::kernel_artifact_inference_descriptor_registered(id)
@@ -431,7 +516,7 @@ pub fn artifact_inference_graphql_sdl(key: &str) -> Option<String> {
 
 //#region 🔖️AppSchemaDescriptor
 /// 🧬️ Registered descriptor for one app owner's config + presence schema facets.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AppSchemaDescriptor {
     pub id: &'static str,
     pub config: FacetLeaves,
@@ -511,6 +596,41 @@ fn app_descriptor_from_kernel(kernel: &KernelAppSchemaDescriptor) -> AppSchemaDe
 /// - ✅ [`validate_registered_app_descriptor`] validates a descriptor's JSON Schema leaves and `x-semio-state` tagging before registering.
 pub fn register_app_schema_descriptor(descriptor: AppSchemaDescriptor) {
     register_kernel_app_schema_descriptor(app_descriptor_to_kernel(descriptor));
+}
+
+/// 🔬️ Verifies app schema descriptors against the established catalog without mutation.
+#[must_use]
+pub fn preflight_app_schema_descriptors(descriptors: &[AppSchemaDescriptor]) -> Result<(), SchemaDescriptorRegistryError> {
+    let mut proposed = HashMap::new();
+    for descriptor in descriptors {
+        match proposed.insert(descriptor.id, descriptor) {
+            Some(existing) if existing == descriptor => {}
+            Some(_) => return Err(SchemaDescriptorRegistryError { registry: "app-schema", id: descriptor.id.to_string() }),
+            None => {}
+        }
+    }
+    with_app_schema_registry(|registry| {
+        for descriptor in descriptors {
+            if let Some(existing) = registry.get(descriptor.id) {
+                if existing != descriptor {
+                    return Err(SchemaDescriptorRegistryError { registry: "app-schema", id: descriptor.id.to_string() });
+                }
+            }
+        }
+        Ok(())
+    })
+}
+
+/// 📌️ Registers an atomically prevalidated app schema batch.
+#[must_use]
+pub fn register_app_schema_descriptors(descriptors: Vec<AppSchemaDescriptor>) -> Result<(), SchemaDescriptorRegistryError> {
+    preflight_app_schema_descriptors(&descriptors)?;
+    for descriptor in descriptors {
+        if !app_schema_descriptor_registered(descriptor.id) {
+            register_app_schema_descriptor(descriptor);
+        }
+    }
+    Ok(())
 }
 
 /// 🔎 Whether `id` is present in the OS-wide app descriptor registry.

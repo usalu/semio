@@ -40,8 +40,11 @@
       "id": "s.stdio.txt.standard.utf-8.representation.document",
       "standard": "s.stdio.txt.standard.utf-8",
       "representation": "document",
-      "mime": "text/plain",
-      "extension": ".txt",
+      "mimes": ["text/plain"],
+      "extensions": [".txt"],
+      "is_binary": false,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -73,7 +76,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.txt.conformance.public-corpus",
+      "id": "s.stdio.txt.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }

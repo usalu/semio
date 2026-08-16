@@ -1,9 +1,16 @@
 //! 🏗️ Typestate `PluginBuilder` — missing label/version is a compile error.
 
-use crate::app::{App, ArtifactApp, ArtifactDeclaration, ArtifactDefinitionRegistry, Plugin, PluginApp, PluginAssemblyError, PluginCommandHandler};
+use crate::app::{App, ArtifactApp, ArtifactDeclaration, ArtifactDefinitionRegistry, Plugin, PluginApp, PluginAssemblyError, PluginCommandHandler, PluginRegistration};
 use semio_framework::{kernel::CapabilityRequirement, CommandDefinition};
 use std::collections::HashMap;
 use std::marker::PhantomData;
+use std::sync::{Mutex, OnceLock};
+
+static PLUGIN_ASSEMBLY_MUTEX: OnceLock<Mutex<()>> = OnceLock::new();
+
+fn plugin_assembly_mutex() -> &'static Mutex<()> {
+    PLUGIN_ASSEMBLY_MUTEX.get_or_init(|| Mutex::new(()))
+}
 
 /// 🏷️ Builder has plugin id only — next call must be `.label(...)`.
 pub struct NeedsLabel;
@@ -17,14 +24,15 @@ pub struct PluginBuilder<State> {
     plugin_id: String,
     label: Option<String>,
     version: Option<String>,
-    setup: Vec<fn()>,
     artifacts: Vec<ArtifactDeclaration>,
+    artifact_definitions: Vec<crate::app::ArtifactDefinition>,
     capabilities: Vec<CapabilityRequirement>,
     commands: Vec<(CommandDefinition, PluginCommandHandler)>,
     artifact_kinds: Vec<semio_framework::ArtifactKindSpec>,
     apps: HashMap<String, Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static>>,
     app_defs: Vec<(App, Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static>)>,
-    app_schema_registrations: Vec<fn()>,
+    app_schema_descriptors: Vec<fn() -> Option<::semio_framework_schema::AppSchemaDescriptor>>,
+    registrations: Vec<PluginRegistration>,
     _state: PhantomData<State>,
 }
 
@@ -35,14 +43,15 @@ impl PluginBuilder<NeedsLabel> {
             plugin_id: plugin_id.into(),
             label: None,
             version: None,
-            setup: Vec::new(),
             artifacts: Vec::new(),
+            artifact_definitions: Vec::new(),
             capabilities: Vec::new(),
             commands: Vec::new(),
             artifact_kinds: Vec::new(),
             apps: HashMap::new(),
             app_defs: Vec::new(),
-            app_schema_registrations: Vec::new(),
+            app_schema_descriptors: Vec::new(),
+            registrations: Vec::new(),
             _state: PhantomData,
         }
     }
@@ -53,14 +62,15 @@ impl PluginBuilder<NeedsLabel> {
             plugin_id: self.plugin_id,
             label: Some(label.into()),
             version: None,
-            setup: self.setup,
             artifacts: self.artifacts,
+            artifact_definitions: self.artifact_definitions,
             capabilities: self.capabilities,
             commands: self.commands,
             artifact_kinds: self.artifact_kinds,
             apps: self.apps,
             app_defs: self.app_defs,
-            app_schema_registrations: self.app_schema_registrations,
+            app_schema_descriptors: self.app_schema_descriptors,
+            registrations: self.registrations,
             _state: PhantomData,
         }
     }
@@ -73,35 +83,38 @@ impl PluginBuilder<NeedsVersion> {
             plugin_id: self.plugin_id,
             label: self.label,
             version: Some(version.into()),
-            setup: self.setup,
             artifacts: self.artifacts,
+            artifact_definitions: self.artifact_definitions,
             capabilities: self.capabilities,
             commands: self.commands,
             artifact_kinds: self.artifact_kinds,
             apps: self.apps,
             app_defs: self.app_defs,
-            app_schema_registrations: self.app_schema_registrations,
+            app_schema_descriptors: self.app_schema_descriptors,
+            registrations: self.registrations,
             _state: PhantomData,
         }
     }
 }
 
 impl PluginBuilder<Ready> {
-    /// 🔧️ Registers a one-shot setup callback (codecs / languages / importers). Repeatable — accumulates,
-    /// runs in call order, does NOT overwrite an earlier `.setup(...)` call (see the field doc). Retiring
-    /// in favor of `.artifact()`/`app_schema()` — see `PluginBuilder::setup`'s own doc for why this is
-    /// still here.
-    pub fn setup(mut self, setup: fn()) -> Self {
-        self.setup.push(setup);
-        self
-    }
-
-    /// 🗿️ Declares one artifact this plugin owns — the declarative replacement for `.setup()`
-    /// (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1). Repeatable. `build()` walks every
+    /// 🗿️ Declares one artifact this plugin owns. Repeatable. `try_build()` walks every
     /// declared artifact in a fixed deterministic order and validates that it owns everything it
     /// declares — see `ArtifactDeclaration::register_all`.
     pub fn artifact(mut self, declaration: ArtifactDeclaration) -> Self {
         self.artifacts.push(declaration);
+        self
+    }
+
+    /// 🧾️ Registers one definition-only artifact through the same typed preflight registry.
+    pub fn artifact_definition(mut self, definition: crate::app::ArtifactDefinition) -> Self {
+        self.artifact_definitions.push(definition);
+        self
+    }
+
+    /// 🧩️ Declares one typed plugin-wide registration in the transactional assembly plan.
+    pub fn registration(mut self, registration: PluginRegistration) -> Self {
+        self.registrations.push(registration);
         self
     }
 
@@ -131,23 +144,16 @@ impl PluginBuilder<Ready> {
         self
     }
 
-    /// 🧬️ Declares a typed document app factory and defers app-schema registration until commit.
+    /// 🧬️ Declares a typed document app factory and app-schema descriptor for transactional assembly.
     pub fn document_app<A: ArtifactApp>(mut self, app: App) -> Self {
-        fn register_schema<A: ArtifactApp>() {
-            if let Some(descriptor) = A::app_schema() {
-                ::semio_framework_schema::register_app_schema_descriptor(descriptor);
-            }
+        fn app_schema<A: ArtifactApp>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+            A::app_schema()
         }
         let registry = crate::app::AppActionRegistry::from_definition(&app.definition);
         let factory: Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static> = Box::new(move || Box::new(crate::app::VcsArtifactApp::with_registry(A::default(), registry.clone())));
         self.app_defs.push((app, factory));
-        self.app_schema_registrations.push(register_schema::<A>);
+        self.app_schema_descriptors.push(app_schema::<A>);
         self
-    }
-
-    /// 🧬️ Alias for [`Self::document_app`] — matches the retired `Plugin` method name used by `semio_plugin!`.
-    pub fn register_document_app<A: ArtifactApp>(self, app: App) -> Self {
-        self.document_app::<A>(app)
     }
 
     /// 📚️ Assembles a library-only plugin through the typed boundary.
@@ -155,37 +161,48 @@ impl PluginBuilder<Ready> {
         self.try_build()
     }
 
-    /// ✅️ Preflights all declarations before any setup or registry side effect, then commits once.
+    /// ✅️ Preflights all declarations before any registry side effect, then commits once.
     pub fn try_build(self) -> Result<Plugin, PluginAssemblyError> {
         let Self {
             plugin_id,
             label,
             version,
-            setup,
             artifacts,
+            artifact_definitions,
             capabilities,
             commands,
             artifact_kinds,
             apps: _,
             app_defs,
-            app_schema_registrations,
+            app_schema_descriptors,
+            registrations,
             _state: _,
         } = self;
         let label = label.ok_or_else(|| PluginAssemblyError::new("plugin-assembly.label", "typestate-ready builder has no label"))?;
         let version = version.ok_or_else(|| PluginAssemblyError::new("plugin-assembly.version", "typestate-ready builder has no version"))?;
+        let _assembly = plugin_assembly_mutex()
+            .lock()
+            .map_err(|_| PluginAssemblyError::new("plugin-assembly.unavailable", "plugin assembly mutex is poisoned"))?;
         let mut definitions = ArtifactDefinitionRegistry::new();
+        for definition in artifact_definitions {
+            definitions.register(definition).map_err(PluginAssemblyError::definition)?;
+        }
         for declaration in &artifacts {
             declaration.preflight(&plugin_id, &mut definitions)?;
         }
-        for setup in &setup {
-            setup();
+        let mut app_schemas = Vec::new();
+        for get_schema in app_schema_descriptors {
+            if let Some(descriptor) = get_schema() {
+                app_schemas.push(descriptor);
+            }
         }
+        let plan = crate::app::ArtifactRegistrationPlan::from_declarations(&artifacts, app_schemas, registrations);
+        plan.preflight()?;
+        plan.commit()?;
+
         let mut plugin = Plugin::new(plugin_id.clone(), label, version);
         for declaration in artifacts {
-            plugin = declaration.try_register_all(&plugin_id, plugin)?;
-        }
-        for register_schema in app_schema_registrations {
-            register_schema();
+            plugin = declaration.apply_to(plugin);
         }
         for capability in capabilities {
             plugin = plugin.capability(capability);

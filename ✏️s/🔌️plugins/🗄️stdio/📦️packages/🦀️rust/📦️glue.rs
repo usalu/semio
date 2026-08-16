@@ -31,6 +31,11 @@ pub mod plugin;
 pub use plugin::plugin;
 //#endregion Plugin
 
+//#region Registry
+#[path = "../../📇️registry/🦀️component.rs"]
+pub mod registry;
+//#endregion Registry
+
 //#region Manifest
 #[path = "../../🛂️manifest/🦀️component.rs"]
 pub mod manifest;

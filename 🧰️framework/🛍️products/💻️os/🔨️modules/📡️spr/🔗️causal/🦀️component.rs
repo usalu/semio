@@ -721,6 +721,7 @@ mod tests {
                     semantic_kind: None,
                     label: None,
                     group_id: None,
+                    origin: crate::os_spr::command::MutationOrigin::Owner,
                 },
                 crate::os_spr::command::MutationMeta {
                     mutation_id: Some(crate::os_spr::ids::MutationId("op-b".into())),
@@ -733,6 +734,7 @@ mod tests {
                     semantic_kind: None,
                     label: None,
                     group_id: None,
+                    origin: crate::os_spr::command::MutationOrigin::Owner,
                 },
             ],
             description: None,

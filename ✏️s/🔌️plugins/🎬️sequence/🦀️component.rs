@@ -8,11 +8,11 @@ fn register_exports() {
 }
 
 /// 🔌️ Builds the plugin surface for host registration.
-pub fn plugin() -> Plugin {
+pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("sequence")
         .label("Sequence")
         .version("0.1.0")
         .setup(register_exports)
-        .register_document_app::<crate::apps::sequence::SequencePlayApp>(crate::apps::sequence::create_sequence_app())
-        .build()
+        .document_app::<crate::apps::sequence::SequencePlayApp>(crate::apps::sequence::create_sequence_app())
+        .try_build()
 }

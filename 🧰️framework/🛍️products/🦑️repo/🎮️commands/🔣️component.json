@@ -1,0 +1,19 @@
+{
+  "x-semio": {
+    "kind": "collection",
+    "members": [
+      {
+        "directory": "🌊️workflow",
+        "id": "framework.repo.command.workflow",
+        "kind": "command",
+        "responsibility": "Executes a ticket-scoped dependency workflow using locally detected coding-agent process runners."
+      },
+      {
+        "directory": "🔌️plugin-registry",
+        "id": "framework.repo.command.plugin-registry",
+        "kind": "command",
+        "responsibility": "Verifies and regenerates the canonical plugin and playground registry."
+      }
+    ]
+  }
+}

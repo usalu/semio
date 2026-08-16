@@ -33,14 +33,19 @@ pub const OBJ_ARTIFACT_SCHEMA_ID: &str = "s.stdio.obj";
 /// `.setup(crate::artifacts::obj::engine::register_schema_specs)` alongside this declaration's
 /// `.artifact(...)`, exactly this ticket's own W1d precedent (puzzle's B2 OS-media-bridge case) for
 /// a genuine, narrowly scoped registration gap.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(OBJ_ARTIFACT_SCHEMA_ID)
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("obj", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::obj::schema::obj_artifact_schema_descriptor())
         .inferences([crate::artifacts::obj::schema::inferences::obj_artifact_inference_descriptor()])
         .composers(crate::artifacts::obj::engine::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<ObjSnapshot, ObjMutation>(STDIO_OBJ_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built

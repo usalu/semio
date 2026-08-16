@@ -9,8 +9,8 @@
   ],
   "standards": [
     {
-      "id": "s.stdio.pdf.standard.1.4",
-      "revision": "1.4",
+      "id": "s.stdio.pdf.standard.1-4",
+      "revision": "1-4",
       "normative_source": null,
       "publication_date": null,
       "source_checksum": null,
@@ -19,8 +19,8 @@
       "status": "unverified"
     },
     {
-      "id": "s.stdio.pdf.standard.1.7",
-      "revision": "1.7",
+      "id": "s.stdio.pdf.standard.1-7",
+      "revision": "1-7",
       "normative_source": null,
       "publication_date": null,
       "source_checksum": null,
@@ -31,29 +31,29 @@
   ],
   "profiles": [
     {
-      "id": "s.stdio.pdf.standard.1.4.profile.any",
-      "standard": "s.stdio.pdf.standard.1.4",
+      "id": "s.stdio.pdf.standard.1-4.profile.any",
+      "standard": "s.stdio.pdf.standard.1-4",
       "profile": "any",
       "status": "unimplemented"
     },
     {
-      "id": "s.stdio.pdf.standard.1.7.profile.any",
-      "standard": "s.stdio.pdf.standard.1.7",
+      "id": "s.stdio.pdf.standard.1-7.profile.any",
+      "standard": "s.stdio.pdf.standard.1-7",
       "profile": "any",
       "status": "unimplemented"
     }
   ],
   "source_dialects": [
     {
-      "id": "s.stdio.pdf.standard.1.4.dialect.source",
-      "standard": "s.stdio.pdf.standard.1.4",
+      "id": "s.stdio.pdf.standard.1-4.dialect.source",
+      "standard": "s.stdio.pdf.standard.1-4",
       "dialect": "source",
       "registered_code_points": [],
       "status": "unimplemented"
     },
     {
-      "id": "s.stdio.pdf.standard.1.7.dialect.source",
-      "standard": "s.stdio.pdf.standard.1.7",
+      "id": "s.stdio.pdf.standard.1-7.dialect.source",
+      "standard": "s.stdio.pdf.standard.1-7",
       "dialect": "source",
       "registered_code_points": [],
       "status": "unimplemented"
@@ -61,11 +61,14 @@
   ],
   "representations": [
     {
-      "id": "s.stdio.pdf.standard.1.4.representation.document",
-      "standard": "s.stdio.pdf.standard.1.4",
+      "id": "s.stdio.pdf.standard.1-4.representation.document",
+      "standard": "s.stdio.pdf.standard.1-4",
       "representation": "document",
-      "mime": "application/pdf",
-      "extension": ".pdf",
+      "mimes": ["application/pdf"],
+      "extensions": [".pdf"],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -97,7 +100,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.pdf.conformance.public-corpus",
+      "id": "s.stdio.pdf.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }
@@ -109,8 +112,8 @@
     "redistribution_status": "unknown",
     "clauses_or_features": [],
     "profiles": [
-      "s.stdio.pdf.standard.1.4.profile.any",
-      "s.stdio.pdf.standard.1.7.profile.any"
+      "s.stdio.pdf.standard.1-4.profile.any",
+      "s.stdio.pdf.standard.1-7.profile.any"
     ],
     "registered_code_points": [],
     "read": "unimplemented",

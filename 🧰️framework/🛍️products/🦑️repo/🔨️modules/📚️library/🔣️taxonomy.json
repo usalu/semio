@@ -447,6 +447,7 @@
     "🦠️mutation",
     "🔺️diff",
     "↩️inverse",
+    "🧩️plan",
     "📝️text",
     "💾️binary",
     "🧩️deserializers",
@@ -564,6 +565,10 @@
     "🦠️mutation",
     "🔺️diff",
     "↩️inverse"
+  ],
+  "compositeMutationChildDirs": [
+    "🦠️mutation",
+    "🧩️plan"
   ],
   "configChildDirs": [
     "🧬️schema"

@@ -19,14 +19,14 @@ fn register_exports() {
 /// `gisterrain`); `Gis2dPlayApp::app_schema()`/`Gis3dPlayApp::app_schema()` are registered
 /// automatically by each `register_document_app` call below. `.setup()` carries only the host IO
 /// registration `ArtifactDeclaration` still cannot model — see `register_exports`.
-pub fn plugin() -> Plugin {
+pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("gis")
         .label("GIS")
         .version("0.1.0")
         .setup(register_exports)
         .artifact(crate::artifacts::gismap::declaration())
         .artifact(crate::artifacts::gisterrain::declaration())
-        .register_document_app::<crate::apps::gis2d::Gis2dPlayApp>(crate::apps::gis2d::create_gis2d_app())
-        .register_document_app::<crate::apps::gis3d::Gis3dPlayApp>(crate::apps::gis3d::create_gis3d_app())
-        .build()
+        .document_app::<crate::apps::gis2d::Gis2dPlayApp>(crate::apps::gis2d::create_gis2d_app())
+        .document_app::<crate::apps::gis3d::Gis3dPlayApp>(crate::apps::gis3d::create_gis3d_app())
+        .try_build()
 }

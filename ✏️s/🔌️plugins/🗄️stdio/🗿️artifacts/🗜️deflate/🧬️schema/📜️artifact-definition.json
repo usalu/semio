@@ -40,8 +40,11 @@
       "id": "s.stdio.deflate.standard.rfc1950.representation.document",
       "standard": "s.stdio.deflate.standard.rfc1950",
       "representation": "document",
-      "mime": "application/zlib",
-      "extension": ".zz",
+      "mimes": ["application/zlib"],
+      "extensions": [".zz"],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -73,7 +76,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.deflate.conformance.public-corpus",
+      "id": "s.stdio.deflate.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }

@@ -8,8 +8,8 @@
   ],
   "standards": [
     {
-      "id": "s.stdio.las.standard.1.0",
-      "revision": "1.0",
+      "id": "s.stdio.las.standard.1-0",
+      "revision": "1-0",
       "normative_source": null,
       "publication_date": null,
       "source_checksum": null,
@@ -20,16 +20,16 @@
   ],
   "profiles": [
     {
-      "id": "s.stdio.las.standard.1.0.profile.any",
-      "standard": "s.stdio.las.standard.1.0",
+      "id": "s.stdio.las.standard.1-0.profile.any",
+      "standard": "s.stdio.las.standard.1-0",
       "profile": "any",
       "status": "unimplemented"
     }
   ],
   "source_dialects": [
     {
-      "id": "s.stdio.las.standard.1.0.dialect.source",
-      "standard": "s.stdio.las.standard.1.0",
+      "id": "s.stdio.las.standard.1-0.dialect.source",
+      "standard": "s.stdio.las.standard.1-0",
       "dialect": "source",
       "registered_code_points": [],
       "status": "unimplemented"
@@ -37,11 +37,14 @@
   ],
   "representations": [
     {
-      "id": "s.stdio.las.standard.1.0.representation.document",
-      "standard": "s.stdio.las.standard.1.0",
+      "id": "s.stdio.las.standard.1-0.representation.document",
+      "standard": "s.stdio.las.standard.1-0",
       "representation": "document",
-      "mime": "application/vnd.las",
-      "extension": ".las",
+      "mimes": ["application/vnd.las"],
+      "extensions": [".las"],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -73,7 +76,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.las.conformance.public-corpus",
+      "id": "s.stdio.las.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }
@@ -85,7 +88,7 @@
     "redistribution_status": "unknown",
     "clauses_or_features": [],
     "profiles": [
-      "s.stdio.las.standard.1.0.profile.any"
+      "s.stdio.las.standard.1-0.profile.any"
     ],
     "registered_code_points": [],
     "read": "unimplemented",

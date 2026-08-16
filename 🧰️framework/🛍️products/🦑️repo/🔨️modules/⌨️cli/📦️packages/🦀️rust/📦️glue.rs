@@ -3,6 +3,12 @@
 use std::io::IsTerminal;
 use std::path::PathBuf;
 
+#[path = "../../../../🎮️commands/🌊️workflow/🦀️component.rs"]
+pub mod workflow;
+
+#[path = "../../../../🎮️commands/🔌️plugin-registry/🦀️component.rs"]
+pub mod plugin_registry;
+
 // #region 🔖️Args
 pub mod args {
     use std::collections::HashMap;
@@ -144,26 +150,9 @@ pub mod catalog {
     //#endregion 🔖️Entries
 
     //#region 🔖️GenerateCheck
-    /// 📁️ `framework/plugin/registry`'s generated-output dir (the single source of truth this crate
-    /// reads; regeneration is TS-only, see `plugin_registry_command`).
-    fn generated_dir(root: &Path) -> PathBuf {
+    /// 📁️ Resolves the canonical generated plugin-registry output directory.
+    pub(crate) fn generated_dir(root: &Path) -> PathBuf {
         root.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated")
-    }
-
-    /// 🔎️ Verifies the generated registry catalog files exist and parse as JSON. Generation itself is
-    /// TS-only (`bun nx run @semio-tech/plugin-registry:generate`, see `plugin_registry_command::run`)
-    /// — this crate only consumes the output, so "fresh" here means "readable", not "byte-identical to
-    /// a Rust-side re-derivation" (that comparison lives in the TS `CheckScript` instead).
-    pub fn check_registry(root: &Path) -> Vec<String> {
-        let out_dir = generated_dir(root);
-        ["🔣️plugins.json", "🔣️playgrounds.json"]
-            .iter()
-            .filter_map(|name| match fs::read_to_string(out_dir.join(name)) {
-                Ok(text) if serde_json::from_str::<serde_json::Value>(&text).is_ok() => None,
-                Ok(_) => Some(format!("plugin registry catalog is invalid JSON: generated/{name}")),
-                Err(_) => Some(format!("plugin registry catalog is missing: generated/{name} (run `bun nx run @semio-tech/plugin-registry:generate`)")),
-            })
-            .collect()
     }
 
     /// 📄️ Raw text of the generated playgrounds catalog (`"[]\n"` if it has never been generated) —
@@ -378,359 +367,6 @@ pub mod dev {
     }
 }
 // #endregion 🔖️Dev
-
-// #region 🔖️PluginRegistryCommand
-pub mod plugin_registry_command {
-    use crate::catalog::check_registry;
-    use crate::proc::spawn_inherit;
-    use std::path::Path;
-
-    /// 🚦️ `semio plugin registry check|generate`: `check` reads `generated/*` in-process (see
-    /// `catalog::check_registry`); `generate` is TS-only — the scan/parse/emit pipeline's single
-    /// source of truth is `framework/plugin/registry`'s `script.ts`, so this forwards to its nx target
-    /// rather than reimplementing it in Rust (see `26/08/05/REGISTRY-DISCOVERY-CONTRACT-TOLERANCE-AND-RUST-TWIN-COLLAPSE`).
-    pub fn run(root: &Path, subcommand: &str) -> i32 {
-        match subcommand {
-            "check" => {
-                let problems = check_registry(root);
-                if problems.is_empty() {
-                    println!("plugin registry catalog is fresh.");
-                    0
-                } else {
-                    for p in &problems {
-                        eprintln!("{p}");
-                    }
-                    1
-                }
-            }
-            _ => {
-                let code = spawn_inherit("bun", &["nx", "run", "@semio-tech/plugin-registry:generate"], root, &[]);
-                if code == 0 {
-                    match crate::registry::generate(root) {
-                        Ok(path) => println!("dashboard registry -> {}", path.display()),
-                        Err(e) => eprintln!("dashboard registry generate failed: {e}"),
-                    }
-                }
-                code
-            }
-        }
-    }
-}
-// #endregion 🔖️PluginRegistryCommand
-
-
-
-
-// #region 🔖️Workforce
-pub mod workforce {
-    use serde::{Deserialize, Serialize};
-    use std::collections::{HashMap, HashSet, VecDeque};
-    use std::path::{Path, PathBuf};
-
-    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-    pub struct WorkflowTask {
-        pub id: String,
-        pub model: String,
-        pub prompt: String,
-        pub path_scope: Vec<String>,
-        pub verify: Option<String>,
-        pub retries: u32,
-        pub depends_on: Vec<String>,
-    }
-
-    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-    pub struct WorkflowWave {
-        pub id: String,
-        pub tasks: Vec<WorkflowTask>,
-    }
-
-    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-    pub struct WorkflowSpec {
-        pub id: String,
-        pub concurrency: usize,
-        pub waves: Vec<WorkflowWave>,
-    }
-
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    pub enum TaskState {
-        Pending,
-        Running,
-        Succeeded,
-        Failed,
-        Blocked,
-    }
-
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct TaskStatus {
-        pub id: String,
-        pub state: TaskState,
-        pub attempts: u32,
-        pub message: Option<String>,
-    }
-
-    /// 🧭 Wave DAG scheduler with bounded concurrency and exclusive path-scope claims.
-    pub struct Scheduler {
-        pub spec: WorkflowSpec,
-        pub statuses: HashMap<String, TaskStatus>,
-        claims: HashSet<String>,
-        ready: VecDeque<String>,
-        running: HashSet<String>,
-    }
-
-    impl Scheduler {
-        pub fn new(spec: WorkflowSpec) -> Self {
-            let mut statuses = HashMap::new();
-            let mut ready = VecDeque::new();
-            for wave in &spec.waves {
-                for task in &wave.tasks {
-                    let blocked = !task.depends_on.is_empty();
-                    statuses.insert(
-                        task.id.clone(),
-                        TaskStatus {
-                            id: task.id.clone(),
-                            state: if blocked { TaskState::Blocked } else { TaskState::Pending },
-                            attempts: 0,
-                            message: None,
-                        },
-                    );
-                    if !blocked {
-                        ready.push_back(task.id.clone());
-                    }
-                }
-            }
-            Self { spec, statuses, claims: HashSet::new(), ready, running: HashSet::new() }
-        }
-
-        fn task(&self, id: &str) -> Option<&WorkflowTask> {
-            self.spec.waves.iter().flat_map(|w| w.tasks.iter()).find(|t| t.id == id)
-        }
-
-        fn scope_free(&self, task: &WorkflowTask) -> bool {
-            task.path_scope.iter().all(|p| !self.claims.contains(p))
-        }
-
-        /// ▶️ Returns up to `concurrency - running` task ids that may start now.
-        pub fn poll_ready(&mut self) -> Vec<String> {
-            let cap = self.spec.concurrency.max(1);
-            let mut out = Vec::new();
-            let mut deferred = VecDeque::new();
-            while out.len() + self.running.len() < cap {
-                let Some(id) = self.ready.pop_front() else { break };
-                let Some(task) = self.task(&id).cloned() else { continue };
-                if !self.scope_free(&task) {
-                    deferred.push_back(id);
-                    continue;
-                }
-                for p in &task.path_scope {
-                    self.claims.insert(p.clone());
-                }
-                self.running.insert(id.clone());
-                if let Some(st) = self.statuses.get_mut(&id) {
-                    st.state = TaskState::Running;
-                    st.attempts += 1;
-                }
-                out.push(id);
-            }
-            self.ready.append(&mut deferred);
-            out
-        }
-
-        pub fn complete(&mut self, id: &str, ok: bool, message: Option<String>) {
-            if let Some(task) = self.task(id).cloned() {
-                for p in &task.path_scope {
-                    self.claims.remove(p);
-                }
-            }
-            self.running.remove(id);
-            if let Some(st) = self.statuses.get_mut(id) {
-                st.state = if ok { TaskState::Succeeded } else { TaskState::Failed };
-                st.message = message;
-            }
-            // unblock dependents
-            let succeeded: HashSet<String> = self
-                .statuses
-                .iter()
-                .filter(|(_, s)| s.state == TaskState::Succeeded)
-                .map(|(k, _)| k.clone())
-                .collect();
-            for wave in &self.spec.waves {
-                for task in &wave.tasks {
-                    let st = self.statuses.get(&task.id).map(|s| s.state);
-                    if st == Some(TaskState::Blocked) && task.depends_on.iter().all(|d| succeeded.contains(d)) {
-                        if let Some(s) = self.statuses.get_mut(&task.id) {
-                            s.state = TaskState::Pending;
-                        }
-                        if !self.ready.contains(&task.id) {
-                            self.ready.push_back(task.id.clone());
-                        }
-                    }
-                }
-            }
-        }
-
-        pub fn done(&self) -> bool {
-            self.statuses.values().all(|s| matches!(s.state, TaskState::Succeeded | TaskState::Failed))
-        }
-    }
-
-    /// 📁 Conventional workflow path inside a ticket folder.
-    pub fn workflow_path(ticket_dir: &Path) -> PathBuf {
-        ticket_dir.join("🌊️workflow.json")
-    }
-
-    pub fn load_workflow(ticket_dir: &Path) -> std::io::Result<WorkflowSpec> {
-        let text = std::fs::read_to_string(workflow_path(ticket_dir))?;
-        serde_json::from_str(&text).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
-    }
-
-    pub fn save_workflow(ticket_dir: &Path, spec: &WorkflowSpec) -> std::io::Result<()> {
-        std::fs::create_dir_all(ticket_dir)?;
-        let text = serde_json::to_string_pretty(spec).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
-        std::fs::write(workflow_path(ticket_dir), text + "\n")
-    }
-}
-// #endregion 🔖️Workforce
-
-// #region 🔖️AgentRunner
-pub mod agent_runner {
-    use std::path::Path;
-    use std::process::{Command, Stdio};
-
-    /// 🤖️ Pluggable coding-agent launcher.
-    pub trait AgentRunner: Send {
-        fn id(&self) -> &str;
-        fn available(&self) -> bool;
-        fn spawn(&self, prompt: &str, cwd: &Path) -> std::io::Result<std::process::Child>;
-    }
-
-    fn which(bin: &str) -> bool {
-        Command::new("which").arg(bin).stdout(Stdio::null()).stderr(Stdio::null()).status().map(|s| s.success()).unwrap_or(false)
-    }
-
-    pub struct CursorAgent;
-    impl AgentRunner for CursorAgent {
-        fn id(&self) -> &str { "cursor-agent" }
-        fn available(&self) -> bool { which("cursor-agent") }
-        fn spawn(&self, prompt: &str, cwd: &Path) -> std::io::Result<std::process::Child> {
-            Command::new("cursor-agent").arg("-p").arg(prompt).current_dir(cwd).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()
-        }
-    }
-
-    pub struct ClaudeAgent;
-    impl AgentRunner for ClaudeAgent {
-        fn id(&self) -> &str { "claude" }
-        fn available(&self) -> bool { which("claude") }
-        fn spawn(&self, prompt: &str, cwd: &Path) -> std::io::Result<std::process::Child> {
-            Command::new("claude").args(["-p", prompt]).current_dir(cwd).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()
-        }
-    }
-
-    pub struct CodexAgent;
-    impl AgentRunner for CodexAgent {
-        fn id(&self) -> &str { "codex" }
-        fn available(&self) -> bool { which("codex") }
-        fn spawn(&self, prompt: &str, cwd: &Path) -> std::io::Result<std::process::Child> {
-            Command::new("codex").args(["exec", prompt]).current_dir(cwd).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()
-        }
-    }
-
-    /// 🔎 Detects installed runners in preference order.
-    pub fn detect() -> Vec<Box<dyn AgentRunner>> {
-        let candidates: Vec<Box<dyn AgentRunner>> = vec![Box::new(CursorAgent), Box::new(ClaudeAgent), Box::new(CodexAgent)];
-        candidates.into_iter().filter(|a| a.available()).collect()
-    }
-
-    pub fn select(model: &str) -> Option<Box<dyn AgentRunner>> {
-        let all: Vec<Box<dyn AgentRunner>> = vec![Box::new(CursorAgent), Box::new(ClaudeAgent), Box::new(CodexAgent)];
-        all.into_iter().find(|a| a.id() == model && a.available())
-    }
-}
-// #endregion 🔖️AgentRunner
-
-// #region 🔖️Registry
-pub mod registry {
-    use crate::catalog::load_playground_catalog;
-    use serde::Serialize;
-    use std::path::{Path, PathBuf};
-    use std::process::Command;
-
-    #[derive(Debug, Clone, Serialize)]
-    pub struct DashboardTask {
-        pub id: String,
-        pub kind: String,
-        pub label: String,
-        pub command: Vec<String>,
-    }
-
-    #[derive(Debug, Clone, Serialize)]
-    pub struct DashboardAgent {
-        pub id: String,
-        pub bin: String,
-        pub available: bool,
-    }
-
-    #[derive(Debug, Clone, Serialize)]
-    pub struct DashboardRegistry {
-        pub tasks: Vec<DashboardTask>,
-        pub agents: Vec<DashboardAgent>,
-        pub playgrounds: Vec<String>,
-    }
-
-    /// 🗂️ Output path for the generated dashboard catalog.
-    pub fn dashboard_json_path(root: &Path) -> PathBuf {
-        root.join("🤖️generated").join("🎛️dashboard.json")
-    }
-
-    fn bin_on_path(name: &str) -> bool {
-        Command::new(name).arg("--version").output().map(|o| o.status.success()).unwrap_or(false)
-            || Command::new("which").arg(name).output().map(|o| o.status.success()).unwrap_or(false)
-    }
-
-    /// 🧱 Builds the dashboard registry from playgrounds, root verbs, and detected agent runners.
-    pub fn build(root: &Path) -> DashboardRegistry {
-        let playgrounds = load_playground_catalog(root);
-        let mut tasks = Vec::new();
-        for verb in ["dev", "build", "test", "catalog", "daemon", "workflow"] {
-            tasks.push(DashboardTask {
-                id: format!("semio:{verb}"),
-                kind: "root-verb".into(),
-                label: format!("semio {verb}"),
-                command: vec!["semio".into(), verb.into()],
-            });
-        }
-        for row in &playgrounds {
-            tasks.push(DashboardTask {
-                id: format!("playground:{}:dev", row.variant),
-                kind: "playground".into(),
-                label: format!("{} (dev)", row.variant),
-                command: vec!["semio".into(), "dev".into(), row.variant.clone()],
-            });
-        }
-        let agents = ["cursor-agent", "claude", "codex"]
-            .into_iter()
-            .map(|bin| DashboardAgent { id: bin.into(), bin: bin.into(), available: bin_on_path(bin) })
-            .collect();
-        DashboardRegistry {
-            tasks,
-            agents,
-            playgrounds: playgrounds.into_iter().map(|p| p.variant).collect(),
-        }
-    }
-
-    /// ✍️ Writes `🤖️generated/🎛️dashboard.json`.
-    pub fn generate(root: &Path) -> std::io::Result<PathBuf> {
-        let path = dashboard_json_path(root);
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-        let reg = build(root);
-        let text = serde_json::to_string_pretty(&reg).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
-        std::fs::write(&path, text + "\n")?;
-        Ok(path)
-    }
-}
-// #endregion 🔖️Registry
 
 // #region 🔖️Ipc
 pub mod ipc {
@@ -1704,7 +1340,7 @@ pub fn run(argv: Vec<String>) -> i32 {
     let parsed = args::parse(&argv);
     match parsed.verb.as_str() {
         "daemon" => daemon_command(&root, &parsed),
-        "workflow" => workflow_command(&root, &parsed),
+        "workflow" => workflow::run(&root, &parsed),
         "dev" => dev::run_dev(&root, &parsed),
         "catalog" => {
             if parsed.has_flag("json") {
@@ -1717,7 +1353,7 @@ pub fn run(argv: Vec<String>) -> i32 {
             }
             0
         }
-        "plugin" if parsed.segments.first().map(String::as_str) == Some("registry") => plugin_registry_command::run(&root, parsed.segments.get(1).map(String::as_str).unwrap_or("generate")),
+        "plugin" if parsed.segments.first().map(String::as_str) == Some("registry") => plugin_registry::run(&root, parsed.segments.get(1).map(String::as_str).unwrap_or("generate")),
         _ => {
             let mut forward = vec!["./📜️script.ts".to_string(), parsed.verb.clone()];
             forward.extend(parsed.segments.clone());
@@ -1728,66 +1364,6 @@ pub fn run(argv: Vec<String>) -> i32 {
 }
 
 
-
-fn workflow_command(root: &PathBuf, parsed: &args::ParsedArgs) -> i32 {
-    let sub = parsed.segments.first().map(String::as_str).unwrap_or("status");
-    let ticket = parsed.flag("ticket").map(PathBuf::from).unwrap_or_else(|| root.join(".🦑️repo/🎫️tickets"));
-    match sub {
-        "status" => {
-            let path = workforce::workflow_path(&ticket);
-            if !path.exists() {
-                eprintln!("no workflow at {}", path.display());
-                return 1;
-            }
-            match workforce::load_workflow(&ticket) {
-                Ok(spec) => {
-                    println!("workflow {} waves={} concurrency={}", spec.id, spec.waves.len(), spec.concurrency);
-                    0
-                }
-                Err(e) => {
-                    eprintln!("{e}");
-                    1
-                }
-            }
-        }
-        "run" => {
-            let Ok(spec) = workforce::load_workflow(&ticket) else {
-                eprintln!("missing 🌊️workflow.json under {}", ticket.display());
-                return 1;
-            };
-            let tasks: Vec<_> = spec.waves.iter().flat_map(|w| w.tasks.clone()).collect();
-            let mut sched = workforce::Scheduler::new(spec);
-            while !sched.done() {
-                let batch = sched.poll_ready();
-                if batch.is_empty() {
-                    break;
-                }
-                for id in batch {
-                    let task = tasks.iter().find(|t| t.id == id);
-                    let (model, prompt) = task.map(|t| (t.model.as_str(), t.prompt.as_str())).unwrap_or(("claude", ""));
-                    let ok = if let Some(runner) = agent_runner::select(model) {
-                        match runner.spawn(prompt, root) {
-                            Ok(mut child) => child.wait().map(|s| s.success()).unwrap_or(false),
-                            Err(e) => {
-                                eprintln!("agent spawn failed: {e}");
-                                false
-                            }
-                        }
-                    } else {
-                        eprintln!("no agent runner for model {model}");
-                        false
-                    };
-                    sched.complete(&id, ok, None);
-                }
-            }
-            0
-        }
-        _ => {
-            eprintln!("usage: semio workflow status|run --ticket <dir>");
-            1
-        }
-    }
-}
 
 fn daemon_command(root: &PathBuf, parsed: &args::ParsedArgs) -> i32 {
     let sub = parsed.segments.first().map(String::as_str).unwrap_or("status");
@@ -1836,7 +1412,7 @@ fn print_usage() {
 #[cfg(test)]
 mod tests {
     use crate::args::parse;
-    use crate::catalog::{check_registry, playgrounds_json_text, PlaygroundEntry, Ports};
+    use crate::catalog::{playgrounds_json_text, PlaygroundEntry, Ports};
     use crate::dev::{consume_legacy_example_prefix, resolve_playground};
     use crate::env_contract::{build_dev_env, resolve_port, DevOptions};
     use crate::options::{parse_lock, Lock};
@@ -1945,32 +1521,6 @@ mod tests {
     }
 
     #[test]
-    fn check_registry_reports_missing_generated_files() {
-        let root = temp_root("missing");
-        let problems = check_registry(&root);
-        assert_eq!(problems.len(), 2);
-        assert!(problems.iter().all(|p| p.contains("is missing")));
-        std::fs::remove_dir_all(&root).ok();
-    }
-
-    #[test]
-    fn check_registry_reports_invalid_json_and_passes_when_valid() {
-        let root = temp_root("invalid-then-valid");
-        let out = generated_dir_under(&root);
-        std::fs::create_dir_all(&out).unwrap();
-        std::fs::write(out.join("🔣️plugins.json"), "not json").unwrap();
-        std::fs::write(out.join("🔣️playgrounds.json"), "not json").unwrap();
-        let problems = check_registry(&root);
-        assert_eq!(problems.len(), 2);
-        assert!(problems.iter().all(|p| p.contains("invalid JSON")));
-
-        std::fs::write(out.join("🔣️plugins.json"), "[]\n").unwrap();
-        std::fs::write(out.join("🔣️playgrounds.json"), "[]\n").unwrap();
-        assert!(check_registry(&root).is_empty());
-        std::fs::remove_dir_all(&root).ok();
-    }
-
-    #[test]
     fn playgrounds_json_text_falls_back_to_empty_array_when_missing() {
         let root = temp_root("json-text-missing");
         assert_eq!(playgrounds_json_text(&root), "[]\n");
@@ -2005,55 +1555,6 @@ mod tests {
     }
 
     //#endregion 🔖️CatalogConsumer
-
-    //#region 🔖️Workforce
-    #[test]
-    fn workforce_scheduler_respects_scope_and_deps() {
-        use crate::workforce::{Scheduler, TaskState, WorkflowSpec, WorkflowTask, WorkflowWave};
-        let spec = WorkflowSpec {
-            id: "demo".into(),
-            concurrency: 1,
-            waves: vec![WorkflowWave {
-                id: "w0".into(),
-                tasks: vec![
-                    WorkflowTask { id: "a".into(), model: "claude".into(), prompt: "one".into(), path_scope: vec!["x".into()], verify: None, retries: 0, depends_on: vec![] },
-                    WorkflowTask { id: "b".into(), model: "claude".into(), prompt: "two".into(), path_scope: vec!["x".into()], verify: None, retries: 0, depends_on: vec!["a".into()] },
-                ],
-            }],
-        };
-        let mut sched = Scheduler::new(spec);
-        let first = sched.poll_ready();
-        assert_eq!(first, vec!["a".to_string()]);
-        assert!(sched.poll_ready().is_empty(), "scope claimed / concurrency full");
-        sched.complete("a", true, None);
-        let second = sched.poll_ready();
-        assert_eq!(second, vec!["b".to_string()]);
-        assert_eq!(sched.statuses["b"].state, TaskState::Running);
-    }
-
-    #[test]
-    fn agent_runner_detect_returns_only_available() {
-        let detected = crate::agent_runner::detect();
-        for runner in &detected {
-            assert!(runner.available());
-        }
-    }
-    //#endregion 🔖️Workforce
-
-    //#region 🔖️Registry
-    #[test]
-    fn registry_build_includes_agents_and_verbs() {
-        let root = temp_root("dashboard-registry");
-        let reg = crate::registry::build(&root);
-        assert!(reg.tasks.iter().any(|t| t.id == "semio:daemon"));
-        assert!(reg.agents.iter().any(|a| a.id == "claude" || a.id == "codex" || a.id == "cursor-agent"));
-        let path = crate::registry::generate(&root).unwrap();
-        assert!(path.exists());
-        let text = std::fs::read_to_string(path).unwrap();
-        assert!(text.contains("semio:daemon"));
-        std::fs::remove_dir_all(&root).ok();
-    }
-    //#endregion 🔖️Registry
 
     //#region 🔖️Ipc
     #[test]

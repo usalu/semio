@@ -41,8 +41,11 @@
       "id": "s.stdio.pptx.standard.ecma-376.representation.document",
       "standard": "s.stdio.pptx.standard.ecma-376",
       "representation": "document",
-      "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-      "extension": ".pptx",
+      "mimes": ["application/vnd.openxmlformats-officedocument.presentationml.presentation"],
+      "extensions": [".pptx"],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -74,7 +77,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.pptx.conformance.public-corpus",
+      "id": "s.stdio.pptx.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }

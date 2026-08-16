@@ -1617,6 +1617,21 @@ export type AppCommandValue =
   | { readonly LoadChildren: { readonly seq: number; readonly entries: readonly ChildPackEntry[] } }
   | { readonly ReadChildren: { readonly seq: number } }
   | { readonly ReadHistory: { readonly seq: number } }
+  | {
+      readonly transactionPrepare: {
+        readonly seq: number;
+        readonly txn_id: string;
+        readonly mutation_id: string;
+        readonly payload: readonly number[];
+        readonly prepared_ops: readonly (readonly number[])[];
+        readonly label: string;
+        readonly origin: readonly number[];
+      };
+    }
+  | { readonly transactionCommit: { readonly seq: number; readonly txn_id: string } }
+  | { readonly transactionRollback: { readonly seq: number; readonly txn_id: string } }
+  | { readonly transactionUndo: { readonly seq: number; readonly group_id: string } }
+  | { readonly transactionRedo: { readonly seq: number; readonly group_id: string } }
   | "Bye";
 
 export type AppFrameValue =
@@ -1638,7 +1653,20 @@ export type AppFrameValue =
   | { readonly Draft: { readonly in_reply_to: number; readonly pack: readonly number[]; readonly spr: readonly number[]; readonly ops: string } }
   | { readonly Children: { readonly in_reply_to: number; readonly entries: readonly ChildPackEntry[] } }
   | { readonly Ephemeral: { readonly presence: readonly number[]; readonly presence_generation: number; readonly transient_generation: number } }
-  | { readonly HistorySnapshot: { readonly in_reply_to: number; readonly history_patch: readonly number[] } };
+  | { readonly HistorySnapshot: { readonly in_reply_to: number; readonly history_patch: readonly number[] } }
+  | {
+      readonly transactionProposal: {
+        readonly in_reply_to: number;
+        readonly proposal_id: string;
+        readonly local_ops: readonly (readonly number[])[];
+        readonly description: string;
+        readonly coalesce_key: string;
+        readonly foreign: readonly (readonly number[])[];
+      };
+    }
+  | { readonly transactionPrepared: { readonly txn_id: string; readonly foreign: readonly (readonly number[])[]; readonly rejection: readonly number[] } }
+  | { readonly transactionCommitted: { readonly txn_id: string; readonly edit_id: string } }
+  | { readonly transactionRolledBack: { readonly txn_id: string } };
 //#endregion 🔖️Types
 
 //#region 🔖️Combinators
@@ -1697,10 +1725,12 @@ const APP_COMMAND_TAGS = {
   Hello: 0, ConfigCommand: 1, Command: 2, CommandText: 3, RefreshUi: 4, ContextMenu: 5, ArtifactCommand: 6, ApplyEnvelopes: 7,
   LoadDocument: 8, ReadDocument: 9, LoadConfig: 10, ReadConfig: 11, AttachBackbone: 12, DetachBackbone: 13, MediaIn: 14, MediaOut: 15,
   MediaFingerprint: 16, Bye: 17, PureCommand: 18, LoadChildren: 19, ReadChildren: 20, ReadHistory: 21,
+  transactionPrepare: 22, transactionCommit: 23, transactionRollback: 24, transactionUndo: 25, transactionRedo: 26,
 } as const;
 const APP_FRAME_TAGS = {
   Welcome: 0, Done: 1, Invocation: 2, UiSection: 3, Effects: 4, Events: 5, DocumentChanged: 6, Document: 7,
   Config: 8, ConfigChanged: 9, ContextMenu: 10, Media: 11, MediaFingerprint: 12, Error: 13, Emit: 14, Draft: 15, Children: 16, Ephemeral: 17, HistorySnapshot: 18,
+  transactionProposal: 19, transactionPrepared: 20, transactionCommitted: 21, transactionRolledBack: 22,
 } as const;
 
 /** 📤️ `tag u8 | fields` — the TS twin of `protocol_channel::encode_app_command` (agreed contract). */
@@ -1807,6 +1837,31 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
   } else if ("ReadHistory" in cmd) {
     out.push(APP_COMMAND_TAGS.ReadHistory);
     writeVarintU64(out, cmd.ReadHistory.seq);
+  } else if ("transactionPrepare" in cmd) {
+    out.push(APP_COMMAND_TAGS.transactionPrepare);
+    writeVarintU64(out, cmd.transactionPrepare.seq);
+    writeStr(out, cmd.transactionPrepare.txn_id);
+    writeStr(out, cmd.transactionPrepare.mutation_id);
+    writeBytes(out, cmd.transactionPrepare.payload);
+    writeVecBytes(out, cmd.transactionPrepare.prepared_ops);
+    writeStr(out, cmd.transactionPrepare.label);
+    writeBytes(out, cmd.transactionPrepare.origin);
+  } else if ("transactionCommit" in cmd) {
+    out.push(APP_COMMAND_TAGS.transactionCommit);
+    writeVarintU64(out, cmd.transactionCommit.seq);
+    writeStr(out, cmd.transactionCommit.txn_id);
+  } else if ("transactionRollback" in cmd) {
+    out.push(APP_COMMAND_TAGS.transactionRollback);
+    writeVarintU64(out, cmd.transactionRollback.seq);
+    writeStr(out, cmd.transactionRollback.txn_id);
+  } else if ("transactionUndo" in cmd) {
+    out.push(APP_COMMAND_TAGS.transactionUndo);
+    writeVarintU64(out, cmd.transactionUndo.seq);
+    writeStr(out, cmd.transactionUndo.group_id);
+  } else if ("transactionRedo" in cmd) {
+    out.push(APP_COMMAND_TAGS.transactionRedo);
+    writeVarintU64(out, cmd.transactionRedo.seq);
+    writeStr(out, cmd.transactionRedo.group_id);
   } else {
     throw new Error("encodeAppCommand: unrecognized command variant");
   }
@@ -1893,6 +1948,24 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
       return { ReadChildren: { seq: readVarintU64(bytes, pos) } };
     case APP_COMMAND_TAGS.ReadHistory:
       return { ReadHistory: { seq: readVarintU64(bytes, pos) } };
+    case APP_COMMAND_TAGS.transactionPrepare: {
+      const seq = readVarintU64(bytes, pos);
+      const txn_id = readStr(bytes, pos);
+      const mutation_id = readStr(bytes, pos);
+      const payload = readBytes(bytes, pos);
+      const prepared_ops = readVecBytes(bytes, pos);
+      const label = readStr(bytes, pos);
+      const origin = readBytes(bytes, pos);
+      return { transactionPrepare: { seq, txn_id, mutation_id, payload, prepared_ops, label, origin } };
+    }
+    case APP_COMMAND_TAGS.transactionCommit:
+      return { transactionCommit: { seq: readVarintU64(bytes, pos), txn_id: readStr(bytes, pos) } };
+    case APP_COMMAND_TAGS.transactionRollback:
+      return { transactionRollback: { seq: readVarintU64(bytes, pos), txn_id: readStr(bytes, pos) } };
+    case APP_COMMAND_TAGS.transactionUndo:
+      return { transactionUndo: { seq: readVarintU64(bytes, pos), group_id: readStr(bytes, pos) } };
+    case APP_COMMAND_TAGS.transactionRedo:
+      return { transactionRedo: { seq: readVarintU64(bytes, pos), group_id: readStr(bytes, pos) } };
     case APP_COMMAND_TAGS.Bye:
       return "Bye";
     default:
@@ -1999,6 +2072,26 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     out.push(APP_FRAME_TAGS.HistorySnapshot);
     writeVarintU64(out, frame.HistorySnapshot.in_reply_to);
     writeBytes(out, frame.HistorySnapshot.history_patch);
+  } else if ("transactionProposal" in frame) {
+    out.push(APP_FRAME_TAGS.transactionProposal);
+    writeVarintU64(out, frame.transactionProposal.in_reply_to);
+    writeStr(out, frame.transactionProposal.proposal_id);
+    writeVecBytes(out, frame.transactionProposal.local_ops);
+    writeStr(out, frame.transactionProposal.description);
+    writeStr(out, frame.transactionProposal.coalesce_key);
+    writeVecBytes(out, frame.transactionProposal.foreign);
+  } else if ("transactionPrepared" in frame) {
+    out.push(APP_FRAME_TAGS.transactionPrepared);
+    writeStr(out, frame.transactionPrepared.txn_id);
+    writeVecBytes(out, frame.transactionPrepared.foreign);
+    writeBytes(out, frame.transactionPrepared.rejection);
+  } else if ("transactionCommitted" in frame) {
+    out.push(APP_FRAME_TAGS.transactionCommitted);
+    writeStr(out, frame.transactionCommitted.txn_id);
+    writeStr(out, frame.transactionCommitted.edit_id);
+  } else if ("transactionRolledBack" in frame) {
+    out.push(APP_FRAME_TAGS.transactionRolledBack);
+    writeStr(out, frame.transactionRolledBack.txn_id);
   } else {
     throw new Error("encodeAppFrame: unrecognized frame variant");
   }
@@ -2093,6 +2186,25 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
       return { Ephemeral: { presence: readBytes(bytes, pos), presence_generation: readVarintU64(bytes, pos), transient_generation: readVarintU64(bytes, pos) } };
     case APP_FRAME_TAGS.HistorySnapshot:
       return { HistorySnapshot: { in_reply_to: readVarintU64(bytes, pos), history_patch: readBytes(bytes, pos) } };
+    case APP_FRAME_TAGS.transactionProposal: {
+      const in_reply_to = readVarintU64(bytes, pos);
+      const proposal_id = readStr(bytes, pos);
+      const local_ops = readVecBytes(bytes, pos);
+      const description = readStr(bytes, pos);
+      const coalesce_key = readStr(bytes, pos);
+      const foreign = readVecBytes(bytes, pos);
+      return { transactionProposal: { in_reply_to, proposal_id, local_ops, description, coalesce_key, foreign } };
+    }
+    case APP_FRAME_TAGS.transactionPrepared: {
+      const txn_id = readStr(bytes, pos);
+      const foreign = readVecBytes(bytes, pos);
+      const rejection = readBytes(bytes, pos);
+      return { transactionPrepared: { txn_id, foreign, rejection } };
+    }
+    case APP_FRAME_TAGS.transactionCommitted:
+      return { transactionCommitted: { txn_id: readStr(bytes, pos), edit_id: readStr(bytes, pos) } };
+    case APP_FRAME_TAGS.transactionRolledBack:
+      return { transactionRolledBack: { txn_id: readStr(bytes, pos) } };
     default:
       throw new Error(`decodeAppFrame: unknown tag ${bytes[0]}`);
   }
@@ -2505,6 +2617,12 @@ if (import.meta.vitest) {
       { LoadChildren: { seq: 18, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } },
       { ReadChildren: { seq: 19 } },
       { ReadHistory: { seq: 20 } },
+      { transactionPrepare: { seq: 21, txn_id: "txn-1", mutation_id: "s.demo#kind", payload: [1, 2], prepared_ops: [], label: "", origin: [] } },
+      { transactionPrepare: { seq: 22, txn_id: "txn-1", mutation_id: "", payload: [], prepared_ops: [[1], [2, 2]], label: "step-1", origin: [9] } },
+      { transactionCommit: { seq: 23, txn_id: "txn-1" } },
+      { transactionRollback: { seq: 24, txn_id: "txn-1" } },
+      { transactionUndo: { seq: 25, group_id: "grp-1" } },
+      { transactionRedo: { seq: 26, group_id: "grp-1" } },
       "Bye",
     ];
 
@@ -2529,6 +2647,11 @@ if (import.meta.vitest) {
       { Children: { in_reply_to: 13, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } },
       { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4 } },
       { HistorySnapshot: { in_reply_to: 14, history_patch: [1] } },
+      { transactionProposal: { in_reply_to: 15, proposal_id: "prop-1", local_ops: [[1]], description: "move", coalesce_key: "k-1", foreign: [[2, 3]] } },
+      { transactionPrepared: { txn_id: "txn-1", foreign: [[1]], rejection: [] } },
+      { transactionPrepared: { txn_id: "txn-1", foreign: [], rejection: [1, 2] } },
+      { transactionCommitted: { txn_id: "txn-1", edit_id: "edit-1" } },
+      { transactionRolledBack: { txn_id: "txn-1" } },
     ];
 
     it.each(sampleCommands.map((cmd) => [cmd] as const))("round-trips AppCommand %j", (cmd) => {
@@ -2539,19 +2662,28 @@ if (import.meta.vitest) {
       expect(decodeAppFrame(encodeAppFrame(frame))).toEqual(frame);
     });
 
-    it("tags every AppCommand variant per the agreed contract order (Hello=0 ... ReadHistory=21)", () => {
+    it("tags every AppCommand variant per the agreed contract order (Hello=0 ... TransactionRedo=26)", () => {
       expect(encodeAppCommand({ Hello: { channel_version: 0, app_id: "", actor: "", config: [] } })[0]).toBe(0);
       expect(encodeAppCommand({ ConfigCommand: { seq: 0, command: [] } })[0]).toBe(1);
       expect(encodeAppCommand("Bye")[0]).toBe(17);
       expect(encodeAppCommand({ ReadChildren: { seq: 0 } })[0]).toBe(20);
       expect(encodeAppCommand({ ReadHistory: { seq: 0 } })[0]).toBe(21);
+      expect(encodeAppCommand({ transactionPrepare: { seq: 0, txn_id: "", mutation_id: "", payload: [], prepared_ops: [], label: "", origin: [] } })[0]).toBe(22);
+      expect(encodeAppCommand({ transactionCommit: { seq: 0, txn_id: "" } })[0]).toBe(23);
+      expect(encodeAppCommand({ transactionRollback: { seq: 0, txn_id: "" } })[0]).toBe(24);
+      expect(encodeAppCommand({ transactionUndo: { seq: 0, group_id: "" } })[0]).toBe(25);
+      expect(encodeAppCommand({ transactionRedo: { seq: 0, group_id: "" } })[0]).toBe(26);
     });
 
-    it("tags every AppFrame variant per the agreed contract order (Welcome=0 ... HistorySnapshot=18)", () => {
+    it("tags every AppFrame variant per the agreed contract order (Welcome=0 ... transactionRolledBack=22)", () => {
       expect(encodeAppFrame({ Welcome: { channel_version: 0, instance: 0, manifest: [] } })[0]).toBe(0);
       expect(encodeAppFrame({ Error: { in_reply_to: null, fault: [] } })[0]).toBe(13);
       expect(encodeAppFrame({ Ephemeral: { presence: [], presence_generation: 0, transient_generation: 0 } })[0]).toBe(17);
       expect(encodeAppFrame({ HistorySnapshot: { in_reply_to: 0, history_patch: [] } })[0]).toBe(18);
+      expect(encodeAppFrame({ transactionProposal: { in_reply_to: 0, proposal_id: "", local_ops: [], description: "", coalesce_key: "", foreign: [] } })[0]).toBe(19);
+      expect(encodeAppFrame({ transactionPrepared: { txn_id: "", foreign: [], rejection: [] } })[0]).toBe(20);
+      expect(encodeAppFrame({ transactionCommitted: { txn_id: "", edit_id: "" } })[0]).toBe(21);
+      expect(encodeAppFrame({ transactionRolledBack: { txn_id: "" } })[0]).toBe(22);
     });
 
     /**
@@ -2658,6 +2790,50 @@ if (import.meta.vitest) {
       const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
       for (const [label, value] of commandFixtures) expect(hex(encodeAppCommand(value)), `AppCommand::${label}`).toBe(commandGoldenHex[label]);
       for (const [label, value] of frameFixtures) expect(hex(encodeAppFrame(value)), `AppFrame::${label}`).toBe(frameGoldenHex[label]);
+    });
+
+    /**
+     * 🔗️ Cross-language drift guard for the M2 transaction variants (tags 22-26/19-22): both this
+     * suite and `protocol_channel`'s `channel_transaction_fixtures_match_shared_cross_language_json_vectors`
+     * Rust test load the SAME two JSON files under `🧫️fixtures/📡️channel/` — there is exactly one
+     * committed hex string per label, not a copy per language, so a codec change that shifts these
+     * bytes on either side fails here or there, never silently in both at once.
+     */
+    it("matches the shared cross-language transaction fixture vectors, byte-for-byte", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, join } = await import("node:path");
+      const here = dirname(fileURLToPath(import.meta.url));
+      const channelFixturesDir = join(here, "🧫️fixtures", "📡️channel");
+      const commandVectors = JSON.parse(readFileSync(join(channelFixturesDir, "app-command-transaction.json"), "utf8")) as Record<string, string>;
+      const frameVectors = JSON.parse(readFileSync(join(channelFixturesDir, "app-frame-transaction.json"), "utf8")) as Record<string, string>;
+      const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+
+      const commandCases: Readonly<Record<string, AppCommandValue>> = {
+        TransactionPrepareOwner: { transactionPrepare: { seq: 1, txn_id: "t", mutation_id: "m", payload: [9], prepared_ops: [], label: "", origin: [] } },
+        TransactionPreparePrePlanned: { transactionPrepare: { seq: 2, txn_id: "t", mutation_id: "", payload: [], prepared_ops: [[1], [2, 2]], label: "l", origin: [9] } },
+        TransactionCommit: { transactionCommit: { seq: 3, txn_id: "t" } },
+        TransactionRollback: { transactionRollback: { seq: 4, txn_id: "t" } },
+        TransactionUndo: { transactionUndo: { seq: 5, group_id: "g" } },
+        TransactionRedo: { transactionRedo: { seq: 6, group_id: "g" } },
+      };
+      const frameCases: Readonly<Record<string, AppFrameValue>> = {
+        TransactionProposal: { transactionProposal: { in_reply_to: 1, proposal_id: "p", local_ops: [[1]], description: "d", coalesce_key: "k", foreign: [] } },
+        TransactionPrepared: { transactionPrepared: { txn_id: "t", foreign: [[1]], rejection: [] } },
+        TransactionCommitted: { transactionCommitted: { txn_id: "t", edit_id: "e" } },
+        TransactionRolledBack: { transactionRolledBack: { txn_id: "t" } },
+      };
+
+      expect(Object.keys(commandVectors).sort()).toEqual(Object.keys(commandCases).sort());
+      expect(Object.keys(frameVectors).sort()).toEqual(Object.keys(frameCases).sort());
+      for (const [label, value] of Object.entries(commandCases)) {
+        expect(hex(encodeAppCommand(value)), `AppCommand::${label}`).toBe(commandVectors[label]);
+        expect(decodeAppCommand(new Uint8Array(Buffer.from(commandVectors[label]!, "hex")))).toEqual(value);
+      }
+      for (const [label, value] of Object.entries(frameCases)) {
+        expect(hex(encodeAppFrame(value)), `AppFrame::${label}`).toBe(frameVectors[label]);
+        expect(decodeAppFrame(new Uint8Array(Buffer.from(frameVectors[label]!, "hex")))).toEqual(value);
+      }
     });
   });
 

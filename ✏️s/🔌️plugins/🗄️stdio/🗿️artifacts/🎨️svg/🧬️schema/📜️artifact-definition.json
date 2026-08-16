@@ -8,8 +8,8 @@
   ],
   "standards": [
     {
-      "id": "s.stdio.svg.standard.1.1",
-      "revision": "1.1",
+      "id": "s.stdio.svg.standard.1-1",
+      "revision": "1-1",
       "normative_source": null,
       "publication_date": null,
       "source_checksum": null,
@@ -20,16 +20,16 @@
   ],
   "profiles": [
     {
-      "id": "s.stdio.svg.standard.1.1.profile.any",
-      "standard": "s.stdio.svg.standard.1.1",
+      "id": "s.stdio.svg.standard.1-1.profile.any",
+      "standard": "s.stdio.svg.standard.1-1",
       "profile": "any",
       "status": "unimplemented"
     }
   ],
   "source_dialects": [
     {
-      "id": "s.stdio.svg.standard.1.1.dialect.source",
-      "standard": "s.stdio.svg.standard.1.1",
+      "id": "s.stdio.svg.standard.1-1.dialect.source",
+      "standard": "s.stdio.svg.standard.1-1",
       "dialect": "source",
       "registered_code_points": [],
       "status": "unimplemented"
@@ -37,11 +37,14 @@
   ],
   "representations": [
     {
-      "id": "s.stdio.svg.standard.1.1.representation.document",
-      "standard": "s.stdio.svg.standard.1.1",
+      "id": "s.stdio.svg.standard.1-1.representation.document",
+      "standard": "s.stdio.svg.standard.1-1",
       "representation": "document",
-      "mime": "image/svg+xml",
-      "extension": ".svg",
+      "mimes": ["image/svg+xml"],
+      "extensions": [".svg"],
+      "is_binary": false,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -73,7 +76,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.svg.conformance.public-corpus",
+      "id": "s.stdio.svg.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }
@@ -85,7 +88,7 @@
     "redistribution_status": "unknown",
     "clauses_or_features": [],
     "profiles": [
-      "s.stdio.svg.standard.1.1.profile.any"
+      "s.stdio.svg.standard.1-1.profile.any"
     ],
     "registered_code_points": [],
     "read": "unimplemented",

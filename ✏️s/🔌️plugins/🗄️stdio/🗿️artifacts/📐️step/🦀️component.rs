@@ -38,15 +38,20 @@ pub const STEP_ARTIFACT_SCHEMA_ID: &str = "s.stdio.step";
 /// validators()` takes one slice, not six separate calls. `dialect.artifact_kind` on all six is
 /// `"s.stdio.step"` (verified against `🪆️subsets/✳️cc1/🚪️io/🦀️component.rs`'s own `DIALECT_SELF`),
 /// matching this declaration's `kind` exactly — the ownership check in `register_all` holds.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(STEP_ARTIFACT_SCHEMA_ID)
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("step", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::step::schema::step_artifact_schema_descriptor())
         .inferences([crate::artifacts::step::schema::inferences::step_artifact_inference_descriptor()])
         .composers(crate::artifacts::step::engine::io_registry::entries())
         .subset_validators(step_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 🛡️ The six `ap214` conformance-class `SubsetValidator`s, combined — see `declaration()`'s own

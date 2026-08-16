@@ -74,8 +74,11 @@
       "id": "s.stdio.semio.standard.v1.representation.document",
       "standard": "s.stdio.semio.standard.v1",
       "representation": "document",
-      "mime": "application/vnd.semio",
-      "extension": ".semio",
+      "mimes": ["application/vnd.semio"],
+      "extensions": [".semio"],
+      "is_binary": false,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -107,7 +110,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.semio.conformance.public-corpus",
+      "id": "s.stdio.semio.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }

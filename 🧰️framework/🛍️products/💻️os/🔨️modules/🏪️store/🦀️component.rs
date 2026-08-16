@@ -19,8 +19,8 @@
 // extern crate self removed after merge
 
 use crate::os_dsl::{from_dsl_value, to_dsl_value, DslOps, DslRecord, DslValue};
-use crate::os_spr::{Edit, OpBinary, OpText, Mutation, MutationDiff, MutationMeta, ReconcileReport};
 use crate::os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId, UndoPolicy};
+use crate::os_spr::{Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText, ReconcileReport};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -31,8 +31,8 @@ use std::sync::{Arc, Mutex};
 // `Author`/`Change`/`Checkpoint`/`Alternative`/`VcsError`/etc through this crate, never through
 // `vcs` directly (see the crate doc comment above).
 pub use crate::os_vcs::{
-    apply_collection_mutation, apply_mutation, collection_diff_from_mutation, content_addressed_checkpoint_id, content_addressed_entity_id, edit_scoped_id, inverse_collection_mutation, mint_alternative_id, mint_change_id, mint_edit_id, mint_mutation_id, Alternative, Author, Change, Checkpoint, CollectionDiff, CollectionMutation,
-    ArtifactVcs, Identified, ItemPatch, Patchable, VcsError,
+    apply_collection_mutation, apply_mutation, collection_diff_from_mutation, content_addressed_checkpoint_id, content_addressed_entity_id, edit_scoped_id, inverse_collection_mutation, mint_alternative_id, mint_change_id, mint_edit_id,
+    mint_mutation_id, Alternative, ArtifactVcs, Author, Change, Checkpoint, CollectionDiff, CollectionMutation, Identified, ItemPatch, Patchable, VcsError,
 };
 
 //#region 🔖️Schemas
@@ -492,6 +492,16 @@ pub enum ChildStoreFactoryRegistryError {
     Unavailable,
 }
 
+impl std::fmt::Display for ChildStoreFactoryRegistryError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Conflict { kind } => write!(f, "child store factory conflict for kind '{kind}'"),
+            Self::Unavailable => write!(f, "child store factory registry unavailable"),
+        }
+    }
+}
+impl std::error::Error for ChildStoreFactoryRegistryError {}
+
 /// 📝️ Registers a child-store factory only when its exact executable is already the owner.
 #[must_use]
 pub fn register_child_store_factory(kind: crate::os_io::ArtifactKindId, factory: Arc<dyn ChildStoreFactory>) -> Result<(), ChildStoreFactoryRegistryError> {
@@ -556,7 +566,7 @@ where
         let initial = P::decode_pack(initial_pack).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         let mut envelope = create_document_envelope::<P, Mutation>(&self.schema, id, initial, None);
         envelope.dialect = Some(dialect.clone());
-        Ok(Box::new(ArtifactStore::new(envelope)))
+        Ok(Box::new(ArtifactStore::new(envelope)?))
     }
 
     fn open(&self, envelope_pack: &[u8]) -> Result<Box<dyn SpaceMember>, VcsError> {
@@ -570,7 +580,7 @@ where
             Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
             None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
         };
-        let mut store = ArtifactStore::new(envelope.clone());
+        let mut store = ArtifactStore::new(envelope.clone())?;
         store.reset(envelope, applied, redo)?;
         Ok(Box::new(store))
     }
@@ -923,13 +933,27 @@ pub struct ArtifactEnvelopeView<'a, P, Mutation> {
 }
 
 impl<'a, P, Mutation> ArtifactEnvelopeView<'a, P, Mutation> {
-    pub fn schema(&self) -> &str { &self.envelope.schema }
-    pub fn id(&self) -> &str { &self.envelope.id }
-    pub fn vcs(&self) -> &ArtifactVcs<P, Mutation> { &self.envelope.vcs }
-    pub fn backbone(&self) -> Option<&ArtifactBackboneRef> { self.envelope.backbone.as_ref() }
-    pub fn active_alternative_id(&self) -> Option<&str> { self.envelope.active_alternative_id.as_deref() }
-    pub fn cursor(&self) -> Option<&ArtifactCursor> { self.envelope.cursor.as_ref() }
-    pub fn inner(&self) -> &'a ArtifactEnvelope<P, Mutation> { self.envelope }
+    pub fn schema(&self) -> &str {
+        &self.envelope.schema
+    }
+    pub fn id(&self) -> &str {
+        &self.envelope.id
+    }
+    pub fn vcs(&self) -> &ArtifactVcs<P, Mutation> {
+        &self.envelope.vcs
+    }
+    pub fn backbone(&self) -> Option<&ArtifactBackboneRef> {
+        self.envelope.backbone.as_ref()
+    }
+    pub fn active_alternative_id(&self) -> Option<&str> {
+        self.envelope.active_alternative_id.as_deref()
+    }
+    pub fn cursor(&self) -> Option<&ArtifactCursor> {
+        self.envelope.cursor.as_ref()
+    }
+    pub fn inner(&self) -> &'a ArtifactEnvelope<P, Mutation> {
+        self.envelope
+    }
 }
 
 /// @emoji 📝 Draft-lane store alias — same algebra as ArtifactStore; PruneDrafts never enters a Change.
@@ -1391,8 +1415,6 @@ pub struct ArtifactPackFiles {
     pub ops: String,
 }
 
-
-
 /// @emoji 🔌️ Wire codec for the authoritative half of `ArtifactPackFiles` (`pack` + `spr`; `ops` is
 /// a derived text mirror, not carried — `parse_document_pack` never reads it) — one length-prefixed
 /// `pack` blob followed by the remaining bytes as `spr`. Used wherever a single binary blob must
@@ -1530,10 +1552,7 @@ impl ArtifactCodec {
                 return Ok((files.pack, files.spr, files.ops));
             }
             let op_blobs = crate::os_spr::decode_ops_vec(ops_vec).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-            let mutations: Vec<Mutation> = op_blobs
-                .iter()
-                .map(|bytes| Mutation::decode_op(bytes).map_err(|error| VcsError::Deserialize(error.to_string())))
-                .collect::<Result<_, _>>()?;
+            let mutations: Vec<Mutation> = op_blobs.iter().map(|bytes| Mutation::decode_op(bytes).map_err(|error| VcsError::Deserialize(error.to_string()))).collect::<Result<_, _>>()?;
             let mut store = if pack.is_empty() && spr.is_empty() {
                 return Err(VcsError::Deserialize("apply_ops_binary: lane has no pack+spr baseline".into()));
             } else {
@@ -1543,7 +1562,7 @@ impl ArtifactCodec {
                     None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
                 };
                 let envelope = parsed.envelope;
-                let mut store = ArtifactStore::new(envelope.clone());
+                let mut store = ArtifactStore::new(envelope.clone())?;
                 store.reset(envelope, applied, redo)?;
                 store
             };
@@ -1612,25 +1631,59 @@ fn same_document_codec(left: &ArtifactCodec, right: &ArtifactCodec) -> bool {
         && std::ptr::fn_addr_eq(left.apply_ops_binary, right.apply_ops_binary)
 }
 
+fn validate_document_codecs(registry: &std::collections::BTreeMap<String, ArtifactCodec>, codecs: &[ArtifactCodec]) -> Result<(), DocumentCodecRegistryError> {
+    let mut proposed: std::collections::BTreeMap<&str, &ArtifactCodec> = std::collections::BTreeMap::new();
+    for codec in codecs {
+        match proposed.get(codec.schema.as_str()) {
+            Some(existing) if same_document_codec(existing, codec) => {}
+            Some(_) => return Err(DocumentCodecRegistryError::Conflict(DocumentCodecRegistryConflict { schema: codec.schema.clone() })),
+            None => {
+                proposed.insert(codec.schema.as_str(), codec);
+            }
+        }
+    }
+    for (schema, codec) in proposed {
+        match registry.get(schema) {
+            Some(existing) if same_document_codec(existing, codec) => {}
+            Some(_) => return Err(DocumentCodecRegistryError::Conflict(DocumentCodecRegistryConflict { schema: schema.to_string() })),
+            None => {}
+        }
+    }
+    Ok(())
+}
+
+/// 🔬️ Verifies document codecs against all established schemas without mutating the registry.
+#[must_use]
+pub fn preflight_document_codecs(codecs: &[ArtifactCodec]) -> Result<(), DocumentCodecRegistryError> {
+    let registry = document_codec_registry().read().map_err(|_| DocumentCodecRegistryError::Unavailable)?;
+    validate_document_codecs(&registry, codecs)
+}
+
 /// 📝️ Registers one schema codec exactly once. Collisions fail deterministically before any
 /// replacement can occur, so registration order never changes decoding behavior.
 #[must_use]
 pub fn register_document_codec(codec: ArtifactCodec) -> Result<(), DocumentCodecRegistryError> {
-    let mut registry = document_codec_registry().write().map_err(|_| DocumentCodecRegistryError::Unavailable)?;
-    match registry.get(&codec.schema) {
-        Some(existing) if same_document_codec(existing, &codec) => Ok(()),
-        Some(_) => Err(DocumentCodecRegistryError::Conflict(DocumentCodecRegistryConflict { schema: codec.schema })),
-        None => {
-            registry.insert(codec.schema.clone(), codec);
-            Ok(())
-        }
-    }
+    register_document_codecs(vec![codec])
 }
 
-/// @emoji 🔎️ Looks up the codec registered for `schema`, if any.
-pub fn document_codec(schema: &str) -> Option<ArtifactCodec> {
-    let registry = document_codec_registry().read().unwrap_or_else(|poisoned| poisoned.into_inner());
-    registry.get(schema).cloned()
+/// 📝️ Registers document codecs only when every descriptor and executable is conflict-free.
+#[must_use]
+pub fn register_document_codecs(codecs: Vec<ArtifactCodec>) -> Result<(), DocumentCodecRegistryError> {
+    let mut registry = document_codec_registry().write().map_err(|_| DocumentCodecRegistryError::Unavailable)?;
+    validate_document_codecs(&registry, &codecs)?;
+    for codec in codecs {
+        if !registry.contains_key(&codec.schema) {
+            registry.insert(codec.schema.clone(), codec);
+        }
+    }
+    Ok(())
+}
+
+/// 🔎️ Looks up the codec registered for `schema`, if any.
+#[must_use]
+pub fn document_codec(schema: &str) -> Result<Option<ArtifactCodec>, DocumentCodecRegistryError> {
+    let registry = document_codec_registry().read().map_err(|_| DocumentCodecRegistryError::Unavailable)?;
+    Ok(registry.get(schema).cloned())
 }
 
 /// @emoji 📜️ Reads the document schema id from an encoded `.spr` history log.
@@ -1638,10 +1691,7 @@ pub fn lane_schema_from_spr(spr: &[u8]) -> Option<String> {
     if spr.is_empty() {
         return None;
     }
-    crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default())
-        .ok()
-        .map(|log| log.schema)
-        .filter(|schema| !schema.is_empty())
+    crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).ok().map(|log| log.schema).filter(|schema| !schema.is_empty())
 }
 //#endregion 🔖️CodecRegistry
 
@@ -1661,10 +1711,10 @@ pub struct DialectMigration {
     pub migrate_pack: fn(&[u8]) -> Result<Vec<u8>, String>,
 }
 
-static DIALECT_MIGRATION_REGISTRY: std::sync::OnceLock<std::sync::RwLock<HashMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), DialectMigration>>> = std::sync::OnceLock::new();
+static DIALECT_MIGRATION_REGISTRY: std::sync::OnceLock<std::sync::RwLock<std::collections::BTreeMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), DialectMigration>>> = std::sync::OnceLock::new();
 
-fn dialect_migration_registry() -> &'static std::sync::RwLock<HashMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), DialectMigration>> {
-    DIALECT_MIGRATION_REGISTRY.get_or_init(|| std::sync::RwLock::new(HashMap::new()))
+fn dialect_migration_registry() -> &'static std::sync::RwLock<std::collections::BTreeMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), DialectMigration>> {
+    DIALECT_MIGRATION_REGISTRY.get_or_init(|| std::sync::RwLock::new(std::collections::BTreeMap::new()))
 }
 
 /// ⚠️ Dialect-migration registration cannot overwrite an owner or cross artifact kinds.
@@ -1674,6 +1724,17 @@ pub enum DialectMigrationRegistryError {
     Conflict { from: crate::os_io::ArtifactDialect, to: crate::os_io::ArtifactDialect },
     Unavailable,
 }
+
+impl std::fmt::Display for DialectMigrationRegistryError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::CrossArtifactKind { from, to } => write!(f, "dialect migration crosses artifact kinds from {from:?} to {to:?}"),
+            Self::Conflict { from, to } => write!(f, "dialect migration conflict from {from:?} to {to:?}"),
+            Self::Unavailable => write!(f, "dialect migration registry unavailable"),
+        }
+    }
+}
+impl std::error::Error for DialectMigrationRegistryError {}
 
 /// 🚫️ A migration was unavailable or the registered executable rejected its input.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -1687,22 +1748,56 @@ fn same_dialect_migration(left: &DialectMigration, right: &DialectMigration) -> 
     left.from == right.from && left.to == right.to && left.lossless == right.lossless && std::ptr::fn_addr_eq(left.migrate_pack, right.migrate_pack)
 }
 
+fn validate_dialect_migrations(registry: &std::collections::BTreeMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), DialectMigration>, migrations: &[DialectMigration]) -> Result<(), DialectMigrationRegistryError> {
+    let mut proposed: std::collections::BTreeMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), &DialectMigration> = std::collections::BTreeMap::new();
+    for migration in migrations {
+        if migration.from.artifact_kind != migration.to.artifact_kind {
+            return Err(DialectMigrationRegistryError::CrossArtifactKind { from: migration.from.clone(), to: migration.to.clone() });
+        }
+        let key = (migration.from.clone(), migration.to.clone());
+        match proposed.get(&key) {
+            Some(existing) if same_dialect_migration(existing, migration) => {}
+            Some(_) => return Err(DialectMigrationRegistryError::Conflict { from: key.0, to: key.1 }),
+            None => {
+                proposed.insert(key, migration);
+            }
+        }
+    }
+    for (key, migration) in proposed {
+        match registry.get(&key) {
+            Some(existing) if same_dialect_migration(existing, migration) => {}
+            Some(_) => return Err(DialectMigrationRegistryError::Conflict { from: key.0, to: key.1 }),
+            None => {}
+        }
+    }
+    Ok(())
+}
+
+/// 🔬️ Verifies a migration set against established dialect pairs without mutation.
+#[must_use]
+pub fn preflight_dialect_migrations(migrations: &[DialectMigration]) -> Result<(), DialectMigrationRegistryError> {
+    let registry = dialect_migration_registry().read().map_err(|_| DialectMigrationRegistryError::Unavailable)?;
+    validate_dialect_migrations(&registry, migrations)
+}
+
 /// 📝️ Registers a migration only when its full descriptor and executable identity match.
 #[must_use]
 pub fn register_dialect_migration(migration: DialectMigration) -> Result<(), DialectMigrationRegistryError> {
-    if migration.from.artifact_kind != migration.to.artifact_kind {
-        return Err(DialectMigrationRegistryError::CrossArtifactKind { from: migration.from, to: migration.to });
-    }
-    let key = (migration.from.clone(), migration.to.clone());
+    register_dialect_migrations(vec![migration])
+}
+
+/// 📝️ Registers migrations only when every candidate pair is conflict-free.
+#[must_use]
+pub fn register_dialect_migrations(migrations: Vec<DialectMigration>) -> Result<(), DialectMigrationRegistryError> {
     let mut registry = dialect_migration_registry().write().map_err(|_| DialectMigrationRegistryError::Unavailable)?;
-    match registry.get(&key) {
-        Some(existing) if same_dialect_migration(existing, &migration) => Ok(()),
-        Some(_) => Err(DialectMigrationRegistryError::Conflict { from: key.0, to: key.1 }),
-        None => {
+    validate_dialect_migrations(&registry, &migrations)?;
+    for migration in migrations {
+        let key = (migration.from.clone(), migration.to.clone());
+        if !registry.contains_key(&key) {
             registry.insert(key, migration);
-            Ok(())
         }
     }
+    Ok(())
 }
 
 /// @emoji 🔁️ Looks up the exact `(from, to)` migration and runs its `migrate_pack` over
@@ -1818,7 +1913,18 @@ pub fn create_document_envelope<P, Mutation>(schema: &str, id: &str, initial_sna
 where
     P: Clone,
 {
-    ArtifactEnvelope { schema: schema.into(), id: id.into(), vcs: ArtifactVcs { initial_snapshot, edits: Vec::new(), changes: Vec::new(), checkpoints: Vec::new(), alternatives: Vec::new() }, backbone, active_alternative_id: None, cursor: None, dialect: None, migrated_from: None, owner: None, lanes: std::collections::BTreeMap::new() }
+    ArtifactEnvelope {
+        schema: schema.into(),
+        id: id.into(),
+        vcs: ArtifactVcs { initial_snapshot, edits: Vec::new(), changes: Vec::new(), checkpoints: Vec::new(), alternatives: Vec::new() },
+        backbone,
+        active_alternative_id: None,
+        cursor: None,
+        dialect: None,
+        migrated_from: None,
+        owner: None,
+        lanes: std::collections::BTreeMap::new(),
+    }
 }
 
 pub fn edit_ids_for_changes<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, change_ids: &[String]) -> Vec<String>
@@ -2025,11 +2131,7 @@ impl OpText for OpsHeaderLine {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
-                )?;
+                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
                 return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -2049,11 +2151,7 @@ impl OpBinary for OpsHeaderLine {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 0,
-            detail: format!("keyword {keyword:?} is not a declared variant"),
-        })?;
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
@@ -2071,19 +2169,11 @@ impl OpBinary for OpsHeaderLine {
         }
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 1,
-            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
-        })?;
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
-        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
-            what: "op record",
-            offset: reader.position() as u64,
-            detail: error.to_string(),
-        })
+        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpCodec
@@ -2204,6 +2294,7 @@ fn history_op_meta_from_operation_meta(meta: &MutationMeta) -> crate::os_spr::Hi
         undo_policy: protocol_undo_policy_ordinal(meta.undo_policy),
         payload_hash: meta.payload_hash.as_ref().map(|hash| hash.0),
         group_id: meta.group_id.clone(),
+        origin: meta.origin.clone(),
     }
 }
 
@@ -2220,6 +2311,7 @@ fn mutation_meta_from_history_op_meta(meta: crate::os_spr::HistoryOpMeta) -> Mut
         semantic_kind: None,
         label: None,
         group_id: meta.group_id,
+        origin: meta.origin,
     }
 }
 
@@ -2314,7 +2406,8 @@ fn apply_history_composition<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mut
     envelope.dialect = composition.dialect.as_ref().map(|(artifact_kind, standard, subset)| crate::os_io::ArtifactDialect { artifact_kind: artifact_kind.clone(), standard: standard.clone(), subset: subset.clone() });
     for (checkpoint_id, pins) in &composition.checkpoint_pins {
         if let Some(checkpoint) = envelope.vcs.checkpoints.iter_mut().find(|checkpoint| checkpoint.id == *checkpoint_id) {
-            checkpoint.composition_pins = pins.iter().filter_map(|(child_uri, pin_checkpoint_id)| crate::os_io::ArtifactRef::parse_uri(child_uri).ok().map(|child_ref| crate::os_vcs::CompositionPin { child_ref, checkpoint_id: pin_checkpoint_id.clone() })).collect();
+            checkpoint.composition_pins =
+                pins.iter().filter_map(|(child_uri, pin_checkpoint_id)| crate::os_io::ArtifactRef::parse_uri(child_uri).ok().map(|child_ref| crate::os_vcs::CompositionPin { child_ref, checkpoint_id: pin_checkpoint_id.clone() })).collect();
         }
     }
 }
@@ -2401,6 +2494,7 @@ where
                     semantic_kind: None,
                     label: None,
                     group_id: None,
+                    origin: Default::default(),
                 });
             }
             (inverse, mutation_meta)
@@ -2565,6 +2659,7 @@ where
                 semantic_kind: None,
                 label: None,
                 group_id: None,
+                origin: Default::default(),
             });
             *snapshot = apply_mutation(snapshot, operation);
         }
@@ -2629,7 +2724,18 @@ where
     // `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/b2-store-composition-report.md`
     // sharedFileRequests) until a later wave threads `OwnerRef` through the text grammar. Same
     // deferral for `lanes` — see the matching note in `parse_document_spr` above.
-    let envelope = ArtifactEnvelope { schema, id, vcs: ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives }, backbone: None, active_alternative_id, cursor: cursor.clone(), dialect: None, migrated_from: None, owner: None, lanes: std::collections::BTreeMap::new() };
+    let envelope = ArtifactEnvelope {
+        schema,
+        id,
+        vcs: ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives },
+        backbone: None,
+        active_alternative_id,
+        cursor: cursor.clone(),
+        dialect: None,
+        migrated_from: None,
+        owner: None,
+        lanes: std::collections::BTreeMap::new(),
+    };
     // 🎯️ W4: every edit is still folded above in file order (needed for correct inverse/meta —
     // an edit's inverse depends on the snapshot state at the time it was made, which requires
     // walking the FULL sequence regardless of undo/redo position). Only the RETURNED live
@@ -2758,11 +2864,7 @@ impl OpText for CommandHeaderLine {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
-                )?;
+                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
                 return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -2782,11 +2884,7 @@ impl OpBinary for CommandHeaderLine {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 0,
-            detail: format!("keyword {keyword:?} is not a declared variant"),
-        })?;
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
@@ -2804,23 +2902,14 @@ impl OpBinary for CommandHeaderLine {
         }
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 1,
-            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
-        })?;
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
-        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
-            what: "op record",
-            offset: reader.position() as u64,
-            detail: error.to_string(),
-        })
+        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpCodec
-
 
 fn undo_policy_to_token(policy: UndoPolicy) -> &'static str {
     match policy {
@@ -3308,7 +3397,6 @@ impl<Op: OpBinary> OpBinary for ArtifactCommand<Op> {
     }
 }
 
-
 //#endregion 🔖️CommandFormat
 
 //#region 🔖️History
@@ -3483,29 +3571,31 @@ where
     /// `local_actor_id` is seeded from the tail applied edit's actor so `UndoPolicy::ExactBaseOnly`'s
     /// foreign-edit check keeps working immediately after reload (a real `VcsArtifactApp` overrides
     /// it anyway via `set_local_actor_id` on every dispatch). Absent a cursor, every edit is
-    /// treated as applied and `local_actor_id` stays `None` (pre-W4 behavior).
-    pub fn new(envelope: ArtifactEnvelope<P, Mutation>) -> Self {
-        let (applied_edit_ids, redo_edit_ids, current_checkpoint_id, current, local_actor_id) = match &envelope.cursor {
-            Some(cursor) => {
-                let mut folded = envelope.vcs.initial_snapshot.clone();
-                let mut last_actor: Option<String> = None;
-                for edit_id in &cursor.applied_edit_ids {
-                    if let Some(edit) = envelope.vcs.edits.iter().find(|edit| &edit.id == edit_id) {
-                        for operation in &edit.forwards {
-                            folded = apply_mutation(&folded, operation);
-                        }
-                        last_actor = edit.actor.clone();
-                    }
-                }
-                let checkpoint_id = cursor.checkpoint_id.clone().or_else(|| envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone()));
-                (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone(), checkpoint_id, folded, last_actor)
-            }
-            None => {
-                let checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
-                (Vec::new(), Vec::new(), checkpoint_id, envelope.vcs.initial_snapshot.clone(), None)
-            }
+    /// treated as applied in authoritative history order.
+    pub fn new(envelope: ArtifactEnvelope<P, Mutation>) -> Result<Self, VcsError> {
+        Self::validate_authoritative_history(&envelope)?;
+        let (applied_edit_ids, redo_edit_ids, current_checkpoint_id) = match &envelope.cursor {
+            Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone(), cursor.checkpoint_id.clone().or_else(|| envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone()))),
+            None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new(), envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone())),
         };
-        Self { envelope, backbone: None, dag: crate::os_spr::MutationDag::new(), applied_edit_ids, redo_edit_ids, edit_sequence: 0, generation: 0, last_projection_cause: None, current_checkpoint_id, local_actor_id, conflicts: Vec::new(), current, tail_undo_cache: None }
+        Self::validate_history_lanes(&envelope, &applied_edit_ids, &redo_edit_ids)?;
+        let current = Self::fold_history(&envelope, &applied_edit_ids)?;
+        let local_actor_id = applied_edit_ids.last().and_then(|edit_id| envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id)).and_then(|edit| edit.actor.clone());
+        Ok(Self {
+            envelope,
+            backbone: None,
+            dag: crate::os_spr::MutationDag::new(),
+            applied_edit_ids,
+            redo_edit_ids,
+            edit_sequence: 0,
+            generation: 0,
+            last_projection_cause: None,
+            current_checkpoint_id,
+            local_actor_id,
+            conflicts: Vec::new(),
+            current,
+            tail_undo_cache: None,
+        })
     }
 
     pub fn generation(&self) -> u64 {
@@ -3514,13 +3604,7 @@ where
 
     /// 🧬️ Returns the current history identity used to invalidate derived work.
     pub fn artifact_revision(&self) -> ArtifactRevision {
-        ArtifactRevision {
-            artifact_id: self.envelope.id.clone(),
-            schema: self.envelope.schema.clone(),
-            applied_edit_ids: self.applied_edit_ids.clone(),
-            redo_edit_ids: self.redo_edit_ids.clone(),
-            checkpoint_id: self.current_checkpoint_id.clone(),
-        }
+        ArtifactRevision { artifact_id: self.envelope.id.clone(), schema: self.envelope.schema.clone(), applied_edit_ids: self.applied_edit_ids.clone(), redo_edit_ids: self.redo_edit_ids.clone(), checkpoint_id: self.current_checkpoint_id.clone() }
     }
 
     /// 🎯️ Returns the exact revision plus local generation a projection result must match.
@@ -3529,21 +3613,8 @@ where
     }
 
     /// 📬️ Captures one immutable projection or inference input from the current reconciled snapshot.
-    pub fn projection_event<Previous, Policy>(
-        &self,
-        cause: ArtifactProjectionCause,
-        previous: Option<Previous>,
-        cache_mode: ArtifactProjectionCacheMode,
-        policy: Policy,
-    ) -> Result<ArtifactProjectionEvent<P, Previous, Policy>, VcsError> {
-        Ok(ArtifactProjectionEvent {
-            stamp: self.projection_stamp(),
-            cause,
-            state: self.snapshot()?,
-            previous,
-            cache_mode,
-            policy,
-        })
+    pub fn projection_event<Previous, Policy>(&self, cause: ArtifactProjectionCause, previous: Option<Previous>, cache_mode: ArtifactProjectionCacheMode, policy: Policy) -> Result<ArtifactProjectionEvent<P, Previous, Policy>, VcsError> {
+        Ok(ArtifactProjectionEvent { stamp: self.projection_stamp(), cause, state: self.snapshot()?, previous, cache_mode, policy })
     }
 
     /// 📣️ Returns the last successful transition through the shared projection invalidation seam.
@@ -3574,10 +3645,7 @@ where
 
     /// 🛂️ Accepts only a result computed for the exact current revision and generation. Accepted
     /// semantic diffs are returned to their owning strict-apply boundary, never applied here.
-    pub fn accept_projection_result<Output, Diff>(
-        &self,
-        result: ArtifactProjectionResult<Output, Diff>,
-    ) -> Result<AcceptedArtifactProjection<Output, Diff>, StaleArtifactProjection> {
+    pub fn accept_projection_result<Output, Diff>(&self, result: ArtifactProjectionResult<Output, Diff>) -> Result<AcceptedArtifactProjection<Output, Diff>, StaleArtifactProjection> {
         let current = self.projection_stamp();
         if result.stamp != current {
             return Err(StaleArtifactProjection { computed_for: result.stamp, current });
@@ -3612,8 +3680,15 @@ where
     /// @emoji 🧭️ Restores the checkout position after reconstructing the store from a serialized
     /// envelope (`set_state` resets it to the latest checkpoint, which is wrong once a caller has
     /// checked out an older one).
-    pub fn set_current_checkpoint_id(&mut self, checkpoint_id: Option<String>) {
+    #[must_use]
+    pub fn set_current_checkpoint_id(&mut self, checkpoint_id: Option<String>) -> Result<ArtifactProjectionInvalidation, VcsError> {
+        if let Some(checkpoint_id) = &checkpoint_id {
+            if !self.envelope.vcs.checkpoints.iter().any(|checkpoint| checkpoint.id == *checkpoint_id) {
+                return Err(VcsError::UnknownChange(checkpoint_id.clone()));
+            }
+        }
         self.current_checkpoint_id = checkpoint_id;
+        Ok(self.invalidate_projections(ArtifactProjectionCause::Checkout))
     }
 
     /// @emoji 🖋️ The local actor id used to distinguish this store's own edits from ingested ones.
@@ -3655,9 +3730,8 @@ where
     /// @emoji 💾️ Restores full store state including the redo stack, so `Redo` survives
     /// round-tripping through a serialized envelope (e.g. one `dispatch` call per request).
     pub(crate) fn set_state(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>, redo_edit_ids: Vec<String>) -> Result<(), VcsError> {
-        if applied_edit_ids.iter().any(|id| redo_edit_ids.contains(id)) {
-            return Err(VcsError::ValidationFailed("reset history places an edit in both applied and redo lanes".to_string()));
-        }
+        Self::validate_authoritative_history(&envelope)?;
+        Self::validate_history_lanes(&envelope, &applied_edit_ids, &redo_edit_ids)?;
         let current = Self::fold_history(&envelope, &applied_edit_ids)?;
         self.backbone = None;
         self.edit_sequence = envelope.vcs.edits.iter().map(|edit| edit.sequence_number).max().unwrap_or(0);
@@ -3701,11 +3775,11 @@ where
     /// checkpoint is created, since a pin can only name a child checkpoint that already exists.
     /// Re-derives `content_addressed_checkpoint_id` so the checkpoint's identity actually covers its
     /// pins rather than merely storing them beside it.
-    pub fn set_checkpoint_composition_pins(&mut self, checkpoint_id: &str, pins: Vec<crate::os_vcs::CompositionPin>) {
-        if let Some(checkpoint) = self.envelope.vcs.checkpoints.iter_mut().find(|checkpoint| checkpoint.id == checkpoint_id) {
-            checkpoint.composition_pins = pins;
-        }
-        self.bump();
+    #[must_use]
+    pub fn set_checkpoint_composition_pins(&mut self, checkpoint_id: &str, pins: Vec<crate::os_vcs::CompositionPin>) -> Result<ArtifactProjectionInvalidation, VcsError> {
+        let checkpoint = self.envelope.vcs.checkpoints.iter_mut().find(|checkpoint| checkpoint.id == checkpoint_id).ok_or_else(|| VcsError::UnknownChange(checkpoint_id.to_string()))?;
+        checkpoint.composition_pins = pins;
+        Ok(self.invalidate_projections(ArtifactProjectionCause::Checkpoint))
     }
 
     /// @emoji ⚡️ The live snapshot: `Mutation::reconcile` applied to the incrementally-maintained
@@ -3757,15 +3831,8 @@ where
             self.flush_outbound(is_apply)?;
         }
         // Undo/redo shrink `applied_edit_ids`; only Apply/AmendLast append past `before`.
-        let edit_ids = if self.applied_edit_ids.len() >= before {
-            self.applied_edit_ids[before..].to_vec()
-        } else {
-            Vec::new()
-        };
-        Ok(CommandReceipt {
-            edit_ids,
-            generation: self.generation(),
-        })
+        let edit_ids = if self.applied_edit_ids.len() >= before { self.applied_edit_ids[before..].to_vec() } else { Vec::new() };
+        Ok(CommandReceipt { edit_ids, generation: self.generation() })
     }
 
     fn dispatch_inner(&mut self, command: ArtifactCommand<Mutation>) -> Result<(), VcsError> {
@@ -3842,6 +3909,9 @@ where
             }
             ArtifactCommand::CreateAlternative { name } => {
                 if self.envelope.vcs.checkpoints.is_empty() {
+                    if self.applied_edit_ids.is_empty() {
+                        return Err(VcsError::NoCheckpoint);
+                    }
                     self.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() })?;
                 }
                 let checkpoint_id = self.current_checkpoint_id.clone().or_else(|| self.envelope.vcs.checkpoints.last().map(|cp| cp.id.clone())).ok_or(VcsError::NoCheckpoint)?;
@@ -3882,9 +3952,7 @@ where
                 let _receipt = self.ingest_remote(envelope)?;
                 Ok(())
             }
-            ArtifactCommand::PruneDrafts => {
-                Err(VcsError::ValidationFailed("draft pruning is not implemented by ArtifactStore; no draft history was removed".to_string()))
-            }
+            ArtifactCommand::PruneDrafts => Err(VcsError::ValidationFailed("draft pruning is not implemented by ArtifactStore; no draft history was removed".to_string())),
         }
     }
 
@@ -3960,8 +4028,19 @@ where
         let actor = edit_actor_from_meta(&mutation_meta);
         self.local_actor_id = actor.clone();
         self.edit_sequence += 1;
-        let forwards_fingerprint = serde_json::to_vec(&forwards).unwrap_or_default();
-        let edit = Edit { id: mint_edit_id(actor.as_deref(), self.edit_sequence, &forwards_fingerprint), actor, forwards, inverse, mutation_meta, description, coalesce_key: None, sequence_number: self.edit_sequence, started_at, finished_at: Some(now_iso()) };
+        let forwards_fingerprint = serde_json::to_vec(&forwards).map_err(|error| VcsError::Serialize(error.to_string()))?;
+        let edit = Edit {
+            id: mint_edit_id(actor.as_deref(), self.edit_sequence, &forwards_fingerprint),
+            actor,
+            forwards,
+            inverse,
+            mutation_meta,
+            description,
+            coalesce_key: None,
+            sequence_number: self.edit_sequence,
+            started_at,
+            finished_at: Some(now_iso()),
+        };
         if !lane.is_document() {
             self.envelope.lanes.insert(edit.id.clone(), lane);
         }
@@ -3983,9 +4062,7 @@ where
             return Err(VcsError::EmptyApply);
         }
         let amend_target = self.applied_edit_ids.last().cloned().filter(|last_id| {
-            coalesce_key.is_some()
-                && uncommitted_edit_ids(&self.envelope, &self.applied_edit_ids).contains(last_id)
-                && self.envelope.vcs.edits.iter().find(|edit| edit.id == *last_id).map(|edit| edit.coalesce_key == coalesce_key).unwrap_or(false)
+            coalesce_key.is_some() && uncommitted_edit_ids(&self.envelope, &self.applied_edit_ids).contains(last_id) && self.envelope.vcs.edits.iter().find(|edit| edit.id == *last_id).map(|edit| edit.coalesce_key == coalesce_key).unwrap_or(false)
         });
         if let Some(edit_id) = amend_target {
             // ⚡️ `current` already reflects this edit's existing forwards (it was folded in when
@@ -4010,7 +4087,7 @@ where
             let actor = edit_actor_from_meta(&mutation_meta);
             self.local_actor_id = actor.clone();
             self.edit_sequence += 1;
-            let forwards_fingerprint = serde_json::to_vec(&forwards).unwrap_or_default();
+            let forwards_fingerprint = serde_json::to_vec(&forwards).map_err(|error| VcsError::Serialize(error.to_string()))?;
             let edit_id = mint_edit_id(actor.as_deref(), self.edit_sequence, &forwards_fingerprint);
             let edit = Edit { id: edit_id.clone(), actor, forwards, inverse, mutation_meta, description: None, coalesce_key, sequence_number: self.edit_sequence, started_at, finished_at: Some(now_iso()) };
             if !lane.is_document() {
@@ -4039,7 +4116,7 @@ where
         let mut mutation_meta = Vec::with_capacity(mutations.len());
         for mutation in mutations {
             mutation.validate(&snapshot).map_err(VcsError::ValidationFailed)?;
-            let encoded = mutation.encode_op().map_err(VcsError::ValidationFailed)?;
+            let encoded = mutation.encode_op().map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
             let mut back = mutation.inverse(&snapshot);
             back.reverse();
             inverse.extend(back);
@@ -4060,6 +4137,7 @@ where
                 semantic_kind: None,
                 label: None,
                 group_id: None,
+                origin: Default::default(),
             });
             snapshot = apply_mutation(&snapshot, &mutation);
             forwards.push(mutation);
@@ -4166,9 +4244,12 @@ where
         let edit_id = edit.id.clone();
         // ⚡️ Fold just the new edit's forwards onto the existing `current` (which already reflects
         // every prior applied edit) — algebraically identical to a full raw-fold replay, in O(new ops).
+        let mut candidate = self.current.clone();
         for operation in &edit.forwards {
-            self.current = apply_mutation(&self.current, operation);
+            operation.validate(&candidate).map_err(VcsError::ValidationFailed)?;
+            candidate = apply_mutation(&candidate, operation);
         }
+        self.current = candidate;
         self.envelope.vcs.edits.push(edit);
         self.applied_edit_ids.push(edit_id);
         self.tail_undo_cache = None;
@@ -4177,13 +4258,16 @@ where
         let (_, conflicts) = reconcile_with_last(self.last_applied_operation(), self.current.clone());
         self.conflicts = conflicts;
         self.bump();
+        self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
         Ok(())
     }
 
     fn merge_remote_snapshot(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), VcsError> {
         let remote: ArtifactEnvelope<P, Mutation> = parse_document_pack(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?.envelope;
+        Self::validate_authoritative_history(&remote)?;
         if self.envelope.vcs.edits.is_empty() {
             let applied: Vec<String> = remote.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
+            let current = Self::fold_history(&remote, &applied)?;
             self.edit_sequence = remote.vcs.edits.iter().map(|edit| edit.sequence_number).max().unwrap_or(0);
             let backbone_ref = self.envelope.backbone.clone();
             self.envelope = remote;
@@ -4205,8 +4289,9 @@ where
             self.redo_edit_ids.clear();
             self.tail_undo_cache = None;
             // 🔂️ Wholesale replacement, not a tail append — cold-path full raw-fold recompute.
-            self.current = self.fold_current()?;
+            self.current = current;
             self.bump();
+            self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
             return Ok(());
         }
         // 🪪️ An edit's top-level `id` is NOT a stable cross-store identity: `ingest_envelope` (the
@@ -4222,6 +4307,33 @@ where
             known_ids.insert(edit.id.clone());
             known_ids.extend(crate::os_spr::mutation_ids_for_edit(edit).into_iter().map(|id| id.0));
         }
+        for remote_edit in &remote.vcs.edits {
+            if let Some(local_edit) = self.envelope.vcs.edits.iter().find(|local_edit| local_edit.id == remote_edit.id) {
+                let local_bytes = serde_json::to_vec(local_edit).map_err(|error| VcsError::Serialize(error.to_string()))?;
+                let remote_bytes = serde_json::to_vec(remote_edit).map_err(|error| VcsError::Serialize(error.to_string()))?;
+                if local_bytes != remote_bytes {
+                    return Err(VcsError::ValidationFailed(format!("remote history conflicts with established edit {}", remote_edit.id)));
+                }
+            }
+        }
+        preflight_merge_by_id(&self.envelope.vcs.changes, &remote.vcs.changes, |change| &change.id)?;
+        preflight_merge_by_id(&self.envelope.vcs.checkpoints, &remote.vcs.checkpoints, |checkpoint| &checkpoint.id)?;
+        preflight_merge_by_id(&self.envelope.vcs.alternatives, &remote.vcs.alternatives, |alternative| &alternative.id)?;
+        let mut candidate = self.current.clone();
+        let mut candidate_ids = known_ids.clone();
+        for edit in &remote.vcs.edits {
+            let operation_ids = crate::os_spr::mutation_ids_for_edit(edit);
+            let already_known = candidate_ids.contains(&edit.id) || (!operation_ids.is_empty() && operation_ids.iter().all(|id| candidate_ids.contains(&id.0)));
+            if already_known {
+                continue;
+            }
+            for operation in &edit.forwards {
+                operation.validate(&candidate).map_err(VcsError::ValidationFailed)?;
+                candidate = apply_mutation(&candidate, operation);
+            }
+            candidate_ids.insert(edit.id.clone());
+            candidate_ids.extend(operation_ids.into_iter().map(|id| id.0));
+        }
         let mut newly_merged_ids: Vec<String> = Vec::new();
         for edit in remote.vcs.edits {
             let operation_ids = crate::os_spr::mutation_ids_for_edit(&edit);
@@ -4234,11 +4346,6 @@ where
             newly_merged_ids.push(edit.id.clone());
             known_ids.insert(edit.id.clone());
             known_ids.extend(operation_ids.iter().map(|id| id.0.clone()));
-            // ⚡️ Each newly-merged edit is appended at the tail, so folding its forwards onto `current`
-            // in iteration order is exactly a prefix-extension of the existing raw fold.
-            for operation in &edit.forwards {
-                self.current = apply_mutation(&self.current, operation);
-            }
             for mutation_id in operation_ids {
                 self.dag.seed_applied(mutation_id);
             }
@@ -4247,11 +4354,13 @@ where
         for edit_id in &newly_merged_ids {
             self.dag.seed_applied(MutationId(edit_id.clone()));
         }
-        merge_by_id(&mut self.envelope.vcs.changes, remote.vcs.changes, |change| &change.id);
-        merge_by_id(&mut self.envelope.vcs.checkpoints, remote.vcs.checkpoints, |checkpoint| &checkpoint.id);
-        merge_by_id(&mut self.envelope.vcs.alternatives, remote.vcs.alternatives, |alternative| &alternative.id);
+        merge_by_id(&mut self.envelope.vcs.changes, remote.vcs.changes, |change| &change.id)?;
+        merge_by_id(&mut self.envelope.vcs.checkpoints, remote.vcs.checkpoints, |checkpoint| &checkpoint.id)?;
+        merge_by_id(&mut self.envelope.vcs.alternatives, remote.vcs.alternatives, |alternative| &alternative.id)?;
         self.tail_undo_cache = None;
+        self.current = candidate;
         self.bump();
+        self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
         Ok(())
     }
 
@@ -4345,19 +4454,126 @@ where
         self.envelope.cursor = Some(ArtifactCursor { applied_edit_ids: self.applied_edit_ids.clone(), redo_edit_ids: self.redo_edit_ids.clone(), checkpoint_id: self.current_checkpoint_id.clone() });
     }
 
+    fn validate_authoritative_history(envelope: &ArtifactEnvelope<P, Mutation>) -> Result<(), VcsError> {
+        let mut edit_ids = HashSet::new();
+        for edit in &envelope.vcs.edits {
+            if !edit_ids.insert(edit.id.as_str()) {
+                return Err(VcsError::ValidationFailed(format!("history repeats authoritative edit {}", edit.id)));
+            }
+        }
+        let mut change_ids = HashSet::new();
+        for change in &envelope.vcs.changes {
+            if !change_ids.insert(change.id.as_str()) {
+                return Err(VcsError::ValidationFailed(format!("history repeats authoritative change {}", change.id)));
+            }
+            let mut referenced_edits = HashSet::new();
+            for edit_id in &change.edit_ids {
+                if !referenced_edits.insert(edit_id.as_str()) || !edit_ids.contains(edit_id.as_str()) {
+                    return Err(VcsError::ValidationFailed(format!("change {} has an invalid edit reference {edit_id}", change.id)));
+                }
+            }
+        }
+        let mut checkpoint_ids = HashSet::new();
+        for checkpoint in &envelope.vcs.checkpoints {
+            if !checkpoint_ids.insert(checkpoint.id.as_str()) {
+                return Err(VcsError::ValidationFailed(format!("history repeats authoritative checkpoint {}", checkpoint.id)));
+            }
+        }
+        for checkpoint in &envelope.vcs.checkpoints {
+            let mut referenced_changes = HashSet::new();
+            for change_id in &checkpoint.change_ids {
+                if !referenced_changes.insert(change_id.as_str()) || !change_ids.contains(change_id.as_str()) {
+                    return Err(VcsError::ValidationFailed(format!("checkpoint {} has an invalid change reference {change_id}", checkpoint.id)));
+                }
+            }
+            if let Some(parent_id) = &checkpoint.parent_id {
+                if !checkpoint_ids.contains(parent_id.as_str()) || parent_id == &checkpoint.id {
+                    return Err(VcsError::ValidationFailed(format!("checkpoint {} has an invalid parent reference {parent_id}", checkpoint.id)));
+                }
+            }
+        }
+        let mut alternative_ids = HashSet::new();
+        for alternative in &envelope.vcs.alternatives {
+            if !alternative_ids.insert(alternative.id.as_str()) {
+                return Err(VcsError::ValidationFailed(format!("history repeats authoritative alternative {}", alternative.id)));
+            }
+            let mut referenced_checkpoints = HashSet::new();
+            for checkpoint_id in &alternative.checkpoint_ids {
+                if !referenced_checkpoints.insert(checkpoint_id.as_str()) || !checkpoint_ids.contains(checkpoint_id.as_str()) {
+                    return Err(VcsError::ValidationFailed(format!("alternative {} has an invalid checkpoint reference {checkpoint_id}", alternative.id)));
+                }
+            }
+        }
+        if let Some(active_alternative_id) = &envelope.active_alternative_id {
+            if !alternative_ids.contains(active_alternative_id.as_str()) {
+                return Err(VcsError::ValidationFailed(format!("history names an unknown active alternative {active_alternative_id}")));
+            }
+        }
+        if let Some(cursor) = &envelope.cursor {
+            Self::validate_history_lanes(envelope, &cursor.applied_edit_ids, &cursor.redo_edit_ids)?;
+            if let Some(checkpoint_id) = &cursor.checkpoint_id {
+                if !checkpoint_ids.contains(checkpoint_id.as_str()) {
+                    return Err(VcsError::ValidationFailed(format!("history cursor names an unknown checkpoint {checkpoint_id}")));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn validate_history_lanes(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String], redo_edit_ids: &[String]) -> Result<(), VcsError> {
+        let known = envelope.vcs.edits.iter().map(|edit| edit.id.as_str()).collect::<HashSet<_>>();
+        let mut applied = HashSet::new();
+        for edit_id in applied_edit_ids {
+            if !applied.insert(edit_id.as_str()) {
+                return Err(VcsError::ValidationFailed(format!("history repeats applied edit {edit_id}")));
+            }
+            if !known.contains(edit_id.as_str()) {
+                return Err(VcsError::UnknownEdit(edit_id.clone()));
+            }
+        }
+        let mut redo = HashSet::new();
+        for edit_id in redo_edit_ids {
+            if !redo.insert(edit_id.as_str()) {
+                return Err(VcsError::ValidationFailed(format!("history repeats redo edit {edit_id}")));
+            }
+            if applied.contains(edit_id.as_str()) {
+                return Err(VcsError::ValidationFailed("history places an edit in both applied and redo lanes".to_string()));
+            }
+            if !known.contains(edit_id.as_str()) {
+                return Err(VcsError::UnknownEdit(edit_id.clone()));
+            }
+        }
+        Ok(())
+    }
+
     fn bump(&mut self) {
         self.generation += 1;
         self.sync_cursor();
     }
 }
 
-fn merge_by_id<T: Clone>(local: &mut Vec<T>, remote: Vec<T>, id_of: impl Fn(&T) -> &String) {
+fn preflight_merge_by_id<T: PartialEq>(local: &[T], remote: &[T], id_of: impl Fn(&T) -> &String) -> Result<(), VcsError> {
+    let existing: HashMap<&str, &T> = local.iter().map(|item| (id_of(item).as_str(), item)).collect();
+    for item in remote {
+        let id = id_of(item).clone();
+        match existing.get(id.as_str()) {
+            Some(established) if *established == item => {}
+            Some(_) => return Err(VcsError::ValidationFailed(format!("remote history conflicts with established record {id}"))),
+            None => {}
+        }
+    }
+    Ok(())
+}
+
+fn merge_by_id<T: Clone + PartialEq>(local: &mut Vec<T>, remote: Vec<T>, id_of: impl Fn(&T) -> &String) -> Result<(), VcsError> {
+    preflight_merge_by_id(local, &remote, &id_of)?;
     let mut existing: HashSet<String> = local.iter().map(|item| id_of(item).clone()).collect();
     for item in remote {
         if existing.insert(id_of(&item).clone()) {
             local.push(item);
         }
     }
+    Ok(())
 }
 
 // 🎯️ W6 kernel unification: this crate's own `mutation_envelope_from_edit` (whole-edit-per-
@@ -4394,6 +4610,7 @@ pub fn edit_from_operation_envelope<Mutation: OpBinary>(envelope: &crate::os_spr
             semantic_kind: None,
             label: None,
             group_id: None,
+            origin: Default::default(),
         }],
         description: None,
         coalesce_key: None,
@@ -4477,9 +4694,7 @@ pub enum BackboneMessage {
     },
     /// @emoji ✅️ Acknowledges inbound operations the store has ingested (store→actor). Lets a future actor
     /// implement at-least-once redelivery with id-based dedupe — safe across store crashes/reloads.
-    Ack {
-        op_ids: Vec<String>,
-    },
+    Ack { op_ids: Vec<String> },
 }
 
 //#region 🔖️OpCodec
@@ -4490,11 +4705,7 @@ impl OpText for BackboneMessage {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
-                )?;
+                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
                 return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -4514,11 +4725,7 @@ impl OpBinary for BackboneMessage {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 0,
-            detail: format!("keyword {keyword:?} is not a declared variant"),
-        })?;
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
@@ -4536,23 +4743,14 @@ impl OpBinary for BackboneMessage {
         }
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 1,
-            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
-        })?;
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
-        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
-            what: "op record",
-            offset: reader.position() as u64,
-            detail: error.to_string(),
-        })
+        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpCodec
-
 
 /// @emoji 🧵️ Non-blocking, IO-free in-memory queue contract between a `ArtifactStore` and its
 /// sync actor. `send`/`receive` MUST return immediately: implementations only enqueue/dequeue
@@ -5336,13 +5534,9 @@ pub struct SpaceHost {
     members: HashMap<String, Box<dyn SpaceMember>>,
 }
 
-
-
-
-
 impl SpaceHost {
-    pub fn new(meta_envelope: ArtifactEnvelope<SpaceHistorySnapshot, SpaceHistoryMutation>) -> Self {
-        Self { meta: ArtifactStore::new(meta_envelope), members: HashMap::new() }
+    pub fn new(meta_envelope: ArtifactEnvelope<SpaceHistorySnapshot, SpaceHistoryMutation>) -> Result<Self, VcsError> {
+        Ok(Self { meta: ArtifactStore::new(meta_envelope)?, members: HashMap::new() })
     }
 
     pub fn register_member(&mut self, member: Box<dyn SpaceMember>) {
@@ -5871,7 +6065,15 @@ impl CompositionCoordinator {
     /// itself fails to fully roll back, the returned error is `VcsError::CompensationFailed`
     /// (`fold_compensation_error`) carrying both the original failure and which members could not
     /// be rolled back, rather than silently leaving partial state unreported.
-    pub fn dispatch_group(&mut self, parent_ref: &crate::os_io::ArtifactRef, parent: &mut dyn SpaceMember, children: &mut [(&mut dyn SpaceMember, ChildDispatch)], parent_ops: Vec<Vec<u8>>, genesis: Vec<ChildGenesis>, meta: GroupMeta) -> Result<GroupReceipt, VcsError> {
+    pub fn dispatch_group(
+        &mut self,
+        parent_ref: &crate::os_io::ArtifactRef,
+        parent: &mut dyn SpaceMember,
+        children: &mut [(&mut dyn SpaceMember, ChildDispatch)],
+        parent_ops: Vec<Vec<u8>>,
+        genesis: Vec<ChildGenesis>,
+        meta: GroupMeta,
+    ) -> Result<GroupReceipt, VcsError> {
         //#region Phase1Validate
         if !parent_ops.is_empty() {
             parent.validate_wire(&parent_ops).map_err(VcsError::ValidationFailed)?;
@@ -6038,7 +6240,7 @@ pub mod test_support {
         Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
     {
         let envelope = create_document_envelope("test/v1", "test", initial.clone(), None);
-        let mut store = ArtifactStore::new(envelope);
+        let mut store = ArtifactStore::new(envelope).expect("test support store construction");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], description: None }).expect("apply");
         let post = store.snapshot().expect("post snapshot");
         store.dispatch(ArtifactCommand::Undo).expect("undo");
@@ -6419,47 +6621,167 @@ pub mod test_support {
 mod tests {
     use super::*;
 
+    struct ArtifactStore<P, Mutation>(super::ArtifactStore<P, Mutation>)
+    where
+        P: Clone + Serialize + DeserializeOwned,
+        Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<P>;
+
+    impl<P, Mutation> ArtifactStore<P, Mutation>
+    where
+        P: Clone + Serialize + DeserializeOwned + ArtifactPack,
+        Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<P> + OpBinary + OpText,
+    {
+        fn new(envelope: ArtifactEnvelope<P, Mutation>) -> Self {
+            Self(super::ArtifactStore::new(envelope).expect("test fixture history is valid"))
+        }
+
+        fn current_checkpoint_id(&self) -> Option<&str> {
+            self.0.current_checkpoint_id()
+        }
+    }
+
+    impl<P, Mutation> std::ops::Deref for ArtifactStore<P, Mutation>
+    where
+        P: Clone + Serialize + DeserializeOwned,
+        Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<P>,
+    {
+        type Target = super::ArtifactStore<P, Mutation>;
+
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl<P, Mutation> std::ops::DerefMut for ArtifactStore<P, Mutation>
+    where
+        P: Clone + Serialize + DeserializeOwned,
+        Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<P>,
+    {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
+    where
+        P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+        Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        fn document_id(&self) -> &str {
+            SpaceMember::document_id(&self.0)
+        }
+        fn is_dirty(&self) -> bool {
+            SpaceMember::is_dirty(&self.0)
+        }
+        fn commit_checkpoint(&mut self, message: String, authors: Vec<Author>) -> Result<String, VcsError> {
+            SpaceMember::commit_checkpoint(&mut self.0, message, authors)
+        }
+        fn current_checkpoint_id(&self) -> Option<String> {
+            SpaceMember::current_checkpoint_id(&self.0)
+        }
+        fn current_alternative_id(&self) -> Option<String> {
+            SpaceMember::current_alternative_id(&self.0)
+        }
+        fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str) -> Result<(), VcsError> {
+            SpaceMember::checkout(&mut self.0, checkpoint_id, alternative_id)
+        }
+        fn create_alternative(&mut self, name: String) -> Result<String, VcsError> {
+            SpaceMember::create_alternative(&mut self.0, name)
+        }
+        fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
+            SpaceMember::last_local_edit_timestamp(&self.0)
+        }
+        fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
+            SpaceMember::last_undone_local_edit_timestamp(&self.0)
+        }
+        fn undo(&mut self) -> Result<(), VcsError> {
+            SpaceMember::undo(&mut self.0)
+        }
+        fn redo(&mut self) -> Result<(), VcsError> {
+            SpaceMember::redo(&mut self.0)
+        }
+        fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+            self
+        }
+        fn validate_wire(&self, ops: &[Vec<u8>]) -> Result<(), String> {
+            SpaceMember::validate_wire(&self.0, ops)
+        }
+        fn dispatch_wire(&mut self, command: &[u8]) -> Result<CommandReceipt, VcsError> {
+            SpaceMember::dispatch_wire(&mut self.0, command)
+        }
+        fn tail_group_id(&self) -> Option<String> {
+            SpaceMember::tail_group_id(&self.0)
+        }
+        fn tail_edit_id(&self) -> Option<String> {
+            SpaceMember::tail_edit_id(&self.0)
+        }
+        fn redo_tail(&self) -> Option<(String, Option<String>)> {
+            SpaceMember::redo_tail(&self.0)
+        }
+        fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), VcsError> {
+            SpaceMember::stamp_tail_group_id(&mut self.0, group_id)
+        }
+        fn set_owner(&mut self, owner: Option<OwnerRef>) {
+            SpaceMember::set_owner(&mut self.0, owner)
+        }
+        fn document_pack_bytes(&self) -> Result<Vec<u8>, VcsError> {
+            SpaceMember::document_pack_bytes(&self.0)
+        }
+        fn envelope_pack_bytes(&self) -> Result<Vec<u8>, VcsError> {
+            SpaceMember::envelope_pack_bytes(&self.0)
+        }
+        fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, VcsError> {
+            SpaceMember::pack_at_checkpoint(&self.0, checkpoint_id)
+        }
+    }
+
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, crate::os_dsl::DslArtifact)]
     #[dsl(id = "demo.doc", extension = "demo")]
     struct DemoSnapshot {
         n: i32,
     }
 
-//#region 🔖️ArtifactCodec
-/// 📜️ Handcrafted ArtifactDsl (P6).
-impl ArtifactDsl for DemoSnapshot {
-    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str { Self::__DSL_ENVELOPE_ID }
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = match semio_format::split_text_preamble(text) { Ok((_, rest)) => rest, Err(_) => text };
-        let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document })?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        semio_format::wrap_text(&envelope, &body)
-    }
-}
-/// 📦️ Handcrafted ArtifactPack (P6).
-impl ArtifactPack for DemoSnapshot {
-    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
-        Ok(semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
-            return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+    //#region 🔖️ArtifactCodec
+    /// 📜️ Handcrafted ArtifactDsl (P6).
+    impl ArtifactDsl for DemoSnapshot {
+        const EXTENSION: &'static str = Self::__DSL_EXTENSION;
+        fn envelope_id() -> &'static str {
+            Self::__DSL_ENVELOPE_ID
         }
-        let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
+        fn parse_dsl(text: &str) -> Result<Self, TextError> {
+            let body = match semio_format::split_text_preamble(text) {
+                Ok((_, rest)) => rest,
+                Err(_) => text,
+            };
+            let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document })?;
+            Self::__dsl_from_record(&record)
+        }
+        fn print_dsl(&self) -> String {
+            let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+            let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Dsl, 1).expect("valid envelope_id");
+            semio_format::wrap_text(&envelope, &body)
+        }
     }
-    fn record_spec() -> Option<crate::os_dsl::RecordSpec> { Some(Self::__dsl_spec()) }
-}
-//#endregion 🔖️ArtifactCodec
-
+    /// 📦️ Handcrafted ArtifactPack (P6).
+    impl ArtifactPack for DemoSnapshot {
+        fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+            let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+            let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
+            Ok(semio_format::wrap_binary(&envelope, &inner))
+        }
+        fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
+            let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
+            if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
+                return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+            }
+            let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+            Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
+        }
+        fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+            Some(Self::__dsl_spec())
+        }
+    }
+    //#endregion 🔖️ArtifactCodec
 
     // `impl crate::os_store::ArtifactPack for DemoSnapshot` is now generated automatically by
     // `#[derive(crate::os_dsl::DslArtifact)]` above (see dsl/derive/rs/lib.rs's `🔖️DslArtifact` region) —
@@ -6469,8 +6791,6 @@ impl ArtifactPack for DemoSnapshot {
     struct DemoDiff {
         n: Option<i32>,
     }
-
-
 
     impl MutationDiff<DemoSnapshot> for DemoDiff {
         fn apply(&self, snapshot: &DemoSnapshot) -> DemoSnapshot {
@@ -6491,77 +6811,60 @@ impl ArtifactPack for DemoSnapshot {
         SetN { n: i32 },
     }
 
-//#region 🔖️OpCodec
-/// 🎞️ Handcrafted OpText (P6).
-impl OpText for DemoMutation {
-    fn parse_op(line: &str) -> Result<Self, TextError> {
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
-                )?;
-                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+    //#region 🔖️OpCodec
+    /// 🎞️ Handcrafted OpText (P6).
+    impl OpText for DemoMutation {
+        fn parse_op(line: &str) -> Result<Self, TextError> {
+            let variants = <Self as crate::os_dsl::DslVariants>::variants();
+            for (keyword, spec_fn) in &variants {
+                let probe = format!("{} ", keyword);
+                if line == keyword.as_str() || line.starts_with(&probe) {
+                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+                }
             }
+            Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
-        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
-    }
-}
-
-/// 🎯️ Handcrafted OpBinary (P6).
-impl OpBinary for DemoMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 0,
-            detail: format!("keyword {keyword:?} is not a declared variant"),
-        })?;
-        let spec = (variants[ordinal].1)();
-        let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = crate::os_pack::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+        fn print_op(&self) -> String {
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+            let variants = <Self as crate::os_dsl::DslVariants>::variants();
+            let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
         }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 1,
-            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
-        })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
-        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
-            what: "op record",
-            offset: reader.position() as u64,
-            detail: error.to_string(),
-        })
     }
-}
-//#endregion 🔖️OpCodec
 
+    /// 🎯️ Handcrafted OpBinary (P6).
+    impl OpBinary for DemoMutation {
+        fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+            const OP_BINARY_FORMAT: u8 = 1;
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+            let variants = <Self as crate::os_dsl::DslVariants>::variants();
+            let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
+            let spec = (variants[ordinal].1)();
+            let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+            let mut out = Vec::with_capacity(body.len() + 3);
+            out.push(OP_BINARY_FORMAT);
+            crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
+            out.extend_from_slice(&body);
+            Ok(out)
+        }
+        fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+            const OP_BINARY_FORMAT: u8 = 1;
+            let mut reader = crate::os_pack::ByteReader::new(bytes);
+            let format = reader.read_u8()?;
+            if format != OP_BINARY_FORMAT {
+                return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+            }
+            let ordinal = reader.read_varint_u64()?;
+            let variants = <Self as crate::os_dsl::DslVariants>::variants();
+            let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
+            let spec = spec_fn();
+            let body = &bytes[reader.position()..];
+            let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
+        }
+    }
+    //#endregion 🔖️OpCodec
 
     impl Mutation<DemoSnapshot> for DemoMutation {
         type Diff = DemoDiff;
@@ -7065,9 +7368,11 @@ impl OpBinary for DemoMutation {
         assert!(edit_text.contains("set-n"), "edit text contains the printed op line: {edit_text:?}");
         assert!(!edit_text.contains('\n') || edit_text.trim_end_matches('\n').lines().count() <= 2, "one header line + one op line: {edit_text:?}");
 
+        preflight_document_codecs(std::slice::from_ref(&codec)).expect("preflight accepts an unclaimed full descriptor without publishing it");
+        assert!(document_codec("test.document-codec-roundtrip/v1").expect("registry availability").is_none(), "preflight must not publish a codec");
         register_document_codec(codec).expect("first document codec registration");
-        assert!(document_codec("test.document-codec-roundtrip/v1").is_some(), "registered codec is discoverable by schema string");
-        assert!(document_codec("no-such-schema").is_none());
+        assert!(document_codec("test.document-codec-roundtrip/v1").expect("registry availability").is_some(), "registered codec is discoverable by schema string");
+        assert!(document_codec("no-such-schema").expect("registry availability").is_none());
     }
 
     #[test]
@@ -7077,16 +7382,37 @@ impl OpBinary for DemoMutation {
         assert_ne!(first.pack_schema_hash, second.pack_schema_hash, "fixture precondition: the two codecs must be distinguishable");
 
         register_document_codec(first.clone()).expect("first registration");
-        let conflict = register_document_codec(second).expect_err("a schema collision must reject rather than replace");
+        register_document_codec(first.clone()).expect("an identical descriptor and executable is idempotent");
+        let conflict = match register_document_codec(second).expect_err("a schema collision must reject rather than replace") {
+            DocumentCodecRegistryError::Conflict(conflict) => conflict,
+            DocumentCodecRegistryError::Unavailable => panic!("document codec registry unavailable"),
+        };
         assert_eq!(conflict.schema, "test.duplicate-id-probe/v1");
-        let resolved = document_codec("test.duplicate-id-probe/v1").expect("still registered after the second call");
+        let resolved = document_codec("test.duplicate-id-probe/v1").expect("registry availability").expect("still registered after the second call");
         assert_eq!(resolved.pack_schema_hash, first.pack_schema_hash, "the first codec remains authoritative after a conflict");
     }
 
+    #[test]
+    fn dialect_migration_preflight_and_batch_commit_are_conflict_free_or_noop() {
+        fn append_marker(bytes: &[u8]) -> Result<Vec<u8>, String> {
+            Ok([bytes, b"-migrated"].concat())
+        }
+
+        let from = crate::os_io::ArtifactDialect { artifact_kind: "test.runtime-migration".into(), standard: "1".into(), subset: "*".into() };
+        let to = crate::os_io::ArtifactDialect { artifact_kind: "test.runtime-migration".into(), standard: "2".into(), subset: "*".into() };
+        let migration = DialectMigration { from: from.clone(), to: to.clone(), lossless: true, migrate_pack: append_marker };
+        preflight_dialect_migrations(std::slice::from_ref(&migration)).expect("preflight accepts an unclaimed dialect pair without mutation");
+        assert!(matches!(migrate_document(&from, &to, b"seed"), Err(DialectMigrationError::Missing { .. })), "preflight must not publish a migration");
+        register_dialect_migrations(vec![migration.clone()]).expect("batch migration registration");
+        assert_eq!(migrate_document(&from, &to, b"seed").expect("registered migration"), b"seed-migrated");
+
+        let conflict = DialectMigration { lossless: false, ..migration };
+        assert!(matches!(preflight_dialect_migrations(std::slice::from_ref(&conflict)), Err(DialectMigrationRegistryError::Conflict { .. })), "preflight must reject a descriptor change before batch commit");
+        assert_eq!(migrate_document(&from, &to, b"seed").expect("first migration remains authoritative"), b"seed-migrated");
+    }
+
     fn projection_probe(store: &ArtifactStore<DemoSnapshot, DemoMutation>, cause: ArtifactProjectionCause) -> ArtifactProjectionResult<i32, DemoDiff> {
-        let event = store
-            .projection_event(cause, Some(DemoSnapshot { n: -1 }), ArtifactProjectionCacheMode::ValidatePrevious, "deterministic")
-            .expect("capture projection event");
+        let event = store.projection_event(cause, Some(DemoSnapshot { n: -1 }), ArtifactProjectionCacheMode::ValidatePrevious, "deterministic").expect("capture projection event");
         assert_eq!(event.previous, Some(DemoSnapshot { n: -1 }));
         assert_eq!(event.cache_mode, ArtifactProjectionCacheMode::ValidatePrevious);
         event.result(event.state.n, None)
@@ -7129,6 +7455,62 @@ impl OpBinary for DemoMutation {
         let before_checkout = projection_probe(&store, ArtifactProjectionCause::Checkout);
         store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id }).expect("checkout");
         assert_projection_is_stale(&store, before_checkout);
+    }
+
+    #[test]
+    fn projection_result_gate_rejects_results_after_dependency_and_checkpoint_transitions() {
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "projection-dependencies", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+
+        let before_replay = projection_probe(&store, ArtifactProjectionCause::Replay);
+        assert_eq!(store.invalidate_after_replay().cause, ArtifactProjectionCause::Replay);
+        assert_projection_is_stale(&store, before_replay);
+
+        let before_policy = projection_probe(&store, ArtifactProjectionCause::PolicyChange);
+        assert_eq!(store.invalidate_after_policy_change().cause, ArtifactProjectionCause::PolicyChange);
+        assert_projection_is_stale(&store, before_policy);
+
+        let before_resource = projection_probe(&store, ArtifactProjectionCause::ExternalResourceChange);
+        assert_eq!(store.invalidate_after_external_resource_change().cause, ArtifactProjectionCause::ExternalResourceChange);
+        assert_projection_is_stale(&store, before_resource);
+
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply before checkpoint");
+        let before_checkpoint = projection_probe(&store, ArtifactProjectionCause::Checkpoint);
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).expect("non-empty checkpoint");
+        assert_projection_is_stale(&store, before_checkpoint);
+        assert_eq!(store.last_projection_invalidation().expect("checkpoint invalidation").cause, ArtifactProjectionCause::Checkpoint);
+
+        let generation = store.generation();
+        let error = store.dispatch(ArtifactCommand::PruneDrafts).expect_err("draft pruning is explicitly unavailable");
+        assert!(matches!(error, VcsError::ValidationFailed(_)));
+        assert_eq!(store.generation(), generation, "a rejected prune cannot invalidate or report a success");
+    }
+
+    #[test]
+    fn reset_and_apply_reject_malformed_history_or_invalid_mutations_before_persisting() {
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "reset-invalid", DemoSnapshot { n: 0 }, None);
+        let mut malformed_constructor = envelope.clone();
+        malformed_constructor.cursor = Some(ArtifactCursor { applied_edit_ids: vec!["missing".into()], redo_edit_ids: Vec::new(), checkpoint_id: None });
+        assert!(matches!(super::ArtifactStore::new(malformed_constructor), Err(VcsError::UnknownEdit(id)) if id == "missing"), "construction must reject malformed cursor history before any mutation applies");
+
+        let mut legacy_seed = super::ArtifactStore::new(envelope.clone()).expect("valid seed history");
+        legacy_seed.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("seed edit");
+        let mut cursorless_history = legacy_seed.envelope().clone();
+        cursorless_history.cursor = None;
+        assert_eq!(super::ArtifactStore::new(cursorless_history.clone()).expect("cursorless authoritative history is validated and folded").snapshot().expect("cursorless snapshot"), DemoSnapshot { n: 3 });
+        cursorless_history.vcs.edits.push(cursorless_history.vcs.edits[0].clone());
+        assert!(matches!(super::ArtifactStore::new(cursorless_history), Err(VcsError::ValidationFailed(message)) if message.contains("repeats authoritative edit")), "duplicate authoritative edits cannot be hidden by first-match replay");
+
+        let mut store = ArtifactStore::new(envelope.clone());
+        let generation = store.generation();
+        assert!(matches!(store.reset(envelope, vec!["missing".into()], Vec::new()), Err(VcsError::UnknownEdit(id)) if id == "missing"));
+        assert_eq!(store.generation(), generation, "failed reset must preserve the live store");
+
+        let mut validated = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", "apply-invalid", DemoSnapshot { n: 0 }, None));
+        let error = validated.dispatch(ArtifactCommand::Apply { mutations: vec![ValidatedMutation::SetN { n: -1 }], description: None }).expect_err("invalid mutation must fail before inverse or persistence");
+        assert!(matches!(error, VcsError::ValidationFailed(_)));
+        assert!(validated.envelope().vcs.edits.is_empty());
+        assert_eq!(validated.snapshot().expect("unchanged snapshot"), DemoSnapshot { n: 0 });
     }
 
     #[test]
@@ -7341,6 +7723,7 @@ impl OpBinary for DemoMutation {
                 semantic_kind: None,
                 label: None,
                 group_id: None,
+                origin: Default::default(),
             }],
             description: None,
             coalesce_key: None,
@@ -7544,79 +7927,60 @@ impl OpBinary for DemoMutation {
         SetN { n: i32, physical_ms: u64 },
     }
 
-//#region 🔖️OpCodec
-/// 🎞️ Handcrafted OpText (P6).
-impl OpText for TimestampedMutation {
-    fn parse_op(line: &str) -> Result<Self, TextError> {
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
-                )?;
-                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+    //#region 🔖️OpCodec
+    /// 🎞️ Handcrafted OpText (P6).
+    impl OpText for TimestampedMutation {
+        fn parse_op(line: &str) -> Result<Self, TextError> {
+            let variants = <Self as crate::os_dsl::DslVariants>::variants();
+            for (keyword, spec_fn) in &variants {
+                let probe = format!("{} ", keyword);
+                if line == keyword.as_str() || line.starts_with(&probe) {
+                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+                }
             }
+            Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
-        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
-    }
-}
-
-/// 🎯️ Handcrafted OpBinary (P6).
-impl OpBinary for TimestampedMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 0,
-            detail: format!("keyword {keyword:?} is not a declared variant"),
-        })?;
-        let spec = (variants[ordinal].1)();
-        let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = crate::os_pack::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+        fn print_op(&self) -> String {
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+            let variants = <Self as crate::os_dsl::DslVariants>::variants();
+            let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
         }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 1,
-            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
-        })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
-        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
-            what: "op record",
-            offset: reader.position() as u64,
-            detail: error.to_string(),
-        })
     }
-}
-//#endregion 🔖️OpCodec
 
-
-
+    /// 🎯️ Handcrafted OpBinary (P6).
+    impl OpBinary for TimestampedMutation {
+        fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+            const OP_BINARY_FORMAT: u8 = 1;
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+            let variants = <Self as crate::os_dsl::DslVariants>::variants();
+            let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
+            let spec = (variants[ordinal].1)();
+            let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+            let mut out = Vec::with_capacity(body.len() + 3);
+            out.push(OP_BINARY_FORMAT);
+            crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
+            out.extend_from_slice(&body);
+            Ok(out)
+        }
+        fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+            const OP_BINARY_FORMAT: u8 = 1;
+            let mut reader = crate::os_pack::ByteReader::new(bytes);
+            let format = reader.read_u8()?;
+            if format != OP_BINARY_FORMAT {
+                return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+            }
+            let ordinal = reader.read_varint_u64()?;
+            let variants = <Self as crate::os_dsl::DslVariants>::variants();
+            let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
+            let spec = spec_fn();
+            let body = &bytes[reader.position()..];
+            let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
+        }
+    }
+    //#endregion 🔖️OpCodec
 
     impl Mutation<DemoSnapshot> for TimestampedMutation {
         type Diff = DemoDiff;
@@ -7659,7 +8023,7 @@ impl OpBinary for TimestampedMutation {
         let mut artifact_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "artifact-a", DemoSnapshot { n: 0 }, None));
         artifact_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).expect("apply artifact edit");
 
-        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None));
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None)).expect("valid space host history");
         host.register_space_documents(Box::new(manifest), vec![Box::new(collection_a), Box::new(collection_b)], vec![Box::new(artifact_a)]);
 
         assert!(host.member("space-manifest").is_some(), "manifest registered");
@@ -7685,7 +8049,7 @@ impl OpBinary for TimestampedMutation {
         member_b.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b-init".into()), authors: Vec::new() }).expect("commit b upfront, so it starts clean");
         let member_b_checkpoint = member_b.current_checkpoint_id().expect("b checkpoint").to_string();
 
-        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None));
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None)).expect("valid space host history");
         host.register_member(Box::new(member_a));
         host.register_member(Box::new(member_b));
 
@@ -7705,8 +8069,8 @@ impl OpBinary for TimestampedMutation {
     fn space_vcs_host_meta_document_is_backbone_attachable_and_detachable() {
         let (backbone_a, backbone_b) = MemoryBackbone::pair("studio-a", "studio-b");
         let meta_envelope: ArtifactEnvelope<SpaceHistorySnapshot, SpaceHistoryMutation> = create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None);
-        let mut host_a = SpaceHost::new(meta_envelope.clone());
-        let mut host_b = SpaceHost::new(meta_envelope);
+        let mut host_a = SpaceHost::new(meta_envelope.clone()).expect("valid first space host history");
+        let mut host_b = SpaceHost::new(meta_envelope).expect("valid second space host history");
         assert!(host_a.backbone_ref().is_none(), "default is unattached, like any other ArtifactStore");
 
         host_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
@@ -7731,7 +8095,7 @@ impl OpBinary for TimestampedMutation {
     #[test]
     fn space_checkout_checkpoint_fans_out_and_restores_pinned_member_state() {
         let member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
-        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None));
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None)).expect("valid space host history");
         host.register_member(Box::new(member_a));
 
         demo_member::<DemoMutation>(&mut host, "member-a").dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
@@ -7748,7 +8112,7 @@ impl OpBinary for TimestampedMutation {
     #[test]
     fn space_switch_alternative_fans_out_and_restores_pinned_member_state() {
         let member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
-        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None));
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None)).expect("valid space host history");
         host.register_member(Box::new(member_a));
 
         demo_member::<DemoMutation>(&mut host, "member-a").dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
@@ -7771,7 +8135,7 @@ impl OpBinary for TimestampedMutation {
         let mut member_late = ArtifactStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-late", DemoSnapshot { n: 0 }, None));
         member_late.dispatch(ArtifactCommand::Apply { mutations: vec![TimestampedMutation::SetN { n: 9, physical_ms: 2_000 }], description: None }).expect("apply late");
 
-        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None));
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None)).expect("valid space host history");
         host.register_member(Box::new(member_early));
         host.register_member(Box::new(member_late));
 
@@ -8776,7 +9140,7 @@ impl OpBinary for TimestampedMutation {
     /// minted child id and the identical `invocation_id`.
     #[test]
     fn dispatch_group_mints_genesis_child_ids_deterministically_across_replicas() {
-        register_child_store_factory(crate::os_io::ArtifactKindId::parse("s.stdio.demochild").expect("valid kind"), Arc::new(DemoChildFactory));
+        register_child_store_factory(crate::os_io::ArtifactKindId::parse("s.stdio.demochild").expect("valid kind"), Arc::new(DemoChildFactory)).expect("register child factory");
 
         let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-genesis-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let genesis_dialect = crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() };

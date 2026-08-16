@@ -7942,7 +7942,7 @@ pub mod vcs {
         pub type KitSnapshotEnvelope = ArtifactVcsEnvelope<KitSnapshot, ComposeWireOperation>;
 
         pub fn create_kit_snapshot_store(id: &crate::id::Id, initial: Value) -> KitSnapshotStore {
-            ArtifactVcsStore::new(create_document_vcs_envelope(KIT_SNAPSHOT_SCHEMA, id.as_str(), KitSnapshot(initial), None))
+            ArtifactVcsStore::new(create_document_vcs_envelope(KIT_SNAPSHOT_SCHEMA, id.as_str(), KitSnapshot(initial), None)).expect("failed to create kit snapshot store")
         }
 
         pub fn materialize_kit_snapshot(envelope: &KitSnapshotEnvelope, applied: &[String]) -> Result<KitSnapshot, semio_framework_os_kernel::os_store::VcsError> {

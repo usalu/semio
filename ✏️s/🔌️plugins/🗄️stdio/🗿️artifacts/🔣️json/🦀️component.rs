@@ -49,15 +49,20 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// below, built fresh via `subset_validator_entry_of::<JsonIJsonValidator>()` rather than reaching
 /// into that module's private `validator_entry()` OnceLock (left untouched — first artifact in the
 /// repo to populate this field, see its own builder doc).
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.stdio.json")
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("json", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::json::schema::json_artifact_schema_descriptor())
         .inferences([crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::inferences::json_artifact_inference_descriptor()])
         .composers(crate::artifacts::json::standards::v_rfc8259::subsets::any::io::io_registry::entries())
         .subset_validators(pilot_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<JsonSnapshot, JsonMutation>(STDIO_JSON_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 🛡️ The ✳️i-json subset's `SubsetValidatorEntry`, built once — see `declaration()`'s own doc for

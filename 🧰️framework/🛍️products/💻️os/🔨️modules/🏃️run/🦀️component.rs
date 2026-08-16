@@ -285,6 +285,9 @@ fn frame_in_reply_to(frame: &AppFrame) -> Option<u64> {
         AppFrame::Config { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::Emit { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::Draft { in_reply_to, .. } => Some(*in_reply_to),
+        AppFrame::Children { in_reply_to, .. } => Some(*in_reply_to),
+        AppFrame::Ephemeral { .. } => None,
+        AppFrame::HistorySnapshot { in_reply_to, .. } => Some(*in_reply_to),
     }
 }
 

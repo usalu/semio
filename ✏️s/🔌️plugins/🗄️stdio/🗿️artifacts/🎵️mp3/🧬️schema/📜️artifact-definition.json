@@ -40,8 +40,11 @@
       "id": "s.stdio.mp3.standard.mpeg1-layer3.representation.document",
       "standard": "s.stdio.mp3.standard.mpeg1-layer3",
       "representation": "document",
-      "mime": "audio/mpeg",
-      "extension": ".mp3",
+      "mimes": ["audio/mpeg"],
+      "extensions": [".mp3"],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -73,7 +76,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.mp3.conformance.public-corpus",
+      "id": "s.stdio.mp3.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }

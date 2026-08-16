@@ -99,7 +99,7 @@ pub struct HistoryCursor {
     pub checkpoint_id: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Default)]
 pub struct HistoryOpMeta {
     pub op_id: Option<String>,
     pub dependencies: Vec<String>,
@@ -114,6 +114,12 @@ pub struct HistoryOpMeta {
     /// design point: every sibling member of one composite gesture shares the identical string,
     /// so the dictionary compresses it near-for-free across a whole edit/checkpoint).
     pub group_id: Option<String>,
+    /// @emoji 🔀️ Durable twin of `crate::os_spr::command::MutationMeta.origin` — canonical-JSON
+    /// encoded (not dict-interned like the id fields above: an origin's `Contributed`/`Transaction`
+    /// payload carries structured data, not a short repeated token). `MutationOrigin::Owner`
+    /// (`Default`) whenever absent from the byte log, matching `group_id`'s own "absent for logs
+    /// predating this field" contract.
+    pub origin: crate::os_spr::command::MutationOrigin,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -636,6 +642,9 @@ fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut DictBuil
     if meta.group_id.is_some() {
         presence |= 1 << 4;
     }
+    if !meta.origin.is_owner() {
+        presence |= 1 << 5;
+    }
     out.write_u8(presence);
     if let Some(op_id) = &meta.op_id {
         write_id_field(out, op_id, dict, edit_ordinal_of)?;
@@ -665,6 +674,14 @@ fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut DictBuil
     if let Some(group_id) = &meta.group_id {
         write_id_field(out, group_id, dict, edit_ordinal_of)?;
     }
+    // 🎯️ Appended past `group_id` (bit5 of the same presence byte, same "absent for logs predating
+    // this field" contract) — canonical-JSON, not dict-interned: unlike `group_id`, an origin's
+    // `Contributed`/`Transaction` payload is structured data that won't repeat verbatim across
+    // siblings the way a shared composite-gesture id does.
+    if !meta.origin.is_owner() {
+        let encoded = serde_json::to_string(&meta.origin).expect("MutationOrigin canonical encoding never fails");
+        write_str_field(out, &encoded);
+    }
     Ok(())
 }
 
@@ -689,7 +706,13 @@ fn read_op_meta<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to
     let undo_policy = input.read_u8()?;
     let payload_hash = if presence & (1 << 3) != 0 { Some(input.read_array32()?) } else { None };
     let group_id = if presence & (1 << 4) != 0 { Some(read_id_field(input, dict, ordinal_to_id)?) } else { None };
-    Ok(HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id })
+    let origin = if presence & (1 << 5) != 0 {
+        let encoded = read_str_field(input)?;
+        serde_json::from_str(&encoded).map_err(|error| ProtocolError::Malformed { what: "op meta origin", offset: 0, detail: error.to_string() })?
+    } else {
+        crate::os_spr::command::MutationOrigin::Owner
+    };
+    Ok(HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id, origin })
 }
 
 pub fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
@@ -1757,6 +1780,14 @@ mod tests {
                         // a real `.spr` byte round trip via `assert_eq!(decoded, log)`, not just a
                         // narrowly-targeted unit test.
                         group_id: Some("group-composite-1".to_string()),
+                        // 🎯️ A non-`Owner`, field-carrying variant on purpose (mirrors the `group_id`
+                        // choice above): proves `MutationOrigin::Contributed`'s structured payload —
+                        // not just the unit `Owner` case — survives a real `.spr` byte round trip.
+                        origin: crate::os_spr::command::MutationOrigin::Contributed {
+                            plugin_id: "flow".to_string(),
+                            mutation_id: crate::os_spr::ids::SchemaId("widget.doc#recolor".to_string()),
+                            payload_hash: crate::os_spr::ids::PayloadHash([3u8; 32]),
+                        },
                     }]),
                 },
             ],

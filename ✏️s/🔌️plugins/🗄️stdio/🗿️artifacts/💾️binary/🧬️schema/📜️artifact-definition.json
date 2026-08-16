@@ -38,8 +38,11 @@
       "id": "s.stdio.binary.standard.raw.representation.document",
       "standard": "s.stdio.binary.standard.raw",
       "representation": "document",
-      "mime": "application/octet-stream",
-      "extension": ".bin",
+      "mimes": ["application/octet-stream"],
+      "extensions": [".bin"],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -71,7 +74,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.binary.conformance.public-corpus",
+      "id": "s.stdio.binary.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }

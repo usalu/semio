@@ -9,8 +9,8 @@
   ],
   "standards": [
     {
-      "id": "s.stdio.zip.standard.2.0",
-      "revision": "2.0",
+      "id": "s.stdio.zip.standard.2-0",
+      "revision": "2-0",
       "normative_source": null,
       "publication_date": null,
       "source_checksum": null,
@@ -21,16 +21,16 @@
   ],
   "profiles": [
     {
-      "id": "s.stdio.zip.standard.2.0.profile.any",
-      "standard": "s.stdio.zip.standard.2.0",
+      "id": "s.stdio.zip.standard.2-0.profile.any",
+      "standard": "s.stdio.zip.standard.2-0",
       "profile": "any",
       "status": "unimplemented"
     }
   ],
   "source_dialects": [
     {
-      "id": "s.stdio.zip.standard.2.0.dialect.source",
-      "standard": "s.stdio.zip.standard.2.0",
+      "id": "s.stdio.zip.standard.2-0.dialect.source",
+      "standard": "s.stdio.zip.standard.2-0",
       "dialect": "source",
       "registered_code_points": [],
       "status": "unimplemented"
@@ -38,11 +38,14 @@
   ],
   "representations": [
     {
-      "id": "s.stdio.zip.standard.2.0.representation.document",
-      "standard": "s.stdio.zip.standard.2.0",
+      "id": "s.stdio.zip.standard.2-0.representation.document",
+      "standard": "s.stdio.zip.standard.2-0",
       "representation": "document",
-      "mime": "application/zip",
-      "extension": ".zip",
+      "mimes": ["application/zip"],
+      "extensions": [".zip"],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -74,7 +77,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.zip.conformance.public-corpus",
+      "id": "s.stdio.zip.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }
@@ -86,7 +89,7 @@
     "redistribution_status": "unknown",
     "clauses_or_features": [],
     "profiles": [
-      "s.stdio.zip.standard.2.0.profile.any"
+      "s.stdio.zip.standard.2-0.profile.any"
     ],
     "registered_code_points": [],
     "read": "unimplemented",

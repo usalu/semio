@@ -40,8 +40,11 @@
       "id": "s.stdio.csv.standard.rfc4180.representation.document",
       "standard": "s.stdio.csv.standard.rfc4180",
       "representation": "document",
-      "mime": "text/csv",
-      "extension": ".csv",
+      "mimes": ["text/csv"],
+      "extensions": [".csv"],
+      "is_binary": false,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -73,7 +76,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.csv.conformance.public-corpus",
+      "id": "s.stdio.csv.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }

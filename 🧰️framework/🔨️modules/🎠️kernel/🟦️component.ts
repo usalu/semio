@@ -197,7 +197,75 @@ export type PluginRegistryEntry = {
   readonly moduleUrl: string;
   readonly contributes?: readonly string[];
   readonly consumes?: readonly string[];
+  /** 🔗️ Direct plugin dependencies this entry's manifest declares — mirrors Rust
+   * `PluginManifest.dependencies` (`🛂️manifest/🦀️component.rs`), ticket
+   * 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS §3. */
+  readonly dependencies?: readonly PluginDependency[];
 };
+
+//#region 🔖️PluginDependency
+/** 🔢️ A frozen `major.minor.patch` version requirement string — one of `*`, `=X.Y.Z`, `^X.Y.Z`,
+ * `~X.Y.Z`, `>=X.Y.Z` (contract freeze §3). Mirrors Rust `VersionReq`'s `Display`/`Serialize`
+ * wire form exactly; parsing/matching stays server-side (Rust `resolve_load_order` et al.) — this
+ * type only lets the browser host read/display/round-trip the requirement string. */
+export type VersionReq = string;
+
+/** 🔗️ One direct plugin dependency — mirrors Rust `PluginDependency`
+ * (`🛂️manifest/🦀️component.rs`). */
+export type PluginDependency = {
+  readonly pluginId: string;
+  readonly version: VersionReq;
+};
+//#endregion 🔖️PluginDependency
+
+//#region 🔖️ArtifactContribution
+/** 🗂️ The `verb`/`entity`/`kind`/`record` semantic identity of one contributed mutation — mirrors
+ * Rust `ContributedMutationSemantics`. */
+export type ContributedMutationSemantics = {
+  readonly verb: string;
+  readonly entity: string;
+  readonly kind: string;
+  readonly record: string;
+};
+
+/** 🗂️ One mutation a plugin contributes onto an artifact kind it depends on — mirrors Rust
+ * `ContributedMutationMetadata`. `mutationId` follows the contract freeze §3 contributed-id
+ * grammar: `"<target-document-schema>#<contributor-plugin-id>:<kebab-kind>"`. */
+export type ContributedMutationMetadata = {
+  readonly mutationId: string;
+  readonly semantics: ContributedMutationSemantics;
+  readonly schemaVersion: number;
+  readonly algorithmVersion: number;
+};
+
+/** 💡️ One inference a plugin contributes onto an artifact kind it depends on — mirrors Rust
+ * `ContributedInferenceMetadata` (the native `ArtifactInferenceServiceMetadata` fields plus
+ * `contributor`/`dependsOn`). Registration gate (contract freeze §4): `owner === contributor`,
+ * `artifactKind` equals the target artifact kind. */
+export type ContributedInferenceMetadata = {
+  readonly owner: string;
+  readonly artifactKind: string;
+  readonly artifactSchema: string;
+  readonly artifactSchemaVersion: number;
+  readonly documentSchema: string;
+  readonly documentSchemaVersion: number;
+  readonly inferenceSchema: string;
+  readonly inferenceSchemaVersion: number;
+  readonly algorithmVersion: number;
+  readonly policyVersion: number;
+  readonly contributor: string;
+  readonly dependsOn?: readonly string[];
+};
+
+/** 🗂️ Everything one plugin contributes onto one artifact kind it depends on — mirrors Rust
+ * `ArtifactContributionDescriptor`. Accepted only when `artifactKind`'s owning plugin is a direct
+ * entry in the contributor's declared `PluginManifest.dependencies` (contract freeze §4). */
+export type ArtifactContributionDescriptor = {
+  readonly artifactKind: string;
+  readonly mutations?: readonly ContributedMutationMetadata[];
+  readonly inferences?: readonly ContributedInferenceMetadata[];
+};
+//#endregion 🔖️ArtifactContribution
 
 //#region 🗂️PluginCatalog
 /** 🗂️ Framework-owned mirror of the OS product's generated `PluginBuildTarget` row — kept

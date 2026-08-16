@@ -18,6 +18,7 @@ bindgen!({
     world: "plugin-world",
     path: "../../../📦️packages/🦀️rust/📜️wit",
     async: false,
+    additional_derives: [serde::Serialize, serde::Deserialize],
 });
 
 //#region ⚠️ Errors
@@ -870,7 +871,8 @@ impl WasmPluginRuntime {
         let mut store = self.store_guard()?;
         let bindings = self.bindings_guard()?;
         Self::prepare_call(&mut store);
-        bindings.semio_framework_plugin().call_list_artifact_dialects(&mut *store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))
+        let result = bindings.semio_framework_plugin().call_list_artifact_dialects(&mut *store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Self::plugin_result(result)
     }
 
     /// 📦️ Composes `sources` against THIS plugin's registry entry for `key` (JSON wire bytes, same
@@ -885,22 +887,52 @@ impl WasmPluginRuntime {
         Self::plugin_result(result)
     }
 
-    /// 💡️ Reads this guest's deterministic executable inference roster once at load time.
+    /// 💡️ Reads this guest's deterministic executable inference roster once at load time. Moved
+    /// (PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS §6) from the `plugin`
+    /// interface bindings to the `contributor` interface bindings — same call idiom, new accessor.
     pub fn list_artifact_inferences(&self) -> Result<Vec<u8>, PluginHostError> {
         let mut store = self.store_guard()?;
         let bindings = self.bindings_guard()?;
         Self::prepare_call(&mut store);
-        let result = bindings.semio_framework_plugin().call_list_artifact_inferences(&mut *store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let result = bindings.semio_framework_contributor().call_list_artifact_inferences(&mut *store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         Self::plugin_result(result)
     }
 
     /// 💡️ Executes one serialized guest inference call. Holding the runtime's store mutex for
     /// the complete call applies the same single-flight/reentrancy boundary as every other export.
+    /// Moved (§6) to the `contributor` interface bindings — same call idiom, new accessor.
     pub fn artifact_infer(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
         let mut store = self.store_guard()?;
         let bindings = self.bindings_guard()?;
         Self::prepare_call(&mut store);
-        let result = bindings.semio_framework_plugin().call_artifact_infer(&mut *store, request).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let req_struct: semio::framework::types::ArtifactInferenceRequest = serde_json::from_slice(request)?;
+        let result_struct = bindings.semio_framework_contributor().call_artifact_infer(&mut *store, &req_struct).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let result_struct = Self::plugin_result(result_struct)?;
+        serde_json::to_vec(&result_struct).map_err(|error| PluginHostError::Wasmtime(error.to_string()))
+    }
+
+    /// 🎯️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (§6): this guest's
+    /// deterministic wire roster of contributed artifact mutations against OTHER plugins' artifact
+    /// kinds — the WIT `contributor.list-artifact-mutations` export, mirroring `list_artifact_inferences`.
+    /// Wave 0 wiring only; the guest side is a W1-A placeholder returning an empty roster until W1-A
+    /// lands the real `plugin_runtime` implementation.
+    pub fn list_artifact_mutations(&self) -> Result<Vec<u8>, PluginHostError> {
+        let mut store = self.store_guard()?;
+        let bindings = self.bindings_guard()?;
+        Self::prepare_call(&mut store);
+        let result = bindings.semio_framework_contributor().call_list_artifact_mutations(&mut *store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Self::plugin_result(result)
+    }
+
+    /// 🎯️ Plans one contributed mutation against a target artifact this plugin does not own — the
+    /// WIT `contributor.artifact-mutation-plan` export, mirroring `artifact_infer`'s call idiom.
+    /// `request`/result are opaque wire bytes owned by W1-A's guest SDK layer; this is Wave 0 ABI
+    /// wiring only, later consumed by the transaction protocol (contract freeze §5), not built here.
+    pub fn artifact_mutation_plan(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+        let mut store = self.store_guard()?;
+        let bindings = self.bindings_guard()?;
+        Self::prepare_call(&mut store);
+        let result = bindings.semio_framework_contributor().call_artifact_mutation_plan(&mut *store, request).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         Self::plugin_result(result)
     }
 
@@ -938,7 +970,7 @@ impl WasmPluginRuntime {
     }
 
     fn read_manifest(engine: &Engine, component: &Component, linker: &Linker<HostState>) -> Result<PluginManifest, PluginHostError> {
-        let manifest = PluginManifest { plugin_id: "unknown".into(), label: "Unknown".into(), version: "0.0.0".into(), apps: vec![], examples: vec![], capabilities: vec![], topic_contributions: vec![], commands: vec![], artifact_kinds: vec![] };
+        let manifest = PluginManifest { plugin_id: "unknown".into(), label: "Unknown".into(), version: "0.0.0".into(), apps: vec![], examples: vec![], capabilities: vec![], topic_contributions: vec![], commands: vec![], artifact_kinds: vec![], dependencies: vec![], contributions: vec![] };
         let mut store = Store::new(engine, Self::host_state("bootstrap", &manifest));
         Self::prepare_call(&mut store);
         let (bindings, _instance) = PluginWorld::instantiate(&mut store, component, linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
@@ -966,6 +998,9 @@ mod extension_bindings {
         world: "extension-world",
         path: "../../../📦️packages/🦀️rust/📜️wit",
         async: false,
+        with: {
+            "semio:framework/types": crate::semio::framework::types,
+        },
     });
 }
 

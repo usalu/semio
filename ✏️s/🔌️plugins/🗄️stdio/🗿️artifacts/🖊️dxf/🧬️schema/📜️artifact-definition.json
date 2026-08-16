@@ -40,8 +40,11 @@
       "id": "s.stdio.dxf.standard.r12.representation.document",
       "standard": "s.stdio.dxf.standard.r12",
       "representation": "document",
-      "mime": "image/vnd.dxf",
-      "extension": ".dxf",
+      "mimes": ["image/vnd.dxf"],
+      "extensions": [".dxf"],
+      "is_binary": false,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -73,7 +76,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.dxf.conformance.public-corpus",
+      "id": "s.stdio.dxf.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }

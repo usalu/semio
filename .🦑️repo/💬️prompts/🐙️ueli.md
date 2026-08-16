@@ -379,14 +379,21 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 ---
 
 
-The current goal of where all apps are combined into workflows nodes, remain non-destructive and have a headless engine that replays everything will not work because every single ui interactions must be saved and checked in into vcs.
+The current goal of where all apps are combined into workflows nodes, remain non-destructive and have a headless engine that replays everything will not work because every single ui interactions must be saved and checked in into vcs which will become too slow.
 Instead we adjusted the design:
 We introduce interactions.
-Interactions are an abstraction (An edit has operations, an operation yields mutations, every mutation yields a diff, hence an operation transitiviely also yields diffs which can be merged into a total operation diff)
-An operation takes an artifact and parameters as an input and returns mutations for that artifact. 
-Nodes in a workflow are no longer apps but mutations.
+Interactions are an abstraction for interactively and dynamically creating mutations.
+Interactions are a new level in the vcs between edits and mutations (An edit has interactions, an interaction yields mutations, every mutation yields a diff, hence an interaction transitiviely also yields diffs which can be merged into a total interaction diff)
+Interactions are state machines (the state is called config which is no longer local but checked in into vcs)
+An interaction takes an artifact and a config as an input and returns mutations for that artifact.
+
+Nodes in a workflow are no longer apps but interactions.
 Operations have a config with parameters
-Operations are state machines (depending on some parameters others )
+
+e.g. puzzle 3d fill is an interaction.
+stochastic-extend is a mutation that takes a number, a distribution, a seed and then adds the number of objects to the aggregation depending on the distribution.
+The fill interaction has a count slider, a seed stepper, a distribution tree. 
+When the slider is increased, then the stochastic-extend mutation is called with the new count, the same distribution and the same seed. When the slider is decreased, then the number for stochastic-extend is decreased. The special part is that when the slider is increased again, then a new stochastic-extend is started with for the remaining new objects. This achieves the experience that when the slider is decreased and ramped up again, then the new objects are always
 - 
 
 ---
@@ -433,6 +440,36 @@ Operations are state machines (depending on some parameters others )
           <assetfile>
         tests
           component.rs
+        
+```
+
+---
+
+All tools and utilities must display the current diff
+
+---
+
+Currently there is just a general app system.
+Make it more specific and make sure that every artifact has a viewer (read-only) and an editor.
+It is possible for plugins to register different viewers and editors for other artifacts.
+The user can open artifacts in different viewers and editors and configure default viewers and editors per artifact kind.
+
+```
+<artifact>
+  viewer
+    windows
+      <window>
+        component.rs
+        component.ts
+        …
+    …
+  editor
+    windows
+      <window>
+        component.rs
+        component.ts
+        …
+    …
         
 ```
 

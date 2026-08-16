@@ -1674,6 +1674,25 @@ function semanticFixture(options: { readonly secondProductionConsumer?: boolean;
   return { root, taxonomy };
 }
 
+function schemaMountedRustModulesFixture(): { readonly root: string; readonly taxonomy: Taxonomy } {
+  const root = mkdtempSync(join(tmpdir(), "semio-schema-mounted-rust-modules-"));
+  const taxonomy = loadTaxonomy();
+  const write = (path: string, content: string): void => {
+    const absolute = join(root, path);
+    mkdirSync(join(absolute, ".."), { recursive: true });
+    writeFileSync(absolute, content);
+  };
+  write("🧰️framework/🔨️modules/📏measure/🦀️component.rs", "pub fn measure(value: u32) -> u32 { value }\n");
+  write("🧰️framework/🔨️modules/🔣️component.json", JSON.stringify({ "x-semio": { kind: "collection", members: [{ directory: "📏measure", id: "measure", kind: "module", responsibility: "exact and stable numeric measurement", module: { productionConsumers: ["height", "width"] } }] } }));
+  write("🧰️framework/🧬️schema/💡️inferences/📏width/🦀️component.rs", "use super::super::modules::measure::measure;\npub fn width() -> u32 { measure(1) }\n");
+  write("🧰️framework/🧬️schema/💡️inferences/↕️height/🦀️component.rs", "use super::super::modules::measure::measure;\npub fn height() -> u32 { measure(1) }\n");
+  write("🧰️framework/🧬️schema/💡️inferences/🔣️component.json", JSON.stringify({ "x-semio": { kind: "collection", members: [
+    { directory: "📏width", id: "width", kind: "inference", responsibility: "derived width", inference: { inputs: ["value"], target: "width" } },
+    { directory: "↕️height", id: "height", kind: "inference", responsibility: "derived height", inference: { inputs: ["value"], target: "height" } },
+  ] } }));
+  return { root, taxonomy };
+}
+
 function mutationTransportFixture(): { readonly root: string; readonly taxonomy: Taxonomy } {
   const root = mkdtempSync(join(tmpdir(), "semio-mutation-transport-"));
   const taxonomy = loadTaxonomy();
@@ -1712,6 +1731,18 @@ describe("semantic collection census", () => {
       const imports = census.graph.edges.filter((edge) => edge.to === "measure" && edge.mechanism === "static-import");
       expect(imports.map((edge) => edge.from)).toEqual(["height", "height", "width", "width"]);
       expect(imports.map((edge) => edge.target.endsWith("🦀️component.rs") || edge.target.endsWith("🟦️component.ts"))).toEqual([true, true, true, true]);
+      expect(census.records.find((record) => record.id === "measure")?.productionConsumers).toEqual(["height", "width"]);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("resolves logical schema modules to their closest physical module collection", () => {
+    const fixture = schemaMountedRustModulesFixture();
+    try {
+      const census = buildSemanticCensus(fixture.root, {}, fixture.taxonomy);
+      expect(census.problems).toEqual([]);
+      expect(census.graph.edges.filter((edge) => edge.to === "measure" && edge.mechanism === "static-import").map((edge) => edge.from)).toEqual(["height", "width"]);
       expect(census.records.find((record) => record.id === "measure")?.productionConsumers).toEqual(["height", "width"]);
     } finally {
       rmSync(fixture.root, { recursive: true, force: true });

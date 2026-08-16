@@ -505,7 +505,7 @@ pub mod vcs_integration {
             let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
             let store = stores.entry(document.0.clone()).or_insert_with(|| {
                 let envelope = store::create_document_envelope::<HashProjection, HashMutation>("db_engine.version_graph", &document.0, HashProjection::default(), None);
-                store::ArtifactStore::new(envelope)
+                store::ArtifactStore::new(envelope).expect("failed to create db vcs store")
             });
             f(store)
         }

@@ -28,14 +28,19 @@ pub const DXF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.dxf";
 /// `register_pilot_languages()` had no `register_schema_specs()` call, so unlike `dwg`/`obj`/`las`
 /// there is no `.setup()` survivor needed here — every registration `engine::register()` performed
 /// is covered by a declaration field.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(DXF_ARTIFACT_SCHEMA_ID)
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("dxf", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::dxf::schema::dxf_artifact_schema_descriptor())
         .inferences([crate::artifacts::dxf::schema::inferences::dxf_artifact_inference_descriptor()])
         .composers(crate::artifacts::dxf::engine::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<DxfSnapshot, DxfMutation>(STDIO_DXF_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built

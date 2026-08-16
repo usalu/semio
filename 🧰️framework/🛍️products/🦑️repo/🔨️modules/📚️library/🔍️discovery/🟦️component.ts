@@ -159,8 +159,10 @@ export interface Taxonomy {
   readonly subsetArchetypes?: readonly string[];
   /** ⚖️ Allowed IO fidelity class names a subset may declare. */
   readonly ioFidelityClasses?: readonly string[];
-  /** 🧬️ Required children of each `🧬️mutations/<mutation>/` dir: mutation struct, per-mutation diff, inverse. */
+  /** 🧬️ Required children of each LEAF `🧬️mutations/<mutation>/` dir: mutation struct, per-mutation diff, inverse. */
   readonly mutationChildDirs: readonly string[];
+  /** 🧩️ Required children of each COMPOSITE `🧬️mutations/<mutation>/` dir: mutation struct plus its plan. A composite derives its diff and inverse by folding the plan, so it owns neither `🔺️diff` nor `↩️inverse`. */
+  readonly compositeMutationChildDirs?: readonly string[];
   /** 🧬️ Required children of each `🧬️schema/` facet: snapshot, diff, mutations. */
   readonly schemaChildDirs: readonly string[];
   /** 📝️ Representation nodes under schema snapshot/diff/mutations. */
@@ -301,7 +303,7 @@ function artifactFacetChildLevel(parents: readonly string[], taxonomy: Taxonomy)
     }
     if (parents.length === 3 && a === "🧬️mutations") {
       if ((taxonomy.representationDirs ?? []).includes(b!)) return { kind: "none" };
-      return { kind: "fixed", dirs: taxonomy.mutationChildDirs ?? [] };
+      return { kind: "fixed", dirs: [...new Set([...(taxonomy.mutationChildDirs ?? []), ...(taxonomy.compositeMutationChildDirs ?? [])])] };
     }
     if (parents.length === 3 && a === "💡️inferences") return { kind: "none" };
     if (parents.length === 3 && (taxonomy.representationDirs ?? []).includes(b!)) return { kind: "none" };
@@ -550,7 +552,28 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
       }
     }
   }
-  for (const required of ["🧬️mutations", "🦠️mutation", "↩️inverse"] as const) {
+  if (!Array.isArray(taxonomy.compositeMutationChildDirs) || taxonomy.compositeMutationChildDirs.length === 0) {
+    problems.push(`compositeMutationChildDirs must be a non-empty array.`);
+  } else {
+    for (const dir of taxonomy.compositeMutationChildDirs) {
+      if (!dir) {
+        problems.push(`compositeMutationChildDirs contains an empty entry.`);
+        continue;
+      }
+      if (!taxonomy.taxonomyLeafParentDirs.includes(dir)) {
+        problems.push(`compositeMutationChildDirs member "${dir}" is missing from taxonomyLeafParentDirs.`);
+      }
+    }
+    if (!taxonomy.compositeMutationChildDirs.includes("🦠️mutation")) {
+      problems.push(`compositeMutationChildDirs must include "🦠️mutation" — a composite still owns its payload struct.`);
+    }
+    for (const derived of ["🔺️diff", "↩️inverse"] as const) {
+      if (taxonomy.compositeMutationChildDirs.includes(derived)) {
+        problems.push(`compositeMutationChildDirs must not include "${derived}" — a composite folds it from its plan.`);
+      }
+    }
+  }
+  for (const required of ["🧬️mutations", "🦠️mutation", "↩️inverse", "🧩️plan"] as const) {
     if (!taxonomy.taxonomyLeafParentDirs.includes(required)) {
       problems.push(`taxonomyLeafParentDirs must include "${required}".`);
     }
@@ -1587,6 +1610,19 @@ function semanticRustUseSpecs(source: SemanticSource): string[] {
   return semanticUnique(specs);
 }
 
+/** 🧭️ Resolves a logical Rust namespace to its closest physical taxonomy directory. */
+function semanticRustNamespaceDirectory(base: string, segment: string): string | null {
+  let current = base;
+  for (;;) {
+    const child = readdirSafe(current).find((entry) => entry.isDirectory() && stripEmoji(entry.name).replaceAll("-", "_") === segment);
+    if (child) return join(current, child.name);
+    if (segment !== "modules") return null;
+    const parent = dirname(current);
+    if (parent === current) return null;
+    current = parent;
+  }
+}
+
 function semanticJson(path: string): Record<string, unknown> | null {
   try {
     const content = readFileSync(path, "utf8").replace(/\/\*[\s\S]*?\*\//gu, "").replace(/(^|\s)\/\/.*$/gmu, "$1").replace(/,\s*([}\]])/gu, "$1");
@@ -1689,9 +1725,9 @@ function resolveRustRelativeUses(source: SemanticSource, componentRoot: string, 
     const braceAt = tail.indexOf("{");
     const path = (braceAt < 0 ? tail : tail.slice(0, braceAt)).replace(/::$/u, "");
     for (const segment of path.split("::").map((part) => part.trim()).filter(Boolean)) {
-      const child = readdirSafe(base).find((entry) => entry.isDirectory() && stripEmoji(entry.name).replaceAll("-", "_") === segment);
+      const child = semanticRustNamespaceDirectory(base, segment);
       if (!child) break;
-      base = join(base, child.name);
+      base = child;
       const target = componentLeaves.get(base);
       if (target) {
         resolved.push({ specifier, target });

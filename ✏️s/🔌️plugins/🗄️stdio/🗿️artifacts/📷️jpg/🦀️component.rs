@@ -53,15 +53,20 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// on hand-rolled fields, so it never calls `dsl::registry::register_schema_spec` at all), so
 /// dropping the call changes zero runtime behaviour. `⚙️engine` itself is untouched — this only
 /// REFERENCES what it already exposes.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(JPG_ARTIFACT_SCHEMA_ID)
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("jpg", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::jpg_artifact_schema_descriptor())
         .inferences([crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::inferences::jpg_artifact_inference_descriptor()])
         .composers(crate::artifacts::jpg::standards::v_jfif_1_01::engine::io_registry::entries())
         .subset_validators(declared_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 🛡️ Re-derives the ✳️baseline subset's `SubsetValidatorEntry` — see `declaration()`'s own doc for

@@ -27,14 +27,19 @@ pub const STL_ARTIFACT_SCHEMA_ID: &str = "s.stdio.stl";
 /// would silently rebind under a bare call (this ticket's "SILENT REBIND" hazard). stl's own
 /// `register()` had no `register_schema_specs()` call, so every registration `engine::register()`
 /// performed is covered by a declaration field — no `.setup()` survivor needed.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder(STL_ARTIFACT_SCHEMA_ID)
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("stl", definition, declaration)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::stl::schema::stl_artifact_schema_descriptor())
         .inferences([crate::artifacts::stl::schema::inferences::stl_artifact_inference_descriptor()])
         .composers(crate::artifacts::stl::engine::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<StlSnapshot, StlMutation>(STDIO_STL_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built

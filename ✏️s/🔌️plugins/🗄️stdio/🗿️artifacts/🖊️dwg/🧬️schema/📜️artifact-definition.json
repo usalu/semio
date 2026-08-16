@@ -63,8 +63,11 @@
       "id": "s.stdio.dwg.standard.ac1018.representation.document",
       "standard": "s.stdio.dwg.standard.ac1018",
       "representation": "document",
-      "mime": "image/vnd.dwg",
-      "extension": ".dwg",
+      "mimes": ["image/vnd.dwg"],
+      "extensions": [".dwg"],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
       "status": "declared"
     }
   ],
@@ -96,7 +99,7 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.dwg.conformance.public-corpus",
+      "id": "s.stdio.dwg.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
     }

@@ -519,6 +519,67 @@ fn language_registry() -> &'static Mutex<HashMap<&'static str, LanguageSpec>> {
     LANGUAGE_REGISTRY.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
+/// ⚠️ Language registration rejects a distinct owner for an established language id.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LanguageRegistryError {
+    pub id: String,
+}
+
+impl std::fmt::Display for LanguageRegistryError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "language registration conflicts for {}", self.id)
+    }
+}
+
+impl std::error::Error for LanguageRegistryError {}
+
+fn same_language(left: LanguageSpec, right: LanguageSpec) -> bool {
+    left.id == right.id
+        && left.extension == right.extension
+        && left.role == right.role
+        && left.grammar == right.grammar
+        && left.grammar_path == right.grammar_path
+        && left.protocol == right.protocol
+        && left.protocol_path == right.protocol_path
+        && left.hooks.lang == right.hooks.lang
+        && std::ptr::fn_addr_eq(left.hooks.canonicalize, right.hooks.canonicalize)
+        && std::ptr::fn_addr_eq(left.hooks.classify, right.hooks.classify)
+        && std::ptr::fn_addr_eq(left.hooks.complete, right.hooks.complete)
+}
+
+/// 🔬️ Verifies language specifications against established and intra-batch identities without mutation.
+#[must_use]
+pub fn preflight_languages(specs: &[LanguageSpec]) -> Result<(), LanguageRegistryError> {
+    let mut proposed = HashMap::new();
+    for spec in specs {
+        match proposed.insert(spec.id, *spec) {
+            Some(existing) if same_language(existing, *spec) => {}
+            Some(_) => return Err(LanguageRegistryError { id: spec.id.to_string() }),
+            None => {}
+        }
+    }
+    let registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
+    for spec in specs {
+        if let Some(existing) = registry.get(spec.id) {
+            if !same_language(*existing, *spec) {
+                return Err(LanguageRegistryError { id: spec.id.to_string() });
+            }
+        }
+    }
+    Ok(())
+}
+
+/// 📌️ Registers language specifications only after the whole candidate set is conflict-free.
+#[must_use]
+pub fn register_languages(specs: Vec<LanguageSpec>) -> Result<(), LanguageRegistryError> {
+    preflight_languages(&specs)?;
+    let mut registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
+    for spec in specs {
+        registry.entry(spec.id).or_insert(spec);
+    }
+    Ok(())
+}
+
 /// @emoji 📌️ Registers one grammar under its `id` — called once per grammar at plugin init,
 /// alongside (not instead of) `register_document_codec_for_app`. Overwrites on re-registration,
 /// matching `register_idiom`'s hot-reload-safe behavior.

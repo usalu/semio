@@ -10,7 +10,7 @@ pub mod component {
     //! 🧩️ WASI P2 component exports for the plugin world contract.
     #![allow(unsafe_op_in_unsafe_fn)]
 
-    use crate::plugin_runtime::{ensure_plugin_initialized, plugin_clear_instance_guard, plugin_create_app, plugin_exchange, plugin_manifest};
+    use crate::plugin_runtime::{ensure_plugin_initialized, plugin_clear_instance_guard, plugin_create_app, plugin_exchange, plugin_manifest, wire_artifact_mutation_plan, wire_list_artifact_mutations};
     use wit_bindgen::generate;
 
     generate!({
@@ -18,8 +18,9 @@ pub mod component {
         path: "📜️wit",
     });
 
+    use exports::semio::framework::contributor::Guest as ContributorGuest;
     use exports::semio::framework::plugin::Guest;
-    use semio::framework::types::{MigrateArtifactInput as MigrateDocumentInput, MigrateArtifactOutput as MigrateDocumentOutput, PluginError};
+    use semio::framework::types::{ArtifactInferenceRequest as ComponentInferenceRequest, ArtifactInferenceResult as ComponentInferenceResult, InferenceCacheMode as ComponentInferenceCacheMode, InferenceDiagnostic as ComponentInferenceDiagnostic, InferenceProvenance as ComponentInferenceProvenance, MigrateArtifactInput as MigrateDocumentInput, MigrateArtifactOutput as MigrateDocumentOutput, PluginError};
     use semio_framework::{Fault, FaultCode, FaultOrigin};
 
     pub struct ComponentGuest;
@@ -48,24 +49,102 @@ pub mod component {
             plugin_clear_instance_guard();
         }
 
-        fn list_artifact_dialects() -> Vec<u8> {
+        fn list_artifact_dialects() -> Result<Vec<u8>, PluginError> {
             ensure_plugin_initialized();
-            crate::wire_list_composer_entries()
+            crate::wire_list_composer_entries().map_err(|error| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.artifact-dialects"), error.to_string()))))
         }
 
         fn artifact_compose(key: Vec<u8>, sources: Vec<u8>) -> Result<Vec<u8>, PluginError> {
             ensure_plugin_initialized();
             crate::wire_artifact_compose(&key, &sources).map_err(|message| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.artifact-compose"), message))))
         }
+    }
 
+    /// 🎯️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (§6): `contributor` moved
+    /// out of `plugin` — `list-artifact-inferences`/`artifact-infer` (unchanged behavior, relocated)
+    /// plus the new `list-artifact-mutations`/`artifact-mutation-plan` stubs (W1-A fills in real logic;
+    /// see the `plugin_runtime::wire_list_artifact_mutations`/`wire_artifact_mutation_plan` doc comments).
+    impl ContributorGuest for ComponentGuest {
         fn list_artifact_inferences() -> Result<Vec<u8>, PluginError> {
             ensure_plugin_initialized();
             crate::app::wire_list_artifact_inference_services().map_err(|error| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new(error.code), error.message))))
         }
 
-        fn artifact_infer(request: Vec<u8>) -> Result<Vec<u8>, PluginError> {
+        fn artifact_infer(request: ComponentInferenceRequest) -> Result<ComponentInferenceResult, PluginError> {
             ensure_plugin_initialized();
-            crate::app::wire_artifact_infer(&request).map_err(|error| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new(error.code), error.message))))
+            let request = crate::app::WireArtifactInferenceRequest {
+                wire_version: request.wire_version,
+                owner: request.owner,
+                artifact_kind: request.artifact_kind,
+                artifact_schema: request.artifact_schema,
+                artifact_schema_version: request.artifact_schema_version,
+                document_schema: request.document_schema,
+                document_schema_version: request.document_schema_version,
+                inference_schema: request.inference_schema,
+                inference_schema_version: request.inference_schema_version,
+                algorithm_version: request.algorithm_version,
+                policy_version: request.policy_version,
+                revision: request.revision,
+                generation: request.generation,
+                source_dialect: request.source_dialect,
+                policy: request.policy,
+                budgets: crate::app::WireArtifactInferenceBudget { allocation_bytes: request.budgets.allocation_bytes, work_units: request.budgets.work_units, recursion_depth: request.budgets.recursion_depth },
+                cancellation_id: request.cancellation_id,
+                previous_state: request.previous_state,
+                requested_cache_mode: match request.requested_cache_mode {
+                    ComponentInferenceCacheMode::Cold => crate::app::WireArtifactInferenceCacheMode::Cold,
+                    ComponentInferenceCacheMode::Incremental => crate::app::WireArtifactInferenceCacheMode::Incremental,
+                    ComponentInferenceCacheMode::Bypass => crate::app::WireArtifactInferenceCacheMode::Bypass,
+                },
+                canonical_payload: request.canonical_payload,
+                dependencies: request.dependencies,
+            };
+            let bytes = serde_json::to_vec(&request).map_err(|error| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.artifact-infer-request"), error.to_string()))))?;
+            let result: crate::app::WireArtifactInferenceResult = serde_json::from_slice(&crate::app::wire_artifact_infer(&bytes).map_err(|error| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new(error.code), error.message))))?).map_err(|error| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.artifact-infer-result"), error.to_string()))))?;
+            Ok(ComponentInferenceResult {
+                wire_version: result.wire_version,
+                owner: result.owner,
+                artifact_kind: result.artifact_kind,
+                artifact_schema: result.artifact_schema,
+                artifact_schema_version: result.artifact_schema_version,
+                document_schema: result.document_schema,
+                document_schema_version: result.document_schema_version,
+                inference_schema: result.inference_schema,
+                inference_schema_version: result.inference_schema_version,
+                algorithm_version: result.algorithm_version,
+                policy_version: result.policy_version,
+                revision: result.revision,
+                generation: result.generation,
+                source_dialect: result.source_dialect,
+                canonical_payload: result.canonical_payload,
+                diagnostics: result.diagnostics.into_iter().map(|diagnostic| ComponentInferenceDiagnostic { code: diagnostic.code, message: diagnostic.message, severity: diagnostic.severity, parameters: diagnostic.parameters.into_iter().collect() }).collect(),
+                provenance: ComponentInferenceProvenance {
+                    owner: result.provenance.owner,
+                    inference_schema: result.provenance.inference_schema,
+                    algorithm_version: result.provenance.algorithm_version,
+                    policy_version: result.provenance.policy_version,
+                    source_dialect: result.provenance.source_dialect,
+                },
+                validity: result.validity,
+                quality: result.quality,
+                complete: result.complete,
+                actual_cache_mode: match result.actual_cache_mode {
+                    crate::app::WireArtifactInferenceCacheMode::Cold => ComponentInferenceCacheMode::Cold,
+                    crate::app::WireArtifactInferenceCacheMode::Incremental => ComponentInferenceCacheMode::Incremental,
+                    crate::app::WireArtifactInferenceCacheMode::Bypass => ComponentInferenceCacheMode::Bypass,
+                },
+                cancellation_id: result.cancellation_id,
+            })
+        }
+
+        fn list_artifact_mutations() -> Result<Vec<u8>, PluginError> {
+            ensure_plugin_initialized();
+            Ok(wire_list_artifact_mutations())
+        }
+
+        fn artifact_mutation_plan(request: Vec<u8>) -> Result<Vec<u8>, PluginError> {
+            ensure_plugin_initialized();
+            wire_artifact_mutation_plan(&request).map_err(|fault| PluginError::Fault(dsl::encode_fault_bytes(&fault)))
         }
     }
 
@@ -145,7 +224,7 @@ pub mod extension_component {
     //! only ever piggybacking on a `plugin-world` component (the previous workaround).
     #![allow(unsafe_op_in_unsafe_fn)]
 
-    use crate::plugin_runtime::{extension_activate, extension_deactivate, extension_invoke, extension_manifest};
+    use crate::plugin_runtime::{extension_activate, extension_deactivate, extension_invoke, extension_manifest, extension_wire_artifact_infer, extension_wire_list_artifact_inferences, wire_artifact_mutation_plan, wire_list_artifact_mutations};
     use wit_bindgen::generate;
 
     generate!({
@@ -153,8 +232,9 @@ pub mod extension_component {
         path: "📜️wit",
     });
 
+    use exports::semio::framework::contributor::Guest as ContributorGuest;
     use exports::semio::framework::extension::Guest;
-    use semio::framework::types::PluginError;
+    use semio::framework::types::{ArtifactInferenceRequest as ExtensionInferenceRequest, ArtifactInferenceResult as ExtensionInferenceResult, PluginError};
 
     pub struct ExtensionComponentGuest;
 
@@ -173,6 +253,29 @@ pub mod extension_component {
 
         fn invoke(capability: String, request: Vec<u8>) -> Result<Vec<u8>, PluginError> {
             extension_invoke(&capability, &request).map_err(|fault| PluginError::Fault(dsl::encode_fault_bytes(&fault)))
+        }
+    }
+
+    /// 🎯️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (§6): `extension-world`
+    /// now exports `contributor` alongside `extension` (an extension MAY be a dependency contributor,
+    /// per the contract freeze's `extends == dependencies[0]` rule). No extension previously wired
+    /// inference/mutation services — every method here is a W1-A placeholder (see the delegated
+    /// `plugin_runtime::extension_wire_*`/`wire_*` free-function doc comments).
+    impl ContributorGuest for ExtensionComponentGuest {
+        fn list_artifact_inferences() -> Result<Vec<u8>, PluginError> {
+            Ok(extension_wire_list_artifact_inferences())
+        }
+
+        fn artifact_infer(_request: ExtensionInferenceRequest) -> Result<ExtensionInferenceResult, PluginError> {
+            Err(PluginError::Fault(dsl::encode_fault_bytes(&extension_wire_artifact_infer())))
+        }
+
+        fn list_artifact_mutations() -> Result<Vec<u8>, PluginError> {
+            Ok(wire_list_artifact_mutations())
+        }
+
+        fn artifact_mutation_plan(request: Vec<u8>) -> Result<Vec<u8>, PluginError> {
+            wire_artifact_mutation_plan(&request).map_err(|fault| PluginError::Fault(dsl::encode_fault_bytes(&fault)))
         }
     }
 
@@ -1095,17 +1198,23 @@ pub mod app {
         }
     }
 
-    /// 🚨️ A duplicate is accepted only when metadata and executable identity are identical.
+    /// 🚨️ Typed failure from the native inference-service registry.
     #[derive(Clone, Debug, PartialEq, Eq)]
-    pub struct ArtifactInferenceRegistrationError {
-        pub key: ArtifactInferenceServiceKey,
-        pub existing: ArtifactInferenceServiceMetadata,
-        pub incoming: ArtifactInferenceServiceMetadata,
+    pub enum ArtifactInferenceRegistrationError {
+        Conflict {
+            key: ArtifactInferenceServiceKey,
+            existing: ArtifactInferenceServiceMetadata,
+            incoming: ArtifactInferenceServiceMetadata,
+        },
+        Unavailable,
     }
 
     impl std::fmt::Display for ArtifactInferenceRegistrationError {
         fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            write!(formatter, "conflicting artifact inference registration for {}/{}: existing {:?}, incoming {:?}", self.key.artifact_kind, self.key.inference_schema, self.existing, self.incoming)
+            match self {
+                Self::Conflict { key, existing, incoming } => write!(formatter, "conflicting artifact inference registration for {}/{}: existing {:?}, incoming {:?}", key.artifact_kind, key.inference_schema, existing, incoming),
+                Self::Unavailable => formatter.write_str("artifact inference registry is poisoned"),
+            }
         }
     }
 
@@ -1128,7 +1237,7 @@ pub mod app {
                 if existing.identical_to(&service) {
                     return Ok(());
                 }
-                return Err(ArtifactInferenceRegistrationError { key, existing: existing.metadata, incoming: service.metadata });
+                return Err(ArtifactInferenceRegistrationError::Conflict { key, existing: existing.metadata, incoming: service.metadata });
             }
             self.by_key.insert(key, service);
             Ok(())
@@ -1155,20 +1264,57 @@ pub mod app {
     }
 
     pub fn register_artifact_inference_service(service: ArtifactInferenceService) -> Result<(), ArtifactInferenceRegistrationError> {
-        artifact_inference_service_registry().write().unwrap_or_else(|poisoned| poisoned.into_inner()).register(service)
+        artifact_inference_service_registry().write().map_err(|_| ArtifactInferenceRegistrationError::Unavailable)?.register(service)
     }
 
-    pub fn artifact_inference_service(artifact_kind: &str, inference_schema: &str) -> Option<ArtifactInferenceService> {
-        artifact_inference_service_registry().read().unwrap_or_else(|poisoned| poisoned.into_inner()).get(artifact_kind, inference_schema).copied()
+    /// 🔬️ Verifies native inference services against the established registry without mutation.
+    #[must_use]
+    pub fn preflight_artifact_inference_services(services: &[ArtifactInferenceService]) -> Result<(), ArtifactInferenceRegistrationError> {
+        let mut proposed = ArtifactInferenceServiceRegistry::new();
+        for service in services {
+            proposed.register(*service)?;
+        }
+        let registry = artifact_inference_service_registry().read().map_err(|_| ArtifactInferenceRegistrationError::Unavailable)?;
+        for service in services {
+            let key = ArtifactInferenceServiceKey::from(service.metadata());
+            if let Some(existing) = registry.by_key.get(&key) {
+                if !existing.identical_to(service) {
+                    return Err(ArtifactInferenceRegistrationError::Conflict { key, existing: existing.metadata(), incoming: service.metadata() });
+                }
+            }
+        }
+        Ok(())
     }
 
-    pub fn list_artifact_inference_services() -> Vec<ArtifactInferenceServiceMetadata> {
-        artifact_inference_service_registry().read().unwrap_or_else(|poisoned| poisoned.into_inner()).metadata()
+    /// 📌️ Registers native inference services only after the whole candidate set is conflict-free.
+    #[must_use]
+    pub fn register_artifact_inference_services(services: Vec<ArtifactInferenceService>) -> Result<(), ArtifactInferenceRegistrationError> {
+        preflight_artifact_inference_services(&services)?;
+        let mut registry = artifact_inference_service_registry().write().map_err(|_| ArtifactInferenceRegistrationError::Unavailable)?;
+        for service in services {
+            registry.register(service)?;
+        }
+        Ok(())
+    }
+
+    pub fn artifact_inference_service(artifact_kind: &str, inference_schema: &str) -> Result<Option<ArtifactInferenceService>, ArtifactInferenceExecutionError> {
+        Ok(artifact_inference_service_registry()
+            .read()
+            .map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "artifact inference registry is poisoned"))?
+            .get(artifact_kind, inference_schema)
+            .copied())
+    }
+
+    pub fn list_artifact_inference_services() -> Result<Vec<ArtifactInferenceServiceMetadata>, ArtifactInferenceExecutionError> {
+        Ok(artifact_inference_service_registry()
+            .read()
+            .map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "artifact inference registry is poisoned"))?
+            .metadata())
     }
 
     pub fn infer_artifact_cold(artifact_kind: &str, inference_schema: &str, snapshot_pack: &[u8]) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
-        let service =
-            artifact_inference_service(artifact_kind, inference_schema).ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.not-registered", format!("no native inference service for {artifact_kind}/{inference_schema}")))?;
+        let service = artifact_inference_service(artifact_kind, inference_schema)?
+            .ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.not-registered", format!("no native inference service for {artifact_kind}/{inference_schema}")))?;
         service.infer_cold(snapshot_pack)
     }
 
@@ -1223,11 +1369,17 @@ pub mod app {
             let mut registry = ArtifactInferenceServiceRegistry::new();
             registry.register(first).unwrap();
             let executable_error = registry.register(ArtifactInferenceService::new(identity, reject)).unwrap_err();
-            assert_eq!(executable_error.existing, executable_error.incoming);
+            let ArtifactInferenceRegistrationError::Conflict { existing, incoming, .. } = executable_error else {
+                panic!("in-memory registry must report a registration conflict");
+            };
+            assert_eq!(existing, incoming);
             let error = registry.register(ArtifactInferenceService::new(changed_metadata, reject)).unwrap_err();
-            assert_eq!(error.key.artifact_kind, "s.test.conflict");
-            assert_eq!(error.existing.algorithm_version, 1);
-            assert_eq!(error.incoming.algorithm_version, 2);
+            let ArtifactInferenceRegistrationError::Conflict { key, existing, incoming } = error else {
+                panic!("in-memory registry must report a registration conflict");
+            };
+            assert_eq!(key.artifact_kind, "s.test.conflict");
+            assert_eq!(existing.algorithm_version, 1);
+            assert_eq!(incoming.algorithm_version, 2);
         }
     }
     //#endregion 💡️ArtifactInferenceService
@@ -1290,6 +1442,7 @@ pub mod app {
         pub previous_state: Option<Vec<u8>>,
         pub requested_cache_mode: WireArtifactInferenceCacheMode,
         pub canonical_payload: Vec<u8>,
+        pub dependencies: Vec<(String, Vec<u8>)>,
     }
 
     /// ⏱️ Finite host-enforced inference work limits.
@@ -1358,7 +1511,7 @@ pub mod app {
     }
 
     pub fn wire_list_artifact_inference_services() -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
-        let metadata: Vec<WireArtifactInferenceMetadata> = list_artifact_inference_services().into_iter().map(Into::into).collect();
+        let metadata: Vec<WireArtifactInferenceMetadata> = list_artifact_inference_services()?.into_iter().map(Into::into).collect();
         serde_json::to_vec(&metadata).map_err(|error| ArtifactInferenceExecutionError::new("artifact-inference.wire-encode", error.to_string()))
     }
 
@@ -1367,7 +1520,7 @@ pub mod app {
         if request.wire_version != ARTIFACT_INFERENCE_WIRE_VERSION {
             return Err(ArtifactInferenceExecutionError::new("artifact-inference.wire-version", format!("expected {}, got {}", ARTIFACT_INFERENCE_WIRE_VERSION, request.wire_version)));
         }
-        let service = artifact_inference_service(&request.artifact_kind, &request.inference_schema)
+        let service = artifact_inference_service(&request.artifact_kind, &request.inference_schema)?
             .ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.not-registered", format!("no inference service for {}/{}", request.artifact_kind, request.inference_schema)))?;
         let expected = WireArtifactInferenceMetadata::from(service.metadata());
         validate_wire_request_metadata(&request, &expected)?;
@@ -1384,15 +1537,22 @@ pub mod app {
             return Err(ArtifactInferenceExecutionError::new("artifact-inference.previous-state", "incremental inference requires previous state"));
         }
         let canonical_payload = service.infer_cold(&request.canonical_payload)?;
+        let provenance = WireArtifactInferenceProvenance {
+            owner: request.owner.clone(),
+            inference_schema: request.inference_schema.clone(),
+            algorithm_version: request.algorithm_version,
+            policy_version: request.policy_version,
+            source_dialect: request.source_dialect.clone(),
+        };
         let result = WireArtifactInferenceResult {
             wire_version: ARTIFACT_INFERENCE_WIRE_VERSION,
-            owner: request.owner,
+            owner: request.owner.clone(),
             artifact_kind: request.artifact_kind,
             artifact_schema: request.artifact_schema,
             artifact_schema_version: request.artifact_schema_version,
             document_schema: request.document_schema,
             document_schema_version: request.document_schema_version,
-            inference_schema: request.inference_schema,
+            inference_schema: request.inference_schema.clone(),
             inference_schema_version: request.inference_schema_version,
             algorithm_version: request.algorithm_version,
             policy_version: request.policy_version,
@@ -1401,13 +1561,7 @@ pub mod app {
             source_dialect: request.source_dialect.clone(),
             canonical_payload,
             diagnostics: Vec::new(),
-            provenance: WireArtifactInferenceProvenance {
-                owner: request.owner.clone(),
-                inference_schema: request.inference_schema.clone(),
-                algorithm_version: request.algorithm_version,
-                policy_version: request.policy_version,
-                source_dialect: request.source_dialect,
-            },
+            provenance,
             validity: "valid".into(),
             quality: "complete".into(),
             complete: true,
@@ -1463,6 +1617,7 @@ pub mod app {
                 previous_state: None,
                 requested_cache_mode: WireArtifactInferenceCacheMode::Cold,
                 canonical_payload: Vec::new(),
+                dependencies: Vec::new(),
             };
             let error = wire_artifact_infer(&serde_json::to_vec(&request).unwrap()).unwrap_err();
             assert_eq!(error.code, "artifact-inference.wire-version");
@@ -1515,7 +1670,7 @@ pub mod app {
             Self { code: code.into(), message: message.into() }
         }
 
-        fn definition(error: ArtifactDefinitionError) -> Self {
+        pub fn definition(error: ArtifactDefinitionError) -> Self {
             Self::new(error.code(), error.message().to_owned())
         }
     }
@@ -1603,6 +1758,11 @@ pub mod app {
             &self.value
         }
 
+        /// 🌿️ Returns the validated path segments in hierarchical order.
+        pub fn segments(&self) -> &[String] {
+            &self.segments
+        }
+
         /// 🌿️ Returns this identity extended by one validated segment.
         pub fn child(&self, segment: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
             let segment = segment.as_ref();
@@ -1652,6 +1812,96 @@ pub mod app {
             }
             Ok(value)
         }
+    }
+
+    /// 🧩️ Typed, extensible plugin-wide registration with explicit identity and preflight proof.
+    #[derive(Clone, Copy)]
+    pub struct PluginRegistration {
+        identity: &'static str,
+        descriptor: &'static [u8],
+        preflight: fn() -> Result<(), PluginAssemblyError>,
+        commit: fn(),
+    }
+
+    impl std::fmt::Debug for PluginRegistration {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            formatter.debug_struct("PluginRegistration").field("identity", &self.identity).finish_non_exhaustive()
+        }
+    }
+
+    impl PluginRegistration {
+        /// 🧭️ Creates an extensible registration with a non-empty stable descriptor.
+        pub fn new(identity: &'static str, descriptor: &'static [u8], preflight: fn() -> Result<(), PluginAssemblyError>, commit: fn()) -> Result<Self, PluginAssemblyError> {
+            let parsed = ArtifactIdentity::parse(identity).map_err(PluginAssemblyError::definition)?;
+            if parsed.segments().len() != 4 || parsed.segments()[0] != "s" || parsed.segments()[2] != "registration" {
+                return Err(PluginAssemblyError::new("plugin-registration.identity", format!("registration {identity:?} must be s.<plugin>.registration.<name>")));
+            }
+            if descriptor.is_empty() {
+                return Err(PluginAssemblyError::new("plugin-registration.descriptor", format!("registration {identity:?} has an empty descriptor")));
+            }
+            Ok(Self { identity, descriptor, preflight, commit })
+        }
+
+        /// 🪪️ Stable hierarchical registration identity.
+        pub fn identity(&self) -> &'static str {
+            self.identity
+        }
+
+        fn identical_to(&self, other: &Self) -> bool {
+            self.identity == other.identity
+                && self.descriptor == other.descriptor
+                && std::ptr::fn_addr_eq(self.preflight, other.preflight)
+                && std::ptr::fn_addr_eq(self.commit, other.commit)
+        }
+    }
+
+    static PLUGIN_REGISTRATIONS: std::sync::OnceLock<std::sync::RwLock<std::collections::BTreeMap<&'static str, PluginRegistration>>> = std::sync::OnceLock::new();
+
+    fn plugin_registrations() -> &'static std::sync::RwLock<std::collections::BTreeMap<&'static str, PluginRegistration>> {
+        PLUGIN_REGISTRATIONS.get_or_init(|| std::sync::RwLock::new(std::collections::BTreeMap::new()))
+    }
+
+    fn preflight_plugin_registrations(registrations: &[PluginRegistration]) -> Result<(), PluginAssemblyError> {
+        let mut proposed = std::collections::BTreeMap::new();
+        for registration in registrations {
+            if let Some(existing) = proposed.insert(registration.identity, *registration) {
+                if !existing.identical_to(registration) {
+                    return Err(PluginAssemblyError::new("plugin-registration.conflict", format!("conflicting candidate registration {}", registration.identity)));
+                }
+            }
+        }
+        let established = plugin_registrations()
+            .read()
+            .map_err(|_| PluginAssemblyError::new("plugin-registration.unavailable", "plugin registration registry is poisoned"))?;
+        for registration in registrations {
+            if let Some(existing) = established.get(registration.identity) {
+                if !existing.identical_to(registration) {
+                    return Err(PluginAssemblyError::new("plugin-registration.conflict", format!("conflicting established registration {}", registration.identity)));
+                }
+            }
+            (registration.preflight)()?;
+        }
+        Ok(())
+    }
+
+    fn commit_plugin_registrations(registrations: Vec<PluginRegistration>) -> Result<(), PluginAssemblyError> {
+        let mut established = plugin_registrations()
+            .write()
+            .map_err(|_| PluginAssemblyError::new("plugin-registration.unavailable", "plugin registration registry is poisoned"))?;
+        let mut pending = registrations;
+        pending.sort_by_key(|registration| registration.identity);
+        let pending = pending
+            .into_iter()
+            .filter(|registration| !established.contains_key(registration.identity))
+            .collect::<Vec<_>>();
+        for registration in &pending {
+            established.insert(registration.identity, *registration);
+        }
+        drop(established);
+        for registration in pending {
+            (registration.commit)();
+        }
+        Ok(())
     }
 
     impl std::fmt::Display for ArtifactIdentity {
@@ -1995,44 +2245,51 @@ pub mod app {
 
         /// 🏅️ Declares a standard leaf in this artifact's plural definition.
         pub fn standard(self, revision: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            self.stdio_capability(self.identity.standard(revision)?, ArtifactCapabilityKind::standard(), descriptor)
+            let identity = self.identity.standard(revision)?;
+            self.stdio_capability(identity, ArtifactCapabilityKind::standard(), descriptor)
         }
 
         /// 🪆️ Declares a profile leaf in this artifact's plural definition.
         pub fn profile(self, revision: impl AsRef<str>, profile: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            self.stdio_capability(self.identity.standard(revision)?.profile(profile)?, ArtifactCapabilityKind::profile(), descriptor)
+            let identity = self.identity.standard(revision)?.profile(profile)?;
+            self.stdio_capability(identity, ArtifactCapabilityKind::profile(), descriptor)
         }
 
         /// 🚪️ Declares a source-dialect leaf in this artifact's plural definition.
         pub fn source_dialect(self, revision: impl AsRef<str>, dialect: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            self.stdio_capability(self.identity.standard(revision)?.source_dialect(dialect)?, ArtifactCapabilityKind::source_dialect(), descriptor)
+            let identity = self.identity.standard(revision)?.source_dialect(dialect)?;
+            self.stdio_capability(identity, ArtifactCapabilityKind::source_dialect(), descriptor)
         }
 
         /// 🎭️ Declares a representation leaf, optionally claiming its MIME identity.
         pub fn representation(self, revision: impl AsRef<str>, representation: impl AsRef<str>, mime: Option<ArtifactMime>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
             let identity = self.identity.standard(revision)?.representation(representation)?;
-            let capability = mime.map(|mime| ArtifactCapability::new(identity, ArtifactCapabilityKind::representation()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::mime(), mime.as_str())?)).transpose()?.unwrap_or_else(|| ArtifactCapability::new(identity, ArtifactCapabilityKind::representation())).descriptor(descriptor)?;
+            let capability = mime.map(|mime| ArtifactCapability::new(identity.clone(), ArtifactCapabilityKind::representation()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::mime(), mime.as_str())?)).transpose()?.unwrap_or_else(|| ArtifactCapability::new(identity, ArtifactCapabilityKind::representation())).descriptor(descriptor)?;
             self.capability(capability)
         }
 
         /// 🗜️ Declares a codec leaf in this artifact's plural definition.
         pub fn codec(self, revision: impl AsRef<str>, codec: impl AsRef<str>, version: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            self.stdio_capability(self.identity.standard(revision)?.codec(codec, version)?, ArtifactCapabilityKind::codec(), descriptor)
+            let identity = self.identity.standard(revision)?.codec(codec, version)?;
+            self.stdio_capability(identity, ArtifactCapabilityKind::codec(), descriptor)
         }
 
         /// 🧬️ Declares a semantic mutation leaf in this artifact's plural definition.
         pub fn mutation(self, command: impl AsRef<str>, version: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            self.stdio_capability(self.identity.mutation(command, version)?, ArtifactCapabilityKind::mutation(), descriptor)
+            let identity = self.identity.mutation(command, version)?;
+            self.stdio_capability(identity, ArtifactCapabilityKind::mutation(), descriptor)
         }
 
         /// 💡️ Declares an atomic inference leaf in this artifact's plural definition.
         pub fn inference(self, semantic_slug: impl AsRef<str>, version: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            self.stdio_capability(self.identity.inference(semantic_slug, version)?, ArtifactCapabilityKind::inference(), descriptor)
+            let identity = self.identity.inference(semantic_slug, version)?;
+            self.stdio_capability(identity, ArtifactCapabilityKind::inference(), descriptor)
         }
 
         /// 📦️ Declares an open resource-policy leaf in this artifact's plural definition.
         pub fn resource(self, name: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            self.stdio_capability(self.identity.child("resource")?.child(name.as_ref())?, ArtifactCapabilityKind::resource(), descriptor)
+            let identity = self.identity.child("resource")?.child(name.as_ref())?;
+            self.stdio_capability(identity, ArtifactCapabilityKind::resource(), descriptor)
         }
 
         /// 🗺️ Declares an explicit locale leaf in this artifact's plural definition.
@@ -2043,7 +2300,8 @@ pub mod app {
 
         /// ✅️ Declares a conformance-suite leaf in this artifact's plural definition.
         pub fn conformance_suite(self, name: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            self.stdio_capability(self.identity.child("conformance-suite")?.child(name.as_ref())?, ArtifactCapabilityKind::conformance_suite(), descriptor)
+            let identity = self.identity.child("conformance-suite")?.child(name.as_ref())?;
+            self.stdio_capability(identity, ArtifactCapabilityKind::conformance_suite(), descriptor)
         }
 
         /// 📚️ Returns capabilities in stable hierarchical order.
@@ -2234,48 +2492,56 @@ pub mod app {
         let mut encoded = String::from("x");
         for byte in value.as_bytes() {
             use std::fmt::Write;
-            write!(&mut encoded, "{byte:02x}").expect("writing to String cannot fail");
+            let _ = write!(&mut encoded, "{byte:02x}");
         }
         encoded
     }
 
     /// 🧩️ Creates a data-only capability below `owner` from an arbitrary human or external name.
-    fn artifact_capability(owner: &ArtifactIdentity, kind: ArtifactCapabilityKind, name: &str) -> ArtifactCapability {
+    fn artifact_capability(owner: &ArtifactIdentity, kind: ArtifactCapabilityKind, name: &str) -> Result<ArtifactCapability, ArtifactDefinitionError> {
         let category = if kind.as_str().bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'_' | b'-')) { kind.as_str().to_string() } else { artifact_external_segment(kind.as_str()) };
         let name = artifact_external_segment(name);
-        let identity = owner.child(category).and_then(|identity| identity.child(name)).expect("hex-encoded capability identity is canonical");
-        ArtifactCapability::new(identity, kind)
+        let identity = owner.child(category).and_then(|identity| identity.child(name))?;
+        Ok(ArtifactCapability::new(identity, kind))
     }
 
     /// 🧩️ Appends one legacy-runtime facet to the declaration's data-only contract.
-    fn append_artifact_capability(definition: &mut ArtifactDefinition, kind: ArtifactCapabilityKind, name: &str, claims: Vec<ArtifactIdentityClaim>) {
-        let capability = claims.into_iter().try_fold(artifact_capability(definition.identity(), kind, name), |capability, claim| capability.claim(claim)).expect("legacy declaration facets must create unique non-empty identity claims");
-        *definition = definition.clone().capability(capability).expect("legacy declaration facets must remain below their artifact identity");
+    fn append_artifact_capability(definition: &mut ArtifactDefinition, kind: ArtifactCapabilityKind, name: &str, claims: Vec<ArtifactIdentityClaim>) -> Result<(), ArtifactDefinitionError> {
+        let capability = claims.into_iter().try_fold(artifact_capability(definition.identity(), kind, name)?, |capability, claim| capability.claim(claim))?;
+        *definition = definition.clone().capability(capability)?;
+        Ok(())
+    }
+
+    fn append_artifact_capability_or_record(
+        definition: &mut ArtifactDefinition,
+        definition_error: &mut Option<ArtifactDefinitionError>,
+        kind: ArtifactCapabilityKind,
+        name: &str,
+        claims: Result<Vec<ArtifactIdentityClaim>, ArtifactDefinitionError>,
+    ) {
+        if definition_error.is_some() {
+            return;
+        }
+        if let Err(error) = claims.and_then(|claims| append_artifact_capability(definition, kind, name, claims)) {
+            *definition_error = Some(error);
+        }
     }
     //#endregion 🧾️ArtifactDefinition
 
     //#region 🔖️ArtifactDeclaration
-    /// 🔖️ Everything an artifact currently registers by CALLING free functions, expressed instead as
-    /// DATA the framework walks in `PluginBuilder::build()` — see
+    /// 🔖️ Everything an artifact declares as data for `PluginBuilder::try_build()` — see
     /// `.🦑️repo/🎫️tickets/26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE/📓️w1-mechanism-design.md`. Every
     /// field mirrors exactly one global registration function reachable from plugin code (census:
     /// `📓️w0-d-sdk-surface.md` §6); the two §6 functions that are NOT artifact-scoped
     /// (`register_app_schema_descriptor` — app config/presence schema, not an artifact concern;
     /// `register_linked_flow_extension_installer` — flow's own extension registry) have no field
     /// here on purpose, called out loudly rather than silently dropped — see the W1 report. Built
-    /// only through `ArtifactDeclaration::builder(kind)`, a consuming typestate builder mirroring
+    /// only through `ArtifactDeclaration::builder(definition)`, a consuming typestate builder mirroring
     /// `PluginBuilder`'s own shape, so a declaration missing its mandatory `schema` is a compile
     /// error rather than a runtime panic. Every field is module-private — a plugin crate can
     /// describe a declaration through the builder's methods but never read or hand-assemble one;
-    /// only `register_all` (called exactly once, from `PluginBuilder::build()`) ever walks it.
+    /// only the transactional assembly plan ever walks it.
     pub struct ArtifactDeclaration {
-        // 🏷️ Deliberately a raw `String`, not `ArtifactKindId`: `ArtifactKindId::parse` enforces the
-        // canonical `s.<plugin>.<artifact>` grammar, and renaming EXISTING artifact kind strings
-        // (today's note is `"s.note"`, raster's own `ArtifactKindSpec.id` is `"2d.raster"` — neither
-        // canonical) to that grammar is its own later wave, not this one's (see `ArtifactKindId`'s
-        // own doc at `🚪️io/🦀️component.rs:91-93`). `register_all` upgrades to the strict
-        // plugin-segment check automatically the moment a given `kind` DOES parse as canonical, so
-        // this tightens itself as that migration lands — no second pass needed here.
         kind: String,
         schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
         inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
@@ -2300,9 +2566,9 @@ pub mod app {
         definition_error: Option<ArtifactDefinitionError>,
     }
 
-    /// 🏷️ Declaration builder has a `kind` only — next call must be `.schema(...)`.
+    /// 🏷️ Declaration builder has a definition only — next call must be `.schema(...)`.
     pub struct NeedsSchema;
-    /// ✅️ Declaration builder has `kind` + `schema` — ready for every other facet plus `.build()`.
+    /// ✅️ Declaration builder has a definition + `schema` — ready for every other facet plus `.try_build()`.
     pub struct DeclarationReady;
 
     /// 🏗️ Consuming typestate builder for [`ArtifactDeclaration`] — mirrors [`PluginBuilder`]'s own
@@ -2327,14 +2593,9 @@ pub mod app {
     }
 
     impl ArtifactDeclaration {
-        /// 🪪️ Starts a declaration from this artifact's kind id — canonical `s.<plugin>.<artifact>`
-        /// where that migration has already landed, today's pre-migration grammar otherwise (see the
-        /// field doc on `ArtifactDeclaration::kind`).
-        pub fn builder(kind: impl Into<String>) -> ArtifactDeclarationBuilder<NeedsSchema> {
-            let kind = kind.into();
-            let parsed = ArtifactIdentity::parse(kind.clone());
-            let definition_error = parsed.as_ref().err().cloned();
-            let identity = parsed.unwrap_or_else(|_| ArtifactIdentity { value: "invalid".into(), segments: vec!["invalid".into()] });
+        /// 🪪️ Starts a declaration from its one authoritative artifact definition.
+        pub fn builder(definition: ArtifactDefinition) -> ArtifactDeclarationBuilder<NeedsSchema> {
+            let kind = definition.identity().as_str().to_string();
             ArtifactDeclarationBuilder {
                 kind,
                 schemas: Vec::new(),
@@ -2349,8 +2610,8 @@ pub mod app {
                 child_slots: &[],
                 link_slots: &[],
                 capabilities: Vec::new(),
-                definition: ArtifactDefinition::new(identity),
-                definition_error,
+                definition,
+                definition_error: None,
                 _state: std::marker::PhantomData,
             }
         }
@@ -2360,11 +2621,12 @@ pub mod app {
         /// 🧬️ Sets the artifact's four-facet schema descriptor — mandatory, so this is the one call
         /// that unlocks every other declaration method.
         pub fn schema(mut self, descriptor: ::semio_framework_schema::ArtifactSchemaDescriptor) -> ArtifactDeclarationBuilder<DeclarationReady> {
-            append_artifact_capability(
+            append_artifact_capability_or_record(
                 &mut self.definition,
+                &mut self.definition_error,
                 ArtifactCapabilityKind::schema(),
                 descriptor.id,
-                vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), descriptor.id).expect("artifact schema descriptor ids are non-empty")],
+                ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), descriptor.id).map(|claim| vec![claim]),
             );
             ArtifactDeclarationBuilder {
                 kind: self.kind,
@@ -2391,17 +2653,16 @@ pub mod app {
         /// 🧬️ Appends further schema descriptors for independently versioned standards or profiles.
         pub fn schemas(mut self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactSchemaDescriptor>) -> Self {
             for item in items {
-                append_artifact_capability(&mut self.definition, ArtifactCapabilityKind::schema(), item.id, vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), item.id).expect("artifact schema descriptor ids are non-empty")]);
+                append_artifact_capability_or_record(&mut self.definition, &mut self.definition_error, ArtifactCapabilityKind::schema(), item.id, ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), item.id).map(|claim| vec![claim]));
                 self.schemas.push(item);
             }
             self
         }
 
-        /// 💡️ Appends inference descriptors (`register_artifact_inference_descriptor`, one call per
-        /// item at `build()` time). Repeatable.
+        /// 💡️ Appends inference descriptors for transactional registration. Repeatable.
         pub fn inferences(mut self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactInferenceDescriptor>) -> Self {
             for item in items {
-                append_artifact_capability(&mut self.definition, ArtifactCapabilityKind::inference(), item.id, vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), item.id).expect("inference descriptor ids are non-empty")]);
+                append_artifact_capability_or_record(&mut self.definition, &mut self.definition_error, ArtifactCapabilityKind::inference(), item.id, ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), item.id).map(|claim| vec![claim]));
                 self.inferences.push(item);
             }
             self
@@ -2414,9 +2675,7 @@ pub mod app {
             self
         }
 
-        /// 🎹️ Appends this artifact's composer table (`register_composer_entries`). Every entry's
-        /// `writes.artifact_kind` must equal this declaration's `kind` — checked at `build()` time,
-        /// not here, since only `PluginBuilder::build()` knows the plugin id to check `kind` itself against.
+        /// 🎹️ Appends this artifact's composer table for transactional registration.
         pub fn composers(mut self, entries: &'static [ComposerEntry]) -> Self {
             self.composers.extend(entries);
             self
@@ -2425,14 +2684,13 @@ pub mod app {
         /// 🗂️ Appends format rows (`register_format_descriptors`).
         pub fn formats(mut self, rows: impl IntoIterator<Item = semio_framework::FormatDescriptor>) -> Self {
             for row in rows {
-                append_artifact_capability(
+                append_artifact_capability_or_record(
                     &mut self.definition,
+                    &mut self.definition_error,
                     ArtifactCapabilityKind::representation(),
                     &row.kind_id,
-                    vec![
-                        ArtifactIdentityClaim::new(ArtifactIdentityNamespace::mime(), row.mime.clone()).expect("format MIME types are non-empty"),
-                        ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), row.extension.clone()).expect("format extensions are non-empty"),
-                    ],
+                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::mime(), row.primary_mime().to_string())
+                        .and_then(|mime| ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), row.primary_extension().to_string()).map(|extension| vec![mime, extension])),
                 );
                 self.formats.push(row);
             }
@@ -2448,8 +2706,8 @@ pub mod app {
         /// 📖️ Appends this artifact's grammar table (`register_language`, one call per entry).
         pub fn languages(mut self, specs: &'static [dsl::LanguageSpec]) -> Self {
             for spec in specs {
-                let claims = spec.extension.map(|extension| vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), extension).expect("language extensions are non-empty")]).unwrap_or_default();
-                append_artifact_capability(&mut self.definition, ArtifactCapabilityKind::representation(), spec.id, claims);
+                let claims = spec.extension.map(|extension| ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), extension).map(|claim| vec![claim])).unwrap_or_else(|| Ok(Vec::new()));
+                append_artifact_capability_or_record(&mut self.definition, &mut self.definition_error, ArtifactCapabilityKind::representation(), spec.id, claims);
             }
             self.languages.extend(specs);
             self
@@ -2460,14 +2718,13 @@ pub mod app {
         /// every schema-owned codec is retained and conflict-checked before runtime registration.
         pub fn document_codec<A: ArtifactApp>(mut self) -> Self {
             let codec = DocumentCodecSpec::of::<A>();
-            append_artifact_capability(
+            append_artifact_capability_or_record(
                 &mut self.definition,
+                &mut self.definition_error,
                 ArtifactCapabilityKind::codec(),
                 &codec.schema,
-                vec![
-                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), codec.schema.clone()).expect("codec schemas are non-empty"),
-                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension).expect("codec extensions are non-empty"),
-                ],
+                ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), codec.schema.clone())
+                    .and_then(|schema| ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension).map(|extension| vec![schema, extension])),
             );
             self.document_codecs.push(codec);
             self
@@ -2486,21 +2743,19 @@ pub mod app {
             Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,
         {
             let codec = DocumentCodecSpec::bare::<Snapshot, Mutation>(schema);
-            append_artifact_capability(
+            append_artifact_capability_or_record(
                 &mut self.definition,
+                &mut self.definition_error,
                 ArtifactCapabilityKind::codec(),
                 &codec.schema,
-                vec![
-                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), codec.schema.clone()).expect("codec schemas are non-empty"),
-                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension).expect("codec extensions are non-empty"),
-                ],
+                ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), codec.schema.clone())
+                    .and_then(|schema| ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension).map(|extension| vec![schema, extension])),
             );
             self.document_codecs.push(codec);
             self
         }
 
-        /// 🧭️ Appends dialect migrations (`register_dialect_migration`). Both `from.artifact_kind`
-        /// and `to.artifact_kind` must equal this declaration's `kind` — checked at `build()` time.
+        /// 🧭️ Appends dialect migrations for transactional registration.
         pub fn migrations(mut self, items: impl IntoIterator<Item = store::DialectMigration>) -> Self {
             self.migrations.extend(items);
             self
@@ -2517,7 +2772,7 @@ pub mod app {
         }
 
         /// 🔒️ Declares a capability requirement owned by this artifact (unioned into
-        /// `PluginManifest.capabilities` at `build()` time) — IO is artifact-owned, so an artifact
+        /// `PluginManifest.capabilities` at assembly time) — IO is artifact-owned, so an artifact
         /// that reads assets declares this on itself, not on the plugin.
         pub fn capability(mut self, capability: CapabilityRequirement) -> Self {
             if !self.capabilities.contains(&capability) {
@@ -2526,21 +2781,12 @@ pub mod app {
             self
         }
 
-        /// 🧾️ Appends an independently assembled standard/profile definition. Its identity must
-        /// live within this declaration's artifact kind; registration validates every definition
-        /// atomically before any legacy runtime registry is touched.
-        pub fn definition(mut self, definition: ArtifactDefinition) -> Result<Self, ArtifactDefinitionError> {
-            let owner = self.definition.identity().clone();
-            if definition.identity() != &owner {
-                return Err(ArtifactDefinitionError::new("artifact-definition.declaration-identity", format!("definition {} does not equal declaration artifact {}", definition.identity(), owner)));
+        /// ✅️ Validates the declaration-local contract before assembly.
+        pub fn try_build(self) -> Result<ArtifactDeclaration, ArtifactDefinitionError> {
+            if let Some(error) = self.definition_error {
+                return Err(error);
             }
-            self.definition = definition;
-            Ok(self)
-        }
-
-        /// ✅️ Finishes the declaration.
-        pub fn build(self) -> ArtifactDeclaration {
-            ArtifactDeclaration {
+            Ok(ArtifactDeclaration {
                 kind: self.kind,
                 schemas: self.schemas,
                 inferences: self.inferences,
@@ -2555,15 +2801,15 @@ pub mod app {
                 link_slots: self.link_slots,
                 capabilities: self.capabilities,
                 definition: self.definition,
-                definition_error: self.definition_error,
-            }
+                definition_error: None,
+            })
         }
     }
 
     /// 🗂️ A monomorphized, non-capturing thunk pairing a `schema` string with the fn pointer that
     /// registers a document codec under it — lets `.document_codec::<A>()`/`.document_codec_bare()`
     /// store the registration as inert data instead of performing it immediately, matching every
-    /// other declaration field's "described now, run once at `PluginBuilder::build()`" contract. The
+    /// other declaration field's "described now, committed once by `PluginBuilder::try_build()`" contract. The
     /// `schema` sits alongside the thunk (not baked into it) because `bare`'s schema is a runtime
     /// `impl Into<String>`, not a type-level const like `A::DOCUMENT_SCHEMA` — a `fn()` thunk cannot
     /// close over it without capturing, which would break the "plain fn pointer" contract this type
@@ -2571,15 +2817,15 @@ pub mod app {
     pub struct DocumentCodecSpec {
         schema: String,
         extension: &'static str,
-        register: fn(String) -> Result<(), PluginAssemblyError>,
+        codec: fn(String) -> store::ArtifactCodec,
     }
 
     impl DocumentCodecSpec {
         fn of<A: ArtifactApp>() -> Self {
-            fn register_thunk<A: ArtifactApp>(schema: String) -> Result<(), PluginAssemblyError> {
-                super::plugin_runtime::register_document_codec_for_app::<A>(schema).map_err(|error| PluginAssemblyError::new("plugin-assembly.document-codec-registration", error.to_string()))
+            fn codec<A: ArtifactApp>(schema: String) -> store::ArtifactCodec {
+                store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema)
             }
-            DocumentCodecSpec { schema: A::DOCUMENT_SCHEMA.to_string(), extension: <A::Snapshot as store::ArtifactDsl>::EXTENSION, register: register_thunk::<A> }
+            DocumentCodecSpec { schema: A::DOCUMENT_SCHEMA.to_string(), extension: <A::Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<A> }
         }
 
         /// 🗂️ `of::<A>()`'s app-less sibling — see `.document_codec_bare()`'s own doc for why this
@@ -2590,14 +2836,18 @@ pub mod app {
             Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
             Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,
         {
-            fn register_thunk<Snapshot, Mutation>(schema: String) -> Result<(), PluginAssemblyError>
+            fn codec<Snapshot, Mutation>(schema: String) -> store::ArtifactCodec
             where
                 Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
                 Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,
             {
-                store::register_document_codec(store::ArtifactCodec::of::<Snapshot, Mutation>(schema)).map_err(|error| PluginAssemblyError::new("plugin-assembly.document-codec-registration", error.to_string()))
+                store::ArtifactCodec::of::<Snapshot, Mutation>(schema)
             }
-            DocumentCodecSpec { schema: schema.into(), extension: <Snapshot as store::ArtifactDsl>::EXTENSION, register: register_thunk::<Snapshot, Mutation> }
+            DocumentCodecSpec { schema: schema.into(), extension: <Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<Snapshot, Mutation> }
+        }
+
+        fn codec(&self) -> store::ArtifactCodec {
+            (self.codec)(self.schema.clone())
         }
     }
 
@@ -2656,41 +2906,73 @@ pub mod app {
             Ok(())
         }
 
-        /// 🏗️ Commits one preflighted declaration through the typed assembly boundary.
-        pub(crate) fn try_register_all(self, plugin_id: &str, plugin: Plugin) -> Result<Plugin, PluginAssemblyError> {
-            for schema in self.schemas {
-                ::semio_framework_schema::register_artifact_schema_descriptor(schema);
+        /// 🏗️ Adds this declaration's manifest capabilities after registration-plan commit.
+        pub(crate) fn apply_to(self, plugin: Plugin) -> Plugin {
+            self.capabilities.into_iter().fold(plugin, |plugin, capability| plugin.capability(capability))
+        }
+    }
+
+    /// 🧭️ One deterministic complete global-registration candidate assembled before any commit.
+    pub(crate) struct ArtifactRegistrationPlan {
+        schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
+        inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
+        inference_services: Vec<ArtifactInferenceService>,
+        formats: Vec<semio_framework::FormatDescriptor>,
+        subset_validators: Vec<&'static SubsetValidatorEntry>,
+        composers: Vec<&'static ComposerEntry>,
+        languages: Vec<dsl::LanguageSpec>,
+        document_codecs: Vec<store::ArtifactCodec>,
+        migrations: Vec<store::DialectMigration>,
+        app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
+        registrations: Vec<PluginRegistration>,
+    }
+
+    impl ArtifactRegistrationPlan {
+        pub(crate) fn from_declarations(declarations: &[ArtifactDeclaration], app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>, registrations: Vec<PluginRegistration>) -> Self {
+            let mut plan = Self { schemas: Vec::new(), inferences: Vec::new(), inference_services: Vec::new(), formats: Vec::new(), subset_validators: Vec::new(), composers: Vec::new(), languages: Vec::new(), document_codecs: Vec::new(), migrations: Vec::new(), app_schemas, registrations };
+            for declaration in declarations {
+                plan.schemas.extend(declaration.schemas.iter().cloned());
+                plan.inferences.extend(declaration.inferences.iter().cloned());
+                plan.inference_services.extend(declaration.inference_services.iter().copied());
+                plan.formats.extend(declaration.formats.iter().cloned());
+                plan.subset_validators.extend(declaration.subset_validators.iter().copied());
+                plan.composers.extend(declaration.composers.iter().copied());
+                plan.languages.extend(declaration.languages.iter().map(|spec| **spec));
+                plan.document_codecs.extend(declaration.document_codecs.iter().map(DocumentCodecSpec::codec));
+                plan.migrations.extend(declaration.migrations.iter().cloned());
             }
-            for inference in self.inferences {
-                ::semio_framework_schema::register_artifact_inference_descriptor(inference);
-            }
-            for service in self.inference_services {
-                register_artifact_inference_service(service).map_err(|error| PluginAssemblyError::new("plugin-assembly.inference-registration", error.to_string()))?;
-            }
-            if !self.formats.is_empty() {
-                semio_framework::register_format_descriptors(self.formats).map_err(|error| PluginAssemblyError::new("plugin-assembly.format-registration", error.to_string()))?;
-            }
-            for entry in self.subset_validators {
-                semio_framework::register_subset_validator(entry).map_err(|error| PluginAssemblyError::new("plugin-assembly.subset-registration", error.to_string()))?;
-            }
-            for entry in self.composers {
-                semio_framework::register_composer_entries(std::slice::from_ref(entry)).map_err(|error| PluginAssemblyError::new("plugin-assembly.composer-registration", error.to_string()))?;
-            }
-            for spec in self.languages {
-                dsl::register_language(*spec);
-            }
-            for codec in self.document_codecs {
-                (codec.register)(codec.schema)?;
-            }
-            for migration in self.migrations {
-                store::register_dialect_migration(migration).map_err(|error| PluginAssemblyError::new("plugin-assembly.migration-registration", error.to_string()))?;
-            }
-            let mut plugin = plugin;
-            for capability in self.capabilities {
-                plugin = plugin.capability(capability);
-            }
-            let _ = plugin_id;
-            Ok(plugin)
+            plan
+        }
+
+        /// 🔬️ Validates every global registry against the entire candidate set before mutation.
+        pub(crate) fn preflight(&self) -> Result<(), PluginAssemblyError> {
+            ::semio_framework_schema::preflight_artifact_schema_descriptors(&self.schemas).map_err(|error| PluginAssemblyError::new("plugin-assembly.schema-preflight", error.to_string()))?;
+            ::semio_framework_schema::preflight_artifact_inference_descriptors(&self.inferences).map_err(|error| PluginAssemblyError::new("plugin-assembly.inference-schema-preflight", error.to_string()))?;
+            preflight_artifact_inference_services(&self.inference_services).map_err(|error| PluginAssemblyError::new("plugin-assembly.inference-preflight", error.to_string()))?;
+            semio_framework::preflight_format_descriptors(&self.formats).map_err(|error| PluginAssemblyError::new("plugin-assembly.format-preflight", error.to_string()))?;
+            semio_framework::preflight_subset_validators(&self.subset_validators).map_err(|error| PluginAssemblyError::new("plugin-assembly.subset-preflight", format!("{error:?}")))?;
+            semio_framework::preflight_composer_entry_refs(&self.composers).map_err(|error| PluginAssemblyError::new("plugin-assembly.composer-preflight", format!("{error:?}")))?;
+            dsl::preflight_languages(&self.languages).map_err(|error| PluginAssemblyError::new("plugin-assembly.language-preflight", error.to_string()))?;
+            store::preflight_document_codecs(&self.document_codecs).map_err(|error| PluginAssemblyError::new("plugin-assembly.document-codec-preflight", error.to_string()))?;
+            store::preflight_dialect_migrations(&self.migrations).map_err(|error| PluginAssemblyError::new("plugin-assembly.migration-preflight", format!("{error:?}")))?;
+            ::semio_framework_schema::preflight_app_schema_descriptors(&self.app_schemas).map_err(|error| PluginAssemblyError::new("plugin-assembly.app-schema-preflight", error.to_string()))?;
+            preflight_plugin_registrations(&self.registrations)
+        }
+
+        /// 📌️ Commits a fully preflighted registration plan while assembly ownership is locked.
+        pub(crate) fn commit(self) -> Result<(), PluginAssemblyError> {
+            ::semio_framework_schema::register_artifact_schema_descriptors(self.schemas).map_err(|error| PluginAssemblyError::new("plugin-assembly.schema-registration", error.to_string()))?;
+            ::semio_framework_schema::register_artifact_inference_descriptors(self.inferences).map_err(|error| PluginAssemblyError::new("plugin-assembly.inference-schema-registration", error.to_string()))?;
+            register_artifact_inference_services(self.inference_services).map_err(|error| PluginAssemblyError::new("plugin-assembly.inference-registration", error.to_string()))?;
+            semio_framework::register_format_descriptors(self.formats).map_err(|error| PluginAssemblyError::new("plugin-assembly.format-registration", error.to_string()))?;
+            semio_framework::register_subset_validators(&self.subset_validators).map_err(|error| PluginAssemblyError::new("plugin-assembly.subset-registration", format!("{error:?}")))?;
+            semio_framework::register_composer_entry_refs(&self.composers).map_err(|error| PluginAssemblyError::new("plugin-assembly.composer-registration", format!("{error:?}")))?;
+            dsl::register_languages(self.languages).map_err(|error| PluginAssemblyError::new("plugin-assembly.language-registration", error.to_string()))?;
+            store::register_document_codecs(self.document_codecs).map_err(|error| PluginAssemblyError::new("plugin-assembly.document-codec-registration", error.to_string()))?;
+            store::register_dialect_migrations(self.migrations).map_err(|error| PluginAssemblyError::new("plugin-assembly.migration-registration", format!("{error:?}")))?;
+            ::semio_framework_schema::register_app_schema_descriptors(self.app_schemas).map_err(|error| PluginAssemblyError::new("plugin-assembly.app-schema-registration", error.to_string()))?;
+            commit_plugin_registrations(self.registrations)?;
+            Ok(())
         }
     }
     //#endregion 🔖️ArtifactDeclaration
@@ -2709,11 +2991,11 @@ pub mod app {
 
         #[test]
         fn plural_definition_carries_every_artifact_capability_without_a_dispatch_edit() {
-            let owner = identity("s.stdio.ifc.standards.v4");
+            let owner = identity("s.stdio.ifc");
             let schema = capability(&owner, "schema", ArtifactCapabilityKind::schema()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.stdio.ifc.v4").unwrap()).unwrap();
             let standard = capability(&owner, "standard", ArtifactCapabilityKind::standard());
             let profile = capability(&owner, "profile", ArtifactCapabilityKind::profile());
-            let dialect = capability(&owner, "source-dialect", ArtifactCapabilityKind::source_dialect()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.ifc@4.any").unwrap()).unwrap();
+            let dialect = capability(&owner, "source-dialect", ArtifactCapabilityKind::source_dialect()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.ifc.standard.v4.dialect.any").unwrap()).unwrap();
             let representation = capability(&owner, "representation", ArtifactCapabilityKind::representation()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::mime(), "application/ifc").unwrap()).unwrap();
             let codec = capability(&owner, "codec", ArtifactCapabilityKind::codec()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "stdio.ifc.v4.pack").unwrap()).unwrap();
             let mutation = capability(&owner, "mutation", ArtifactCapabilityKind::mutation());
@@ -2732,13 +3014,13 @@ pub mod app {
 
             assert_eq!(definition.capabilities().count(), 11);
             assert!(definition.validate().is_ok());
-            assert_eq!(definition.capabilities().last().unwrap().identity().as_str(), "s.stdio.ifc.standards.v4.standard");
+            assert_eq!(definition.capabilities().last().unwrap().identity().as_str(), "s.stdio.ifc.standard");
         }
 
         #[test]
         fn registry_rejects_duplicate_schema_dialect_codec_mime_and_extension_claims_atomically() {
-            let owner_a = identity("s.stdio.ifc.standards.v4");
-            let owner_b = identity("s.stdio.ifc.standards.v5");
+            let owner_a = identity("s.stdio.ifc");
+            let owner_b = identity("s.stdio.json");
             let namespaces = [ArtifactIdentityNamespace::schema(), ArtifactIdentityNamespace::dialect(), ArtifactIdentityNamespace::codec(), ArtifactIdentityNamespace::mime(), ArtifactIdentityNamespace::extension()];
             for (index, namespace) in namespaces.into_iter().enumerate() {
                 let value = format!("shared-{index}");
@@ -2758,7 +3040,7 @@ pub mod app {
         fn identities_and_locales_are_explicit_and_conflicts_do_not_overwrite() {
             assert!(ArtifactIdentity::parse("s.stdio..ifc").is_err());
             assert!(ArtifactLocale::parse("EN").is_err());
-            let owner = identity("s.stdio.ifc.standards.v4");
+            let owner = identity("s.stdio.ifc");
             let localized = capability(&owner, "localized", ArtifactCapabilityKind::localization()).localization(ArtifactLocalization::new(ArtifactLocale::parse("en").unwrap(), "Ifc").unwrap()).unwrap();
             let duplicate = localized.clone().localization(ArtifactLocalization::new(ArtifactLocale::parse("en").unwrap(), "IFC").unwrap()).unwrap_err();
             assert_eq!(duplicate.code(), "artifact-definition.duplicate-locale");
@@ -2766,8 +3048,26 @@ pub mod app {
             let mut registry = ArtifactDefinitionRegistry::new();
             registry.register(ArtifactDefinition::new(owner.clone()).capability(localized).unwrap()).unwrap();
             let error = registry.register(ArtifactDefinition::new(owner)).unwrap_err();
-            assert_eq!(error.code(), "artifact-definition.duplicate-artifact");
+            assert_eq!(error.code(), "artifact-definition.conflicting-artifact");
             assert_eq!(registry.len(), 1);
+        }
+
+        fn registration_preflight() -> Result<(), PluginAssemblyError> {
+            Ok(())
+        }
+
+        fn registration_commit() {}
+
+        #[test]
+        fn plugin_registration_is_idempotent_only_for_its_full_executable_descriptor() {
+            let registration = PluginRegistration::new("s.test.registration.atomic", b"v1", registration_preflight, registration_commit).unwrap();
+            preflight_plugin_registrations(&[registration, registration]).unwrap();
+            commit_plugin_registrations(vec![registration, registration]).unwrap();
+            preflight_plugin_registrations(&[registration]).unwrap();
+
+            let conflict = PluginRegistration::new("s.test.registration.atomic", b"v2", registration_preflight, registration_commit).unwrap();
+            let error = preflight_plugin_registrations(&[conflict]).unwrap_err();
+            assert_eq!(error.code, "plugin-registration.conflict");
         }
     }
 
@@ -7124,10 +7424,9 @@ pub mod app {
             Vec::new()
         }
 
-        /// 🪪️ This app's own config+presence schema descriptor, auto-registered by
-        /// `register_document_app`/`document_app` the moment this type is bound to a plugin (ticket
-        /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c: closes the last legitimate `.setup()`
-        /// reason — app-scope schema is app-scope precisely because it is keyed off `Self`, so the
+        /// 🪪️ This app's own config+presence schema descriptor, declared by
+        /// `PluginBuilder::document_app` the moment this type is bound to a plugin (ticket
+        /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c: app-scope schema is keyed off `Self`, so the
         /// builder call that already names `Self` is the correct place to register it, not a plugin-root
         /// side callback). `None` (the default) means this app has no schema of its own — a plugin
         /// library with zero document apps, or a document app whose config truly has no dedicated facet.
@@ -7832,10 +8131,10 @@ pub mod app {
             let draft_envelope = create_document_envelope::<A::Draft, A::DraftMutation>("draft.empty", &draft_id, A::initial_draft(), None);
             let interaction_id = format!("{}-interaction", A::APP_ID);
             let interaction_envelope = create_document_envelope::<protocol::InteractionState, InteractionConfigMutation>("framework.interaction", &interaction_id, protocol::InteractionState::default(), None);
-            let mut store = ArtifactStore::new(envelope);
-            let config_store = ConfigStore::new(config_envelope);
-            let draft_store = store::DraftStore::new(draft_envelope);
-            let interaction_store = ConfigStore::new(interaction_envelope);
+            let mut store = ArtifactStore::new(envelope).expect("failed to create document store");
+            let config_store = ConfigStore::new(config_envelope).expect("failed to create config store");
+            let draft_store = store::DraftStore::new(draft_envelope).expect("failed to create draft store");
+            let interaction_store = ConfigStore::new(interaction_envelope).expect("failed to create interaction store");
             let genesis_mutations = A::genesis();
             if !genesis_mutations.is_empty() {
                 store.dispatch(ArtifactCommand::Apply { mutations: genesis_mutations, description: Some("genesis".to_string()) }).expect("ArtifactApp::genesis mutations must apply cleanly onto a freshly constructed store");
@@ -7880,7 +8179,7 @@ pub mod app {
             let slot = slot.into();
             let child_id = child_id.into();
             let kind = ArtifactKindId::parse(&dialect.artifact_kind).map_err(plugin_sdk_fault)?;
-            let factory = child_store_factory(&kind).ok_or_else(|| plugin_sdk_fault(format!("open_child: no ChildStoreFactory registered for kind {}", dialect.artifact_kind)))?;
+            let factory = child_store_factory(&kind).map_err(|error| plugin_sdk_fault(format!("{error:?}")))?.ok_or_else(|| plugin_sdk_fault(format!("open_child: no ChildStoreFactory registered for kind {}", dialect.artifact_kind)))?;
             let mut member = factory.open(envelope_pack).map_err(|error| plugin_sdk_fault(error.to_string()))?;
             let parent_id = self.store.envelope().id.clone();
             self.composition.graph_mut().insert_owns(&parent_id, &slot, &child_id).map_err(plugin_sdk_fault)?;
@@ -7948,13 +8247,14 @@ pub mod app {
         /// that dispatch because the checkpoint does not exist until then, and `composition_pins`
         /// participates in `content_addressed_checkpoint_id`, so the pins must be present on the
         /// envelope that gets persisted.
-        fn stamp_checkpoint_composition_pins(&mut self, pins: Vec<vcs::CompositionPin>) {
+        fn stamp_checkpoint_composition_pins(&mut self, pins: Vec<vcs::CompositionPin>) -> Result<(), Fault> {
             if pins.is_empty() {
-                return;
+                return Ok(());
             }
             if let Some(checkpoint_id) = self.store.current_checkpoint_id().map(str::to_string) {
-                self.store.set_checkpoint_composition_pins(&checkpoint_id, pins);
+                self.store.set_checkpoint_composition_pins(&checkpoint_id, pins).map_err(|error| error.into_fault())?;
             }
+            Ok(())
         }
 
         /// @emoji ⏮️ Checkout half of the cascade: restores every live child to the checkpoint the
@@ -8984,7 +9284,7 @@ pub mod app {
                 };
                 match self.store.dispatch(command) {
                     Ok(_) => {
-                        self.stamp_checkpoint_composition_pins(pending_pins);
+                        self.stamp_checkpoint_composition_pins(pending_pins)?;
                         if action == "checkoutCheckpoint" {
                             self.cascade_checkout_to_children();
                         }
@@ -9655,6 +9955,8 @@ pub mod app {
                     topic_contributions: Vec::new(),
                     commands: Vec::new(),
                     artifact_kinds: Vec::new(),
+                    dependencies: Vec::new(),
+                    contributions: Vec::new(),
                 },
                 apps: HashMap::new(),
                 command_handlers: HashMap::new(),
@@ -9712,7 +10014,7 @@ pub mod app {
             self.capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Read, scope: Scope::Plugin }).capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Write, scope: Scope::Plugin })
         }
 
-        /// 🧬️ Registers an already-wrapped app factory (used by `PluginBuilder` and `register_document_app`).
+        /// 🧬️ Registers an already-wrapped app factory after typed assembly has completed.
         pub fn register_app_factory(mut self, app: App, factory: impl Fn() -> Box<dyn PluginApp> + Send + 'static) -> Self {
             let app_id = app.definition.id.clone();
             self.manifest.apps.push(app.definition);
@@ -9722,18 +10024,6 @@ pub mod app {
             }
             self.apps.insert(self.manifest.apps.last().unwrap().id.clone(), Box::new(factory));
             self
-        }
-
-        /// @emoji 🧬️ Registers a typed {@link ArtifactApp} as a ZST — turbofish-only, no factory closure.
-        /// Wraps each instance in {@link VcsArtifactApp}. Stateful app structs are unrepresentable.
-        /// Also registers `A::app_schema()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) —
-        /// see {@link ArtifactApp::app_schema}'s own doc.
-        pub fn register_document_app<A: ArtifactApp>(self, app: App) -> Self {
-            if let Some(descriptor) = A::app_schema() {
-                ::semio_framework_schema::register_app_schema_descriptor(descriptor);
-            }
-            let registry = AppActionRegistry::from_definition(&app.definition);
-            self.register_app_factory(app, move || Box::new(VcsArtifactApp::with_registry(A::default(), registry.clone())))
         }
 
         pub fn create_app(&self, app_id: &str) -> Option<Box<dyn PluginApp>> {
@@ -9763,7 +10053,7 @@ pub mod plugin_runtime {
     // #region plugin_runtime
     //! 📤️ WASM component export glue for plugin bundles.
 
-    use crate::app::{ActionMeta, AppInstance, MediaArtifact, MediaArtifactDescriptor, Plugin, PluginProgram};
+    use crate::app::{ActionMeta, AppInstance, MediaArtifact, MediaArtifactDescriptor, Plugin, PluginAssemblyError, PluginProgram};
     use crate::ArtifactApp;
     use dsl::{from_dsl_value, to_dsl_value};
     use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
@@ -9781,6 +10071,7 @@ pub mod plugin_runtime {
 
     thread_local! {
         static PLUGIN: RefCell<Option<Plugin>> = const { RefCell::new(None) };
+        static PLUGIN_ASSEMBLY_ERROR: RefCell<Option<Fault>> = const { RefCell::new(None) };
         // 🔓️ `UnsafeCell` (not `RefCell`): a wasm trap skips `RefMut::drop` and permanently poisons
         // `RefCell`'s borrow flag. Exclusive access is enforced by `InstanceGuard` + the host's
         // serialized plugin bridge instead.
@@ -9882,6 +10173,21 @@ pub mod plugin_runtime {
         PLUGIN.with(|slot| {
             *slot.borrow_mut() = Some(bundle);
         });
+        PLUGIN_ASSEMBLY_ERROR.with(|slot| {
+            *slot.borrow_mut() = None;
+        });
+    }
+
+    /// 🧩️ Installs a successful plugin bundle or retains its typed assembly fault for WIT startup calls.
+    pub fn install_plugin_bundle_result(bundle: Result<Plugin, PluginAssemblyError>) {
+        match bundle {
+            Ok(bundle) => install_plugin_bundle(bundle),
+            Err(error) => {
+                PLUGIN_ASSEMBLY_ERROR.with(|slot| {
+                    *slot.borrow_mut() = Some(Fault::new(FaultOrigin::Plugin, FaultCode::new(error.code), error.message));
+                });
+            }
+        }
     }
 
     static PLUGIN_INIT_ONCE: std::sync::Once = std::sync::Once::new();
@@ -9922,6 +10228,21 @@ pub mod plugin_runtime {
 
     pub fn plugin_manifest() -> PluginManifest {
         ensure_plugin_initialized();
+        if let Some(fault) = PLUGIN_ASSEMBLY_ERROR.with(|slot| slot.borrow().clone()) {
+            return PluginManifest {
+                plugin_id: "assembly-failed".into(),
+                label: fault.message,
+                version: "0.0.0".into(),
+                apps: vec![],
+                examples: vec![],
+                capabilities: vec![],
+                topic_contributions: vec![],
+                commands: vec![],
+                artifact_kinds: vec![],
+                dependencies: vec![],
+                contributions: vec![],
+            };
+        }
         PLUGIN.with(|slot| {
             slot.borrow().as_ref().map(|bundle| Plugin::manifest(bundle)).unwrap_or_else(|| PluginManifest {
                 plugin_id: "empty".into(),
@@ -9933,11 +10254,33 @@ pub mod plugin_runtime {
                 topic_contributions: vec![],
                 commands: vec![],
                 artifact_kinds: vec![],
+                dependencies: vec![],
+                contributions: vec![],
             })
         })
     }
 
+    /// 🚧️ PLACEHOLDER for W1-A (guest SDK contributed-mutation roster). PLUGIN-DEPENDENCIES-ARTIFACT-
+    /// CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS lane W0-D only wires the WIT `contributor.list-artifact-
+    /// mutations` export through to here; the deterministic wire roster of contributed mutations
+    /// (mirroring `crate::app::wire_list_artifact_inference_services`) is W1-A's to implement. Returns
+    /// a deterministic EMPTY roster (`store::pack_rt::encode_wire_value` of an empty list) until then.
+    pub fn wire_list_artifact_mutations() -> Vec<u8> {
+        store::pack_rt::encode_wire_value(&dsl::DslValue::Array(Vec::new()))
+    }
+
+    /// 🚧️ PLACEHOLDER for W1-A (guest SDK contributed-mutation planning). PLUGIN-DEPENDENCIES-ARTIFACT-
+    /// CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS lane W0-D only wires the WIT `contributor.artifact-
+    /// mutation-plan` export through to here; real planning (delegating into a `CompositeMutationKind`
+    /// plan, per the contract freeze §1/§5) is W1-A's to implement. Returns a typed `Fault` until then.
+    pub fn wire_artifact_mutation_plan(_request: &[u8]) -> Result<Vec<u8>, Fault> {
+        Err(plugin_internal_fault("artifact-mutation-plan not implemented (W1-A placeholder)"))
+    }
+
     pub fn plugin_create_app(app_id: &str) -> Result<u32, Fault> {
+        if let Some(fault) = PLUGIN_ASSEMBLY_ERROR.with(|slot| slot.borrow().clone()) {
+            return Err(fault);
+        }
         PLUGIN.with(|slot| {
             let program = slot.borrow();
             let program = program.as_ref().ok_or_else(|| plugin_internal_fault("plugin not initialized"))?;
@@ -10762,6 +11105,7 @@ pub mod plugin_runtime {
                     }
                 }
                 protocol::AppCommand::Bye => {}
+                _ => {}
             }
         }
 
@@ -10793,7 +11137,7 @@ pub mod plugin_runtime {
     macro_rules! plugin_exports {
         ($bundle_fn:expr) => {
             fn __semio_install_plugin_bundle() {
-                $crate::plugin_runtime::install_plugin_bundle(($bundle_fn)());
+                $crate::plugin_runtime::install_plugin_bundle_result(($bundle_fn)());
             }
 
             #[doc(hidden)]
@@ -10963,6 +11307,22 @@ pub mod plugin_runtime {
             };
             handler(request)
         })
+    }
+
+    /// 🚧️ PLACEHOLDER for W1-A. PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS
+    /// (§6): `extension-world` now exports `contributor` alongside `extension`, but no extension has
+    /// ever wired inference services — this is a deterministic EMPTY roster
+    /// (`store::pack_rt::encode_wire_value` of an empty list) until W1-A adds real extension-side
+    /// inference wiring (mirroring `crate::app::wire_list_artifact_inference_services`, plugin-side).
+    pub fn extension_wire_list_artifact_inferences() -> Vec<u8> {
+        store::pack_rt::encode_wire_value(&dsl::DslValue::Array(Vec::new()))
+    }
+
+    /// 🚧️ PLACEHOLDER for W1-A. Companion to `extension_wire_list_artifact_inferences` — since the
+    /// roster above is always empty, this can never legitimately be called; it exists only so
+    /// `contributor.artifact-infer` type-checks on `extension-world`. Always returns a typed `Fault`.
+    pub fn extension_wire_artifact_infer() -> Fault {
+        plugin_internal_fault("artifact-infer not implemented for extensions (W1-A placeholder)")
     }
 
     /// 🧩️ Installs an extension crate's bundle builder into TLS for WIT guest exports.
@@ -11663,10 +12023,8 @@ pub mod plugin_runtime {
             object
         }
 
-        fn synthetic_setup() {}
-
-        fn __semio_plugin_bundle() -> Result<crate::Plugin, PluginAssemblyError> {
-            crate::Plugin::builder("synthetic").label("Synthetic").version("0.0.1").setup(synthetic_setup).register_document_app::<TestApp>(synthetic_play_app()).try_build()
+        fn __semio_plugin_bundle() -> Result<crate::Plugin, crate::PluginAssemblyError> {
+            crate::Plugin::builder("synthetic").label("Synthetic").version("0.0.1").document_app::<TestApp>(synthetic_play_app()).try_build()
         }
 
         #[test]
@@ -11680,7 +12038,7 @@ pub mod plugin_runtime {
 
         #[test]
         fn plugin_builder_wires_app_factory_for_create_app() {
-            let bundle = __semio_plugin_bundle();
+            let bundle = __semio_plugin_bundle().expect("synthetic plugin assembly");
             let app = bundle.create_app("synthetic-play").expect("registered app");
             assert_eq!(app.app_id(), "synthetic-play");
             assert!(bundle.create_app("unknown-app").is_none());
@@ -11737,9 +12095,9 @@ pub mod plugin_runtime {
         /// directly (no real `ChildStoreFactory` registration needed for these in-process tests) —
         /// the SAME `TestSnapshot`/`TestMutation` pair `TestApp` itself uses, so a "child" here is
         /// just a second, independently-owned instance of the identical document shape.
-        fn new_test_child(id: &str) -> Box<dyn store::SpaceMember> {
+        fn new_test_child(id: &str) -> Result<Box<dyn store::SpaceMember>, store::VcsError> {
             let envelope = store::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
-            Box::new(store::ArtifactStore::new(envelope))
+            Ok(Box::new(store::ArtifactStore::new(envelope)?))
         }
 
         fn test_child_dialect() -> store::os_io::ArtifactDialect {
@@ -11749,7 +12107,7 @@ pub mod plugin_runtime {
         #[test]
         fn composite_gesture_produces_one_undo_group_spanning_parent_and_child_with_real_handles() {
             let mut app = VcsArtifactApp::new(TestApp::default());
-            app.register_child("slot", "child-1", test_child_dialect(), new_test_child("child-1")).expect("register child seeds ownership");
+            app.register_child("slot", "child-1", test_child_dialect(), new_test_child("child-1").expect("construct child")).expect("register child seeds ownership");
 
             let result = app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).expect("composite edit");
 
@@ -11785,14 +12143,14 @@ pub mod plugin_runtime {
         /// 🧪️ Registers the production `TypedChildStoreFactory` for the test child kind, so the
         /// paths below go through the SAME factory a real plugin uses rather than a test-only stub.
         fn register_test_child_factory() {
-            store::register_typed_child_store_factory::<TestSnapshot, TestMutation>(store::os_io::ArtifactKindId::parse("s.test.child").expect("canonical kind"), "semio.test/v1");
+            store::register_typed_child_store_factory::<TestSnapshot, TestMutation>(store::os_io::ArtifactKindId::parse("s.test.child").expect("canonical kind"), "semio.test/v1").expect("register child factory");
         }
 
         #[test]
         fn a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames() {
             register_test_child_factory();
             let mut app = VcsArtifactApp::new(TestApp::default());
-            app.register_child("slot", "child-1", test_child_dialect(), new_test_child("child-1")).expect("register child");
+            app.register_child("slot", "child-1", test_child_dialect(), new_test_child("child-1").expect("construct child")).expect("register child");
             app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).expect("composite edit");
 
             // 📤️ Persist exactly what the host would: the parent's document pack plus one
@@ -11821,7 +12179,7 @@ pub mod plugin_runtime {
         fn a_checkpoint_pins_its_children_and_a_checkout_cascades_back_to_them() {
             register_test_child_factory();
             let mut app = VcsArtifactApp::new(TestApp::default());
-            app.register_child("slot", "child-1", test_child_dialect(), new_test_child("child-1")).expect("register child");
+            app.register_child("slot", "child-1", test_child_dialect(), new_test_child("child-1").expect("construct child")).expect("register child");
             app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).expect("first composite edit");
 
             // 📌️ Checkpoint the parent: the cascade must commit the dirty child first, then pin the
@@ -11852,7 +12210,7 @@ pub mod plugin_runtime {
         #[test]
         fn the_child_content_view_never_goes_stale_across_undo_and_redo() {
             let mut app = VcsArtifactApp::new(TestApp::default());
-            app.register_child("slot", "child-1", test_child_dialect(), new_test_child("child-1")).expect("register child");
+            app.register_child("slot", "child-1", test_child_dialect(), new_test_child("child-1").expect("construct child")).expect("register child");
             app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).expect("composite edit");
             assert_eq!(reads_child_count(&app), 7);
 
@@ -11867,11 +12225,11 @@ pub mod plugin_runtime {
         #[test]
         fn group_undo_skips_a_foreign_tail_child_but_still_undoes_parent_and_touched_child() {
             let mut app = VcsArtifactApp::new(TestApp::default());
-            app.register_child("slot", "child-a", test_child_dialect(), new_test_child("child-a")).expect("register child seeds ownership");
+            app.register_child("slot", "child-a", test_child_dialect(), new_test_child("child-a").expect("construct child")).expect("register child seeds ownership");
             // `child-b` is registered but NEVER targeted by the composite gesture below — its
             // `tail_group_id()` stays `None`, the textbook "foreign tail" `GroupUndoReport` must
             // skip rather than abort the whole group over.
-            app.register_child("slot", "child-b", test_child_dialect(), new_test_child("child-b")).expect("register child seeds ownership");
+            app.register_child("slot", "child-b", test_child_dialect(), new_test_child("child-b").expect("construct child")).expect("register child seeds ownership");
 
             let before = app.test_snapshot();
             app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-a".into(), child_value: 5 }, &meta()).expect("composite edit");
@@ -11901,7 +12259,7 @@ pub mod plugin_runtime {
             let parent_id = app.store.envelope().id.clone();
             app.composition.graph_mut().insert_owns(&parent_id, "genesisSlot", "genesis-child").expect("seed ownership so absorb's slot_of lookup resolves");
             let target = store::os_io::ArtifactRef { artifact_id: "genesis-child".into(), dialect: test_child_dialect() };
-            let created: Vec<(store::os_io::ArtifactRef, Box<dyn store::SpaceMember>)> = vec![(target, new_test_child("genesis-child"))];
+            let created: Vec<(store::os_io::ArtifactRef, Box<dyn store::SpaceMember>)> = vec![(target, new_test_child("genesis-child").expect("construct genesis child"))];
 
             app.absorb_created_children(created);
 
@@ -13873,6 +14231,7 @@ pub use app::{
     PanelTreeBuilder,
     Plugin,
     PluginAssemblyError,
+    PluginRegistration,
     PluginApp,
     PluginBuilder,
     PluginProgram,
@@ -13893,7 +14252,7 @@ pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, select
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 pub use host_port::{host_backbone_poll, host_backbone_send, host_backbone_status, host_now_ms, host_read_asset, register_host_backbone_channel, HostBackboneChannel};
 pub use plugin_runtime::{
-    extension_activate, extension_deactivate, extension_invoke, extension_manifest, install_extension_bundle, install_plugin_bundle, plugin_attach_backbone, plugin_detach_backbone, plugin_document_pack, plugin_ingest_operations,
+    extension_activate, extension_deactivate, extension_invoke, extension_manifest, install_extension_bundle, install_plugin_bundle, install_plugin_bundle_result, plugin_attach_backbone, plugin_detach_backbone, plugin_document_pack, plugin_ingest_operations,
     plugin_load_document_pack, ExtensionBundle, ExtensionManifest,
 };
 pub use semio_framework::*;
@@ -13910,7 +14269,7 @@ pub use ui_wgpu::wgpu::*;
 #[macro_export]
 macro_rules! register_plugin {
     ($bundle:expr) => {
-        $crate::plugin_runtime::install_plugin_bundle($bundle);
+        $crate::plugin_runtime::install_plugin_bundle_result($bundle);
     };
 }
 

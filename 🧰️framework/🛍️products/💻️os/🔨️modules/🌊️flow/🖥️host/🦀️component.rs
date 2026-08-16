@@ -149,7 +149,7 @@ impl FlowHost {
         // 🌱️ A throwaway placeholder, same as `dag` below — `rebuild_dag` (via `sync_from_dag`)
         // settles auto-computed layout onto `self.fixture` before the real undo/redo baseline is
         // captured, so a fresh host never starts with a spurious undoable step.
-        let history_store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", FlowFixture::default(), None));
+        let history_store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", FlowFixture::default(), None)).expect("failed to create flow history store");
         let mut host = Self {
             fixture,
             dag: DagHost::from_fixture(DagFixture { schema: "dag.fixture".into(), camera: dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
@@ -175,7 +175,7 @@ impl FlowHost {
             pending_extension_eval: None,
         };
         host.rebuild_dag();
-        host.history_store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", host.fixture.clone(), None));
+        host.history_store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", host.fixture.clone(), None)).expect("failed to create flow history store");
         host
     }
 
@@ -214,7 +214,7 @@ impl FlowHost {
         if reset_history {
             // 🌱️ Captured AFTER `rebuild_dag` (see `from_fixture_with_cache`'s matching comment) so the
             // new undo/redo baseline is the settled, auto-laid-out fixture, not the raw input.
-            self.history_store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.fixture.clone(), None));
+            self.history_store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.fixture.clone(), None)).expect("failed to create flow history store");
             self.pending_change = false;
             self.gesture_active = false;
         }
