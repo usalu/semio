@@ -61,8 +61,10 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = crate::registry::format_descriptors_for("xml")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::xml::schema::xml_artifact_schema_descriptor())
+        .formats(formats)
         .inferences([crate::artifacts::xml::standards::v1_0::subsets::any::schema::inferences::xml_artifact_inference_descriptor()])
         .composers(crate::artifacts::xml::standards::v1_0::subsets::any::io::io_registry::entries())
         .subset_validators(pilot_subset_validators())

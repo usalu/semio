@@ -36,8 +36,10 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = crate::registry::format_descriptors_for("bcf")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::bcf::schema::bcf_artifact_schema_descriptor())
+        .formats(formats)
         .inferences([crate::artifacts::bcf::standards::v2_1::subsets::any::schema::inferences::bcf_artifact_inference_descriptor()])
         .composers(crate::artifacts::bcf::standards::v2_1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())

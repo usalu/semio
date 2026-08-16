@@ -9,6 +9,18 @@ pub mod workflow;
 #[path = "../../../../🎮️commands/🔌️plugin-registry/🦀️component.rs"]
 pub mod plugin_registry;
 
+#[path = "../../../../🎮️commands/🖥️terminal-dashboard-daemon/🦀️component.rs"]
+pub mod terminal_dashboard_daemon;
+
+#[path = "../../../../🎮️commands/🛝️playground-development-session/🦀️component.rs"]
+pub mod playground_development_session;
+
+#[path = "../../../../🎮️commands/🧭️cli-usage-presentation/🦀️component.rs"]
+pub mod cli_usage_presentation;
+
+#[path = "../../../../🎮️commands/📇️playground-catalog-query/🦀️component.rs"]
+pub mod playground_catalog_query;
+
 // #region 🔖️Args
 pub mod args {
     use std::collections::HashMap;
@@ -305,68 +317,6 @@ pub mod env_contract {
     }
 }
 // #endregion 🔖️EnvContract
-
-// #region 🔖️Dev
-pub mod dev {
-    use crate::args::ParsedArgs;
-    use crate::catalog::{load_playground_catalog, PlaygroundEntry};
-    use crate::env_contract::{build_dev_env, DevOptions};
-    use crate::options::parse_lock;
-    use crate::proc::spawn_inherit;
-    use std::path::Path;
-
-    /// 🎯️ Longest-prefix multi-word alias resolution against the catalog (`"puzzle 3d"`, `"gis 2d"`, …).
-    pub fn resolve_playground<'a>(catalog: &'a [PlaygroundEntry], segments: &[String]) -> Option<(&'a PlaygroundEntry, Vec<String>)> {
-        for len in (1..=segments.len()).rev() {
-            let alias = segments[..len].join(" ");
-            if let Some(row) = catalog.iter().find(|r| r.variant == alias || r.aliases.iter().any(|a| a == &alias)) {
-                return Some((row, segments[len..].to_vec()));
-            }
-        }
-        None
-    }
-
-    /// 🩹️ Maps the legacy `fixture <slug>` / `example <slug>` positional prefix onto `--example`.
-    pub fn consume_legacy_example_prefix(segments: &[String]) -> (Vec<String>, Option<String>) {
-        if segments.len() >= 2 && (segments[0] == "fixture" || segments[0] == "example") {
-            (segments[2..].to_vec(), Some(segments[1].clone()))
-        } else {
-            (segments.to_vec(), None)
-        }
-    }
-
-    fn dev_options_from_args(args: &ParsedArgs) -> DevOptions {
-        let (rest, legacy_example) = consume_legacy_example_prefix(&args.segments[1.min(args.segments.len())..]);
-        let _ = rest;
-        DevOptions {
-            renderer: args.flag("renderer").unwrap_or("react").to_string(),
-            port: args.flag("port").and_then(|p| p.parse().ok()),
-            example: args.flag("example").map(parse_lock).or(legacy_example.as_deref().map(parse_lock)).unwrap_or(crate::options::Lock::All),
-            language: args.flag("language").map(parse_lock).unwrap_or(crate::options::Lock::All),
-            terminology: args.flag("terminology").map(parse_lock).unwrap_or(crate::options::Lock::All),
-            theme: args.flag("theme").map(parse_lock).unwrap_or(crate::options::Lock::All),
-            appearance: args.flag("appearance").map(parse_lock).unwrap_or(crate::options::Lock::All),
-            skip_plugin_build: args.has_flag("skip-plugin-build"),
-            skip_engine_build: args.has_flag("skip-engine-build"),
-            skip_wgpu_build: args.has_flag("skip-wgpu-build"),
-        }
-    }
-
-    /// ▶️ Resolves a `semio dev <variant…>` invocation and spawns the dev session with its env.
-    pub fn run_dev(root: &Path, args: &ParsedArgs) -> i32 {
-        let catalog = load_playground_catalog(root);
-        let (segments, _) = consume_legacy_example_prefix(&args.segments);
-        let Some((playground, _rest)) = resolve_playground(&catalog, &segments) else {
-            eprintln!("[semio dev] unknown plugin/variant {:?} — run `semio catalog` to list playgrounds", segments.join(" "));
-            return 1;
-        };
-        let opts = dev_options_from_args(args);
-        let env = build_dev_env(&playground.variant, Some(playground), &opts);
-        println!("[semio dev] {} via {} on port {}", playground.variant, opts.renderer, env.iter().find(|(k, _)| k == "S_OS_PORT").map(|(_, v)| v.as_str()).unwrap_or("?"));
-        spawn_inherit("bun", &["nx", "run", "@semio-tech/framework-os-dev:dev"], root, &env)
-    }
-}
-// #endregion 🔖️Dev
 
 // #region 🔖️Ipc
 pub mod ipc {
@@ -1332,27 +1282,17 @@ pub fn run(argv: Vec<String>) -> i32 {
     let root = workspace::find_root(&std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
     if argv.is_empty() {
         if !std::io::stdout().is_terminal() {
-            print_usage();
+            cli_usage_presentation::print();
             return 1;
         }
         return tui_dashboard::run(&root);
     }
     let parsed = args::parse(&argv);
     match parsed.verb.as_str() {
-        "daemon" => daemon_command(&root, &parsed),
+        "daemon" => terminal_dashboard_daemon::run(&root, &parsed),
         "workflow" => workflow::run(&root, &parsed),
-        "dev" => dev::run_dev(&root, &parsed),
-        "catalog" => {
-            if parsed.has_flag("json") {
-                print!("{}", catalog::playgrounds_json_text(&root));
-                return 0;
-            }
-            let catalog = catalog::load_playground_catalog(&root);
-            for row in &catalog {
-                println!("{}\t{}\treact:{}\twgpu:{}", row.variant, row.plugin_id, row.ports.react, row.ports.wgpu);
-            }
-            0
-        }
+        "dev" => playground_development_session::run(&root, &parsed),
+        "catalog" => playground_catalog_query::run(&root, &parsed),
         "plugin" if parsed.segments.first().map(String::as_str) == Some("registry") => plugin_registry::run(&root, parsed.segments.get(1).map(String::as_str).unwrap_or("generate")),
         _ => {
             let mut forward = vec!["./📜️script.ts".to_string(), parsed.verb.clone()];
@@ -1363,49 +1303,6 @@ pub fn run(argv: Vec<String>) -> i32 {
     }
 }
 
-
-
-fn daemon_command(root: &PathBuf, parsed: &args::ParsedArgs) -> i32 {
-    let sub = parsed.segments.first().map(String::as_str).unwrap_or("status");
-    let root = if let Some(r) = parsed.flag("root") { PathBuf::from(r) } else { root.clone() };
-    match sub {
-        "start" => {
-            let exe = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("semio"));
-            daemon::start_detached(&root, &exe)
-        }
-        "serve" => {
-            let running = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
-            let flag = std::sync::Arc::clone(&running);
-            ctrlc_stub(flag);
-            match daemon::serve(&root, running) {
-                Ok(()) => 0,
-                Err(e) => {
-                    eprintln!("daemon serve failed: {e}");
-                    1
-                }
-            }
-        }
-        "stop" => daemon::stop(&root),
-        "status" => {
-            print!("{}", daemon::status(&root));
-            0
-        }
-        "attach" => tui_dashboard::run(&root),
-        _ => {
-            eprintln!("usage: semio daemon start|stop|status|attach|serve");
-            1
-        }
-    }
-}
-
-fn ctrlc_stub(_flag: std::sync::Arc<std::sync::atomic::AtomicBool>) {
-    // No ctrlc crate: daemon stops via `semio daemon stop` (SIGTERM) or process kill.
-}
-
-fn print_usage() {
-    eprintln!("semio — semio monorepo orchestrator\n\nUsage:\n  semio                 interactive TUI dashboard (requires a TTY)\n  semio dev <variant…>  start a plugin dev session\n  semio catalog         list playgrounds\n  semio plugin registry generate|check\n  semio daemon …        start|stop|status|attach dashboard daemon
-  semio <verb> …        forwarded to `bun ./📜️script.ts <verb> …`");
-}
 // #endregion 🔖️Dispatch
 
 // #region 🔖️Tests
@@ -1413,7 +1310,6 @@ fn print_usage() {
 mod tests {
     use crate::args::parse;
     use crate::catalog::{playgrounds_json_text, PlaygroundEntry, Ports};
-    use crate::dev::{consume_legacy_example_prefix, resolve_playground};
     use crate::env_contract::{build_dev_env, resolve_port, DevOptions};
     use crate::options::{parse_lock, Lock};
     use crate::tui_dashboard::group_catalog_into_table;
@@ -1427,23 +1323,6 @@ mod tests {
         assert_eq!(parsed.flag("renderer"), Some("wgpu-wasm"));
         assert!(parsed.has_flag("skip-plugin-build"));
         assert_eq!(parsed.flag("skip-plugin-build"), None);
-    }
-
-    #[test]
-    fn resolve_playground_prefers_longest_multi_word_alias() {
-        let catalog = vec![PlaygroundEntry { variant: "puzzle2d".into(), aliases: vec!["puzzle 2d".into(), "2d".into()], ..Default::default() }, PlaygroundEntry { variant: "puzzle3d".into(), aliases: vec!["puzzle 3d".into()], ..Default::default() }];
-        let segments = ["puzzle".to_string(), "3d".to_string(), "fixture".to_string(), "concrete".to_string()];
-        let (row, rest) = resolve_playground(&catalog, &segments).expect("resolves");
-        assert_eq!(row.variant, "puzzle3d");
-        assert_eq!(rest, vec!["fixture", "concrete"]);
-    }
-
-    #[test]
-    fn legacy_fixture_prefix_maps_to_example() {
-        let segments = ["fixture".to_string(), "concrete".to_string()];
-        let (rest, example) = consume_legacy_example_prefix(&segments);
-        assert!(rest.is_empty());
-        assert_eq!(example, Some("concrete".to_string()));
     }
 
     #[test]

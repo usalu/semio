@@ -3,7 +3,7 @@
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
 use crate::apps::space::engine::{workflow_parameter_bindings_to_os, workflow_parameters_to_os};
 use semio_framework_os::{materialize_os_app_instance_document_json, os_app_registration, WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, HostEffect};
 use serde_json::{json, Value};
 
 use serde::{Deserialize, Serialize};
@@ -23,11 +23,13 @@ pub fn handle(payload: &ExportMedia, doc: &ArtifactView<'_, WorkflowSnapshot>, _
             let schema = os_app_registration(&node.plugin_id, &node.app_id).map(|row| row.source_format).unwrap_or_default();
             let document_json = materialize_os_app_instance_document_json(&json!({ "schema": schema }).to_string(), &node.id, &workflow_parameter_bindings_to_os(&projection.parameter_bindings), &workflow_parameters_to_os(&projection.parameters));
             let document_value: Value = serde_json::from_str(&document_json).unwrap_or_else(|_| json!({}));
-            let format_kind = semio_framework::format_descriptor(&payload.format).map(|d| d.short_id).unwrap_or_else(|| payload.format.clone());
-            match semio_framework_os::export_os_app_instance_media_kind(node, &document_value, &format_kind) {
-                Ok(result) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: result.file_name, mime_type: result.mime_type, data: result.data, encoding: result.encoding })),
-                Err(_) => Ok(Emit::default()),
-            }
+            let format_kind = semio_framework::format_descriptor(&payload.format)
+                .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), error.to_string()))?
+                .map(|descriptor| descriptor.short_id)
+                .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), format!("unknown media format `{}`", payload.format)))?;
+            let result = semio_framework_os::export_os_app_instance_media_kind(node, &document_value, &format_kind)
+                .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.export"), error))?;
+            Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: result.file_name, mime_type: result.mime_type, data: result.data, encoding: result.encoding }))
         }
         None => Ok(Emit::default()),
     }

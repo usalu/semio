@@ -81,6 +81,126 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.deflate.runtime.codec.codec-stdio-deflate-extension-zz.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.deflate|extension:zz",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.deflate"
+        },
+        {
+          "namespace": "extension",
+          "value": "zz"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.deflate.runtime.composer.dialect-s-stdio-deflate-rfc1950.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.deflate@rfc1950/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.deflate@rfc1950/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.deflate.runtime.grammar.grammar-stdio-deflate.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.deflate",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.deflate"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.deflate.runtime.grammar.grammar-stdio-deflate-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.deflate.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.deflate.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.deflate.runtime.grammar.grammar-stdio-deflate-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.deflate.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.deflate.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.deflate.runtime.grammar.grammar-stdio-deflate-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.deflate.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.deflate.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.deflate.runtime.grammar.grammar-stdio-deflate-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.deflate.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.deflate.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.deflate.runtime.inference.schema-s-stdio-deflate-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.deflate.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.deflate.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.deflate.runtime.representation.mime-application-zlib-extension-zz.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:application/zlib|extension:.zz",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "application/zlib"
+        },
+        {
+          "namespace": "extension",
+          "value": ".zz"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.deflate.runtime.schema.schema-s-stdio-deflate.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.deflate",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.deflate"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

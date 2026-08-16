@@ -618,15 +618,15 @@ pub mod host {
     }
 
     impl OsWorkflowStore {
-        pub fn new(document: OsWorkflowArtifactDocument) -> Self {
+        pub fn new(document: OsWorkflowArtifactDocument) -> Result<Self, VcsError> {
             let applied_edit_ids = document.applied_edit_ids.clone();
             let envelope = ArtifactEnvelope { schema: document.schema, id: document.id, vcs: document.vcs, backbone: document.backbone, active_alternative_id: None, cursor: None, dialect: None, migrated_from: None, owner: None, lanes: std::collections::BTreeMap::new() };
-            let mut inner = ArtifactStore::new(envelope).expect("failed to create workflow store");
+            let mut inner = ArtifactStore::new(envelope)?;
             if !applied_edit_ids.is_empty() {
                 let snapshot = inner.envelope().clone();
-                inner.reset(snapshot, applied_edit_ids, Vec::new()).expect("reset snapshot");
+                inner.reset(snapshot, applied_edit_ids, Vec::new())?;
             }
-            Self { inner, name: document.name }
+            Ok(Self { inner, name: document.name })
         }
 
         pub fn generation(&self) -> u64 {
@@ -1338,11 +1338,11 @@ pub mod host {
 
         fn test_space_store() -> OsSpaceStore {
             let envelope = create_document_envelope(space::S_SPACE_SCHEMA, "space", space::empty_space_snapshot("Space", space::SpaceKind::Studio, space::SpaceVisibility::Private), None);
-            ArtifactStore::new(envelope)
+            ArtifactStore::new(envelope).expect("valid artifact store fixture")
         }
 
         fn test_workflow_store() -> OsWorkflowStore {
-            OsWorkflowStore::new(create_backbone_document(workflow::S_WORKFLOW_SCHEMA, "workflow", "Workflow", workflow::empty_workflow_snapshot()))
+            OsWorkflowStore::new(create_backbone_document(workflow::S_WORKFLOW_SCHEMA, "workflow", "Workflow", workflow::empty_workflow_snapshot())).expect("valid workflow store fixture")
         }
 
         #[test]
@@ -1395,7 +1395,7 @@ pub mod host {
             let mut store_a = test_workflow_store();
             let node_a_id = store_a.add_workflow_node("draw", "draw", None, 0.0, 0.0, &mut space_store_a).expect("spawn a");
             let node_b_id = store_a.add_workflow_node("sink", "sink", None, 200.0, 0.0, &mut space_store_a).expect("spawn b");
-            let mut store_b = OsWorkflowStore::new(store_a.document());
+            let mut store_b = OsWorkflowStore::new(store_a.document()).expect("valid replicated workflow store fixture");
 
             let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://reconcile-race", "mem://reconcile-race");
             store_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
@@ -1634,7 +1634,7 @@ pub mod host {
         #[test]
         fn document_text_round_trips_store_with_applied_operation() {
             let envelope = create_document_envelope(workflow::S_WORKFLOW_SCHEMA, "workflow-text-test", workflow::empty_workflow_snapshot(), None);
-            let mut store = ArtifactStore::new(envelope);
+            let mut store = ArtifactStore::new(envelope).expect("valid artifact store fixture");
             store.dispatch(ArtifactCommand::Apply { mutations: vec![workflow::WorkflowMutation::SyncNodePorts], description: None }).expect("apply");
             store::test_support::assert_document_text_round_trip(&store);
             store::test_support::assert_document_pack_round_trip(&store);
@@ -2564,7 +2564,10 @@ pub mod media_export_raster {
         /// 📤️ Build an export result from raw bytes + stdio format kind id.
         pub fn from_format_kind_bytes(bytes: Vec<u8>, format_artifact_kind: &str, file_stem: &str) -> Result<Self, String> {
             let entry = semio_framework::format_descriptor(format_artifact_kind)
+                .map_err(|error| error.to_string())?
                 .ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
+            let mime_type = entry.mimes.first().cloned().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no MIME claim"))?;
+            let extension = entry.extensions.first().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no extension claim"))?;
             let data = if entry.is_binary {
                 base64::engine::general_purpose::STANDARD.encode(&bytes)
             } else {
@@ -2572,15 +2575,15 @@ pub mod media_export_raster {
             };
             Ok(Self {
                 data,
-                mime_type: entry.mime.clone(),
-                file_name: format!("{file_stem}{}", entry.extension),
+                mime_type,
+                file_name: format!("{file_stem}{extension}"),
                 encoding: if entry.is_binary { Some("base64".into()) } else { None },
             })
         }
     }
 
     /// 🗂️ Build a file-picker `accept` filter from stdio format kind ids (`dwg` / `stdio.dwg`).
-    pub fn media_accept_filter_kinds(format_artifact_kinds: &[&str]) -> String {
+    pub fn media_accept_filter_kinds(format_artifact_kinds: &[&str]) -> Result<String, semio_framework::FormatRegistryError> {
         semio_framework::format_accept_filter(format_artifact_kinds)
     }
 
@@ -2806,15 +2809,16 @@ pub mod media_export_raster {
     /// @emoji 🧵️ Registers one `MeshExporter` format (Obj/Glb/Stl/…) for a mesh resource kind; call once per format — `mesh_from_document` bridges the OS workflow's per-document export pipeline down to the format-agnostic `MeshData` the exporter instance actually encodes. DWG stays on `register_mesh_dwg_import_handler`'s sibling below; it is not part of the `MeshExporter` mechanism.
     pub fn register_mesh_exporter(artifact_kind: &'static str, file_stem: &'static str, mesh_from_document: fn(&Value) -> Result<semio_framework_plugin::MeshData, String>, exporter: Box<dyn semio_framework_plugin::MeshExporter>) {
         let format_kind = exporter.format_kind();
-        let descriptor = semio_framework::format_descriptor(format_kind);
-        let ext = descriptor.as_ref().map(|d| d.extension.trim_start_matches('.').to_string()).unwrap_or_else(|| format_kind.to_string());
-        let mime_type = descriptor.as_ref().map(|d| d.mime.clone()).unwrap_or_else(|| "application/octet-stream".to_string());
-        let binary = descriptor.as_ref().map(|d| d.is_binary).unwrap_or(true);
         register_os_media_export_handler_kind(artifact_kind, format_kind, move |doc| {
+            let descriptor = semio_framework::format_descriptor(format_kind)
+                .map_err(|error| error.to_string())?
+                .ok_or_else(|| format!("unknown mesh export format kind `{format_kind}`"))?;
+            let extension = descriptor.extensions.first().ok_or_else(|| format!("mesh export format kind `{format_kind}` has no extension claim"))?;
+            let mime_type = descriptor.mimes.first().cloned().ok_or_else(|| format!("mesh export format kind `{format_kind}` has no MIME claim"))?;
             let mesh = mesh_from_document(doc)?;
             let bytes = exporter.export(&mesh)?;
-            let data = if binary { base64::engine::general_purpose::STANDARD.encode(&bytes) } else { String::from_utf8(bytes).map_err(|error| error.to_string())? };
-            Ok(OsMediaExportResult { data, mime_type: mime_type.clone(), file_name: format!("{file_stem}.{ext}"), encoding: if binary { Some("base64".into()) } else { None } })
+            let data = if descriptor.is_binary { base64::engine::general_purpose::STANDARD.encode(&bytes) } else { String::from_utf8(bytes).map_err(|error| error.to_string())? };
+            Ok(OsMediaExportResult { data, mime_type, file_name: format!("{file_stem}{extension}"), encoding: descriptor.is_binary.then(|| "base64".into()) })
         });
     }
 
@@ -3035,7 +3039,7 @@ pub use crate::workflow_kernel::{
                 ));
             }
         };
-        let wire = negotiate_wire_format(&source_descriptor, &target_descriptor).ok_or_else(|| format!("cannot connect `{}` to `{}`: no shared wire format", source_port.spec.id, target_port.spec.id))?;
+        let wire = negotiate_wire_format(&source_descriptor, &target_descriptor)?.ok_or_else(|| format!("cannot connect `{}` to `{}`: no shared wire format", source_port.spec.id, target_port.spec.id))?;
         let kind_id = target_port.spec.kind_id.clone().unwrap_or_else(|| target_descriptor.kind.clone());
         Ok(MediaContract { kind_id, media_type: target_port.spec.media_type, wire, conversion })
     }
@@ -3044,40 +3048,53 @@ pub use crate::workflow_kernel::{
     /// `Binary{format_kind}` wire (the first common format kind id between the two descriptors' export/import
     /// lists) — see `MediaWireFormat`. The legacy format enum was retired — ticket 26/08/11/
     /// SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6.
-    fn negotiate_wire_format(source: &OsArtifactDescriptor, target: &OsArtifactDescriptor) -> Option<MediaWireFormat> {
+    fn negotiate_wire_format(source: &OsArtifactDescriptor, target: &OsArtifactDescriptor) -> Result<Option<MediaWireFormat>, String> {
         if !source.schema.is_empty() && source.schema == target.schema {
-            return Some(MediaWireFormat::Document { schema: source.schema.clone() });
+            return Ok(Some(MediaWireFormat::Document { schema: source.schema.clone() }));
         }
         if !source.export_stdio_kinds.is_empty() && !target.import_stdio_kinds.is_empty() {
             for kind in &source.export_stdio_kinds {
-                let short = semio_framework::format_descriptor(kind).map(|d| d.short_id).unwrap_or_else(|| kind.clone());
-                let hit = target.import_stdio_kinds.iter().any(|other| {
-                    semio_framework::format_descriptor(other).map(|d| d.short_id).unwrap_or_else(|| other.clone()) == short
-                });
-                if hit {
-                    return Some(MediaWireFormat::Binary { format_kind: short });
+                let format_kind = semio_framework::format_descriptor(kind)
+                    .map_err(|error| error.to_string())?
+                    .ok_or_else(|| format!("unknown source stdio format kind `{kind}`"))?
+                    .kind_id;
+                for other in &target.import_stdio_kinds {
+                    let target_format_kind = semio_framework::format_descriptor(other)
+                        .map_err(|error| error.to_string())?
+                        .ok_or_else(|| format!("unknown target stdio format kind `{other}`"))?
+                        .kind_id;
+                    if target_format_kind == format_kind {
+                        return Ok(Some(MediaWireFormat::Binary { format_kind }));
+                    }
                 }
             }
         }
-        if let Some(format_kind) = registry_shared_stdio_dialect(&native_dialect_kind(&source.kind), &native_dialect_kind(&target.kind)) {
-            return Some(MediaWireFormat::Binary { format_kind });
+        if let Some(format_kind) = registry_shared_stdio_dialect(&native_dialect_kind(&source.kind), &native_dialect_kind(&target.kind))? {
+            return Ok(Some(MediaWireFormat::Binary { format_kind }));
         }
-        source.export_formats.iter().find(|format| target.import_formats.contains(format)).map(|format| MediaWireFormat::Binary { format_kind: format.clone() })
+        Ok(source.export_formats.iter().find(|format| target.import_formats.contains(format)).map(|format| MediaWireFormat::Binary { format_kind: format.clone() }))
     }
 
     /// 🗄️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: see the os-side twin of this function for
     /// the full rationale — consults the live typed IO registry as a supplement to the
     /// `export_stdio_kinds`/`import_stdio_kinds` static lists, catching drift between the two.
-    fn registry_shared_stdio_dialect(source_kind: &str, target_kind: &str) -> Option<String> {
+    fn registry_shared_stdio_dialect(source_kind: &str, target_kind: &str) -> Result<Option<String>, String> {
         use semio_framework::IoDirection;
         let target_reads: HashSet<&str> = semio_framework::io_dialects_for(target_kind, IoDirection::Import).iter().map(|d| d.artifact_kind).collect();
         if target_reads.contains(source_kind) {
-            if let Some(descriptor) = semio_framework::format_descriptor(source_kind) {
-                return Some(descriptor.short_id);
-            }
+            let descriptor = semio_framework::format_descriptor(source_kind)
+                .map_err(|error| error.to_string())?
+                .ok_or_else(|| format!("unknown source dialect format kind `{source_kind}`"))?;
+            return Ok(Some(descriptor.kind_id));
         }
         let source_reads: HashSet<&str> = semio_framework::io_dialects_for(source_kind, IoDirection::Import).iter().map(|d| d.artifact_kind).collect();
-        target_reads.intersection(&source_reads).find_map(|candidate| semio_framework::format_descriptor(candidate).map(|d| d.short_id))
+        for candidate in target_reads.intersection(&source_reads) {
+            let descriptor = semio_framework::format_descriptor(candidate)
+                .map_err(|error| error.to_string())?
+                .ok_or_else(|| format!("unknown shared dialect format kind `{candidate}`"))?;
+            return Ok(Some(descriptor.kind_id));
+        }
+        Ok(None)
     }
 
     /// @emoji ✅️ Validates workflow connectivity, cycle freedom (via `workflow::validate_workflow`,
@@ -3434,7 +3451,10 @@ pub use crate::workflow_kernel::{
         /// ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6).
         pub fn from_format_kind_bytes(bytes: Vec<u8>, format_artifact_kind: &str, file_stem: &str) -> Result<Self, String> {
             let entry = semio_framework::format_descriptor(format_artifact_kind)
+                .map_err(|error| error.to_string())?
                 .ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
+            let mime_type = entry.mimes.first().cloned().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no MIME claim"))?;
+            let extension = entry.extensions.first().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no extension claim"))?;
             let data = if entry.is_binary {
                 base64::engine::general_purpose::STANDARD.encode(&bytes)
             } else {
@@ -3442,8 +3462,8 @@ pub use crate::workflow_kernel::{
             };
             Ok(Self {
                 data,
-                mime_type: entry.mime.clone(),
-                file_name: format!("{file_stem}{}", entry.extension),
+                mime_type,
+                file_name: format!("{file_stem}{extension}"),
                 encoding: if entry.is_binary { Some("base64".into()) } else { None },
             })
         }
@@ -3475,13 +3495,15 @@ pub use crate::workflow_kernel::{
 
     /// 📤️ Export via `(artifact_kind, format_artifact_kind)` stdio kind ids.
     pub fn export_os_app_instance_media_kind(node: &WorkflowNode, source_document: &Value, format_artifact_kind: &str) -> Result<OsMediaExportResult, String> {
-        let short = semio_framework::normalize_format_kind(format_artifact_kind).unwrap_or_else(|| format_artifact_kind.to_string());
-        if let Some(result) = registry_export_media(&node.yields, &short, source_document) {
+        let format_kind = semio_framework::normalize_format_kind(format_artifact_kind)
+            .map_err(|error| error.to_string())?
+            .ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
+        if let Some(result) = registry_export_media(&node.yields, &format_kind, source_document) {
             return result;
         }
         let handlers = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let handler = handlers
-            .get(&os_media_handler_key(&node.yields, &short))
+            .get(&os_media_handler_key(&node.yields, &format_kind))
             .or_else(|| handlers.get(&os_media_handler_key(&node.yields, format_artifact_kind)))
             .ok_or_else(|| format!("no export handler for {}:{}", node.yields, format_artifact_kind))?;
         handler(source_document)
@@ -3525,8 +3547,8 @@ pub use crate::workflow_kernel::{
         Some(OsMediaExportResult::from_format_kind_bytes(bytes, format_kind, artifact_kind))
     }
 
-    pub fn os_media_export_extension_for_format_kind(format_artifact_kind: &str) -> Option<String> {
-        semio_framework::format_descriptor(format_artifact_kind).map(|row| row.short_id)
+    pub fn os_media_export_extension_for_format_kind(format_artifact_kind: &str) -> Result<Option<String>, semio_framework::FormatRegistryError> {
+        Ok(semio_framework::format_descriptor(format_artifact_kind)?.and_then(|row| row.extensions.first().cloned()))
     }
 
     type OsMediaImportHandler = Box<dyn Fn(&[u8]) -> Result<Value, String> + Send + Sync>;
@@ -3550,13 +3572,15 @@ pub use crate::workflow_kernel::{
 
     /// 📥️ Import via `(artifact_kind, format_artifact_kind)` stdio kind ids.
     pub fn import_os_app_instance_media_kind(node: &WorkflowNode, data: &[u8], format_artifact_kind: &str) -> Result<Value, String> {
-        let short = semio_framework::normalize_format_kind(format_artifact_kind).unwrap_or_else(|| format_artifact_kind.to_string());
-        if let Some(result) = registry_import_media(&node.yields, &short, data) {
+        let format_kind = semio_framework::normalize_format_kind(format_artifact_kind)
+            .map_err(|error| error.to_string())?
+            .ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
+        if let Some(result) = registry_import_media(&node.yields, &format_kind, data) {
             return result;
         }
         let handlers = import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let handler = handlers
-            .get(&os_media_handler_key(&node.yields, &short))
+            .get(&os_media_handler_key(&node.yields, &format_kind))
             .or_else(|| handlers.get(&os_media_handler_key(&node.yields, format_artifact_kind)))
             .ok_or_else(|| format!("no import handler for {}:{}", node.yields, format_artifact_kind))?;
         handler(data)
@@ -3971,13 +3995,16 @@ pub mod wasm_exports {
     pub fn wasm_media_accept_filter_kinds(format_artifact_kinds: JsValue) -> Result<String, JsValue> {
         let kinds: Vec<String> = serde_wasm_bindgen::from_value(format_artifact_kinds).map_err(|e| JsValue::from_str(&e.to_string()))?;
         let refs: Vec<&str> = kinds.iter().map(|s| s.as_str()).collect();
-        Ok(semio_framework::format_accept_filter(&refs))
+        semio_framework::format_accept_filter(&refs).map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
     /// 🏷️ Normalize `stdio.dwg` / `dwg` to short stdio format kind id (WASM bridge).
     #[wasm_bindgen(js_name = normalizeStdioFormatKind)]
-    pub fn wasm_normalize_stdio_format_kind(value: &str) -> String {
-        semio_framework::format_descriptor(value).map(|d| d.short_id).unwrap_or_else(|| value.to_string())
+    pub fn wasm_normalize_stdio_format_kind(value: &str) -> Result<String, JsValue> {
+        semio_framework::format_descriptor(value)
+            .map_err(|error| JsValue::from_str(&error.to_string()))?
+            .map(|descriptor| descriptor.short_id)
+            .ok_or_else(|| JsValue::from_str(&format!("unknown stdio format kind `{value}`")))
     }
 
     // #endregion wasm_exports

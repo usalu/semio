@@ -163,16 +163,23 @@ const PROCESS3D_TESSELLATION_TOLERANCE: f64 = 0.05;
 /// `ProcessWorkingScene`'s own doc comment in the artifact root file). Callers that only have a
 /// persisted snapshot get the honest empty scene from `process_working_scene_from_snapshot` — this
 /// export then legitimately returns `None` (no stock to replay), the same documented gap.
-pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>, format: &str) -> Option<Process3dModelExport> {
+pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>, format: &str) -> Result<Option<Process3dModelExport>, String> {
     if format == "glb" {
-        let mesh = crate::artifacts::process3d::schema::inferences::processed_mesh(scene, resolved_up_to)?;
-        let bytes = semio_framework_plugin::GlbExporter.export(&mesh).ok()?;
-        return Some(Process3dModelExport {
-            filename: "process3d.glb".into(),
+        let Some(mesh) = crate::artifacts::process3d::schema::inferences::processed_mesh(scene, resolved_up_to) else {
+            return Ok(None);
+        };
+        let bytes = semio_framework_plugin::GlbExporter.export(&mesh)?;
+        let descriptor = semio_framework::format_descriptor("glb")
+            .map_err(|error| error.to_string())?
+            .ok_or_else(|| "unknown process export format kind `glb`".to_string())?;
+        let extension = descriptor.extensions.first().ok_or_else(|| "process export format kind `glb` has no extension claim".to_string())?;
+        let mime_type = descriptor.mimes.first().cloned().ok_or_else(|| "process export format kind `glb` has no MIME claim".to_string())?;
+        return Ok(Some(Process3dModelExport {
+            filename: format!("process3d{extension}"),
             data: Value::String(base64::engine::general_purpose::STANDARD.encode(bytes)),
-            mime_type: "model/gltf-binary".into(),
-            encoding: Some("base64".into()),
-        });
+            mime_type,
+            encoding: descriptor.is_binary.then(|| "base64".into()),
+        }));
     }
     let exporter: Box<dyn SolidExporter> = match format {
         "obj" => Box::new(ObjSolidExporter),
@@ -180,14 +187,18 @@ pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Optio
         _ => Box::new(StepSolidExporter),
     };
     let mut session = crate::artifacts::process3d::schema::inferences::ProcessKernelReplay::new();
-    let handle = crate::artifacts::process3d::schema::inferences::replay_process(&mut session, scene, resolved_up_to)?;
-    let bytes = exporter.export(session.kernel(), &[handle], PROCESS3D_TESSELLATION_TOLERANCE).ok()?;
+    let Some(handle) = crate::artifacts::process3d::schema::inferences::replay_process(&mut session, scene, resolved_up_to) else {
+        return Ok(None);
+    };
+    let bytes = exporter.export(session.kernel(), &[handle], PROCESS3D_TESSELLATION_TOLERANCE).map_err(|error| error.to_string())?;
     let format_kind = exporter.format_kind();
-    let descriptor = semio_framework::format_descriptor(format_kind);
-    let binary = descriptor.as_ref().map(|d| d.is_binary).unwrap_or(true);
-    let mime_type = descriptor.map(|d| d.mime).unwrap_or_else(|| "application/octet-stream".to_string());
-    let data = if binary { Value::String(base64::engine::general_purpose::STANDARD.encode(&bytes)) } else { Value::String(String::from_utf8(bytes).ok()?) };
-    Some(Process3dModelExport { filename: format!("process3d.{}", format_kind), data, mime_type, encoding: if binary { Some("base64".into()) } else { None } })
+    let descriptor = semio_framework::format_descriptor(format_kind)
+        .map_err(|error| error.to_string())?
+        .ok_or_else(|| format!("unknown process export format kind `{format_kind}`"))?;
+    let extension = descriptor.extensions.first().ok_or_else(|| format!("process export format kind `{format_kind}` has no extension claim"))?;
+    let mime_type = descriptor.mimes.first().cloned().ok_or_else(|| format!("process export format kind `{format_kind}` has no MIME claim"))?;
+    let data = if descriptor.is_binary { Value::String(base64::engine::general_purpose::STANDARD.encode(&bytes)) } else { Value::String(String::from_utf8(bytes).map_err(|error| error.to_string())?) };
+    Ok(Some(Process3dModelExport { filename: format!("process3d{extension}"), data, mime_type, encoding: descriptor.is_binary.then(|| "base64".into()) }))
 }
 
 /// 📦️ Decodes a `requestFileOpen(readAs: "dataUrl")` payload into raw bytes.

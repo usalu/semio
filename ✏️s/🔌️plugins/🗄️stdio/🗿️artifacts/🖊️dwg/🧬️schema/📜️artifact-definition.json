@@ -69,6 +69,21 @@
       "aliases": [],
       "neutral": true,
       "status": "declared"
+    },
+    {
+      "id": "s.stdio.dwg.standard.ac1024.representation.document",
+      "standard": "s.stdio.dwg.standard.ac1024",
+      "representation": "document",
+      "mimes": [
+        "image/vnd.dwg"
+      ],
+      "extensions": [
+        ".dwg"
+      ],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
+      "status": "declared"
     }
   ],
   "codecs": [],
@@ -102,6 +117,126 @@
       "id": "s.stdio.dwg.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
+    }
+  ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.dwg.runtime.codec.codec-stdio-dwg-extension-dwg.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.dwg|extension:dwg",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.dwg"
+        },
+        {
+          "namespace": "extension",
+          "value": "dwg"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.dwg.runtime.composer.dialect-s-stdio-dwg-ac1024.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.dwg@ac1024/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.dwg@ac1024/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.dwg.runtime.grammar.grammar-stdio-dwg.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.dwg",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.dwg"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.dwg.runtime.grammar.grammar-stdio-dwg-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.dwg.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.dwg.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.dwg.runtime.grammar.grammar-stdio-dwg-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.dwg.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.dwg.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.dwg.runtime.grammar.grammar-stdio-dwg-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.dwg.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.dwg.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.dwg.runtime.grammar.grammar-stdio-dwg-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.dwg.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.dwg.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.dwg.runtime.inference.schema-s-stdio-dwg-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.dwg.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.dwg.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.dwg.runtime.representation.mime-image-vnd-dwg-extension-dwg.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:image/vnd.dwg|extension:.dwg",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "image/vnd.dwg"
+        },
+        {
+          "namespace": "extension",
+          "value": ".dwg"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.dwg.runtime.schema.schema-s-stdio-dwg.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.dwg",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.dwg"
+        }
+      ]
     }
   ],
   "support_ledger": {

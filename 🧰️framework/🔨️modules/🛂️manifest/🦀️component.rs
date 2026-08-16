@@ -19,6 +19,10 @@ use crate::IconName;
 // like `IconName` above, so `AppDefinition.interactions`/`WindowKindDefinition.interactions` see
 // them the same way manifest consumers already see `ActionDefinition`/`ActionRef`.
 use crate::{DomainSelection, InteractionDefinition, InteractionRef};
+// 🎯️ ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET C1: `AppDefinition.dialect` is the
+// owned wire form of a dialect coordinate (`ArtifactDialect`, not the compile-time `&'static str`
+// `Dialect`) — see 🔖️Surface below.
+use crate::ArtifactDialect;
 
 //#region 🔖️Manifest
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2580,6 +2584,10 @@ pub enum PanelTabKind {
     DisplayLayout,
     SettingsGeneral,
     SettingsTheme,
+    /// 🎯️ ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET C1/C5: the "Default apps" settings
+    /// sub-tab — table of dialect × {viewer, editor} with selects, writes only through the `os.*`
+    /// default-app commands (see 🔖️Surface below).
+    SettingsDefaultApps,
     /// 🧩️ App-declared tab — id is app-namespaced (e.g. `"puzzle.catalogue"`).
     App(String),
 }
@@ -2596,6 +2604,7 @@ impl PanelTabKind {
             PanelTabKind::DisplayLayout => "framework.display.layout",
             PanelTabKind::SettingsGeneral => "framework.settings.general",
             PanelTabKind::SettingsTheme => "framework.settings.theme",
+            PanelTabKind::SettingsDefaultApps => "framework.settings.default-apps",
             PanelTabKind::App(id) => id.as_str(),
         }
     }
@@ -2624,11 +2633,71 @@ impl PanelTabDefinition {
     }
 }
 
+//#region 🔖️Surface
+/// 👁️✏️ Whether a surface may change the artifact it is bound to.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum AppRole {
+    Viewer,
+    Editor,
+}
+
+impl AppRole {
+    /// 🔤️ Wire spelling — exactly `"viewer"`/`"editor"`, shared by serde, TS, JSON schema and the
+    /// `SEMIO_APP_ROLE`/`VITE_SEMIO_APP_ROLE` env values.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            AppRole::Viewer => "viewer",
+            AppRole::Editor => "editor",
+        }
+    }
+}
+
+impl std::str::FromStr for AppRole {
+    type Err = String;
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        match input {
+            "viewer" => Ok(AppRole::Viewer),
+            "editor" => Ok(AppRole::Editor),
+            other => Err(format!("unknown app role {other:?}, expected \"viewer\" or \"editor\"")),
+        }
+    }
+}
+
+/// 🎯️ A surface addressed across plugin boundaries.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AppRef {
+    pub plugin_id: String,
+    pub app_id: String,
+}
+
+/// 🪪️ The one canonical spelling of a surface id: `<artifact_kind>@<standard>/<subset>#<role>`.
+pub fn surface_app_id(dialect: &ArtifactDialect, role: AppRole) -> String {
+    format!("{}#{}", dialect.to_coordinate(), role.as_str())
+}
+
+/// 🪪️ Inverse of `surface_app_id`; rejects anything not matching the grammar.
+pub fn parse_surface_app_id(id: &str) -> Result<(ArtifactDialect, AppRole), String> {
+    let (coordinate, role_str) = id.rsplit_once('#').ok_or_else(|| format!("surface id {id:?} missing '#'"))?;
+    let dialect = ArtifactDialect::parse_coordinate(coordinate)?;
+    let role: AppRole = role_str.parse().map_err(|err| format!("surface id {id:?}: {err}"))?;
+    Ok((dialect, role))
+}
+//#endregion 🔖️Surface
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct AppDefinition {
     pub id: String,
+    /// 👁️✏️ Whether this surface may mutate the artifact it is bound to — see `AppRole`.
+    pub role: AppRole,
+    /// 🎯️ The dialect coordinate (artifact kind, standard, subset) this surface is bound to — see
+    /// `ArtifactDialect`. Together with `role` this derives the canonical `id` via `surface_app_id`.
+    pub dialect: ArtifactDialect,
     /// 🗣️ The app's own display name (e.g. "Puzzle 3D") — manifest-level, locale×terminology-checked,
     /// see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
     #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
@@ -4185,8 +4254,8 @@ mod app_label_tests {
     use crate::ui::{
         app_window_label, child_element_id, effective_action_args, element_id_segment, is_element_id, missing_required_args,
         resolve_app_breadcrumb, resolve_layout_for_mode, resolve_mode_tools,
-        resolve_window_actions, ActionAddress, ActionArgControl, ActionArgDef, ActionInvocation,
-        ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, CommandAddress, CommandDefinition, CommandInvocation,
+        resolve_window_actions, surface_app_id, parse_surface_app_id, ActionAddress, ActionArgControl, ActionArgDef, ActionInvocation,
+        ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, AppRole, AppRef, CommandAddress, CommandDefinition, CommandInvocation,
         CommandOwnerAddress, DialogDefinition, IntroductionCursor, IntroductionDemonstration, IntroductionGesture, LocalizedLabel, Locale, OsDefinition,
         Platform, PlatformKeybinding, Terminology,
         IntroductionInteraction, IntroductionInteractionKind, IntroductionKeyModifier, IntroductionPoint, IntroductionPointerButton, IntroductionStepDefinition,
@@ -4205,7 +4274,7 @@ mod app_label_tests {
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W1: the wave-0 interaction
     // definition family lives at the crate root, not under `crate::ui` — see the equivalent `use`
     // at this file's top.
-    use crate::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
+    use crate::{ArtifactDialect, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
     use dsl::DslValue;
     use serde_json::json;
 
@@ -4274,6 +4343,8 @@ mod app_label_tests {
         };
         AppDefinition {
             id: "a".into(),
+            role: AppRole::Editor,
+            dialect: ArtifactDialect { artifact_kind: "s.test.a".into(), standard: "1".into(), subset: "*".into() },
             label: LocalizedLabel::data("A"),
             breadcrumb: vec!["semio".into(), "a".into()],
             icon_id: None,
@@ -5496,6 +5567,63 @@ mod app_label_tests {
 
     //#endregion 🔖️ActionArgsAndUtilitiesTests
 
+    //#region 🔖️SurfaceTests
+    /// ⚖️ LAW (contract freeze §1 C1): `parse_surface_app_id(surface_app_id(d, r)) == (d, r)` for
+    /// every dialect in a fixture set covering subset `*`, a dotted standard, and a hyphenated
+    /// artifact kind.
+    #[test]
+    fn surface_app_id_round_trips_through_parse_surface_app_id() {
+        let fixtures = [
+            (ArtifactDialect { artifact_kind: "s.cad.cad".into(), standard: "1".into(), subset: "*".into() }, AppRole::Editor),
+            (ArtifactDialect { artifact_kind: "s.stdio.png".into(), standard: "1.7".into(), subset: "a".into() }, AppRole::Viewer),
+            (ArtifactDialect { artifact_kind: "s.stdio.dwg-2d".into(), standard: "1".into(), subset: "cc6".into() }, AppRole::Editor),
+        ];
+        for (dialect, role) in fixtures {
+            let id = surface_app_id(&dialect, role);
+            let (parsed_dialect, parsed_role) = parse_surface_app_id(&id).unwrap_or_else(|err| panic!("{id}: {err}"));
+            assert_eq!(parsed_dialect, dialect, "{id}");
+            assert_eq!(parsed_role, role, "{id}");
+        }
+    }
+
+    #[test]
+    fn parse_surface_app_id_rejects_missing_hash_and_unknown_role() {
+        assert!(parse_surface_app_id("s.cad.cad@1/*").is_err(), "missing '#role' suffix");
+        assert!(parse_surface_app_id("s.cad.cad@1/*#owner").is_err(), "role outside viewer/editor");
+    }
+
+    #[test]
+    fn app_role_serde_wire_strings_are_exactly_viewer_and_editor() {
+        assert_eq!(serde_json::to_string(&AppRole::Viewer).unwrap(), "\"viewer\"");
+        assert_eq!(serde_json::to_string(&AppRole::Editor).unwrap(), "\"editor\"");
+        assert_eq!(serde_json::from_str::<AppRole>("\"viewer\"").unwrap(), AppRole::Viewer);
+        assert_eq!(serde_json::from_str::<AppRole>("\"editor\"").unwrap(), AppRole::Editor);
+        assert!(serde_json::from_str::<AppRole>("\"owner\"").is_err());
+    }
+
+    #[test]
+    fn app_role_as_str_and_from_str_round_trip() {
+        assert_eq!(AppRole::Viewer.as_str(), "viewer");
+        assert_eq!(AppRole::Editor.as_str(), "editor");
+        assert_eq!("viewer".parse::<AppRole>().unwrap(), AppRole::Viewer);
+        assert_eq!("editor".parse::<AppRole>().unwrap(), AppRole::Editor);
+        assert!("owner".parse::<AppRole>().is_err());
+    }
+
+    #[test]
+    fn panel_tab_kind_settings_default_apps_id_str() {
+        assert_eq!(PanelTabKind::SettingsDefaultApps.id_str(), "framework.settings.default-apps");
+    }
+
+    #[test]
+    fn app_ref_serde_round_trips_as_camel_case() {
+        let app_ref = AppRef { plugin_id: "s.cad".into(), app_id: "s.cad.cad@1/*#editor".into() };
+        let json = serde_json::to_string(&app_ref).unwrap();
+        assert_eq!(json, "{\"pluginId\":\"s.cad\",\"appId\":\"s.cad.cad@1/*#editor\"}");
+        assert_eq!(serde_json::from_str::<AppRef>(&json).unwrap(), app_ref);
+    }
+    //#endregion 🔖️SurfaceTests
+
     #[cfg(feature = "typegen")]
     #[test]
     fn exports_typescript_bindings() {
@@ -5631,6 +5759,8 @@ mod app_label_tests {
         crate::ui::TutorialEasing::export().unwrap();
         crate::ui::TutorialGestureCue::export().unwrap();
         crate::ui::DialogDefinition::export().unwrap();
+        crate::ui::AppRole::export().unwrap();
+        crate::ui::AppRef::export().unwrap();
         crate::ui::AppDefinition::export().unwrap();
         crate::ui::ExampleDefinition::export().unwrap();
         crate::ui::ProgramContributionEntry::export().unwrap();

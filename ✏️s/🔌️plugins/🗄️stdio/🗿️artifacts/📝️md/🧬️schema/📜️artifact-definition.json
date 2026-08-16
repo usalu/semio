@@ -81,6 +81,126 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.md.runtime.codec.codec-stdio-md-extension-md.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.md|extension:md",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.md"
+        },
+        {
+          "namespace": "extension",
+          "value": "md"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.md.runtime.composer.dialect-s-stdio-md-commonmark.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.md@commonmark/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.md@commonmark/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.md.runtime.grammar.grammar-stdio-md.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.md",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.md"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.md.runtime.grammar.grammar-stdio-md-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.md.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.md.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.md.runtime.grammar.grammar-stdio-md-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.md.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.md.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.md.runtime.grammar.grammar-stdio-md-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.md.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.md.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.md.runtime.grammar.grammar-stdio-md-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.md.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.md.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.md.runtime.inference.schema-s-stdio-md-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.md.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.md.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.md.runtime.representation.mime-text-markdown-extension-md.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:text/markdown|extension:.md",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "text/markdown"
+        },
+        {
+          "namespace": "extension",
+          "value": ".md"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.md.runtime.schema.schema-s-stdio-md.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.md",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.md"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

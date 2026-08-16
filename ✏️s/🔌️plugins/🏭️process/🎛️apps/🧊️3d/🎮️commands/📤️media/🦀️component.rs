@@ -4,7 +4,7 @@ use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::artifacts::process3d::io::{export_process3d_model, import_process3d_model};
 use crate::artifacts::process3d::{op::Process3dMutation, Process3dSnapshot};
 use semio_framework::kernel::HostEffect;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, FaultCode, FaultOrigin};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -23,7 +23,9 @@ pub mod export_model {
         // `ProcessWorkingScene`'s doc comment; `doc.snapshot` alone cannot recover its composed
         // children's content, so export degrades honestly to the empty working scene.
         let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(doc.snapshot);
-        match export_process3d_model(&scene, doc.snapshot.resolved_up_to, &payload.format) {
+        match export_process3d_model(&scene, doc.snapshot.resolved_up_to, &payload.format)
+            .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("process3d.media.export"), error))?
+        {
             Some(export) => Ok(Emit::effect(HostEffect::DownloadMediaExport {
                 filename: export.filename,
                 mime_type: export.mime_type,

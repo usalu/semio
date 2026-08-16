@@ -39,7 +39,7 @@ mod tests {
     #[test]
     fn document_text_round_trips_through_store() {
         let envelope = store::create_document_envelope("norm.din4108/v1", "din4108", Din4108Snapshot::default(), None);
-        let mut store = store::ArtifactStore::new(envelope);
+        let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         let mutation = Din4108Mutation::ChangeAirtightnessN50(ChangeAirtightnessN50 { new_airtightness_n50: 1.2 });
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&store);

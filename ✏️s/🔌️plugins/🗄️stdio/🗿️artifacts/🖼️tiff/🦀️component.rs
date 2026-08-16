@@ -55,8 +55,10 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = crate::registry::format_descriptors_for("tiff")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::tiff::standards::v6_0::subsets::any::schema::tiff_artifact_schema_descriptor())
+        .formats(formats)
         .inferences([crate::artifacts::tiff::standards::v6_0::subsets::any::schema::inferences::tiff_artifact_inference_descriptor()])
         .composers(crate::artifacts::tiff::standards::v6_0::engine::io_registry::entries())
         .subset_validators(declared_subset_validators())

@@ -51,7 +51,7 @@ mod tests {
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let mut store: ArtifactStore<MathematicalSnapshot, MathematicalMutation> =
-            ArtifactStore::new(create_document_envelope("semio.mathematical/v1", "math-demo", MathematicalSnapshot::default(), None));
+            ArtifactStore::new(create_document_envelope("semio.mathematical/v1", "math-demo", MathematicalSnapshot::default(), None)).expect("valid artifact store fixture");
         store
             .dispatch(ArtifactCommand::Apply {
                 mutations: vec![MathematicalMutation::UpdateGraphAlgorithm(UpdateGraphAlgorithm { new_algorithm: "components".into(), new_algorithm_seed: None })],

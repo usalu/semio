@@ -81,6 +81,71 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.avi.runtime.codec.codec-stdio-avi-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.avi|extension:semio",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.avi"
+        },
+        {
+          "namespace": "extension",
+          "value": "semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.avi.runtime.composer.dialect-s-stdio-avi-1-0.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.avi@1.0/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.avi@1.0/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.avi.runtime.inference.schema-s-stdio-avi-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.avi.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.avi.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.avi.runtime.representation.mime-video-x-msvideo-extension-avi.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:video/x-msvideo|extension:.avi",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "video/x-msvideo"
+        },
+        {
+          "namespace": "extension",
+          "value": ".avi"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.avi.runtime.schema.schema-s-stdio-avi.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.avi",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.avi"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

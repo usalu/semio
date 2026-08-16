@@ -81,6 +81,148 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.json.runtime.codec.codec-stdio-json-extension-json.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.json|extension:json",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.json"
+        },
+        {
+          "namespace": "extension",
+          "value": "json"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.json.runtime.composer.dialect-s-stdio-json-rfc8259.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.json@rfc8259/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.json@rfc8259/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.json.runtime.composer.dialect-s-stdio-json-rfc8259-i-json.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.json@rfc8259/i-json",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.json@rfc8259/i-json"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.json.runtime.grammar.grammar-stdio-json.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.json",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.json"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.json.runtime.grammar.grammar-stdio-json-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.json.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.json.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.json.runtime.grammar.grammar-stdio-json-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.json.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.json.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.json.runtime.grammar.grammar-stdio-json-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.json.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.json.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.json.runtime.grammar.grammar-stdio-json-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.json.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.json.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.json.runtime.inference.schema-s-stdio-json-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.json.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.json.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.json.runtime.representation.mime-application-json-extension-json.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:application/json|extension:.json",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "application/json"
+        },
+        {
+          "namespace": "extension",
+          "value": ".json"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.json.runtime.schema.schema-s-stdio-json.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.json",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.json"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.json.runtime.subset-validator.dialect-s-stdio-json-rfc8259-i-json.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.json@rfc8259/i-json",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.json@rfc8259/i-json"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

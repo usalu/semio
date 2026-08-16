@@ -39,8 +39,10 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = crate::registry::format_descriptors_for("las")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::las::schema::las_artifact_schema_descriptor())
+        .formats(formats)
         .inferences([crate::artifacts::las::schema::inferences::las_artifact_inference_descriptor()])
         .composers(crate::artifacts::las::engine::io_registry::entries())
         .languages(pilot_languages())

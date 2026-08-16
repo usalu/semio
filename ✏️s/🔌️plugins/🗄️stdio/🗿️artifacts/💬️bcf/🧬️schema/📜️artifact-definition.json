@@ -82,6 +82,126 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.bcf.runtime.codec.codec-stdio-bcf-extension-bcf.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.bcf|extension:bcf",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.bcf"
+        },
+        {
+          "namespace": "extension",
+          "value": "bcf"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.bcf.runtime.composer.dialect-s-stdio-bcf-2-1.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.bcf@2.1/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.bcf@2.1/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.bcf.runtime.grammar.grammar-stdio-bcf.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.bcf",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.bcf"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.bcf.runtime.grammar.grammar-stdio-bcf-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.bcf.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.bcf.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.bcf.runtime.grammar.grammar-stdio-bcf-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.bcf.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.bcf.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.bcf.runtime.grammar.grammar-stdio-bcf-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.bcf.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.bcf.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.bcf.runtime.grammar.grammar-stdio-bcf-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.bcf.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.bcf.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.bcf.runtime.inference.schema-s-stdio-bcf-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.bcf.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.bcf.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.bcf.runtime.representation.mime-application-vnd-bcf-xml-extension-bcf.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:application/vnd.bcf+xml|extension:.bcf",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "application/vnd.bcf+xml"
+        },
+        {
+          "namespace": "extension",
+          "value": ".bcf"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.bcf.runtime.schema.schema-s-stdio-bcf.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.bcf",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.bcf"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

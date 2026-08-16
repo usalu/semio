@@ -1250,6 +1250,15 @@ type StdioCodecDefinition = Readonly<{
   executable_registration: boolean;
 }>;
 
+type StdioRuntimeCapability = Readonly<{
+  id: string;
+  category: "schema" | "inference" | "codec" | "representation" | "grammar" | "composer" | "subset-validator";
+  descriptor: string;
+  claims: readonly Readonly<{ namespace: "schema" | "codec" | "extension" | "mime" | "dialect" | "grammar"; value: string }>[];
+}>;
+
+type StdioExecutableLeaf = Readonly<{ id: string; status: "unimplemented" | "implemented" | "verified"; executable_registration: boolean }>;
+
 type StdioArtifactDefinition = Readonly<{
   id: string;
   kind: string;
@@ -1292,17 +1301,18 @@ type StdioSchemaDefinition = Readonly<{
   source_dialects: readonly Readonly<{ id: string; standard: string; dialect: string; registered_code_points: readonly string[]; status: string }>[];
   representations: readonly Readonly<{ id: string; standard: string; representation: string; mimes: readonly string[]; extensions: readonly string[]; is_binary: boolean; aliases: readonly string[]; neutral: boolean; status: string }>[];
   codecs: readonly StdioCodecDefinition[];
-  mutations: readonly Readonly<{ id: string; status: string }>[];
-  inferences: readonly Readonly<{ id: string; status: string }>[];
+  mutations: readonly StdioExecutableLeaf[];
+  inferences: readonly StdioExecutableLeaf[];
   resources: readonly Readonly<{ id: string; status: string }>[];
   localized_descriptors: readonly Readonly<{ id: string; locale: "en" | "de"; name: string; description: string; status: string }>[];
   conformance_suites: readonly Readonly<{ id: string; status: string; fixtures: readonly string[] }>[];
+  runtime_capabilities: readonly StdioRuntimeCapability[];
   support_ledger: StdioSupportLedger;
 }>;
 
 type StdioArtifactLedger = Readonly<{
   artifacts: readonly StdioArtifactDefinition[];
-  counts: Readonly<{ artifacts: number; registeredMimes: number; standards: number; profiles: number; dialects: number; representations: number; codecs: number; mutations: number; inferences: number; conformanceSuites: number }>;
+  counts: Readonly<{ artifacts: number; registeredMimes: number; standards: number; profiles: number; dialects: number; representations: number; codecs: number; mutations: number; inferences: number; conformanceSuites: number; runtimeCapabilities: number; capabilities: Readonly<{ declared: number; registered: number; implemented: number; verified: number }> }>;
 }>;
 
 const STDIO_ROOT_REL = join("✏️s", "🔌️plugins", "🗄️stdio");
@@ -1332,6 +1342,11 @@ function stdioAssertUnique(label: string, values: readonly string[]): void {
 function stdioDefinitionIdentity(id: string, suffix = ""): void {
   if (!/^s\.stdio\.[a-z0-9_-]+(?:\.[a-z0-9_-]+)*$/u.test(id)) throw new Error(`[stdio] non-canonical definition identity ${JSON.stringify(id)}.`);
   if (suffix && !id.includes(suffix)) throw new Error(`[stdio] definition identity ${JSON.stringify(id)} is missing ${suffix}.`);
+}
+
+function stdioVersionedLeaf(id: string, prefix: string): void {
+  if (!id.startsWith(prefix) || !/^[a-z0-9-]+\.v[1-9][0-9]*$/u.test(id.slice(prefix.length))) throw new Error(`[stdio] ${JSON.stringify(id)} must be a canonical vN leaf below ${JSON.stringify(prefix)}.`);
+  stdioDefinitionIdentity(id);
 }
 
 function stdioRecord(value: unknown, label: string): Record<string, unknown> {
@@ -1393,7 +1408,7 @@ function stdioDefinitionCatalog(workspaceRoot: string): readonly StdioSchemaDefi
 }
 
 function stdioAssertDefinition(value: unknown): asserts value is StdioSchemaDefinition {
-  const definition = stdioExactFields(value, "artifact definition", ["definition_version", "id", "artifact", "directory", "dependencies", "standards", "profiles", "source_dialects", "representations", "codecs", "mutations", "inferences", "resources", "localized_descriptors", "conformance_suites", "support_ledger"]);
+  const definition = stdioExactFields(value, "artifact definition", ["definition_version", "id", "artifact", "directory", "dependencies", "standards", "profiles", "source_dialects", "representations", "codecs", "mutations", "inferences", "resources", "localized_descriptors", "conformance_suites", "runtime_capabilities", "support_ledger"]);
   if (definition.definition_version !== 1) throw new Error("[stdio] artifact definition_version must equal 1.");
   const artifact = stdioString(definition.artifact, "artifact slug");
   const id = stdioString(definition.id, "artifact definition id");
@@ -1471,6 +1486,7 @@ function stdioAssertDefinition(value: unknown): asserts value is StdioSchemaDefi
     stdioAssertUnique(`extension claim for ${representation.id}`, representation.extensions);
     stdioDefinitionIdentity(representation.id, ".representation.");
   }
+  if (new Set(representations.map((representation) => representation.standard)).size !== standards.length) throw new Error(`[stdio] ${artifactId} must give each declared standard its own representation.`);
   const codecs = stdioArray(definition.codecs, `${artifactId}.codecs`).map((codec, index) => {
     const record = stdioExactFields(codec, `${artifactId}.codecs[${index}]`, ["id", "status", "from", "to", "executable_registration"]);
     stdioString(record.id, `${artifactId}.codecs[${index}].id`);
@@ -1481,7 +1497,10 @@ function stdioAssertDefinition(value: unknown): asserts value is StdioSchemaDefi
     return record as unknown as StdioCodecDefinition & { executable_registration: boolean };
   });
   for (const codec of codecs) {
-    if (!codec.executable_registration) throw new Error(`[stdio] codec ${codec.id} is not executable-registered.`);
+    const standard = standards.find((candidate) => codec.id.startsWith(`${candidate.id}.codec.`));
+    if (!standard) throw new Error(`[stdio] codec ${codec.id} is not owned by a declared standard.`);
+    stdioVersionedLeaf(codec.id, `${standard.id}.codec.`);
+    if (!["unimplemented", "implemented", "verified"].includes(codec.status) || codec.executable_registration !== (codec.status === "implemented" || codec.status === "verified")) throw new Error(`[stdio] codec ${codec.id} has dishonest executable status.`);
   }
   const mutations = stdioArray(definition.mutations, `${artifactId}.mutations`).map((mutation, index) => {
     const record = stdioExactFields(mutation, `${artifactId}.mutations[${index}]`, ["id", "status", "executable_registration"]);
@@ -1491,7 +1510,9 @@ function stdioAssertDefinition(value: unknown): asserts value is StdioSchemaDefi
     return record as unknown as StdioSchemaDefinition["mutations"][number] & { executable_registration: boolean };
   });
   for (const mutation of mutations) {
-    if (!mutation.executable_registration) throw new Error(`[stdio] mutation ${mutation.id} is not executable-registered.`);
+    stdioVersionedLeaf(mutation.id, `${artifactId}.mutation.`);
+    if (artifact === "gltf" && (mutation.id.includes(".no-mutation.") || mutation.id.includes(".set-snapshot.") || mutation.id.includes(".set-"))) throw new Error(`[stdio] GLTF mutation ${mutation.id} is not semantically specific.`);
+    if (!["unimplemented", "implemented", "verified"].includes(mutation.status) || mutation.executable_registration !== (mutation.status === "implemented" || mutation.status === "verified")) throw new Error(`[stdio] mutation ${mutation.id} has dishonest executable status.`);
   }
   const inferences = stdioArray(definition.inferences, `${artifactId}.inferences`).map((inference, index) => {
     const record = stdioExactFields(inference, `${artifactId}.inferences[${index}]`, ["id", "status", "executable_registration"]);
@@ -1501,7 +1522,31 @@ function stdioAssertDefinition(value: unknown): asserts value is StdioSchemaDefi
     return record as unknown as StdioSchemaDefinition["inferences"][number] & { executable_registration: boolean };
   });
   for (const inference of inferences) {
-    if (!inference.executable_registration) throw new Error(`[stdio] inference ${inference.id} is not executable-registered.`);
+    stdioVersionedLeaf(inference.id, `${artifactId}.inference.`);
+    if (!["unimplemented", "implemented", "verified"].includes(inference.status) || inference.executable_registration !== (inference.status === "implemented" || inference.status === "verified")) throw new Error(`[stdio] inference ${inference.id} has dishonest executable status.`);
+  }
+  const runtimeCapabilities = stdioArray(definition.runtime_capabilities, `${artifactId}.runtime_capabilities`).map((capability, index) => {
+    const record = stdioExactFields(capability, `${artifactId}.runtime_capabilities[${index}]`, ["id", "category", "descriptor", "claims"]);
+    const category = stdioString(record.category, `${artifactId}.runtime_capabilities[${index}].category`);
+    if (!["schema", "inference", "codec", "representation", "grammar", "composer", "subset-validator"].includes(category)) throw new Error(`[stdio] invalid runtime capability category ${category}.`);
+    const capabilityId = stdioString(record.id, `${artifactId}.runtime_capabilities[${index}].id`);
+    stdioVersionedLeaf(capabilityId, `${artifactId}.runtime.${category}.`);
+    const descriptor = stdioString(record.descriptor, `${artifactId}.runtime_capabilities[${index}].descriptor`);
+    const claims = stdioArray(record.claims, `${artifactId}.runtime_capabilities[${index}].claims`).map((claim, claimIndex) => {
+      const claimRecord = stdioExactFields(claim, `${artifactId}.runtime_capabilities[${index}].claims[${claimIndex}]`, ["namespace", "value"]);
+      const namespace = stdioString(claimRecord.namespace, `${artifactId}.runtime_capabilities[${index}].claims[${claimIndex}].namespace`);
+      if (!["schema", "codec", "extension", "mime", "dialect", "grammar"].includes(namespace)) throw new Error(`[stdio] invalid runtime claim namespace ${namespace}.`);
+      return { namespace, value: stdioString(claimRecord.value, `${artifactId}.runtime_capabilities[${index}].claims[${claimIndex}].value`) };
+    });
+    if (claims.length === 0) throw new Error(`[stdio] runtime capability ${capabilityId} has no claims.`);
+    stdioAssertUnique(`runtime claim for ${capabilityId}`, claims.map((claim) => `${claim.namespace}:${claim.value}`));
+    return { id: capabilityId, category: category as StdioRuntimeCapability["category"], descriptor, claims } satisfies StdioRuntimeCapability;
+  });
+  stdioAssertUnique(`${artifactId} runtime capability`, runtimeCapabilities.map((capability) => capability.id));
+  stdioAssertUnique(`${artifactId} runtime category claims`, runtimeCapabilities.map((capability) => `${capability.category}|${capability.claims.map((claim) => `${claim.namespace}:${claim.value}`).sort().join("|")}`));
+  for (const capability of runtimeCapabilities.filter((capability) => capability.category === "representation")) {
+    const claims = capability.claims.map((claim) => `${claim.namespace}:${claim.value}`).sort().join("|");
+    if (representations.filter((representation) => [...representation.mimes.map((mime) => `mime:${mime}`), ...representation.extensions.map((extension) => `extension:${extension}`)].sort().join("|") === claims).length === 0) throw new Error(`[stdio] runtime representation ${capability.id} does not claim a representation leaf.`);
   }
   const resources = stdioArray(definition.resources, `${artifactId}.resources`).map((resource, index) => {
     const record = stdioExactFields(resource, `${artifactId}.resources[${index}]`, ["id", "external_reference_policy", "status"]);
@@ -1540,7 +1585,7 @@ function stdioAssertDefinition(value: unknown): asserts value is StdioSchemaDefi
   const implemented = [ledger.read, ledger.write, ledger.lossless, ledger.canonical].includes("implemented");
   if (implemented && (!ledger.normative_source || !ledger.publication_date || !ledger.source_checksum || ledger.redistribution_status === "unknown" || ledger.clauses_or_features.length === 0 || ledger.validators.length === 0 || ledger.fixtures.length === 0)) throw new Error(`[stdio] ${artifactId} claims implemented support without normative, validator, and fixture evidence.`);
   const IDs = [
-    id, ...standards.map((item) => item.id), ...profiles.map((item) => item.id), ...dialects.map((item) => item.id), ...representations.map((item) => item.id), ...codecs.map((item) => item.id), ...mutations.map((item) => item.id), ...inferences.map((item) => item.id), ...resources.map((item) => item.id), ...descriptors.map((item) => item.id), ...suites.map((item) => item.id),
+    id, ...standards.map((item) => item.id), ...profiles.map((item) => item.id), ...dialects.map((item) => item.id), ...representations.map((item) => item.id), ...codecs.map((item) => item.id), ...mutations.map((item) => item.id), ...inferences.map((item) => item.id), ...resources.map((item) => item.id), ...descriptors.map((item) => item.id), ...suites.map((item) => item.id), ...runtimeCapabilities.map((item) => item.id),
   ];
   for (const id of IDs) stdioDefinitionIdentity(id);
   stdioAssertUnique(`definition identity for ${artifactId}`, IDs);
@@ -1561,6 +1606,7 @@ function stdioArtifactLedger(workspaceRoot: string): StdioArtifactLedger {
     ...definition.codecs.map((item) => item.id),
     ...definition.mutations.map((item) => item.id),
     ...definition.inferences.map((item) => item.id),
+    ...definition.runtime_capabilities.map((item) => item.id),
     ...definition.resources.map((item) => item.id),
     ...definition.localized_descriptors.map((item) => item.id),
     ...definition.conformance_suites.flatMap((item) => [item.id, ...item.fixtures]),
@@ -1580,6 +1626,7 @@ function stdioArtifactLedger(workspaceRoot: string): StdioArtifactLedger {
       ...definition.codecs.map((item) => item.id),
       ...definition.mutations.map((item) => item.id),
       ...definition.inferences.map((item) => item.id),
+      ...definition.runtime_capabilities.map((item) => item.id),
       ...definition.resources.map((item) => item.id),
       ...definition.localized_descriptors.map((item) => item.id),
       ...definition.conformance_suites.flatMap((item) => [item.id, ...item.fixtures]),
@@ -1626,10 +1673,17 @@ function stdioArtifactLedger(workspaceRoot: string): StdioArtifactLedger {
       support: definition.support_ledger,
     } satisfies StdioArtifactDefinition));
   const representations = definitions.flatMap((definition) => definition.representations);
-  stdioAssertUnique("registered MIME", representations.flatMap((representation) => representation.mimes));
-  stdioAssertUnique("file extension", representations.flatMap((representation) => representation.extensions));
+  for (const [label, claims] of [["registered MIME", representations.flatMap((representation) => representation.mimes.map((mime) => [mime, definitions.find((definition) => definition.representations.includes(representation))!.id] as const))], ["file extension", representations.flatMap((representation) => representation.extensions.map((extension) => [extension, definitions.find((definition) => definition.representations.includes(representation))!.id] as const))]] as const) {
+    const owners = new Map<string, string>();
+    for (const [claim, owner] of claims) {
+      const existing = owners.get(claim);
+      if (existing && existing !== owner) throw new Error(`[stdio] ${label} ${claim} is claimed by both ${existing} and ${owner}.`);
+      owners.set(claim, owner);
+    }
+  }
   stdioAssertUnique("source dialect", artifacts.flatMap((artifact) => artifact.dialects.map((dialect) => dialect.id)));
   stdioAssertUnique("codec", artifacts.flatMap((artifact) => artifact.codecs.map((codec) => codec.id)));
+  stdioAssertUnique("runtime capability", definitions.flatMap((definition) => definition.runtime_capabilities.map((capability) => capability.id)));
   const epw = artifacts.find((artifact) => artifact.id === "epw");
   if (!epw || epw.representations.some((representation) => representation.mimes.length !== 0)) throw new Error("[stdio] EPW must remain MIME-unregistered.");
   const txt = artifacts.find((artifact) => artifact.id === "txt");
@@ -1647,6 +1701,13 @@ function stdioArtifactLedger(workspaceRoot: string): StdioArtifactLedger {
       mutations: definitions.reduce((count, definition) => count + definition.mutations.length, 0),
       inferences: definitions.reduce((count, definition) => count + definition.inferences.length, 0),
       conformanceSuites: definitions.reduce((count, definition) => count + definition.conformance_suites.length, 0),
+      runtimeCapabilities: definitions.reduce((count, definition) => count + definition.runtime_capabilities.length, 0),
+      capabilities: {
+        declared: definitions.reduce((count, definition) => count + definition.codecs.length + definition.mutations.length + definition.inferences.length, 0),
+        registered: definitions.reduce((count, definition) => count + definition.codecs.filter((item) => item.executable_registration).length + definition.mutations.filter((item) => item.executable_registration).length + definition.inferences.filter((item) => item.executable_registration).length, 0),
+        implemented: definitions.reduce((count, definition) => count + definition.codecs.filter((item) => item.status === "implemented").length + definition.mutations.filter((item) => item.status === "implemented").length + definition.inferences.filter((item) => item.status === "implemented").length, 0),
+        verified: definitions.reduce((count, definition) => count + definition.codecs.filter((item) => item.status === "verified").length + definition.mutations.filter((item) => item.status === "verified").length + definition.inferences.filter((item) => item.status === "verified").length, 0),
+      },
     },
   };
 }

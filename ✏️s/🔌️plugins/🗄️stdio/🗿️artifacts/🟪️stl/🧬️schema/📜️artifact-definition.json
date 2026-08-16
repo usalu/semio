@@ -82,6 +82,126 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.stl.runtime.codec.codec-stdio-stl-extension-stl.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.stl|extension:stl",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.stl"
+        },
+        {
+          "namespace": "extension",
+          "value": "stl"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.stl.runtime.composer.dialect-s-stdio-stl-ascii.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.stl@ascii/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.stl@ascii/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.stl.runtime.grammar.grammar-stdio-stl.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.stl",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.stl"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.stl.runtime.grammar.grammar-stdio-stl-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.stl.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.stl.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.stl.runtime.grammar.grammar-stdio-stl-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.stl.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.stl.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.stl.runtime.grammar.grammar-stdio-stl-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.stl.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.stl.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.stl.runtime.grammar.grammar-stdio-stl-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.stl.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.stl.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.stl.runtime.inference.schema-s-stdio-stl-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.stl.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.stl.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.stl.runtime.representation.mime-model-stl-extension-stl.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:model/stl|extension:.stl",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "model/stl"
+        },
+        {
+          "namespace": "extension",
+          "value": ".stl"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.stl.runtime.schema.schema-s-stdio-stl.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.stl",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.stl"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

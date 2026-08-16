@@ -50,7 +50,7 @@ mod tests {
         use crate::artifacts::mathematical::mutations::update_graph_algorithm::mutation::UpdateGraphAlgorithm;
         let initial = MathematicalSnapshot::default();
         let envelope = store::create_document_envelope(crate::artifacts::mathematical::MATH_DOCUMENT_SCHEMA, "math-demo", initial, None);
-        let mut store = store::ArtifactStore::new(envelope);
+        let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         let mutation = UpdateGraphAlgorithm { new_algorithm: "components".into(), new_algorithm_seed: None };
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![MathematicalMutation::UpdateGraphAlgorithm(mutation)], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&store);

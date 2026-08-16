@@ -81,6 +81,71 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.mp3.runtime.codec.codec-stdio-mp3-extension-mp3.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.mp3|extension:mp3",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.mp3"
+        },
+        {
+          "namespace": "extension",
+          "value": "mp3"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.mp3.runtime.composer.dialect-s-stdio-mp3-mpeg1-layer3.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.mp3@mpeg1-layer3/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.mp3@mpeg1-layer3/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.mp3.runtime.inference.schema-s-stdio-mp3-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.mp3.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.mp3.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.mp3.runtime.representation.mime-audio-mpeg-extension-mp3.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:audio/mpeg|extension:.mp3",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "audio/mpeg"
+        },
+        {
+          "namespace": "extension",
+          "value": ".mp3"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.mp3.runtime.schema.schema-s-stdio-mp3.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.mp3",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.mp3"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

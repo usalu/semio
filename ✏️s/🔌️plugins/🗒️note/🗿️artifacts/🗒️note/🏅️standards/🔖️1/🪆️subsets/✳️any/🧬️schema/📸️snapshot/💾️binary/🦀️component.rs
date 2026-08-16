@@ -103,7 +103,7 @@ mod tests {
 
         let initial = crate::artifacts::note::schema::snapshot::text::parse_dsl(crate::artifacts::note::schema::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
         let envelope = create_document_envelope::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA, "note-command-envelope-demo", initial, None);
-        let mut store = ArtifactStore::new(envelope);
+        let mut store = ArtifactStore::new(envelope).expect("valid artifact store fixture");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::note::schema::mutations::change_grid_visible(Some(false))], description: None }).expect("apply");
         let edit: &Edit<NoteMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<NoteSnapshot, NoteMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
@@ -132,4 +132,3 @@ mod semio_protocol_conformance {
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes pack bytes");
     }
 }
-

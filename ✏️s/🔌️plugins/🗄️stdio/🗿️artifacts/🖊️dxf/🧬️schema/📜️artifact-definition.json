@@ -81,6 +81,126 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.dxf.runtime.codec.codec-stdio-dxf-extension-dxf.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.dxf|extension:dxf",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.dxf"
+        },
+        {
+          "namespace": "extension",
+          "value": "dxf"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.dxf.runtime.composer.dialect-s-stdio-dxf-r12.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.dxf@r12/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.dxf@r12/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.dxf.runtime.grammar.grammar-stdio-dxf.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.dxf",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.dxf"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.dxf.runtime.grammar.grammar-stdio-dxf-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.dxf.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.dxf.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.dxf.runtime.grammar.grammar-stdio-dxf-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.dxf.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.dxf.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.dxf.runtime.grammar.grammar-stdio-dxf-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.dxf.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.dxf.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.dxf.runtime.grammar.grammar-stdio-dxf-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.dxf.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.dxf.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.dxf.runtime.inference.schema-s-stdio-dxf-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.dxf.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.dxf.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.dxf.runtime.representation.mime-image-vnd-dxf-extension-dxf.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:image/vnd.dxf|extension:.dxf",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "image/vnd.dxf"
+        },
+        {
+          "namespace": "extension",
+          "value": ".dxf"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.dxf.runtime.schema.schema-s-stdio-dxf.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.dxf",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.dxf"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

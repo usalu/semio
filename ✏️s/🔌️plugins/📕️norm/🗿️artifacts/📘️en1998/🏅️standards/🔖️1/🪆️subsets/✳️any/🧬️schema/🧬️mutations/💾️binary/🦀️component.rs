@@ -43,7 +43,7 @@ mod tests {
     #[test]
     fn document_text_round_trips_through_store() {
         let envelope = store::create_document_envelope("norm.en1998/v1", "en1998", En1998Snapshot::default(), None);
-        let mut store = store::ArtifactStore::new(envelope);
+        let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![sample_mutation()], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&store);
         store::os_store::test_support::assert_document_pack_round_trip(&store);

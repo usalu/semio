@@ -52,7 +52,7 @@ mod tests {
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let document = DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), content: crate::artifacts::dag::dag_content_child_handle_and_cache(Vec::new(), Vec::new()) };
-        let mut store: ArtifactStore<DagSnapshot, DagMutation> = ArtifactStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag-demo", document, None));
+        let mut store: ArtifactStore<DagSnapshot, DagMutation> = ArtifactStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag-demo", document, None)).expect("valid artifact store fixture");
         let node = crate::artifacts::dag::schema::default_node_for_kind("note", "node-1", 0.0, 0.0);
         store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::dag::mutations::create_node(node)], description: None }).expect("apply");
         let edit: &Edit<DagMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
@@ -83,4 +83,3 @@ mod semio_protocol_conformance {
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes pack bytes");
     }
 }
-

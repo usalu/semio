@@ -69,6 +69,21 @@
       "aliases": [],
       "neutral": true,
       "status": "declared"
+    },
+    {
+      "id": "s.stdio.ifc.standard.4.representation.document",
+      "standard": "s.stdio.ifc.standard.4",
+      "representation": "document",
+      "mimes": [
+        "application/x-ifc"
+      ],
+      "extensions": [
+        ".ifc"
+      ],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
+      "status": "declared"
     }
   ],
   "codecs": [],
@@ -104,6 +119,7 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

@@ -1037,7 +1037,7 @@ mod tests {
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let mut store: ArtifactStore<ModuleRenderPayload, ModulePayloadMutation> = ArtifactStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None));
+        let mut store: ArtifactStore<ModuleRenderPayload, ModulePayloadMutation> = ArtifactStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None)).expect("valid artifact store fixture");
         let mut payload = default_payload();
         payload.interactive = false;
         store.dispatch(ArtifactCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload { payload }], description: None }).expect("apply");

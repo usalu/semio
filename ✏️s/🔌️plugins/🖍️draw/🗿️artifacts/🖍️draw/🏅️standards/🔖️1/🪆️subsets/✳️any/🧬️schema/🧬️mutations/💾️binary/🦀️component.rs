@@ -42,7 +42,7 @@ mod tests {
     fn document_text_round_trips_a_store_with_an_applied_operation() {
         let initial = default_draw_document("doc-text-test", None);
         let envelope = store::create_document_envelope::<DrawSnapshot, DrawMutation>(DRAW_DOCUMENT_SCHEMA, "doc-text-test", initial, None);
-        let mut doc_store = store::ArtifactStore::new(envelope);
+        let mut doc_store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         let layer = create_draw_shape_layer_rect("Added Rect");
         let layer_id_value = layer_id(&layer).to_string();
         doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::artifacts::draw::mutations::create_layer(None, None, layer)], description: Some("add rect".into()) }).expect("apply add layer");
@@ -62,7 +62,7 @@ mod tests {
 
         let initial = default_draw_document("doc-text-test", None);
         let envelope = store::create_document_envelope::<DrawSnapshot, DrawMutation>(DRAW_DOCUMENT_SCHEMA, "doc-text-test", initial, None);
-        let mut doc_store = store::ArtifactStore::new(envelope);
+        let mut doc_store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         let layer = create_draw_shape_layer_rect("Added Rect");
         let layer_id_value = layer_id(&layer).to_string();
         doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::artifacts::draw::mutations::create_layer(None, None, layer)], description: Some("add rect".into()) }).expect("apply add layer");

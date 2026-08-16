@@ -62,6 +62,9 @@ pub mod app_surface;
 //#region 🗿️Artifacts
 #[path = "."]
 pub mod artifacts {
+    #[path = "../../🗿️artifacts/🦀️component.rs"]
+    pub mod definition;
+
     #[path = "."]
     pub mod iso16757 {
         #[path = "../../🗿️artifacts/📓️iso16757/🦀️component.rs"]

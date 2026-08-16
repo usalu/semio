@@ -1224,7 +1224,7 @@ mod flow_vcs_tests {
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         let envelope = create_document_envelope("test/v1", "test", FlowFixture::default(), None);
-        let mut store = ArtifactStore::new(envelope);
+        let mut store = ArtifactStore::new(envelope).expect("valid artifact store fixture");
         let operation = FlowMutation::Widgets(CollectionMutation::Add { index: 0, item: sample_widget("w1") });
         store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], description: None }).expect("apply");
         let edit: &Edit<FlowMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");

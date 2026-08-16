@@ -81,7 +81,7 @@ mod tests {
     fn gis_map_document_text_round_trips_through_store() {
         let initial = empty_gis_map_snapshot();
         let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None);
-        let mut store = store::ArtifactStore::new(envelope);
+        let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         store
             .dispatch(store::ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: sample_feature("p1") })], description: None })
             .expect("apply");

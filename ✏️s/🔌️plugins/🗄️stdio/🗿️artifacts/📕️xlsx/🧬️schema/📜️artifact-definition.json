@@ -82,6 +82,170 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.xlsx.runtime.codec.codec-stdio-xlsx-extension-xlsx.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.xlsx|extension:xlsx",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.xlsx"
+        },
+        {
+          "namespace": "extension",
+          "value": "xlsx"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xlsx.runtime.composer.dialect-s-stdio-xlsx-ecma-376.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.xlsx@ecma-376/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.xlsx@ecma-376/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xlsx.runtime.composer.dialect-s-stdio-xlsx-ecma-376-strict.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.xlsx@ecma-376/strict",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.xlsx@ecma-376/strict"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xlsx.runtime.composer.dialect-s-stdio-xlsx-ecma-376-transitional.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.xlsx@ecma-376/transitional",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.xlsx@ecma-376/transitional"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xlsx.runtime.grammar.grammar-stdio-xlsx.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.xlsx",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.xlsx"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xlsx.runtime.grammar.grammar-stdio-xlsx-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.xlsx.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.xlsx.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xlsx.runtime.grammar.grammar-stdio-xlsx-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.xlsx.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.xlsx.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xlsx.runtime.grammar.grammar-stdio-xlsx-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.xlsx.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.xlsx.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xlsx.runtime.grammar.grammar-stdio-xlsx-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.xlsx.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.xlsx.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xlsx.runtime.inference.schema-s-stdio-xlsx-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.xlsx.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.xlsx.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xlsx.runtime.representation.mime-application-vnd-openxmlformats-officedocument-spreadsheetml-sheet-extension-xlsx.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|extension:.xlsx",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        },
+        {
+          "namespace": "extension",
+          "value": ".xlsx"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xlsx.runtime.schema.schema-s-stdio-xlsx.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.xlsx",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.xlsx"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xlsx.runtime.subset-validator.dialect-s-stdio-xlsx-ecma-376-strict.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.xlsx@ecma-376/strict",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.xlsx@ecma-376/strict"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xlsx.runtime.subset-validator.dialect-s-stdio-xlsx-ecma-376-transitional.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.xlsx@ecma-376/transitional",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.xlsx@ecma-376/transitional"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

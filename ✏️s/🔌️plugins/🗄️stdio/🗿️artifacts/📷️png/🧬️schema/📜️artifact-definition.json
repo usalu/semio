@@ -82,6 +82,126 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.png.runtime.codec.codec-stdio-png-extension-png.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.png|extension:png",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.png"
+        },
+        {
+          "namespace": "extension",
+          "value": "png"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.png.runtime.composer.dialect-s-stdio-png-1-2.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.png@1.2/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.png@1.2/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.png.runtime.grammar.grammar-stdio-png.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.png",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.png"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.png.runtime.grammar.grammar-stdio-png-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.png.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.png.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.png.runtime.grammar.grammar-stdio-png-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.png.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.png.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.png.runtime.grammar.grammar-stdio-png-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.png.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.png.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.png.runtime.grammar.grammar-stdio-png-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.png.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.png.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.png.runtime.inference.schema-s-stdio-png-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.png.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.png.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.png.runtime.representation.mime-image-png-extension-png.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:image/png|extension:.png",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "image/png"
+        },
+        {
+          "namespace": "extension",
+          "value": ".png"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.png.runtime.schema.schema-s-stdio-png.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.png",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.png"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

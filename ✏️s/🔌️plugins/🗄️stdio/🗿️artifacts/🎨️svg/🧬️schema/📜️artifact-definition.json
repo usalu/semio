@@ -81,6 +81,170 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.svg.runtime.codec.codec-stdio-svg-extension-svg.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.svg|extension:svg",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.svg"
+        },
+        {
+          "namespace": "extension",
+          "value": "svg"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.svg.runtime.composer.dialect-s-stdio-svg-1-1.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.svg@1.1/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.svg@1.1/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.svg.runtime.composer.dialect-s-stdio-svg-1-1-basic.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.svg@1.1/basic",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.svg@1.1/basic"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.svg.runtime.composer.dialect-s-stdio-svg-1-1-tiny.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.svg@1.1/tiny",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.svg@1.1/tiny"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.svg.runtime.grammar.grammar-stdio-svg.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.svg",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.svg"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.svg.runtime.grammar.grammar-stdio-svg-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.svg.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.svg.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.svg.runtime.grammar.grammar-stdio-svg-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.svg.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.svg.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.svg.runtime.grammar.grammar-stdio-svg-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.svg.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.svg.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.svg.runtime.grammar.grammar-stdio-svg-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.svg.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.svg.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.svg.runtime.inference.schema-s-stdio-svg-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.svg.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.svg.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.svg.runtime.representation.mime-image-svg-xml-extension-svg.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:image/svg+xml|extension:.svg",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "image/svg+xml"
+        },
+        {
+          "namespace": "extension",
+          "value": ".svg"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.svg.runtime.schema.schema-s-stdio-svg.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.svg",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.svg"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.svg.runtime.subset-validator.dialect-s-stdio-svg-1-1-basic.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.svg@1.1/basic",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.svg@1.1/basic"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.svg.runtime.subset-validator.dialect-s-stdio-svg-1-1-tiny.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.svg@1.1/tiny",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.svg@1.1/tiny"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

@@ -98,6 +98,8 @@ mod tests {
         let mut platform = Platform::new(None);
         platform.add_app(AppDefinition {
             id: "draw-play".into(),
+            role: crate::ui::AppRole::Editor,
+            dialect: crate::ArtifactDialect { artifact_kind: "s.test.draw-play".into(), standard: "1".into(), subset: "*".into() },
             label: LocalizedLabel::data("Draw"),
             breadcrumb: vec!["semio".into(), "draw".into()],
             icon_id: None,
@@ -153,6 +155,8 @@ mod tests {
     fn minimal_app(id: &str) -> AppDefinition {
         AppDefinition {
             id: id.into(),
+            role: crate::ui::AppRole::Editor,
+            dialect: crate::ArtifactDialect { artifact_kind: format!("s.test.{id}"), standard: "1".into(), subset: "*".into() },
             label: LocalizedLabel::data(id),
             breadcrumb: vec!["semio".into(), id.into()],
             icon_id: None,

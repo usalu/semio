@@ -13,6 +13,30 @@
         "id": "framework.repo.command.plugin-registry",
         "kind": "command",
         "responsibility": "Verifies and regenerates the canonical plugin and playground registry."
+      },
+      {
+        "directory": "🖥️terminal-dashboard-daemon",
+        "id": "framework.repo.command.terminal-dashboard-daemon",
+        "kind": "command",
+        "responsibility": "Controls the terminal dashboard daemon lifecycle and attachment."
+      },
+      {
+        "directory": "🛝️playground-development-session",
+        "id": "framework.repo.command.playground-development-session",
+        "kind": "command",
+        "responsibility": "Resolves a registered playground variant and launches its Framework OS development session with the selected environment."
+      },
+      {
+        "directory": "🧭️cli-usage-presentation",
+        "id": "framework.repo.command.cli-usage-presentation",
+        "kind": "command",
+        "responsibility": "Presents the non-interactive Semio CLI usage reference."
+      },
+      {
+        "directory": "📇️playground-catalog-query",
+        "id": "framework.repo.command.playground-catalog-query",
+        "kind": "command",
+        "responsibility": "Lists generated playground registrations as canonical JSON or tabular terminal text."
       }
     ]
   }

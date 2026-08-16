@@ -49,6 +49,16 @@ Gate commands (crate names verified):
 
 ⚠️ 1-A and 1-B share one 14k-line file at non-overlapping regions. Both MUST re-read the exact region immediately before each `Edit`, keep every edit region-local, and never reformat or move a region boundary. A lane that finds its anchor changed re-reads rather than forcing.
 
+## Wave 2 leases (opened at the W1 barrier)
+
+| Lane | Model | Exclusive lease | Deliverable |
+|---|---|---|---|
+| **2-A Rust host** | Sonnet 5 | `🔌️plugin/🖥️host/🦀️component.rs`; `🏃️run/🦀️component.rs`; `🏃️run/📦️bin.rs` | `PluginGraph` (load order, version checks, cycles, dependents-aware hot reload/unload), `ArtifactMutationRouter`, contributor-aware `ArtifactInferenceRouter` with a `depends_on` DAG, `InstanceDirectory`, `HostTransactionCoordinator`; wasmtime e2e over ≥2 plugin components + 1 extension |
+| **2-B TS host** | Sonnet 5 | `🎠️kernel/🟦️component.ts` runtime regions; `💻️os/🟦️component.ts` `AppChannelClient` only; `📺️renderer/…/🟦️boot.ts`; `…/🧱️elements/PluginRuntime/🟦️component.tsx` | the same five components over `AppChannelClient`; **the per-instance document-pack cache scout-1 §4 found missing**; boot ordered by the dependency graph; en+de dependency-fault UI |
+| **2-C registry / gates / launch** | Sonnet 5 | `🔌️plugin/📦️packages/🟦️typescript/📇️registry/**`; `.vscode/launch.json`; touched `📋️project.json` | `dependsOn` in the generated catalog + transitive closure in the dev filter; launch entries for the new gates in existing order/grouping |
+
+⚠️ 2-A and 2-C both touch generated launch config — 2-C owns `.vscode/launch.json`; 2-A requests entries through the coordinator.
+
 ## Scout findings that bind later waves
 
 `📓️scout-1-pilot-targets.md` and `📓️scout-2-group-undo-and-hosts.md` (read both before starting W1/W2/W3):

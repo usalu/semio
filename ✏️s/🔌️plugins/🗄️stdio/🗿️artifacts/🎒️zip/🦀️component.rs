@@ -41,8 +41,10 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = crate::registry::format_descriptors_for("zip")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::zip::schema::zip_artifact_schema_descriptor())
+        .formats(formats)
         .inferences([crate::artifacts::zip::schema::inferences::zip_artifact_inference_descriptor()])
         .composers(crate::artifacts::zip::standards::v2_0::subsets::any::io::io_registry::entries())
         .subset_validators(zip_subset_validators())

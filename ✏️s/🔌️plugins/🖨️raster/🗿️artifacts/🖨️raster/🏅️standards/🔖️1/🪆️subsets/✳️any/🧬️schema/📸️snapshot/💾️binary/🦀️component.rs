@@ -108,7 +108,7 @@ mod tests {
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let envelope = create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-command-envelope-demo", crate::artifacts::raster::schema::empty_raster_document(), None);
-        let mut store = ArtifactStore::new(envelope);
+        let mut store = ArtifactStore::new(envelope).expect("valid artifact store fixture");
         store
             .dispatch(ArtifactCommand::Apply {
                 mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {

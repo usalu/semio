@@ -50,94 +50,84 @@
   ],
   "codecs": [
     {
-      "id": "s.stdio.gltf.inference.io.binary",
+      "id": "s.stdio.gltf.standard.2.0.codec.inference-binary.v1",
       "status": "unimplemented",
       "from": "s.stdio.gltf.standard.2.0.dialect.source",
       "to": "s.stdio.gltf.standard.2.0.dialect.source",
-      "executable_registration": true
+      "executable_registration": false
     },
     {
-      "id": "s.stdio.gltf.inference.io.text",
+      "id": "s.stdio.gltf.standard.2.0.codec.inference-text.v1",
       "status": "unimplemented",
       "from": "s.stdio.gltf.standard.2.0.dialect.source",
       "to": "s.stdio.gltf.standard.2.0.dialect.source",
-      "executable_registration": true
+      "executable_registration": false
     },
     {
-      "id": "s.stdio.gltf.io.export.artifacts",
+      "id": "s.stdio.gltf.standard.2.0.codec.artifact-export.v1",
       "status": "unimplemented",
       "from": "s.stdio.gltf.standard.2.0.dialect.source",
       "to": "s.stdio.gltf.standard.2.0.dialect.source",
-      "executable_registration": true
+      "executable_registration": false
     },
     {
-      "id": "s.stdio.gltf.io.import.artifacts",
+      "id": "s.stdio.gltf.standard.2.0.codec.artifact-import.v1",
       "status": "unimplemented",
       "from": "s.stdio.gltf.standard.2.0.dialect.source",
       "to": "s.stdio.gltf.standard.2.0.dialect.source",
-      "executable_registration": true
+      "executable_registration": false
     },
     {
-      "id": "s.stdio.gltf.io.mutation.binary",
+      "id": "s.stdio.gltf.standard.2.0.codec.mutation-binary.v1",
       "status": "unimplemented",
       "from": "s.stdio.gltf.standard.2.0.dialect.source",
       "to": "s.stdio.gltf.standard.2.0.dialect.source",
-      "executable_registration": true
+      "executable_registration": false
     },
     {
-      "id": "s.stdio.gltf.io.mutation.text",
+      "id": "s.stdio.gltf.standard.2.0.codec.mutation-text.v1",
       "status": "unimplemented",
       "from": "s.stdio.gltf.standard.2.0.dialect.source",
       "to": "s.stdio.gltf.standard.2.0.dialect.source",
-      "executable_registration": true
+      "executable_registration": false
     }
   ],
   "mutations": [
-    { "id": "s.stdio.gltf.mutation.no-mutation", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.set-snapshot", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.set-asset", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.insert-scene", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.remove-scene", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.set-scene", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.insert-node", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.remove-node", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.set-node", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.transform-node", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.reparent-node", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.bind-node-mesh", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.insert-mesh", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.remove-mesh", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.set-mesh", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.insert-accessor", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.remove-accessor", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.set-accessor", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.insert-material", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.remove-material", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.set-material", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.bind-primitive-material", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.insert-buffer", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.remove-buffer", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.set-buffer", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.insert-animation", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.remove-animation", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.set-animation", "status": "unimplemented", "executable_registration": true }
+    { "id": "s.stdio.gltf.mutation.insert-scene.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.mutation.remove-scene.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.mutation.insert-node.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.mutation.remove-node.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.mutation.transform-node.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.mutation.reparent-node.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.mutation.bind-node-mesh.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.mutation.insert-mesh.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.mutation.remove-mesh.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.mutation.insert-accessor.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.mutation.remove-accessor.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.mutation.insert-material.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.mutation.remove-material.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.mutation.bind-primitive-material.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.mutation.insert-buffer.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.mutation.remove-buffer.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.mutation.insert-animation.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.mutation.remove-animation.v1", "status": "unimplemented", "executable_registration": false }
   ],
   "inferences": [
-    { "id": "s.stdio.gltf.inference.size", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.area-volume", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.compactness", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.proportion", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.mass-distribution", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.curvature", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.thickness", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.concavity", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.clearance", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.adjacency", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.orientation", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.symmetry", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.roughness", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.topology", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.geometric-analysis", "status": "unimplemented", "executable_registration": true }
+    { "id": "s.stdio.gltf.inference.size.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.inference.area-volume.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.inference.compactness.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.inference.proportion.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.inference.mass-distribution.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.inference.curvature.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.inference.thickness.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.inference.concavity.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.inference.clearance.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.inference.adjacency.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.inference.orientation.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.inference.symmetry.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.inference.roughness.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.inference.topology.v1", "status": "unimplemented", "executable_registration": false },
+    { "id": "s.stdio.gltf.inference.geometric-analysis.v1", "status": "unimplemented", "executable_registration": false }
   ],
   "resources": [
     {
@@ -169,6 +159,126 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.gltf.runtime.codec.codec-stdio-gltf-extension-gltf.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.gltf|extension:gltf",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.gltf"
+        },
+        {
+          "namespace": "extension",
+          "value": "gltf"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.gltf.runtime.composer.dialect-s-stdio-gltf-2-0.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.gltf@2.0/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.gltf@2.0/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.gltf.runtime.grammar.grammar-stdio-gltf.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.gltf",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.gltf"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.gltf.runtime.grammar.grammar-stdio-gltf-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.gltf.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.gltf.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.gltf.runtime.grammar.grammar-stdio-gltf-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.gltf.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.gltf.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.gltf.runtime.grammar.grammar-stdio-gltf-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.gltf.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.gltf.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.gltf.runtime.grammar.grammar-stdio-gltf-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.gltf.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.gltf.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.gltf.runtime.inference.schema-s-stdio-gltf-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.gltf.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.gltf.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.gltf.runtime.representation.mime-model-gltf-json-extension-gltf.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:model/gltf+json|extension:.gltf",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "model/gltf+json"
+        },
+        {
+          "namespace": "extension",
+          "value": ".gltf"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.gltf.runtime.schema.schema-s-stdio-gltf.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.gltf",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.gltf"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,
@@ -185,51 +295,41 @@
     "canonical": "unimplemented",
     "validators": [],
     "mutations": [
-      "s.stdio.gltf.mutation.no-mutation",
-      "s.stdio.gltf.mutation.set-snapshot",
-      "s.stdio.gltf.mutation.set-asset",
-      "s.stdio.gltf.mutation.insert-scene",
-      "s.stdio.gltf.mutation.remove-scene",
-      "s.stdio.gltf.mutation.set-scene",
-      "s.stdio.gltf.mutation.insert-node",
-      "s.stdio.gltf.mutation.remove-node",
-      "s.stdio.gltf.mutation.set-node",
-      "s.stdio.gltf.mutation.transform-node",
-      "s.stdio.gltf.mutation.reparent-node",
-      "s.stdio.gltf.mutation.bind-node-mesh",
-      "s.stdio.gltf.mutation.insert-mesh",
-      "s.stdio.gltf.mutation.remove-mesh",
-      "s.stdio.gltf.mutation.set-mesh",
-      "s.stdio.gltf.mutation.insert-accessor",
-      "s.stdio.gltf.mutation.remove-accessor",
-      "s.stdio.gltf.mutation.set-accessor",
-      "s.stdio.gltf.mutation.insert-material",
-      "s.stdio.gltf.mutation.remove-material",
-      "s.stdio.gltf.mutation.set-material",
-      "s.stdio.gltf.mutation.bind-primitive-material",
-      "s.stdio.gltf.mutation.insert-buffer",
-      "s.stdio.gltf.mutation.remove-buffer",
-      "s.stdio.gltf.mutation.set-buffer",
-      "s.stdio.gltf.mutation.insert-animation",
-      "s.stdio.gltf.mutation.remove-animation",
-      "s.stdio.gltf.mutation.set-animation"
+      "s.stdio.gltf.mutation.insert-scene.v1",
+      "s.stdio.gltf.mutation.remove-scene.v1",
+      "s.stdio.gltf.mutation.insert-node.v1",
+      "s.stdio.gltf.mutation.remove-node.v1",
+      "s.stdio.gltf.mutation.transform-node.v1",
+      "s.stdio.gltf.mutation.reparent-node.v1",
+      "s.stdio.gltf.mutation.bind-node-mesh.v1",
+      "s.stdio.gltf.mutation.insert-mesh.v1",
+      "s.stdio.gltf.mutation.remove-mesh.v1",
+      "s.stdio.gltf.mutation.insert-accessor.v1",
+      "s.stdio.gltf.mutation.remove-accessor.v1",
+      "s.stdio.gltf.mutation.insert-material.v1",
+      "s.stdio.gltf.mutation.remove-material.v1",
+      "s.stdio.gltf.mutation.bind-primitive-material.v1",
+      "s.stdio.gltf.mutation.insert-buffer.v1",
+      "s.stdio.gltf.mutation.remove-buffer.v1",
+      "s.stdio.gltf.mutation.insert-animation.v1",
+      "s.stdio.gltf.mutation.remove-animation.v1"
     ],
     "inferences": [
-      "s.stdio.gltf.inference.size",
-      "s.stdio.gltf.inference.area-volume",
-      "s.stdio.gltf.inference.compactness",
-      "s.stdio.gltf.inference.proportion",
-      "s.stdio.gltf.inference.mass-distribution",
-      "s.stdio.gltf.inference.curvature",
-      "s.stdio.gltf.inference.thickness",
-      "s.stdio.gltf.inference.concavity",
-      "s.stdio.gltf.inference.clearance",
-      "s.stdio.gltf.inference.adjacency",
-      "s.stdio.gltf.inference.orientation",
-      "s.stdio.gltf.inference.symmetry",
-      "s.stdio.gltf.inference.roughness",
-      "s.stdio.gltf.inference.topology",
-      "s.stdio.gltf.inference.geometric-analysis"
+      "s.stdio.gltf.inference.size.v1",
+      "s.stdio.gltf.inference.area-volume.v1",
+      "s.stdio.gltf.inference.compactness.v1",
+      "s.stdio.gltf.inference.proportion.v1",
+      "s.stdio.gltf.inference.mass-distribution.v1",
+      "s.stdio.gltf.inference.curvature.v1",
+      "s.stdio.gltf.inference.thickness.v1",
+      "s.stdio.gltf.inference.concavity.v1",
+      "s.stdio.gltf.inference.clearance.v1",
+      "s.stdio.gltf.inference.adjacency.v1",
+      "s.stdio.gltf.inference.orientation.v1",
+      "s.stdio.gltf.inference.symmetry.v1",
+      "s.stdio.gltf.inference.roughness.v1",
+      "s.stdio.gltf.inference.topology.v1",
+      "s.stdio.gltf.inference.geometric-analysis.v1"
     ],
     "fixtures": []
   }

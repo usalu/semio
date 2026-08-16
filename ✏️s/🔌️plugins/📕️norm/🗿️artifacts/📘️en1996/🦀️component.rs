@@ -108,13 +108,28 @@ pub mod io_registry {
 /// the old side-effecting `register()`/`register_pilot_languages()`/`register_artifact_schema()`/
 /// `register_artifact_inferences()`/`register_io()`, each of which called a global registry directly
 /// from the plugin root's `.setup()` fan-out (`register_norm_exports`, deleted by this same wave).
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.en1996")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    crate::artifacts::definition::schema_owned_definition(
+        "s.en1996",
+        crate::artifacts::en1996::schema::en1996_artifact_schema_descriptor().id,
+        crate::artifacts::en1996::standards::v1::subsets::any::schema::inferences::en1996_artifact_inference_descriptor().id,
+        crate::artifacts::en1996::standards::v1::subsets::any::io::io_registry::entries(),
+        pilot_languages(),
+        crate::apps::en1996::DOCUMENT_SCHEMA,
+        <En1996Snapshot as store::ArtifactDsl>::EXTENSION,
+        "EN 1996 design of masonry structures",
+        "EN 1996 Bemessung und Konstruktion von Mauerwerksbauten",
+    )
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::en1996::schema::en1996_artifact_schema_descriptor())
         .inferences([crate::artifacts::en1996::standards::v1::subsets::any::schema::inferences::en1996_artifact_inference_descriptor()])
         .composers(crate::artifacts::en1996::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .build()
+        .document_codec::<crate::apps::en1996::En1996PlayApp>()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once

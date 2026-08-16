@@ -1,16 +1,9 @@
 //! 🏗️ Typestate `PluginBuilder` — missing label/version is a compile error.
 
-use crate::app::{App, ArtifactApp, ArtifactDeclaration, ArtifactDefinitionRegistry, Plugin, PluginApp, PluginAssemblyError, PluginCommandHandler, PluginRegistration};
+use crate::app::{App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, Plugin, PluginApp, PluginAssemblyError, PluginCommandHandler};
 use semio_framework::{kernel::CapabilityRequirement, CommandDefinition};
 use std::collections::HashMap;
 use std::marker::PhantomData;
-use std::sync::{Mutex, OnceLock};
-
-static PLUGIN_ASSEMBLY_MUTEX: OnceLock<Mutex<()>> = OnceLock::new();
-
-fn plugin_assembly_mutex() -> &'static Mutex<()> {
-    PLUGIN_ASSEMBLY_MUTEX.get_or_init(|| Mutex::new(()))
-}
 
 /// 🏷️ Builder has plugin id only — next call must be `.label(...)`.
 pub struct NeedsLabel;
@@ -29,10 +22,18 @@ pub struct PluginBuilder<State> {
     capabilities: Vec<CapabilityRequirement>,
     commands: Vec<(CommandDefinition, PluginCommandHandler)>,
     artifact_kinds: Vec<semio_framework::ArtifactKindSpec>,
+    /// 🔗️ Direct plugin dependencies — contract freeze §3/§4; gate-checked in `try_build` via
+    /// `crate::app::register_contributions`.
+    dependencies: Vec<semio_framework::PluginDependency>,
+    /// 🗂️ Contributions onto artifact kinds owned by a dependency — resolved against `plugin_id` in
+    /// `try_build`, once it is known to be final.
+    contributions: Vec<ArtifactContribution>,
+    /// 📖️ One non-capturing `(document_schema, kinds)` provider per `.document_app::<A>()` call —
+    /// committed into the process-wide owner mutation roster by `try_build`.
+    owner_mutation_rosters: Vec<fn() -> (&'static str, &'static [protocol::SemanticDescriptor])>,
     apps: HashMap<String, Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static>>,
     app_defs: Vec<(App, Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static>)>,
     app_schema_descriptors: Vec<fn() -> Option<::semio_framework_schema::AppSchemaDescriptor>>,
-    registrations: Vec<PluginRegistration>,
     _state: PhantomData<State>,
 }
 
@@ -48,10 +49,12 @@ impl PluginBuilder<NeedsLabel> {
             capabilities: Vec::new(),
             commands: Vec::new(),
             artifact_kinds: Vec::new(),
+            dependencies: Vec::new(),
+            contributions: Vec::new(),
+            owner_mutation_rosters: Vec::new(),
             apps: HashMap::new(),
             app_defs: Vec::new(),
             app_schema_descriptors: Vec::new(),
-            registrations: Vec::new(),
             _state: PhantomData,
         }
     }
@@ -67,10 +70,12 @@ impl PluginBuilder<NeedsLabel> {
             capabilities: self.capabilities,
             commands: self.commands,
             artifact_kinds: self.artifact_kinds,
+            dependencies: self.dependencies,
+            contributions: self.contributions,
+            owner_mutation_rosters: self.owner_mutation_rosters,
             apps: self.apps,
             app_defs: self.app_defs,
             app_schema_descriptors: self.app_schema_descriptors,
-            registrations: self.registrations,
             _state: PhantomData,
         }
     }
@@ -88,10 +93,12 @@ impl PluginBuilder<NeedsVersion> {
             capabilities: self.capabilities,
             commands: self.commands,
             artifact_kinds: self.artifact_kinds,
+            dependencies: self.dependencies,
+            contributions: self.contributions,
+            owner_mutation_rosters: self.owner_mutation_rosters,
             apps: self.apps,
             app_defs: self.app_defs,
             app_schema_descriptors: self.app_schema_descriptors,
-            registrations: self.registrations,
             _state: PhantomData,
         }
     }
@@ -100,7 +107,7 @@ impl PluginBuilder<NeedsVersion> {
 impl PluginBuilder<Ready> {
     /// 🗿️ Declares one artifact this plugin owns. Repeatable. `try_build()` walks every
     /// declared artifact in a fixed deterministic order and validates that it owns everything it
-    /// declares — see `ArtifactDeclaration::register_all`.
+    /// declares — see `ArtifactDeclaration::preflight`.
     pub fn artifact(mut self, declaration: ArtifactDeclaration) -> Self {
         self.artifacts.push(declaration);
         self
@@ -109,12 +116,6 @@ impl PluginBuilder<Ready> {
     /// 🧾️ Registers one definition-only artifact through the same typed preflight registry.
     pub fn artifact_definition(mut self, definition: crate::app::ArtifactDefinition) -> Self {
         self.artifact_definitions.push(definition);
-        self
-    }
-
-    /// 🧩️ Declares one typed plugin-wide registration in the transactional assembly plan.
-    pub fn registration(mut self, registration: PluginRegistration) -> Self {
-        self.registrations.push(registration);
         self
     }
 
@@ -144,15 +145,45 @@ impl PluginBuilder<Ready> {
         self
     }
 
+    /// 🔗️ Declares a direct plugin dependency this plugin requires to load — contract freeze §3/§4.
+    /// Repeatable; order matters only for extensions (`ExtensionBundle::extends` must equal
+    /// `dependencies[0].plugin_id`), which plain plugins have no equivalent constraint for.
+    pub fn depends_on(mut self, plugin_id: impl Into<String>, version: semio_framework::VersionReq) -> Self {
+        self.dependencies.push(semio_framework::PluginDependency::new(plugin_id, version));
+        self
+    }
+
+    /// 🗂️ Declares one contribution of mutations/inferences onto an artifact kind owned by a
+    /// dependency. Resolved against this plugin's own id and gate-checked (contract freeze §4) at
+    /// `try_build()`, once every declared dependency is final.
+    pub fn contributes(mut self, contribution: ArtifactContribution) -> Self {
+        self.contributions.push(contribution);
+        self
+    }
+
     /// 🧬️ Declares a typed document app factory and app-schema descriptor for transactional assembly.
-    pub fn document_app<A: ArtifactApp>(mut self, app: App) -> Self {
+    pub fn document_app<A: ArtifactApp>(mut self, app: App) -> Self
+    where
+        A::Mutation: protocol::SemanticMutation<A::Snapshot>,
+    {
         fn app_schema<A: ArtifactApp>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             A::app_schema()
+        }
+        /// 📖️ Non-capturing thunk pairing `A::DOCUMENT_SCHEMA` with its `SemanticMutation::kinds()`
+        /// table — `try_build()` commits these into the process-wide owner mutation roster
+        /// (`crate::app::commit_owner_mutation_roster`), the "owner half" of
+        /// `contributor.list-artifact-mutations`.
+        fn owner_mutation_roster<A: ArtifactApp>() -> (&'static str, &'static [protocol::SemanticDescriptor])
+        where
+            A::Mutation: protocol::SemanticMutation<A::Snapshot>,
+        {
+            (A::DOCUMENT_SCHEMA, <A::Mutation as protocol::SemanticMutation<A::Snapshot>>::kinds())
         }
         let registry = crate::app::AppActionRegistry::from_definition(&app.definition);
         let factory: Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static> = Box::new(move || Box::new(crate::app::VcsArtifactApp::with_registry(A::default(), registry.clone())));
         self.app_defs.push((app, factory));
         self.app_schema_descriptors.push(app_schema::<A>);
+        self.owner_mutation_rosters.push(owner_mutation_roster::<A>);
         self
     }
 
@@ -161,7 +192,7 @@ impl PluginBuilder<Ready> {
         self.try_build()
     }
 
-    /// ✅️ Preflights all declarations before any registry side effect, then commits once.
+    /// ✅️ Builds plugin-local runtime authority before one all-registry commit.
     pub fn try_build(self) -> Result<Plugin, PluginAssemblyError> {
         let Self {
             plugin_id,
@@ -172,17 +203,16 @@ impl PluginBuilder<Ready> {
             capabilities,
             commands,
             artifact_kinds,
+            dependencies,
+            contributions,
+            owner_mutation_rosters,
             apps: _,
             app_defs,
             app_schema_descriptors,
-            registrations,
             _state: _,
         } = self;
         let label = label.ok_or_else(|| PluginAssemblyError::new("plugin-assembly.label", "typestate-ready builder has no label"))?;
         let version = version.ok_or_else(|| PluginAssemblyError::new("plugin-assembly.version", "typestate-ready builder has no version"))?;
-        let _assembly = plugin_assembly_mutex()
-            .lock()
-            .map_err(|_| PluginAssemblyError::new("plugin-assembly.unavailable", "plugin assembly mutex is poisoned"))?;
         let mut definitions = ArtifactDefinitionRegistry::new();
         for definition in artifact_definitions {
             definitions.register(definition).map_err(PluginAssemblyError::definition)?;
@@ -196,11 +226,27 @@ impl PluginBuilder<Ready> {
                 app_schemas.push(descriptor);
             }
         }
-        let plan = crate::app::ArtifactRegistrationPlan::from_declarations(&artifacts, app_schemas, registrations);
-        plan.preflight()?;
-        plan.commit()?;
+        let plan = crate::app::ArtifactRegistrationPlan::from_declarations(&artifacts, app_schemas);
+        let (mut runtime, registry_plan) = plan.into_runtime(definitions)?;
 
-        let mut plugin = Plugin::new(plugin_id.clone(), label, version);
+        // 🗂️ Resolve every declared contribution against this plugin's own (now-final) id — pure,
+        // no registry side effects — then gate-check the WHOLE candidate set (contract freeze §4)
+        // before anything commits.
+        let mut contribution_descriptors = Vec::with_capacity(contributions.len());
+        let mut contributed_inference_services = Vec::new();
+        let mut contributed_mutation_runtime = Vec::new();
+        for contribution in contributions {
+            let (descriptor, inference_services, mutation_runtime) = contribution.resolve(&plugin_id);
+            contribution_descriptors.push(descriptor);
+            contributed_inference_services.extend(inference_services);
+            contributed_mutation_runtime.extend(mutation_runtime);
+        }
+        crate::app::register_contributions(&plugin_id, &dependencies, &contribution_descriptors).map_err(|error| PluginAssemblyError::new("plugin-assembly.contribution-gate", error.to_string()))?;
+        runtime.extend_contributions(contributed_inference_services, &owner_mutation_rosters, contributed_mutation_runtime)?;
+
+        let mut plugin = Plugin::new(plugin_id.clone(), label, version).with_runtime_registry(runtime);
+        plugin.manifest.dependencies = dependencies;
+        plugin.manifest.contributions = contribution_descriptors;
         for declaration in artifacts {
             plugin = declaration.apply_to(plugin);
         }
@@ -216,6 +262,8 @@ impl PluginBuilder<Ready> {
         for (app, factory) in app_defs {
             plugin = plugin.register_app_factory(app, factory);
         }
+        let assembly = store::begin_artifact_assembly().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
+        crate::app::commit_artifact_registration_plan(&assembly, registry_plan)?;
         Ok(plugin)
     }
 }
@@ -224,5 +272,108 @@ impl Plugin {
     /// 🏗️ Starts a typestate plugin builder from a stable plugin id.
     pub fn builder(plugin_id: impl Into<String>) -> PluginBuilder<NeedsLabel> {
         PluginBuilder::new(plugin_id)
+    }
+}
+
+#[cfg(test)]
+mod plugin_builder_dependency_tests {
+    use super::*;
+    use crate::app::ArtifactContribution;
+
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    struct DependencyTestSnapshot {
+        value: i32,
+    }
+    impl store::ArtifactPack for DependencyTestSnapshot {
+        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+            serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
+        }
+        fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+            serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
+        }
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+    struct DependencyTestDiff {
+        delta: i32,
+    }
+    impl protocol::MutationDiff<DependencyTestSnapshot> for DependencyTestDiff {
+        fn apply(&self, base: &DependencyTestSnapshot) -> DependencyTestSnapshot {
+            DependencyTestSnapshot { value: base.value + self.delta }
+        }
+        fn absorb(&mut self, other: Self) {
+            self.delta += other.delta;
+        }
+    }
+
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    enum DependencyTestOp {
+        Add(i32),
+    }
+    impl protocol::Mutation<DependencyTestSnapshot> for DependencyTestOp {
+        type Diff = DependencyTestDiff;
+        fn diff(&self, _base: &DependencyTestSnapshot) -> DependencyTestDiff {
+            let DependencyTestOp::Add(delta) = self;
+            DependencyTestDiff { delta: *delta }
+        }
+        fn inverse(&self, _base: &DependencyTestSnapshot) -> Vec<Self> {
+            let DependencyTestOp::Add(delta) = self;
+            vec![DependencyTestOp::Add(-delta)]
+        }
+    }
+    impl protocol::OpBinary for DependencyTestOp {
+        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+            Ok(serde_json::to_vec(self).expect("dependency test op always encodes"))
+        }
+        fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+            serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()).into())
+        }
+    }
+
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    struct DependencyTestMutationKind {
+        delta: i32,
+    }
+    impl protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp> for DependencyTestMutationKind {
+        const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "value", kind: "add-value", record: "AddedValue" };
+        fn plan(&self, _base: &DependencyTestSnapshot, planner: &mut protocol::Planner<DependencyTestSnapshot, DependencyTestOp>) -> Result<(), protocol::PlanError> {
+            planner.call(DependencyTestOp::Add(self.delta))
+        }
+        fn label(&self) -> String {
+            format!("Add {} to value", self.delta)
+        }
+    }
+
+    fn contribution(target_artifact_kind: &str) -> ArtifactContribution {
+        ArtifactContribution::builder(target_artifact_kind).mutation::<DependencyTestSnapshot, DependencyTestOp, DependencyTestMutationKind>("dep-target.document", 1, 1).build()
+    }
+
+    #[test]
+    fn dependency_gating_rejects_a_contribution_onto_a_non_dependency() {
+        let error = Plugin::builder("builder-test-contributor-missing-dep")
+            .label("Builder Test Contributor Missing Dep")
+            .version("0.1.0")
+            .contributes(contribution("s.builder-test-dep-target.thing"))
+            .try_build()
+            .err()
+            .expect("a contribution with no matching declared dependency must be rejected");
+        assert_eq!(error.code, "plugin-assembly.contribution-gate");
+        assert!(error.message.contains("not a direct dependency"), "unexpected message: {}", error.message);
+    }
+
+    #[test]
+    fn a_direct_dependency_permits_its_contribution_and_lands_on_the_manifest() {
+        let plugin = Plugin::builder("builder-test-contributor-ok")
+            .label("Builder Test Contributor Ok")
+            .version("0.1.0")
+            .depends_on("builder-test-dep-target-ok", semio_framework::VersionReq::Any)
+            .contributes(contribution("s.builder-test-dep-target-ok.thing"))
+            .try_build()
+            .expect("a contribution onto a direct dependency must be accepted");
+        assert_eq!(plugin.manifest.dependencies.len(), 1);
+        assert_eq!(plugin.manifest.dependencies[0].plugin_id, "builder-test-dep-target-ok");
+        assert_eq!(plugin.manifest.contributions.len(), 1);
+        assert_eq!(plugin.manifest.contributions[0].artifact_kind, "s.builder-test-dep-target-ok.thing");
+        assert_eq!(plugin.manifest.contributions[0].mutations[0].mutation_id, "dep-target.document#builder-test-contributor-ok:add-value");
     }
 }

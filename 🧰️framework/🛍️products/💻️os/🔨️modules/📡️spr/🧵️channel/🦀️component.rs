@@ -17,7 +17,7 @@
 /// @emoji 🔢️ The channel wire format's own version, advertised by `AppCommand::Hello` and echoed
 /// back by `AppFrame::Welcome` so either side can detect a mismatched build before exchanging any
 /// other frame.
-pub const CHANNEL_VERSION: u32 = 9;
+pub const CHANNEL_VERSION: u32 = 10;
 //#endregion 🔖️Version
 
 //#region 🔖️ChildPackEntry
@@ -192,6 +192,36 @@ pub enum AppCommand {
     TransactionRedo {
         seq: u64,
         group_id: String,
+    },
+    /// 📂️ Opens an artifact in its resolved (or explicitly named) viewer/editor surface — see
+    /// contract-freeze.md §3 of `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET/`.
+    /// Empty `plugin_id`/`app_id` means "resolve via `OpeningResolver`". CHANNEL_VERSION 10 wire addition.
+    OpenArtifact {
+        seq: u64,
+        artifact_ref: String,
+        role: u8,
+        plugin_id: String,
+        app_id: String,
+    },
+    /// 🎚️ Pins a viewer/editor default for one `(artifact_kind, standard, subset, role)` coordinate,
+    /// persisted event-sourced in the OS `🎚️config` opening-preferences facet. CHANNEL_VERSION 10 wire addition.
+    SetDefaultApp {
+        seq: u64,
+        artifact_kind: String,
+        standard: String,
+        subset: String,
+        role: u8,
+        plugin_id: String,
+        app_id: String,
+    },
+    /// 🎚️ Clears a previously pinned default, falling back to the `OpeningResolver`'s owner/router
+    /// order. CHANNEL_VERSION 10 wire addition.
+    ClearDefaultApp {
+        seq: u64,
+        artifact_kind: String,
+        standard: String,
+        subset: String,
+        role: u8,
     },
 }
 //#endregion 🔖️AppCommand
@@ -518,6 +548,32 @@ pub fn encode_app_command(command: &AppCommand) -> Vec<u8> {
             crate::os_spr::write_varint_u64(&mut out, *seq);
             crate::os_spr::write_str(&mut out, group_id);
         }
+        AppCommand::OpenArtifact { seq, artifact_ref, role, plugin_id, app_id } => {
+            out.push(27);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, artifact_ref);
+            out.push(*role);
+            crate::os_spr::write_str(&mut out, plugin_id);
+            crate::os_spr::write_str(&mut out, app_id);
+        }
+        AppCommand::SetDefaultApp { seq, artifact_kind, standard, subset, role, plugin_id, app_id } => {
+            out.push(28);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, artifact_kind);
+            crate::os_spr::write_str(&mut out, standard);
+            crate::os_spr::write_str(&mut out, subset);
+            out.push(*role);
+            crate::os_spr::write_str(&mut out, plugin_id);
+            crate::os_spr::write_str(&mut out, app_id);
+        }
+        AppCommand::ClearDefaultApp { seq, artifact_kind, standard, subset, role } => {
+            out.push(29);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, artifact_kind);
+            crate::os_spr::write_str(&mut out, standard);
+            crate::os_spr::write_str(&mut out, subset);
+            out.push(*role);
+        }
     }
     out
 }
@@ -603,6 +659,35 @@ pub fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate::os_spr::Pro
         24 => AppCommand::TransactionRollback { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, txn_id: crate::os_spr::read_str(bytes, &mut pos)? },
         25 => AppCommand::TransactionUndo { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, group_id: crate::os_spr::read_str(bytes, &mut pos)? },
         26 => AppCommand::TransactionRedo { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, group_id: crate::os_spr::read_str(bytes, &mut pos)? },
+        27 => {
+            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let artifact_ref = crate::os_spr::read_str(bytes, &mut pos)?;
+            let role = *bytes.get(pos).ok_or_else(|| malformed("channel app-command OpenArtifact.role", pos as u64, "truncated"))?;
+            pos += 1;
+            let plugin_id = crate::os_spr::read_str(bytes, &mut pos)?;
+            let app_id = crate::os_spr::read_str(bytes, &mut pos)?;
+            AppCommand::OpenArtifact { seq, artifact_ref, role, plugin_id, app_id }
+        }
+        28 => {
+            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let artifact_kind = crate::os_spr::read_str(bytes, &mut pos)?;
+            let standard = crate::os_spr::read_str(bytes, &mut pos)?;
+            let subset = crate::os_spr::read_str(bytes, &mut pos)?;
+            let role = *bytes.get(pos).ok_or_else(|| malformed("channel app-command SetDefaultApp.role", pos as u64, "truncated"))?;
+            pos += 1;
+            let plugin_id = crate::os_spr::read_str(bytes, &mut pos)?;
+            let app_id = crate::os_spr::read_str(bytes, &mut pos)?;
+            AppCommand::SetDefaultApp { seq, artifact_kind, standard, subset, role, plugin_id, app_id }
+        }
+        29 => {
+            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let artifact_kind = crate::os_spr::read_str(bytes, &mut pos)?;
+            let standard = crate::os_spr::read_str(bytes, &mut pos)?;
+            let subset = crate::os_spr::read_str(bytes, &mut pos)?;
+            let role = *bytes.get(pos).ok_or_else(|| malformed("channel app-command ClearDefaultApp.role", pos as u64, "truncated"))?;
+            pos += 1;
+            AppCommand::ClearDefaultApp { seq, artifact_kind, standard, subset, role }
+        }
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(command)
@@ -1011,6 +1096,24 @@ mod tests {
         assert_command_round_trips(&AppCommand::TransactionRedo { seq: 6, group_id: "g".to_string() });
     }
     //#endregion 🔖️Transaction
+
+    //#region 🔖️Opening
+    #[test]
+    fn app_command_open_artifact_round_trips_resolved_and_explicit_forms() {
+        assert_command_round_trips(&AppCommand::OpenArtifact { seq: 1, artifact_ref: "s.cad.cad@1/*#viewer".to_string(), role: 0, plugin_id: String::new(), app_id: String::new() });
+        assert_command_round_trips(&AppCommand::OpenArtifact { seq: 2, artifact_ref: "s.cad.cad@1/*#editor".to_string(), role: 1, plugin_id: "cad".to_string(), app_id: "s.cad.cad@1/*#editor".to_string() });
+    }
+
+    #[test]
+    fn app_command_set_default_app_round_trips() {
+        assert_command_round_trips(&AppCommand::SetDefaultApp { seq: 3, artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string(), role: 1, plugin_id: "cad".to_string(), app_id: "s.cad.cad@1/*#editor".to_string() });
+    }
+
+    #[test]
+    fn app_command_clear_default_app_round_trips() {
+        assert_command_round_trips(&AppCommand::ClearDefaultApp { seq: 4, artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string(), role: 0 });
+    }
+    //#endregion 🔖️Opening
     //#endregion 🔖️AppCommand
 
     //#region 🔖️AppFrame
@@ -1303,6 +1406,10 @@ mod tests {
             ("TransactionRollback", AppCommand::TransactionRollback { seq: 4, txn_id: "t".to_string() }),
             ("TransactionUndo", AppCommand::TransactionUndo { seq: 5, group_id: "g".to_string() }),
             ("TransactionRedo", AppCommand::TransactionRedo { seq: 6, group_id: "g".to_string() }),
+            ("OpenArtifactResolve", AppCommand::OpenArtifact { seq: 1, artifact_ref: "s.cad.cad@1/*#viewer".to_string(), role: 0, plugin_id: String::new(), app_id: String::new() }),
+            ("OpenArtifactExplicit", AppCommand::OpenArtifact { seq: 2, artifact_ref: "s.cad.cad@1/*#editor".to_string(), role: 1, plugin_id: "cad".to_string(), app_id: "s.cad.cad@1/*#editor".to_string() }),
+            ("SetDefaultApp", AppCommand::SetDefaultApp { seq: 3, artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string(), role: 1, plugin_id: "cad".to_string(), app_id: "s.cad.cad@1/*#editor".to_string() }),
+            ("ClearDefaultApp", AppCommand::ClearDefaultApp { seq: 4, artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string(), role: 0 }),
         ]
     }
 
@@ -1355,7 +1462,7 @@ mod tests {
     /// this test, forcing a deliberate update of both this table and the TS-side twin (WP-0B).
     fn channel_command_fixture_hex(label: &str) -> &'static str {
         match label {
-            "Hello" => "000803617070056163746f72020102",
+            "Hello" => "000903617070056163746f72020102",
             "ConfigCommand" => "01010109",
             "Command" => "0201010100",
             "CommandText" => "030102676f",
@@ -1383,6 +1490,10 @@ mod tests {
             "TransactionRollback" => "18040174",
             "TransactionUndo" => "19050167",
             "TransactionRedo" => "1a060167",
+            "OpenArtifactResolve" => "1b0114732e6361642e63616440312f2a23766965776572000000",
+            "OpenArtifactExplicit" => "1b0214732e6361642e63616440312f2a23656469746f72010363616414732e6361642e63616440312f2a23656469746f72",
+            "SetDefaultApp" => "1c0309732e6361642e6361640131012a010363616414732e6361642e63616440312f2a23656469746f72",
+            "ClearDefaultApp" => "1d0409732e6361642e6361640131012a00",
             other => panic!("channel_command_fixture_hex: no golden hex registered for label {other:?}"),
         }
     }
@@ -1391,7 +1502,7 @@ mod tests {
     /// `channel_command_fixture_hex`'s docstring for provenance/drift-guard rationale.
     fn channel_frame_fixture_hex(label: &str) -> &'static str {
         match label {
-            "Welcome" => "0008010101",
+            "Welcome" => "0009010101",
             "Done" => "0101",
             "Invocation" => "02010101000000",
             "UiSection" => "03010101016b0100",
@@ -1461,6 +1572,24 @@ mod tests {
             if let Some(expected) = frame_vectors.get(label) {
                 let actual = hex_encode(&encode_app_frame(&value));
                 assert_eq!(&actual, expected, "AppFrame::{label} drifted from the shared cross-language fixture");
+            }
+        }
+    }
+
+    /// @emoji 🔗️ Cross-language drift guard for the C3 opening variants (tags 27-29): the JSON file
+    /// under `🧫️fixtures/📡️channel/` is the single source of truth this codec's TS twin
+    /// (`🟦️component.ts`'s `AppChannelCodec` `🧪️Tests` region) loads and asserts against too — no
+    /// `AppFrame` variants were added for opening, so only the command-side vector file exists.
+    #[test]
+    fn channel_opening_fixtures_match_shared_cross_language_json_vectors() {
+        let command_json = include_str!("../../../🧫️fixtures/📡️channel/app-command-opening.json");
+        let command_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(command_json).expect("app-command-opening.json must parse");
+        assert_eq!(command_vectors.len(), 4, "app-command-opening.json vector count changed");
+
+        for (label, value) in channel_command_fixture_corpus() {
+            if let Some(expected) = command_vectors.get(label) {
+                let actual = hex_encode(&encode_app_command(&value));
+                assert_eq!(&actual, expected, "AppCommand::{label} drifted from the shared cross-language fixture");
             }
         }
     }

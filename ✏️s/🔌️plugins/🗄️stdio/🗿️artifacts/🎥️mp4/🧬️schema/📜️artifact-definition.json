@@ -81,6 +81,71 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.mp4.runtime.codec.codec-stdio-mp4-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.mp4|extension:semio",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.mp4"
+        },
+        {
+          "namespace": "extension",
+          "value": "semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.mp4.runtime.composer.dialect-s-stdio-mp4-isobmff.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.mp4@isobmff/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.mp4@isobmff/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.mp4.runtime.inference.schema-s-stdio-mp4-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.mp4.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.mp4.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.mp4.runtime.representation.mime-video-mp4-extension-mp4.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:video/mp4|extension:.mp4",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "video/mp4"
+        },
+        {
+          "namespace": "extension",
+          "value": ".mp4"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.mp4.runtime.schema.schema-s-stdio-mp4.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.mp4",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.mp4"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

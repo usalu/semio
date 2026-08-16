@@ -60,7 +60,7 @@ mod tests {
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let mut store: ArtifactStore<WriterSnapshot, WriterMutation> = ArtifactStore::new(create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None));
+        let mut store: ArtifactStore<WriterSnapshot, WriterMutation> = ArtifactStore::new(create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None)).expect("valid artifact store fixture");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(crate::artifacts::writer::schema::mutations::EditText { text: "hello".into() })], description: None }).expect("apply");
         let edit: &Edit<WriterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
@@ -89,4 +89,3 @@ mod semio_protocol_conformance {
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes pack bytes");
     }
 }
-

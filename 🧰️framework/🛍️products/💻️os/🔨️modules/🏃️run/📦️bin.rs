@@ -145,7 +145,7 @@ fn main() {
 /// `sink` accumulated — the ONLY two places this CLI ever writes bytes for a run.
 fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn std::error::Error>> {
     let envelope = store::create_document_envelope::<workflow::RunArtifact, workflow::RunMutation>(workflow::S_RUN_SCHEMA, RUN_ID, workflow::empty_run_document(), None);
-    let mut document_store = store::ArtifactStore::new(envelope);
+    let mut document_store = store::ArtifactStore::new(envelope).map_err(|error| error.to_string())?;
     if !sink.mutations.is_empty() {
         document_store.dispatch(store::ArtifactCommand::Apply { mutations: sink.mutations.clone(), description: None }).map_err(|error| error.to_string())?;
     }

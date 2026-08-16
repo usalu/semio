@@ -25,7 +25,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::marker::PhantomData;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 // 🗃️ `store`'s facade over `vcs`'s version-graph algebra — apps that depend on `store` reach
 // `Author`/`Change`/`Checkpoint`/`Alternative`/`VcsError`/etc through this crate, never through
@@ -34,6 +34,38 @@ pub use crate::os_vcs::{
     apply_collection_mutation, apply_mutation, collection_diff_from_mutation, content_addressed_checkpoint_id, content_addressed_entity_id, edit_scoped_id, inverse_collection_mutation, mint_alternative_id, mint_change_id, mint_edit_id,
     mint_mutation_id, Alternative, ArtifactVcs, Author, Change, Checkpoint, CollectionDiff, CollectionMutation, Identified, ItemPatch, Patchable, VcsError,
 };
+
+//#region 🔖️ArtifactAssembly
+/// 🧷️ One process-wide guard for a plugin's all-registry publication phase.
+pub struct ArtifactAssemblyTransaction {
+    _guard: MutexGuard<'static, ()>,
+}
+
+/// 🚫️ The all-registry publication barrier is unavailable after a writer panic.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ArtifactAssemblyTransactionError {
+    Unavailable,
+}
+
+impl std::fmt::Display for ArtifactAssemblyTransactionError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str("artifact assembly transaction unavailable")
+    }
+}
+
+impl std::error::Error for ArtifactAssemblyTransactionError {}
+
+fn artifact_assembly_lock() -> &'static Mutex<()> {
+    static LOCK: std::sync::OnceLock<Mutex<()>> = std::sync::OnceLock::new();
+    LOCK.get_or_init(|| Mutex::new(()))
+}
+
+/// 🧷️ Begins the only cross-registry transaction accepted by artifact registration APIs.
+#[must_use]
+pub fn begin_artifact_assembly() -> Result<ArtifactAssemblyTransaction, ArtifactAssemblyTransactionError> {
+    Ok(ArtifactAssemblyTransaction { _guard: artifact_assembly_lock().lock().map_err(|_| ArtifactAssemblyTransactionError::Unavailable)? })
+}
+//#endregion 🔖️ArtifactAssembly
 
 //#region 🔖️Schemas
 /// @emoji 🔗️ Identifies the channel a document synchronizes through, when one is attached.
@@ -1655,6 +1687,13 @@ fn validate_document_codecs(registry: &std::collections::BTreeMap<String, Artifa
 /// 🔬️ Verifies document codecs against all established schemas without mutating the registry.
 #[must_use]
 pub fn preflight_document_codecs(codecs: &[ArtifactCodec]) -> Result<(), DocumentCodecRegistryError> {
+    let assembly = begin_artifact_assembly().map_err(|_| DocumentCodecRegistryError::Unavailable)?;
+    preflight_document_codecs_in_assembly(&assembly, codecs)
+}
+
+/// 🔬️ Verifies document codecs while one artifact assembly owns the shared publication barrier.
+#[must_use]
+pub fn preflight_document_codecs_in_assembly(_assembly: &ArtifactAssemblyTransaction, codecs: &[ArtifactCodec]) -> Result<(), DocumentCodecRegistryError> {
     let registry = document_codec_registry().read().map_err(|_| DocumentCodecRegistryError::Unavailable)?;
     validate_document_codecs(&registry, codecs)
 }
@@ -1669,6 +1708,13 @@ pub fn register_document_codec(codec: ArtifactCodec) -> Result<(), DocumentCodec
 /// 📝️ Registers document codecs only when every descriptor and executable is conflict-free.
 #[must_use]
 pub fn register_document_codecs(codecs: Vec<ArtifactCodec>) -> Result<(), DocumentCodecRegistryError> {
+    let assembly = begin_artifact_assembly().map_err(|_| DocumentCodecRegistryError::Unavailable)?;
+    register_document_codecs_in_assembly(&assembly, codecs)
+}
+
+/// 📝️ Publishes preflighted document codecs while one artifact assembly owns the shared barrier.
+#[must_use]
+pub fn register_document_codecs_in_assembly(_assembly: &ArtifactAssemblyTransaction, codecs: Vec<ArtifactCodec>) -> Result<(), DocumentCodecRegistryError> {
     let mut registry = document_codec_registry().write().map_err(|_| DocumentCodecRegistryError::Unavailable)?;
     validate_document_codecs(&registry, &codecs)?;
     for codec in codecs {
@@ -1776,6 +1822,13 @@ fn validate_dialect_migrations(registry: &std::collections::BTreeMap<(crate::os_
 /// 🔬️ Verifies a migration set against established dialect pairs without mutation.
 #[must_use]
 pub fn preflight_dialect_migrations(migrations: &[DialectMigration]) -> Result<(), DialectMigrationRegistryError> {
+    let assembly = begin_artifact_assembly().map_err(|_| DialectMigrationRegistryError::Unavailable)?;
+    preflight_dialect_migrations_in_assembly(&assembly, migrations)
+}
+
+/// 🔬️ Verifies migrations while one artifact assembly owns the shared publication barrier.
+#[must_use]
+pub fn preflight_dialect_migrations_in_assembly(_assembly: &ArtifactAssemblyTransaction, migrations: &[DialectMigration]) -> Result<(), DialectMigrationRegistryError> {
     let registry = dialect_migration_registry().read().map_err(|_| DialectMigrationRegistryError::Unavailable)?;
     validate_dialect_migrations(&registry, migrations)
 }
@@ -1789,6 +1842,13 @@ pub fn register_dialect_migration(migration: DialectMigration) -> Result<(), Dia
 /// 📝️ Registers migrations only when every candidate pair is conflict-free.
 #[must_use]
 pub fn register_dialect_migrations(migrations: Vec<DialectMigration>) -> Result<(), DialectMigrationRegistryError> {
+    let assembly = begin_artifact_assembly().map_err(|_| DialectMigrationRegistryError::Unavailable)?;
+    register_dialect_migrations_in_assembly(&assembly, migrations)
+}
+
+/// 📝️ Publishes preflighted migrations while one artifact assembly owns the shared barrier.
+#[must_use]
+pub fn register_dialect_migrations_in_assembly(_assembly: &ArtifactAssemblyTransaction, migrations: Vec<DialectMigration>) -> Result<(), DialectMigrationRegistryError> {
     let mut registry = dialect_migration_registry().write().map_err(|_| DialectMigrationRegistryError::Unavailable)?;
     validate_dialect_migrations(&registry, &migrations)?;
     for migration in migrations {
@@ -1807,6 +1867,56 @@ pub fn migrate_document(from: &crate::os_io::ArtifactDialect, to: &crate::os_io:
     let registry = dialect_migration_registry().read().map_err(|_| DialectMigrationError::Unavailable)?;
     let migration = registry.get(&(from.clone(), to.clone())).ok_or_else(|| DialectMigrationError::Missing { from: from.clone(), to: to.clone() })?;
     (migration.migrate_pack)(pack_bytes).map_err(DialectMigrationError::Rejected)
+}
+
+/// 🧷️ All writable store registries held before an artifact assembly can publish anything.
+pub struct ArtifactAssemblyStoreRegistryGuards {
+    document_codecs: std::sync::RwLockWriteGuard<'static, std::collections::BTreeMap<String, ArtifactCodec>>,
+    dialect_migrations: std::sync::RwLockWriteGuard<'static, std::collections::BTreeMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), DialectMigration>>,
+}
+
+/// 🚫️ A staged store registry assembly cannot be preflighted or committed.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ArtifactAssemblyStoreRegistryError {
+    DocumentCodec(DocumentCodecRegistryError),
+    DialectMigration(DialectMigrationRegistryError),
+}
+
+impl std::fmt::Display for ArtifactAssemblyStoreRegistryError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::DocumentCodec(error) => error.fmt(formatter),
+            Self::DialectMigration(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl std::error::Error for ArtifactAssemblyStoreRegistryError {}
+
+/// 🧷️ Acquires every store registry write lock before an assembly validates or mutates state.
+#[must_use]
+pub fn acquire_artifact_assembly_store_registry_guards(_assembly: &ArtifactAssemblyTransaction) -> Result<ArtifactAssemblyStoreRegistryGuards, ArtifactAssemblyStoreRegistryError> {
+    let document_codecs = document_codec_registry().write().map_err(|_| ArtifactAssemblyStoreRegistryError::DocumentCodec(DocumentCodecRegistryError::Unavailable))?;
+    let dialect_migrations = dialect_migration_registry().write().map_err(|_| ArtifactAssemblyStoreRegistryError::DialectMigration(DialectMigrationRegistryError::Unavailable))?;
+    Ok(ArtifactAssemblyStoreRegistryGuards { document_codecs, dialect_migrations })
+}
+
+/// 🔬️ Verifies all staged store rows while every affected write lock is already held.
+#[must_use]
+pub fn preflight_artifact_assembly_store_registry_guards(guards: &ArtifactAssemblyStoreRegistryGuards, document_codecs: &[ArtifactCodec], dialect_migrations: &[DialectMigration]) -> Result<(), ArtifactAssemblyStoreRegistryError> {
+    validate_document_codecs(&guards.document_codecs, document_codecs).map_err(ArtifactAssemblyStoreRegistryError::DocumentCodec)?;
+    validate_dialect_migrations(&guards.dialect_migrations, dialect_migrations).map_err(ArtifactAssemblyStoreRegistryError::DialectMigration)
+}
+
+/// 📌️ Publishes rows proven safe by `preflight_artifact_assembly_store_registry_guards`.
+pub fn commit_artifact_assembly_store_registry_guards(guards: &mut ArtifactAssemblyStoreRegistryGuards, document_codecs: Vec<ArtifactCodec>, dialect_migrations: Vec<DialectMigration>) {
+    for codec in document_codecs {
+        guards.document_codecs.entry(codec.schema.clone()).or_insert(codec);
+    }
+    for migration in dialect_migrations {
+        let key = (migration.from.clone(), migration.to.clone());
+        guards.dialect_migrations.entry(key).or_insert(migration);
+    }
 }
 //#endregion 🔖️DialectMigration
 
@@ -2396,20 +2506,23 @@ fn history_composition_from_envelope<P, Mutation>(envelope: &ArtifactEnvelope<P,
     Some(crate::os_spr::HistoryComposition { owner, dialect, checkpoint_pins })
 }
 
-/// @emoji 🧩️ Inverse of `history_composition_from_envelope`: stamps a decoded overlay back onto a
-/// freshly-parsed envelope. A malformed `ArtifactRef` uri is DROPPED rather than failing the whole
-/// parse — an unreadable ownership stamp degrades that one document to "not visibly owned", which
-/// the fail-closed check in `TypedChildStoreFactory::open` then catches, whereas failing the parse
-/// would make one bad pin unable to open an otherwise-valid document at all.
-fn apply_history_composition<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, composition: &crate::os_spr::HistoryComposition) {
-    envelope.owner = composition.owner.as_ref().and_then(|(parent, slot, child_id)| crate::os_io::ArtifactRef::parse_uri(parent).ok().map(|parent| OwnerRef { parent, slot: slot.clone(), child_id: child_id.clone() }));
+/// @emoji 🧩️ Inverse of `history_composition_from_envelope`: malformed ownership or pins reject
+/// the authoritative history rather than being silently discarded.
+fn apply_history_composition<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, composition: &crate::os_spr::HistoryComposition) -> Result<(), VcsError> {
+    envelope.owner = match &composition.owner {
+        Some((parent, slot, child_id)) => Some(OwnerRef { parent: crate::os_io::ArtifactRef::parse_uri(parent).map_err(VcsError::Deserialize)?, slot: slot.clone(), child_id: child_id.clone() }),
+        None => None,
+    };
     envelope.dialect = composition.dialect.as_ref().map(|(artifact_kind, standard, subset)| crate::os_io::ArtifactDialect { artifact_kind: artifact_kind.clone(), standard: standard.clone(), subset: subset.clone() });
     for (checkpoint_id, pins) in &composition.checkpoint_pins {
-        if let Some(checkpoint) = envelope.vcs.checkpoints.iter_mut().find(|checkpoint| checkpoint.id == *checkpoint_id) {
-            checkpoint.composition_pins =
-                pins.iter().filter_map(|(child_uri, pin_checkpoint_id)| crate::os_io::ArtifactRef::parse_uri(child_uri).ok().map(|child_ref| crate::os_vcs::CompositionPin { child_ref, checkpoint_id: pin_checkpoint_id.clone() })).collect();
-        }
+        let checkpoint = envelope.vcs.checkpoints.iter_mut().find(|checkpoint| checkpoint.id == *checkpoint_id).ok_or_else(|| VcsError::UnknownChange(checkpoint_id.clone()))?;
+        checkpoint.composition_pins = pins
+            .iter()
+            .map(|(child_uri, pin_checkpoint_id)| Ok(crate::os_vcs::CompositionPin { child_ref: crate::os_io::ArtifactRef::parse_uri(child_uri).map_err(VcsError::Deserialize)?, checkpoint_id: pin_checkpoint_id.clone() }))
+            .collect::<Result<Vec<_>, VcsError>>()?;
+        validate_composition_pins(&checkpoint.composition_pins)?;
     }
+    Ok(())
 }
 
 pub fn print_document_spr<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> Result<Vec<u8>, VcsError>
@@ -2560,7 +2673,7 @@ where
         lanes: std::collections::BTreeMap::new(),
     };
     if let Some(composition) = &log.composition {
-        apply_history_composition(&mut envelope, composition);
+        apply_history_composition(&mut envelope, composition).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
     }
 
     let snapshot = if let Some(cursor) = &cursor {
@@ -3556,6 +3669,33 @@ fn edit_actor_from_meta(mutation_meta: &[MutationMeta]) -> Option<String> {
     mutation_meta.first().and_then(|meta| meta.author_id.clone()).map(|actor_id| actor_id.0)
 }
 
+fn validate_composition_pins(pins: &[crate::os_vcs::CompositionPin]) -> Result<(), VcsError> {
+    let mut children = HashSet::new();
+    for pin in pins {
+        let child_uri = pin.child_ref.to_uri();
+        let reparsed = crate::os_io::ArtifactRef::parse_uri(&child_uri).map_err(VcsError::ValidationFailed)?;
+        if reparsed != pin.child_ref || pin.child_ref.artifact_id.trim().is_empty() || pin.checkpoint_id.trim().is_empty() {
+            return Err(VcsError::ValidationFailed(format!("invalid composition pin {child_uri}")));
+        }
+        if !children.insert(child_uri.clone()) {
+            return Err(VcsError::ValidationFailed(format!("checkpoint repeats composition child {child_uri}")));
+        }
+    }
+    Ok(())
+}
+
+fn checkpoint_identity(checkpoint: &Checkpoint, changes: &[Change]) -> String {
+    content_addressed_checkpoint_id(
+        checkpoint.parent_id.as_deref(),
+        &checkpoint.change_ids,
+        changes,
+        checkpoint.message.as_deref(),
+        &checkpoint.authors,
+        &checkpoint.timestamp,
+        &checkpoint.composition_pins,
+    )
+}
+
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
     P: Clone + Serialize + DeserializeOwned + ArtifactPack,
@@ -3777,8 +3917,36 @@ where
     /// pins rather than merely storing them beside it.
     #[must_use]
     pub fn set_checkpoint_composition_pins(&mut self, checkpoint_id: &str, pins: Vec<crate::os_vcs::CompositionPin>) -> Result<ArtifactProjectionInvalidation, VcsError> {
-        let checkpoint = self.envelope.vcs.checkpoints.iter_mut().find(|checkpoint| checkpoint.id == checkpoint_id).ok_or_else(|| VcsError::UnknownChange(checkpoint_id.to_string()))?;
-        checkpoint.composition_pins = pins;
+        validate_composition_pins(&pins)?;
+        let target_index = self.envelope.vcs.checkpoints.iter().position(|checkpoint| checkpoint.id == checkpoint_id).ok_or_else(|| VcsError::UnknownChange(checkpoint_id.to_string()))?;
+        if self.envelope.vcs.checkpoints.iter().any(|checkpoint| checkpoint.parent_id.as_deref() == Some(checkpoint_id)) {
+            return Err(VcsError::ValidationFailed(format!("cannot repin checkpoint {checkpoint_id} after a descendant exists")));
+        }
+        let mut candidate = self.envelope.clone();
+        let previous_id = candidate.vcs.checkpoints[target_index].id.clone();
+        candidate.vcs.checkpoints[target_index].composition_pins = pins;
+        let next_id = checkpoint_identity(&candidate.vcs.checkpoints[target_index], &candidate.vcs.changes);
+        if next_id != previous_id && candidate.vcs.checkpoints.iter().enumerate().any(|(index, checkpoint)| index != target_index && checkpoint.id == next_id) {
+            return Err(VcsError::ValidationFailed(format!("rederived checkpoint identity {next_id} collides with established history")));
+        }
+        candidate.vcs.checkpoints[target_index].id = next_id.clone();
+        for alternative in &mut candidate.vcs.alternatives {
+            for id in &mut alternative.checkpoint_ids {
+                if *id == previous_id {
+                    *id = next_id.clone();
+                }
+            }
+        }
+        if candidate.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.as_ref()) == Some(&previous_id) {
+            if let Some(cursor) = &mut candidate.cursor {
+                cursor.checkpoint_id = Some(next_id.clone());
+            }
+        }
+        Self::validate_authoritative_history(&candidate)?;
+        self.envelope = candidate;
+        if self.current_checkpoint_id.as_deref() == Some(checkpoint_id) {
+            self.current_checkpoint_id = Some(next_id);
+        }
         Ok(self.invalidate_projections(ArtifactProjectionCause::Checkpoint))
     }
 
@@ -4225,41 +4393,75 @@ where
     /// `framework/sync`'s `MutationDag` and the vcs edit history.
     /// @emoji 🕸️ Sole public remote write gate — parallel to `dispatch` for causal envelopes.
     pub(crate) fn ingest_remote(&mut self, envelope: crate::os_spr::MutationEnvelope) -> Result<(), VcsError> {
-        self.dag.insert(envelope).map_err(|error| VcsError::Backbone(error.to_string()))?;
-        for envelope in self.dag.drain_applied_envelopes() {
-            self.ingest_envelope(envelope)?;
+        let mut candidate_dag = self.dag.clone();
+        if matches!(candidate_dag.insert(envelope.clone()).map_err(|error| VcsError::Backbone(error.to_string()))?, crate::os_spr::InsertResult::AlreadyApplied) {
+            return self.assert_equivalent_remote_mutation(&envelope);
         }
-        Ok(())
-    }
-
-    fn ingest_envelope(&mut self, envelope: crate::os_spr::MutationEnvelope) -> Result<(), VcsError> {
-        let mut edit: Edit<Mutation> = edit_from_operation_envelope(&envelope)?;
-        edit.actor = Some(envelope.actor.0.clone());
-        if self.envelope.vcs.edits.iter().any(|existing| existing.id == edit.id) {
+        let ready = candidate_dag.drain_applied_envelopes();
+        let mut current = self.current.clone();
+        let mut edit_sequence = self.edit_sequence;
+        let mut incoming_edits = Vec::new();
+        for envelope in ready {
+            let mut edit = edit_from_operation_envelope::<Mutation>(&envelope)?;
+            edit.actor = Some(envelope.actor.0.clone());
+            if let Some(existing) = self.envelope.vcs.edits.iter().find(|existing| existing.id == edit.id) {
+                self.assert_equivalent_remote_envelope(existing, &envelope)?;
+                continue;
+            }
+            if incoming_edits.iter().any(|existing: &Edit<Mutation>| existing.id == edit.id) {
+                return Err(VcsError::ValidationFailed(format!("remote ingest repeats authoritative edit {}", edit.id)));
+            }
+            for operation in &edit.forwards {
+                operation.validate(&current).map_err(VcsError::ValidationFailed)?;
+                current = apply_mutation(&current, operation);
+            }
+            edit_sequence += 1;
+            edit.sequence_number = edit_sequence;
+            edit.started_at = now_iso();
+            incoming_edits.push(edit);
+        }
+        self.dag = candidate_dag;
+        if incoming_edits.is_empty() {
             return Ok(());
         }
-        self.edit_sequence += 1;
-        edit.sequence_number = self.edit_sequence;
-        edit.started_at = now_iso();
-        let edit_id = edit.id.clone();
-        // ⚡️ Fold just the new edit's forwards onto the existing `current` (which already reflects
-        // every prior applied edit) — algebraically identical to a full raw-fold replay, in O(new ops).
-        let mut candidate = self.current.clone();
-        for operation in &edit.forwards {
-            operation.validate(&candidate).map_err(VcsError::ValidationFailed)?;
-            candidate = apply_mutation(&candidate, operation);
-        }
-        self.current = candidate;
-        self.envelope.vcs.edits.push(edit);
-        self.applied_edit_ids.push(edit_id);
+        let latest_operation = incoming_edits.last().and_then(|edit| edit.forwards.last());
+        let (_, conflicts) = reconcile_with_last(latest_operation, current.clone());
+        self.edit_sequence = edit_sequence;
+        self.applied_edit_ids.extend(incoming_edits.iter().map(|edit| edit.id.clone()));
+        self.envelope.vcs.edits.extend(incoming_edits);
         self.tail_undo_cache = None;
-        // 🤝️ Tail reconciliation hook: remote ingestion is the one path where this store's snapshot
-        // can diverge from what a local `Apply` alone would produce, so refresh conflicts here.
-        let (_, conflicts) = reconcile_with_last(self.last_applied_operation(), self.current.clone());
+        self.current = current;
         self.conflicts = conflicts;
         self.bump();
         self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
         Ok(())
+    }
+
+    fn assert_equivalent_remote_envelope(&self, existing: &Edit<Mutation>, incoming: &crate::os_spr::MutationEnvelope) -> Result<(), VcsError> {
+        let document_id = ArtifactId(self.envelope.id.clone());
+        let schema = SchemaId(self.envelope.schema.clone());
+        let established = crate::os_spr::mutation_envelope_from_edit::<P, Mutation>(existing, &document_id, &schema).map_err(|error| VcsError::Serialize(error.to_string()))?;
+        if established.len() == 1 && established.first() == Some(incoming) {
+            return Ok(());
+        }
+        Err(VcsError::ValidationFailed(format!("remote mutation id {} conflicts with its established payload", incoming.mutation_id.0)))
+    }
+
+    fn assert_equivalent_remote_mutation(&self, incoming: &crate::os_spr::MutationEnvelope) -> Result<(), VcsError> {
+        let document_id = ArtifactId(self.envelope.id.clone());
+        let schema = SchemaId(self.envelope.schema.clone());
+        for edit in &self.envelope.vcs.edits {
+            for established in crate::os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &document_id, &schema).map_err(|error| VcsError::Serialize(error.to_string()))? {
+                if established.mutation_id == incoming.mutation_id {
+                    return if established == *incoming {
+                        Ok(())
+                    } else {
+                        Err(VcsError::ValidationFailed(format!("remote mutation id {} conflicts with its established payload", incoming.mutation_id.0)))
+                    };
+                }
+            }
+        }
+        Err(VcsError::ValidationFailed(format!("remote mutation id {} was marked applied without an established payload", incoming.mutation_id.0)))
     }
 
     fn merge_remote_snapshot(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), VcsError> {
@@ -4268,28 +4470,26 @@ where
         if self.envelope.vcs.edits.is_empty() {
             let applied: Vec<String> = remote.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
             let current = Self::fold_history(&remote, &applied)?;
-            self.edit_sequence = remote.vcs.edits.iter().map(|edit| edit.sequence_number).max().unwrap_or(0);
-            let backbone_ref = self.envelope.backbone.clone();
-            self.envelope = remote;
-            self.envelope.backbone = backbone_ref;
-            // 🌱️ A snapshot adopts these edits directly (not through `dag.insert`), so the dag never
-            // learns they're satisfied — seed it here or a later envelope whose `deps` point back at
-            // one of these ids would sit `Pending` forever (see `MutationDag::seed_applied`). Seed each
-            // edit's own id AND its per-op WIRE ids (`crate::os_spr::mutation_ids_for_edit` — the same
-            // ids `ingest_envelope` would key a remote copy of these ops under, see the double-
-            // delivery note below) so a `BackboneMessage::Mutations` for one of these ops that
-            // arrives later is recognized as `AlreadyApplied` instead of re-materializing it.
-            for edit in &self.envelope.vcs.edits {
-                self.dag.seed_applied(MutationId(edit.id.clone()));
+            let mut candidate_envelope = remote;
+            candidate_envelope.backbone = self.envelope.backbone.clone();
+            let mut candidate_dag = self.dag.clone();
+            for edit in &candidate_envelope.vcs.edits {
+                candidate_dag.seed_applied(MutationId(edit.id.clone()));
                 for mutation_id in crate::os_spr::mutation_ids_for_edit(edit) {
-                    self.dag.seed_applied(mutation_id);
+                    candidate_dag.seed_applied(mutation_id);
                 }
             }
+            let edit_sequence = candidate_envelope.vcs.edits.iter().map(|edit| edit.sequence_number).max().unwrap_or(0);
+            let current_checkpoint_id = candidate_envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone()).or_else(|| candidate_envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone()));
+            self.envelope = candidate_envelope;
+            self.dag = candidate_dag;
+            self.edit_sequence = edit_sequence;
             self.applied_edit_ids = applied;
-            self.redo_edit_ids.clear();
+            self.redo_edit_ids = Vec::new();
             self.tail_undo_cache = None;
-            // 🔂️ Wholesale replacement, not a tail append — cold-path full raw-fold recompute.
             self.current = current;
+            self.current_checkpoint_id = current_checkpoint_id;
+            self.conflicts = Vec::new();
             self.bump();
             self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
             return Ok(());
@@ -4325,6 +4525,9 @@ where
             let operation_ids = crate::os_spr::mutation_ids_for_edit(edit);
             let already_known = candidate_ids.contains(&edit.id) || (!operation_ids.is_empty() && operation_ids.iter().all(|id| candidate_ids.contains(&id.0)));
             if already_known {
+                if !self.envelope.vcs.edits.iter().any(|local_edit| local_edit.id == edit.id) {
+                    self.assert_equivalent_remote_edit(edit)?;
+                }
                 continue;
             }
             for operation in &edit.forwards {
@@ -4334,33 +4537,66 @@ where
             candidate_ids.insert(edit.id.clone());
             candidate_ids.extend(operation_ids.into_iter().map(|id| id.0));
         }
+        let mut candidate_envelope = self.envelope.clone();
+        let mut candidate_dag = self.dag.clone();
+        let mut candidate_applied = self.applied_edit_ids.clone();
+        let mut candidate_edit_sequence = self.edit_sequence;
         let mut newly_merged_ids: Vec<String> = Vec::new();
-        for edit in remote.vcs.edits {
+        for edit in remote.vcs.edits.iter().cloned() {
             let operation_ids = crate::os_spr::mutation_ids_for_edit(&edit);
             let already_known = known_ids.contains(&edit.id) || (!operation_ids.is_empty() && operation_ids.iter().all(|id| known_ids.contains(&id.0)));
             if already_known {
                 continue;
             }
-            self.edit_sequence = self.edit_sequence.max(edit.sequence_number);
-            self.applied_edit_ids.push(edit.id.clone());
+            candidate_edit_sequence = candidate_edit_sequence.max(edit.sequence_number);
+            candidate_applied.push(edit.id.clone());
             newly_merged_ids.push(edit.id.clone());
             known_ids.insert(edit.id.clone());
             known_ids.extend(operation_ids.iter().map(|id| id.0.clone()));
             for mutation_id in operation_ids {
-                self.dag.seed_applied(mutation_id);
+                candidate_dag.seed_applied(mutation_id);
             }
-            self.envelope.vcs.edits.push(edit);
+            candidate_envelope.vcs.edits.push(edit);
         }
         for edit_id in &newly_merged_ids {
-            self.dag.seed_applied(MutationId(edit_id.clone()));
+            candidate_dag.seed_applied(MutationId(edit_id.clone()));
         }
-        merge_by_id(&mut self.envelope.vcs.changes, remote.vcs.changes, |change| &change.id)?;
-        merge_by_id(&mut self.envelope.vcs.checkpoints, remote.vcs.checkpoints, |checkpoint| &checkpoint.id)?;
-        merge_by_id(&mut self.envelope.vcs.alternatives, remote.vcs.alternatives, |alternative| &alternative.id)?;
+        merge_by_id(&mut candidate_envelope.vcs.changes, remote.vcs.changes.clone(), |change| &change.id)?;
+        merge_by_id(&mut candidate_envelope.vcs.checkpoints, remote.vcs.checkpoints.clone(), |checkpoint| &checkpoint.id)?;
+        merge_by_id(&mut candidate_envelope.vcs.alternatives, remote.vcs.alternatives.clone(), |alternative| &alternative.id)?;
+        Self::validate_authoritative_history(&candidate_envelope)?;
+        self.envelope = candidate_envelope;
+        self.dag = candidate_dag;
+        self.applied_edit_ids = candidate_applied;
+        self.edit_sequence = candidate_edit_sequence;
         self.tail_undo_cache = None;
         self.current = candidate;
         self.bump();
         self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
+        Ok(())
+    }
+
+    fn assert_equivalent_remote_edit(&self, remote: &Edit<Mutation>) -> Result<(), VcsError> {
+        let document_id = ArtifactId(self.envelope.id.clone());
+        let schema = SchemaId(self.envelope.schema.clone());
+        let incoming = crate::os_spr::mutation_envelope_from_edit::<P, Mutation>(remote, &document_id, &schema).map_err(|error| VcsError::Serialize(error.to_string()))?;
+        let established = self
+            .envelope
+            .vcs
+            .edits
+            .iter()
+            .map(|edit| crate::os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &document_id, &schema).map_err(|error| VcsError::Serialize(error.to_string())))
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>();
+        for envelope in incoming {
+            match established.iter().find(|candidate| candidate.mutation_id == envelope.mutation_id) {
+                Some(candidate) if candidate == &envelope => {}
+                Some(_) => return Err(VcsError::ValidationFailed(format!("remote mutation id {} conflicts with its established payload", envelope.mutation_id.0))),
+                None => return Err(VcsError::ValidationFailed(format!("remote history claims known mutation id {} without an established payload", envelope.mutation_id.0))),
+            }
+        }
         Ok(())
     }
 
@@ -4489,6 +4725,13 @@ where
             if let Some(parent_id) = &checkpoint.parent_id {
                 if !checkpoint_ids.contains(parent_id.as_str()) || parent_id == &checkpoint.id {
                     return Err(VcsError::ValidationFailed(format!("checkpoint {} has an invalid parent reference {parent_id}", checkpoint.id)));
+                }
+            }
+            validate_composition_pins(&checkpoint.composition_pins)?;
+            if !checkpoint.composition_pins.is_empty() {
+                let expected = checkpoint_identity(checkpoint, &envelope.vcs.changes);
+                if checkpoint.id != expected {
+                    return Err(VcsError::ValidationFailed(format!("checkpoint {} does not match its content-addressed composition identity {expected}", checkpoint.id)));
                 }
             }
         }
@@ -5130,6 +5373,16 @@ pub trait SpaceMember: Send {
     /// all — never true on the path `dispatch_group` actually calls it from, since it always calls
     /// this immediately after a successful `dispatch_wire`.
     fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), VcsError>;
+    /// @emoji 🔀️ Stamps `origin` onto every `MutationMeta` entry of this member's TAIL applied
+    /// edit — `stamp_tail_group_id`'s provenance-direction twin, used by
+    /// `TransactionCoordinator::dispatch_group`'s `Peer` relation to mark a foreign member's edit
+    /// `crate::os_spr::MutationOrigin::Transaction { initiator }` after dispatching it (the
+    /// initiator's OWN edit is left `Owner` — it is not foreign to itself). Never called on the
+    /// `Owned` relation path, which keeps every member's origin at its ordinary `Apply`-assigned
+    /// default (`Owner`) — this is precisely what keeps `Owned` byte-identical to its pre-`Peer`
+    /// behaviour. Same `VcsError::UnknownEdit` failure mode as `stamp_tail_group_id` (never true on
+    /// the path `dispatch_group` calls it from).
+    fn stamp_tail_origin(&mut self, origin: crate::os_spr::MutationOrigin) -> Result<(), VcsError>;
     /// @emoji 🏠️ Sets (or clears) this member's own envelope `owner` stamp — the mechanism
     /// `CompositionCoordinator::dispatch_group`'s phase 2 uses to record a freshly-`ChildGenesis`-
     /// created child's `OwnerRef` directly on the child's own envelope (see
@@ -5270,6 +5523,15 @@ where
         let edit = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
         for meta in edit.mutation_meta.iter_mut() {
             meta.group_id = Some(group_id.to_string());
+        }
+        Ok(())
+    }
+
+    fn stamp_tail_origin(&mut self, origin: crate::os_spr::MutationOrigin) -> Result<(), VcsError> {
+        let edit_id = self.applied_edit_ids().last().cloned().ok_or(VcsError::NothingToUndo)?;
+        let edit = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+        for meta in edit.mutation_meta.iter_mut() {
+            meta.origin = origin.clone();
         }
         Ok(())
     }
@@ -5992,16 +6254,48 @@ fn fold_compensation_error(original: VcsError, report: GroupUndoReport) -> VcsEr
     }
 }
 
-/// @emoji 🧩️ Atomic composite dispatch across a parent + N children — see this region's doc
-/// comment for the two-phase protocol. Holds a `CompositionGraph` incrementally maintained across
-/// calls (`graph`/`graph_mut` for a host to `sync_member` into, or to consult directly for UI-level
-/// "would this cycle" checks without dispatching anything).
+/// @emoji 🔀️ Which structural relationship holds between a `TransactionCoordinator::dispatch_group`
+/// (or `dispatch_peer_group`) call's `parent`/initiator and its `children`/peers —
+/// `PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS` W1-C's generalization of
+/// the pre-existing composition machinery (contract-freeze §5, `📓️scout-2-group-undo-and-hosts.md`
+/// §2). `Owned` is the pre-existing, byte-identical-unchanged behaviour: `CompositionGraph::
+/// owner_of` is checked and `ChildGenesis` is allowed. `Peer` is new: every member is an equal
+/// party to a cross-artifact transaction with NO ownership relation — no `owner_of` check, no
+/// genesis — but the SAME cycle guard (`CompositionGraph::would_cycle_links` in place of
+/// `would_cycle_owns`, persisting a `Links` edge per successfully-dispatched peer so a LATER
+/// transaction that would close a cycle across separate calls is also caught), the same shared
+/// `invocation_id`, the same one-edit-per-member rule, and the same reverse-order compensation.
+/// Every peer's tail edit additionally gets `MutationMeta.origin` stamped
+/// `crate::os_spr::MutationOrigin::Transaction { initiator }` (`SpaceMember::stamp_tail_origin`) —
+/// the initiator's own edit is left at its ordinary `Owner` default, since it is not foreign to
+/// itself. `Owned` never stamps `origin` at all, which is exactly what keeps it byte-identical.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MemberRelation {
+    Owned,
+    Peer,
+}
+
+/// @emoji 🧩️ Atomic composite/transactional dispatch across a parent-or-initiator + N children-
+/// or-peers — see this region's doc comment for the two-phase protocol and `MemberRelation` for
+/// what differs between `Owned` (`dispatch_group`) and `Peer` (`dispatch_peer_group`). Holds a
+/// `CompositionGraph` incrementally maintained across calls (`graph`/`graph_mut` for a host to
+/// `sync_member` into, or to consult directly for UI-level "would this cycle" checks without
+/// dispatching anything).
+///
+/// Named `TransactionCoordinator` as of W1-C — `CompositionCoordinator` just below is kept as an
+/// exact type alias (same type, not a wrapper) so every existing call site across the tree,
+/// including out-of-lease files under concurrent edit by sibling W1 lanes, keeps compiling and
+/// behaving identically unchanged. Prefer the new name in code this ticket authors.
 #[derive(Debug, Default)]
-pub struct CompositionCoordinator {
+pub struct TransactionCoordinator {
     graph: CompositionGraph,
 }
 
-impl CompositionCoordinator {
+/// @emoji 🪪️ Source-compatible alias — see `TransactionCoordinator`'s own doc comment for why this
+/// exists rather than a rename-in-place.
+pub type CompositionCoordinator = TransactionCoordinator;
+
+impl TransactionCoordinator {
     pub fn new() -> Self {
         Self::default()
     }
@@ -6018,7 +6312,8 @@ impl CompositionCoordinator {
     /// order (parent — if it was itself applied — first, then children in reverse dispatch order),
     /// collecting a `GroupUndoReport` rather than propagating the first failure — see
     /// `dispatch_group`'s doc comment for why every already-applied member must still get a
-    /// best-effort rollback attempt even if an earlier one in this same pass failed.
+    /// best-effort rollback attempt even if an earlier one in this same pass failed. Relation-
+    /// agnostic: undoing a member does not need to know WHY it was dispatched.
     fn compensate(parent_ref: &crate::os_io::ArtifactRef, parent: &mut dyn SpaceMember, children: &mut [(&mut dyn SpaceMember, ChildDispatch)], applied_children: &[(usize, String)], parent_applied: Option<&str>) -> GroupUndoReport {
         let mut undone = Vec::new();
         let mut skipped = Vec::new();
@@ -6038,35 +6333,72 @@ impl CompositionCoordinator {
         GroupUndoReport { undone, skipped }
     }
 
-    /// 🧩️ Dispatches one composite gesture spanning `parent` + `children` (+ any brand-new
-    /// `genesis` children) as a single atomic unit.
+    /// 🧩️ `Owned`-relation dispatch: `parent` truly owns every `children` entry (checked against
+    /// `self.graph`) and may create brand-new `genesis` children. See `dispatch_relation_group` for
+    /// the shared two-phase/compensation engine this delegates to unchanged — this method's own
+    /// behaviour is byte-identical to before `MemberRelation` existed.
+    pub fn dispatch_group(
+        &mut self,
+        parent_ref: &crate::os_io::ArtifactRef,
+        parent: &mut dyn SpaceMember,
+        children: &mut [(&mut dyn SpaceMember, ChildDispatch)],
+        parent_ops: Vec<Vec<u8>>,
+        genesis: Vec<ChildGenesis>,
+        meta: GroupMeta,
+    ) -> Result<GroupReceipt, VcsError> {
+        self.dispatch_relation_group(MemberRelation::Owned, parent_ref, parent, children, parent_ops, genesis, meta)
+    }
+
+    /// 🤝️ `Peer`-relation dispatch (contract-freeze §5): `initiator_ref`/`initiator` is the
+    /// transaction's member #0, `peers` are every OTHER member with NO ownership relation to it.
+    /// No `genesis` parameter — a peer transaction never creates a child, only touches existing
+    /// artifacts. See `MemberRelation::Peer`'s doc comment for exactly what differs from
+    /// `dispatch_group`, and `dispatch_relation_group` for the shared engine.
+    pub fn dispatch_peer_group(&mut self, initiator_ref: &crate::os_io::ArtifactRef, initiator: &mut dyn SpaceMember, peers: &mut [(&mut dyn SpaceMember, ChildDispatch)], initiator_ops: Vec<Vec<u8>>, meta: GroupMeta) -> Result<GroupReceipt, VcsError> {
+        self.dispatch_relation_group(MemberRelation::Peer, initiator_ref, initiator, peers, initiator_ops, Vec::new(), meta)
+    }
+
+    /// 🧩️ Dispatches one composite/transactional gesture spanning `parent` + `children` (+ any
+    /// brand-new `genesis` children, `Owned` only) as a single atomic unit. Shared by
+    /// `dispatch_group`/`dispatch_peer_group` — `relation` is the ONLY thing that changes phase-1's
+    /// per-child check and whether phase-2 stamps `MutationOrigin::Transaction`; everything else
+    /// (order, `invocation_id` minting, `group_id` stamping, compensation) is identical, which is
+    /// what "generalize, don't replace" means concretely in this method.
     ///
     /// **Phase 1 — validate-all, zero side effects.** Every non-empty op slice (`parent_ops`, each
     /// `ChildDispatch.ops`) is checked via `SpaceMember::validate_wire` against that member's
-    /// CURRENT snapshot; every `children` entry's claimed ownership is checked against `self.graph`
-    /// (`VcsError::OwnershipViolation` if the graph does not currently track `parent_ref` as that
-    /// child's owner); every `genesis` slot's deterministic id is minted and checked for a cycle
-    /// (`VcsError::CompositionCycle`) and a registered `ChildStoreFactory`
-    /// (`VcsError::ValidationFailed` if none). Any failure here returns immediately — NOTHING has
-    /// been dispatched anywhere yet.
+    /// CURRENT snapshot. Under `Owned`, every `children` entry's claimed ownership is checked
+    /// against `self.graph` (`VcsError::OwnershipViolation` if the graph does not currently track
+    /// `parent_ref` as that child's owner). Under `Peer`, no ownership is checked; instead
+    /// `self.graph.would_cycle_links(parent_ref, child)` guards against a peer transaction that
+    /// would close a link cycle (`VcsError::CompositionCycle`), including the trivial self-cycle of
+    /// an artifact transacting with itself. Every `genesis` slot's (Owned-only) deterministic id is
+    /// minted and checked for a cycle (`VcsError::CompositionCycle`) and a registered
+    /// `ChildStoreFactory` (`VcsError::ValidationFailed` if none). Any failure here returns
+    /// immediately — NOTHING has been dispatched anywhere yet.
     ///
     /// **Phase 2 — apply in fixed order: child geneses → child edits → parent ops.** This order
     /// guarantees a parent's own `Apply` (which typically ADDS the `ArtifactChild` handle pointing
     /// at a just-created genesis child) never references a child that does not exist locally yet.
     /// Every member that receives an `Apply` gets its tail edit's `MutationMeta.group_id` stamped
-    /// with the same minted `invocation_id` right after dispatching it.
+    /// with the same minted `invocation_id` right after dispatching it. Under `Peer`, each
+    /// dispatched child ALSO gets `MutationMeta.origin` stamped `MutationOrigin::Transaction {
+    /// initiator: parent_ref }` and a `self.graph.insert_link(parent_ref, child)` edge recorded (so
+    /// a later, separate transaction's cycle guard sees it too).
     ///
-    /// **Compensation.** A failure during phase 2 (a `dispatch_wire`/`stamp_tail_group_id` call
-    /// that phase 1's validation did not catch — e.g. a `Mutation::validate` that is not fully
-    /// exhaustive, or a genuinely unexpected `VcsError`) triggers `compensate`: `Undo` on every
-    /// already-applied member in reverse order. This is sound under `&mut` on every member for the
-    /// whole call (single-threaded per-app actor discipline) because each such member's group edit
-    /// IS its tail — exact-base undo is mechanical, never a mid-history removal. If compensation
-    /// itself fails to fully roll back, the returned error is `VcsError::CompensationFailed`
-    /// (`fold_compensation_error`) carrying both the original failure and which members could not
-    /// be rolled back, rather than silently leaving partial state unreported.
-    pub fn dispatch_group(
+    /// **Compensation.** A failure during phase 2 (a `dispatch_wire`/`stamp_tail_group_id`/
+    /// `stamp_tail_origin` call that phase 1's validation did not catch — e.g. a `Mutation::
+    /// validate` that is not fully exhaustive, or a genuinely unexpected `VcsError`) triggers
+    /// `compensate`: `Undo` on every already-applied member in reverse order. This is sound under
+    /// `&mut` on every member for the whole call (single-threaded per-app actor discipline) because
+    /// each such member's group edit IS its tail — exact-base undo is mechanical, never a
+    /// mid-history removal. If compensation itself fails to fully roll back, the returned error is
+    /// `VcsError::CompensationFailed` (`fold_compensation_error`) carrying both the original
+    /// failure and which members could not be rolled back, rather than silently leaving partial
+    /// state unreported.
+    fn dispatch_relation_group(
         &mut self,
+        relation: MemberRelation,
         parent_ref: &crate::os_io::ArtifactRef,
         parent: &mut dyn SpaceMember,
         children: &mut [(&mut dyn SpaceMember, ChildDispatch)],
@@ -6079,9 +6411,16 @@ impl CompositionCoordinator {
             parent.validate_wire(&parent_ops).map_err(VcsError::ValidationFailed)?;
         }
         for (member, dispatch) in children.iter() {
-            match self.graph.owner_of(&dispatch.child.artifact_id) {
-                Some(owner_id) if owner_id == parent_ref.artifact_id => {}
-                _ => return Err(VcsError::OwnershipViolation(format!("{} is not a currently-tracked owned child of {}", dispatch.child.artifact_id, parent_ref.artifact_id))),
+            match relation {
+                MemberRelation::Owned => match self.graph.owner_of(&dispatch.child.artifact_id) {
+                    Some(owner_id) if owner_id == parent_ref.artifact_id => {}
+                    _ => return Err(VcsError::OwnershipViolation(format!("{} is not a currently-tracked owned child of {}", dispatch.child.artifact_id, parent_ref.artifact_id))),
+                },
+                MemberRelation::Peer => {
+                    if self.graph.would_cycle_links(&parent_ref.artifact_id, &dispatch.child.artifact_id) {
+                        return Err(VcsError::CompositionCycle(format!("transacting {} with {} would create a peer cycle", parent_ref.artifact_id, dispatch.child.artifact_id)));
+                    }
+                }
             }
             if !dispatch.ops.is_empty() {
                 member.validate_wire(&dispatch.ops).map_err(VcsError::ValidationFailed)?;
@@ -6142,6 +6481,18 @@ impl CompositionCoordinator {
                 let report = Self::compensate(parent_ref, parent, children, &applied_children, None);
                 return Err(fold_compensation_error(error, report));
             }
+            if relation == MemberRelation::Peer {
+                let initiator = crate::os_spr::ForeignTarget { artifact_id: parent_ref.artifact_id.clone(), artifact_kind: parent_ref.dialect.artifact_kind.clone(), dialect: Some(parent_ref.dialect.to_coordinate()) };
+                if let Err(error) = children[index].0.stamp_tail_origin(crate::os_spr::MutationOrigin::Transaction { initiator }) {
+                    let report = Self::compensate(parent_ref, parent, children, &applied_children, None);
+                    return Err(fold_compensation_error(error, report));
+                }
+                // 🔗️ Best-effort: `would_cycle_links` already cleared this exact edge in phase 1, so
+                // this can only fail if a CONCURRENT graph mutation raced us between the two — not
+                // worth failing an already-applied transaction over; the cycle guard still holds for
+                // every edge that DID get recorded.
+                let _ = self.graph.insert_link(&parent_ref.artifact_id, &children[index].1.child.artifact_id);
+            }
         }
 
         let mut parent_edit_id: Option<String> = None;
@@ -6171,11 +6522,14 @@ impl CompositionCoordinator {
     }
 
     /// ↩️ Best-effort group undo: for every `(reference, member)` pair (caller-ordered — put the
-    /// parent first, matching `dispatch_group`'s own "undo parent-first then children" fixed
-    /// order), undoes it if and only if `member.tail_group_id() == Some(group_id)`; a member whose
-    /// tail belongs to a different (or no) group, or whose own `undo()` call errors, is SKIPPED and
-    /// recorded in the returned report rather than aborting the rest — see `GroupUndoReport`'s doc
-    /// comment for why abort-all would be actively harmful here.
+    /// parent/initiator first, matching `dispatch_group`/`dispatch_peer_group`'s own "undo
+    /// parent-first then children" fixed order), undoes it if and only if `member.tail_group_id()
+    /// == Some(group_id)`; a member whose tail belongs to a different (or no) group, or whose own
+    /// `undo()` call errors, is SKIPPED and recorded in the returned report rather than aborting the
+    /// rest — see `GroupUndoReport`'s doc comment for why abort-all would be actively harmful here.
+    /// Relation-agnostic by construction: it never consults `self.graph`/ownership at all, only
+    /// each member's own `tail_group_id()`, so a `Peer`-relation group reverses as one exactly the
+    /// same way an `Owned`-relation group does — no separate code path needed.
     pub fn undo_group(members: &mut [(&crate::os_io::ArtifactRef, &mut dyn SpaceMember)], group_id: &str) -> GroupUndoReport {
         let mut undone = Vec::new();
         let mut skipped = Vec::new();
@@ -6195,8 +6549,9 @@ impl CompositionCoordinator {
     }
 
     /// ↪️ `undo_group`'s redo-direction mirror: caller orders `members` children-first (matching
-    /// `dispatch_group`'s apply order, so redo re-establishes the group in the same order it was
-    /// originally applied), redoing each member whose `redo_tail()` group id matches.
+    /// `dispatch_group`/`dispatch_peer_group`'s apply order, so redo re-establishes the group in
+    /// the same order it was originally applied), redoing each member whose `redo_tail()` group id
+    /// matches. Relation-agnostic for the same reason `undo_group` is.
     pub fn redo_group(members: &mut [(&crate::os_io::ArtifactRef, &mut dyn SpaceMember)], group_id: &str) -> GroupUndoReport {
         let mut undone = Vec::new();
         let mut skipped = Vec::new();
@@ -6721,6 +7076,9 @@ mod tests {
         fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), VcsError> {
             SpaceMember::stamp_tail_group_id(&mut self.0, group_id)
         }
+        fn stamp_tail_origin(&mut self, origin: crate::os_spr::MutationOrigin) -> Result<(), VcsError> {
+            SpaceMember::stamp_tail_origin(&mut self.0, origin)
+        }
         fn set_owner(&mut self, owner: Option<OwnerRef>) {
             SpaceMember::set_owner(&mut self.0, owner)
         }
@@ -6893,6 +7251,77 @@ mod tests {
         let mut envelope = envelopes.pop().expect("exactly one op envelope for a single-op edit");
         envelope.actor = ActorId(actor.to_string());
         envelope
+    }
+
+    #[test]
+    fn rejected_remote_ingest_keeps_state_and_dag_unpoisoned() {
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
+        let valid = foreign_mutation_envelope("peer", DemoMutation::SetN { n: 7 });
+        let mut malformed = valid.clone();
+        malformed.diff.payload = vec![0xff];
+        let before = store.envelope().clone();
+
+        assert!(store.ingest_remote(malformed).is_err(), "malformed remote data must reject before committing the DAG or history");
+        assert_eq!(store.envelope(), &before);
+        assert_eq!(store.snapshot().expect("unchanged snapshot"), DemoSnapshot { n: 0 });
+
+        store.ingest_remote(valid).expect("the rejected envelope must not poison its mutation id in the DAG");
+        assert_eq!(store.snapshot().expect("accepted snapshot"), DemoSnapshot { n: 7 });
+    }
+
+    #[test]
+    fn remote_ingest_requires_duplicate_mutation_payload_equivalence() {
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
+        let accepted = foreign_mutation_envelope("peer", DemoMutation::SetN { n: 2 });
+        store.ingest_remote(accepted.clone()).expect("first remote envelope");
+        let before = store.envelope().clone();
+
+        store.ingest_remote(accepted.clone()).expect("an exact duplicate is idempotent");
+        let mut conflict = foreign_mutation_envelope("peer", DemoMutation::SetN { n: 9 });
+        conflict.mutation_id = accepted.mutation_id.clone();
+        let error = store.ingest_remote(conflict).expect_err("the same mutation id may not carry a different payload");
+        assert!(matches!(error, VcsError::ValidationFailed(message) if message.contains("conflicts with its established payload")));
+        assert_eq!(store.envelope(), &before);
+        assert_eq!(store.snapshot().expect("unchanged snapshot"), DemoSnapshot { n: 2 });
+    }
+
+    #[test]
+    fn snapshot_merge_preflights_every_conflict_before_committing() {
+        let mut local = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
+        local.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("local edit");
+        local.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("local checkpoint".into()), authors: Vec::new() }).expect("local checkpoint");
+        local.dispatch(ArtifactCommand::CreateAlternative { name: "local".into() }).expect("local alternative");
+        let local_alternative = local.envelope().vcs.alternatives[0].id.clone();
+        let before = local.envelope().clone();
+
+        let mut remote = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
+        remote.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).expect("remote edit");
+        remote.0.envelope.vcs.alternatives.push(Alternative { id: local_alternative, name: "conflicting remote alternative".into(), checkpoint_ids: Vec::new() });
+        let files = print_document_pack(remote.envelope()).expect("remote pack");
+
+        assert!(local.merge_remote_snapshot(&files.pack, &files.spr).is_err(), "a late registry conflict must reject the whole snapshot merge");
+        assert_eq!(local.envelope(), &before);
+        assert_eq!(local.snapshot().expect("unchanged snapshot"), DemoSnapshot { n: 1 });
+    }
+
+    #[test]
+    fn composition_pins_rederive_checkpoint_identity_without_partial_mutation() {
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }).expect("checkpoint");
+        let original_checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
+        let before = store.envelope().clone();
+        let invalid = crate::os_vcs::CompositionPin { child_ref: crate::os_io::ArtifactRef { artifact_id: String::new(), dialect: demo_child_dialect() }, checkpoint_id: "child-checkpoint".into() };
+
+        assert!(store.set_checkpoint_composition_pins(&original_checkpoint_id, vec![invalid]).is_err());
+        assert_eq!(store.envelope(), &before);
+
+        let pin = crate::os_vcs::CompositionPin { child_ref: crate::os_io::ArtifactRef { artifact_id: "child".into(), dialect: demo_child_dialect() }, checkpoint_id: "child-checkpoint".into() };
+        store.set_checkpoint_composition_pins(&original_checkpoint_id, vec![pin]).expect("valid pin update");
+        let rederived = &store.envelope().vcs.checkpoints[0];
+        assert_ne!(rederived.id, original_checkpoint_id);
+        assert_eq!(rederived.composition_pins.len(), 1);
+        assert!(super::ArtifactStore::<DemoSnapshot, DemoMutation>::new(store.envelope().clone()).is_ok(), "a persisted pinned checkpoint must validate its rederived identity");
     }
 
     #[test]
@@ -8372,12 +8801,14 @@ mod tests {
     }
 
     #[test]
-    fn switch_to_an_alternative_whose_pinned_checkpoint_is_missing_is_rejected() {
+    fn malformed_alternative_checkpoint_pin_is_rejected_at_construction() {
         let mut envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         envelope.vcs.alternatives.push(Alternative { id: "alt-dangling".into(), name: "dangling".into(), checkpoint_ids: vec!["checkpoint-that-was-never-recorded".into()] });
-        let mut store = ArtifactStore::new(envelope);
-        let error = store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: "alt-dangling".into() }).unwrap_err();
-        assert_eq!(error, VcsError::NoCheckpoint, "the alternative's pinned checkpoint id must actually exist");
+        let error = match super::ArtifactStore::<DemoSnapshot, DemoMutation>::new(envelope) {
+            Ok(_) => panic!("the alternative's pinned checkpoint id must actually exist"),
+            Err(error) => error,
+        };
+        assert!(matches!(error, VcsError::ValidationFailed(message) if message.contains("alt-dangling") && message.contains("checkpoint-that-was-never-recorded")));
     }
 
     #[test]
@@ -9233,6 +9664,191 @@ mod tests {
         assert_eq!(parent_store.snapshot().expect("parent snapshot").n, 1, "parent's edit was reapplied");
         assert_eq!(foreign_store.snapshot().expect("foreign snapshot").n, 0, "the foreign member's redo stack was left untouched");
     }
+
+    //#region 🔖️TransactionPeerTests
+    /// @emoji 🧪️ W1-C's headline `Peer`-relation law (contract-freeze §5): two artifacts with NO
+    /// ownership relation commit through `dispatch_peer_group` as ONE atomic transaction — both
+    /// members end up carrying the SAME `MutationMeta.group_id` (the shared minted
+    /// `invocation_id`), the peer's tail edit is stamped `MutationOrigin::Transaction { initiator }`,
+    /// and the initiator's own edit stays at its ordinary `Owner` default (it is not foreign to
+    /// itself). Deliberately does NOT seed any `CompositionGraph::insert_owns` edge — `Peer` never
+    /// consults `owner_of` at all.
+    #[test]
+    fn dispatch_peer_group_commits_both_members_with_one_shared_group_id() {
+        let initiator_ref = crate::os_io::ArtifactRef { artifact_id: "peer-initiator-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+        let peer_ref = crate::os_io::ArtifactRef { artifact_id: "peer-member-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+
+        let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut peer_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut coordinator = TransactionCoordinator::new();
+
+        let initiator_ops: Vec<Vec<u8>> = vec![DemoMutation::SetN { n: 1 }.encode_op().expect("encode initiator op")];
+        let peer_op = DemoMutation::SetN { n: 2 }.encode_op().expect("encode peer op");
+        let peer_dispatch = ChildDispatch { child: peer_ref.clone(), ops: vec![peer_op], op_schema: SchemaId("demo/v1".into()), labels: vec!["peer".into()] };
+        let mut peers: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut peer_store as &mut dyn SpaceMember, peer_dispatch)];
+
+        let receipt = coordinator.dispatch_peer_group(&initiator_ref, &mut initiator_store as &mut dyn SpaceMember, &mut peers, initiator_ops, GroupMeta::default()).expect("peer transaction dispatch");
+
+        assert_eq!(receipt.member_edits.len(), 2, "both the initiator and the one peer got a real edit");
+        assert_eq!(initiator_store.snapshot().expect("initiator snapshot").n, 1);
+        assert_eq!(peer_store.snapshot().expect("peer snapshot").n, 2);
+
+        let initiator_group_id = initiator_store.tail_group_id().expect("initiator tail group id");
+        let peer_group_id = peer_store.tail_group_id().expect("peer tail group id");
+        assert_eq!(initiator_group_id, peer_group_id, "both members share the SAME minted invocation id as their group id");
+        assert_eq!(initiator_group_id, receipt.invocation_id);
+
+        let initiator_origin = initiator_store.envelope().vcs.edits.last().expect("initiator edit").mutation_meta.last().expect("initiator meta").origin.clone();
+        assert_eq!(initiator_origin, crate::os_spr::MutationOrigin::Owner, "the initiator's own edit is not foreign to itself, so it stays at the ordinary Owner default");
+
+        let peer_origin = peer_store.envelope().vcs.edits.last().expect("peer edit").mutation_meta.last().expect("peer meta").origin.clone();
+        match peer_origin {
+            crate::os_spr::MutationOrigin::Transaction { initiator } => assert_eq!(initiator.artifact_id, initiator_ref.artifact_id, "the peer's origin names the real initiator"),
+            other => panic!("expected MutationOrigin::Transaction on the peer's tail edit, got {other:?}"),
+        }
+    }
+
+    /// @emoji 🧪️ W1-C's compensation law for `Peer`: `compensate` is relation-agnostic (see its own
+    /// doc comment) — exercising it with a two-PEER (no ownership) scenario proves the SAME
+    /// reverse-order rollback `dispatch_peer_group`'s phase 2 falls back to on a late failure works
+    /// identically to the `Owned` case `compensate_undoes_applied_members_in_reverse_order` already
+    /// covers. Peer B is deliberately left with no applied edit at all, modeling "the SECOND
+    /// member's own dispatch failed" — the exact trigger `dispatch_peer_group`'s real error branch
+    /// calls `compensate` from, passing only the members that DID get applied (the initiator + peer
+    /// A) as `applied_children`/`parent_applied`.
+    #[test]
+    fn compensate_undoes_applied_peer_members_in_reverse_order() {
+        let initiator_ref = crate::os_io::ArtifactRef { artifact_id: "peer-comp-initiator".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+        let peer_a_ref = crate::os_io::ArtifactRef { artifact_id: "peer-comp-a".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+        let peer_b_ref = crate::os_io::ArtifactRef { artifact_id: "peer-comp-b".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+
+        let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        initiator_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply initiator");
+        let initiator_edit_id = initiator_store.envelope().vcs.edits.last().expect("initiator edit").id.clone();
+
+        let mut peer_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_a_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        peer_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply peer a — the member the transaction already reached");
+        let peer_a_edit_id = peer_a.envelope().vcs.edits.last().expect("a edit").id.clone();
+
+        let mut peer_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_b_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+
+        let dispatch_a = ChildDispatch { child: peer_a_ref.clone(), ops: Vec::new(), op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
+        let dispatch_b = ChildDispatch { child: peer_b_ref.clone(), ops: Vec::new(), op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
+        let mut peers: [(&mut dyn SpaceMember, ChildDispatch); 2] = [(&mut peer_a as &mut dyn SpaceMember, dispatch_a), (&mut peer_b as &mut dyn SpaceMember, dispatch_b)];
+        let applied_so_far = vec![(0usize, peer_a_edit_id)];
+
+        let report = TransactionCoordinator::compensate(&initiator_ref, &mut initiator_store as &mut dyn SpaceMember, &mut peers, &applied_so_far, Some(&initiator_edit_id));
+
+        assert!(report.skipped.is_empty(), "every already-applied member should have undone cleanly");
+        assert_eq!(report.undone.len(), 2, "the initiator and peer A (the only two that were actually applied) are both rolled back");
+        assert_eq!(report.undone[0].0.artifact_id, initiator_ref.artifact_id, "initiator undone first");
+        assert_eq!(report.undone[1].0.artifact_id, peer_a_ref.artifact_id, "then the one applied peer");
+
+        assert_eq!(initiator_store.snapshot().expect("initiator snapshot").n, 0, "initiator's edit was compensated");
+        assert_eq!(peer_a.snapshot().expect("a snapshot").n, 0, "peer A's edit was compensated");
+    }
+
+    /// @emoji 🧪️ Task 2's group-undo law, exercised through a REAL `Peer` transaction end-to-end:
+    /// `undo_group` (unmodified — see its own doc comment on being relation-agnostic) reverses BOTH
+    /// members of a `dispatch_peer_group` group as ONE, using the exact `invocation_id` that call
+    /// minted, with no code path specific to `Peer` needed.
+    #[test]
+    fn undo_group_reverses_both_members_of_a_real_peer_transaction() {
+        let initiator_ref = crate::os_io::ArtifactRef { artifact_id: "peer-undo-initiator".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+        let peer_ref = crate::os_io::ArtifactRef { artifact_id: "peer-undo-member".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+
+        let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut peer_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut coordinator = TransactionCoordinator::new();
+
+        let initiator_ops = vec![DemoMutation::SetN { n: 5 }.encode_op().expect("encode initiator op")];
+        let peer_op = DemoMutation::SetN { n: 7 }.encode_op().expect("encode peer op");
+        let peer_dispatch = ChildDispatch { child: peer_ref.clone(), ops: vec![peer_op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
+        let receipt = {
+            let mut peers: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut peer_store as &mut dyn SpaceMember, peer_dispatch)];
+            coordinator.dispatch_peer_group(&initiator_ref, &mut initiator_store as &mut dyn SpaceMember, &mut peers, initiator_ops, GroupMeta::default()).expect("peer transaction dispatch")
+        };
+        assert_eq!(initiator_store.snapshot().expect("initiator snapshot").n, 5);
+        assert_eq!(peer_store.snapshot().expect("peer snapshot").n, 7);
+
+        let mut members: [(&crate::os_io::ArtifactRef, &mut dyn SpaceMember); 2] =
+            [(&initiator_ref, &mut initiator_store as &mut dyn SpaceMember), (&peer_ref, &mut peer_store as &mut dyn SpaceMember)];
+        let report = TransactionCoordinator::undo_group(&mut members, &receipt.invocation_id);
+
+        assert!(report.skipped.is_empty(), "both real transaction members must belong to the group");
+        assert_eq!(report.undone.len(), 2);
+        assert_eq!(initiator_store.snapshot().expect("initiator snapshot after undo").n, 0);
+        assert_eq!(peer_store.snapshot().expect("peer snapshot after undo").n, 0);
+    }
+
+    /// @emoji 🧪️ `Peer`'s cycle guard law (`MemberRelation::Peer`'s doc comment): a SECOND, separate
+    /// `dispatch_peer_group` call that would close a link cycle across the coordinator's persisted
+    /// `Links` graph is rejected — `CompositionGraph::would_cycle_links`, the same primitive
+    /// `would_cycle_owns` is to `Owned`'s genesis cycle guard. Transaction 1 (A initiates, B is the
+    /// peer) succeeds and records a `Links` edge A -> B; transaction 2 (B initiates, A is the peer)
+    /// would close A -> B -> A and is rejected with zero side effects.
+    #[test]
+    fn dispatch_peer_group_rejects_a_transaction_that_would_close_a_peer_link_cycle() {
+        let artifact_a_ref = crate::os_io::ArtifactRef { artifact_id: "peer-cycle-a".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+        let artifact_b_ref = crate::os_io::ArtifactRef { artifact_id: "peer-cycle-b".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+
+        let mut store_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &artifact_a_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut store_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &artifact_b_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut coordinator = TransactionCoordinator::new();
+
+        let op_ab = DemoMutation::SetN { n: 1 }.encode_op().expect("encode a->b op");
+        let dispatch_ab = ChildDispatch { child: artifact_b_ref.clone(), ops: vec![op_ab], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
+        {
+            let mut peers: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut store_b as &mut dyn SpaceMember, dispatch_ab)];
+            coordinator.dispatch_peer_group(&artifact_a_ref, &mut store_a as &mut dyn SpaceMember, &mut peers, Vec::new(), GroupMeta::default()).expect("first transaction A -> B");
+        }
+        assert_eq!(store_b.snapshot().expect("b snapshot").n, 1);
+
+        let op_ba = DemoMutation::SetN { n: 9 }.encode_op().expect("encode b->a op");
+        let dispatch_ba = ChildDispatch { child: artifact_a_ref.clone(), ops: vec![op_ba], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
+        let mut peers: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut store_a as &mut dyn SpaceMember, dispatch_ba)];
+        let result = coordinator.dispatch_peer_group(&artifact_b_ref, &mut store_b as &mut dyn SpaceMember, &mut peers, Vec::new(), GroupMeta::default());
+        match result {
+            Ok(_) => panic!("expected a CompositionCycle rejection, but the dispatch succeeded"),
+            Err(VcsError::CompositionCycle(_)) => {}
+            Err(other) => panic!("expected CompositionCycle, got a different VcsError: {other}"),
+        }
+        assert_eq!(store_a.snapshot().expect("a snapshot").n, 0, "A must have zero new edits after a rejected cycle");
+    }
+
+    /// @emoji 🧪️ W1-C's "Owned reproduces today's behaviour EXACTLY" law: `CompositionCoordinator`
+    /// (the `TransactionCoordinator` alias) dispatching through the ordinary `Owned`-relation
+    /// `dispatch_group` produces EXACTLY what it did before `MemberRelation` existed — including
+    /// that `MutationMeta.origin` is NEVER touched (stays the ordinary `Apply`-assigned `Owner`
+    /// default), because `stamp_tail_origin` is only ever called on the `Peer` path. Every other
+    /// `dispatch_group_*`/`compensate_*`/`undo_group_*`/`redo_group_*` test above this region
+    /// already re-proves the rest of `Owned`'s behaviour (ownership check, genesis, atomicity,
+    /// compensation order) is untouched, unmodified, still green.
+    #[test]
+    fn dispatch_group_owned_path_never_stamps_a_transaction_origin() {
+        let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-owned-origin-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+        let child_ref = crate::os_io::ArtifactRef { artifact_id: "child-owned-origin-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+
+        let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+
+        let mut coordinator = CompositionCoordinator::new();
+        coordinator.graph_mut().insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).expect("seed ownership");
+
+        let parent_ops = vec![DemoMutation::SetN { n: 1 }.encode_op().expect("encode parent op")];
+        let child_op = DemoMutation::SetN { n: 2 }.encode_op().expect("encode child op");
+        let dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![child_op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
+        let mut children: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut child_store as &mut dyn SpaceMember, dispatch)];
+
+        let receipt = coordinator.dispatch_group(&parent_ref, &mut parent_store as &mut dyn SpaceMember, &mut children, parent_ops, Vec::new(), GroupMeta::default()).expect("owned dispatch");
+
+        assert_eq!(receipt.member_edits.len(), 2);
+        let parent_origin = parent_store.envelope().vcs.edits.last().expect("parent edit").mutation_meta.last().expect("parent meta").origin.clone();
+        let child_origin = child_store.envelope().vcs.edits.last().expect("child edit").mutation_meta.last().expect("child meta").origin.clone();
+        assert_eq!(parent_origin, crate::os_spr::MutationOrigin::Owner, "Owned relation never stamps a Transaction origin on the parent");
+        assert_eq!(child_origin, crate::os_spr::MutationOrigin::Owner, "Owned relation never stamps a Transaction origin on an owned child either");
+    }
+    //#endregion 🔖️TransactionPeerTests
     //#endregion 🔖️CompositionTests
 }
 //#endregion 🧪️Tests

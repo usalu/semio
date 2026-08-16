@@ -503,10 +503,12 @@ pub mod vcs_integration {
 
         fn with_store<R>(&self, document: &ArtifactId, f: impl FnOnce(&mut HashStore) -> Result<R, DbError>) -> Result<R, DbError> {
             let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
-            let store = stores.entry(document.0.clone()).or_insert_with(|| {
+            if !stores.contains_key(&document.0) {
                 let envelope = store::create_document_envelope::<HashProjection, HashMutation>("db_engine.version_graph", &document.0, HashProjection::default(), None);
-                store::ArtifactStore::new(envelope).expect("failed to create db vcs store")
-            });
+                let created = store::ArtifactStore::new(envelope).map_err(map_vcs_error)?;
+                stores.insert(document.0.clone(), created);
+            }
+            let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
             f(store)
         }
     }

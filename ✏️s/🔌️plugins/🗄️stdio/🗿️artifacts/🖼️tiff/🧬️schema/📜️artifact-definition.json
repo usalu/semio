@@ -81,6 +81,148 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.tiff.runtime.codec.codec-stdio-tiff-extension-tiff.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.tiff|extension:tiff",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.tiff"
+        },
+        {
+          "namespace": "extension",
+          "value": "tiff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.tiff.runtime.composer.dialect-s-stdio-tiff-6-0.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.tiff@6.0/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.tiff@6.0/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.tiff.runtime.composer.dialect-s-stdio-tiff-6-0-baseline.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.tiff@6.0/baseline",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.tiff@6.0/baseline"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.tiff.runtime.grammar.grammar-stdio-tiff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.tiff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.tiff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.tiff.runtime.grammar.grammar-stdio-tiff-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.tiff.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.tiff.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.tiff.runtime.grammar.grammar-stdio-tiff-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.tiff.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.tiff.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.tiff.runtime.grammar.grammar-stdio-tiff-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.tiff.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.tiff.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.tiff.runtime.grammar.grammar-stdio-tiff-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.tiff.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.tiff.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.tiff.runtime.inference.schema-s-stdio-tiff-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.tiff.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.tiff.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.tiff.runtime.representation.mime-image-tiff-extension-tiff.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:image/tiff|extension:.tiff",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "image/tiff"
+        },
+        {
+          "namespace": "extension",
+          "value": ".tiff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.tiff.runtime.schema.schema-s-stdio-tiff.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.tiff",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.tiff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.tiff.runtime.subset-validator.dialect-s-stdio-tiff-6-0-baseline.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.tiff@6.0/baseline",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.tiff@6.0/baseline"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

@@ -180,7 +180,7 @@ mod tests {
 
         let document = crate::artifacts::imperative::schema::default_snapshot();
         let envelope = store::create_document_envelope::<ImperativeSnapshot, ImperativeMutation>("imperative.document/v1", "test", document, None);
-        let mut doc_store = store::ArtifactStore::new(envelope);
+        let mut doc_store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         let step = Step { id: "step-x".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: BTreeMap::new() };
         let operation = create_step(PathRef::default(), step);
         doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: None }).expect("apply");

@@ -1,0 +1,45 @@
+{
+  "x-semio": {
+    "kind": "collection",
+    "members": [
+      {
+        "directory": "🎨print-design-token-paints",
+        "id": "framework.print.module.print-design-token-paints",
+        "kind": "module",
+        "module": {
+          "productionConsumers": [
+            "framework.print.command.latex-token-stylesheet-generation",
+            "framework.print.command.template-pdf-build",
+            "framework.print.command.template-pdf-watch"
+          ]
+        },
+        "responsibility": "Resolves design-token paints and renders the canonical LaTeX design-token stylesheet text."
+      },
+      {
+        "directory": "🔤print-font-catalog",
+        "id": "framework.print.module.print-font-catalog",
+        "kind": "module",
+        "module": {
+          "productionConsumers": [
+            "framework.print.command.print-font-provisioning",
+            "framework.print.command.template-pdf-build",
+            "framework.print.command.template-pdf-watch"
+          ]
+        },
+        "responsibility": "Defines the canonical print-font descriptors and their deterministic search paths."
+      },
+      {
+        "directory": "🖨️tectonic-template-compilation",
+        "id": "framework.print.module.tectonic-template-compilation",
+        "kind": "module",
+        "module": {
+          "productionConsumers": [
+            "framework.print.command.template-pdf-build",
+            "framework.print.command.template-pdf-watch"
+          ]
+        },
+        "responsibility": "Compiles one registered TeX template's light and dark representations to verified PDFs, including its panel-glass pass."
+      }
+    ]
+  }
+}

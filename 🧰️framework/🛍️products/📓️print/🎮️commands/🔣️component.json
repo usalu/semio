@@ -1,0 +1,38 @@
+{
+  "x-semio": {
+    "kind": "collection",
+    "members": [
+      {
+        "directory": "🎨latex-token-stylesheet-generation",
+        "generator": "bun nx run @semio-tech/print:generate",
+        "id": "framework.print.command.latex-token-stylesheet-generation",
+        "kind": "command",
+        "responsibility": "Writes the canonical LaTeX stylesheet from the framework design-token document."
+      },
+      {
+        "directory": "🔤print-font-provisioning",
+        "id": "framework.print.command.print-font-provisioning",
+        "kind": "command",
+        "responsibility": "Ensures the exact print TTF catalog is present locally."
+      },
+      {
+        "directory": "🖨️template-pdf-build",
+        "id": "framework.print.command.template-pdf-build",
+        "kind": "command",
+        "responsibility": "Builds requested registered print templates as light and dark PDFs."
+      },
+      {
+        "directory": "👁️template-pdf-watch",
+        "id": "framework.print.command.template-pdf-watch",
+        "kind": "command",
+        "responsibility": "Watches print inputs and rebuilds requested template PDFs."
+      },
+      {
+        "directory": "🧪️print-pipeline-verification",
+        "id": "framework.print.command.print-pipeline-verification",
+        "kind": "command",
+        "responsibility": "Verifies pure print transformations and, at long level, every template PDF output."
+      }
+    ]
+  }
+}

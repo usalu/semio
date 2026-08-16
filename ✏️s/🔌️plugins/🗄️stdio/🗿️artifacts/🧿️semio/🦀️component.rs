@@ -216,7 +216,7 @@ mod tests {
     fn the_semio_artifact_has_a_registered_child_store_factory() {
         register_child_store_factories();
         let kind = ArtifactKindId::parse(SEMIO_ARTIFACT_SCHEMA_ID).expect("canonical kind");
-        assert!(child_store_factory(&kind).is_some(), "no ChildStoreFactory registered for {SEMIO_ARTIFACT_SCHEMA_ID}");
+        assert!(child_store_factory(&kind).expect("child store factory registry available").is_some(), "no ChildStoreFactory registered for {SEMIO_ARTIFACT_SCHEMA_ID}");
     }
 
     /// 🧸️ Every composable subset must be reachable through that one factory — an unlisted subset
@@ -224,7 +224,7 @@ mod tests {
     #[test]
     fn every_composable_subset_dispatches_to_a_real_child_store() {
         register_child_store_factories();
-        let factory = child_store_factory(&ArtifactKindId::parse(SEMIO_ARTIFACT_SCHEMA_ID).expect("canonical kind")).expect("factory registered");
+        let factory = child_store_factory(&ArtifactKindId::parse(SEMIO_ARTIFACT_SCHEMA_ID).expect("canonical kind")).expect("child store factory registry available").expect("factory registered");
         for subset in composable_subsets() {
             // An empty pack is rejected by the production factory, so this asserts the DISPATCH
             // reached a real typed factory rather than falling through to "no composable subset".
@@ -247,7 +247,7 @@ mod tests {
     #[test]
     fn a_registered_factory_mints_and_reopens_a_real_child_envelope() {
         register_child_store_factories();
-        let factory = child_store_factory(&ArtifactKindId::parse(SEMIO_ARTIFACT_SCHEMA_ID).expect("canonical kind")).expect("factory registered");
+        let factory = child_store_factory(&ArtifactKindId::parse(SEMIO_ARTIFACT_SCHEMA_ID).expect("canonical kind")).expect("child store factory registry available").expect("factory registered");
         let dialect = subset_dialect("mesh");
 
         let seed = SemioMeshSnapshot::default();

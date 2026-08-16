@@ -1632,6 +1632,19 @@ export type AppCommandValue =
   | { readonly transactionRollback: { readonly seq: number; readonly txn_id: string } }
   | { readonly transactionUndo: { readonly seq: number; readonly group_id: string } }
   | { readonly transactionRedo: { readonly seq: number; readonly group_id: string } }
+  | { readonly openArtifact: { readonly seq: number; readonly artifact_ref: string; readonly role: number; readonly plugin_id: string; readonly app_id: string } }
+  | {
+      readonly setDefaultApp: {
+        readonly seq: number;
+        readonly artifact_kind: string;
+        readonly standard: string;
+        readonly subset: string;
+        readonly role: number;
+        readonly plugin_id: string;
+        readonly app_id: string;
+      };
+    }
+  | { readonly clearDefaultApp: { readonly seq: number; readonly artifact_kind: string; readonly standard: string; readonly subset: string; readonly role: number } }
   | "Bye";
 
 export type AppFrameValue =
@@ -1726,6 +1739,7 @@ const APP_COMMAND_TAGS = {
   LoadDocument: 8, ReadDocument: 9, LoadConfig: 10, ReadConfig: 11, AttachBackbone: 12, DetachBackbone: 13, MediaIn: 14, MediaOut: 15,
   MediaFingerprint: 16, Bye: 17, PureCommand: 18, LoadChildren: 19, ReadChildren: 20, ReadHistory: 21,
   transactionPrepare: 22, transactionCommit: 23, transactionRollback: 24, transactionUndo: 25, transactionRedo: 26,
+  openArtifact: 27, setDefaultApp: 28, clearDefaultApp: 29,
 } as const;
 const APP_FRAME_TAGS = {
   Welcome: 0, Done: 1, Invocation: 2, UiSection: 3, Effects: 4, Events: 5, DocumentChanged: 6, Document: 7,
@@ -1862,6 +1876,29 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
     out.push(APP_COMMAND_TAGS.transactionRedo);
     writeVarintU64(out, cmd.transactionRedo.seq);
     writeStr(out, cmd.transactionRedo.group_id);
+  } else if ("openArtifact" in cmd) {
+    out.push(APP_COMMAND_TAGS.openArtifact);
+    writeVarintU64(out, cmd.openArtifact.seq);
+    writeStr(out, cmd.openArtifact.artifact_ref);
+    out.push(cmd.openArtifact.role);
+    writeStr(out, cmd.openArtifact.plugin_id);
+    writeStr(out, cmd.openArtifact.app_id);
+  } else if ("setDefaultApp" in cmd) {
+    out.push(APP_COMMAND_TAGS.setDefaultApp);
+    writeVarintU64(out, cmd.setDefaultApp.seq);
+    writeStr(out, cmd.setDefaultApp.artifact_kind);
+    writeStr(out, cmd.setDefaultApp.standard);
+    writeStr(out, cmd.setDefaultApp.subset);
+    out.push(cmd.setDefaultApp.role);
+    writeStr(out, cmd.setDefaultApp.plugin_id);
+    writeStr(out, cmd.setDefaultApp.app_id);
+  } else if ("clearDefaultApp" in cmd) {
+    out.push(APP_COMMAND_TAGS.clearDefaultApp);
+    writeVarintU64(out, cmd.clearDefaultApp.seq);
+    writeStr(out, cmd.clearDefaultApp.artifact_kind);
+    writeStr(out, cmd.clearDefaultApp.standard);
+    writeStr(out, cmd.clearDefaultApp.subset);
+    out.push(cmd.clearDefaultApp.role);
   } else {
     throw new Error("encodeAppCommand: unrecognized command variant");
   }
@@ -1966,6 +2003,35 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
       return { transactionUndo: { seq: readVarintU64(bytes, pos), group_id: readStr(bytes, pos) } };
     case APP_COMMAND_TAGS.transactionRedo:
       return { transactionRedo: { seq: readVarintU64(bytes, pos), group_id: readStr(bytes, pos) } };
+    case APP_COMMAND_TAGS.openArtifact: {
+      const seq = readVarintU64(bytes, pos);
+      const artifact_ref = readStr(bytes, pos);
+      const role = bytes[pos[0]]!;
+      pos[0] += 1;
+      const plugin_id = readStr(bytes, pos);
+      const app_id = readStr(bytes, pos);
+      return { openArtifact: { seq, artifact_ref, role, plugin_id, app_id } };
+    }
+    case APP_COMMAND_TAGS.setDefaultApp: {
+      const seq = readVarintU64(bytes, pos);
+      const artifact_kind = readStr(bytes, pos);
+      const standard = readStr(bytes, pos);
+      const subset = readStr(bytes, pos);
+      const role = bytes[pos[0]]!;
+      pos[0] += 1;
+      const plugin_id = readStr(bytes, pos);
+      const app_id = readStr(bytes, pos);
+      return { setDefaultApp: { seq, artifact_kind, standard, subset, role, plugin_id, app_id } };
+    }
+    case APP_COMMAND_TAGS.clearDefaultApp: {
+      const seq = readVarintU64(bytes, pos);
+      const artifact_kind = readStr(bytes, pos);
+      const standard = readStr(bytes, pos);
+      const subset = readStr(bytes, pos);
+      const role = bytes[pos[0]]!;
+      pos[0] += 1;
+      return { clearDefaultApp: { seq, artifact_kind, standard, subset, role } };
+    }
     case APP_COMMAND_TAGS.Bye:
       return "Bye";
     default:
@@ -2623,6 +2689,10 @@ if (import.meta.vitest) {
       { transactionRollback: { seq: 24, txn_id: "txn-1" } },
       { transactionUndo: { seq: 25, group_id: "grp-1" } },
       { transactionRedo: { seq: 26, group_id: "grp-1" } },
+      { openArtifact: { seq: 27, artifact_ref: "s.cad.cad@1/*#viewer", role: 0, plugin_id: "", app_id: "" } },
+      { openArtifact: { seq: 28, artifact_ref: "s.cad.cad@1/*#editor", role: 1, plugin_id: "cad", app_id: "s.cad.cad@1/*#editor" } },
+      { setDefaultApp: { seq: 29, artifact_kind: "s.cad.cad", standard: "1", subset: "*", role: 1, plugin_id: "cad", app_id: "s.cad.cad@1/*#editor" } },
+      { clearDefaultApp: { seq: 30, artifact_kind: "s.cad.cad", standard: "1", subset: "*", role: 0 } },
       "Bye",
     ];
 
@@ -2662,7 +2732,7 @@ if (import.meta.vitest) {
       expect(decodeAppFrame(encodeAppFrame(frame))).toEqual(frame);
     });
 
-    it("tags every AppCommand variant per the agreed contract order (Hello=0 ... TransactionRedo=26)", () => {
+    it("tags every AppCommand variant per the agreed contract order (Hello=0 ... ClearDefaultApp=29)", () => {
       expect(encodeAppCommand({ Hello: { channel_version: 0, app_id: "", actor: "", config: [] } })[0]).toBe(0);
       expect(encodeAppCommand({ ConfigCommand: { seq: 0, command: [] } })[0]).toBe(1);
       expect(encodeAppCommand("Bye")[0]).toBe(17);
@@ -2673,6 +2743,9 @@ if (import.meta.vitest) {
       expect(encodeAppCommand({ transactionRollback: { seq: 0, txn_id: "" } })[0]).toBe(24);
       expect(encodeAppCommand({ transactionUndo: { seq: 0, group_id: "" } })[0]).toBe(25);
       expect(encodeAppCommand({ transactionRedo: { seq: 0, group_id: "" } })[0]).toBe(26);
+      expect(encodeAppCommand({ openArtifact: { seq: 0, artifact_ref: "", role: 0, plugin_id: "", app_id: "" } })[0]).toBe(27);
+      expect(encodeAppCommand({ setDefaultApp: { seq: 0, artifact_kind: "", standard: "", subset: "", role: 0, plugin_id: "", app_id: "" } })[0]).toBe(28);
+      expect(encodeAppCommand({ clearDefaultApp: { seq: 0, artifact_kind: "", standard: "", subset: "", role: 0 } })[0]).toBe(29);
     });
 
     it("tags every AppFrame variant per the agreed contract order (Welcome=0 ... transactionRolledBack=22)", () => {
@@ -2833,6 +2906,35 @@ if (import.meta.vitest) {
       for (const [label, value] of Object.entries(frameCases)) {
         expect(hex(encodeAppFrame(value)), `AppFrame::${label}`).toBe(frameVectors[label]);
         expect(decodeAppFrame(new Uint8Array(Buffer.from(frameVectors[label]!, "hex")))).toEqual(value);
+      }
+    });
+
+    /**
+     * 🔗️ Cross-language drift guard for the C3 opening variants (tags 27-29): both this suite and
+     * `protocol_channel`'s `channel_opening_fixtures_match_shared_cross_language_json_vectors` Rust
+     * test load the SAME JSON file under `🧫️fixtures/📡️channel/` — no `AppFrame` variants were added
+     * for opening, so only the command-side vector file exists.
+     */
+    it("matches the shared cross-language opening fixture vectors, byte-for-byte", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, join } = await import("node:path");
+      const here = dirname(fileURLToPath(import.meta.url));
+      const channelFixturesDir = join(here, "🧫️fixtures", "📡️channel");
+      const commandVectors = JSON.parse(readFileSync(join(channelFixturesDir, "app-command-opening.json"), "utf8")) as Record<string, string>;
+      const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+
+      const commandCases: Readonly<Record<string, AppCommandValue>> = {
+        OpenArtifactResolve: { openArtifact: { seq: 1, artifact_ref: "s.cad.cad@1/*#viewer", role: 0, plugin_id: "", app_id: "" } },
+        OpenArtifactExplicit: { openArtifact: { seq: 2, artifact_ref: "s.cad.cad@1/*#editor", role: 1, plugin_id: "cad", app_id: "s.cad.cad@1/*#editor" } },
+        SetDefaultApp: { setDefaultApp: { seq: 3, artifact_kind: "s.cad.cad", standard: "1", subset: "*", role: 1, plugin_id: "cad", app_id: "s.cad.cad@1/*#editor" } },
+        ClearDefaultApp: { clearDefaultApp: { seq: 4, artifact_kind: "s.cad.cad", standard: "1", subset: "*", role: 0 } },
+      };
+
+      expect(Object.keys(commandVectors).sort()).toEqual(Object.keys(commandCases).sort());
+      for (const [label, value] of Object.entries(commandCases)) {
+        expect(hex(encodeAppCommand(value)), `AppCommand::${label}`).toBe(commandVectors[label]);
+        expect(decodeAppCommand(new Uint8Array(Buffer.from(commandVectors[label]!, "hex")))).toEqual(value);
       }
     });
   });

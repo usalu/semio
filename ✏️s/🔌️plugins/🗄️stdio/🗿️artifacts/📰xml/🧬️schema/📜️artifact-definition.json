@@ -81,6 +81,148 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.xml.runtime.codec.codec-stdio-xml-extension-xml.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.xml|extension:xml",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.xml"
+        },
+        {
+          "namespace": "extension",
+          "value": "xml"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xml.runtime.composer.dialect-s-stdio-xml-1-0.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.xml@1.0/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.xml@1.0/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xml.runtime.composer.dialect-s-stdio-xml-1-0-valid.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.xml@1.0/valid",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.xml@1.0/valid"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xml.runtime.grammar.grammar-stdio-xml.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.xml",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.xml"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xml.runtime.grammar.grammar-stdio-xml-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.xml.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.xml.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xml.runtime.grammar.grammar-stdio-xml-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.xml.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.xml.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xml.runtime.grammar.grammar-stdio-xml-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.xml.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.xml.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xml.runtime.grammar.grammar-stdio-xml-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.xml.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.xml.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xml.runtime.inference.schema-s-stdio-xml-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.xml.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.xml.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xml.runtime.representation.mime-application-xml-extension-xml.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:application/xml|extension:.xml",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "application/xml"
+        },
+        {
+          "namespace": "extension",
+          "value": ".xml"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xml.runtime.schema.schema-s-stdio-xml.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.xml",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.xml"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.xml.runtime.subset-validator.dialect-s-stdio-xml-1-0-valid.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.xml@1.0/valid",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.xml@1.0/valid"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

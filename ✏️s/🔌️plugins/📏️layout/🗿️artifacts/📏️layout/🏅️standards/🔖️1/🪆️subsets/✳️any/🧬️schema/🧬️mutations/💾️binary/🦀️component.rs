@@ -52,7 +52,7 @@ mod tests {
 
         let initial = crate::artifacts::layout::schema::default_document();
         let envelope = store::create_document_envelope(LAYOUT_DOCUMENT_SCHEMA, "layout-doc-binary-test", initial, None);
-        let mut doc_store: store::ArtifactStore<LayoutSnapshot, LayoutMutation> = store::ArtifactStore::new(envelope);
+        let mut doc_store: store::ArtifactStore<LayoutSnapshot, LayoutMutation> = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         doc_store
             .dispatch(store::ArtifactCommand::Apply {
                 mutations: vec![LayoutMutation::RenameLayout(rename_layout::mutation::RenameLayout { new_name: "Renamed".into() })],

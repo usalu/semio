@@ -49,8 +49,10 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = crate::registry::format_descriptors_for("avi")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::avi::standards::v1_0::subsets::any::schema::avi_artifact_schema_descriptor())
+        .formats(formats)
         .inferences([crate::artifacts::avi::standards::v1_0::subsets::any::schema::inferences::avi_artifact_inference_descriptor()])
         .composers(crate::artifacts::avi::standards::v1_0::subsets::any::io::io_registry::entries())
         .document_codec_bare::<AviSnapshot, AviMutation>(STDIO_AVI_DOCUMENT_SCHEMA)

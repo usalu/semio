@@ -58,7 +58,7 @@ mod tests {
         use crate::artifacts::raster::RasterSnapshot;
 
         let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "doc-text-test", empty_raster_document(), None);
-        let mut store = store::ArtifactStore::new(envelope);
+        let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         store
             .dispatch(store::ArtifactCommand::Apply {
                 mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {
@@ -93,7 +93,7 @@ mod tests {
         use protocol::{ArtifactId, Edit, SchemaId};
 
         let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "command-envelope-demo", empty_raster_document(), None);
-        let mut store = store::ArtifactStore::new(envelope);
+        let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         store
             .dispatch(store::ArtifactCommand::Apply {
                 mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {

@@ -882,7 +882,7 @@ impl_norm_artifact_record!(DemoDocument, extension = "demo-norm", envelope_id = 
     #[test]
     fn document_text_round_trips_for_a_norm_family_document() {
         let envelope = store::create_document_envelope("norm.demo/v1", "demo", DemoDocument { value: 1.0 }, None);
-        let mut store = store::ArtifactStore::new(envelope);
+        let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![SetArtifactMutation::SetArtifact { document: DemoDocument { value: 3.0 } }], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&store);
         store::os_store::test_support::assert_document_pack_round_trip(&store);
@@ -900,7 +900,7 @@ impl_norm_artifact_record!(DemoDocument, extension = "demo-norm", envelope_id = 
         use protocol::{ArtifactId, Edit, SchemaId};
 
         let envelope = store::create_document_envelope("norm.demo/v1", "demo", DemoDocument { value: 1.0 }, None);
-        let mut store = store::ArtifactStore::new(envelope);
+        let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![SetArtifactMutation::SetArtifact { document: DemoDocument { value: 3.0 } }], description: None }).expect("apply");
         let edit: &Edit<SetArtifactMutation<DemoDocument>> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<DemoDocument, SetArtifactMutation<DemoDocument>>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));

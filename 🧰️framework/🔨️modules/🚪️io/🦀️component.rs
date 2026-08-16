@@ -549,10 +549,12 @@ impl DecodeContext {
     }
 
     /// 🔗️ Resolves one external source exclusively through the host-owned resolver.
-    pub fn resolve(&mut self, request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSource>> {
+    pub fn resolve<'context>(&'context mut self, request: &ResourceRequest) -> CodecResult<ResolvedPayloadSource<'context>> {
         self.budget.ensure_active()?;
         let resolver = self.resolver.clone().ok_or_else(|| CodecFailure::error("io.codec.resource-resolver-unavailable", "decode context has no resource resolver"))?;
-        resolver.resolve_decode(request, self)
+        let resolved = resolver.resolve_decode(request)?;
+        resolved.value.span().validate().map_err(|error| CodecFailure::error("io.codec.invalid-source-span", format!("invalid resolved payload source span: {error:?}")))?;
+        Ok(CodecOutput { value: ResolvedPayloadSource { source: resolved.value, context: self }, diagnostics: resolved.diagnostics })
     }
 
     /// ✅️ Finalizes a decode result only when its requested representation is valid.
@@ -594,10 +596,11 @@ impl EncodeContext {
     }
 
     /// 🔗️ Resolves one host-owned encoded resource destination.
-    pub fn resolve(&mut self, request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSink>> {
+    pub fn resolve<'context>(&'context mut self, request: &ResourceRequest) -> CodecResult<ResolvedPayloadSink<'context>> {
         self.budget.ensure_active()?;
         let resolver = self.resolver.clone().ok_or_else(|| CodecFailure::error("io.codec.resource-resolver-unavailable", "encode context has no resource resolver"))?;
-        resolver.resolve_encode(request, self)
+        let resolved = resolver.resolve_encode(request)?;
+        Ok(CodecOutput { value: ResolvedPayloadSink { sink: resolved.value, context: self }, diagnostics: resolved.diagnostics })
     }
 
     /// ✅️ Finalizes an encode result only when host policy has made it canonical or lossless-valid.
@@ -650,8 +653,8 @@ pub struct ResourceRequest {
 
 /// 🧭️ Resolves a resource into the common streaming/random-access source contract.
 pub trait ResourceResolver: Send + Sync {
-    fn resolve_decode(&self, request: &ResourceRequest, context: &mut DecodeContext) -> CodecResult<Box<dyn PayloadSource>>;
-    fn resolve_encode(&self, request: &ResourceRequest, context: &mut EncodeContext) -> CodecResult<Box<dyn PayloadSink>>;
+    fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSource>>;
+    fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSink>>;
 }
 
 /// 🔒️ Host-owned bounded random-access view exposed to codecs.
@@ -735,6 +738,45 @@ impl BoundedPayloadSource<'_> {
     }
 }
 
+/// 🔒️ A resolver-owned source whose only codec-facing operations share this context's budget.
+pub struct ResolvedPayloadSource<'a> {
+    source: Box<dyn PayloadSource>,
+    context: &'a mut DecodeContext,
+}
+
+impl ResolvedPayloadSource<'_> {
+    /// 📥️ Reads one bounded streaming chunk from a resolved source.
+    pub fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize> {
+        let allowed = self.permitted(output.len())?;
+        let result = self.source.read_chunk(&mut output[..allowed])?;
+        self.charge_result(result.value, allowed)
+    }
+
+    /// 🎯️ Opens bounded random access when this resolved source supports it.
+    pub fn random_access(&mut self) -> Option<BoundedRandomAccessPayload<'_>> {
+        Some(BoundedRandomAccessPayload { source: self.source.random_access()?, context: self.context })
+    }
+
+    fn permitted(&mut self, requested: usize) -> Result<usize, CodecFailure> {
+        self.context.budget.ensure_active()?;
+        self.context.budget.charge_work(1)?;
+        let remaining = self.context.policy.limits.max_read_bytes.saturating_sub(self.context.budget.consumption().read_bytes);
+        let permitted = if remaining > usize::MAX as u64 { requested } else { requested.min(remaining as usize) };
+        if requested > 0 && permitted == 0 {
+            return Err(CodecFailure::error("io.codec.budget-exhausted", "read-bytes budget exhausted"));
+        }
+        Ok(permitted)
+    }
+
+    fn charge_result(&mut self, read: usize, permitted: usize) -> CodecResult<usize> {
+        if read > permitted {
+            return Err(CodecFailure::error("io.codec.source-overread", format!("payload source returned {read} bytes after being limited to {permitted}")));
+        }
+        self.context.budget.charge_read(read as u64)?;
+        Ok(CodecOutput { value: read, diagnostics: Vec::new() })
+    }
+}
+
 /// 🔒️ Host-owned bounded streaming sink exposed to codecs.
 pub struct BoundedPayloadSink<'a> {
     sink: &'a mut dyn PayloadSink,
@@ -743,6 +785,22 @@ pub struct BoundedPayloadSink<'a> {
 
 impl BoundedPayloadSink<'_> {
     /// 📤️ Writes one bounded chunk while charging work, allocation, and output bytes first.
+    pub fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()> {
+        self.context.budget.charge_work(1)?;
+        self.context.budget.charge_allocation(input.len() as u64)?;
+        self.context.budget.charge_write(input.len() as u64)?;
+        self.sink.write_chunk(input)
+    }
+}
+
+/// 🔒️ A resolver-owned sink whose only codec-facing operation shares this context's budget.
+pub struct ResolvedPayloadSink<'a> {
+    sink: Box<dyn PayloadSink>,
+    context: &'a mut EncodeContext,
+}
+
+impl ResolvedPayloadSink<'_> {
+    /// 📤️ Writes one budgeted chunk to a resolved destination.
     pub fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()> {
         self.context.budget.charge_work(1)?;
         self.context.budget.charge_allocation(input.len() as u64)?;
@@ -964,6 +1022,13 @@ pub fn preflight_composer_entries(entries: &'static [ComposerEntry]) -> Result<(
 /// 🔬️ Verifies independently declared static composers as one atomic candidate set.
 #[must_use]
 pub fn preflight_composer_entry_refs(entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
+    let assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    preflight_composer_entry_refs_in_assembly(&assembly, entries)
+}
+
+/// 🔬️ Verifies composers while one artifact assembly owns the shared publication barrier.
+#[must_use]
+pub fn preflight_composer_entry_refs_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
     let proposed = composer_entries_by_key(entries.iter().copied())?;
     let registry = io_registry().read().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))?;
     validate_composer_entries(&registry, &proposed)
@@ -979,6 +1044,13 @@ pub fn register_composer_entries(entries: &'static [ComposerEntry]) -> Result<()
 /// 📌️ Registers independently declared static composers as one all-or-nothing candidate set.
 #[must_use]
 pub fn register_composer_entry_refs(entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
+    let assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    register_composer_entry_refs_in_assembly(&assembly, entries)
+}
+
+/// 📌️ Publishes preflighted composers while one artifact assembly owns the shared barrier.
+#[must_use]
+pub fn register_composer_entry_refs_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
     let proposed = composer_entries_by_key(entries.iter().copied())?;
     let mut reg = io_registry().write().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))?;
     validate_composer_entries(&reg, &proposed)?;
@@ -1092,18 +1164,17 @@ pub fn set_io_fallback_dispatcher(dispatcher: IoFallbackDispatcher) -> Result<()
 /// fallback) has the key, so existing error-message-matching callers don't need to change.
 pub fn io_dispatch(key: &IoKey, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
     match resolve(key) {
-        Ok(entry) => match (entry.compose)(sources) {
-            Ok(mut composed) => {
-                run_subset_validation(composed.dialect, &composed.payload, &mut composed.diagnostics).map_err(|error| ComposeError { message: format!("subset validation failed: {error:?}"), diagnostics: Vec::new() })?;
-                Ok(composed)
-            }
-            Err(e) => Err(e),
-        },
+        Ok(entry) => validate_composed_subset((entry.compose)(sources)?),
         Err(local_err) => match IO_FALLBACK.get().and_then(|dispatcher| (dispatcher.dispatch)(key, sources)) {
-            Some(result) => result,
+            Some(result) => validate_composed_subset(result?),
             None => Err(ComposeError { message: local_err.message, diagnostics: Vec::new() }),
         },
     }
+}
+
+fn validate_composed_subset(mut composed: ComposedArtifact) -> Result<ComposedArtifact, ComposeError> {
+    run_subset_validation(composed.dialect, &composed.payload, &mut composed.diagnostics).map_err(|error| ComposeError { message: format!("subset validation failed: {error:?}"), diagnostics: Vec::new() })?;
+    Ok(composed)
 }
 
 /// 🌉️🌉️ Two-hop compose: resolve+compose `hub` from `sources` via `io_dispatch`, then feed that
@@ -1227,6 +1298,13 @@ fn validate_subset_validators(registry: &BTreeMap<ArtifactDialect, &'static Subs
 /// 🔬️ Verifies subset-validator entries without changing their established owners.
 #[must_use]
 pub fn preflight_subset_validators(entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
+    let assembly = store::begin_artifact_assembly().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    preflight_subset_validators_in_assembly(&assembly, entries)
+}
+
+/// 🔬️ Verifies subset validators while one artifact assembly owns the shared publication barrier.
+#[must_use]
+pub fn preflight_subset_validators_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
     let registry = subset_validator_registry().read().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
     validate_subset_validators(&registry, entries)
 }
@@ -1234,6 +1312,13 @@ pub fn preflight_subset_validators(entries: &[&'static SubsetValidatorEntry]) ->
 /// 📌️ Registers subset-validator entries only when the entire candidate set is conflict-free.
 #[must_use]
 pub fn register_subset_validators(entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
+    let assembly = store::begin_artifact_assembly().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    register_subset_validators_in_assembly(&assembly, entries)
+}
+
+/// 📌️ Publishes preflighted subset validators while one artifact assembly owns the shared barrier.
+#[must_use]
+pub fn register_subset_validators_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
     let mut reg = subset_validator_registry().write().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
     validate_subset_validators(&reg, entries)?;
     for entry in entries {
@@ -1260,8 +1345,8 @@ pub fn list_registered_subset_validator_dialects() -> Result<Vec<Dialect>, Subse
 /// enforces that itself, inside its own `compose`, before ever returning `Ok` -- see the PDF/A
 /// pilot). Called from every generic compose-dispatch path in this module (`io_dispatch`,
 /// `wire_artifact_compose`) so every future subset gets this for free the moment it registers a
-/// validator -- no dispatch call site needs to change again. Never panics: a poisoned registry
-/// lock degrades to a no-op.
+/// validator -- no dispatch call site needs to change again. A poisoned registry lock is surfaced
+/// as a typed dispatch failure.
 ///
 /// `ANY` always short-circuits (nothing to validate against the unconstrained base subset). A
 /// real (non-`ANY`) dialect with NO registered validator is, since ticket
@@ -1425,6 +1510,7 @@ impl From<ComposedArtifact> for WireComposedArtifact {
 pub enum IoWireError {
     Decode { operation: &'static str, message: String },
     Encode { operation: &'static str, message: String },
+    Limit { operation: &'static str, detail: String },
     Registry(IoRegistryUnavailable),
     Resolve(String),
     Subset(SubsetValidationError),
@@ -1436,6 +1522,7 @@ impl std::fmt::Display for IoWireError {
         match self {
             Self::Decode { operation, message } => write!(formatter, "{operation} decode failed: {message}"),
             Self::Encode { operation, message } => write!(formatter, "{operation} encode failed: {message}"),
+            Self::Limit { operation, detail } => write!(formatter, "{operation} exceeds wire limit: {detail}"),
             Self::Registry(error) => write!(formatter, "registry unavailable: {}", error.registry),
             Self::Resolve(message) => formatter.write_str(message),
             Self::Subset(error) => write!(formatter, "subset validation failed: {error:?}"),
@@ -1446,7 +1533,55 @@ impl std::fmt::Display for IoWireError {
 
 impl std::error::Error for IoWireError {}
 
+const MAX_IO_WIRE_BYTES: usize = 4 * 1024 * 1024;
+const MAX_IO_WIRE_SOURCES: usize = 256;
+const MAX_IO_WIRE_DIALECT_COMPONENT_BYTES: usize = 192;
+const MAX_IO_WIRE_INTERNED_DIALECTS: usize = 512;
+
+fn ensure_wire_bytes(operation: &'static str, bytes: &[u8]) -> Result<(), IoWireError> {
+    if bytes.len() > MAX_IO_WIRE_BYTES {
+        return Err(IoWireError::Limit { operation, detail: format!("{} bytes exceeds {MAX_IO_WIRE_BYTES}", bytes.len()) });
+    }
+    Ok(())
+}
+
+fn validate_wire_dialect(operation: &'static str, dialect: &ArtifactDialect) -> Result<(), IoWireError> {
+    for (name, value) in [("artifact_kind", &dialect.artifact_kind), ("standard", &dialect.standard), ("subset", &dialect.subset)] {
+        if value.is_empty() || value.len() > MAX_IO_WIRE_DIALECT_COMPONENT_BYTES || value.bytes().any(|byte| byte.is_ascii_whitespace() || byte.is_ascii_control() || matches!(byte, b'@' | b'/' | b'!')) {
+            return Err(IoWireError::Limit { operation, detail: format!("invalid bounded dialect {name}") });
+        }
+    }
+    Ok(())
+}
+
+fn validate_wire_payload(operation: &'static str, payload: &IoPayload) -> Result<(), IoWireError> {
+    let bytes = match payload {
+        IoPayload::Text(text) => text.len(),
+        IoPayload::Binary(bytes) => bytes.len(),
+    };
+    if bytes > MAX_IO_WIRE_BYTES {
+        return Err(IoWireError::Limit { operation, detail: format!("payload {bytes} bytes exceeds {MAX_IO_WIRE_BYTES}") });
+    }
+    Ok(())
+}
+
+fn validate_wire_key(key: &IoKey) -> Result<(), IoWireError> {
+    for value in [&key.artifact_kind, &key.standard, &key.subset, &key.format_kind, &key.format_standard, &key.format_subset] {
+        if value.is_empty() || value.len() > MAX_IO_WIRE_DIALECT_COMPONENT_BYTES || value.bytes().any(|byte| byte.is_ascii_whitespace() || byte.is_ascii_control()) {
+            return Err(IoWireError::Limit { operation: "io-key", detail: "key component is empty or exceeds the bounded wire grammar".to_string() });
+        }
+    }
+    Ok(())
+}
+
+fn encode_wire_json<T: Serialize>(operation: &'static str, value: &T) -> Result<Vec<u8>, IoWireError> {
+    let bytes = serde_json::to_vec(value).map_err(|error| IoWireError::Encode { operation, message: error.to_string() })?;
+    ensure_wire_bytes(operation, &bytes)?;
+    Ok(bytes)
+}
+
 fn intern_dialect(dialect: &ArtifactDialect) -> Result<Dialect, IoWireError> {
+    validate_wire_dialect("dialect", dialect)?;
     static INTERNED: std::sync::OnceLock<RwLock<HashMap<ArtifactDialect, Dialect>>> = std::sync::OnceLock::new();
     let table = INTERNED.get_or_init(|| RwLock::new(HashMap::new()));
     if let Some(found) = table.read().map_err(|_| IoWireError::InternUnavailable)?.get(dialect) {
@@ -1455,6 +1590,9 @@ fn intern_dialect(dialect: &ArtifactDialect) -> Result<Dialect, IoWireError> {
     let mut write = table.write().map_err(|_| IoWireError::InternUnavailable)?;
     if let Some(found) = write.get(dialect) {
         return Ok(*found);
+    }
+    if write.len() >= MAX_IO_WIRE_INTERNED_DIALECTS {
+        return Err(IoWireError::Limit { operation: "dialect", detail: format!("intern table reached {MAX_IO_WIRE_INTERNED_DIALECTS} entries") });
     }
     let leaked = Dialect { artifact_kind: Box::leak(dialect.artifact_kind.clone().into_boxed_str()), standard: StandardId(Box::leak(dialect.standard.clone().into_boxed_str())), subset: SubsetId(Box::leak(dialect.subset.clone().into_boxed_str())) };
     write.insert(dialect.clone(), leaked);
@@ -1466,7 +1604,13 @@ fn intern_dialect(dialect: &ArtifactDialect) -> Result<Dialect, IoWireError> {
 /// — used by a guest's `io_dispatch` fallback hook once `host.io-compose` returns.
 #[must_use]
 pub fn wire_decode_composed_artifact(bytes: &[u8]) -> Result<ComposedArtifact, IoWireError> {
+    ensure_wire_bytes("composed-artifact", bytes)?;
     let wire: WireComposedArtifact = serde_json::from_slice(bytes).map_err(|error| IoWireError::Decode { operation: "composed-artifact", message: error.to_string() })?;
+    validate_wire_dialect("composed-artifact", &wire.dialect)?;
+    validate_wire_payload("composed-artifact", &wire.payload)?;
+    if wire.diagnostics.len() > MAX_IO_WIRE_SOURCES {
+        return Err(IoWireError::Limit { operation: "composed-artifact", detail: "too many diagnostics".to_string() });
+    }
     Ok(ComposedArtifact { dialect: intern_dialect(&wire.dialect)?, payload: wire.payload, diagnostics: wire.diagnostics, confidence: wire.confidence })
 }
 
@@ -1479,7 +1623,7 @@ pub fn wire_decode_composed_artifact(bytes: &[u8]) -> Result<ComposedArtifact, I
 #[must_use]
 pub fn wire_list_composer_entries() -> Result<Vec<u8>, IoWireError> {
     let entries = list_composer_entries().map_err(IoWireError::Registry)?;
-    serde_json::to_vec(&entries).map_err(|error| IoWireError::Encode { operation: "composer-entry-list", message: error.to_string() })
+    encode_wire_json("composer-entry-list", &entries)
 }
 
 /// 🌉️ Decodes a wire `(IoKey, Vec<WireComposeSource>)` request and composes it against THIS
@@ -1492,18 +1636,26 @@ pub fn wire_list_composer_entries() -> Result<Vec<u8>, IoWireError> {
 /// `migrate-artifact`'s `plugin-error` for the existing precedent.
 #[must_use]
 pub fn wire_artifact_compose(key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, IoWireError> {
+    ensure_wire_bytes("io-key", key_bytes)?;
+    ensure_wire_bytes("compose-source", sources_bytes)?;
     let key: IoKey = serde_json::from_slice(key_bytes).map_err(|error| IoWireError::Decode { operation: "io-key", message: error.to_string() })?;
+    validate_wire_key(&key)?;
     let wire_sources: Vec<WireComposeSource> = serde_json::from_slice(sources_bytes).map_err(|error| IoWireError::Decode { operation: "compose-source", message: error.to_string() })?;
+    if wire_sources.len() > MAX_IO_WIRE_SOURCES {
+        return Err(IoWireError::Limit { operation: "compose-source", detail: format!("{} sources exceeds {MAX_IO_WIRE_SOURCES}", wire_sources.len()) });
+    }
     let entry = resolve(&key).map_err(|error| error.unavailable.map(IoWireError::Registry).unwrap_or_else(|| IoWireError::Resolve(error.message)))?;
     let mut sources = Vec::with_capacity(wire_sources.len());
     for wire in wire_sources {
+        validate_wire_dialect("compose-source", &wire.dialect)?;
+        validate_wire_payload("compose-source", &wire.payload)?;
         let dialect = entry.reads.iter().copied().find(|&d| ArtifactDialect::from(d) == wire.dialect).ok_or_else(|| IoWireError::Resolve(format!("composer for {} does not read dialect {}", key.artifact_kind, wire.dialect.to_coordinate())))?;
         sources.push(ErasedComposeSource { dialect, payload: wire.payload });
     }
     match (entry.compose)(&sources) {
         Ok(mut composed) => {
             run_subset_validation(composed.dialect, &composed.payload, &mut composed.diagnostics).map_err(IoWireError::Subset)?;
-            serde_json::to_vec(&WireComposedArtifact::from(composed)).map_err(|error| IoWireError::Encode { operation: "composed-artifact", message: error.to_string() })
+            encode_wire_json("composed-artifact", &WireComposedArtifact::from(composed))
         }
         Err(error) => Err(IoWireError::Resolve(error.message)),
     }
@@ -1559,6 +1711,7 @@ impl std::error::Error for FormatRegistryConflict {}
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FormatRegistryError {
     Conflict(FormatRegistryConflict),
+    Unknown { input: String },
     Unavailable(IoRegistryUnavailable),
 }
 
@@ -1566,6 +1719,7 @@ impl std::fmt::Display for FormatRegistryError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Conflict(error) => error.fmt(formatter),
+            Self::Unknown { input } => write!(formatter, "unknown format {input}"),
             Self::Unavailable(error) => write!(formatter, "format registry unavailable: {}", error.registry),
         }
     }
@@ -1583,6 +1737,13 @@ fn format_catalog() -> &'static RwLock<BTreeMap<String, FormatDescriptor>> {
 /// globally singular; equal duplicate rows are idempotent and never replace an established owner.
 #[must_use]
 pub fn register_format_descriptors(descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(), FormatRegistryError> {
+    let assembly = store::begin_artifact_assembly().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    register_format_descriptors_in_assembly(&assembly, descriptors)
+}
+
+/// 📌️ Publishes preflighted format rows while one artifact assembly owns the shared barrier.
+#[must_use]
+pub fn register_format_descriptors_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(), FormatRegistryError> {
     let (proposed, proposed_by_kind) = index_format_descriptors(descriptors).map_err(FormatRegistryError::Conflict)?;
     let mut registry = format_catalog().write().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
     validate_format_descriptors(&registry, &proposed, &proposed_by_kind).map_err(FormatRegistryError::Conflict)?;
@@ -1595,6 +1756,13 @@ pub fn register_format_descriptors(descriptors: impl IntoIterator<Item = FormatD
 /// 🔬️ Verifies format rows against the catalog without mutating their global ownership.
 #[must_use]
 pub fn preflight_format_descriptors(rows: &[FormatDescriptor]) -> Result<(), FormatRegistryError> {
+    let assembly = store::begin_artifact_assembly().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    preflight_format_descriptors_in_assembly(&assembly, rows)
+}
+
+/// 🔬️ Verifies format rows while one artifact assembly owns the shared publication barrier.
+#[must_use]
+pub fn preflight_format_descriptors_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, rows: &[FormatDescriptor]) -> Result<(), FormatRegistryError> {
     let (proposed, proposed_by_kind) = index_format_descriptors(rows.iter().cloned()).map_err(FormatRegistryError::Conflict)?;
     let registry = format_catalog().read().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
     validate_format_descriptors(&registry, &proposed, &proposed_by_kind).map_err(FormatRegistryError::Conflict)
@@ -1726,7 +1894,83 @@ pub fn normalize_format_kind(input: &str) -> Result<Option<String>, FormatRegist
 #[must_use]
 pub fn format_accept_filter(kind_ids: &[&str]) -> Result<String, FormatRegistryError> {
     let registry = format_catalog().read().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
-    Ok(kind_ids.iter().filter_map(|kind| registry.get(*kind)).flat_map(|descriptor| descriptor.extensions.iter()).cloned().collect::<Vec<_>>().join(","))
+    let mut extensions = Vec::new();
+    for kind_id in kind_ids {
+        let descriptor = registry.get(*kind_id).ok_or_else(|| FormatRegistryError::Unknown { input: (*kind_id).to_string() })?;
+        extensions.extend(descriptor.extensions.iter().cloned());
+    }
+    Ok(extensions.join(","))
+}
+
+/// 🧷️ All IO and store rows a plugin must publish as one irreducible assembly unit.
+pub struct ArtifactAssemblyRegistryPlan {
+    pub composer_entries: Vec<&'static ComposerEntry>,
+    pub subset_validators: Vec<&'static SubsetValidatorEntry>,
+    pub format_descriptors: Vec<FormatDescriptor>,
+    pub document_codecs: Vec<store::ArtifactCodec>,
+    pub dialect_migrations: Vec<store::DialectMigration>,
+}
+
+impl ArtifactAssemblyRegistryPlan {
+    /// 🌱️ Starts an empty plan; callers append every owned registry row before committing once.
+    pub fn new() -> Self {
+        Self { composer_entries: Vec::new(), subset_validators: Vec::new(), format_descriptors: Vec::new(), document_codecs: Vec::new(), dialect_migrations: Vec::new() }
+    }
+}
+
+impl Default for ArtifactAssemblyRegistryPlan {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// 🚫️ An all-registry assembly cannot acquire its locks or pass preflight.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ArtifactAssemblyRegistryError {
+    Composer(IoRegistryRegistrationError),
+    SubsetValidator(SubsetValidatorRegistryError),
+    Format(FormatRegistryError),
+    Store(store::ArtifactAssemblyStoreRegistryError),
+}
+
+impl std::fmt::Display for ArtifactAssemblyRegistryError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Composer(error) => error.fmt(formatter),
+            Self::SubsetValidator(error) => error.fmt(formatter),
+            Self::Format(error) => error.fmt(formatter),
+            Self::Store(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl std::error::Error for ArtifactAssemblyRegistryError {}
+
+/// 📌️ Acquires every affected write lock, preflights every candidate, then commits without any
+/// fallible operation after the first registry mutation.
+#[must_use]
+pub fn commit_artifact_assembly_registry_plan(assembly: &store::ArtifactAssemblyTransaction, plan: ArtifactAssemblyRegistryPlan) -> Result<(), ArtifactAssemblyRegistryError> {
+    let mut store_guards = store::acquire_artifact_assembly_store_registry_guards(assembly).map_err(ArtifactAssemblyRegistryError::Store)?;
+    let mut composers = io_registry().write().map_err(|_| ArtifactAssemblyRegistryError::Composer(IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" })))?;
+    let mut subset_validators = subset_validator_registry().write().map_err(|_| ArtifactAssemblyRegistryError::SubsetValidator(SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" })))?;
+    let mut formats = format_catalog().write().map_err(|_| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" })))?;
+    let proposed_composers = composer_entries_by_key(plan.composer_entries.iter().copied()).map_err(ArtifactAssemblyRegistryError::Composer)?;
+    validate_composer_entries(&composers, &proposed_composers).map_err(ArtifactAssemblyRegistryError::Composer)?;
+    validate_subset_validators(&subset_validators, &plan.subset_validators).map_err(ArtifactAssemblyRegistryError::SubsetValidator)?;
+    let (proposed_formats, proposed_formats_by_kind) = index_format_descriptors(plan.format_descriptors.iter().cloned()).map_err(|error| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Conflict(error)))?;
+    validate_format_descriptors(&formats, &proposed_formats, &proposed_formats_by_kind).map_err(|error| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Conflict(error)))?;
+    store::preflight_artifact_assembly_store_registry_guards(&store_guards, &plan.document_codecs, &plan.dialect_migrations).map_err(ArtifactAssemblyRegistryError::Store)?;
+    for (key, entry) in proposed_composers {
+        composers.entry(key).or_insert(entry);
+    }
+    for entry in plan.subset_validators {
+        subset_validators.entry(ArtifactDialect::from(entry.dialect)).or_insert(entry);
+    }
+    for (key, descriptor) in proposed_formats {
+        formats.entry(key).or_insert(descriptor);
+    }
+    store::commit_artifact_assembly_store_registry_guards(&mut store_guards, plan.document_codecs, plan.dialect_migrations);
+    Ok(())
 }
 
 /// 📋️ Serialize every distinct registered format as a `mimes.csv`-shaped body (header + one row
@@ -1851,7 +2095,7 @@ mod tests {
             IoRegistryRegistrationError::Conflict(conflict) => conflict,
             IoRegistryRegistrationError::Unavailable(error) => panic!("registry unavailable: {error:?}"),
         };
-        assert_eq!(conflict.key, IoKey::from_owner_counterpart(CONFLICT_INTO, CONFLICT_FROM, IoDirection::Import));
+        assert_eq!(conflict.key, IoKey::from_owner_counterpart(CONFLICT_FROM, CONFLICT_INTO, IoDirection::Export));
         let resolved = resolve(&conflict.key).expect("first owner remains resolvable");
         assert!(std::ptr::eq(resolved, &CONFLICT_FIRST));
     }
@@ -1892,6 +2136,7 @@ mod tests {
         assert_eq!(step.mimes, ["application/step"]);
         assert_eq!(step.extensions, [".step", ".stp"]);
         assert_eq!(format_accept_filter(&["test.format.step"]).expect("catalog availability"), ".step,.stp");
+        assert!(matches!(format_accept_filter(&["test.format.unknown"]), Err(FormatRegistryError::Unknown { input }) if input == "test.format.unknown"));
         assert!(formats_csv().expect("catalog availability").contains("application/step,.step"));
 
         let first = format_descriptor_fixture("test.format.mime-first", "mime-first", &["application/x-wave0-conflict"], &[".first"]);
@@ -1971,11 +2216,11 @@ mod tests {
     struct TestResolver;
 
     impl ResourceResolver for TestResolver {
-        fn resolve_decode(&self, _request: &ResourceRequest, _context: &mut DecodeContext) -> CodecResult<Box<dyn PayloadSource>> {
+        fn resolve_decode(&self, _request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSource>> {
             Ok(CodecOutput { value: Box::new(TestPayload::new(b"resolved", "resolver://decode")), diagnostics: Vec::new() })
         }
 
-        fn resolve_encode(&self, _request: &ResourceRequest, _context: &mut EncodeContext) -> CodecResult<Box<dyn PayloadSink>> {
+        fn resolve_encode(&self, _request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSink>> {
             Ok(CodecOutput { value: Box::new(TestSink), diagnostics: Vec::new() })
         }
     }
@@ -1986,9 +2231,8 @@ mod tests {
         let resolver = std::sync::Arc::new(TestResolver);
         let mut decode = DecodeContext::with_resolver(DecodePolicy { representation: CodecRepresentation::Lossless, limits: limits.clone(), cancellation: CancellationToken::new() }, resolver.clone());
         let request = ResourceRequest { locator: "resolver://document".to_string(), expected_media_type: None };
-        let mut payload = decode.resolve(&request).expect("decode resource resolves").value;
+        let mut source = decode.resolve(&request).expect("decode resource resolves").value;
         let mut output = [0u8; 3];
-        let mut source = decode.source(&mut *payload).expect("source span is valid").value;
         assert_eq!(source.read_chunk(&mut output).expect("bounded stream read").value, 3);
         let mut random = source.random_access().expect("random access is available");
         assert_eq!(random.read_at(0, &mut [0u8; 2]).expect("remaining bounded random read").value, 1);
@@ -2001,8 +2245,33 @@ mod tests {
 
         let mut encode = EncodeContext::with_resolver(EncodePolicy { representation: CodecRepresentation::Canonical, limits, cancellation: CancellationToken::new() }, resolver);
         let mut sink = encode.resolve(&request).expect("encode resource resolves").value;
-        encode.sink(&mut *sink).expect("bounded sink").value.write_chunk(b"four").expect("bounded write");
-        assert!(encode.sink(&mut *sink).expect("bounded sink").value.write_chunk(b"x").is_err(), "writes cannot bypass the output budget");
+        sink.write_chunk(b"four").expect("bounded write");
+        assert!(sink.write_chunk(b"x").is_err(), "writes cannot bypass the output budget");
+    }
+
+    #[test]
+    fn resolved_resources_cannot_outlive_their_cancellation_budget() {
+        let cancellation = CancellationToken::new();
+        let policy = DecodePolicy { representation: CodecRepresentation::Lossless, limits: CodecLimits::default(), cancellation: cancellation.clone() };
+        let resolver = std::sync::Arc::new(TestResolver);
+        let request = ResourceRequest { locator: "resolver://cancelled".to_string(), expected_media_type: None };
+        let mut context = DecodeContext::with_resolver(policy, resolver);
+        let mut source = context.resolve(&request).expect("resolve while active").value;
+        cancellation.cancel();
+        assert!(source.read_chunk(&mut [0u8; 1]).is_err(), "the resolved source must be cancellable after resolution");
+    }
+
+    #[test]
+    fn wire_rejects_oversized_and_unbounded_dialect_inputs_before_interning() {
+        assert!(matches!(wire_decode_composed_artifact(&vec![b' '; MAX_IO_WIRE_BYTES + 1]), Err(IoWireError::Limit { operation: "composed-artifact", .. })));
+        let wire = WireComposedArtifact {
+            dialect: ArtifactDialect { artifact_kind: "x".repeat(MAX_IO_WIRE_DIALECT_COMPONENT_BYTES + 1), standard: "1".into(), subset: "*".into() },
+            payload: IoPayload::Text("payload".into()),
+            diagnostics: Vec::new(),
+            confidence: Confidence::High,
+        };
+        let bytes = serde_json::to_vec(&wire).expect("wire fixture");
+        assert!(matches!(wire_decode_composed_artifact(&bytes), Err(IoWireError::Limit { operation: "composed-artifact", .. })));
     }
 
     #[test]

@@ -115,6 +115,7 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

@@ -1,6 +1,6 @@
 //! 🎪 `stdio.gltf` artifact — stdio reference format.
 
-use semio_framework_plugin::{ArtifactInferenceExecutionError, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ArtifactInferrer, ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ArtifactInferrer, ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 pub use crate::artifacts::gltf::schema::diff::GltfDiff;
 pub use crate::artifacts::gltf::schema::modules::mutation_dispatch::GltfMutation;
@@ -40,8 +40,10 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = crate::registry::format_descriptors_for("gltf")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::gltf::schema::gltf_artifact_schema_descriptor())
+        .formats(formats)
         .inferences([crate::artifacts::gltf::schema::inferences::geometric_analysis::gltf_artifact_inference_descriptor()])
         .inference_services([gltf_inference_service()])
         .composers(crate::artifacts::gltf::engine::io_registry::entries())
@@ -69,10 +71,11 @@ pub fn gltf_inference_service() -> ArtifactInferenceService {
     )
 }
 
-fn infer_gltf_cold(snapshot_pack: &[u8]) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
-    let snapshot = <GltfSnapshot as store::ArtifactPack>::decode_pack(snapshot_pack).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.snapshot-decode", error.to_string()))?;
+fn infer_gltf_cold(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+    let snapshot = <GltfSnapshot as store::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.snapshot-decode", error.to_string()))?;
     let inference = <crate::artifacts::gltf::schema::GltfBuilder as ArtifactInferrer>::infer(&snapshot);
-    crate::artifacts::gltf::io::inferences::binary::encode_gltf_inference_binary(&inference).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.binary-encode", error.to_string()))
+    let canonical_payload = crate::artifacts::gltf::io::inferences::binary::encode_gltf_inference_binary(&inference).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.binary-encode", error.to_string()))?;
+    Ok(ArtifactInferenceExecution { canonical_payload, diagnostics: Vec::new(), validity: "valid".into(), quality: "complete".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built
@@ -185,7 +188,7 @@ pub mod io_registry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{register_artifact_inference_service, wire_artifact_infer, ArtifactInferenceServiceRegistry, WireArtifactInferenceRequest, WireArtifactInferenceResult, ARTIFACT_INFERENCE_WIRE_VERSION};
+    use semio_framework_plugin::{register_artifact_inference_service, wire_artifact_infer, ArtifactInferenceExecutionRequest, ArtifactInferenceServiceRegistry, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode, WireArtifactInferenceRequest, WireArtifactInferenceResult, ARTIFACT_INFERENCE_WIRE_VERSION};
 
     #[test]
     fn cold_native_inference_decodes_snapshot_pack_and_matches_typed_result() {
@@ -193,11 +196,15 @@ mod tests {
         let snapshot_pack = <GltfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
         let mut registry = ArtifactInferenceServiceRegistry::new();
         registry.register(gltf_inference_service()).unwrap();
-        let bytes = registry.infer_cold(GLTF_ARTIFACT_KIND_ID, GLTF_INFERENCE_SCHEMA_ID, &snapshot_pack).unwrap();
+        let budgets = WireArtifactInferenceBudget { allocation_bytes: 1_000_000, work_units: 1, recursion_depth: 1 };
+        let dependencies = Vec::new();
+        let request = ArtifactInferenceExecutionRequest { policy: b"gltf-test", budgets: &budgets, cancellation_id: "gltf-native", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Cold, canonical_payload: &snapshot_pack, dependencies: &dependencies };
+        let execution = registry.infer(GLTF_ARTIFACT_KIND_ID, GLTF_INFERENCE_SCHEMA_ID, &request).unwrap();
+        let bytes = execution.canonical_payload;
         let decoded = crate::artifacts::gltf::io::inferences::binary::decode_gltf_inference_binary(&bytes).unwrap();
         let direct = <crate::artifacts::gltf::schema::GltfBuilder as ArtifactInferrer>::infer(&snapshot);
         assert_eq!(decoded, direct);
-        assert_eq!(bytes, gltf_inference_service().infer_cold(&snapshot_pack).unwrap());
+        assert_eq!(bytes, gltf_inference_service().infer(&request).unwrap().canonical_payload);
     }
 
     #[test]
@@ -220,15 +227,21 @@ mod tests {
             policy_version: metadata.policy_version,
             revision: 7,
             generation: 9,
-            snapshot_pack: snapshot_pack.clone(),
-            policy: Vec::new(),
-            changed_paths: Some(vec!["document/nodes/0/transform".into()]),
-            session: Some("document-a/main".into()),
+            source_dialect: "s.stdio.gltf.standard.2.0.dialect.source".into(),
+            policy: b"test-policy".to_vec(),
+            budgets: WireArtifactInferenceBudget { allocation_bytes: 1_000_000, work_units: 1, recursion_depth: 1 },
+            cancellation_id: "gltf-wire".into(),
+            previous_state: None,
+            requested_cache_mode: WireArtifactInferenceCacheMode::Cold,
+            canonical_payload: snapshot_pack.clone(),
+            dependencies: Vec::new(),
         };
         let bytes = wire_artifact_infer(&serde_json::to_vec(&request).unwrap()).unwrap();
         let result: WireArtifactInferenceResult = serde_json::from_slice(&bytes).unwrap();
         assert_eq!((result.revision, result.generation), (7, 9));
-        assert_eq!(result.inference_binary, service.infer_cold(&snapshot_pack).unwrap());
-        assert_eq!(result.changed_paths, vec!["document/nodes/0/transform"]);
+        assert_eq!(&result.policy, &request.policy);
+        assert_eq!(&result.budgets, &request.budgets);
+        assert_eq!(result.requested_cache_mode, request.requested_cache_mode.clone());
+        assert_eq!(result.canonical_payload, service.infer(&ArtifactInferenceExecutionRequest { policy: &request.policy, budgets: &request.budgets, cancellation_id: &request.cancellation_id, previous_state: request.previous_state.as_deref(), requested_cache_mode: request.requested_cache_mode.clone(), canonical_payload: &request.canonical_payload, dependencies: &request.dependencies }).unwrap().canonical_payload);
     }
 }

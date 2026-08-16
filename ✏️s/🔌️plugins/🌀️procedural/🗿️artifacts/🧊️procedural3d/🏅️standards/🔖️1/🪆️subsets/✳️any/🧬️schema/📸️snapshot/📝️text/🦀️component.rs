@@ -394,7 +394,7 @@ mod tests {
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let mut store: ArtifactStore<Procedural3dSnapshot, Procedural3dMutation> = ArtifactStore::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", Procedural3dSnapshot::default(), None));
+        let mut store: ArtifactStore<Procedural3dSnapshot, Procedural3dMutation> = ArtifactStore::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", Procedural3dSnapshot::default(), None)).expect("valid artifact store fixture");
         use crate::artifacts::procedural3d::mutations::create_widget::mutation::CreateWidget;
         store.dispatch(ArtifactCommand::Apply { mutations: vec![Procedural3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None }).expect("apply");
         let edit: &Edit<Procedural3dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");

@@ -1,0 +1,13 @@
+{
+  "title": "Artifact Viewers and Editors per Subset",
+  "emoji": "👁️",
+  "status": "open",
+  "description": "Replace the general app system with a specific one: every artifact subset owns a viewer (read-only) and an editor, both shaped like today's apps (🎭️modes/\u003cmode\u003e/🪟️windows/\u003cwindow\u003e/ with 🦀️component.rs + 🟦️component.ts leaves) and living beside the subset's 🧬️schema/🚪️io/📚️examples at 🗿️artifacts/\u003ckind\u003e/🏅️standards/🔖️\u003cv\u003e/🪆️subsets/\u003csubset\u003e/👁️viewer and /✏️editor. Plugins may register viewers/editors for subsets they do not own by mirroring the owner's path under their own 🗿️artifacts (marked x-semio.contribution, runtime via .depends_on + contribution router). The user can open any artifact in any registered viewer/editor (\"Open with…\") and configure per-subset defaults, persisted event-sourced in the OS 🎚️config lane (OpeningPreferences, set-default-app/clear-default-app mutations). SDK splits ArtifactApp into ArtifactEditor and a new ArtifactViewer whose ViewEmit makes artifact mutations unrepresentable; VcsArtifactApp enforces read-only at runtime. Hosts gain an AppRouter + OpeningResolver in Rust (wasmtime) and TypeScript (browser) parity; both shells (React + wgpu) get role-aware sessions, read-only chrome, Open with… and a Default apps settings tab, en/de. 🎛️apps is dissolved repo-wide; 🔣️taxonomy.json gains surface vocabulary (👁️viewer/✏️editor/surface*) and retires app* keys, with all three validators (root 📜️script.ts policies, 📇️registry/📜️script.ts, Rust taxonomy gate) taught the new shape and .vscode/launch.json regenerated. Master plan: 📋️master-plan.md in this ticket folder.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2559"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪ab4cb6847f8b415ca635584c4cf740bf"
+  ]
+}

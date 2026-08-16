@@ -42,7 +42,7 @@ mod tests {
     fn store_roundtrips_through_document_text() {
         let initial = default_remodel_scene();
         let envelope = store::create_document_envelope("test/v1", "test", initial, None);
-        let mut store = store::ArtifactStore::new(envelope);
+        let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         let mut feature_params = store.snapshot().expect("initial projection").params.feature;
         feature_params.target_count = 12345;
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::artifacts::remodel::mutations::update_feature_params(feature_params)], description: None }).expect("apply");

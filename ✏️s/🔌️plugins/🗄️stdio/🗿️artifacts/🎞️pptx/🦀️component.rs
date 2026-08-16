@@ -38,8 +38,10 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = crate::registry::format_descriptors_for("pptx")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::pptx::schema::pptx_artifact_schema_descriptor())
+        .formats(formats)
         .inferences([crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::inferences::pptx_artifact_inference_descriptor()])
         .composers(crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::io_registry::entries())
         .subset_validators(pptx_subset_validators())

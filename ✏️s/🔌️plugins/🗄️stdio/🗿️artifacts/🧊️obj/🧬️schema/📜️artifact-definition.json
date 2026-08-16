@@ -81,6 +81,126 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.obj.runtime.codec.codec-stdio-obj-extension-obj.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.obj|extension:obj",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.obj"
+        },
+        {
+          "namespace": "extension",
+          "value": "obj"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.obj.runtime.composer.dialect-s-stdio-obj-3-0.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.obj@3.0/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.obj@3.0/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.obj.runtime.grammar.grammar-stdio-obj.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.obj",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.obj"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.obj.runtime.grammar.grammar-stdio-obj-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.obj.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.obj.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.obj.runtime.grammar.grammar-stdio-obj-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.obj.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.obj.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.obj.runtime.grammar.grammar-stdio-obj-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.obj.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.obj.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.obj.runtime.grammar.grammar-stdio-obj-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.obj.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.obj.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.obj.runtime.inference.schema-s-stdio-obj-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.obj.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.obj.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.obj.runtime.representation.mime-model-obj-extension-obj.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:model/obj|extension:.obj",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "model/obj"
+        },
+        {
+          "namespace": "extension",
+          "value": ".obj"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.obj.runtime.schema.schema-s-stdio-obj.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.obj",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.obj"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

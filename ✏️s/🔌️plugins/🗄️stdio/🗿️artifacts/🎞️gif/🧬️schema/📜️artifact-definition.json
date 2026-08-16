@@ -69,6 +69,21 @@
       "aliases": [],
       "neutral": true,
       "status": "declared"
+    },
+    {
+      "id": "s.stdio.gif.standard.89a.representation.document",
+      "standard": "s.stdio.gif.standard.89a",
+      "representation": "document",
+      "mimes": [
+        "image/gif"
+      ],
+      "extensions": [
+        ".gif"
+      ],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
+      "status": "declared"
     }
   ],
   "codecs": [],
@@ -104,6 +119,7 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

@@ -790,11 +790,8 @@ mod native_actor {
     /// @emoji 📁️ A folder/file binding's storage driver, keyed for multi-document sqlite or single
     /// pack-backed blob. Both variants move real `pack`+`spr` bytes end to end — this actor never
     /// touches JSON. `Sqlite` is fully codec-free (its row IS the pack+spr pair, no bridging
-    /// needed). `Pack` (file) needs a codec ONLY for the `.dsl`/`.ops` text mirrors — logging, not
-    /// truth — and for the hand-authored/imported fallback when no `.pack` exists yet
-    /// (`compile_dsl`); a missing codec there degrades to pack+spr-only persistence (mirrors
-    /// skipped, with a caller-visible warning), never a hard failure, since the mirrors are not
-    /// load-bearing.
+    /// needed). `Pack` requires the schema codec for both authoritative DSL fallback validation
+    /// and synchronized text mirrors.
     enum FolderEndpoint {
         Sqlite { storage: FolderSqliteStorage, document_id: String, schema: String },
         Pack { storage: FolderTextStorage, document_id: String, extension: String, schema: String },
@@ -815,9 +812,9 @@ mod native_actor {
                     let Some(text_files) = storage.read(document_id, extension).map_err(|error| error.to_string())? else {
                         return Ok(None);
                     };
-                    let Some(codec) = crate::os_store::document_codec(schema) else {
-                        return Err(format!("no document codec registered for schema {schema:?} — cannot compile the DSL-only fallback"));
-                    };
+                    let codec = crate::os_store::document_codec(schema)
+                        .map_err(|error| error.to_string())?
+                        .ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot compile the DSL-only fallback"))?;
                     let (pack_files, _dsl_mirror) = (codec.compile_dsl)(&text_files.dsl, &text_files.ops).map_err(|error| error.to_string())?;
                     Ok(Some((pack_files.pack, pack_files.spr)))
                 }
@@ -826,15 +823,14 @@ mod native_actor {
 
         /// @emoji ✍️ Persists the authoritative `pack`+`spr` pair. `Sqlite` needs no codec at all;
         /// `Pack` additionally writes the `.dsl`/`.ops` logging mirrors when a codec is registered
-        /// (silently skipped otherwise — the pack+spr write below already succeeded).
+        /// and schema codec; a missing or unavailable codec aborts the write before storage changes.
         fn write(&self, pack: &[u8], spr: &[u8]) -> Result<(), String> {
             match self {
                 FolderEndpoint::Sqlite { storage, document_id, schema } => storage.write(document_id, schema, pack, spr).map_err(|error| error.to_string()),
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
-                    let Some(codec) = crate::os_store::document_codec(schema) else {
-                        let pack_files = crate::os_store::ArtifactPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
-                        return storage.write_pack(document_id, extension, &pack_files, "").map_err(|error| error.to_string());
-                    };
+                    let codec = crate::os_store::document_codec(schema)
+                        .map_err(|error| error.to_string())?
+                        .ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot persist synchronized pack mirrors"))?;
                     let mirror = (codec.print_mirror)(pack, spr).map_err(|error| error.to_string())?;
                     let pack_files = crate::os_store::ArtifactPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
                     storage.write_pack(document_id, extension, &pack_files, &mirror.dsl).map_err(|error| error.to_string())
@@ -2272,7 +2268,7 @@ mod tests {
     fn ensure_demo_codec_registered() {
         static ONCE: std::sync::Once = std::sync::Once::new();
         ONCE.call_once(|| {
-            register_document_codec(ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1"));
+            register_document_codec(ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1")).expect("register demo codec");
         });
     }
 
@@ -2299,7 +2295,7 @@ mod tests {
     #[test]
     fn receive_materializes_remote_envelope_into_the_edit_timeline() {
         let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let store = ArtifactStore::new(envelope);
+        let store = ArtifactStore::new(envelope).expect("valid receive fixture");
         let mut session = SyncSession::new(store);
         session.receive(sample_operation_envelope("edit-1", 5)).expect("receive");
         assert_eq!(session.store.snapshot().expect("snapshot").n, 5);
@@ -2309,7 +2305,7 @@ mod tests {
     #[test]
     fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
         let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let store = ArtifactStore::new(envelope);
+        let store = ArtifactStore::new(envelope).expect("valid out-of-order fixture");
         let mut session = SyncSession::new(store);
         let first = sample_operation_envelope("edit-1", 5);
         let mut second = sample_operation_envelope("edit-2", 9);
@@ -2709,7 +2705,7 @@ mod tests {
             let host = ArtifactHost::new();
             let channels = host.open(ArtifactActorConfig { document_id: "doc-a".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() });
             let mut events = host.subscribe("doc-a");
-            let mut store = ArtifactStore::new(demo_envelope("doc-a"));
+            let mut store = ArtifactStore::new(demo_envelope("doc-a")).expect("valid actor fixture");
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
 
             // A local apply establishes a persisted edit on disk.
@@ -2892,7 +2888,7 @@ mod tests {
                 watch_external: false,
                 actor: "A".into(),
             });
-            let mut store_a = ArtifactStore::new(demo_envelope("shared"));
+            let mut store_a = ArtifactStore::new(demo_envelope("shared")).expect("valid shared actor A fixture");
             store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
 
             let host_b = ArtifactHost::new();
@@ -2904,7 +2900,7 @@ mod tests {
                 actor: "B".into(),
             });
             let mut events_b = host_b.subscribe("shared");
-            let mut store_b = ArtifactStore::new(demo_envelope("shared"));
+            let mut store_b = ArtifactStore::new(demo_envelope("shared")).expect("valid shared actor B fixture");
             store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
 
             // Give both actors time to connect + Hello.
@@ -2940,7 +2936,7 @@ mod tests {
                 watch_external: false,
                 actor: "A".into(),
             });
-            let mut store_a = ArtifactStore::new(demo_envelope("catchup"));
+            let mut store_a = ArtifactStore::new(demo_envelope("catchup")).expect("valid catchup actor A fixture");
             store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
@@ -2956,7 +2952,7 @@ mod tests {
             let channels_b =
                 host_b.open(ArtifactActorConfig { document_id: "catchup".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "B".into() });
             let mut events_b = host_b.subscribe("catchup");
-            let mut store_b = ArtifactStore::new(demo_envelope("catchup"));
+            let mut store_b = ArtifactStore::new(demo_envelope("catchup")).expect("valid catchup actor B fixture");
             store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
 
             let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::RemoteMutations { .. })).await;
@@ -2987,13 +2983,13 @@ mod tests {
                 actor: "B".into(),
             });
             let mut events_b = host_b.subscribe("drain");
-            let mut store_b = ArtifactStore::new(demo_envelope("drain"));
+            let mut store_b = ArtifactStore::new(demo_envelope("drain")).expect("valid drain actor B fixture");
             store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
 
             let host_a = ArtifactHost::new();
             let channels_a =
                 host_a.open(ArtifactActorConfig { document_id: "drain".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
-            let mut store_a = ArtifactStore::new(demo_envelope("drain"));
+            let mut store_a = ArtifactStore::new(demo_envelope("drain")).expect("valid drain actor A fixture");
             store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
@@ -3020,7 +3016,7 @@ mod tests {
             let channels =
                 host.open(ArtifactActorConfig { document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
             let mut events = host.subscribe("outcome");
-            let mut store = ArtifactStore::new(demo_envelope("outcome"));
+            let mut store = ArtifactStore::new(demo_envelope("outcome")).expect("valid outcome actor fixture");
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
@@ -3085,13 +3081,15 @@ mod tests {
 
         async fn replay_fixture(fixture: &ActorFixture) {
             ensure_demo_codec_registered();
-            let codec = crate::os_store::document_codec(&fixture.schema).unwrap_or_else(|| panic!("no codec registered for fixture schema {:?}", fixture.schema));
+            let codec = crate::os_store::document_codec(&fixture.schema)
+                .expect("codec registry available")
+                .unwrap_or_else(|| panic!("no codec registered for fixture schema {:?}", fixture.schema));
             let dir = tempfile::tempdir().expect("tempdir");
             let host = ArtifactHost::new();
             let channels =
                 host.open(ArtifactActorConfig { document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() });
             let mut events = host.subscribe(&fixture.document_id);
-            let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None));
+            let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None)).expect("valid fixture store");
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
             let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
             wait_until(&format!("seed snapshot for {} on disk", fixture.document_id), || storage.read(&fixture.document_id).expect("read").is_some()).await;
@@ -3192,7 +3190,7 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
 
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None));
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None)).expect("valid folder store");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply e1");
         let post_e1 = store.snapshot().expect("post-e1");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply e2");
@@ -3205,7 +3203,7 @@ mod tests {
         let (pack, spr) = storage.read("doc-a").expect("read").expect("some");
         let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack, &spr).unwrap_or_else(|error| panic!("parse: {error}"));
         assert_eq!(parsed.snapshot, post_e1, "loaded snapshot must equal post-e1 through the folder storage layer");
-        let mut reloaded = ArtifactStore::new(parsed.envelope);
+        let mut reloaded = ArtifactStore::new(parsed.envelope).expect("valid reloaded history");
         assert_eq!(reloaded.snapshot().expect("reloaded"), post_e1);
 
         reloaded.dispatch(ArtifactCommand::Redo).expect("redo e2 after folder reload");
@@ -3228,7 +3226,7 @@ mod tests {
         let files = print_document_text(seed.envelope()).expect("print document text");
         storage.write("demo", "demo", &files).expect("write");
 
-        let mut store = ArtifactStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).expect("valid text fixture");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
         let first_edit = store.envelope().vcs.edits.last().expect("first edit");
         storage.append_ops("demo", "demo", &print_edit_lines(first_edit).expect("print edit lines")).expect("append ops 1");
@@ -3259,12 +3257,12 @@ mod tests {
         let storage = FolderTextStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read_pack("demo", "demo").expect("read empty"), None, "absent pack reads as None");
 
-        let seed = ArtifactStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
+        let seed = ArtifactStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).expect("valid pack fixture");
         let files = print_document_pack(seed.envelope()).expect("print document pack");
         let dsl_mirror = seed.envelope().vcs.initial_snapshot.print_dsl();
         storage.write_pack("demo", "demo", &files, &dsl_mirror).expect("write pack");
 
-        let mut store = ArtifactStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).expect("valid pack append fixture");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
         let first_edit = store.envelope().vcs.edits.last().expect("first edit");
         storage.append_ops("demo", "demo", &print_edit_lines(first_edit).expect("print edit lines")).expect("append ops 1");

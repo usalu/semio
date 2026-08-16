@@ -155,6 +155,28 @@ export interface Taxonomy {
   /** 🪆️ Required and allowed children of a subset. */
   readonly subsetComponentDirs: readonly string[];
   readonly subsetChildDirs: readonly string[];
+  /** 👁️ Surface dir name for the read-only role. */
+  readonly viewerDirName: string;
+  /** ✏️ Surface dir name for the mutating role. */
+  readonly editorDirName: string;
+  /** 👁️✏️ The closed role vocabulary a surface may carry — also the `AppRole` wire strings. */
+  readonly surfaceRoles: readonly string[];
+  /** 👁️✏️ Role → on-disk surface dir name; the canonical single source for the mapping. */
+  readonly surfaceDirNames: Readonly<Record<string, string>>;
+  /** 👁️✏️ STRUCTURAL set: surface dirs a subset may carry. */
+  readonly subsetSurfaceDirs: readonly string[];
+  /** 👁️✏️ COMPLETENESS set: surface dirs every OWNED subset must carry. */
+  readonly subsetRequiredSurfaceDirs: readonly string[];
+  /** 👁️✏️ The only dirs a CONTRIBUTED (foreign-kind) subset mirror may carry — never schema or io. */
+  readonly contributedSubsetChildDirs: readonly string[];
+  /** 👁️✏️ STRUCTURAL set: every directory allowed directly below a surface. */
+  readonly surfaceChildDirs: readonly string[];
+  /** 👁️✏️ COMPLETENESS set: surface children that must exist even when empty. */
+  readonly surfaceRequiredChildDirs: readonly string[];
+  /** 👁️✏️ IMPLEMENTATION set: language leaves every surface root must carry. */
+  readonly surfaceComponentLangs: readonly string[];
+  /** 🔣️ Normative JSON Schema leaf per surface schema facet path — the surface twin of `appSchemaSpecFilenames`. */
+  readonly surfaceSchemaSpecFilenames: Readonly<Record<string, string>>;
   /** 🪆️ Allowed subset archetypes: owning owns types; derived reuses types + conformance gate. */
   readonly subsetArchetypes?: readonly string[];
   /** ⚖️ Allowed IO fidelity class names a subset may declare. */
@@ -218,6 +240,8 @@ export interface Taxonomy {
   readonly windowRequiredChildDirs: readonly string[];
   /** 🌐️ IMPLEMENTATION set: language component leaves every concrete capability member must carry. */
   readonly windowComponentLangs: readonly string[];
+  /** 🪟️ IMPLEMENTATION set: language leaves the window ROOT itself must carry (facet items use `windowComponentLangs`). */
+  readonly windowLeafLangs: readonly string[];
   /** 📌️ Tracked marker used only when a required window facet has no specific items. */
   readonly windowEmptyFacetFilename: string;
   readonly taxonomyLeafParentDirs: readonly string[];
@@ -759,6 +783,69 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
     if (!taxonomy.windowRequiredChildDirs.includes(lane)) problems.push(`windowRequiredChildDirs must include the state lane "${lane}".`);
   }
   //#endregion StateLaneContract
+  //#region SurfaceContract
+  // 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: a surface is a subset facet with a
+  // role, carrying the same mode/window shape 🎛️apps used. `surfaceRoles` is the closed role
+  // vocabulary AND the `AppRole` wire strings, so a drift here is a drift in the manifest enum.
+  const surfaceRoleWords = ["viewer", "editor"] as const;
+  if (!Array.isArray(taxonomy.surfaceRoles) || taxonomy.surfaceRoles.length !== surfaceRoleWords.length || surfaceRoleWords.some((role, index) => taxonomy.surfaceRoles[index] !== role)) {
+    problems.push(`surfaceRoles must be exactly ${JSON.stringify(surfaceRoleWords)} in that order — it is the AppRole declaration order and the u8 channel tag.`);
+  }
+  if (taxonomy.surfaceDirNames?.viewer !== taxonomy.viewerDirName) problems.push(`surfaceDirNames.viewer must equal viewerDirName.`);
+  if (taxonomy.surfaceDirNames?.editor !== taxonomy.editorDirName) problems.push(`surfaceDirNames.editor must equal editorDirName.`);
+  for (const role of taxonomy.surfaceRoles ?? []) {
+    if (!taxonomy.surfaceDirNames?.[role]) problems.push(`surfaceDirNames is missing role "${role}".`);
+  }
+  for (const [name, dirs] of [
+    ["subsetSurfaceDirs", taxonomy.subsetSurfaceDirs],
+    ["subsetRequiredSurfaceDirs", taxonomy.subsetRequiredSurfaceDirs],
+    ["contributedSubsetChildDirs", taxonomy.contributedSubsetChildDirs],
+  ] as const) {
+    if (!Array.isArray(dirs) || dirs.length === 0) {
+      problems.push(`${name} must be a non-empty array.`);
+      continue;
+    }
+    for (const dir of dirs) {
+      if (!Object.values(taxonomy.surfaceDirNames ?? {}).includes(dir)) problems.push(`${name} member "${dir}" is not a declared surfaceDirNames value.`);
+      if (!taxonomy.subsetChildDirs.includes(dir)) problems.push(`${name} member "${dir}" is missing from subsetChildDirs.`);
+    }
+    if (new Set(dirs).size !== dirs.length) problems.push(`${name} contains duplicate members.`);
+  }
+  if (!Array.isArray(taxonomy.surfaceChildDirs) || taxonomy.surfaceChildDirs.length === 0) {
+    problems.push(`surfaceChildDirs must be a non-empty array.`);
+  } else if (!taxonomy.surfaceChildDirs.includes(taxonomy.modesDirName)) {
+    problems.push(`surfaceChildDirs must include "${taxonomy.modesDirName}" — a surface owns its modes.`);
+  }
+  if (!Array.isArray(taxonomy.surfaceRequiredChildDirs) || taxonomy.surfaceRequiredChildDirs.length === 0) {
+    problems.push(`surfaceRequiredChildDirs must be a non-empty array.`);
+  } else {
+    for (const dir of taxonomy.surfaceRequiredChildDirs) {
+      if (!taxonomy.surfaceChildDirs.includes(dir)) problems.push(`surfaceRequiredChildDirs member "${dir}" is missing from surfaceChildDirs — the structural set must be a superset of the completeness set.`);
+    }
+    for (const lane of stateLaneDirs) {
+      if (!taxonomy.surfaceRequiredChildDirs.includes(lane)) problems.push(`surfaceRequiredChildDirs must include the state lane "${lane}".`);
+    }
+  }
+  for (const [name, langs] of [
+    ["surfaceComponentLangs", taxonomy.surfaceComponentLangs],
+    ["windowLeafLangs", taxonomy.windowLeafLangs],
+  ] as const) {
+    if (!Array.isArray(langs) || langs.length === 0) {
+      problems.push(`${name} must be a non-empty array.`);
+      continue;
+    }
+    for (const lang of langs) {
+      if (!taxonomy.langs.includes(lang)) problems.push(`${name} member "${lang}" is not a declared lang.`);
+      if (!taxonomy.taxonomyLeafFilenames[lang]) problems.push(`${name} member "${lang}" has no taxonomyLeafFilenames entry.`);
+    }
+  }
+  const normativeSurfaceSchemaLeaf = taxonomy.schemaFormats["🔣️jsonschema"]?.leafFilename;
+  for (const [facet, specName] of Object.entries(taxonomy.surfaceSchemaSpecFilenames ?? {})) {
+    const [lane] = facet.split("/");
+    if (!lane || !taxonomy.surfaceChildDirs.includes(lane)) problems.push(`surfaceSchemaSpecFilenames key "${facet}" does not start with a declared surfaceChildDirs member.`);
+    if (specName !== normativeSurfaceSchemaLeaf) problems.push(`surfaceSchemaSpecFilenames["${facet}"] = ${JSON.stringify(specName)} must be the normative schemaFormats["🔣️jsonschema"] leaf ${JSON.stringify(normativeSurfaceSchemaLeaf)}.`);
+  }
+  //#endregion SurfaceContract
   //#endregion SchemaFacetContract
   for (const lang of taxonomy.langs) {
     const ecosystem = taxonomy.ecosystems[lang];

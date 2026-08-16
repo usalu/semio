@@ -230,7 +230,7 @@ mod tests {
     #[test]
     fn nakagin_document_text_round_trips_store_with_applied_operation() {
         let envelope = create_document_envelope_for_test();
-        let mut doc_store = store::ArtifactStore::new(envelope);
+        let mut doc_store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![rename_node("node-1".into(), "Renamed".into())], description: None }).ok();
         ::store::os_store::test_support::assert_document_text_round_trip(&doc_store);
         ::store::os_store::test_support::assert_document_pack_round_trip(&doc_store);

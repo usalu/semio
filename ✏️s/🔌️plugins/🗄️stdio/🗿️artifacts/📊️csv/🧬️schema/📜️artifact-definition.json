@@ -81,6 +81,126 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.csv.runtime.codec.codec-stdio-csv-extension-csv.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.csv|extension:csv",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.csv"
+        },
+        {
+          "namespace": "extension",
+          "value": "csv"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.csv.runtime.composer.dialect-s-stdio-csv-rfc4180.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.csv@rfc4180/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.csv@rfc4180/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.csv.runtime.grammar.grammar-stdio-csv.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.csv",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.csv"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.csv.runtime.grammar.grammar-stdio-csv-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.csv.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.csv.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.csv.runtime.grammar.grammar-stdio-csv-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.csv.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.csv.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.csv.runtime.grammar.grammar-stdio-csv-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.csv.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.csv.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.csv.runtime.grammar.grammar-stdio-csv-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.csv.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.csv.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.csv.runtime.inference.schema-s-stdio-csv-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.csv.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.csv.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.csv.runtime.representation.mime-text-csv-extension-csv.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:text/csv|extension:.csv",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "text/csv"
+        },
+        {
+          "namespace": "extension",
+          "value": ".csv"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.csv.runtime.schema.schema-s-stdio-csv.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.csv",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.csv"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

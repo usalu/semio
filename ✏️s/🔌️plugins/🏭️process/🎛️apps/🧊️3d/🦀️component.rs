@@ -224,7 +224,9 @@ impl ArtifactApp for Process3dPlayApp {
     /// shadows the trait's provided body for every port on this app, not just the new one).
     fn export_media(port: &str, doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
-            "brep:out" => match crate::artifacts::process3d::io::export_process3d_model(&crate::artifacts::process3d::process_working_scene_from_snapshot(doc.snapshot), doc.snapshot.resolved_up_to, "step") {
+            "brep:out" => match crate::artifacts::process3d::io::export_process3d_model(&crate::artifacts::process3d::process_working_scene_from_snapshot(doc.snapshot), doc.snapshot.resolved_up_to, "step")
+                .map_err(|error| MediaError::Payload("brep:out".into(), error))?
+            {
                 Some(export) => {
                     let text = match export.data {
                         Value::String(text) => text,

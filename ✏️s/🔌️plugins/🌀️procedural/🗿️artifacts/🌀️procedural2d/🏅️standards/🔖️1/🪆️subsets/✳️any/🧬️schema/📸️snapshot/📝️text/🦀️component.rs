@@ -441,7 +441,7 @@ mod tests {
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let mut store: ArtifactStore<Procedural2dSnapshot, Procedural2dMutation> = ArtifactStore::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", Procedural2dSnapshot::default(), None));
+        let mut store: ArtifactStore<Procedural2dSnapshot, Procedural2dMutation> = ArtifactStore::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", Procedural2dSnapshot::default(), None)).expect("valid artifact store fixture");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::procedural2d::op::replace_widget(Widget::InputNote { id: "note-9".into(), text: String::new() })], description: None }).expect("apply");
         let edit: &Edit<Procedural2dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         test_support::assert_command_envelope_round_trip::<Procedural2dSnapshot, Procedural2dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));

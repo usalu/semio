@@ -1380,7 +1380,7 @@ describe("loadTaxonomy", () => {
     expect(taxonomy.standardComponentDirs).toEqual(["🪆️subsets"]);
     expect(taxonomy.standardChildDirs).toEqual(["🪆️subsets"]);
     expect(taxonomy.subsetComponentDirs).toEqual(["🧬️schema", "🚪️io"]);
-    expect(taxonomy.subsetChildDirs).toEqual(["🧬️schema", "🚪️io", "📚️examples"]);
+    expect(taxonomy.subsetChildDirs).toEqual(["🧬️schema", "🚪️io", "📚️examples", "👁️viewer", "✏️editor"]);
     expect(taxonomy.subsetArchetypes).toEqual(["owning", "derived"]);
     expect(taxonomy.ioFidelityClasses).toEqual(["exact", "canonical", "semantic", "lossy"]);
     expect([
@@ -1492,6 +1492,48 @@ describe("validateTaxonomy", () => {
     expect(validateTaxonomy({ ...taxonomy, ioSemanticCollectionDirNames: ["💡️inferences"] }).some((problem) => problem.includes('must include "🧬️mutations"'))).toBe(true);
   });
 
+  test("declares the surface vocabulary ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET froze", () => {
+    const taxonomy = loadTaxonomy();
+    expect(taxonomy.schemaVersion).toBe(5);
+    expect(taxonomy.viewerDirName).toBe("👁️viewer");
+    expect(taxonomy.editorDirName).toBe("✏️editor");
+    expect(taxonomy.surfaceRoles).toEqual(["viewer", "editor"]);
+    expect(taxonomy.surfaceDirNames).toEqual({ viewer: "👁️viewer", editor: "✏️editor" });
+    expect(taxonomy.subsetChildDirs).toContain("👁️viewer");
+    expect(taxonomy.subsetChildDirs).toContain("✏️editor");
+    expect(taxonomy.subsetRequiredSurfaceDirs).toEqual(["👁️viewer", "✏️editor"]);
+    expect(taxonomy.contributedSubsetChildDirs).toEqual(["👁️viewer", "✏️editor"]);
+    expect(taxonomy.surfaceChildDirs).toContain(taxonomy.modesDirName);
+    expect(taxonomy.surfaceComponentLangs).toEqual(["🦀️rust", "🟦️typescript"]);
+    expect(taxonomy.windowLeafLangs).toEqual(["🦀️rust", "🟦️typescript"]);
+  });
+
+  test("surfaceRoles order is load-bearing — it is the AppRole declaration order and the u8 channel tag", () => {
+    const taxonomy = loadTaxonomy();
+    const swapped = { ...taxonomy, surfaceRoles: ["editor", "viewer"] };
+    expect(validateTaxonomy(swapped).some((problem) => problem.includes("surfaceRoles must be exactly"))).toBe(true);
+  });
+
+  test("a surface dir name and its role mapping cannot drift apart", () => {
+    const taxonomy = loadTaxonomy();
+    const drifted = { ...taxonomy, surfaceDirNames: { ...taxonomy.surfaceDirNames, viewer: "🫣️viewer" } };
+    expect(validateTaxonomy(drifted).some((problem) => problem.includes("surfaceDirNames.viewer must equal viewerDirName"))).toBe(true);
+  });
+
+  test("a required surface child dir must be in the structural set and cover every state lane", () => {
+    const taxonomy = loadTaxonomy();
+    const missingStructural = { ...taxonomy, surfaceChildDirs: taxonomy.surfaceChildDirs.filter((dir) => dir !== "🎚️config") };
+    expect(validateTaxonomy(missingStructural).some((problem) => problem.includes("surfaceRequiredChildDirs member \"🎚️config\" is missing from surfaceChildDirs"))).toBe(true);
+    const missingLane = { ...taxonomy, surfaceRequiredChildDirs: taxonomy.surfaceRequiredChildDirs.filter((dir) => dir !== "👥️presence") };
+    expect(validateTaxonomy(missingLane).some((problem) => problem.includes("surfaceRequiredChildDirs must include the state lane \"👥️presence\""))).toBe(true);
+  });
+
+  test("a surface dir declared outside subsetChildDirs is rejected", () => {
+    const taxonomy = loadTaxonomy();
+    const orphaned = { ...taxonomy, subsetChildDirs: taxonomy.subsetChildDirs.filter((dir) => dir !== "✏️editor") };
+    expect(validateTaxonomy(orphaned).some((problem) => problem.includes("is missing from subsetChildDirs"))).toBe(true);
+  });
+
   test("reports an area state outside the declared enum", () => {
     const taxonomy = loadTaxonomy();
     const broken = { ...taxonomy, areas: { ...taxonomy.areas, "🧰️framework": "taxonomy" as never } };
@@ -1506,8 +1548,8 @@ describe("validateTaxonomy", () => {
 
   test("reports a completeness dir missing from the structural set", () => {
     const taxonomy = loadTaxonomy();
-    const broken = { ...taxonomy, artifactChildDirs: taxonomy.artifactChildDirs.filter((dir) => dir !== "📡️spr") };
-    expect(validateTaxonomy(broken).some((problem) => problem.includes("📡️spr"))).toBe(true);
+    const broken = { ...taxonomy, artifactChildDirs: taxonomy.artifactChildDirs.filter((dir) => dir !== "🚪️io") };
+    expect(validateTaxonomy(broken).some((problem) => problem.includes("🚪️io"))).toBe(true);
   });
 
   test("rejects explicit artifact lifecycle directories", () => {

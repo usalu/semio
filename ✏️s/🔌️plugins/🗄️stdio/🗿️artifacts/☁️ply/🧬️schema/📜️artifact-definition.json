@@ -81,6 +81,126 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.ply.runtime.codec.codec-stdio-ply-extension-ply.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.ply|extension:ply",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.ply"
+        },
+        {
+          "namespace": "extension",
+          "value": "ply"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ply.runtime.composer.dialect-s-stdio-ply-1-0.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.ply@1.0/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.ply@1.0/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ply.runtime.grammar.grammar-stdio-ply.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.ply",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.ply"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ply.runtime.grammar.grammar-stdio-ply-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.ply.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.ply.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ply.runtime.grammar.grammar-stdio-ply-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.ply.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.ply.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ply.runtime.grammar.grammar-stdio-ply-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.ply.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.ply.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ply.runtime.grammar.grammar-stdio-ply-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.ply.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.ply.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ply.runtime.inference.schema-s-stdio-ply-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.ply.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.ply.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ply.runtime.representation.mime-model-ply-extension-ply.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:model/ply|extension:.ply",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "model/ply"
+        },
+        {
+          "namespace": "extension",
+          "value": ".ply"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ply.runtime.schema.schema-s-stdio-ply.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.ply",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.ply"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

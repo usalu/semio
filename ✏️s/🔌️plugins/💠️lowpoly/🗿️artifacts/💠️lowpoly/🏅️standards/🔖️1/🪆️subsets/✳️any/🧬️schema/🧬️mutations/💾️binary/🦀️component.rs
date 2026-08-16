@@ -47,7 +47,7 @@ mod tests {
         let projection = default_snapshot();
         let object_id = projection.objects[0].id.clone();
         let envelope = store::create_document_envelope::<crate::artifacts::lowpoly::LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "test-doc", projection, None);
-        let mut doc_store = store::ArtifactStore::new(envelope);
+        let mut doc_store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         let operation = LowpolyMutation::RenameObject(rename_object::mutation::RenameObject { id: object_id, new_name: "Renamed Layer".into() });
         doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: None }).expect("apply");
         semio_framework_os_kernel::os_store::test_support::assert_document_text_round_trip(&doc_store);

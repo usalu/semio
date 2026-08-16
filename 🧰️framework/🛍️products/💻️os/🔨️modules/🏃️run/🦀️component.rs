@@ -259,7 +259,13 @@ pub fn media_from_artifact(descriptor: &[u8], data: Vec<u8>, blob_store: &dyn Bl
     let payload = match descriptor.wire {
         MediaWireFormat::Document { schema } => MediaPayload::Structured { schema, json: String::from_utf8(data).map_err(|error| RunError::Host(error.to_string()))? },
         MediaWireFormat::Binary { format_kind } => {
-            let mime = semio_framework::format_descriptor(&format_kind).map(|d| d.mime).unwrap_or_else(|| "application/octet-stream".to_string());
+            let mime = semio_framework::format_descriptor(&format_kind)
+                .map_err(|error| RunError::Host(error.to_string()))?
+                .ok_or_else(|| RunError::Host(format!("unknown media format kind {format_kind:?}")))?
+                .mimes
+                .first()
+                .cloned()
+                .ok_or_else(|| RunError::Host(format!("media format kind {format_kind:?} has no MIME claim")))?;
             let blob_ref = blob_store.put(&data, &mime).map_err(|error| RunError::Host(error.to_string()))?;
             MediaPayload::Binary { format_kind, blob_hash: blob_ref.hash }
         }

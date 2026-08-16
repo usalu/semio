@@ -82,6 +82,148 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.zip.runtime.codec.codec-stdio-zip-extension-zip.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.zip|extension:zip",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.zip"
+        },
+        {
+          "namespace": "extension",
+          "value": "zip"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.zip.runtime.composer.dialect-s-stdio-zip-2-0.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.zip@2.0/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.zip@2.0/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.zip.runtime.composer.dialect-s-stdio-zip-2-0-iso21320.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.zip@2.0/iso21320",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.zip@2.0/iso21320"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.zip.runtime.grammar.grammar-stdio-zip.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.zip",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.zip"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.zip.runtime.grammar.grammar-stdio-zip-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.zip.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.zip.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.zip.runtime.grammar.grammar-stdio-zip-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.zip.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.zip.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.zip.runtime.grammar.grammar-stdio-zip-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.zip.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.zip.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.zip.runtime.grammar.grammar-stdio-zip-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.zip.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.zip.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.zip.runtime.inference.schema-s-stdio-zip-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.zip.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.zip.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.zip.runtime.representation.mime-application-zip-extension-zip.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:application/zip|extension:.zip",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "application/zip"
+        },
+        {
+          "namespace": "extension",
+          "value": ".zip"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.zip.runtime.schema.schema-s-stdio-zip.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.zip",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.zip"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.zip.runtime.subset-validator.dialect-s-stdio-zip-2-0-iso21320.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.zip@2.0/iso21320",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.zip@2.0/iso21320"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

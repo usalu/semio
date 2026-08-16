@@ -1762,7 +1762,7 @@ where
     Mutation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Mutation<P> + protocol::OpBinary + protocol::OpText,
 {
     let parsed = store::parse_document_pack::<P, Mutation>(pack_bytes, spr_bytes).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
-    Ok(store::ArtifactStore::new(parsed.envelope))
+    store::ArtifactStore::new(parsed.envelope).map_err(|error| SpaceZipError::Pack(error.to_string()))
 }
 
 /// 📥️ Puts one imported blob's bytes into a live `store::BlobStore`, verifying the freshly computed
@@ -2393,7 +2393,7 @@ mod tests {
     /// that export->import->export stays byte-stable with real data too.
     #[test]
     fn zip_export_import_round_trips_real_store_documents_and_blob() {
-        let mut nested_space_store = store::ArtifactStore::new(store::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None));
+        let mut nested_space_store = store::ArtifactStore::new(store::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None)).expect("valid artifact store fixture");
         nested_space_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![SpaceMutation::SetName { name: "Nested Space".into() }], description: None }).expect("apply");
         nested_space_store.dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }).expect("commit checkpoint");
         let original_pack_files = nested_space_store.snapshot_pack().expect("snapshot pack");

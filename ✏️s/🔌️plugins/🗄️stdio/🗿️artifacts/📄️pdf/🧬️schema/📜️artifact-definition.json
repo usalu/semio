@@ -70,6 +70,21 @@
       "aliases": [],
       "neutral": true,
       "status": "declared"
+    },
+    {
+      "id": "s.stdio.pdf.standard.1-7.representation.document",
+      "standard": "s.stdio.pdf.standard.1-7",
+      "representation": "document",
+      "mimes": [
+        "application/pdf"
+      ],
+      "extensions": [
+        ".pdf"
+      ],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
+      "status": "declared"
     }
   ],
   "codecs": [],
@@ -103,6 +118,405 @@
       "id": "s.stdio.pdf.conformance-suite.public-corpus",
       "status": "unimplemented",
       "fixtures": []
+    }
+  ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.pdf.runtime.codec.codec-stdio-pdf-1-7-extension-pdf.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.pdf.1.7|extension:pdf",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.pdf.1.7"
+        },
+        {
+          "namespace": "extension",
+          "value": "pdf"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.codec.codec-stdio-pdf-extension-pdf.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.pdf|extension:pdf",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.pdf"
+        },
+        {
+          "namespace": "extension",
+          "value": "pdf"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.composer.dialect-s-stdio-pdf-1-4.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.pdf@1.4/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pdf@1.4/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.composer.dialect-s-stdio-pdf-1-4-a.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.pdf@1.4/a",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pdf@1.4/a"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.composer.dialect-s-stdio-pdf-1-4-x.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.pdf@1.4/x",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pdf@1.4/x"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.composer.dialect-s-stdio-pdf-1-7.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.pdf@1.7/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pdf@1.7/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.composer.dialect-s-stdio-pdf-1-7-a.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.pdf@1.7/a",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pdf@1.7/a"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.composer.dialect-s-stdio-pdf-1-7-e.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.pdf@1.7/e",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pdf@1.7/e"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.composer.dialect-s-stdio-pdf-1-7-h.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.pdf@1.7/h",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pdf@1.7/h"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.composer.dialect-s-stdio-pdf-1-7-ua.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.pdf@1.7/ua",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pdf@1.7/ua"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.composer.dialect-s-stdio-pdf-1-7-vt.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.pdf@1.7/vt",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pdf@1.7/vt"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.composer.dialect-s-stdio-pdf-1-7-x.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.pdf@1.7/x",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pdf@1.7/x"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.grammar.grammar-stdio-pdf.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.pdf",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.pdf"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.grammar.grammar-stdio-pdf-1-7.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.pdf.1.7",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.pdf.1.7"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.grammar.grammar-stdio-pdf-1-7-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.pdf.1.7.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.pdf.1.7.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.grammar.grammar-stdio-pdf-1-7-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.pdf.1.7.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.pdf.1.7.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.grammar.grammar-stdio-pdf-1-7-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.pdf.1.7.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.pdf.1.7.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.grammar.grammar-stdio-pdf-1-7-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.pdf.1.7.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.pdf.1.7.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.grammar.grammar-stdio-pdf-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.pdf.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.pdf.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.grammar.grammar-stdio-pdf-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.pdf.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.pdf.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.grammar.grammar-stdio-pdf-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.pdf.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.pdf.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.grammar.grammar-stdio-pdf-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.pdf.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.pdf.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.inference.schema-s-stdio-pdf-1-7-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.pdf.1.7.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.pdf.1.7.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.inference.schema-s-stdio-pdf-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.pdf.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.pdf.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.representation.mime-application-pdf-extension-pdf.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:application/pdf|extension:.pdf",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "application/pdf"
+        },
+        {
+          "namespace": "extension",
+          "value": ".pdf"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.schema.schema-s-stdio-pdf.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.pdf",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.pdf"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.schema.schema-s-stdio-pdf-1-7.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.pdf.1.7",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.pdf.1.7"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.subset-validator.dialect-s-stdio-pdf-1-4-a.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.pdf@1.4/a",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pdf@1.4/a"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.subset-validator.dialect-s-stdio-pdf-1-4-x.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.pdf@1.4/x",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pdf@1.4/x"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.subset-validator.dialect-s-stdio-pdf-1-7-a.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.pdf@1.7/a",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pdf@1.7/a"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.subset-validator.dialect-s-stdio-pdf-1-7-e.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.pdf@1.7/e",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pdf@1.7/e"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.subset-validator.dialect-s-stdio-pdf-1-7-h.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.pdf@1.7/h",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pdf@1.7/h"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.subset-validator.dialect-s-stdio-pdf-1-7-ua.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.pdf@1.7/ua",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pdf@1.7/ua"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.subset-validator.dialect-s-stdio-pdf-1-7-vt.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.pdf@1.7/vt",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pdf@1.7/vt"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pdf.runtime.subset-validator.dialect-s-stdio-pdf-1-7-x.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.pdf@1.7/x",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pdf@1.7/x"
+        }
+      ]
     }
   ],
   "support_ledger": {

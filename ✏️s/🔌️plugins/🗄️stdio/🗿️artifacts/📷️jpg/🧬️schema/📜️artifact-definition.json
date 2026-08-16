@@ -81,6 +81,148 @@
       "fixtures": []
     }
   ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.jpg.runtime.codec.codec-stdio-jpg-extension-jpg.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec:stdio.jpg|extension:jpg",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.jpg"
+        },
+        {
+          "namespace": "extension",
+          "value": "jpg"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.runtime.composer.dialect-s-stdio-jpg-jfif-1-01.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.jpg@jfif-1.01/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.jpg@jfif-1.01/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.runtime.composer.dialect-s-stdio-jpg-jfif-1-01-baseline.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.jpg@jfif-1.01/baseline",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.jpg@jfif-1.01/baseline"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.runtime.grammar.grammar-stdio-jpg.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.jpg",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.jpg"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.runtime.grammar.grammar-stdio-jpg-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.jpg.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.jpg.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.runtime.grammar.grammar-stdio-jpg-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.jpg.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.jpg.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.runtime.grammar.grammar-stdio-jpg-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.jpg.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.jpg.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.runtime.grammar.grammar-stdio-jpg-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.jpg.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.jpg.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.runtime.inference.schema-s-stdio-jpg-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.jpg.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.jpg.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.runtime.representation.mime-image-jpeg-extension-jpg.v1",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:image/jpeg|extension:.jpg",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "image/jpeg"
+        },
+        {
+          "namespace": "extension",
+          "value": ".jpg"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.runtime.schema.schema-s-stdio-jpg.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.jpg",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.jpg"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.runtime.subset-validator.dialect-s-stdio-jpg-jfif-1-01-baseline.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.jpg@jfif-1.01/baseline",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.jpg@jfif-1.01/baseline"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

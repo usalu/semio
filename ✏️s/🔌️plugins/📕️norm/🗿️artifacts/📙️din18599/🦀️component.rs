@@ -213,13 +213,28 @@ pub mod io_registry {
 /// the old side-effecting `register()`/`register_pilot_languages()`/`register_artifact_schema()`/
 /// `register_artifact_inferences()`/`register_io()`, each of which called a global registry directly
 /// from the plugin root's `.setup()` fan-out (`register_norm_exports`, deleted by this same wave).
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.din18599")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    crate::artifacts::definition::schema_owned_definition(
+        "s.din18599",
+        crate::artifacts::din18599::schema::din18599_artifact_schema_descriptor().id,
+        crate::artifacts::din18599::standards::v1::subsets::any::schema::inferences::din18599_artifact_inference_descriptor().id,
+        crate::artifacts::din18599::standards::v1::subsets::any::io::io_registry::entries(),
+        pilot_languages(),
+        crate::apps::din18599::DOCUMENT_SCHEMA,
+        <Din18599Snapshot as store::ArtifactDsl>::EXTENSION,
+        "DIN V 18599 energy performance of buildings",
+        "DIN V 18599 Energetische Bewertung von Gebäuden",
+    )
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::din18599::schema::din18599_artifact_schema_descriptor())
         .inferences([crate::artifacts::din18599::standards::v1::subsets::any::schema::inferences::din18599_artifact_inference_descriptor()])
         .composers(crate::artifacts::din18599::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .build()
+        .document_codec::<crate::apps::din18599::Din18599PlayApp>()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once

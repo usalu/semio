@@ -35,6 +35,10 @@ pub enum PluginHostError {
     Wasmtime(String),
     #[error("plugin: {0}")]
     Plugin(String),
+    #[error("io route conflict for {key:?}: {existing_plugin} already owns it; {incoming_plugin} cannot replace it")]
+    IoRouteConflict { key: semio_framework::IoKey, existing_plugin: String, incoming_plugin: String },
+    #[error("plugin runtime conflict for {plugin_id}")]
+    PluginRuntimeConflict { plugin_id: String },
     #[error("{0} lock poisoned")]
     LockPoisoned(&'static str),
 }
@@ -87,7 +91,7 @@ impl SessionLanePack {
             self.pending_binary_ops = ops;
             return;
         };
-        let Some(codec) = store::document_codec(schema) else {
+        let Ok(Some(codec)) = store::document_codec(schema) else {
             self.pending_binary_ops = ops;
             return;
         };
@@ -148,13 +152,17 @@ const DEFAULT_ENGINE_CACHE_BUDGET_BYTES: usize = 64 * 1024 * 1024;
 /// dialects` on every plugin as it loads, mapping each key to the plugin id that owns it, plus a
 /// handle to that plugin's own `WasmPluginRuntime` to actually forward the call.
 pub struct IoRouter {
-    routes: Mutex<HashMap<semio_framework::IoKey, String>>,
-    runtimes: Mutex<HashMap<String, Arc<WasmPluginRuntime>>>,
+    state: Mutex<IoRouterState>,
+}
+
+struct IoRouterState {
+    routes: HashMap<semio_framework::IoKey, String>,
+    runtimes: HashMap<String, Arc<WasmPluginRuntime>>,
 }
 
 impl IoRouter {
     pub fn new() -> Self {
-        Self { routes: Mutex::new(HashMap::new()), runtimes: Mutex::new(HashMap::new()) }
+        Self { state: Mutex::new(IoRouterState { routes: HashMap::new(), runtimes: HashMap::new() }) }
     }
 
     /// 📌️ Registers one already-loaded plugin's runtime + merges its composer roster into the
@@ -162,46 +170,54 @@ impl IoRouter {
     pub fn register_plugin(&self, plugin_id: &str, runtime: Arc<WasmPluginRuntime>) -> Result<(), PluginHostError> {
         let wire_bytes = runtime.list_artifact_dialects()?;
         let entries: Vec<(semio_framework::ArtifactDialect, Vec<semio_framework::ArtifactDialect>)> = serde_json::from_slice(&wire_bytes).map_err(PluginHostError::Json)?;
-        let mut routes = self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("io router routes"))?;
+        let mut candidate_routes = Vec::new();
         for (writes, reads) in entries {
             for read in &reads {
-                routes.insert(
-                    semio_framework::IoKey {
-                        artifact_kind: writes.artifact_kind.clone(),
-                        standard: writes.standard.clone(),
-                        subset: writes.subset.clone(),
-                        direction: semio_framework::IoDirection::Import,
-                        format_kind: read.artifact_kind.clone(),
-                        format_standard: read.standard.clone(),
-                        format_subset: read.subset.clone(),
-                    },
-                    plugin_id.to_string(),
-                );
-                routes.insert(
-                    semio_framework::IoKey {
-                        artifact_kind: read.artifact_kind.clone(),
-                        standard: read.standard.clone(),
-                        subset: read.subset.clone(),
-                        direction: semio_framework::IoDirection::Export,
-                        format_kind: writes.artifact_kind.clone(),
-                        format_standard: writes.standard.clone(),
-                        format_subset: writes.subset.clone(),
-                    },
-                    plugin_id.to_string(),
-                );
+                candidate_routes.push(semio_framework::IoKey {
+                    artifact_kind: writes.artifact_kind.clone(),
+                    standard: writes.standard.clone(),
+                    subset: writes.subset.clone(),
+                    direction: semio_framework::IoDirection::Import,
+                    format_kind: read.artifact_kind.clone(),
+                    format_standard: read.standard.clone(),
+                    format_subset: read.subset.clone(),
+                });
+                candidate_routes.push(semio_framework::IoKey {
+                    artifact_kind: read.artifact_kind.clone(),
+                    standard: read.standard.clone(),
+                    subset: read.subset.clone(),
+                    direction: semio_framework::IoDirection::Export,
+                    format_kind: writes.artifact_kind.clone(),
+                    format_standard: writes.standard.clone(),
+                    format_subset: writes.subset.clone(),
+                });
             }
         }
-        drop(routes);
-        self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("io router runtimes"))?.insert(plugin_id.to_string(), runtime);
+        let mut state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
+        if let Some(existing) = state.runtimes.get(plugin_id) {
+            if !Arc::ptr_eq(existing, &runtime) {
+                return Err(PluginHostError::PluginRuntimeConflict { plugin_id: plugin_id.to_owned() });
+            }
+        }
+        for key in &candidate_routes {
+            if let Some(existing_plugin) = state.routes.get(key) {
+                if existing_plugin != plugin_id {
+                    return Err(PluginHostError::IoRouteConflict { key: key.clone(), existing_plugin: existing_plugin.clone(), incoming_plugin: plugin_id.to_owned() });
+                }
+            }
+        }
+        state.runtimes.entry(plugin_id.to_owned()).or_insert(runtime);
+        for key in candidate_routes {
+            state.routes.entry(key).or_insert_with(|| plugin_id.to_owned());
+        }
         Ok(())
     }
 
     /// 📊️ `N plugins / M keys` — logged at boot so a dev-boot smoke test can confirm the router
     /// actually picked up more than zero cross-plugin routes.
-    pub fn stats(&self) -> (usize, usize) {
-        let plugins = self.runtimes.lock().map(|r| r.len()).unwrap_or(0);
-        let keys = self.routes.lock().map(|r| r.len()).unwrap_or(0);
-        (plugins, keys)
+    pub fn stats(&self) -> Result<(usize, usize), PluginHostError> {
+        let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
+        Ok((state.runtimes.len(), state.routes.len()))
     }
 
     /// 🌉️ Routes `key`/`sources` (JSON wire bytes) to whichever OTHER plugin owns `key`. Refuses to
@@ -211,39 +227,38 @@ impl IoRouter {
     /// what keeps a plugin from ever needing to reason about calling back into its own in-flight
     /// `Store` mutex (which would deadlock, since that mutex is already held by the caller of this
     /// very host call).
-    pub fn compose(&self, calling_plugin_id: &str, key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, String> {
-        let key: semio_framework::IoKey = serde_json::from_slice(key_bytes).map_err(|e| format!("bad io key wire bytes: {e}"))?;
-        let owner = {
-            let routes = self.routes.lock().map_err(|_| "io router routes lock poisoned".to_string())?;
-            routes.get(&key).cloned()
-        }
-        .ok_or_else(|| format!("no plugin registered for {}/{}/{} {:?} {}/{}/{}", key.artifact_kind, key.standard, key.subset, key.direction, key.format_kind, key.format_standard, key.format_subset))?;
+    pub fn compose(&self, calling_plugin_id: &str, key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+        let key: semio_framework::IoKey = serde_json::from_slice(key_bytes)?;
+        let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
+        let owner = state
+            .routes
+            .get(&key)
+            .cloned()
+            .ok_or_else(|| PluginHostError::Plugin(format!("no plugin registered for {}/{}/{} {:?} {}/{}/{}", key.artifact_kind, key.standard, key.subset, key.direction, key.format_kind, key.format_standard, key.format_subset)))?;
         if owner == calling_plugin_id {
-            return Err(format!("io-compose refused: plugin `{calling_plugin_id}` would be routing to itself (should have resolved locally)"));
+            return Err(PluginHostError::Plugin(format!("io-compose refused: plugin `{calling_plugin_id}` would be routing to itself (should have resolved locally)")));
         }
-        let runtime = {
-            let runtimes = self.runtimes.lock().map_err(|_| "io router runtimes lock poisoned".to_string())?;
-            runtimes.get(&owner).cloned()
-        }
-        .ok_or_else(|| format!("plugin `{owner}` owns this key but its runtime is not registered with the router"))?;
-        runtime.artifact_compose(key_bytes, sources_bytes).map_err(|error| error.to_string())
+        let runtime = state.runtimes.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("plugin `{owner}` owns this key but its runtime is not registered with the router")))?;
+        drop(state);
+        runtime.artifact_compose(key_bytes, sources_bytes)
     }
 
     /// 📚️ Every dialect ANY loaded plugin can move `artifact_kind` through in `direction`
     /// ("import"|"export"), JSON `Vec<ArtifactDialect>` bytes.
-    pub fn dialects(&self, artifact_kind: &str, direction: &str) -> Result<Vec<u8>, String> {
+    pub fn dialects(&self, artifact_kind: &str, direction: &str) -> Result<Vec<u8>, PluginHostError> {
         let direction = match direction {
             "import" => semio_framework::IoDirection::Import,
             "export" => semio_framework::IoDirection::Export,
-            other => return Err(format!("unknown io direction `{other}` (expected \"import\" or \"export\")")),
+            other => return Err(PluginHostError::Plugin(format!("unknown io direction `{other}` (expected \"import\" or \"export\")"))),
         };
-        let routes = self.routes.lock().map_err(|_| "io router routes lock poisoned".to_string())?;
-        let dialects: Vec<semio_framework::ArtifactDialect> = routes
+        let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
+        let dialects: Vec<semio_framework::ArtifactDialect> = state
+            .routes
             .keys()
             .filter(|key| key.artifact_kind == artifact_kind && key.direction == direction)
             .map(|key| semio_framework::ArtifactDialect { artifact_kind: key.format_kind.clone(), standard: key.format_standard.clone(), subset: key.format_subset.clone() })
             .collect();
-        serde_json::to_vec(&dialects).map_err(|error| error.to_string())
+        serde_json::to_vec(&dialects).map_err(PluginHostError::Json)
     }
 }
 
@@ -270,24 +285,74 @@ pub struct GuestArtifactInferenceMetadata {
     pub policy_version: u32,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct InferenceRouteRequest {
+    wire_version: u32,
+    owner: String,
     artifact_kind: String,
+    artifact_schema: String,
+    artifact_schema_version: u32,
+    document_schema: String,
+    document_schema_version: u32,
     inference_schema: String,
+    inference_schema_version: u32,
+    algorithm_version: u32,
+    policy_version: u32,
     revision: u64,
     generation: u64,
+    source_dialect: String,
+    policy: Vec<u8>,
+    budgets: InferenceRouteBudget,
+    cancellation_id: String,
+    previous_state: Option<Vec<u8>>,
+    requested_cache_mode: InferenceRouteCacheMode,
+    canonical_payload: Vec<u8>,
+    dependencies: Vec<(String, Vec<u8>)>,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct InferenceRouteBudget {
+    allocation_bytes: u64,
+    work_units: u64,
+    recursion_depth: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+enum InferenceRouteCacheMode {
+    Cold,
+    Incremental,
+    Bypass,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct InferenceRouteResult {
+    wire_version: u32,
+    owner: String,
     artifact_kind: String,
+    artifact_schema: String,
+    artifact_schema_version: u32,
+    document_schema: String,
+    document_schema_version: u32,
     inference_schema: String,
+    inference_schema_version: u32,
+    algorithm_version: u32,
+    policy_version: u32,
     revision: u64,
     generation: u64,
-    inference_binary: Vec<u8>,
+    source_dialect: String,
+    policy: Vec<u8>,
+    budgets: InferenceRouteBudget,
+    cancellation_id: String,
+    previous_state: Option<Vec<u8>>,
+    requested_cache_mode: InferenceRouteCacheMode,
+    canonical_payload: Vec<u8>,
+    dependencies: Vec<(String, Vec<u8>)>,
     complete: bool,
+    actual_cache_mode: InferenceRouteCacheMode,
 }
 
 pub struct ArtifactInferenceRouter {
@@ -340,8 +405,29 @@ impl ArtifactInferenceRouter {
 }
 
 fn validate_inference_echo(request: &InferenceRouteRequest, result: &InferenceRouteResult) -> Result<(), PluginHostError> {
-    if result.artifact_kind != request.artifact_kind || result.inference_schema != request.inference_schema || result.revision != request.revision || result.generation != request.generation || !result.complete || result.inference_binary.is_empty() {
-        return Err(PluginHostError::Plugin("guest inference result did not echo the requested schema/revision/generation or was incomplete".into()));
+    if result.wire_version != request.wire_version
+        || result.owner != request.owner
+        || result.artifact_kind != request.artifact_kind
+        || result.artifact_schema != request.artifact_schema
+        || result.artifact_schema_version != request.artifact_schema_version
+        || result.document_schema != request.document_schema
+        || result.document_schema_version != request.document_schema_version
+        || result.inference_schema != request.inference_schema
+        || result.inference_schema_version != request.inference_schema_version
+        || result.algorithm_version != request.algorithm_version
+        || result.policy_version != request.policy_version
+        || result.revision != request.revision
+        || result.generation != request.generation
+        || result.source_dialect != request.source_dialect
+        || result.policy != request.policy
+        || result.budgets != request.budgets
+        || result.cancellation_id != request.cancellation_id
+        || result.previous_state != request.previous_state
+        || result.requested_cache_mode != request.requested_cache_mode
+        || result.dependencies != request.dependencies
+        || result.actual_cache_mode != request.requested_cache_mode
+    {
+        return Err(PluginHostError::Plugin("guest inference result did not exactly echo its request metadata".into()));
     }
     Ok(())
 }
@@ -357,9 +443,55 @@ mod artifact_inference_router_tests {
     use super::*;
 
     #[test]
-    fn stale_or_empty_guest_results_are_never_publishable() {
-        let request = InferenceRouteRequest { artifact_kind: "s.test".into(), inference_schema: "s.test.inference".into(), revision: 7, generation: 9 };
-        let valid = InferenceRouteResult { artifact_kind: request.artifact_kind.clone(), inference_schema: request.inference_schema.clone(), revision: 7, generation: 9, inference_binary: vec![1], complete: true };
+    fn only_exactly_echoed_guest_results_are_publishable() {
+        let request = InferenceRouteRequest {
+            wire_version: 2,
+            owner: "s.test".into(),
+            artifact_kind: "s.test".into(),
+            artifact_schema: "s.test".into(),
+            artifact_schema_version: 1,
+            document_schema: "s.test.document".into(),
+            document_schema_version: 1,
+            inference_schema: "s.test.inference".into(),
+            inference_schema_version: 1,
+            algorithm_version: 1,
+            policy_version: 1,
+            revision: 7,
+            generation: 9,
+            source_dialect: "s.test.standard.v1.dialect.canonical".into(),
+            policy: vec![1],
+            budgets: InferenceRouteBudget { allocation_bytes: 128, work_units: 1, recursion_depth: 1 },
+            cancellation_id: "cancel-1".into(),
+            previous_state: None,
+            requested_cache_mode: InferenceRouteCacheMode::Cold,
+            canonical_payload: vec![1],
+            dependencies: vec![("s.dependency".into(), vec![2])],
+        };
+        let valid = InferenceRouteResult {
+            wire_version: request.wire_version,
+            owner: request.owner.clone(),
+            artifact_kind: request.artifact_kind.clone(),
+            artifact_schema: request.artifact_schema.clone(),
+            artifact_schema_version: request.artifact_schema_version,
+            document_schema: request.document_schema.clone(),
+            document_schema_version: request.document_schema_version,
+            inference_schema: request.inference_schema.clone(),
+            inference_schema_version: request.inference_schema_version,
+            algorithm_version: request.algorithm_version,
+            policy_version: request.policy_version,
+            revision: request.revision,
+            generation: request.generation,
+            source_dialect: request.source_dialect.clone(),
+            policy: request.policy.clone(),
+            budgets: request.budgets.clone(),
+            cancellation_id: request.cancellation_id.clone(),
+            previous_state: request.previous_state.clone(),
+            requested_cache_mode: request.requested_cache_mode.clone(),
+            canonical_payload: request.canonical_payload.clone(),
+            dependencies: request.dependencies.clone(),
+            complete: true,
+            actual_cache_mode: request.requested_cache_mode.clone(),
+        };
         assert!(validate_inference_echo(&request, &valid).is_ok());
         let stale = InferenceRouteResult { generation: 8, ..valid };
         assert!(matches!(validate_inference_echo(&request, &stale), Err(PluginHostError::Plugin(_))));
@@ -512,12 +644,12 @@ impl semio::framework::host::Host for HostState {
 
     fn io_dialects(&mut self, artifact_kind: String, direction: String) -> Result<Vec<u8>, Vec<u8>> {
         let router = self.io_router.as_ref().ok_or_else(|| host_fault_bytes("os.host.io-dialects", "no host io router registered; call register_host_io_router"))?;
-        router.dialects(&artifact_kind, &direction).map_err(|error| host_fault_bytes("os.host.io-dialects", error))
+        router.dialects(&artifact_kind, &direction).map_err(|error| host_fault_bytes("os.host.io-dialects", error.to_string()))
     }
 
     fn io_compose(&mut self, key: Vec<u8>, sources: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
         let router = self.io_router.as_ref().ok_or_else(|| host_fault_bytes("os.host.io-compose", "no host io router registered; call register_host_io_router"))?;
-        router.compose(&self.plugin_id, &key, &sources).map_err(|error| host_fault_bytes("os.host.io-compose", error))
+        router.compose(&self.plugin_id, &key, &sources).map_err(|error| host_fault_bytes("os.host.io-compose", error.to_string()))
     }
 
     fn engine_read(&mut self, engine_id: String, key: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
@@ -1303,7 +1435,7 @@ mod tests {
         router.register_plugin(&stdio_runtime.manifest.plugin_id, Arc::clone(&stdio_runtime)).expect("register stdio plugin");
         router.register_plugin(&cad_runtime.manifest.plugin_id, Arc::clone(&cad_runtime)).expect("register cad plugin");
 
-        let (plugins, keys) = router.stats();
+        let (plugins, keys) = router.stats().expect("router stats");
         assert_eq!(plugins, 2, "both real plugins must be registered with the shared router");
         assert!(keys > 0, "both plugins' real composer rosters must have produced at least one route");
 

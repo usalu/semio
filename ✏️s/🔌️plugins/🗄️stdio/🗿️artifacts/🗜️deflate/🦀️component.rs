@@ -40,8 +40,10 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = crate::registry::format_descriptors_for("deflate")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::deflate::schema::deflate_artifact_schema_descriptor())
+        .formats(formats)
         .inferences([crate::artifacts::deflate::schema::inferences::deflate_artifact_inference_descriptor()])
         .composers(crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())

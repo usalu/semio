@@ -55,8 +55,10 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = crate::registry::format_descriptors_for("svg")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::svg::standards::v1_1::subsets::any::schema::svg_artifact_schema_descriptor())
+        .formats(formats)
         .inferences([crate::artifacts::svg::standards::v1_1::subsets::any::schema::inferences::svg_artifact_inference_descriptor()])
         .composers(crate::artifacts::svg::standards::v1_1::engine::io_registry::entries())
         .subset_validators(declared_subset_validators())

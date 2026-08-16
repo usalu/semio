@@ -55,8 +55,10 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = crate::registry::format_descriptors_for("json")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::json::schema::json_artifact_schema_descriptor())
+        .formats(formats)
         .inferences([crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::inferences::json_artifact_inference_descriptor()])
         .composers(crate::artifacts::json::standards::v_rfc8259::subsets::any::io::io_registry::entries())
         .subset_validators(pilot_subset_validators())
