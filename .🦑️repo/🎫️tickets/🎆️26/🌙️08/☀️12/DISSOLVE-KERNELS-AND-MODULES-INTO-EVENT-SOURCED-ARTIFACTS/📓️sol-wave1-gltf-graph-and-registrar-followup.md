@@ -33,7 +33,7 @@ The demonstrator registrar removes the requested stale topology, text shim, app,
 
 The moved text and binary codec leaves are classified as I/O, not inferences. They are not subjected to the module consumer minimum.
 
-The scoped glTF report is not release-clean. It has 84 structural findings: 37 `manifest-child-missing`, 34 `member-component-leaf-missing`, 8 `collection-authored-behavior`, and 5 `collection-manifest-missing`. These are real owner-wide structural work; no baseline or path exception was added.
+The deterministic census path filter for the glTF owner is not release-clean. It has 84 structural findings: 37 `manifest-child-missing`, 34 `member-component-leaf-missing`, 8 `collection-authored-behavior`, and 5 `collection-manifest-missing`. The current `verify taxonomy report --scope s.stdio.gltf` command incorrectly omits these unregistered collection-path findings and prints zero errors; this is a central report-scope defect, not a clean owner. These are real owner-wide structural work; no baseline or path exception was added.
 
 `🧬️schema/💡️inferences/🧾measure` is an additional semantic release blocker. Its source declares a shared inference vocabulary and contracts, not a derived result, and its resolved production consumers are the fourteen metric inferences, `geometric-analysis`, and `inference-measures`. It is currently typed as an inference, which is structurally accepted but semantically invalid. A new atomic glTF lease must promote that responsibility to a specifically named subset module, remove it from the inference collection manifest, and update its consumers and mounts. It must not be retained as a shared inference contract.
 
@@ -55,7 +55,7 @@ bun ./📜️script.ts generate taxonomy duplicates --ticket 26/08/12/DISSOLVE-K
 bun ./📜️script.ts verify taxonomy report --scope s.stdio.gltf
 ```
 
-The census and duplicate artifacts are updated in this ticket. Enforce mode is correctly deferred: the active scoped report has unresolved findings.
+The census and duplicate artifacts are updated in this ticket. Enforce mode is correctly deferred: the active owner path has unresolved findings, regardless of the current scoped-report filtering defect.
 
 `git diff --check` is clean for the central taxonomy, discovery, script, test, and Cargo registrar paths.
 
@@ -64,3 +64,7 @@ The census and duplicate artifacts are updated in this ticket. Enforce mode is c
 The glTF source owner promoted `🧾measure` to `ROOT/🔨️modules/🧾️measurement-contracts` with semantic ID `s.stdio.gltf.module.measurement-contracts` and sixteen direct production consumers. After its manifest/import pass, the central registrar removed the retired `schema::inferences::measure` mount and added exactly one `modules::measurement_contracts` Rust mount in `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs`. The stale-mount and duplicate-mount sweep is clean; the three existing glTF module mounts are unchanged.
 
 `bun nx run @semio-tech/stdio-plugin:test-quick --skip-nx-cache` reached the shared Cargo build lock held by a concurrent workspace check before compiling this package. The queued local Cargo process was released without changing source; this is a validation contention, not a reported build or test result. The source owner has been notified to validate through the available Cargo lane.
+
+A later captured rerun of the same target reached `cargo nextest run --no-tests warn --profile quick -p semio-s-plugin-stdio -- --skip long:: --skip exhaustive::`, then the package script terminated it at its configured 30,000 ms budget. The target therefore exits nonzero for `[budget] ... exceeded 30000ms — killed`; no compiler diagnostic or failing test assertion was emitted before the budget termination. This is recorded as an unresolved runtime-budget validation failure, not a passing test.
+
+The post-registrar census resolves `measurement-contracts` to fifteen independent terminal inference consumers at the glTF subset owner. It correctly retains the module, but exposes three source-owner follow-ups: the manifest also declares intermediary `s.stdio.gltf.module.inference-measures` and must remove that non-terminal ID; the empty retired `🧬️schema/💡️inferences/🧾️measure` directory must be deleted. The latter causes one `manifest-child-missing` and one `member-component-leaf-missing`; the former causes one `module-consumer-graph-mismatch`. No central graph change is warranted.

@@ -1,6 +1,6 @@
 # glTF Scoped Taxonomy Problem Lease Map
 
-This is the exact grouped result of `bun ./📜️script.ts verify taxonomy report --scope s.stdio.gltf` against the regenerated deterministic census. There are 84 errors. The groups below are ownership queues, not suppression rules or path exceptions.
+This is the exact grouped deterministic-census path-filter result for the glTF semantic owner. There are 84 errors. `bun ./📜️script.ts verify taxonomy report --scope s.stdio.gltf` currently filters these unregistered collection-path problems out and reports zero errors; the central report-scope defect is tracked separately. The groups below are ownership queues, not suppression rules or path exceptions.
 
 `VERSION_ROOT` denotes `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0`. `ROOT` denotes `VERSION_ROOT/🪆️subsets/✳️any`.
 

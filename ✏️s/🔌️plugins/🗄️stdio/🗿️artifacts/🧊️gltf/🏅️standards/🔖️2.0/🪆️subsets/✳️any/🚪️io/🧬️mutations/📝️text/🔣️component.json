@@ -1,0 +1,11 @@
+{
+
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/stdio.gltf/mutations/text.json",
+  "title": "GltfMutationTextDocument",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["text"],
+  "properties": { "text": { "type": "string" }, "value": { "$ref": "https://semio.tech/schema/s.stdio.gltf/mutation.json" }, "rejection": { "$ref": "https://semio.tech/schema/s.stdio.gltf/mutation.json#/$defs/rejection" } },
+  "oneOf": [ { "required": ["value"] }, { "required": ["rejection"] } ]
+}

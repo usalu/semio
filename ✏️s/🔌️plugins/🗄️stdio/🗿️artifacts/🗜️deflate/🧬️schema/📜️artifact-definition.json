@@ -1,0 +1,100 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.deflate",
+  "artifact": "deflate",
+  "directory": "🗜️deflate",
+  "dependencies": [
+    "s.stdio.binary"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.deflate.standard.rfc1950",
+      "revision": "rfc1950",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.deflate.standard.rfc1950.profile.any",
+      "standard": "s.stdio.deflate.standard.rfc1950",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.deflate.standard.rfc1950.dialect.source",
+      "standard": "s.stdio.deflate.standard.rfc1950",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.deflate.standard.rfc1950.representation.document",
+      "standard": "s.stdio.deflate.standard.rfc1950",
+      "representation": "document",
+      "mime": "application/zlib",
+      "extension": ".zz",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.deflate.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.deflate.localization.en",
+      "locale": "en",
+      "name": "Zlib Deflate Stream",
+      "description": "Zlib Deflate Stream artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.deflate.localization.de",
+      "locale": "de",
+      "name": "Zlib-Deflate-Datenstrom",
+      "description": "Zlib-Deflate-Datenstrom-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.deflate.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.deflate.standard.rfc1950.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

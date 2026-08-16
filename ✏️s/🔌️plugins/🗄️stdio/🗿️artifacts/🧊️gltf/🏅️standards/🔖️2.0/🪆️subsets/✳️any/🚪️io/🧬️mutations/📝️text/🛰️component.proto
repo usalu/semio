@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.stdio_gltf.mutations_text;
+import "../../../🧬️schema/🔨️modules/🧭️mutation-dispatch/🛰️component.proto";
+message GltfMutationTextDocument { string text = 1; semio.s_stdio_gltf.mutation.GltfMutation value = 2; optional semio.s_stdio_gltf.mutation.GltfMutationRejection rejection = 3; }

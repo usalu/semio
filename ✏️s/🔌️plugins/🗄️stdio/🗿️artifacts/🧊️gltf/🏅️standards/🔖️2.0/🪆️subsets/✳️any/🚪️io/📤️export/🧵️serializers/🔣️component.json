@@ -1,0 +1,17 @@
+{
+  "x-semio": {
+    "kind": "collection",
+    "members": [
+      {
+        "directory": "🗿️artifacts",
+        "id": "s.stdio.gltf.io.export.artifacts",
+        "kind": "io",
+        "responsibility": "glTF artifact serialization routes.",
+        "io": {
+          "format": "s.stdio.gltf.artifact.json",
+          "direction": "export"
+        }
+      }
+    ]
+  }
+}

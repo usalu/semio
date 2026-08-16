@@ -1,0 +1,124 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.dwg",
+  "artifact": "dwg",
+  "directory": "🖊️dwg",
+  "dependencies": [
+    "s.stdio.binary"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.dwg.standard.ac1018",
+      "revision": "ac1018",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    },
+    {
+      "id": "s.stdio.dwg.standard.ac1024",
+      "revision": "ac1024",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.dwg.standard.ac1018.profile.any",
+      "standard": "s.stdio.dwg.standard.ac1018",
+      "profile": "any",
+      "status": "unimplemented"
+    },
+    {
+      "id": "s.stdio.dwg.standard.ac1024.profile.any",
+      "standard": "s.stdio.dwg.standard.ac1024",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.dwg.standard.ac1018.dialect.source",
+      "standard": "s.stdio.dwg.standard.ac1018",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    },
+    {
+      "id": "s.stdio.dwg.standard.ac1024.dialect.source",
+      "standard": "s.stdio.dwg.standard.ac1024",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.dwg.standard.ac1018.representation.document",
+      "standard": "s.stdio.dwg.standard.ac1018",
+      "representation": "document",
+      "mime": "image/vnd.dwg",
+      "extension": ".dwg",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.dwg.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.dwg.localization.en",
+      "locale": "en",
+      "name": "Drawing",
+      "description": "Drawing artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.dwg.localization.de",
+      "locale": "de",
+      "name": "Zeichnung",
+      "description": "Zeichnung-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.dwg.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.dwg.standard.ac1018.profile.any",
+      "s.stdio.dwg.standard.ac1024.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

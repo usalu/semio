@@ -1233,7 +1233,7 @@ pub mod app {
     //#endregion 💡️ArtifactInferenceService
 
     //#region 🌉️ArtifactInferenceWire
-    pub const ARTIFACT_INFERENCE_WIRE_VERSION: u32 = 1;
+    pub const ARTIFACT_INFERENCE_WIRE_VERSION: u32 = 2;
 
     #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -1283,17 +1283,51 @@ pub mod app {
         pub policy_version: u32,
         pub revision: u64,
         pub generation: u64,
-        pub snapshot_pack: Vec<u8>,
+        pub source_dialect: String,
         pub policy: Vec<u8>,
-        pub changed_paths: Option<Vec<String>>,
-        pub session: Option<String>,
+        pub budgets: WireArtifactInferenceBudget,
+        pub cancellation_id: String,
+        pub previous_state: Option<Vec<u8>>,
+        pub requested_cache_mode: WireArtifactInferenceCacheMode,
+        pub canonical_payload: Vec<u8>,
+    }
+
+    /// ⏱️ Finite host-enforced inference work limits.
+    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    pub struct WireArtifactInferenceBudget {
+        pub allocation_bytes: u64,
+        pub work_units: u64,
+        pub recursion_depth: u32,
+    }
+
+    /// 🗃️ Requested or actual inference cache behavior.
+    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum WireArtifactInferenceCacheMode {
+        Cold,
+        Incremental,
+        Bypass,
     }
 
     #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
     pub struct WireArtifactInferenceDiagnostic {
         pub code: String,
+        pub message: String,
+        pub severity: String,
         pub parameters: BTreeMap<String, String>,
+    }
+
+    /// 🧾️ Immutable provenance for one inference result.
+    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    pub struct WireArtifactInferenceProvenance {
+        pub owner: String,
+        pub inference_schema: String,
+        pub algorithm_version: u32,
+        pub policy_version: u32,
+        pub source_dialect: String,
     }
 
     #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -1312,12 +1346,15 @@ pub mod app {
         pub policy_version: u32,
         pub revision: u64,
         pub generation: u64,
-        pub inference_binary: Vec<u8>,
+        pub source_dialect: String,
+        pub canonical_payload: Vec<u8>,
         pub diagnostics: Vec<WireArtifactInferenceDiagnostic>,
+        pub provenance: WireArtifactInferenceProvenance,
+        pub validity: String,
+        pub quality: String,
         pub complete: bool,
-        pub cache_mode: String,
-        pub changed_paths: Vec<String>,
-        pub session: Option<String>,
+        pub actual_cache_mode: WireArtifactInferenceCacheMode,
+        pub cancellation_id: String,
     }
 
     pub fn wire_list_artifact_inference_services() -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
@@ -1334,17 +1371,19 @@ pub mod app {
             .ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.not-registered", format!("no inference service for {}/{}", request.artifact_kind, request.inference_schema)))?;
         let expected = WireArtifactInferenceMetadata::from(service.metadata());
         validate_wire_request_metadata(&request, &expected)?;
-        if !request.policy.is_empty() {
-            return Err(ArtifactInferenceExecutionError::new("artifact-inference.policy-unsupported", "only the canonical empty/default policy envelope is supported"));
+        if request.source_dialect.trim().is_empty() {
+            return Err(ArtifactInferenceExecutionError::new("artifact-inference.source-dialect", "source dialect is required"));
         }
-        let mut changed_paths = request.changed_paths.clone().unwrap_or_default();
-        let original_paths = changed_paths.clone();
-        changed_paths.sort();
-        changed_paths.dedup();
-        if changed_paths != original_paths || changed_paths.iter().any(|path| path.is_empty() || path.starts_with('/') || path.ends_with('/')) {
-            return Err(ArtifactInferenceExecutionError::new("artifact-inference.changed-paths-noncanonical", "changed paths must be sorted, unique, relative, non-empty paths without a trailing slash"));
+        if request.cancellation_id.trim().is_empty() {
+            return Err(ArtifactInferenceExecutionError::new("artifact-inference.cancellation", "cancellation identity is required"));
         }
-        let inference_binary = service.infer_cold(&request.snapshot_pack)?;
+        if request.budgets.allocation_bytes == 0 || request.budgets.work_units == 0 || request.budgets.recursion_depth == 0 {
+            return Err(ArtifactInferenceExecutionError::new("artifact-inference.budget", "allocation, work, and recursion budgets must be finite non-zero values"));
+        }
+        if matches!(request.requested_cache_mode, WireArtifactInferenceCacheMode::Incremental) && request.previous_state.is_none() {
+            return Err(ArtifactInferenceExecutionError::new("artifact-inference.previous-state", "incremental inference requires previous state"));
+        }
+        let canonical_payload = service.infer_cold(&request.canonical_payload)?;
         let result = WireArtifactInferenceResult {
             wire_version: ARTIFACT_INFERENCE_WIRE_VERSION,
             owner: request.owner,
@@ -1359,12 +1398,21 @@ pub mod app {
             policy_version: request.policy_version,
             revision: request.revision,
             generation: request.generation,
-            inference_binary,
+            source_dialect: request.source_dialect.clone(),
+            canonical_payload,
             diagnostics: Vec::new(),
+            provenance: WireArtifactInferenceProvenance {
+                owner: request.owner.clone(),
+                inference_schema: request.inference_schema.clone(),
+                algorithm_version: request.algorithm_version,
+                policy_version: request.policy_version,
+                source_dialect: request.source_dialect,
+            },
+            validity: "valid".into(),
+            quality: "complete".into(),
             complete: true,
-            cache_mode: "cold".into(),
-            changed_paths,
-            session: request.session,
+            actual_cache_mode: WireArtifactInferenceCacheMode::Cold,
+            cancellation_id: request.cancellation_id,
         };
         serde_json::to_vec(&result).map_err(|error| ArtifactInferenceExecutionError::new("artifact-inference.wire-encode", error.to_string()))
     }
@@ -1408,16 +1456,803 @@ pub mod app {
                 policy_version: 1,
                 revision: 3,
                 generation: 4,
-                snapshot_pack: Vec::new(),
+                source_dialect: "s.stdio.test.standard.v1.dialect.canonical".into(),
                 policy: Vec::new(),
-                changed_paths: None,
-                session: None,
+                budgets: WireArtifactInferenceBudget { allocation_bytes: 1, work_units: 1, recursion_depth: 1 },
+                cancellation_id: "test-cancel".into(),
+                previous_state: None,
+                requested_cache_mode: WireArtifactInferenceCacheMode::Cold,
+                canonical_payload: Vec::new(),
             };
             let error = wire_artifact_infer(&serde_json::to_vec(&request).unwrap()).unwrap_err();
             assert_eq!(error.code, "artifact-inference.wire-version");
         }
     }
     //#endregion 🌉️ArtifactInferenceWire
+
+    //#region 🧾️ArtifactDefinition
+    /// 🧾️ A validation failure in the artifact-definition contract.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct ArtifactDefinitionError {
+        code: &'static str,
+        message: String,
+    }
+
+    impl ArtifactDefinitionError {
+        fn new(code: &'static str, message: impl Into<String>) -> Self {
+            Self { code, message: message.into() }
+        }
+
+        /// 🏷️ Stable machine-readable failure identity.
+        pub fn code(&self) -> &'static str {
+            self.code
+        }
+
+        /// 📝 Human-readable failure detail.
+        pub fn message(&self) -> &str {
+            &self.message
+        }
+    }
+
+    impl std::fmt::Display for ArtifactDefinitionError {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(formatter, "{}: {}", self.code, self.message)
+        }
+    }
+
+    impl std::error::Error for ArtifactDefinitionError {}
+
+    /// 🚨️ Typed failure at the plugin assembly boundary.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct PluginAssemblyError {
+        pub code: String,
+        pub message: String,
+    }
+
+    impl PluginAssemblyError {
+        /// 🏗️ Creates a codebase-owned assembly failure.
+        pub fn new(code: impl Into<String>, message: impl Into<String>) -> Self {
+            Self { code: code.into(), message: message.into() }
+        }
+
+        fn definition(error: ArtifactDefinitionError) -> Self {
+            Self::new(error.code(), error.message().to_owned())
+        }
+    }
+
+    impl std::fmt::Display for PluginAssemblyError {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(formatter, "{}: {}", self.code, self.message)
+        }
+    }
+
+    impl std::error::Error for PluginAssemblyError {}
+
+    /// 🪪️ Canonical, dot-delimited identity with explicit hierarchy.
+    #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct ArtifactIdentity {
+        value: String,
+        segments: Vec<String>,
+    }
+
+    impl ArtifactIdentity {
+        /// 🏗️ Parses a canonical identity whose segments contain only lower-case ASCII letters,
+        /// digits, `_`, or `-`.
+        pub fn parse(value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
+            let value = value.into();
+            if value.is_empty() || value.starts_with('.') || value.ends_with('.') {
+                return Err(ArtifactDefinitionError::new("artifact-definition.identity", format!("identity {value:?} must contain non-empty dot-delimited segments")));
+            }
+            let segments: Vec<String> = value.split('.').map(str::to_owned).collect();
+            if segments.iter().any(|segment| segment.is_empty() || !segment.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'_' | b'-'))) {
+                return Err(ArtifactDefinitionError::new("artifact-definition.identity", format!("identity {value:?} has a non-canonical segment")));
+            }
+            Ok(Self { value, segments })
+        }
+
+        /// 🧭️ Creates the exact canonical root identity for one stdio artifact.
+        pub fn stdio_artifact(artifact: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+            let artifact = artifact.as_ref();
+            Self::validate_segment(artifact, "artifact")?;
+            Self::parse(format!("s.stdio.{artifact}"))
+        }
+
+        /// 🏅️ Creates a canonical standard identity below this stdio artifact root.
+        pub fn standard(&self, revision: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+            self.stdio_artifact_child("standard", revision.as_ref())
+        }
+
+        /// 🪆️ Creates a canonical profile identity below a stdio standard.
+        pub fn profile(&self, profile: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+            self.stdio_standard_child("profile", profile.as_ref())
+        }
+
+        /// 🚪️ Creates a canonical source-dialect identity below a stdio standard.
+        pub fn source_dialect(&self, dialect: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+            self.stdio_standard_child("dialect", dialect.as_ref())
+        }
+
+        /// 🎭️ Creates a canonical representation identity below a stdio standard.
+        pub fn representation(&self, representation: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+            self.stdio_standard_child("representation", representation.as_ref())
+        }
+
+        /// 🗜️ Creates a canonical codec identity below a stdio standard.
+        pub fn codec(&self, codec: impl AsRef<str>, version: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+            let codec = codec.as_ref();
+            let version = version.as_ref();
+            self.stdio_standard_child("codec", codec)?.child(version)
+        }
+
+        /// 💡️ Creates a canonical inference identity below this stdio artifact root.
+        pub fn inference(&self, semantic_slug: impl AsRef<str>, version: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+            let semantic_slug = semantic_slug.as_ref();
+            let version = version.as_ref();
+            self.stdio_artifact_child("inference", semantic_slug)?.child(Self::version(version)?)
+        }
+
+        /// 🧬️ Creates a canonical mutation identity below this stdio artifact root.
+        pub fn mutation(&self, semantic_command: impl AsRef<str>, version: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+            let semantic_command = semantic_command.as_ref();
+            let version = version.as_ref();
+            self.stdio_artifact_child("mutation", semantic_command)?.child(Self::version(version)?)
+        }
+
+        /// 🧭️ Returns the canonical, stable serialized identity.
+        pub fn as_str(&self) -> &str {
+            &self.value
+        }
+
+        /// 🌿️ Returns this identity extended by one validated segment.
+        pub fn child(&self, segment: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+            let segment = segment.as_ref();
+            Self::validate_segment(segment, "identity")?;
+            Self::parse(format!("{}.{}", self.value, segment))
+        }
+
+        /// 🌳️ Whether `self` is the same identity as, or a descendant of, `ancestor`.
+        pub fn is_within(&self, ancestor: &Self) -> bool {
+            self.segments.len() >= ancestor.segments.len() && self.segments[..ancestor.segments.len()] == ancestor.segments[..]
+        }
+
+        fn stdio_artifact_child(&self, namespace: &str, value: &str) -> Result<Self, ArtifactDefinitionError> {
+            if !self.is_stdio_artifact() {
+                return Err(ArtifactDefinitionError::new("artifact-definition.identity-hierarchy", format!("{} is not a stdio artifact identity", self)));
+            }
+            Self::validate_segment(value, namespace)?;
+            self.child(namespace)?.child(value)
+        }
+
+        fn stdio_standard_child(&self, namespace: &str, value: &str) -> Result<Self, ArtifactDefinitionError> {
+            if !self.is_stdio_standard() {
+                return Err(ArtifactDefinitionError::new("artifact-definition.identity-hierarchy", format!("{} is not a stdio standard identity", self)));
+            }
+            Self::validate_segment(value, namespace)?;
+            self.child(namespace)?.child(value)
+        }
+
+        fn is_stdio_artifact(&self) -> bool {
+            self.segments.len() == 3 && self.segments[0] == "s" && self.segments[1] == "stdio"
+        }
+
+        fn is_stdio_standard(&self) -> bool {
+            self.segments.len() == 5 && self.segments[0] == "s" && self.segments[1] == "stdio" && self.segments[3] == "standard"
+        }
+
+        fn validate_segment(value: &str, label: &str) -> Result<(), ArtifactDefinitionError> {
+            if value.is_empty() || !value.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'_' | b'-')) {
+                return Err(ArtifactDefinitionError::new("artifact-definition.identity", format!("{label} segment {value:?} is not canonical")));
+            }
+            Ok(())
+        }
+
+        fn version(value: &str) -> Result<&str, ArtifactDefinitionError> {
+            if value.len() < 2 || !value.starts_with('v') || !value[1..].bytes().all(|byte| byte.is_ascii_digit()) {
+                return Err(ArtifactDefinitionError::new("artifact-definition.version", format!("version {value:?} must use the canonical vN form")));
+            }
+            Ok(value)
+        }
+    }
+
+    impl std::fmt::Display for ArtifactIdentity {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            formatter.write_str(&self.value)
+        }
+    }
+
+    /// 🏷️ Open-ended capability category. New categories are data, not central-dispatch edits.
+    #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct ArtifactCapabilityKind(String);
+
+    impl ArtifactCapabilityKind {
+        /// 🏗️ Creates a canonical category identity.
+        pub fn parse(value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
+            let identity = ArtifactIdentity::parse(value)?;
+            Ok(Self(identity.value))
+        }
+
+        /// 🧬️ Schema capability category.
+        pub fn schema() -> Self {
+            Self("schema".into())
+        }
+
+        /// 🏅️ Standard capability category.
+        pub fn standard() -> Self {
+            Self("standard".into())
+        }
+
+        /// 🪆️ Profile capability category.
+        pub fn profile() -> Self {
+            Self("profile".into())
+        }
+
+        /// 🚪️ Source-dialect capability category.
+        pub fn source_dialect() -> Self {
+            Self("source-dialect".into())
+        }
+
+        /// 🎭️ Representation capability category.
+        pub fn representation() -> Self {
+            Self("representation".into())
+        }
+
+        /// 🗜️ Codec capability category.
+        pub fn codec() -> Self {
+            Self("codec".into())
+        }
+
+        /// 🧬️ Mutation capability category.
+        pub fn mutation() -> Self {
+            Self("mutation".into())
+        }
+
+        /// 🧠️ Inference capability category.
+        pub fn inference() -> Self {
+            Self("inference".into())
+        }
+
+        /// 📦️ Resource capability category.
+        pub fn resource() -> Self {
+            Self("resource".into())
+        }
+
+        /// 🗺️ Localization capability category.
+        pub fn localization() -> Self {
+            Self("localization".into())
+        }
+
+        /// ✅️ Conformance-suite capability category.
+        pub fn conformance_suite() -> Self {
+            Self("conformance-suite".into())
+        }
+
+        /// 🧩️ Extension capability category.
+        pub fn extension() -> Self {
+            Self("extension".into())
+        }
+
+        /// 🧭️ Returns the category's canonical identity.
+        pub fn as_str(&self) -> &str {
+            &self.0
+        }
+    }
+
+    /// 🏷️ Namespace for an externally visible identity claimed by a capability.
+    #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct ArtifactIdentityNamespace(String);
+
+    impl ArtifactIdentityNamespace {
+        /// 🏗️ Creates a canonical namespace identity.
+        pub fn parse(value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
+            Ok(Self(ArtifactIdentity::parse(value)?.value))
+        }
+
+        /// 🗿️ Artifact identity namespace.
+        pub fn artifact() -> Self {
+            Self("artifact".into())
+        }
+
+        /// 🧬️ Schema identity namespace.
+        pub fn schema() -> Self {
+            Self("schema".into())
+        }
+
+        /// 🚪️ Dialect identity namespace.
+        pub fn dialect() -> Self {
+            Self("dialect".into())
+        }
+
+        /// 🗜️ Codec identity namespace.
+        pub fn codec() -> Self {
+            Self("codec".into())
+        }
+
+        /// 📮️ MIME identity namespace.
+        pub fn mime() -> Self {
+            Self("mime".into())
+        }
+
+        /// 🗂️ File-extension identity namespace.
+        pub fn extension() -> Self {
+            Self("extension".into())
+        }
+
+        /// 🧩️ Extension implementation identity namespace.
+        pub fn extension_implementation() -> Self {
+            Self("extension-implementation".into())
+        }
+
+        /// 🧭️ Returns the namespace's canonical identity.
+        pub fn as_str(&self) -> &str {
+            &self.0
+        }
+    }
+
+    /// 📌️ One unique, externally addressable identity owned by a capability.
+    #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct ArtifactIdentityClaim {
+        namespace: ArtifactIdentityNamespace,
+        value: String,
+    }
+
+    impl ArtifactIdentityClaim {
+        /// 🏗️ Creates a non-empty claim; caller-selectable namespaces keep this contract open.
+        pub fn new(namespace: ArtifactIdentityNamespace, value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
+            let value = value.into();
+            if value.trim().is_empty() {
+                return Err(ArtifactDefinitionError::new("artifact-definition.claim", "identity claim values must be non-empty"));
+            }
+            Ok(Self { namespace, value })
+        }
+
+        /// 🏷️ Returns the claim namespace.
+        pub fn namespace(&self) -> &ArtifactIdentityNamespace {
+            &self.namespace
+        }
+
+        /// 🧭️ Returns the exact identity value; MIME and extension values are deliberately not rewritten.
+        pub fn value(&self) -> &str {
+            &self.value
+        }
+    }
+
+    /// 🌐️ Explicit locale identity. There is intentionally no default locale.
+    #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct ArtifactLocale(String);
+
+    impl ArtifactLocale {
+        /// 🏗️ Parses a lower-case BCP-47-like locale tag.
+        pub fn parse(value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
+            let value = value.into();
+            if value.is_empty() || value.starts_with('-') || value.ends_with('-') || value.contains("--") || !value.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-') {
+                return Err(ArtifactDefinitionError::new("artifact-definition.locale", format!("locale {value:?} must be an explicit lower-case BCP-47-like tag")));
+            }
+            Ok(Self(value))
+        }
+
+        /// 🧭️ Returns the explicit locale tag.
+        pub fn as_str(&self) -> &str {
+            &self.0
+        }
+    }
+
+    /// 🗺️ Localized descriptor text for exactly one explicit locale.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct ArtifactLocalization {
+        locale: ArtifactLocale,
+        text: String,
+    }
+
+    impl ArtifactLocalization {
+        /// 🏗️ Creates localized text. Locale is mandatory and text must be non-empty.
+        pub fn new(locale: ArtifactLocale, text: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
+            let text = text.into();
+            if text.trim().is_empty() {
+                return Err(ArtifactDefinitionError::new("artifact-definition.localization", "localized text must be non-empty"));
+            }
+            Ok(Self { locale, text })
+        }
+
+        /// 🌐️ Returns the explicitly declared locale.
+        pub fn locale(&self) -> &ArtifactLocale {
+            &self.locale
+        }
+
+        /// 📝 Returns localized text.
+        pub fn text(&self) -> &str {
+            &self.text
+        }
+    }
+
+    /// 🧩️ One extension-owned capability and its conflict-checked external identities.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct ArtifactCapability {
+        identity: ArtifactIdentity,
+        kind: ArtifactCapabilityKind,
+        descriptor: Vec<u8>,
+        executable_identity: Option<ArtifactExecutableIdentity>,
+        claims: Vec<ArtifactIdentityClaim>,
+        localizations: Vec<ArtifactLocalization>,
+    }
+
+    /// ⚙️ Stable process-local identity of a non-capturing capability executable.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct ArtifactExecutableIdentity(usize);
+
+    impl ArtifactExecutableIdentity {
+        /// 🧷️ Captures executable identity without exposing a runtime dependency type.
+        pub fn from_function(function: fn()) -> Self {
+            Self(function as usize)
+        }
+    }
+
+    impl ArtifactCapability {
+        /// 🏗️ Constructs a capability at a full hierarchical identity.
+        pub fn new(identity: ArtifactIdentity, kind: ArtifactCapabilityKind) -> Self {
+            Self { identity, kind, descriptor: Vec::new(), executable_identity: None, claims: Vec::new(), localizations: Vec::new() }
+        }
+
+        /// 🧾️ Attaches the canonical byte descriptor whose exact bytes participate in idempotence.
+        pub fn descriptor(mut self, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+            let descriptor = descriptor.into();
+            if descriptor.is_empty() {
+                return Err(ArtifactDefinitionError::new("artifact-definition.descriptor", format!("capability {} has an empty descriptor", self.identity)));
+            }
+            self.descriptor = descriptor;
+            Ok(self)
+        }
+
+        /// ⚙️ Attaches the non-capturing executable identity whose exact value participates in idempotence.
+        pub fn executable(mut self, identity: ArtifactExecutableIdentity) -> Self {
+            self.executable_identity = Some(identity);
+            self
+        }
+
+        /// 📌️ Adds an exclusive external identity claim.
+        pub fn claim(mut self, claim: ArtifactIdentityClaim) -> Result<Self, ArtifactDefinitionError> {
+            if self.claims.contains(&claim) {
+                return Err(ArtifactDefinitionError::new("artifact-definition.duplicate-claim", format!("capability {} repeats {}:{}", self.identity, claim.namespace.as_str(), claim.value)));
+            }
+            self.claims.push(claim);
+            self.claims.sort();
+            Ok(self)
+        }
+
+        /// 🗺️ Adds localized text. An explicit locale can occur at most once per capability.
+        pub fn localization(mut self, localization: ArtifactLocalization) -> Result<Self, ArtifactDefinitionError> {
+            if self.localizations.iter().any(|existing| existing.locale == localization.locale) {
+                return Err(ArtifactDefinitionError::new("artifact-definition.duplicate-locale", format!("capability {} repeats locale {}", self.identity, localization.locale.as_str())));
+            }
+            self.localizations.push(localization);
+            self.localizations.sort_by(|left, right| left.locale.cmp(&right.locale));
+            Ok(self)
+        }
+
+        /// 🪪️ Returns the hierarchical capability identity.
+        pub fn identity(&self) -> &ArtifactIdentity {
+            &self.identity
+        }
+
+        /// 🏷️ Returns the open-ended capability category.
+        pub fn kind(&self) -> &ArtifactCapabilityKind {
+            &self.kind
+        }
+
+        /// 🧾️ Returns the exact canonical descriptor bytes.
+        pub fn descriptor_bytes(&self) -> &[u8] {
+            &self.descriptor
+        }
+
+        /// ⚙️ Returns the optional executable identity.
+        pub fn executable_identity(&self) -> Option<ArtifactExecutableIdentity> {
+            self.executable_identity
+        }
+
+        /// 📌️ Returns deterministically ordered external identity claims.
+        pub fn claims(&self) -> &[ArtifactIdentityClaim] {
+            &self.claims
+        }
+
+        /// 🗺️ Returns deterministically ordered localized descriptor text.
+        pub fn localizations(&self) -> &[ArtifactLocalization] {
+            &self.localizations
+        }
+    }
+
+    /// 🗿️ Schema-owned, plural declarative contract for one artifact family or standard profile.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct ArtifactDefinition {
+        identity: ArtifactIdentity,
+        capabilities: std::collections::BTreeMap<ArtifactIdentity, ArtifactCapability>,
+    }
+
+    impl ArtifactDefinition {
+        /// 🧾️ Starts the one authoritative definition for a canonical stdio artifact.
+        pub fn stdio(artifact: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+            Ok(Self::new(ArtifactIdentity::stdio_artifact(artifact)?))
+        }
+
+        /// 🏗️ Starts an empty definition and claims its artifact identity.
+        pub fn new(identity: ArtifactIdentity) -> Self {
+            Self { identity, capabilities: std::collections::BTreeMap::new() }
+        }
+
+        /// 🪪️ Returns the definition's hierarchical artifact identity.
+        pub fn identity(&self) -> &ArtifactIdentity {
+            &self.identity
+        }
+
+        /// 🧩️ Adds one capability. Its identity must live below this definition's identity.
+        pub fn capability(mut self, capability: ArtifactCapability) -> Result<Self, ArtifactDefinitionError> {
+            if !capability.identity.is_within(&self.identity) || capability.identity == self.identity {
+                return Err(ArtifactDefinitionError::new("artifact-definition.capability-owner", format!("capability {} is not a descendant of artifact {}", capability.identity, self.identity)));
+            }
+            if self.capabilities.insert(capability.identity.clone(), capability).is_some() {
+                return Err(ArtifactDefinitionError::new("artifact-definition.duplicate-capability", "capability identity is already declared"));
+            }
+            Ok(self)
+        }
+
+        /// 🏅️ Declares a standard leaf in this artifact's plural definition.
+        pub fn standard(self, revision: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+            self.stdio_capability(self.identity.standard(revision)?, ArtifactCapabilityKind::standard(), descriptor)
+        }
+
+        /// 🪆️ Declares a profile leaf in this artifact's plural definition.
+        pub fn profile(self, revision: impl AsRef<str>, profile: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+            self.stdio_capability(self.identity.standard(revision)?.profile(profile)?, ArtifactCapabilityKind::profile(), descriptor)
+        }
+
+        /// 🚪️ Declares a source-dialect leaf in this artifact's plural definition.
+        pub fn source_dialect(self, revision: impl AsRef<str>, dialect: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+            self.stdio_capability(self.identity.standard(revision)?.source_dialect(dialect)?, ArtifactCapabilityKind::source_dialect(), descriptor)
+        }
+
+        /// 🎭️ Declares a representation leaf, optionally claiming its MIME identity.
+        pub fn representation(self, revision: impl AsRef<str>, representation: impl AsRef<str>, mime: Option<ArtifactMime>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+            let identity = self.identity.standard(revision)?.representation(representation)?;
+            let capability = mime.map(|mime| ArtifactCapability::new(identity, ArtifactCapabilityKind::representation()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::mime(), mime.as_str())?)).transpose()?.unwrap_or_else(|| ArtifactCapability::new(identity, ArtifactCapabilityKind::representation())).descriptor(descriptor)?;
+            self.capability(capability)
+        }
+
+        /// 🗜️ Declares a codec leaf in this artifact's plural definition.
+        pub fn codec(self, revision: impl AsRef<str>, codec: impl AsRef<str>, version: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+            self.stdio_capability(self.identity.standard(revision)?.codec(codec, version)?, ArtifactCapabilityKind::codec(), descriptor)
+        }
+
+        /// 🧬️ Declares a semantic mutation leaf in this artifact's plural definition.
+        pub fn mutation(self, command: impl AsRef<str>, version: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+            self.stdio_capability(self.identity.mutation(command, version)?, ArtifactCapabilityKind::mutation(), descriptor)
+        }
+
+        /// 💡️ Declares an atomic inference leaf in this artifact's plural definition.
+        pub fn inference(self, semantic_slug: impl AsRef<str>, version: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+            self.stdio_capability(self.identity.inference(semantic_slug, version)?, ArtifactCapabilityKind::inference(), descriptor)
+        }
+
+        /// 📦️ Declares an open resource-policy leaf in this artifact's plural definition.
+        pub fn resource(self, name: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+            self.stdio_capability(self.identity.child("resource")?.child(name.as_ref())?, ArtifactCapabilityKind::resource(), descriptor)
+        }
+
+        /// 🗺️ Declares an explicit locale leaf in this artifact's plural definition.
+        pub fn localization(self, locale: ArtifactLocale, text: impl Into<String>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+            let capability = ArtifactCapability::new(self.identity.child("localization")?.child(locale.as_str())?, ArtifactCapabilityKind::localization()).localization(ArtifactLocalization::new(locale, text)?)?.descriptor(descriptor)?;
+            self.capability(capability)
+        }
+
+        /// ✅️ Declares a conformance-suite leaf in this artifact's plural definition.
+        pub fn conformance_suite(self, name: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+            self.stdio_capability(self.identity.child("conformance-suite")?.child(name.as_ref())?, ArtifactCapabilityKind::conformance_suite(), descriptor)
+        }
+
+        /// 📚️ Returns capabilities in stable hierarchical order.
+        pub fn capabilities(&self) -> impl Iterator<Item = &ArtifactCapability> {
+            self.capabilities.values()
+        }
+
+        /// 🧩️ Returns capabilities belonging to one open-ended category in stable identity order.
+        pub fn capabilities_of<'a>(&'a self, kind: &'a ArtifactCapabilityKind) -> impl Iterator<Item = &'a ArtifactCapability> {
+            self.capabilities().filter(move |capability| capability.kind() == kind)
+        }
+
+        /// 🏅️ Returns every standard leaf in stable identity order.
+        pub fn standards(&self) -> impl Iterator<Item = &ArtifactCapability> {
+            self.capabilities().filter(|capability| capability.kind().as_str() == "standard")
+        }
+
+        /// 🪆️ Returns every profile leaf in stable identity order.
+        pub fn profiles(&self) -> impl Iterator<Item = &ArtifactCapability> {
+            self.capabilities().filter(|capability| capability.kind().as_str() == "profile")
+        }
+
+        /// 🚪️ Returns every source-dialect leaf in stable identity order.
+        pub fn source_dialects(&self) -> impl Iterator<Item = &ArtifactCapability> {
+            self.capabilities().filter(|capability| capability.kind().as_str() == "source-dialect")
+        }
+
+        /// 🎭️ Returns every representation leaf in stable identity order.
+        pub fn representations(&self) -> impl Iterator<Item = &ArtifactCapability> {
+            self.capabilities().filter(|capability| capability.kind().as_str() == "representation")
+        }
+
+        /// 🗜️ Returns every codec leaf in stable identity order.
+        pub fn codecs(&self) -> impl Iterator<Item = &ArtifactCapability> {
+            self.capabilities().filter(|capability| capability.kind().as_str() == "codec")
+        }
+
+        /// 🧬️ Returns every mutation leaf in stable identity order.
+        pub fn mutations(&self) -> impl Iterator<Item = &ArtifactCapability> {
+            self.capabilities().filter(|capability| capability.kind().as_str() == "mutation")
+        }
+
+        /// 💡️ Returns every inference leaf in stable identity order.
+        pub fn inferences(&self) -> impl Iterator<Item = &ArtifactCapability> {
+            self.capabilities().filter(|capability| capability.kind().as_str() == "inference")
+        }
+
+        /// 📦️ Returns every resource-policy leaf in stable identity order.
+        pub fn resources(&self) -> impl Iterator<Item = &ArtifactCapability> {
+            self.capabilities().filter(|capability| capability.kind().as_str() == "resource")
+        }
+
+        /// 🗺️ Returns every localization leaf in stable identity order.
+        pub fn localizations(&self) -> impl Iterator<Item = &ArtifactCapability> {
+            self.capabilities().filter(|capability| capability.kind().as_str() == "localization")
+        }
+
+        /// ✅️ Returns every conformance-suite leaf in stable identity order.
+        pub fn conformance_suites(&self) -> impl Iterator<Item = &ArtifactCapability> {
+            self.capabilities().filter(|capability| capability.kind().as_str() == "conformance-suite")
+        }
+
+        /// 🛡️ Validates identity ownership and all claims before registration mutates a registry.
+        pub fn validate(&self) -> Result<(), ArtifactDefinitionError> {
+            let mut claims = std::collections::BTreeMap::<ArtifactIdentityClaim, ArtifactIdentity>::new();
+            for capability in self.capabilities() {
+                if !capability.identity.is_within(&self.identity) || capability.identity == self.identity {
+                    return Err(ArtifactDefinitionError::new("artifact-definition.capability-owner", format!("capability {} is not a descendant of artifact {}", capability.identity, self.identity)));
+                }
+                for claim in capability.claims() {
+                    if let Some(previous) = claims.insert(claim.clone(), capability.identity.clone()) {
+                        return Err(ArtifactDefinitionError::new("artifact-definition.duplicate-claim", format!("{}:{} is claimed by both {} and {}", claim.namespace.as_str(), claim.value, previous, capability.identity)));
+                    }
+                }
+            }
+            Ok(())
+        }
+
+        fn stdio_capability(self, identity: ArtifactIdentity, kind: ArtifactCapabilityKind, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+            self.capability(ArtifactCapability::new(identity, kind).descriptor(descriptor)?)
+        }
+
+        fn identical_to(&self, other: &Self) -> bool {
+            self.identity == other.identity && self.capabilities == other.capabilities
+        }
+    }
+
+    /// 📮️ A validated optional representation MIME identity.
+    #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct ArtifactMime(String);
+
+    impl ArtifactMime {
+        /// 🏗️ Parses a lower-case ASCII `type/subtype` MIME identity.
+        pub fn parse(value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
+            let value = value.into();
+            let mut segments = value.split('/');
+            let Some(kind) = segments.next() else {
+                return Err(ArtifactDefinitionError::new("artifact-definition.mime", "MIME must contain a type and subtype"));
+            };
+            let Some(subtype) = segments.next() else {
+                return Err(ArtifactDefinitionError::new("artifact-definition.mime", "MIME must contain a type and subtype"));
+            };
+            if segments.next().is_some() || kind.is_empty() || subtype.is_empty() || !value.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'!' | b'#' | b'$' | b'&' | b'^' | b'_' | b'.' | b'+' | b'-' | b'/')) {
+                return Err(ArtifactDefinitionError::new("artifact-definition.mime", format!("MIME {value:?} is not lower-case ASCII type/subtype")));
+            }
+            Ok(Self(value))
+        }
+
+        /// 🧭️ Returns the exact MIME identity.
+        pub fn as_str(&self) -> &str {
+            &self.0
+        }
+    }
+
+    /// 📚️ Deterministic, conflict-rejecting registry for independently assembled definitions.
+    pub struct ArtifactDefinitionRegistry {
+        definitions: std::collections::BTreeMap<ArtifactIdentity, ArtifactDefinition>,
+        claims: std::collections::BTreeMap<ArtifactIdentityClaim, ArtifactIdentity>,
+    }
+
+    impl Default for ArtifactDefinitionRegistry {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
+    impl ArtifactDefinitionRegistry {
+        /// 🏗️ Creates an empty artifact-definition registry.
+        pub fn new() -> Self {
+            Self { definitions: std::collections::BTreeMap::new(), claims: std::collections::BTreeMap::new() }
+        }
+
+        /// 🛡️ Registers exactly one new definition or rejects it without partial mutation.
+        pub fn register(&mut self, definition: ArtifactDefinition) -> Result<(), ArtifactDefinitionError> {
+            definition.validate()?;
+            if let Some(existing) = self.definitions.get(definition.identity()) {
+                if existing.identical_to(&definition) {
+                    return Ok(());
+                }
+                return Err(ArtifactDefinitionError::new("artifact-definition.conflicting-artifact", format!("artifact {} has a different descriptor or executable identity", definition.identity())));
+            }
+            let artifact_claim = ArtifactIdentityClaim::new(ArtifactIdentityNamespace::artifact(), definition.identity().as_str())?;
+            if let Some(previous) = self.claims.get(&artifact_claim) {
+                return Err(ArtifactDefinitionError::new("artifact-definition.duplicate-artifact", format!("artifact {} is already registered by {}", definition.identity(), previous)));
+            }
+            let mut additions = vec![(artifact_claim, definition.identity().clone())];
+            for capability in definition.capabilities() {
+                for claim in capability.claims() {
+                    if let Some(previous) = self.claims.get(claim) {
+                        return Err(ArtifactDefinitionError::new("artifact-definition.conflicting-claim", format!("{}:{} is already registered by {}", claim.namespace.as_str(), claim.value(), previous)));
+                    }
+                    if let Some((_, previous)) = additions.iter().find(|(candidate, _)| candidate == claim) {
+                        return Err(ArtifactDefinitionError::new("artifact-definition.duplicate-claim", format!("{}:{} is declared by both {} and {}", claim.namespace.as_str(), claim.value(), previous, capability.identity())));
+                    }
+                    additions.push((claim.clone(), capability.identity().clone()));
+                }
+            }
+            for (claim, owner) in additions {
+                self.claims.insert(claim, owner);
+            }
+            self.definitions.insert(definition.identity().clone(), definition);
+            Ok(())
+        }
+
+        /// 🔎️ Resolves a definition by its artifact identity.
+        pub fn get(&self, identity: &ArtifactIdentity) -> Option<&ArtifactDefinition> {
+            self.definitions.get(identity)
+        }
+
+        /// 🔢 Returns the number of registered artifact definitions.
+        pub fn len(&self) -> usize {
+            self.definitions.len()
+        }
+
+        /// 📭️ Whether no definitions are registered.
+        pub fn is_empty(&self) -> bool {
+            self.definitions.is_empty()
+        }
+
+        /// 🚶️ Walks definitions in deterministic hierarchical identity order.
+        pub fn definitions(&self) -> impl Iterator<Item = &ArtifactDefinition> {
+            self.definitions.values()
+        }
+    }
+
+    /// 🏗️ Builds a collision-proof child segment from arbitrary externally governed text.
+    fn artifact_external_segment(value: &str) -> String {
+        let mut encoded = String::from("x");
+        for byte in value.as_bytes() {
+            use std::fmt::Write;
+            write!(&mut encoded, "{byte:02x}").expect("writing to String cannot fail");
+        }
+        encoded
+    }
+
+    /// 🧩️ Creates a data-only capability below `owner` from an arbitrary human or external name.
+    fn artifact_capability(owner: &ArtifactIdentity, kind: ArtifactCapabilityKind, name: &str) -> ArtifactCapability {
+        let category = if kind.as_str().bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'_' | b'-')) { kind.as_str().to_string() } else { artifact_external_segment(kind.as_str()) };
+        let name = artifact_external_segment(name);
+        let identity = owner.child(category).and_then(|identity| identity.child(name)).expect("hex-encoded capability identity is canonical");
+        ArtifactCapability::new(identity, kind)
+    }
+
+    /// 🧩️ Appends one legacy-runtime facet to the declaration's data-only contract.
+    fn append_artifact_capability(definition: &mut ArtifactDefinition, kind: ArtifactCapabilityKind, name: &str, claims: Vec<ArtifactIdentityClaim>) {
+        let capability = claims.into_iter().try_fold(artifact_capability(definition.identity(), kind, name), |capability, claim| capability.claim(claim)).expect("legacy declaration facets must create unique non-empty identity claims");
+        *definition = definition.clone().capability(capability).expect("legacy declaration facets must remain below their artifact identity");
+    }
+    //#endregion 🧾️ArtifactDefinition
 
     //#region 🔖️ArtifactDeclaration
     /// 🔖️ Everything an artifact currently registers by CALLING free functions, expressed instead as
@@ -1442,14 +2277,14 @@ pub mod app {
         // plugin-segment check automatically the moment a given `kind` DOES parse as canonical, so
         // this tightens itself as that migration lands — no second pass needed here.
         kind: String,
-        schema: Option<::semio_framework_schema::ArtifactSchemaDescriptor>,
+        schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
         inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
         inference_services: Vec<ArtifactInferenceService>,
-        composers: &'static [ComposerEntry],
+        composers: Vec<&'static ComposerEntry>,
         formats: Vec<semio_framework::FormatDescriptor>,
-        subset_validators: &'static [SubsetValidatorEntry],
-        languages: &'static [dsl::LanguageSpec],
-        document_codec: Option<DocumentCodecSpec>,
+        subset_validators: Vec<&'static SubsetValidatorEntry>,
+        languages: Vec<&'static dsl::LanguageSpec>,
+        document_codecs: Vec<DocumentCodecSpec>,
         migrations: Vec<store::DialectMigration>,
         // 🧒️🔗️ Pulled from `<Snapshot as ArtifactCompositionFields>::{child_slots,link_slots}` via
         // `.composition::<Snapshot>()` — never settable directly (UCAS review, 2026-08-12): the
@@ -1461,6 +2296,8 @@ pub mod app {
         child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
         link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
         capabilities: Vec<CapabilityRequirement>,
+        definition: ArtifactDefinition,
+        definition_error: Option<ArtifactDefinitionError>,
     }
 
     /// 🏷️ Declaration builder has a `kind` only — next call must be `.schema(...)`.
@@ -1472,18 +2309,20 @@ pub mod app {
     /// missing-mandatory-field-is-a-compile-error shape.
     pub struct ArtifactDeclarationBuilder<State> {
         kind: String,
-        schema: Option<::semio_framework_schema::ArtifactSchemaDescriptor>,
+        schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
         inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
         inference_services: Vec<ArtifactInferenceService>,
-        composers: &'static [ComposerEntry],
+        composers: Vec<&'static ComposerEntry>,
         formats: Vec<semio_framework::FormatDescriptor>,
-        subset_validators: &'static [SubsetValidatorEntry],
-        languages: &'static [dsl::LanguageSpec],
-        document_codec: Option<DocumentCodecSpec>,
+        subset_validators: Vec<&'static SubsetValidatorEntry>,
+        languages: Vec<&'static dsl::LanguageSpec>,
+        document_codecs: Vec<DocumentCodecSpec>,
         migrations: Vec<store::DialectMigration>,
         child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
         link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
         capabilities: Vec<CapabilityRequirement>,
+        definition: ArtifactDefinition,
+        definition_error: Option<ArtifactDefinitionError>,
         _state: std::marker::PhantomData<State>,
     }
 
@@ -1492,20 +2331,26 @@ pub mod app {
         /// where that migration has already landed, today's pre-migration grammar otherwise (see the
         /// field doc on `ArtifactDeclaration::kind`).
         pub fn builder(kind: impl Into<String>) -> ArtifactDeclarationBuilder<NeedsSchema> {
+            let kind = kind.into();
+            let parsed = ArtifactIdentity::parse(kind.clone());
+            let definition_error = parsed.as_ref().err().cloned();
+            let identity = parsed.unwrap_or_else(|_| ArtifactIdentity { value: "invalid".into(), segments: vec!["invalid".into()] });
             ArtifactDeclarationBuilder {
-                kind: kind.into(),
-                schema: None,
+                kind,
+                schemas: Vec::new(),
                 inferences: Vec::new(),
                 inference_services: Vec::new(),
-                composers: &[],
+                composers: Vec::new(),
                 formats: Vec::new(),
-                subset_validators: &[],
-                languages: &[],
-                document_codec: None,
+                subset_validators: Vec::new(),
+                languages: Vec::new(),
+                document_codecs: Vec::new(),
                 migrations: Vec::new(),
                 child_slots: &[],
                 link_slots: &[],
                 capabilities: Vec::new(),
+                definition: ArtifactDefinition::new(identity),
+                definition_error,
                 _state: std::marker::PhantomData,
             }
         }
@@ -1514,31 +2359,51 @@ pub mod app {
     impl ArtifactDeclarationBuilder<NeedsSchema> {
         /// 🧬️ Sets the artifact's four-facet schema descriptor — mandatory, so this is the one call
         /// that unlocks every other declaration method.
-        pub fn schema(self, descriptor: ::semio_framework_schema::ArtifactSchemaDescriptor) -> ArtifactDeclarationBuilder<DeclarationReady> {
+        pub fn schema(mut self, descriptor: ::semio_framework_schema::ArtifactSchemaDescriptor) -> ArtifactDeclarationBuilder<DeclarationReady> {
+            append_artifact_capability(
+                &mut self.definition,
+                ArtifactCapabilityKind::schema(),
+                descriptor.id,
+                vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), descriptor.id).expect("artifact schema descriptor ids are non-empty")],
+            );
             ArtifactDeclarationBuilder {
                 kind: self.kind,
-                schema: Some(descriptor),
+                schemas: vec![descriptor],
                 inferences: self.inferences,
                 inference_services: self.inference_services,
                 composers: self.composers,
                 formats: self.formats,
                 subset_validators: self.subset_validators,
                 languages: self.languages,
-                document_codec: self.document_codec,
+                document_codecs: self.document_codecs,
                 migrations: self.migrations,
                 child_slots: self.child_slots,
                 link_slots: self.link_slots,
                 capabilities: self.capabilities,
+                definition: self.definition,
+                definition_error: self.definition_error,
                 _state: std::marker::PhantomData,
             }
         }
     }
 
     impl ArtifactDeclarationBuilder<DeclarationReady> {
+        /// 🧬️ Appends further schema descriptors for independently versioned standards or profiles.
+        pub fn schemas(mut self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactSchemaDescriptor>) -> Self {
+            for item in items {
+                append_artifact_capability(&mut self.definition, ArtifactCapabilityKind::schema(), item.id, vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), item.id).expect("artifact schema descriptor ids are non-empty")]);
+                self.schemas.push(item);
+            }
+            self
+        }
+
         /// 💡️ Appends inference descriptors (`register_artifact_inference_descriptor`, one call per
         /// item at `build()` time). Repeatable.
         pub fn inferences(mut self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactInferenceDescriptor>) -> Self {
-            self.inferences.extend(items);
+            for item in items {
+                append_artifact_capability(&mut self.definition, ArtifactCapabilityKind::inference(), item.id, vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), item.id).expect("inference descriptor ids are non-empty")]);
+                self.inferences.push(item);
+            }
             self
         }
 
@@ -1549,38 +2414,62 @@ pub mod app {
             self
         }
 
-        /// 🎹️ Sets this artifact's composer table (`register_composer_entries`). Every entry's
+        /// 🎹️ Appends this artifact's composer table (`register_composer_entries`). Every entry's
         /// `writes.artifact_kind` must equal this declaration's `kind` — checked at `build()` time,
         /// not here, since only `PluginBuilder::build()` knows the plugin id to check `kind` itself against.
         pub fn composers(mut self, entries: &'static [ComposerEntry]) -> Self {
-            self.composers = entries;
+            self.composers.extend(entries);
             self
         }
 
         /// 🗂️ Appends format rows (`register_format_descriptors`).
         pub fn formats(mut self, rows: impl IntoIterator<Item = semio_framework::FormatDescriptor>) -> Self {
-            self.formats.extend(rows);
+            for row in rows {
+                append_artifact_capability(
+                    &mut self.definition,
+                    ArtifactCapabilityKind::representation(),
+                    &row.kind_id,
+                    vec![
+                        ArtifactIdentityClaim::new(ArtifactIdentityNamespace::mime(), row.mime.clone()).expect("format MIME types are non-empty"),
+                        ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), row.extension.clone()).expect("format extensions are non-empty"),
+                    ],
+                );
+                self.formats.push(row);
+            }
             self
         }
 
-        /// 🧾️ Sets this artifact's subset-validator table (`register_subset_validator`, one call per entry).
+        /// 🧾️ Appends this artifact's subset-validator table (`register_subset_validator`, one call per entry).
         pub fn subset_validators(mut self, entries: &'static [SubsetValidatorEntry]) -> Self {
-            self.subset_validators = entries;
+            self.subset_validators.extend(entries);
             self
         }
 
-        /// 📖️ Sets this artifact's grammar table (`register_language`, one call per entry).
+        /// 📖️ Appends this artifact's grammar table (`register_language`, one call per entry).
         pub fn languages(mut self, specs: &'static [dsl::LanguageSpec]) -> Self {
-            self.languages = specs;
+            for spec in specs {
+                let claims = spec.extension.map(|extension| vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), extension).expect("language extensions are non-empty")]).unwrap_or_default();
+                append_artifact_capability(&mut self.definition, ArtifactCapabilityKind::representation(), spec.id, claims);
+            }
+            self.languages.extend(specs);
             self
         }
 
         /// 🗂️ Declares the document codec for one document-owning `ArtifactApp`
-        /// (`register_document_codec_for_app::<A>`, keyed by `A::DOCUMENT_SCHEMA`). At most one per
-        /// artifact — a second call overwrites the first, matching every other declaration field's
-        /// last-write-wins builder convention.
+        /// (`register_document_codec_for_app::<A>`, keyed by `A::DOCUMENT_SCHEMA`). Repeatable:
+        /// every schema-owned codec is retained and conflict-checked before runtime registration.
         pub fn document_codec<A: ArtifactApp>(mut self) -> Self {
-            self.document_codec = Some(DocumentCodecSpec::of::<A>());
+            let codec = DocumentCodecSpec::of::<A>();
+            append_artifact_capability(
+                &mut self.definition,
+                ArtifactCapabilityKind::codec(),
+                &codec.schema,
+                vec![
+                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), codec.schema.clone()).expect("codec schemas are non-empty"),
+                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension).expect("codec extensions are non-empty"),
+                ],
+            );
+            self.document_codecs.push(codec);
             self
         }
 
@@ -1589,15 +2478,24 @@ pub mod app {
         /// `📓️w1d-declaration-gaps-report.md`). `.document_codec::<A>()` is keyed off `A::DOCUMENT_SCHEMA`
         /// and calls `register_document_codec_for_app::<A>`, which requires a real `ArtifactApp`; a
         /// headless library plugin (energy's `EnergyModelSnapshot`/`EnergyModelMutation` is the
-        /// motivating case) has no such type. Same bounds as `store::ArtifactCodec::of`, same
-        /// last-write-wins convention as `document_codec` above — the two share one `Option` slot since
-        /// an artifact has exactly one document codec either way it's expressed.
+        /// motivating case) has no such type. Same bounds as `store::ArtifactCodec::of`; it appends
+        /// to the same plural codec capability set as `.document_codec::<A>()`.
         pub fn document_codec_bare<Snapshot, Mutation>(mut self, schema: impl Into<String>) -> Self
         where
             Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
             Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,
         {
-            self.document_codec = Some(DocumentCodecSpec::bare::<Snapshot, Mutation>(schema));
+            let codec = DocumentCodecSpec::bare::<Snapshot, Mutation>(schema);
+            append_artifact_capability(
+                &mut self.definition,
+                ArtifactCapabilityKind::codec(),
+                &codec.schema,
+                vec![
+                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), codec.schema.clone()).expect("codec schemas are non-empty"),
+                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension).expect("codec extensions are non-empty"),
+                ],
+            );
+            self.document_codecs.push(codec);
             self
         }
 
@@ -1628,22 +2526,36 @@ pub mod app {
             self
         }
 
+        /// 🧾️ Appends an independently assembled standard/profile definition. Its identity must
+        /// live within this declaration's artifact kind; registration validates every definition
+        /// atomically before any legacy runtime registry is touched.
+        pub fn definition(mut self, definition: ArtifactDefinition) -> Result<Self, ArtifactDefinitionError> {
+            let owner = self.definition.identity().clone();
+            if definition.identity() != &owner {
+                return Err(ArtifactDefinitionError::new("artifact-definition.declaration-identity", format!("definition {} does not equal declaration artifact {}", definition.identity(), owner)));
+            }
+            self.definition = definition;
+            Ok(self)
+        }
+
         /// ✅️ Finishes the declaration.
         pub fn build(self) -> ArtifactDeclaration {
             ArtifactDeclaration {
                 kind: self.kind,
-                schema: self.schema,
+                schemas: self.schemas,
                 inferences: self.inferences,
                 inference_services: self.inference_services,
                 composers: self.composers,
                 formats: self.formats,
                 subset_validators: self.subset_validators,
                 languages: self.languages,
-                document_codec: self.document_codec,
+                document_codecs: self.document_codecs,
                 migrations: self.migrations,
                 child_slots: self.child_slots,
                 link_slots: self.link_slots,
                 capabilities: self.capabilities,
+                definition: self.definition,
+                definition_error: self.definition_error,
             }
         }
     }
@@ -1658,15 +2570,16 @@ pub mod app {
     /// exists to keep.
     pub struct DocumentCodecSpec {
         schema: String,
-        register: fn(String),
+        extension: &'static str,
+        register: fn(String) -> Result<(), PluginAssemblyError>,
     }
 
     impl DocumentCodecSpec {
         fn of<A: ArtifactApp>() -> Self {
-            fn register_thunk<A: ArtifactApp>(schema: String) {
-                super::plugin_runtime::register_document_codec_for_app::<A>(schema);
+            fn register_thunk<A: ArtifactApp>(schema: String) -> Result<(), PluginAssemblyError> {
+                super::plugin_runtime::register_document_codec_for_app::<A>(schema).map_err(|error| PluginAssemblyError::new("plugin-assembly.document-codec-registration", error.to_string()))
             }
-            DocumentCodecSpec { schema: A::DOCUMENT_SCHEMA.to_string(), register: register_thunk::<A> }
+            DocumentCodecSpec { schema: A::DOCUMENT_SCHEMA.to_string(), extension: <A::Snapshot as store::ArtifactDsl>::EXTENSION, register: register_thunk::<A> }
         }
 
         /// 🗂️ `of::<A>()`'s app-less sibling — see `.document_codec_bare()`'s own doc for why this
@@ -1677,117 +2590,186 @@ pub mod app {
             Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
             Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,
         {
-            fn register_thunk<Snapshot, Mutation>(schema: String)
+            fn register_thunk<Snapshot, Mutation>(schema: String) -> Result<(), PluginAssemblyError>
             where
                 Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
                 Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,
             {
-                store::register_document_codec(store::ArtifactCodec::of::<Snapshot, Mutation>(schema));
+                store::register_document_codec(store::ArtifactCodec::of::<Snapshot, Mutation>(schema)).map_err(|error| PluginAssemblyError::new("plugin-assembly.document-codec-registration", error.to_string()))
             }
-            DocumentCodecSpec { schema: schema.into(), register: register_thunk::<Snapshot, Mutation> }
+            DocumentCodecSpec { schema: schema.into(), extension: <Snapshot as store::ArtifactDsl>::EXTENSION, register: register_thunk::<Snapshot, Mutation> }
         }
     }
 
     impl ArtifactDeclaration {
-        /// 🏗️ Performs every registration this declaration carries, in the fixed deterministic order
-        /// schema → inference descriptors → inference services → formats → subset validators → composers → languages → document
-        /// codec → migrations (ordering was implicit in call order inside 33 hand-written `setup`
-        /// functions; this is where it becomes explicit and uniform). Called exactly once per
-        /// declared artifact, from `PluginBuilder::build()` — never `pub`, so a plugin crate can
-        /// describe a declaration but never trigger its own registration.
-        ///
-        /// **Ownership check** — the single most important line in this change, and the direct
-        /// countermeasure to the named violation this ticket opened against (lowpoly's
-        /// `register_mesh_exporter("3d.mesh", …)`: an IO registration naming a kind that call had no
-        /// connection to at all). Two layers, since today's on-disk kind strings are pre-migration
-        /// (see the `kind` field doc):
-        ///   1. **Always enforced**: every composer must ACTUALLY BE ABOUT this declaration's `kind`
-        ///      — either producing it (`writes.artifact_kind == kind`, the import direction) or
-        ///      consuming it (`kind` appears in `reads`, the export direction — an artifact's own
-        ///      composer legitimately writes a FOREIGN format when exporting, e.g. note→svg, so only
-        ///      `writes`-must-equal would reject every real export entry). Every subset validator's
-        ///      `dialect.artifact_kind` and every migration's `from`/`to` `.artifact_kind` must equal
-        ///      `kind` exactly — those are always about this artifact's own dialect, never a foreign one.
-        ///   2. **Enforced once `kind` is canonical**: if `kind` parses as `s.<plugin>.<artifact>`,
-        ///      its plugin segment must equal the builder's `plugin_id` — the precise, structural
-        ///      form of "a plugin may only declare artifacts it owns." This tightens itself
-        ///      automatically as kind strings migrate to the canonical grammar; no second pass here.
-        pub(crate) fn register_all(self, plugin_id: &str, plugin: Plugin) -> Plugin {
+        /// 📚️ Returns this declaration's one authoritative artifact definition.
+        pub fn definition(&self) -> &ArtifactDefinition {
+            &self.definition
+        }
+
+        /// 🛡️ Inserts every attached definition into a caller-owned plugin registry. The caller
+        /// owns the transaction boundary so independently declared artifacts are checked together
+        /// before any runtime registration can mutate its legacy registry.
+        pub(crate) fn register_definitions(&self, registry: &mut ArtifactDefinitionRegistry) -> Result<(), ArtifactDefinitionError> {
+            if let Some(error) = &self.definition_error {
+                return Err(error.clone());
+            }
+            registry.register(self.definition.clone())?;
+            Ok(())
+        }
+
+        /// 🛡️ Validates this declaration into one plugin-owned registry without side effects.
+        pub(crate) fn preflight(&self, plugin_id: &str, definitions: &mut ArtifactDefinitionRegistry) -> Result<(), PluginAssemblyError> {
+            self.register_definitions(definitions).map_err(PluginAssemblyError::definition)?;
             if let Ok(canonical) = ArtifactKindId::parse(&self.kind) {
-                assert!(canonical.plugin() == plugin_id, "plugin {plugin_id:?} declared artifact {:?} but its canonical kind names owning plugin {:?} — a plugin may only declare artifacts it owns", self.kind, canonical.plugin());
+                if canonical.plugin() != plugin_id {
+                    return Err(PluginAssemblyError::new("plugin-assembly.artifact-owner", format!("plugin {plugin_id:?} does not own artifact {:?}", self.kind)));
+                }
             }
-            for entry in self.composers {
-                let writes_it = entry.writes.artifact_kind == self.kind;
-                let reads_it = entry.reads.iter().any(|dialect| dialect.artifact_kind == self.kind);
-                assert!(
-                    writes_it || reads_it,
-                    "plugin {plugin_id:?}'s composer for artifact {:?} writes {} reading {:?} — neither touches the kind this declaration owns; a declaration's composers must produce or consume the kind it declares",
-                    self.kind,
-                    entry.writes.artifact_kind,
-                    entry.reads.iter().map(|dialect| dialect.artifact_kind).collect::<Vec<_>>()
-                );
+            for entry in &self.composers {
+                if entry.writes.artifact_kind != self.kind && !entry.reads.iter().any(|dialect| dialect.artifact_kind == self.kind) {
+                    return Err(PluginAssemblyError::new("plugin-assembly.composer-owner", format!("composer for {:?} neither reads nor writes that artifact", self.kind)));
+                }
             }
-            for entry in self.subset_validators {
-                assert!(entry.dialect.artifact_kind == self.kind, "plugin {plugin_id:?}'s subset validator for artifact {:?} validates {} — ownership mismatch", self.kind, entry.dialect.artifact_kind);
+            for entry in &self.subset_validators {
+                if entry.dialect.artifact_kind != self.kind {
+                    return Err(PluginAssemblyError::new("plugin-assembly.subset-owner", format!("subset validator for {:?} validates {}", self.kind, entry.dialect.artifact_kind)));
+                }
             }
             for migration in &self.migrations {
-                assert!(
-                    migration.from.artifact_kind == self.kind && migration.to.artifact_kind == self.kind,
-                    "plugin {plugin_id:?}'s dialect migration for artifact {:?} names {}→{} — ownership mismatch",
-                    self.kind,
-                    migration.from.artifact_kind,
-                    migration.to.artifact_kind
-                );
+                if migration.from.artifact_kind != self.kind || migration.to.artifact_kind != self.kind {
+                    return Err(PluginAssemblyError::new("plugin-assembly.migration-owner", format!("migration for {:?} names {}→{}", self.kind, migration.from.artifact_kind, migration.to.artifact_kind)));
+                }
             }
             for service in &self.inference_services {
                 let metadata = service.metadata();
-                assert!(metadata.owner == plugin_id, "plugin {plugin_id:?}'s artifact inference service declares owner {:?} — ownership mismatch", metadata.owner);
-                assert!(metadata.artifact_kind == self.kind, "plugin {plugin_id:?}'s artifact inference service declares kind {:?}, declaration owns {:?}", metadata.artifact_kind, self.kind);
-                let artifact_schema = self.schema.as_ref().expect("artifact declaration typestate guarantees a schema");
-                assert!(metadata.artifact_schema == artifact_schema.id, "plugin {plugin_id:?}'s artifact inference service declares artifact schema {:?}, declaration schema is {:?}", metadata.artifact_schema, artifact_schema.id);
-                assert!(
-                    self.inferences.iter().any(|descriptor| descriptor.id == metadata.inference_schema),
-                    "plugin {plugin_id:?}'s artifact inference service declares inference schema {:?} without a matching inference descriptor",
-                    metadata.inference_schema
-                );
+                if metadata.owner != plugin_id || metadata.artifact_kind != self.kind {
+                    return Err(PluginAssemblyError::new("plugin-assembly.inference-owner", format!("inference service {:?}/{:?} does not belong to plugin {plugin_id:?} artifact {:?}", metadata.owner, metadata.artifact_kind, self.kind)));
+                }
+                if !self.schemas.iter().any(|schema| metadata.artifact_schema == schema.id) {
+                    return Err(PluginAssemblyError::new("plugin-assembly.inference-schema", format!("inference service {:?} has no declared artifact schema", metadata.inference_schema)));
+                }
+                if !self.inferences.iter().any(|descriptor| descriptor.id == metadata.inference_schema) {
+                    return Err(PluginAssemblyError::new("plugin-assembly.inference-descriptor", format!("inference service {:?} has no descriptor", metadata.inference_schema)));
+                }
             }
+            Ok(())
+        }
 
-            if let Some(schema) = self.schema {
+        /// 🏗️ Commits one preflighted declaration through the typed assembly boundary.
+        pub(crate) fn try_register_all(self, plugin_id: &str, plugin: Plugin) -> Result<Plugin, PluginAssemblyError> {
+            for schema in self.schemas {
                 ::semio_framework_schema::register_artifact_schema_descriptor(schema);
             }
             for inference in self.inferences {
                 ::semio_framework_schema::register_artifact_inference_descriptor(inference);
             }
             for service in self.inference_services {
-                register_artifact_inference_service(service).unwrap_or_else(|error| panic!("plugin {plugin_id:?} failed to register artifact inference service: {error}"));
+                register_artifact_inference_service(service).map_err(|error| PluginAssemblyError::new("plugin-assembly.inference-registration", error.to_string()))?;
             }
             if !self.formats.is_empty() {
-                semio_framework::register_format_descriptors(self.formats);
+                semio_framework::register_format_descriptors(self.formats).map_err(|error| PluginAssemblyError::new("plugin-assembly.format-registration", error.to_string()))?;
             }
             for entry in self.subset_validators {
-                semio_framework::register_subset_validator(entry);
+                semio_framework::register_subset_validator(entry).map_err(|error| PluginAssemblyError::new("plugin-assembly.subset-registration", error.to_string()))?;
             }
-            if !self.composers.is_empty() {
-                semio_framework::register_composer_entries(self.composers);
+            for entry in self.composers {
+                semio_framework::register_composer_entries(std::slice::from_ref(entry)).map_err(|error| PluginAssemblyError::new("plugin-assembly.composer-registration", error.to_string()))?;
             }
             for spec in self.languages {
                 dsl::register_language(*spec);
             }
-            if let Some(codec) = self.document_codec {
-                (codec.register)(codec.schema);
+            for codec in self.document_codecs {
+                (codec.register)(codec.schema)?;
             }
             for migration in self.migrations {
-                store::register_dialect_migration(migration);
+                store::register_dialect_migration(migration).map_err(|error| PluginAssemblyError::new("plugin-assembly.migration-registration", error.to_string()))?;
             }
-
             let mut plugin = plugin;
             for capability in self.capabilities {
                 plugin = plugin.capability(capability);
             }
-            plugin
+            let _ = plugin_id;
+            Ok(plugin)
         }
     }
     //#endregion 🔖️ArtifactDeclaration
+
+    #[cfg(test)]
+    mod artifact_definition_contract_tests {
+        use super::*;
+
+        fn identity(value: &str) -> ArtifactIdentity {
+            ArtifactIdentity::parse(value).unwrap()
+        }
+
+        fn capability(owner: &ArtifactIdentity, segment: &str, kind: ArtifactCapabilityKind) -> ArtifactCapability {
+            ArtifactCapability::new(owner.child(segment).unwrap(), kind)
+        }
+
+        #[test]
+        fn plural_definition_carries_every_artifact_capability_without_a_dispatch_edit() {
+            let owner = identity("s.stdio.ifc.standards.v4");
+            let schema = capability(&owner, "schema", ArtifactCapabilityKind::schema()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.stdio.ifc.v4").unwrap()).unwrap();
+            let standard = capability(&owner, "standard", ArtifactCapabilityKind::standard());
+            let profile = capability(&owner, "profile", ArtifactCapabilityKind::profile());
+            let dialect = capability(&owner, "source-dialect", ArtifactCapabilityKind::source_dialect()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.ifc@4.any").unwrap()).unwrap();
+            let representation = capability(&owner, "representation", ArtifactCapabilityKind::representation()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::mime(), "application/ifc").unwrap()).unwrap();
+            let codec = capability(&owner, "codec", ArtifactCapabilityKind::codec()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "stdio.ifc.v4.pack").unwrap()).unwrap();
+            let mutation = capability(&owner, "mutation", ArtifactCapabilityKind::mutation());
+            let inference = capability(&owner, "inference", ArtifactCapabilityKind::inference());
+            let resource = capability(&owner, "resource", ArtifactCapabilityKind::resource()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "ifc").unwrap()).unwrap();
+            let localization = capability(&owner, "localization", ArtifactCapabilityKind::localization())
+                .localization(ArtifactLocalization::new(ArtifactLocale::parse("en").unwrap(), "Industry Foundation Classes").unwrap())
+                .unwrap()
+                .localization(ArtifactLocalization::new(ArtifactLocale::parse("de").unwrap(), "Industriegrundklassen").unwrap())
+                .unwrap();
+            let conformance = capability(&owner, "conformance-suite", ArtifactCapabilityKind::conformance_suite()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension_implementation(), "ifc-v4-conformance").unwrap()).unwrap();
+            let definition = [schema, standard, profile, dialect, representation, codec, mutation, inference, resource, localization, conformance]
+                .into_iter()
+                .try_fold(ArtifactDefinition::new(owner.clone()), |definition, capability| definition.capability(capability))
+                .unwrap();
+
+            assert_eq!(definition.capabilities().count(), 11);
+            assert!(definition.validate().is_ok());
+            assert_eq!(definition.capabilities().last().unwrap().identity().as_str(), "s.stdio.ifc.standards.v4.standard");
+        }
+
+        #[test]
+        fn registry_rejects_duplicate_schema_dialect_codec_mime_and_extension_claims_atomically() {
+            let owner_a = identity("s.stdio.ifc.standards.v4");
+            let owner_b = identity("s.stdio.ifc.standards.v5");
+            let namespaces = [ArtifactIdentityNamespace::schema(), ArtifactIdentityNamespace::dialect(), ArtifactIdentityNamespace::codec(), ArtifactIdentityNamespace::mime(), ArtifactIdentityNamespace::extension()];
+            for (index, namespace) in namespaces.into_iter().enumerate() {
+                let value = format!("shared-{index}");
+                let first = ArtifactDefinition::new(owner_a.clone())
+                    .capability(capability(&owner_a, &format!("first-{index}"), ArtifactCapabilityKind::resource()).claim(ArtifactIdentityClaim::new(namespace.clone(), value.clone()).unwrap()).unwrap())
+                    .unwrap();
+                let second = ArtifactDefinition::new(owner_b.clone()).capability(capability(&owner_b, &format!("second-{index}"), ArtifactCapabilityKind::resource()).claim(ArtifactIdentityClaim::new(namespace, value).unwrap()).unwrap()).unwrap();
+                let mut registry = ArtifactDefinitionRegistry::new();
+                registry.register(first).unwrap();
+                let error = registry.register(second).unwrap_err();
+                assert_eq!(error.code(), "artifact-definition.conflicting-claim");
+                assert_eq!(registry.len(), 1);
+            }
+        }
+
+        #[test]
+        fn identities_and_locales_are_explicit_and_conflicts_do_not_overwrite() {
+            assert!(ArtifactIdentity::parse("s.stdio..ifc").is_err());
+            assert!(ArtifactLocale::parse("EN").is_err());
+            let owner = identity("s.stdio.ifc.standards.v4");
+            let localized = capability(&owner, "localized", ArtifactCapabilityKind::localization()).localization(ArtifactLocalization::new(ArtifactLocale::parse("en").unwrap(), "Ifc").unwrap()).unwrap();
+            let duplicate = localized.clone().localization(ArtifactLocalization::new(ArtifactLocale::parse("en").unwrap(), "IFC").unwrap()).unwrap_err();
+            assert_eq!(duplicate.code(), "artifact-definition.duplicate-locale");
+
+            let mut registry = ArtifactDefinitionRegistry::new();
+            registry.register(ArtifactDefinition::new(owner.clone()).capability(localized).unwrap()).unwrap();
+            let error = registry.register(ArtifactDefinition::new(owner)).unwrap_err();
+            assert_eq!(error.code(), "artifact-definition.duplicate-artifact");
+            assert_eq!(registry.len(), 1);
+        }
+    }
 
     pub struct AppBuilder {
         id: String,
@@ -9090,8 +10072,8 @@ pub mod plugin_runtime {
     /// (`register_<app>_exports()`-style) calls once per document kind so `framework/sync`'s
     /// `FolderEndpoint` (and any other schema-string-keyed caller) can print/parse that kind without
     /// depending on its concrete `Snapshot`/`Mutation` types.
-    pub fn register_document_codec_for_app<A: ArtifactApp>(schema: impl Into<String>) {
-        store::register_document_codec(store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema));
+    pub fn register_document_codec_for_app<A: ArtifactApp>(schema: impl Into<String>) -> Result<(), store::DocumentCodecRegistryError> {
+        store::register_document_codec(store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema))
     }
 
     /// @emoji 🔗️ Attaches a backbone channel by URI. The URI is resolved to a `store::PortBackbone`
@@ -10683,14 +11665,13 @@ pub mod plugin_runtime {
 
         fn synthetic_setup() {}
 
-        fn __semio_plugin_bundle() -> crate::Plugin {
-            synthetic_setup();
-            crate::Plugin::builder("synthetic").label("Synthetic").version("0.0.1").register_document_app::<TestApp>(synthetic_play_app()).build()
+        fn __semio_plugin_bundle() -> Result<crate::Plugin, PluginAssemblyError> {
+            crate::Plugin::builder("synthetic").label("Synthetic").version("0.0.1").setup(synthetic_setup).register_document_app::<TestApp>(synthetic_play_app()).try_build()
         }
 
         #[test]
         fn plugin_builder_builds_bundle_from_fluent_spec() {
-            let bundle = __semio_plugin_bundle();
+            let bundle = __semio_plugin_bundle().expect("synthetic plugin assembly");
             assert_eq!(bundle.manifest.plugin_id, "synthetic");
             assert_eq!(bundle.manifest.label.as_str(), "Synthetic");
             assert_eq!(bundle.manifest.version, "0.0.1");
@@ -12827,12 +13808,20 @@ pub use app::{
     ArtifactAnalyzer,
     ArtifactApp,
     ArtifactBuilder,
+    ArtifactCapability,
+    ArtifactCapabilityKind,
     ArtifactChildren,
     ArtifactComposer,
     ArtifactComposition,
     ArtifactDeclaration,
     ArtifactDecomposer,
+    ArtifactDefinition,
+    ArtifactDefinitionError,
+    ArtifactDefinitionRegistry,
     ArtifactDeserializer,
+    ArtifactIdentity,
+    ArtifactIdentityClaim,
+    ArtifactIdentityNamespace,
     ArtifactInferenceExecutionError,
     ArtifactInferenceRegistrationError,
     ArtifactInferenceService,
@@ -12841,9 +13830,12 @@ pub use app::{
     ArtifactInferenceServiceRegistry,
     ArtifactInferrer,
     ArtifactKindSpec,
+    ArtifactLocale,
+    ArtifactLocalization,
+    ArtifactMime,
+    ArtifactExecutableIdentity,
     ArtifactSerializer,
     ArtifactView,
-    ARTIFACT_INFERENCE_WIRE_VERSION,
     // 🧸️👥️🫧️ Composition child-read seam plus the two ephemeral state lanes.
     ChildContentView,
     ColdArtifactInference,
@@ -12880,6 +13872,7 @@ pub use app::{
     PanelTabSpec,
     PanelTreeBuilder,
     Plugin,
+    PluginAssemblyError,
     PluginApp,
     PluginBuilder,
     PluginProgram,
@@ -12888,9 +13881,13 @@ pub use app::{
     VcsArtifactApp,
     WindowKindSpec,
     WireArtifactInferenceDiagnostic,
+    WireArtifactInferenceBudget,
+    WireArtifactInferenceCacheMode,
     WireArtifactInferenceMetadata,
+    WireArtifactInferenceProvenance,
     WireArtifactInferenceRequest,
     WireArtifactInferenceResult,
+    ARTIFACT_INFERENCE_WIRE_VERSION,
 };
 pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};

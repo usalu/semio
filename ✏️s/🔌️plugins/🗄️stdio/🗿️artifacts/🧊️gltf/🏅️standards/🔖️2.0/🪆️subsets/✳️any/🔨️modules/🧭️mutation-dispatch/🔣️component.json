@@ -1,0 +1,51 @@
+{
+
+  "$id": "https://semio.tech/schema/s.stdio.gltf/mutation.json",
+  "title": "GltfMutation",
+  "type": "object",
+  "required": ["mutation"],
+  "oneOf": [
+    { "properties": { "mutation": { "const": "noMutation" } } },
+    { "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": {} } },
+    { "properties": { "mutation": { "const": "setAsset" }, "asset": {} } },
+    { "properties": { "mutation": { "const": "insertScene" }, "index": { "type": "integer" }, "scene": {} } },
+    { "properties": { "mutation": { "const": "removeScene" }, "index": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "setScene" }, "index": { "type": "integer" }, "scene": {} } },
+    { "properties": { "mutation": { "const": "insertNode" }, "index": { "type": "integer" }, "node": {} } },
+    { "properties": { "mutation": { "const": "removeNode" }, "index": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "setNode" }, "index": { "type": "integer" }, "node": {} } },
+    { "required": ["mutation", "index"], "properties": { "mutation": { "const": "transformNode" }, "index": { "type": "integer", "minimum": 0 }, "matrix": { "type": ["array", "null"], "items": { "type": "number" }, "minItems": 16, "maxItems": 16 }, "translation": { "type": ["array", "null"], "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }, "rotation": { "type": ["array", "null"], "items": { "type": "number" }, "minItems": 4, "maxItems": 4 }, "scale": { "type": ["array", "null"], "items": { "type": "number" }, "minItems": 3, "maxItems": 3 } } },
+    { "required": ["mutation", "index", "position"], "properties": { "mutation": { "const": "reparentNode" }, "index": { "type": "integer", "minimum": 0 }, "parent": { "type": ["integer", "null"], "minimum": 0 }, "scene": { "type": ["integer", "null"], "minimum": 0 }, "position": { "type": "integer", "minimum": 0 } } },
+    { "required": ["mutation", "index"], "properties": { "mutation": { "const": "bindNodeMesh" }, "index": { "type": "integer", "minimum": 0 }, "mesh": { "type": ["integer", "null"], "minimum": 0 } } },
+    { "properties": { "mutation": { "const": "insertMesh" }, "index": { "type": "integer" }, "mesh": {} } },
+    { "properties": { "mutation": { "const": "removeMesh" }, "index": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "setMesh" }, "index": { "type": "integer" }, "mesh": {} } },
+    { "properties": { "mutation": { "const": "insertAccessor" }, "index": { "type": "integer" }, "accessor": {} } },
+    { "properties": { "mutation": { "const": "removeAccessor" }, "index": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "setAccessor" }, "index": { "type": "integer" }, "accessor": {} } },
+    { "properties": { "mutation": { "const": "insertMaterial" }, "index": { "type": "integer" }, "material": {} } },
+    { "properties": { "mutation": { "const": "removeMaterial" }, "index": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "setMaterial" }, "index": { "type": "integer" }, "material": {} } },
+    { "required": ["mutation", "mesh", "primitive"], "properties": { "mutation": { "const": "bindPrimitiveMaterial" }, "mesh": { "type": "integer", "minimum": 0 }, "primitive": { "type": "integer", "minimum": 0 }, "material": { "type": ["integer", "null"], "minimum": 0 } } },
+    { "properties": { "mutation": { "const": "insertBuffer" }, "index": { "type": "integer" }, "buffer": {}, "bytes": { "type": "array", "items": { "type": "integer" } } } },
+    { "properties": { "mutation": { "const": "removeBuffer" }, "index": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "setBuffer" }, "index": { "type": "integer" }, "buffer": {}, "bytes": { "type": "array", "items": { "type": "integer" } } } },
+    { "properties": { "mutation": { "const": "insertAnimation" }, "index": { "type": "integer" }, "animation": {} } },
+    { "properties": { "mutation": { "const": "removeAnimation" }, "index": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "setAnimation" }, "index": { "type": "integer" }, "animation": {} } }
+  ],
+  "$defs": {
+    "rejection": { "type": "object", "additionalProperties": false, "required": ["code", "path", "detail"], "properties": { "code": { "type": "string" }, "path": { "type": "string" }, "detail": { "type": "string" } } },
+    "referenceRule": { "type": "object", "additionalProperties": false, "required": ["family", "pathPattern", "validate", "remapOnInsert", "remapOnRemove"], "properties": { "family": { "enum": ["scene", "node", "mesh", "accessor", "material", "buffer"] }, "pathPattern": { "type": "string" }, "validate": { "type": "boolean" }, "remapOnInsert": { "type": "boolean" }, "remapOnRemove": { "type": "boolean" } } },
+    "application": { "oneOf": [ { "type": "object", "additionalProperties": false, "required": ["accepted", "diff"], "properties": { "accepted": { "const": true }, "diff": { "$ref": "https://semio.tech/schema/s.stdio.gltf/diff.json" } } }, { "type": "object", "additionalProperties": false, "required": ["accepted", "rejection"], "properties": { "accepted": { "const": false }, "rejection": { "$ref": "#/$defs/rejection" } } } ] }
+  },
+  "x-semio-reference-rules": [
+    "document/meshes/{mesh}/primitives/{primitive}/attributes/{semantic}",
+    "document/meshes/{mesh}/primitives/{primitive}/targets/{target}/{semantic}",
+    "document/meshes/{mesh}/primitives/{primitive}/indices",
+    "document/skins/{skin}/inverseBindMatrices",
+    "document/animations/{animation}/samplers/{sampler}/{input|output}"
+    ,"incomingInsertNode/children/{slot}"
+    ,"document/buffers|snapshot/buffers"
+  ]
+}

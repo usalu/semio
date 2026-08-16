@@ -10,7 +10,7 @@
 
 use semio_framework_plugin::io::{register_format_descriptors, FormatDescriptor};
 
-/// 🗄️ Full 28-entry stdio format roster, shaped for `register_format_descriptors`.
+/// 🗄️ Full 36-entry stdio format roster, shaped for `register_format_descriptors`.
 pub fn stdio_format_descriptors() -> Vec<FormatDescriptor> {
     vec![
         FormatDescriptor {
@@ -349,13 +349,154 @@ pub fn stdio_format_descriptors() -> Vec<FormatDescriptor> {
             dir_name: "💬️bcf".into(),
             is_binary: true,
         },
+        FormatDescriptor {
+            kind_id: "stdio.semio".into(),
+            short_id: "semio".into(),
+            aliases: vec![],
+            mime: "application/vnd.semio".into(),
+            extension: ".semio".into(),
+            name: "Semio".into(),
+            full_name: "Semio".into(),
+            neutral: true,
+            dir_name: "🧿️semio".into(),
+            is_binary: false,
+        },
+        FormatDescriptor {
+            kind_id: "stdio.mp4".into(),
+            short_id: "mp4".into(),
+            aliases: vec![],
+            mime: "video/mp4".into(),
+            extension: ".mp4".into(),
+            name: "MP4".into(),
+            full_name: "MPEG-4 Part 14".into(),
+            neutral: true,
+            dir_name: "🎥️mp4".into(),
+            is_binary: true,
+        },
+        FormatDescriptor {
+            kind_id: "stdio.avi".into(),
+            short_id: "avi".into(),
+            aliases: vec![],
+            mime: "video/x-msvideo".into(),
+            extension: ".avi".into(),
+            name: "AVI".into(),
+            full_name: "Audio Video Interleave".into(),
+            neutral: true,
+            dir_name: "📼️avi".into(),
+            is_binary: true,
+        },
+        FormatDescriptor {
+            kind_id: "stdio.mp3".into(),
+            short_id: "mp3".into(),
+            aliases: vec![],
+            mime: "audio/mpeg".into(),
+            extension: ".mp3".into(),
+            name: "MP3".into(),
+            full_name: "MPEG Audio Layer III".into(),
+            neutral: true,
+            dir_name: "🎵️mp3".into(),
+            is_binary: true,
+        },
+        FormatDescriptor {
+            kind_id: "stdio.wav".into(),
+            short_id: "wav".into(),
+            aliases: vec![],
+            mime: "audio/wav".into(),
+            extension: ".wav".into(),
+            name: "WAV".into(),
+            full_name: "Waveform Audio File Format".into(),
+            neutral: true,
+            dir_name: "🔊️wav".into(),
+            is_binary: true,
+        },
+        FormatDescriptor {
+            kind_id: "stdio.epw".into(),
+            short_id: "epw".into(),
+            aliases: vec![],
+            mime: "".into(),
+            extension: ".epw".into(),
+            name: "EPW".into(),
+            full_name: "EnergyPlus Weather".into(),
+            neutral: true,
+            dir_name: "🌦️epw".into(),
+            is_binary: false,
+        },
+        FormatDescriptor {
+            kind_id: "stdio.tsv".into(),
+            short_id: "tsv".into(),
+            aliases: vec![],
+            mime: "text/tab-separated-values".into(),
+            extension: ".tsv".into(),
+            name: "TSV".into(),
+            full_name: "Tab-Separated Values".into(),
+            neutral: true,
+            dir_name: "📑️tsv".into(),
+            is_binary: false,
+        },
+        FormatDescriptor {
+            kind_id: "stdio.html".into(),
+            short_id: "html".into(),
+            aliases: vec![],
+            mime: "text/html".into(),
+            extension: ".html".into(),
+            name: "HTML".into(),
+            full_name: "Hypertext Markup Language".into(),
+            neutral: true,
+            dir_name: "🌐️html".into(),
+            is_binary: false,
+        },
     ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde::Deserialize;
+    use std::collections::BTreeMap;
+
+    #[derive(Deserialize)]
+    struct Catalog {
+        stdio_roster: BTreeMap<String, CatalogEntry>,
+    }
+
+    #[derive(Deserialize)]
+    struct CatalogEntry {
+        dir: String,
+        mime: Option<String>,
+        ext: String,
+    }
+
+    #[test]
+    fn descriptor_ledger_is_catalog_derived() {
+        let catalog: Catalog = serde_json::from_str(include_str!("../📇️registry/📇️catalog.json")).expect("catalog JSON");
+        let descriptors = stdio_format_descriptors();
+        assert_eq!(descriptors.len(), catalog.stdio_roster.len());
+        let descriptor_by_id: BTreeMap<_, _> = descriptors.iter().map(|descriptor| (descriptor.short_id.as_str(), descriptor)).collect();
+        assert_eq!(descriptor_by_id.len(), descriptors.len(), "duplicate stdio descriptor id");
+        for (id, entry) in catalog.stdio_roster {
+            let descriptor = descriptor_by_id.get(id.as_str()).unwrap_or_else(|| panic!("missing descriptor for {id}"));
+            assert_eq!(descriptor.kind_id, format!("stdio.{id}"));
+            assert_eq!(descriptor.dir_name, entry.dir);
+            assert_eq!(descriptor.extension, entry.ext);
+            assert_eq!(descriptor.mime, entry.mime.unwrap_or_default());
+        }
+    }
+
+    #[test]
+    fn epw_is_extension_routed_without_claiming_txt_mime() {
+        let descriptors = stdio_format_descriptors();
+        let txt = descriptors.iter().find(|descriptor| descriptor.short_id == "txt").expect("txt descriptor");
+        let epw = descriptors.iter().find(|descriptor| descriptor.short_id == "epw").expect("epw descriptor");
+        assert_eq!(txt.mime, "text/plain");
+        assert!(epw.mime.trim().is_empty());
+        assert_eq!(epw.extension, ".epw");
+    }
 }
 
 /// 📌️ Registers `stdio_format_descriptors` onto the generic `io::FormatDescriptor` registry.
 /// Called from `🗄️stdio`'s `plugin()` (`✏️s/🔌️plugins/🗄️stdio/🦀️component.rs`), alongside its
 /// `artifacts::*::engine::register()` calls.
 pub fn register_stdio_format_descriptors() {
-    register_format_descriptors(stdio_format_descriptors());
+    register_format_descriptors(stdio_format_descriptors()).expect("stdio format descriptor registry conflict");
 }
 //#endregion 🔖️FormatCatalog

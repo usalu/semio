@@ -1,0 +1,174 @@
+dialect grammar
+
+grammar stdio.gltf.mutations
+start op
+comment none
+
+# P2-FG3: real one-line op-text form this artifact's hand-rolled `OpText::print_op`/`parse_op`
+# ACTUALLY emits (../🦀️component.rs `print_gltf_mutation`/`parse_gltf_mutation`) -- kebab-case
+# keyword + space-separated `field=value` tokens, reusing the SAME bracket-positional value shapes
+# `🔺️diff/📝️text/📖️component.grammar.semio`'s own productions describe (`enc_scene`/`enc_node`/…
+# are genuinely SHARED Rust functions, `🔨️modules/🧭️mutation-dispatch/🦀️component.rs`'s own doc comment: "Reuses the
+# diff module's pub(crate) grammar primitives and value codecs... rather than duplicating them a
+# second time"). Cross-FILE `use` between this artifact's own sibling `.grammar.semio` files does
+# not work any better than cross-artifact `use` (§2.1 -- parsed/round-tripped, never consulted by
+# `Recognizer::compile`), so every value production below is an HONEST RESTATEMENT of the diff
+# grammar's own shapes (the same precedent zip's OPC family, gif89a's mutations-vs-diff split, and
+# svg's own planned xml-restatement all already establish) -- kept byte-for-byte identical to the
+# sibling file, not reinvented.
+op = no-mutation-op | set-snapshot-op | set-asset-op | insert-scene-op | remove-scene-op | set-scene-op | insert-node-op | remove-node-op | set-node-op | transform-node-op | reparent-node-op | bind-node-mesh-op | insert-mesh-op | remove-mesh-op | set-mesh-op | insert-accessor-op | remove-accessor-op | set-accessor-op | insert-material-op | remove-material-op | set-material-op | bind-primitive-material-op | insert-buffer-op | remove-buffer-op | set-buffer-op | insert-animation-op | remove-animation-op | set-animation-op
+
+no-mutation-op = "no-mutation"
+set-snapshot-op = "set-snapshot" "snapshot" "=" gltf-snapshot-value
+set-asset-op = "set-asset" "asset" "=" asset-value
+
+insert-scene-op = "insert-scene" "index" "=" INT "scene" "=" scene-value
+remove-scene-op = "remove-scene" "index" "=" INT
+set-scene-op = "set-scene" "index" "=" INT "scene" "=" scene-value
+
+insert-node-op = "insert-node" "index" "=" INT "node" "=" node-value
+remove-node-op = "remove-node" "index" "=" INT
+set-node-op = "set-node" "index" "=" INT "node" "=" node-value
+transform-node-op = "transform-node" "index" "=" INT "matrix" "=" matrix-opt "translation" "=" vec3-opt "rotation" "=" vec4-opt "scale" "=" vec3-opt
+reparent-node-op = "reparent-node" "index" "=" INT "parent" "=" index-dash-opt "scene" "=" index-dash-opt "position" "=" INT
+bind-node-mesh-op = "bind-node-mesh" "index" "=" INT "mesh" "=" index-dash-opt
+
+insert-mesh-op = "insert-mesh" "index" "=" INT "mesh" "=" mesh-value
+remove-mesh-op = "remove-mesh" "index" "=" INT
+set-mesh-op = "set-mesh" "index" "=" INT "mesh" "=" mesh-value
+
+insert-accessor-op = "insert-accessor" "index" "=" INT "accessor" "=" accessor-value
+remove-accessor-op = "remove-accessor" "index" "=" INT
+set-accessor-op = "set-accessor" "index" "=" INT "accessor" "=" accessor-value
+
+insert-material-op = "insert-material" "index" "=" INT "material" "=" material-value
+remove-material-op = "remove-material" "index" "=" INT
+set-material-op = "set-material" "index" "=" INT "material" "=" material-value
+bind-primitive-material-op = "bind-primitive-material" "mesh" "=" INT "primitive" "=" INT "material" "=" index-dash-opt
+
+# `InsertBuffer`/`SetBuffer` couple BOTH `document.buffers[index]` metadata AND the raw
+# `GltfSnapshot::buffers[index]` payload bytes together (recipe's explicit "buffers: Vec<Vec<u8>>
+# stays as-is" instruction) -- `bytes=<hex>` is the SECOND, separate `hex`-encoded token.
+insert-buffer-op = "insert-buffer" "index" "=" INT "buffer" "=" buffer-value "bytes" "=" hex
+remove-buffer-op = "remove-buffer" "index" "=" INT
+set-buffer-op = "set-buffer" "index" "=" INT "buffer" "=" buffer-value "bytes" "=" hex
+
+insert-animation-op = "insert-animation" "index" "=" INT "animation" "=" animation-value
+remove-animation-op = "remove-animation" "index" "=" INT
+set-animation-op = "set-animation" "index" "=" INT "animation" "=" animation-value
+
+#region Primitives
+bit = "0" | "1"
+index-dash-opt = "-" | INT
+matrix-opt = "-" | INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT
+vec3-opt = "-" | INT "," INT "," INT
+vec4-opt = "-" | INT "," INT "," INT "," INT
+gltf-f64 = INT | FLOAT
+int-opt = "[" "0" "]" | "[" "1" "," INT "]"
+str-opt = "[" "0" "]" | "[" "1" "," hex "]"
+f64-list = "[" "]" | "[" gltf-f64 {"," gltf-f64}* "]"
+f64-opt = "[" "0" "]" | "[" "1" "," gltf-f64 "]"
+f64-list-opt = "[" "0" "]" | "[" "1" "," f64-list "]"
+usize-list = "[" "]" | "[" INT {"," INT}* "]"
+str-list = "[" "]" | "[" hex {"," hex}* "]"
+attr-pair = hex ":" INT
+attr-pairs = "[" "]" | "[" attr-pair {"," attr-pair}* "]"
+#endregion
+
+#region GltfJsonValue
+json-value = "Z" | "B" "[" bit "]" | "F" "[" gltf-f64 "]" | "S" "[" hex "]" | "A" "[" json-list? "]" | "O" "[" json-obj-list? "]"
+json-list = json-value {"," json-value}*
+json-obj-list = json-member {"," json-member}*
+json-member = hex ":" json-value
+json-opt = "[" "0" "]" | "[" "1" "," json-value "]"
+#endregion
+
+#region UnitEnums
+component-type = INT
+accessor-type = "SCALAR" | "VEC2" | "VEC3" | "VEC4" | "MAT2" | "MAT3" | "MAT4"
+alpha-mode = "OPAQUE" | "MASK" | "BLEND"
+interpolation = "LINEAR" | "STEP" | "CUBICSPLINE"
+animation-path = "translation" | "rotation" | "scale" | "weights"
+source-form = "json" | "glb"
+#endregion
+
+#region AssetSceneNode
+asset-value = "[" hex "," str-opt "," str-opt "," str-opt "," json-opt "," json-opt "]"
+scene-value = "[" usize-list "," str-opt "," json-opt "," json-opt "]"
+node-value = "[" usize-list "," int-opt "," int-opt "," int-opt "," f64-list-opt "," f64-list-opt "," f64-list-opt "," f64-list-opt "," f64-list "," str-opt "," json-opt "," json-opt "]"
+#endregion
+
+#region MeshAccessorMaterial
+morph-target-list = "[" "]" | "[" attr-pairs {"," attr-pairs}* "]"
+primitive-value = "[" attr-pairs "," int-opt "," int-opt "," int-opt "," morph-target-list "," json-opt "," json-opt "]"
+primitive-list = "[" "]" | "[" primitive-value {"," primitive-value}* "]"
+mesh-value = "[" primitive-list "," f64-list "," str-opt "," json-opt "," json-opt "]"
+
+sparse-indices-value = "[" INT "," INT "," component-type "]"
+sparse-values-value = "[" INT "," INT "]"
+sparse-accessor-value = "[" INT "," sparse-indices-value "," sparse-values-value "]"
+sparse-opt = "[" "0" "]" | "[" "1" "," sparse-accessor-value "]"
+accessor-value = "[" int-opt "," INT "," component-type "," bit "," INT "," accessor-type "," f64-list-opt "," f64-list-opt "," sparse-opt "," str-opt "," json-opt "," json-opt "]"
+
+texture-info-value = "[" INT "," INT "," json-opt "," json-opt "]"
+tex-info-opt = "[" "0" "]" | "[" "1" "," texture-info-value "]"
+normal-texture-info-value = "[" INT "," INT "," gltf-f64 "," json-opt "," json-opt "]"
+normal-tex-opt = "[" "0" "]" | "[" "1" "," normal-texture-info-value "]"
+occlusion-texture-info-value = "[" INT "," INT "," gltf-f64 "," json-opt "," json-opt "]"
+occlusion-tex-opt = "[" "0" "]" | "[" "1" "," occlusion-texture-info-value "]"
+pbr-value = "[" f64-list "," tex-info-opt "," gltf-f64 "," gltf-f64 "," tex-info-opt "," json-opt "," json-opt "]"
+pbr-opt = "[" "0" "]" | "[" "1" "," pbr-value "]"
+material-value = "[" str-opt "," pbr-opt "," normal-tex-opt "," occlusion-tex-opt "," tex-info-opt "," f64-list "," alpha-mode "," gltf-f64 "," bit "," json-opt "," json-opt "]"
+#endregion
+
+#region Buffer
+buffer-value = "[" INT "," str-opt "," str-opt "," json-opt "," json-opt "]"
+buffer-view-value = "[" INT "," INT "," INT "," int-opt "," int-opt "," str-opt "," json-opt "," json-opt "]"
+#endregion
+
+#region TextureImageSamplerSkin
+texture-value = "[" int-opt "," int-opt "," str-opt "," json-opt "," json-opt "]"
+image-value = "[" str-opt "," str-opt "," int-opt "," str-opt "," json-opt "," json-opt "]"
+sampler-value = "[" int-opt "," int-opt "," INT "," INT "," str-opt "," json-opt "," json-opt "]"
+skin-value = "[" int-opt "," int-opt "," usize-list "," str-opt "," json-opt "," json-opt "]"
+#endregion
+
+#region Animation
+animation-channel-target-value = "[" int-opt "," animation-path "," json-opt "," json-opt "]"
+animation-channel-value = "[" INT "," animation-channel-target-value "," json-opt "," json-opt "]"
+animation-sampler-value = "[" INT "," interpolation "," INT "," json-opt "," json-opt "]"
+op-channel-list = "[" "]" | "[" animation-channel-value {"," animation-channel-value}* "]"
+op-animation-sampler-list = "[" "]" | "[" animation-sampler-value {"," animation-sampler-value}* "]"
+animation-value = "[" op-channel-list "," op-animation-sampler-list "," str-opt "," json-opt "," json-opt "]"
+#endregion
+
+#region Camera
+perspective-value = "[" f64-opt "," gltf-f64 "," f64-opt "," gltf-f64 "," json-opt "," json-opt "]"
+orthographic-value = "[" gltf-f64 "," gltf-f64 "," gltf-f64 "," gltf-f64 "," json-opt "," json-opt "]"
+camera-projection-value = "P" perspective-value | "O" orthographic-value
+camera-value = "[" camera-projection-value "," str-opt "," json-opt "," json-opt "]"
+#endregion
+
+#region WholeDocument
+# `GltfSnapshot`/`GltfDocument` -- needed by `set-snapshot`'s mandatory whole-document payload
+# (`enc_gltf_snapshot`/`enc_document`, ../../🔺️diff/🦀️component.rs). Every one of the 14 top-level
+# arrays here is a bare `[item item ...]` list (NOT a removed/modified/added collection triple --
+# that shape is exclusive to the DIFF facet's own collection-of-CHANGES; a snapshot's own arrays are
+# just its current, whole content).
+scene-list = "[" "]" | "[" scene-value {"," scene-value}* "]"
+node-list = "[" "]" | "[" node-value {"," node-value}* "]"
+mesh-list = "[" "]" | "[" mesh-value {"," mesh-value}* "]"
+accessor-list = "[" "]" | "[" accessor-value {"," accessor-value}* "]"
+buffer-view-list = "[" "]" | "[" buffer-view-value {"," buffer-view-value}* "]"
+buffer-list = "[" "]" | "[" buffer-value {"," buffer-value}* "]"
+material-list = "[" "]" | "[" material-value {"," material-value}* "]"
+texture-list = "[" "]" | "[" texture-value {"," texture-value}* "]"
+image-list = "[" "]" | "[" image-value {"," image-value}* "]"
+sampler-list = "[" "]" | "[" sampler-value {"," sampler-value}* "]"
+skin-list = "[" "]" | "[" skin-value {"," skin-value}* "]"
+animation-list = "[" "]" | "[" animation-value {"," animation-value}* "]"
+camera-list = "[" "]" | "[" camera-value {"," camera-value}* "]"
+document-value = "[" asset-value "," int-opt "," scene-list "," node-list "," mesh-list "," accessor-list "," buffer-view-list "," buffer-list "," material-list "," texture-list "," image-list "," sampler-list "," skin-list "," animation-list "," camera-list "," str-list "," str-list "," json-opt "," json-opt "]"
+bytes-list = "[" "]" | "[" hex {"," hex}* "]"
+gltf-snapshot-value = "[" hex "," document-value "," bytes-list "," source-form "]"
+#endregion

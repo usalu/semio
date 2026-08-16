@@ -1,0 +1,134 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.semio",
+  "artifact": "semio",
+  "directory": "🧿️semio",
+  "dependencies": [
+    "s.stdio.txt",
+    "s.stdio.xml",
+    "s.stdio.json",
+    "s.stdio.csv",
+    "s.stdio.md",
+    "s.stdio.gltf",
+    "s.stdio.obj",
+    "s.stdio.stl",
+    "s.stdio.ply",
+    "s.stdio.las",
+    "s.stdio.step",
+    "s.stdio.ifc",
+    "s.stdio.dwg",
+    "s.stdio.dxf",
+    "s.stdio.svg",
+    "s.stdio.png",
+    "s.stdio.jpg",
+    "s.stdio.gif",
+    "s.stdio.bmp",
+    "s.stdio.tiff",
+    "s.stdio.pdf",
+    "s.stdio.docx",
+    "s.stdio.pptx",
+    "s.stdio.xlsx",
+    "s.stdio.bcf",
+    "s.stdio.mp4",
+    "s.stdio.avi",
+    "s.stdio.mp3",
+    "s.stdio.wav",
+    "s.stdio.epw",
+    "s.stdio.tsv",
+    "s.stdio.html",
+    "s.stdio.deflate",
+    "s.stdio.zip",
+    "s.stdio.binary"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.semio.standard.v1",
+      "revision": "v1",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.semio.standard.v1.profile.any",
+      "standard": "s.stdio.semio.standard.v1",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.semio.standard.v1.dialect.source",
+      "standard": "s.stdio.semio.standard.v1",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.semio.standard.v1.representation.document",
+      "standard": "s.stdio.semio.standard.v1",
+      "representation": "document",
+      "mime": "application/vnd.semio",
+      "extension": ".semio",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.semio.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.semio.localization.en",
+      "locale": "en",
+      "name": "Semio",
+      "description": "Semio artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.semio.localization.de",
+      "locale": "de",
+      "name": "Semio",
+      "description": "Semio-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.semio.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.semio.standard.v1.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

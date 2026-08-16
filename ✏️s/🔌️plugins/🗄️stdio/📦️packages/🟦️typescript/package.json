@@ -7,7 +7,10 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @semio-tech/stdio-js:test"
+    "test": "bun nx run @semio-tech/stdio-js:test",
+    "test:quick": "bun nx run @semio-tech/stdio-js:test-quick",
+    "test:long": "bun nx run @semio-tech/stdio-js:test-long",
+    "test:exhaustive": "bun nx run @semio-tech/stdio-js:test-exhaustive"
   },
   "exports": {
     ".": "./📦️index.ts"

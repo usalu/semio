@@ -1,0 +1,100 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.csv",
+  "artifact": "csv",
+  "directory": "📊️csv",
+  "dependencies": [
+    "s.stdio.txt"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.csv.standard.rfc4180",
+      "revision": "rfc4180",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.csv.standard.rfc4180.profile.any",
+      "standard": "s.stdio.csv.standard.rfc4180",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.csv.standard.rfc4180.dialect.source",
+      "standard": "s.stdio.csv.standard.rfc4180",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.csv.standard.rfc4180.representation.document",
+      "standard": "s.stdio.csv.standard.rfc4180",
+      "representation": "document",
+      "mime": "text/csv",
+      "extension": ".csv",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.csv.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.csv.localization.en",
+      "locale": "en",
+      "name": "Comma-Separated Values",
+      "description": "Comma-Separated Values artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.csv.localization.de",
+      "locale": "de",
+      "name": "Kommagetrennte Werte",
+      "description": "Kommagetrennte Werte-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.csv.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.csv.standard.rfc4180.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

@@ -1,6 +1,0 @@
-module Stdio_gltf_mutation_wire;
-public type Document = unit {
-    format: uint8;
-    tag: uint8;
-    variant_payload: bytes &eod;
-};

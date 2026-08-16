@@ -1,0 +1,100 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.md",
+  "artifact": "md",
+  "directory": "📝️md",
+  "dependencies": [
+    "s.stdio.txt"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.md.standard.commonmark",
+      "revision": "commonmark",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.md.standard.commonmark.profile.any",
+      "standard": "s.stdio.md.standard.commonmark",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.md.standard.commonmark.dialect.source",
+      "standard": "s.stdio.md.standard.commonmark",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.md.standard.commonmark.representation.document",
+      "standard": "s.stdio.md.standard.commonmark",
+      "representation": "document",
+      "mime": "text/markdown",
+      "extension": ".md",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.md.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.md.localization.en",
+      "locale": "en",
+      "name": "Markdown",
+      "description": "Markdown artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.md.localization.de",
+      "locale": "de",
+      "name": "Markdown",
+      "description": "Markdown-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.md.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.md.standard.commonmark.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

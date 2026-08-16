@@ -60,7 +60,7 @@ number = INT | FLOAT
 # 1921) with generic `value`/`array`/`number`/`json-string` payloads -- NOT re-typed per nested
 # field (accessor/material/… internals) at the grammar-dialect level: that byte-precise typing
 # already lives in the artifact's real serde-typed Rust model AND in this artifact's exhaustive
-# hand-rolled DIFF/MUTATIONS grammars (../../🔺️diff/📝️text, ../../🧬️mutations/📝️text), matching the
+# hand-rolled DIFF/MUTATIONS grammars (../../🔺️diff/📝️text, ../../../🚪️io/🧬️mutations/📝️text), matching the
 # json pilot's own established depth for a text-native JSON format rather than fabricating a
 # second, redundant per-field JSON schema here.
 gltf-document = "{" "}" | "{" gltf-member {"," gltf-member}* "}"

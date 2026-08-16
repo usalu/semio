@@ -3,7 +3,7 @@
 use std::fmt;
 
 use super::text;
-use crate::artifacts::gltf::schema::inferences::GltfInference;
+use crate::artifacts::gltf::schema::inferences::geometric_analysis::GltfInference;
 
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).

@@ -4,6 +4,8 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::duplicated_attributes)]
 
+extern crate semio_framework_os_kernel as dsl;
+
 //#region 🧬️ entity_dsl
 
 /// @emoji 🧩️ Chains `SchemaBuilder::register_output_type` so macro-emitted shapes stay reachable in `Schema::sdl()`.
@@ -7813,8 +7815,9 @@ pub mod vcs {
         use crate::external_adapters::serde::{Deserialize, Serialize};
         use crate::external_adapters::serde_json::Value;
         #[cfg(test)]
-        use semio_framework_os_kernel::os_vcs::ArtifactVcsCommand;
-        use semio_framework_os_kernel::os_vcs::{create_document_vcs_envelope, materialize_document_projection, ArtifactVcsEnvelope, ArtifactVcsStore, Operation as VcsOperation, OperationDiff};
+        use semio_framework_os_kernel::os_store::ArtifactCommand as ArtifactVcsCommand;
+        use semio_framework_os_kernel::os_store::{create_document_envelope as create_document_vcs_envelope, materialize_document_snapshot as materialize_document_projection, ArtifactEnvelope as ArtifactVcsEnvelope, ArtifactStore as ArtifactVcsStore};
+        use semio_framework_os_kernel::os_spr::{Mutation as VcsOperation, MutationDiff as OperationDiff, OpText, OpBinary};
 
         pub const KIT_SNAPSHOT_SCHEMA: &str = "compose.kit";
 
@@ -7851,16 +7854,24 @@ pub mod vcs {
             pub input: Value,
         }
 
+        impl semio_framework_os_kernel::os_store::ArtifactPack for KitSnapshot {
+            fn encode_pack_with(&self, options: &semio_framework_os_kernel::os_store::PackEncodeOptions) -> Result<Vec<u8>, semio_framework_os_kernel::os_store::PackError> {
+                self.0.encode_pack_with(options)
+            }
+            fn decode_pack_with(bytes: &[u8], options: &semio_framework_os_kernel::os_store::PackDecodeOptions) -> Result<Self, semio_framework_os_kernel::os_store::PackError> {
+                Value::decode_pack_with(bytes, options).map(KitSnapshot)
+            }
+        }
+
         impl ComposeWireOperation {
             pub fn from_operation(operation: &crate::operation::Operation) -> Self {
                 Self { kind: operation.kind().to_string(), input: crate::kit_backbone::kit_operation_step_input_json(operation) }
             }
         }
 
-        impl VcsOperation<KitSnapshot> for ComposeWireOperation {
+        impl semio_framework_os_kernel::os_spr::Mutation<KitSnapshot> for ComposeWireOperation {
             type Diff = ComposeKitDiff;
-
-            fn diff(&self, projection: &KitSnapshot) -> ComposeKitDiff {
+            fn diff(&self, projection: &KitSnapshot) -> Self::Diff {
                 block_on(async {
                     let graph = crate::kit_backbone::graph_new_overlay_from_initial_projection_json(projection.0.clone())
                         .await
@@ -7873,8 +7884,7 @@ pub mod vcs {
                     ComposeKitDiff(crate::kit_backbone::canonical_kit_diff_to_wire_json(&diff.0))
                 })
             }
-
-            fn backwards(&self, projection: &KitSnapshot) -> Vec<Self> {
+            fn inverse(&self, projection: &KitSnapshot) -> Vec<Self> {
                 block_on(async {
                     let graph = crate::kit_backbone::graph_new_overlay_from_initial_projection_json(projection.0.clone())
                         .await
@@ -7885,6 +7895,24 @@ pub mod vcs {
                         .expect("VCS trait methods return bare values, not Result: a stored kind/input pair that fails to resolve back to an Operation has no propagation path");
                     operation.to_backwards(&kit).await.expect("VcsOperation::backwards returns a bare Vec, not Result: a resolved operation that fails to invert has no propagation path").into_iter().map(|row| ComposeWireOperation::from_operation(&row)).collect()
                 })
+            }
+        }
+
+        impl OpText for ComposeWireOperation {
+            fn print_op(&self) -> String {
+                serde_json::to_string(self).unwrap_or_default()
+            }
+            fn parse_op(line: &str) -> Result<Self, semio_framework_os_kernel::os_dsl::TextError> {
+                serde_json::from_str(line).map_err(|e| semio_framework_os_kernel::os_dsl::TextError::new(e.to_string(), semio_framework_os_kernel::os_dsl::TextSpan::default()))
+            }
+        }
+
+        impl OpBinary for ComposeWireOperation {
+            fn encode_op(&self) -> Result<Vec<u8>, semio_framework_os_kernel::os_spr::ProtocolError> {
+                serde_json::to_vec(self).map_err(|e| semio_framework_os_kernel::os_spr::ProtocolError::Malformed { what: "json", offset: 0, detail: e.to_string() })
+            }
+            fn decode_op(bytes: &[u8]) -> Result<Self, semio_framework_os_kernel::os_spr::ProtocolError> {
+                serde_json::from_slice(bytes).map_err(|e| semio_framework_os_kernel::os_spr::ProtocolError::Malformed { what: "json", offset: 0, detail: e.to_string() })
             }
         }
 
@@ -7917,7 +7945,7 @@ pub mod vcs {
             ArtifactVcsStore::new(create_document_vcs_envelope(KIT_SNAPSHOT_SCHEMA, id.as_str(), KitSnapshot(initial), None))
         }
 
-        pub fn materialize_kit_snapshot(envelope: &KitSnapshotEnvelope, applied: &[String]) -> Result<KitSnapshot, semio_framework_os_kernel::os_vcs::VcsError> {
+        pub fn materialize_kit_snapshot(envelope: &KitSnapshotEnvelope, applied: &[String]) -> Result<KitSnapshot, semio_framework_os_kernel::os_store::VcsError> {
             materialize_document_projection(envelope, applied)
         }
 
@@ -7931,8 +7959,8 @@ pub mod vcs {
                 let baseline = Value::Object(Default::default());
                 let mut store = create_kit_snapshot_store(&crate::id::Id::from("ws-test"), baseline);
                 let operation = Operation::RenameKit { scope: Scope::Kit, input: Input::Name { name: "patched".into() } };
-                store.dispatch(ArtifactVcsCommand::Apply { operations: vec![ComposeWireOperation::from_operation(&operation)], description: None }).expect("apply");
-                let snap = store.projection().expect("projection");
+                store.dispatch(ArtifactVcsCommand::Apply { mutations: vec![ComposeWireOperation::from_operation(&operation)], description: None }).expect("apply");
+                let snap = store.snapshot().expect("snapshot");
                 assert_eq!(snap.0.get("name").and_then(|v| v.as_str()), Some("patched"));
             }
         }
@@ -8226,7 +8254,7 @@ pub mod vcs {
                 self.the_kit_snapshot_store
                     .lock()
                     .unwrap_or_else(|poisoned| poisoned.into_inner())
-                    .dispatch(semio_framework_os_kernel::os_vcs::ArtifactVcsCommand::Apply { operations: vec![wire], description: None })
+                    .dispatch(semio_framework_os_kernel::os_store::ArtifactCommand::Apply { mutations: vec![wire], description: None })
                     .map_err(|e| ComposeError::invalid(e.to_string()))?;
             } else if let Some(alt) = self.workspace_alternative(&ws).await {
                 alt.change_seq.fetch_add(1, Ordering::Relaxed);
@@ -19206,11 +19234,21 @@ mod tests {
     #[test]
     fn vcs_typed_ops_materialize_projection() {
         use serde::{Deserialize, Serialize};
-        use vcs::{create_document_vcs_envelope, materialize_document_projection, ArtifactVcsCommand, ArtifactVcsStore, Operation, OperationDiff};
+        use semio_framework_os_kernel::os_store::{create_document_envelope as create_document_vcs_envelope, materialize_document_snapshot as materialize_document_projection, ArtifactCommand as ArtifactVcsCommand, ArtifactStore as ArtifactVcsStore};
+        use semio_framework_os_kernel::os_spr::{Mutation as Operation, MutationDiff as OperationDiff};
 
         #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
         struct KitProjection {
             id: String,
+        }
+
+        impl semio_framework_os_kernel::os_store::ArtifactPack for KitProjection {
+            fn encode_pack_with(&self, _options: &semio_framework_os_kernel::os_store::PackEncodeOptions) -> Result<Vec<u8>, semio_framework_os_kernel::os_store::PackError> {
+                serde_json::to_vec(self).map_err(|e| semio_framework_os_kernel::os_store::PackError::Malformed { what: "json", offset: 0, detail: e.to_string() })
+            }
+            fn decode_pack_with(bytes: &[u8], _options: &semio_framework_os_kernel::os_store::PackDecodeOptions) -> Result<Self, semio_framework_os_kernel::os_store::PackError> {
+                serde_json::from_slice(bytes).map_err(|e| semio_framework_os_kernel::os_store::PackError::Malformed { what: "json", offset: 0, detail: e.to_string() })
+            }
         }
 
         #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -19245,15 +19283,25 @@ mod tests {
                 }
             }
 
-            fn backwards(&self, projection: &KitProjection) -> Vec<Self> {
+            fn inverse(&self, projection: &KitProjection) -> Vec<Self> {
                 vec![KitOperation::SetId { id: projection.id.clone() }]
             }
         }
 
+        impl semio_framework_os_kernel::os_spr::OpText for KitOperation {
+            fn print_op(&self) -> String { "op".into() }
+            fn parse_op(_line: &str) -> Result<Self, semio_framework_os_kernel::os_store::TextError> { Ok(KitOperation::SetId { id: "patched".into() }) }
+        }
+
+        impl semio_framework_os_kernel::os_spr::OpBinary for KitOperation {
+            fn encode_op(&self) -> Result<Vec<u8>, semio_framework_os_kernel::os_spr::ProtocolError> { Ok(vec![]) }
+            fn decode_op(_bytes: &[u8]) -> Result<Self, semio_framework_os_kernel::os_spr::ProtocolError> { Ok(KitOperation::SetId { id: "patched".into() }) }
+        }
+
         let envelope = create_document_vcs_envelope("compose.kit", "kit-test", KitProjection { id: "base".into() }, None);
         let mut store = ArtifactVcsStore::new(envelope);
-        store.dispatch(ArtifactVcsCommand::Apply { operations: vec![KitOperation::SetId { id: "patched".into() }], description: None }).expect("apply");
-        assert_eq!(store.projection().expect("projection").id, "patched");
+        store.dispatch(ArtifactVcsCommand::Apply { mutations: vec![KitOperation::SetId { id: "patched".into() }], description: None }).expect("apply");
+        assert_eq!(store.snapshot().expect("snapshot").id, "patched");
         let replayed = materialize_document_projection(store.envelope(), store.applied_edit_ids()).expect("materialize");
         assert_eq!(replayed.id, "patched");
     }

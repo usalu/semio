@@ -1,0 +1,124 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.gif",
+  "artifact": "gif",
+  "directory": "🎞️gif",
+  "dependencies": [
+    "s.stdio.binary"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.gif.standard.87a",
+      "revision": "87a",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    },
+    {
+      "id": "s.stdio.gif.standard.89a",
+      "revision": "89a",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.gif.standard.87a.profile.any",
+      "standard": "s.stdio.gif.standard.87a",
+      "profile": "any",
+      "status": "unimplemented"
+    },
+    {
+      "id": "s.stdio.gif.standard.89a.profile.any",
+      "standard": "s.stdio.gif.standard.89a",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.gif.standard.87a.dialect.source",
+      "standard": "s.stdio.gif.standard.87a",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    },
+    {
+      "id": "s.stdio.gif.standard.89a.dialect.source",
+      "standard": "s.stdio.gif.standard.89a",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.gif.standard.87a.representation.document",
+      "standard": "s.stdio.gif.standard.87a",
+      "representation": "document",
+      "mime": "image/gif",
+      "extension": ".gif",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.gif.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.gif.localization.en",
+      "locale": "en",
+      "name": "Graphics Interchange Format",
+      "description": "Graphics Interchange Format artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.gif.localization.de",
+      "locale": "de",
+      "name": "Grafikaustauschformat",
+      "description": "Grafikaustauschformat-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.gif.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.gif.standard.87a.profile.any",
+      "s.stdio.gif.standard.89a.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

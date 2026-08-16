@@ -1,0 +1,125 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.pdf",
+  "artifact": "pdf",
+  "directory": "📄️pdf",
+  "dependencies": [
+    "s.stdio.binary",
+    "s.stdio.deflate"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.pdf.standard.1.4",
+      "revision": "1.4",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    },
+    {
+      "id": "s.stdio.pdf.standard.1.7",
+      "revision": "1.7",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.pdf.standard.1.4.profile.any",
+      "standard": "s.stdio.pdf.standard.1.4",
+      "profile": "any",
+      "status": "unimplemented"
+    },
+    {
+      "id": "s.stdio.pdf.standard.1.7.profile.any",
+      "standard": "s.stdio.pdf.standard.1.7",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.pdf.standard.1.4.dialect.source",
+      "standard": "s.stdio.pdf.standard.1.4",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    },
+    {
+      "id": "s.stdio.pdf.standard.1.7.dialect.source",
+      "standard": "s.stdio.pdf.standard.1.7",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.pdf.standard.1.4.representation.document",
+      "standard": "s.stdio.pdf.standard.1.4",
+      "representation": "document",
+      "mime": "application/pdf",
+      "extension": ".pdf",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.pdf.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.pdf.localization.en",
+      "locale": "en",
+      "name": "Portable Document Format",
+      "description": "Portable Document Format artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.pdf.localization.de",
+      "locale": "de",
+      "name": "Portables Dokumentformat",
+      "description": "Portables Dokumentformat-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.pdf.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.pdf.standard.1.4.profile.any",
+      "s.stdio.pdf.standard.1.7.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

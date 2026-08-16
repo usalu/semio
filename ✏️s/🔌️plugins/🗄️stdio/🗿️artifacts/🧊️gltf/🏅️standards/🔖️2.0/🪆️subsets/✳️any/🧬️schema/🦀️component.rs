@@ -75,11 +75,11 @@ pub fn gltf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
             proto: include_str!("🔺️diff/🛰️component.proto"),
         },
         mutations: schema::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️component.rs"),
-            typescript: include_str!("🧬️mutations/🟦️component.ts"),
-            graphql: include_str!("🧬️mutations/🔗️component.graphql"),
-            json_schema: include_str!("🧬️mutations/🔣️component.json"),
-            proto: include_str!("🧬️mutations/🛰️component.proto"),
+            rust: include_str!("../🔨️modules/🧭️mutation-dispatch/🦀️component.rs"),
+            typescript: include_str!("../🔨️modules/🧭️mutation-dispatch/🟦️component.ts"),
+            graphql: include_str!("../🔨️modules/🧭️mutation-dispatch/🔗️component.graphql"),
+            json_schema: include_str!("../🔨️modules/🧭️mutation-dispatch/🔣️component.json"),
+            proto: include_str!("../🔨️modules/🧭️mutation-dispatch/🛰️component.proto"),
         },
     }
 }
@@ -88,7 +88,8 @@ pub fn gltf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 pub mod derived_construction {
     use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
     use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfJson, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene};
-    use crate::artifacts::gltf::{GltfDiff, GltfMutation, GltfSnapshot};
+    use crate::artifacts::gltf::{GltfDiff, GltfSnapshot};
+    use crate::artifacts::gltf::schema::modules::mutation_dispatch::{apply_gltf_mutation, GltfMutation};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -116,7 +117,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<GltfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
-            match crate::artifacts::gltf::schema::mutations::apply_gltf_mutation(&mut self.snapshot, &mutation) {
+            match apply_gltf_mutation(&mut self.snapshot, &mutation) {
                 Ok(diff) => (self, diff),
                 Err(error) => {
                     self.diagnostics.push(dsl::Diagnostic::error("stdio.gltf.mutation-rejected", dsl::TextSpan::at(1, 1), error.to_string()));

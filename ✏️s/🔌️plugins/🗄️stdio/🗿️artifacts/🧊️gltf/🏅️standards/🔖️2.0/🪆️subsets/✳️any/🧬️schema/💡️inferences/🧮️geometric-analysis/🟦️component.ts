@@ -21,3 +21,5 @@ export interface GltfPairInference { first: GltfEntityAddress; second: GltfEntit
 export interface GltfInferenceCounts { sceneCount: number; nodeInstanceCount: number; meshCount: number; primitiveCount: number; vertexCount: number; triangleCount: number; componentCount: number; surfaceRegionCount: number; pairCount: number; validPartCount: number; invalidPartCount: number }
 /** 🧮 Complete authoritative result. Bounds live at `overall.size`, counts at `counts`. */
 export interface GltfGeometricInference { schema: 's.stdio.gltf.inference'; schemaVersion: number; policy: GltfAnalysisPolicy; counts: GltfInferenceCounts; overall: GltfEntityIndicators; parts: GltfPartInference[]; pairs: GltfPairInference[]; diagnostics: GltfDiagnostic[]; validity: GltfValidity; quality: GltfQuality; provenance: GltfProvenance }
+/** 💡 Complete universal geometric inference for a glTF snapshot. */
+export interface GltfInference { /** @derived */ geometricAnalysis: GltfGeometricInference }

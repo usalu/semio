@@ -1230,6 +1230,594 @@ export class TestScript extends Script {
 }
 //#endregion 🔖️TestScript
 
+//#region 🔖️StdioLedgerScript
+type StdioCatalogEntry = Readonly<{
+  dir: string;
+  mime: string | null;
+  ext: string;
+  depends: readonly string[];
+}>;
+
+type StdioCatalog = Readonly<{
+  stdio_roster: Record<string, StdioCatalogEntry>;
+  stdio_dag_edges: readonly Readonly<{ from: string; to: string }>[];
+}>;
+
+type StdioDialectDefinition = Readonly<{
+  id: string;
+  artifact: string;
+  standard: string;
+  subset: string;
+  schema: string;
+  io: string;
+  mutations: string | null;
+  inferences: string | null;
+}>;
+
+type StdioCodecDefinition = Readonly<{
+  id: string;
+  direction: "native" | "import" | "export";
+  from: string;
+  to: string;
+  source: string;
+}>;
+
+type StdioArtifactDefinition = Readonly<{
+  id: string;
+  kind: string;
+  directory: string;
+  extension: string;
+  registeredMime: string | null;
+  depends: readonly string[];
+  component: string;
+  dialects: readonly StdioDialectDefinition[];
+  codecs: readonly StdioCodecDefinition[];
+  support: StdioSupportLedger;
+}>;
+
+type StdioSupportState = "unimplemented" | "opaque" | "implemented";
+
+type StdioSupportLedger = Readonly<{
+  normative_source: string | null;
+  publication_date: string | null;
+  source_checksum: string | null;
+  redistribution_status: string;
+  clauses_or_features: readonly string[];
+  profiles: readonly string[];
+  registered_code_points: readonly string[];
+  read: StdioSupportState;
+  write: StdioSupportState;
+  lossless: StdioSupportState;
+  canonical: StdioSupportState;
+  validators: readonly string[];
+  mutations: readonly string[];
+  inferences: readonly string[];
+  fixtures: readonly string[];
+}>;
+
+type StdioSchemaDefinition = Readonly<{
+  id: string;
+  artifact: string;
+  directory: string;
+  dependencies: readonly string[];
+  standards: readonly Readonly<{ id: string; revision: string; status: string }>[];
+  profiles: readonly Readonly<{ id: string; standard: string; profile: string; status: string }>[];
+  source_dialects: readonly Readonly<{ id: string; standard: string; dialect: string; registered_code_points: readonly string[]; status: string }>[];
+  representations: readonly Readonly<{ id: string; standard: string; representation: string; mime: string | null; extension: string; status: string }>[];
+  codecs: readonly StdioCodecDefinition[];
+  mutations: readonly Readonly<{ id: string; status: string }>[];
+  inferences: readonly Readonly<{ id: string; status: string }>[];
+  resources: readonly Readonly<{ id: string; status: string }>[];
+  localized_descriptors: readonly Readonly<{ id: string; locale: "en" | "de"; name: string; description: string; status: string }>[];
+  conformance_suites: readonly Readonly<{ id: string; status: string; fixtures: readonly string[] }>[];
+  support_ledger: StdioSupportLedger;
+}>;
+
+type StdioArtifactLedger = Readonly<{
+  artifacts: readonly StdioArtifactDefinition[];
+  counts: Readonly<{ artifacts: number; registeredMimes: number; standards: number; profiles: number; dialects: number; representations: number; codecs: number; mutations: number; inferences: number; conformanceSuites: number }>;
+}>;
+
+const STDIO_ROOT_REL = join("✏️s", "🔌️plugins", "🗄️stdio");
+const STDIO_ARTIFACTS_DIR = "🗿️artifacts";
+const STDIO_CATALOG_REL = join(STDIO_ROOT_REL, "📇️registry", "📇️catalog.json");
+const STDIO_COMPONENT_TS = "🟦️component.ts";
+const STDIO_COMPONENT_RS = "🦀️component.rs";
+const STDIO_STANDARDS_DIR = "🏅️standards";
+const STDIO_SUBSETS_DIR = "🪆️subsets";
+const STDIO_SCHEMA_DIR = "🧬️schema";
+const STDIO_IO_DIR = "🚪️io";
+const STDIO_MUTATIONS_DIR = "🧬️mutations";
+const STDIO_INFERENCES_DIR = "💡️inferences";
+const STDIO_EXTERNALLY_OWNED_ARTIFACTS = new Set(["gltf"]);
+
+function stdioRel(workspaceRoot: string, path: string): string {
+  return relative(workspaceRoot, path).split("\\").join("/");
+}
+
+function stdioDirectoryNames(path: string): string[] {
+  return readdirSync(path, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort((a, b) => a.localeCompare(b));
+}
+
+function stdioWalkFiles(path: string, files: string[] = []): string[] {
+  for (const entry of readdirSync(path, { withFileTypes: true })) {
+    const full = join(path, entry.name);
+    if (entry.isDirectory()) stdioWalkFiles(full, files);
+    else files.push(full);
+  }
+  return files;
+}
+
+function stdioTaxonomyId(name: string): string {
+  const id = name.replace(/^[^\p{L}\p{N}]+/u, "");
+  if (!id) throw new Error(`[stdio] taxonomy name ${JSON.stringify(name)} has no semantic id.`);
+  return id;
+}
+
+function stdioAssertUnique(label: string, values: readonly string[]): void {
+  const duplicateValues = [...new Set(values.filter((value, index) => values.indexOf(value) !== index))];
+  if (duplicateValues.length > 0) throw new Error(`[stdio] duplicate ${label}: ${duplicateValues.sort().join(", ")}`);
+}
+
+function stdioReadJsonString(source: string, start: number): Readonly<{ value: string; next: number }> {
+  if (source[start] !== '"') throw new Error(`[stdio] expected JSON string at offset ${start}.`);
+  let next = start + 1;
+  while (next < source.length) {
+    if (source[next] === "\\") {
+      next += 2;
+      continue;
+    }
+    if (source[next] === '"') return { value: JSON.parse(source.slice(start, next + 1)) as string, next: next + 1 };
+    next += 1;
+  }
+  throw new Error("[stdio] unterminated JSON string.");
+}
+
+function stdioSkipJsonValue(source: string, start: number): number {
+  let next = start;
+  while (/\s/u.test(source[next] ?? "")) next += 1;
+  if (source[next] === '"') return stdioReadJsonString(source, next).next;
+  if (source[next] !== "{" && source[next] !== "[") {
+    while (next < source.length && !/[\s,}\]]/u.test(source[next]!)) next += 1;
+    return next;
+  }
+  const opener = source[next]!;
+  const closer = opener === "{" ? "}" : "]";
+  let depth = 0;
+  while (next < source.length) {
+    if (source[next] === '"') {
+      next = stdioReadJsonString(source, next).next;
+      continue;
+    }
+    if (source[next] === opener) depth += 1;
+    if (source[next] === closer && --depth === 0) return next + 1;
+    next += 1;
+  }
+  throw new Error("[stdio] unterminated JSON value.");
+}
+
+function stdioRawRosterKeys(source: string): string[] {
+  const roster = source.indexOf('"stdio_roster"');
+  if (roster < 0) throw new Error("[stdio] catalog has no stdio_roster.");
+  let next = source.indexOf("{", roster);
+  if (next < 0) throw new Error("[stdio] stdio_roster is not an object.");
+  next += 1;
+  const keys: string[] = [];
+  while (next < source.length) {
+    while (/\s/u.test(source[next] ?? "")) next += 1;
+    if (source[next] === "}") return keys;
+    const key = stdioReadJsonString(source, next);
+    keys.push(key.value);
+    next = key.next;
+    while (/\s/u.test(source[next] ?? "")) next += 1;
+    if (source[next] !== ":") throw new Error(`[stdio] catalog key ${JSON.stringify(key.value)} has no value.`);
+    next = stdioSkipJsonValue(source, next + 1);
+    while (/\s/u.test(source[next] ?? "")) next += 1;
+    if (source[next] === "}") return keys;
+    if (source[next] !== ",") throw new Error(`[stdio] catalog key ${JSON.stringify(key.value)} is not object-delimited.`);
+    next += 1;
+  }
+  throw new Error("[stdio] unterminated stdio_roster object.");
+}
+
+function stdioCatalog(workspaceRoot: string): StdioCatalog {
+  const source = readFileSync(join(workspaceRoot, STDIO_CATALOG_REL), "utf8");
+  stdioAssertUnique("catalog artifact id", stdioRawRosterKeys(source));
+  const catalog = JSON.parse(source) as StdioCatalog;
+  for (const [id, entry] of Object.entries(catalog.stdio_roster)) {
+    if (!entry.dir || !entry.ext.startsWith(".")) throw new Error(`[stdio] invalid catalog entry ${id}.`);
+    if (entry.mime !== null && typeof entry.mime !== "string") throw new Error(`[stdio] catalog MIME for ${id} must be a string or null.`);
+    if (!entry.depends.every((dependency) => dependency in catalog.stdio_roster)) throw new Error(`[stdio] catalog dependency of ${id} is not a catalog artifact.`);
+  }
+  const expectedEdges = Object.entries(catalog.stdio_roster)
+    .flatMap(([id, entry]) => entry.depends.map((dependency) => `${id}->${dependency}`))
+    .sort();
+  const actualEdges = catalog.stdio_dag_edges.map((edge) => `${edge.from}->${edge.to}`).sort();
+  stdioAssertUnique("catalog dependency edge", actualEdges);
+  if (expectedEdges.join("\n") !== actualEdges.join("\n")) throw new Error("[stdio] stdio_dag_edges is not derived from stdio_roster dependencies.");
+  return catalog;
+}
+
+function stdioCodecDefinitions(workspaceRoot: string, ioRoot: string, owner: StdioDialectDefinition, catalogByDirectory: ReadonlyMap<string, string>): StdioCodecDefinition[] {
+  if (!existsSync(ioRoot)) return [];
+  const codecs: StdioCodecDefinition[] = [];
+  for (const file of stdioWalkFiles(ioRoot)) {
+    if (!file.endsWith(STDIO_COMPONENT_RS)) continue;
+    const segments = stdioRel(workspaceRoot, file).split("/");
+    const importIndex = segments.indexOf("📥️import");
+    const exportIndex = segments.indexOf("📤️export");
+    const direction = importIndex >= 0 ? "import" : exportIndex >= 0 ? "export" : undefined;
+    if (!direction) continue;
+    const foreignArtifactIndex = segments.lastIndexOf(STDIO_ARTIFACTS_DIR);
+    if (foreignArtifactIndex <= Math.max(importIndex, exportIndex) || foreignArtifactIndex + 3 >= segments.length) continue;
+    const foreignArtifact = catalogByDirectory.get(segments[foreignArtifactIndex + 1]!);
+    if (!foreignArtifact) throw new Error(`[stdio] codec ${stdioRel(workspaceRoot, file)} references an unknown artifact directory.`);
+    const foreignDialect = `stdio.${foreignArtifact}/${stdioTaxonomyId(segments[foreignArtifactIndex + 2]!)}/${stdioTaxonomyId(segments[foreignArtifactIndex + 3]!)}`;
+    const from = direction === "import" ? foreignDialect : owner.id;
+    const to = direction === "import" ? owner.id : foreignDialect;
+    codecs.push({ id: `${direction}:${from}->${to}`, direction, from, to, source: stdioRel(workspaceRoot, file) });
+  }
+  return codecs.sort((a, b) => a.id.localeCompare(b.id) || a.source.localeCompare(b.source));
+}
+
+function stdioRetiredFilesystemArtifactLedger(workspaceRoot: string): StdioArtifactLedger {
+  const catalog = stdioCatalog(workspaceRoot);
+  const stdioRoot = join(workspaceRoot, STDIO_ROOT_REL);
+  const artifactsRoot = join(stdioRoot, STDIO_ARTIFACTS_DIR);
+  const catalogByDirectory = new Map(Object.entries(catalog.stdio_roster).map(([id, entry]) => [entry.dir, id]));
+  stdioAssertUnique("catalog artifact directory", [...catalogByDirectory.keys()]);
+  const artifacts: StdioArtifactDefinition[] = [];
+  for (const [id, entry] of Object.entries(catalog.stdio_roster)) {
+    const artifactRoot = join(artifactsRoot, entry.dir);
+    const component = join(artifactRoot, STDIO_COMPONENT_TS);
+    if (!existsSync(component)) throw new Error(`[stdio] catalog artifact ${id} has no TypeScript component.`);
+    const dialects: StdioDialectDefinition[] = [];
+    const codecs: StdioCodecDefinition[] = [];
+    const standardsRoot = join(artifactRoot, STDIO_STANDARDS_DIR);
+    if (!existsSync(standardsRoot)) throw new Error(`[stdio] catalog artifact ${id} has no standards taxonomy.`);
+    for (const standardDir of stdioDirectoryNames(standardsRoot)) {
+      const subsetsRoot = join(standardsRoot, standardDir, STDIO_SUBSETS_DIR);
+      if (!existsSync(subsetsRoot)) throw new Error(`[stdio] artifact ${id} standard ${standardDir} has no subsets taxonomy.`);
+      for (const subsetDir of stdioDirectoryNames(subsetsRoot)) {
+        const subsetRoot = join(subsetsRoot, subsetDir);
+        const dialect: StdioDialectDefinition = {
+          id: `stdio.${id}/${stdioTaxonomyId(standardDir)}/${stdioTaxonomyId(subsetDir)}`,
+          artifact: id,
+          standard: stdioTaxonomyId(standardDir),
+          subset: stdioTaxonomyId(subsetDir),
+          schema: stdioRel(workspaceRoot, join(subsetRoot, STDIO_SCHEMA_DIR)),
+          io: stdioRel(workspaceRoot, join(subsetRoot, STDIO_IO_DIR)),
+          mutations: existsSync(join(subsetRoot, STDIO_SCHEMA_DIR, STDIO_MUTATIONS_DIR)) ? stdioRel(workspaceRoot, join(subsetRoot, STDIO_SCHEMA_DIR, STDIO_MUTATIONS_DIR)) : null,
+          inferences: existsSync(join(subsetRoot, STDIO_SCHEMA_DIR, STDIO_INFERENCES_DIR)) ? stdioRel(workspaceRoot, join(subsetRoot, STDIO_SCHEMA_DIR, STDIO_INFERENCES_DIR)) : null,
+        };
+        dialects.push(dialect);
+        const ioRoot = join(subsetRoot, STDIO_IO_DIR);
+        const nativeCodec = join(ioRoot, STDIO_COMPONENT_RS);
+        if (existsSync(nativeCodec)) codecs.push({ id: `native:${dialect.id}`, direction: "native", from: dialect.id, to: dialect.id, source: stdioRel(workspaceRoot, nativeCodec) });
+        codecs.push(...stdioCodecDefinitions(workspaceRoot, ioRoot, dialect, catalogByDirectory));
+      }
+    }
+    if (dialects.length === 0) throw new Error(`[stdio] catalog artifact ${id} has no dialect definitions.`);
+    artifacts.push({
+      id,
+      kind: `stdio.${id}`,
+      directory: entry.dir,
+      extension: entry.ext,
+      registeredMime: entry.mime,
+      depends: [...entry.depends],
+      component: stdioRel(workspaceRoot, component),
+      dialects,
+      codecs,
+    });
+  }
+  const genericSchemaRoot = join(artifactsRoot, STDIO_SCHEMA_DIR);
+  if (existsSync(genericSchemaRoot)) throw new Error(`[stdio] ${stdioRel(workspaceRoot, genericSchemaRoot)} is not a catalog artifact definition.`);
+  stdioAssertUnique("artifact id", artifacts.map((artifact) => artifact.id));
+  stdioAssertUnique("registered MIME", artifacts.flatMap((artifact) => (artifact.registeredMime ? [artifact.registeredMime] : [])));
+  stdioAssertUnique("extension", artifacts.map((artifact) => artifact.extension));
+  stdioAssertUnique("dialect", artifacts.flatMap((artifact) => artifact.dialects.map((dialect) => dialect.id)));
+  stdioAssertUnique("codec", artifacts.flatMap((artifact) => artifact.codecs.map((codec) => codec.id)));
+  const knownDialects = new Set(artifacts.flatMap((artifact) => artifact.dialects.map((dialect) => dialect.id)));
+  for (const codec of artifacts.flatMap((artifact) => artifact.codecs)) {
+    if (!knownDialects.has(codec.from) || !knownDialects.has(codec.to)) throw new Error(`[stdio] codec ${codec.id} references an unregistered dialect.`);
+  }
+  return {
+    artifacts,
+    counts: {
+      artifacts: artifacts.length,
+      registeredMimes: artifacts.filter((artifact) => artifact.registeredMime !== null).length,
+      dialects: artifacts.reduce((count, artifact) => count + artifact.dialects.length, 0),
+      codecs: artifacts.reduce((count, artifact) => count + artifact.codecs.length, 0),
+    },
+  };
+}
+
+function stdioDefinitionIdentity(id: string, suffix = ""): void {
+  if (!/^s\.stdio\.[a-z0-9_-]+(?:\.[a-z0-9_-]+)*$/u.test(id)) throw new Error(`[stdio] non-canonical definition identity ${JSON.stringify(id)}.`);
+  if (suffix && !id.includes(suffix)) throw new Error(`[stdio] definition identity ${JSON.stringify(id)} is missing ${suffix}.`);
+}
+
+function stdioDefinitionCatalog(workspaceRoot: string): readonly StdioSchemaDefinition[] {
+  const catalogPath = join(workspaceRoot, STDIO_CATALOG_REL);
+  const catalog = JSON.parse(readFileSync(catalogPath, "utf8")) as { artifact_definition_paths?: unknown };
+  if (!Array.isArray(catalog.artifact_definition_paths)) throw new Error("[stdio] catalog must contain artifact_definition_paths.");
+  const paths = catalog.artifact_definition_paths;
+  if (!paths.every((path): path is string => typeof path === "string" && path.endsWith("📜️artifact-definition.json"))) throw new Error("[stdio] catalog paths must target artifact definition leaves.");
+  stdioAssertUnique("artifact definition path", paths);
+  const definitions = paths.map((definitionPath) => {
+    const absolute = resolve(dirname(catalogPath), definitionPath);
+    const artifactsRoot = resolve(workspaceRoot, STDIO_ROOT_REL, STDIO_ARTIFACTS_DIR);
+    if (!absolute.startsWith(`${artifactsRoot}/`)) throw new Error(`[stdio] artifact definition escapes the stdio artifact root: ${definitionPath}.`);
+    if (!existsSync(absolute)) throw new Error(`[stdio] artifact definition is missing: ${definitionPath}.`);
+    return JSON.parse(readFileSync(absolute, "utf8")) as StdioSchemaDefinition;
+  });
+  const artifactRoot = join(workspaceRoot, STDIO_ROOT_REL, STDIO_ARTIFACTS_DIR);
+  const discovered = stdioWalkFiles(artifactRoot)
+    .filter((path) => path.endsWith("📜️artifact-definition.json"))
+    .map((path) => relative(dirname(catalogPath), path).split("\\").join("/"))
+    .sort();
+  if (discovered.join("\n") !== [...paths].sort().join("\n")) throw new Error("[stdio] catalog definition paths are not the complete schema-owned artifact definition set.");
+  if (definitions.length !== 36) throw new Error(`[stdio] expected 36 artifact definitions, got ${definitions.length}.`);
+  return definitions;
+}
+
+function stdioAssertDefinition(definition: StdioSchemaDefinition): void {
+  const artifactId = `s.stdio.${definition.artifact}`;
+  if (definition.id !== artifactId) throw new Error(`[stdio] definition ${definition.id} does not own ${artifactId}.`);
+  stdioDefinitionIdentity(definition.id);
+  if (!/^[a-z0-9_-]+$/u.test(definition.artifact)) throw new Error(`[stdio] invalid artifact slug ${JSON.stringify(definition.artifact)}.`);
+  if (!definition.directory || !Array.isArray(definition.standards) || !Array.isArray(definition.profiles) || !Array.isArray(definition.source_dialects) || !Array.isArray(definition.representations) || !Array.isArray(definition.codecs) || !Array.isArray(definition.mutations) || !Array.isArray(definition.inferences) || !Array.isArray(definition.resources) || !Array.isArray(definition.localized_descriptors) || !Array.isArray(definition.conformance_suites)) {
+    throw new Error(`[stdio] ${definition.id} omits a required plural definition collection.`);
+  }
+  for (const standard of definition.standards) {
+    const id = `${artifactId}.standard.${standard.revision}`;
+    if (standard.id !== id) throw new Error(`[stdio] standard ${standard.id} must be ${id}.`);
+    stdioDefinitionIdentity(standard.id, ".standard.");
+  }
+  const standards = new Set(definition.standards.map((standard) => standard.id));
+  for (const profile of definition.profiles) {
+    if (!standards.has(profile.standard) || profile.id !== `${profile.standard}.profile.${profile.profile}`) throw new Error(`[stdio] invalid profile identity ${profile.id}.`);
+    stdioDefinitionIdentity(profile.id, ".profile.");
+  }
+  for (const dialect of definition.source_dialects) {
+    if (!standards.has(dialect.standard) || dialect.id !== `${dialect.standard}.dialect.${dialect.dialect}`) throw new Error(`[stdio] invalid source dialect identity ${dialect.id}.`);
+    stdioDefinitionIdentity(dialect.id, ".dialect.");
+  }
+  for (const representation of definition.representations) {
+    if (!standards.has(representation.standard) || representation.id !== `${representation.standard}.representation.${representation.representation}`) throw new Error(`[stdio] invalid representation identity ${representation.id}.`);
+    if (!representation.extension.startsWith(".")) throw new Error(`[stdio] ${representation.id} has no file extension.`);
+    stdioDefinitionIdentity(representation.id, ".representation.");
+  }
+  for (const codec of definition.codecs) stdioDefinitionIdentity(codec.id, ".codec.");
+  for (const mutation of definition.mutations) {
+    if (!new RegExp(`^${artifactId.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}\\.mutation\\.[a-z0-9_-]+\\.v[0-9]+$`, "u").test(mutation.id)) throw new Error(`[stdio] invalid mutation identity ${mutation.id}.`);
+  }
+  for (const inference of definition.inferences) {
+    if (!new RegExp(`^${artifactId.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}\\.inference\\.[a-z0-9_-]+\\.v[0-9]+$`, "u").test(inference.id)) throw new Error(`[stdio] invalid inference identity ${inference.id}.`);
+  }
+  const expectedLocales = ["en", "de"];
+  if (definition.localized_descriptors.length !== expectedLocales.length || definition.localized_descriptors.some((descriptor) => !expectedLocales.includes(descriptor.locale) || !descriptor.name || !descriptor.description)) throw new Error(`[stdio] ${definition.id} must own exactly one non-empty English and German descriptor.`);
+  const ledger = definition.support_ledger;
+  if (!ledger || !["unimplemented", "opaque", "implemented"].includes(ledger.read) || !["unimplemented", "opaque", "implemented"].includes(ledger.write) || !["unimplemented", "opaque", "implemented"].includes(ledger.lossless) || !["unimplemented", "opaque", "implemented"].includes(ledger.canonical)) throw new Error(`[stdio] ${definition.id} has an invalid support ledger.`);
+  const IDs = [
+    definition.id,
+    ...definition.standards.map((item) => item.id),
+    ...definition.profiles.map((item) => item.id),
+    ...definition.source_dialects.map((item) => item.id),
+    ...definition.representations.map((item) => item.id),
+    ...definition.codecs.map((item) => item.id),
+    ...definition.mutations.map((item) => item.id),
+    ...definition.inferences.map((item) => item.id),
+    ...definition.resources.map((item) => item.id),
+    ...definition.localized_descriptors.map((item) => item.id),
+    ...definition.conformance_suites.map((item) => item.id),
+  ];
+  for (const id of IDs) stdioDefinitionIdentity(id);
+  stdioAssertUnique(`definition identity for ${definition.id}`, IDs);
+}
+
+function stdioArtifactLedger(workspaceRoot: string): StdioArtifactLedger {
+  const definitions = stdioDefinitionCatalog(workspaceRoot);
+  definitions.forEach(stdioAssertDefinition);
+  stdioAssertUnique("artifact identity", definitions.map((definition) => definition.id));
+  stdioAssertUnique("artifact directory", definitions.map((definition) => definition.directory));
+  const knownArtifacts = new Set(definitions.map((definition) => definition.id));
+  for (const definition of definitions) {
+    stdioAssertUnique(`dependency for ${definition.id}`, definition.dependencies);
+    for (const dependency of definition.dependencies) {
+      if (!knownArtifacts.has(dependency) || dependency === definition.id) throw new Error(`[stdio] ${definition.id} has an invalid dependency ${dependency}.`);
+    }
+  }
+  const visiting = new Set<string>();
+  const visited = new Set<string>();
+  const definitionsById = new Map(definitions.map((definition) => [definition.id, definition]));
+  const visit = (id: string): void => {
+    if (visiting.has(id)) throw new Error(`[stdio] cyclic definition dependency at ${id}.`);
+    if (visited.has(id)) return;
+    visiting.add(id);
+    definitionsById.get(id)!.dependencies.forEach(visit);
+    visiting.delete(id);
+    visited.add(id);
+  };
+  definitions.forEach((definition) => visit(definition.id));
+  const artifacts = definitions.map((definition) => {
+    const representation = definition.representations[0];
+    if (!representation) throw new Error(`[stdio] ${definition.id} has no declared representation.`);
+    return {
+      id: definition.artifact,
+      kind: definition.id,
+      directory: definition.directory,
+      extension: representation.extension,
+      registeredMime: representation.mime,
+      depends: definition.dependencies.map((dependency) => dependency.slice("s.stdio.".length)),
+      component: stdioRel(workspaceRoot, join(workspaceRoot, STDIO_ROOT_REL, STDIO_ARTIFACTS_DIR, definition.directory, STDIO_COMPONENT_TS)),
+      dialects: definition.source_dialects.map((dialect) => ({ id: dialect.id, artifact: definition.artifact, standard: dialect.standard, subset: dialect.dialect, schema: "", io: "", mutations: null, inferences: null })),
+      codecs: [...definition.codecs],
+      support: definition.support_ledger,
+    } satisfies StdioArtifactDefinition;
+  });
+  stdioAssertUnique("registered MIME", artifacts.flatMap((artifact) => artifact.registeredMime === null ? [] : [artifact.registeredMime]));
+  stdioAssertUnique("file extension", artifacts.map((artifact) => artifact.extension));
+  stdioAssertUnique("source dialect", artifacts.flatMap((artifact) => artifact.dialects.map((dialect) => dialect.id)));
+  stdioAssertUnique("codec", artifacts.flatMap((artifact) => artifact.codecs.map((codec) => codec.id)));
+  const epw = artifacts.find((artifact) => artifact.id === "epw");
+  if (!epw || epw.registeredMime !== null) throw new Error("[stdio] EPW must remain MIME-unregistered.");
+  const txt = artifacts.find((artifact) => artifact.id === "txt");
+  if (!txt || txt.registeredMime !== "text/plain") throw new Error("[stdio] TXT must be the sole text/plain registrant.");
+  return {
+    artifacts,
+    counts: {
+      artifacts: artifacts.length,
+      registeredMimes: artifacts.filter((artifact) => artifact.registeredMime !== null).length,
+      standards: definitions.reduce((count, definition) => count + definition.standards.length, 0),
+      profiles: definitions.reduce((count, definition) => count + definition.profiles.length, 0),
+      dialects: definitions.reduce((count, definition) => count + definition.source_dialects.length, 0),
+      representations: definitions.reduce((count, definition) => count + definition.representations.length, 0),
+      codecs: definitions.reduce((count, definition) => count + definition.codecs.length, 0),
+      mutations: definitions.reduce((count, definition) => count + definition.mutations.length, 0),
+      inferences: definitions.reduce((count, definition) => count + definition.inferences.length, 0),
+      conformanceSuites: definitions.reduce((count, definition) => count + definition.conformance_suites.length, 0),
+    },
+  };
+}
+
+function stdioAssertPath(workspaceRoot: string, path: string, label: string): void {
+  if (!existsSync(join(workspaceRoot, path))) throw new Error(`[stdio] ${label} is missing: ${path}`);
+}
+
+function stdioRetiredTypeScriptExportNames(workspaceRoot: string, ledger: StdioArtifactLedger): void {
+  const barrel = readFileSync(join(workspaceRoot, STDIO_ROOT_REL, "📦️packages", "🟦️typescript", "📦️index.ts"), "utf8");
+  const exports = [...barrel.matchAll(/^export \* as (\w+) from /gmu)].map((match) => match[1]!);
+  stdioAssertUnique("TypeScript export", exports);
+  const expected = ledger.artifacts.map((artifact) => artifact.id).sort();
+  if (exports.sort().join("\n") !== expected.join("\n")) throw new Error("[stdio] TypeScript exports are not catalog-complete.");
+}
+
+function stdioRetiredManifestAssembly(workspaceRoot: string, ledger: StdioArtifactLedger): void {
+  const manifest = readFileSync(join(workspaceRoot, STDIO_ROOT_REL, "🛂️manifest", STDIO_COMPONENT_RS), "utf8");
+  const ids = [...manifest.matchAll(/short_id: "([^"]+)"/g)].map((match) => match[1]!);
+  stdioAssertUnique("manifest descriptor id", ids);
+  const expected = ledger.artifacts.map((artifact) => artifact.id).sort();
+  if (ids.sort().join("\n") !== expected.join("\n")) throw new Error("[stdio] manifest descriptors are not catalog-complete.");
+  const epw = ledger.artifacts.find((artifact) => artifact.id === "epw");
+  if (!epw || epw.registeredMime !== null) throw new Error("[stdio] EPW must remain MIME-unregistered in the schema ledger.");
+  if (!/short_id: "epw"[\s\S]*?mime: ""\.into\(\)/.test(manifest)) throw new Error("[stdio] EPW must cross the legacy manifest boundary as an empty MIME.");
+}
+
+function stdioRetiredFilesystemGate(workspaceRoot: string, gate: "quick" | "schema-parity" | "standards-coverage" | "codec" | "mutation-law" | "inference"): StdioArtifactLedger {
+  const ledger = stdioArtifactLedger(workspaceRoot);
+  stdioAssertTypeScriptExports(workspaceRoot, ledger);
+  stdioAssertManifestAssembly(workspaceRoot, ledger);
+  if (gate === "quick") return ledger;
+  for (const artifact of ledger.artifacts) {
+    if (STDIO_EXTERNALLY_OWNED_ARTIFACTS.has(artifact.id)) continue;
+    for (const dialect of artifact.dialects) {
+      if (gate === "schema-parity" || gate === "standards-coverage") {
+        stdioAssertPath(workspaceRoot, dialect.schema, `schema for ${dialect.id}`);
+        stdioAssertPath(workspaceRoot, join(dialect.schema, STDIO_COMPONENT_RS), `Rust schema for ${dialect.id}`);
+        stdioAssertPath(workspaceRoot, join(dialect.schema, STDIO_COMPONENT_TS), `TypeScript schema for ${dialect.id}`);
+      }
+      if (gate === "standards-coverage") stdioAssertPath(workspaceRoot, dialect.io, `IO taxonomy for ${dialect.id}`);
+      if (gate === "codec") stdioAssertPath(workspaceRoot, join(dialect.io, STDIO_COMPONENT_RS), `Rust codec for ${dialect.id}`);
+      if (gate === "mutation-law") {
+        if (!dialect.mutations) continue;
+        stdioAssertPath(workspaceRoot, dialect.mutations, `mutation taxonomy for ${dialect.id}`);
+        stdioAssertPath(workspaceRoot, join(dialect.mutations, STDIO_COMPONENT_RS), `Rust mutations for ${dialect.id}`);
+        stdioAssertPath(workspaceRoot, join(dialect.mutations, STDIO_COMPONENT_TS), `TypeScript mutations for ${dialect.id}`);
+      }
+      if (gate === "inference") {
+        if (!dialect.inferences) continue;
+        stdioAssertPath(workspaceRoot, dialect.inferences, `inference taxonomy for ${dialect.id}`);
+        stdioAssertPath(workspaceRoot, join(dialect.inferences, STDIO_COMPONENT_RS), `Rust inferences for ${dialect.id}`);
+        stdioAssertPath(workspaceRoot, join(dialect.inferences, STDIO_COMPONENT_TS), `TypeScript inferences for ${dialect.id}`);
+      }
+    }
+  }
+  return ledger;
+}
+
+/** 🗄️ Runs schema-derived stdio catalog, support-ledger, and runtime gates. */
+function stdioAssertTypeScriptExports(workspaceRoot: string, ledger: StdioArtifactLedger): void {
+  const barrel = readFileSync(join(workspaceRoot, STDIO_ROOT_REL, "📦️packages", "🟦️typescript", "📦️index.ts"), "utf8");
+  const exports = [...barrel.matchAll(/^export \* as (\w+) from /gmu)].map((match) => match[1]!);
+  stdioAssertUnique("TypeScript export", exports);
+  const expected = ledger.artifacts.map((artifact) => artifact.id).sort();
+  if (exports.sort().join("\n") !== expected.join("\n")) throw new Error("[stdio] TypeScript exports are not definition-complete.");
+  for (const artifact of ledger.artifacts) {
+    const component = readFileSync(join(workspaceRoot, artifact.component), "utf8");
+    if (!component.includes("📜️artifact-definition.json") || !component.includes("export { definition }")) throw new Error(`[stdio] ${artifact.id} exports a namespace instead of its schema-owned definition.`);
+  }
+}
+
+function stdioAssertManifestAssembly(workspaceRoot: string, ledger: StdioArtifactLedger): void {
+  const manifest = readFileSync(join(workspaceRoot, STDIO_ROOT_REL, "🛂️manifest", STDIO_COMPONENT_RS), "utf8");
+  if (!manifest.includes("crate::registry::format_descriptors()")) throw new Error("[stdio] manifest must derive descriptors from schema-owned definitions.");
+  if (!manifest.includes("crate::registry::artifact_definitions()")) throw new Error("[stdio] manifest must expose the schema-owned artifact definition assembly.");
+  const epw = ledger.artifacts.find((artifact) => artifact.id === "epw");
+  if (!epw || epw.registeredMime !== null) throw new Error("[stdio] EPW must remain MIME-unregistered in the schema ledger.");
+}
+
+function stdioRequireClosed(ledger: StdioArtifactLedger, gate: string): never {
+  const incomplete = ledger.artifacts.filter((artifact) => artifact.support.read !== "implemented" || artifact.support.write !== "implemented" || artifact.support.lossless !== "implemented" || artifact.support.canonical !== "implemented" || artifact.codecs.length === 0);
+  throw new Error(`[stdio] ${gate} is not closed: ${incomplete.length} schema-owned support ledgers remain unimplemented; no runtime, fuzz, or cross-platform support is claimed.`);
+}
+
+function stdioRunStructuralGate(workspaceRoot: string, gate: "quick" | "schema-parity" | "standards-coverage" | "codec" | "mutation-law" | "inference"): StdioArtifactLedger {
+  const ledger = stdioArtifactLedger(workspaceRoot);
+  stdioAssertTypeScriptExports(workspaceRoot, ledger);
+  stdioAssertManifestAssembly(workspaceRoot, ledger);
+  if (gate !== "quick") stdioRequireClosed(ledger, gate);
+  return ledger;
+}
+
+export class StdioScript extends Script {
+  run(segments: string[]): void {
+    const gate = segments[0] ?? "quick";
+    if (gate === "ledger") {
+      process.stdout.write(`${JSON.stringify(stdioArtifactLedger(this.root), null, 2)}\n`);
+      return;
+    }
+    if (gate === "quick" || gate === "schema-parity" || gate === "standards-coverage" || gate === "codec" || gate === "mutation-law" || gate === "inference") {
+      const ledger = stdioRunStructuralGate(this.root, gate);
+      console.log(`[stdio] ${gate} passed (${ledger.counts.artifacts} artifacts, ${ledger.counts.dialects} dialects, ${ledger.counts.codecs} codecs).`);
+      return;
+    }
+    if (gate === "long") {
+      for (const structuralGate of ["quick", "schema-parity", "standards-coverage", "codec", "mutation-law", "inference"] as const) stdioRunStructuralGate(this.root, structuralGate);
+      runCmd("bun", ["nx", "run-many", "-t", "test-long", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      return;
+    }
+    if (gate === "exhaustive") {
+      this.run(["long"]);
+      runCmd("bun", ["nx", "run-many", "-t", "test-exhaustive", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      return;
+    }
+    if (gate === "runtime") {
+      stdioRunStructuralGate(this.root, "quick");
+      runCmd("bun", ["nx", "run-many", "-t", "test-quick", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      return;
+    }
+    if (gate === "fuzz") {
+      stdioRunStructuralGate(this.root, "codec");
+      runCmd("bun", ["nx", "run", "@semio-tech/stdio-plugin:test-exhaustive"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      return;
+    }
+    if (gate === "cross-platform") {
+      const ledger = stdioRunStructuralGate(this.root, "schema-parity");
+      for (const codec of ledger.artifacts.flatMap((artifact) => artifact.codecs)) {
+        if (codec.source.includes("\\")) throw new Error(`[stdio] platform-specific codec path: ${codec.source}`);
+      }
+      runCmd("bun", ["nx", "run-many", "-t", "test-quick", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      return;
+    }
+    throw new Error(`[stdio] expected ledger|quick|long|exhaustive|schema-parity|standards-coverage|codec|mutation-law|inference|runtime|fuzz|cross-platform, got ${JSON.stringify(gate)}.`);
+  }
+}
+//#endregion 🔖️StdioLedgerScript
+
 //#region 🔖️BuildScript
 export class BuildScript extends Script {
   run(segments: string[]): void {
@@ -1708,6 +2296,7 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("verify", VerifyScript)
   .register("format", FormatScript)
   .register("test", TestScript)
+  .register("stdio", StdioScript)
   .register("build", BuildScript)
   .register("cpp", CppScript)
   .register("publish", PublishScript)
@@ -7386,7 +7975,7 @@ const POLICY_SEMANTIC_VOCABULARY_ALLOWLIST = new Set<string>([
   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔨️modules/🧭️mutation-dispatch/🦀️component.rs",
   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🦀️component.rs",

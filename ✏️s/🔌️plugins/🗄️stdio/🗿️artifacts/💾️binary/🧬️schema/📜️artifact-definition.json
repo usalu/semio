@@ -1,0 +1,98 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.binary",
+  "artifact": "binary",
+  "directory": "💾️binary",
+  "dependencies": [],
+  "standards": [
+    {
+      "id": "s.stdio.binary.standard.raw",
+      "revision": "raw",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.binary.standard.raw.profile.any",
+      "standard": "s.stdio.binary.standard.raw",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.binary.standard.raw.dialect.source",
+      "standard": "s.stdio.binary.standard.raw",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.binary.standard.raw.representation.document",
+      "standard": "s.stdio.binary.standard.raw",
+      "representation": "document",
+      "mime": "application/octet-stream",
+      "extension": ".bin",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.binary.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.binary.localization.en",
+      "locale": "en",
+      "name": "Binary",
+      "description": "Binary artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.binary.localization.de",
+      "locale": "de",
+      "name": "Binärdaten",
+      "description": "Binärdaten-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.binary.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.binary.standard.raw.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

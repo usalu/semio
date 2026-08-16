@@ -23,13 +23,16 @@ export type PackageMaturity = "clean" | "mixed";
 /** 🧩️ Semantic responsibility owned by one collection member. */
 export type SemanticKind = "inference" | "mutation" | "io" | "module" | "artifact" | "standard" | "subset" | "plugin" | "product" | "extension" | "capability" | "ui" | "action" | "app" | "command";
 
+/** 🚪️ Exact boundary direction of one I/O semantic collection. */
+export type SemanticIoDirection = "import" | "export" | "transport";
+
 /** 🧭️ Lowest legal owner of a reusable module. */
 export type SemanticOwnerLevel = "subset" | "standard" | "artifact" | "app" | "plugin" | "product" | "s" | "framework";
 
 /** 🗂️ Schema entry describing a recognized semantic collection directory. */
 export interface SemanticCollectionSpec {
   readonly kind: SemanticKind;
-  readonly direction?: "import" | "export";
+  readonly direction?: SemanticIoDirection;
 }
 
 /** 🏷️ One exact child declared by a collection root's canonical `🔣️component.json`. */
@@ -41,7 +44,7 @@ export interface SemanticMember {
   readonly generator?: string;
   readonly inference?: { readonly inputs: readonly string[]; readonly target: string };
   readonly mutation?: { readonly command: string; readonly event: string };
-  readonly io?: { readonly format: string; readonly direction: "import" | "export" };
+  readonly io?: { readonly format: string; readonly direction: SemanticIoDirection };
   readonly module?: { readonly productionConsumers: readonly string[] };
 }
 
@@ -164,8 +167,8 @@ export interface Taxonomy {
   readonly representationDirs: readonly string[];
   /** 🚪️ Top-level dirs under `🚪️io/`: import and export. */
   readonly ioDirectionDirs: readonly string[];
-  /** 🚪️ Dedicated collection below `🚪️io/` for codecs of derived inference results. */
-  readonly ioInferenceCollectionDirName: string;
+  /** 🚪️ Exact collection directories below `🚪️io/` for owned coded boundary results. */
+  readonly ioSemanticCollectionDirNames: readonly string[];
   /** 🚪️ Direction to codec folder (import→deserializers, export→serializers). */
   readonly ioDirectionChildDirs: Readonly<Record<string, string>>;
   /** 📖️ Spec leaves required under every text representation node. */
@@ -287,12 +290,12 @@ function artifactFacetChildLevel(parents: readonly string[], taxonomy: Taxonomy)
   const c = parents[3];
   if (parents.length === 1) {
     if (root === "🧬️schema") return { kind: "fixed", dirs: taxonomy.schemaChildDirs ?? [] };
-    if (root === "🚪️io") return { kind: "fixed", dirs: [...(taxonomy.ioDirectionDirs ?? []), taxonomy.ioInferenceCollectionDirName] };
+    if (root === "🚪️io") return { kind: "fixed", dirs: [...(taxonomy.ioDirectionDirs ?? []), ...(taxonomy.ioSemanticCollectionDirNames ?? [])] };
     return { kind: "none" };
   }
   if (root === "🧬️schema") {
     if (parents.length === 2 && (taxonomy.schemaChildDirs ?? []).includes(a!)) {
-      if (a === "🧬️mutations") return { kind: "fixed", dirs: [...(taxonomy.representationDirs ?? []), "*"] };
+      if (a === "🧬️mutations") return { kind: "fixed", dirs: ["*"] };
       if (a === "💡️inferences") return { kind: "fixed", dirs: ["*"] };
       return { kind: "fixed", dirs: taxonomy.representationDirs ?? [] };
     }
@@ -308,8 +311,8 @@ function artifactFacetChildLevel(parents: readonly string[], taxonomy: Taxonomy)
   if (root === "🚪️io") {
     const directions = taxonomy.ioDirectionDirs ?? [];
     const childMap = taxonomy.ioDirectionChildDirs ?? {};
-    if (parents.length === 2 && a === taxonomy.ioInferenceCollectionDirName) return { kind: "fixed", dirs: taxonomy.representationDirs ?? [] };
-    if (parents.length === 3 && a === taxonomy.ioInferenceCollectionDirName && (taxonomy.representationDirs ?? []).includes(b!)) return { kind: "none" };
+    if (parents.length === 2 && (taxonomy.ioSemanticCollectionDirNames ?? []).includes(a!)) return { kind: "fixed", dirs: taxonomy.representationDirs ?? [] };
+    if (parents.length === 3 && (taxonomy.ioSemanticCollectionDirNames ?? []).includes(a!) && (taxonomy.representationDirs ?? []).includes(b!)) return { kind: "none" };
     if (parents.length === 2 && directions.includes(a!)) {
       const child = childMap[a!];
       return child ? { kind: "fixed", dirs: [child] } : { kind: "none" };
@@ -358,7 +361,7 @@ export function artifactFacetPathIsDeclared(facetPath: string, taxonomy: Taxonom
   if (!root || !taxonomy.artifactComponentDirs.includes(root)) return false;
   const parents: string[] = [root];
   for (const segment of rest) {
-    if (parents.length === 2 && parents[0] === "🧬️schema" && parents[1] === "💡️inferences" && (taxonomy.representationDirs ?? []).includes(segment)) return false;
+    if (parents.length === 2 && parents[0] === "🧬️schema" && (parents[1] === "💡️inferences" || parents[1] === "🧬️mutations") && (taxonomy.representationDirs ?? []).includes(segment)) return false;
     const level = artifactFacetChildLevel(parents, taxonomy);
     if (level.kind === "none") return false;
     if (level.kind === "wildcard") {
@@ -556,8 +559,22 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
   //#region IoFacetContract
   if ("mediaFormatDirs" in taxonomy) problems.push(`mediaFormatDirs is removed — use ioDirectionDirs + ioDirectionChildDirs.`);
   if ("ioFormatChildDirs" in taxonomy) problems.push(`ioFormatChildDirs is removed — use ioDirectionDirs + ioDirectionChildDirs.`);
-  if (!taxonomy.ioInferenceCollectionDirName || !isEmojiPrefixedSlugDir(taxonomy.ioInferenceCollectionDirName)) {
-    problems.push(`ioInferenceCollectionDirName must be one emoji-prefixed collection directory.`);
+  if ("ioInferenceCollectionDirName" in taxonomy) {
+    problems.push(`ioInferenceCollectionDirName is removed — use ioSemanticCollectionDirNames.`);
+  }
+  if (!Array.isArray(taxonomy.ioSemanticCollectionDirNames) || taxonomy.ioSemanticCollectionDirNames.length === 0) {
+    problems.push(`ioSemanticCollectionDirNames must be a non-empty array.`);
+  } else {
+    const names = new Set<string>();
+    for (const directory of taxonomy.ioSemanticCollectionDirNames) {
+      if (!directory || !isEmojiPrefixedSlugDir(directory)) problems.push(`ioSemanticCollectionDirNames member ${JSON.stringify(directory)} must be one emoji-prefixed collection directory.`);
+      if (names.has(directory)) problems.push(`ioSemanticCollectionDirNames contains duplicate member ${JSON.stringify(directory)}.`);
+      names.add(directory);
+      if (!taxonomy.taxonomyLeafParentDirs.includes(directory)) problems.push(`ioSemanticCollectionDirNames member ${JSON.stringify(directory)} is missing from taxonomyLeafParentDirs.`);
+    }
+    for (const required of ["💡️inferences", "🧬️mutations"] as const) {
+      if (!names.has(required)) problems.push(`ioSemanticCollectionDirNames must include ${JSON.stringify(required)}.`);
+    }
   }
   if (!Array.isArray(taxonomy.ioDirectionDirs) || taxonomy.ioDirectionDirs.length === 0) {
     problems.push(`ioDirectionDirs must be a non-empty array.`);
@@ -581,7 +598,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
       problems.push(`ioDirectionChildDirs["${direction}"] = "${child}" is missing from taxonomyLeafParentDirs.`);
     }
   }
-  for (const required of ["📥️import", "📤️export", "🚪️io", taxonomy.ioInferenceCollectionDirName, "\ud83e\udde9\ufe0fdeserializers", "\ud83e\uddf5\ufe0fserializers"] as const) {
+  for (const required of ["📥️import", "📤️export", "🚪️io", ...(taxonomy.ioSemanticCollectionDirNames ?? []), "\ud83e\udde9\ufe0fdeserializers", "\ud83e\uddf5\ufe0fserializers"] as const) {
     if (!taxonomy.taxonomyLeafParentDirs.includes(required)) {
       problems.push(`taxonomyLeafParentDirs must include "${required}".`);
     }
@@ -783,12 +800,14 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
   const ownerLevels = new Set<SemanticOwnerLevel>(["subset", "standard", "artifact", "app", "plugin", "product", "s", "framework"]);
   if (new Set(taxonomy.semanticAllowedOwnerLevels).size !== taxonomy.semanticAllowedOwnerLevels.length) problems.push(`semanticAllowedOwnerLevels contains duplicate members.`);
   for (const level of taxonomy.semanticAllowedOwnerLevels) if (!ownerLevels.has(level)) problems.push(`semanticAllowedOwnerLevels contains unknown level "${level}".`);
-  for (const required of ["🔨️modules", "💡️inferences", "🧬️mutations", "🧩️deserializers", "🧵️serializers", `🚪️io/${taxonomy.ioInferenceCollectionDirName}`] as const) {
+  for (const required of ["🔨️modules", "💡️inferences", "🧬️mutations", "🧩️deserializers", "🧵️serializers", ...(taxonomy.ioSemanticCollectionDirNames ?? []).map((directory) => `🚪️io/${directory}`)] as const) {
     if (!taxonomy.semanticCollections[required]) problems.push(`semanticCollections must declare "${required}".`);
   }
+  const ioDirections = new Set<SemanticIoDirection>(["import", "export", "transport"]);
   for (const [directory, spec] of Object.entries(taxonomy.semanticCollections)) {
     if (!directory || !directory.split("/").every(isEmojiPrefixedSlugDir)) problems.push(`semanticCollections key ${JSON.stringify(directory)} must be one or more emoji-prefixed directories.`);
     if (spec.kind === "io" && !spec.direction) problems.push(`semanticCollections["${directory}"] must declare an io direction.`);
+    if (spec.kind === "io" && spec.direction && !ioDirections.has(spec.direction)) problems.push(`semanticCollections["${directory}"] has unsupported io direction ${JSON.stringify(spec.direction)}.`);
     if (spec.kind !== "io" && spec.direction) problems.push(`semanticCollections["${directory}"] declares a direction but is not io.`);
   }
   //#endregion SemanticCollectionContract
@@ -1774,6 +1793,33 @@ function semanticTerminalProductionConsumers(componentId: string, edges: readonl
   return semanticUnique(terminals);
 }
 
+//#region 🧭️SemanticScope
+function semanticScopeMatchesId(id: string, scope: string): boolean {
+  return id === scope || id.startsWith(`${scope}.`);
+}
+
+function semanticCommonPath(paths: readonly string[]): string | null {
+  const [first, ...remaining] = paths.map((path) => path.split("/").filter(Boolean));
+  if (!first) return null;
+  const common = first.filter((segment, index) => remaining.every((candidate) => candidate[index] === segment));
+  return common.length === 0 ? null : common.join("/");
+}
+
+/** 🧭️ Resolves a semantic-id scope to its real owner boundary so unclassified collection findings remain visible. */
+function semanticScopeRoots(records: readonly SemanticCensusRecord[], scope: string): string[] {
+  const matched = records.filter((record) => semanticScopeMatchesId(record.id, scope) || record.currentPath === scope || record.currentPath.startsWith(`${scope}/`));
+  if (matched.length === 0) return [];
+  const ownerName = scope.split(".").filter(Boolean).at(-1);
+  const ownerPaths = ownerName ? matched.flatMap((record) => record.ownerAncestry.filter((owner) => stripEmoji(basename(owner)) === ownerName)) : [];
+  const root = semanticCommonPath(ownerPaths.length > 0 ? ownerPaths : matched.map((record) => record.currentPath));
+  return root ? [root] : [];
+}
+
+function semanticPathInRoots(path: string, roots: readonly string[]): boolean {
+  return roots.some((root) => path === root || path.startsWith(`${root}/`));
+}
+//#endregion 🧭️SemanticScope
+
 /** 📊️ Builds the timestamp-free semantic census from taxonomy-defined active scope. */
 export function buildSemanticCensus(repoRoot: string, options: { readonly scope?: string } = {}, taxonomy: Taxonomy = loadTaxonomy()): SemanticCensus {
   repoRoot = realpathSync(repoRoot);
@@ -1934,9 +1980,10 @@ export function buildSemanticCensus(repoRoot: string, options: { readonly scope?
       leaseId: null,
     };
   }).sort((a, b) => semanticCompare(a.id, b.id));
-  const scopedRecords = options.scope ? records.filter((record) => record.id.includes(options.scope!) || record.currentPath.includes(options.scope!)) : records;
+  const scopedRecords = options.scope ? records.filter((record) => semanticScopeMatchesId(record.id, options.scope!) || record.currentPath === options.scope || record.currentPath.startsWith(`${options.scope}/`)) : records;
   const scopedIds = new Set(scopedRecords.map((record) => record.id));
-  const scopedProblems = problems.filter((problem) => !options.scope || problem.path.includes(options.scope) || problem.componentId?.includes(options.scope));
+  const scopedRoots = options.scope ? semanticScopeRoots(records, options.scope) : [];
+  const scopedProblems = problems.filter((problem) => !options.scope || semanticPathInRoots(problem.path, scopedRoots) || (problem.componentId !== undefined && semanticScopeMatchesId(problem.componentId, options.scope)));
   return {
     records: scopedRecords,
     graph: { nodes: scopedRecords.map((record) => record.id), edges: uniqueEdges.filter((edge) => scopedIds.has(edge.from) || scopedIds.has(edge.to)) },

@@ -1,0 +1,100 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.mp4",
+  "artifact": "mp4",
+  "directory": "🎥️mp4",
+  "dependencies": [
+    "s.stdio.binary"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.mp4.standard.isobmff",
+      "revision": "isobmff",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.mp4.standard.isobmff.profile.any",
+      "standard": "s.stdio.mp4.standard.isobmff",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.mp4.standard.isobmff.dialect.source",
+      "standard": "s.stdio.mp4.standard.isobmff",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.mp4.standard.isobmff.representation.document",
+      "standard": "s.stdio.mp4.standard.isobmff",
+      "representation": "document",
+      "mime": "video/mp4",
+      "extension": ".mp4",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.mp4.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.mp4.localization.en",
+      "locale": "en",
+      "name": "MPEG-4 Part 14",
+      "description": "MPEG-4 Part 14 artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.mp4.localization.de",
+      "locale": "de",
+      "name": "MPEG-4 Teil 14",
+      "description": "MPEG-4 Teil 14-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.mp4.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.mp4.standard.isobmff.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

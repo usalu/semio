@@ -1,0 +1,13 @@
+{
+  "x-semio": {
+    "kind": "collection",
+    "members": [
+      {
+        "directory": "🔣️json",
+        "id": "s.stdio.gltf.io.import.artifact.json",
+        "kind": "artifact",
+        "responsibility": "JSON representation of a deserialized glTF artifact."
+      }
+    ]
+  }
+}

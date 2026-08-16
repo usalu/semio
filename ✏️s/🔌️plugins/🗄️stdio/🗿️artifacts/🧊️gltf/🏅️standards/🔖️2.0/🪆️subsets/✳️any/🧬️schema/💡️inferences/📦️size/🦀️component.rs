@@ -1,8 +1,8 @@
 //! 📦 GLTF size indicators.
 
 use super::geometric_analysis::{GltfGeometryContext};
-use super::super::super::modules::{inference_measures::{estimate, exact, unavailable}, vector_operations::{cross, sub}};
-use super::super::super::modules::measurement_contracts::*;
+use super::super::modules::{inference_measures::{estimate, exact, unavailable}, vector_operations::{cross, sub}};
+use super::super::modules::measurement_contracts::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

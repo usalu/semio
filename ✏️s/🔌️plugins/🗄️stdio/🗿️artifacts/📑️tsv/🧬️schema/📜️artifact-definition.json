@@ -1,0 +1,100 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.tsv",
+  "artifact": "tsv",
+  "directory": "📑️tsv",
+  "dependencies": [
+    "s.stdio.txt"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.tsv.standard.iana",
+      "revision": "iana",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.tsv.standard.iana.profile.any",
+      "standard": "s.stdio.tsv.standard.iana",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.tsv.standard.iana.dialect.source",
+      "standard": "s.stdio.tsv.standard.iana",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.tsv.standard.iana.representation.document",
+      "standard": "s.stdio.tsv.standard.iana",
+      "representation": "document",
+      "mime": "text/tab-separated-values",
+      "extension": ".tsv",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.tsv.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.tsv.localization.en",
+      "locale": "en",
+      "name": "Tab-Separated Values",
+      "description": "Tab-Separated Values artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.tsv.localization.de",
+      "locale": "de",
+      "name": "Tabulatorgetrennte Werte",
+      "description": "Tabulatorgetrennte Werte-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.tsv.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.tsv.standard.iana.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

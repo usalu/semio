@@ -4,7 +4,7 @@ use serde::Serialize;
 use serde_json::Value;
 use std::{cmp::Ordering, fmt};
 
-use crate::artifacts::gltf::schema::inferences::GltfInference;
+use crate::artifacts::gltf::schema::inferences::geometric_analysis::GltfInference;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

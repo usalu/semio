@@ -1,0 +1,100 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.step",
+  "artifact": "step",
+  "directory": "📐️step",
+  "dependencies": [
+    "s.stdio.txt"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.step.standard.ap214",
+      "revision": "ap214",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.step.standard.ap214.profile.any",
+      "standard": "s.stdio.step.standard.ap214",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.step.standard.ap214.dialect.source",
+      "standard": "s.stdio.step.standard.ap214",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.step.standard.ap214.representation.document",
+      "standard": "s.stdio.step.standard.ap214",
+      "representation": "document",
+      "mime": "model/step",
+      "extension": ".step",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.step.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.step.localization.en",
+      "locale": "en",
+      "name": "ISO 10303 STEP",
+      "description": "ISO 10303 STEP artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.step.localization.de",
+      "locale": "de",
+      "name": "ISO 10303 STEP",
+      "description": "ISO 10303 STEP-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.step.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.step.standard.ap214.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

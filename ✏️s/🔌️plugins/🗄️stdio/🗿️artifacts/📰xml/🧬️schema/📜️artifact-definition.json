@@ -1,0 +1,100 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.xml",
+  "artifact": "xml",
+  "directory": "📰xml",
+  "dependencies": [
+    "s.stdio.txt"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.xml.standard.1.0",
+      "revision": "1.0",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.xml.standard.1.0.profile.any",
+      "standard": "s.stdio.xml.standard.1.0",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.xml.standard.1.0.dialect.source",
+      "standard": "s.stdio.xml.standard.1.0",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.xml.standard.1.0.representation.document",
+      "standard": "s.stdio.xml.standard.1.0",
+      "representation": "document",
+      "mime": "application/xml",
+      "extension": ".xml",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.xml.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.xml.localization.en",
+      "locale": "en",
+      "name": "Extensible Markup Language",
+      "description": "Extensible Markup Language artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.xml.localization.de",
+      "locale": "de",
+      "name": "Erweiterbare Auszeichnungssprache",
+      "description": "Erweiterbare Auszeichnungssprache-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.xml.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.xml.standard.1.0.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

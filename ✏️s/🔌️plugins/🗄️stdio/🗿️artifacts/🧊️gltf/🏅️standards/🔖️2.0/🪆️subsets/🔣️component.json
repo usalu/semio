@@ -5,5 +5,16 @@
     "*": {
       "name": "Unconstrained gltf 2.0"
     }
+  },
+  "x-semio": {
+    "kind": "collection",
+    "members": [
+      {
+        "directory": "✳️any",
+        "id": "s.stdio.gltf.subset.any",
+        "kind": "subset",
+        "responsibility": "Unconstrained glTF 2.0 subset assembly."
+      }
+    ]
   }
 }

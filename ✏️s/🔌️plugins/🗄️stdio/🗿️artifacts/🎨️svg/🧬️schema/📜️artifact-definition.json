@@ -1,0 +1,100 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.svg",
+  "artifact": "svg",
+  "directory": "🎨️svg",
+  "dependencies": [
+    "s.stdio.xml"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.svg.standard.1.1",
+      "revision": "1.1",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.svg.standard.1.1.profile.any",
+      "standard": "s.stdio.svg.standard.1.1",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.svg.standard.1.1.dialect.source",
+      "standard": "s.stdio.svg.standard.1.1",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.svg.standard.1.1.representation.document",
+      "standard": "s.stdio.svg.standard.1.1",
+      "representation": "document",
+      "mime": "image/svg+xml",
+      "extension": ".svg",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.svg.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.svg.localization.en",
+      "locale": "en",
+      "name": "Scalable Vector Graphics",
+      "description": "Scalable Vector Graphics artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.svg.localization.de",
+      "locale": "de",
+      "name": "Skalierbare Vektorgrafiken",
+      "description": "Skalierbare Vektorgrafiken-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.svg.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.svg.standard.1.1.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

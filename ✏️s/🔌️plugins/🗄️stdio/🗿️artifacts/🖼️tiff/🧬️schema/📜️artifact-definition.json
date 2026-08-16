@@ -1,0 +1,100 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.tiff",
+  "artifact": "tiff",
+  "directory": "🖼️tiff",
+  "dependencies": [
+    "s.stdio.binary"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.tiff.standard.6.0",
+      "revision": "6.0",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.tiff.standard.6.0.profile.any",
+      "standard": "s.stdio.tiff.standard.6.0",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.tiff.standard.6.0.dialect.source",
+      "standard": "s.stdio.tiff.standard.6.0",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.tiff.standard.6.0.representation.document",
+      "standard": "s.stdio.tiff.standard.6.0",
+      "representation": "document",
+      "mime": "image/tiff",
+      "extension": ".tiff",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.tiff.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.tiff.localization.en",
+      "locale": "en",
+      "name": "Tagged Image File Format",
+      "description": "Tagged Image File Format artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.tiff.localization.de",
+      "locale": "de",
+      "name": "Tagged Image-Dateiformat",
+      "description": "Tagged Image-Dateiformat-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.tiff.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.tiff.standard.6.0.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

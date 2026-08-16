@@ -1,6 +1,6 @@
 syntax = "proto3";
 package semio.s.stdio.gltf.inference.io.text;
-import "../../../🧬️schema/💡️inferences/🛰️component.proto";
+import "../../../🧬️schema/💡️inferences/🧮️geometric-analysis/🛰️component.proto";
 message GltfInferenceTextDocument {
   string schema = 1;
   uint32 version = 2;

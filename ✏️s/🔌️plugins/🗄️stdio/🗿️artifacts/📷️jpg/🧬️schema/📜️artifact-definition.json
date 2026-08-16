@@ -1,0 +1,100 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.jpg",
+  "artifact": "jpg",
+  "directory": "📷️jpg",
+  "dependencies": [
+    "s.stdio.binary"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.jpg.standard.jfif-1.01",
+      "revision": "jfif-1.01",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.jpg.standard.jfif-1.01.profile.any",
+      "standard": "s.stdio.jpg.standard.jfif-1.01",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.jpg.standard.jfif-1.01.dialect.source",
+      "standard": "s.stdio.jpg.standard.jfif-1.01",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.jpg.standard.jfif-1.01.representation.document",
+      "standard": "s.stdio.jpg.standard.jfif-1.01",
+      "representation": "document",
+      "mime": "image/jpeg",
+      "extension": ".jpg",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.jpg.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.jpg.localization.en",
+      "locale": "en",
+      "name": "JPEG",
+      "description": "JPEG artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.jpg.localization.de",
+      "locale": "de",
+      "name": "JPEG",
+      "description": "JPEG-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.jpg.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.jpg.standard.jfif-1.01.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

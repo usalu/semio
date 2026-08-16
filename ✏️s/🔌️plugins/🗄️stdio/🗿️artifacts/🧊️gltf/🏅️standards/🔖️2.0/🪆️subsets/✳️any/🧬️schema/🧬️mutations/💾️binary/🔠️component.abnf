@@ -1,6 +1,0 @@
-; 🧬 Structured OpBinary frame. Format=1; tag is frozen 0..27; payload is tag-specific.
-document = %x01 tag payload
-tag = %x00-1B
-payload = *OCTET
-; tags 0..23 retain their original meanings; 18/20 couple buffer metadata and bytes.
-; 24=TransformNode, 25=ReparentNode, 26=BindNodeMesh, 27=BindPrimitiveMaterial.

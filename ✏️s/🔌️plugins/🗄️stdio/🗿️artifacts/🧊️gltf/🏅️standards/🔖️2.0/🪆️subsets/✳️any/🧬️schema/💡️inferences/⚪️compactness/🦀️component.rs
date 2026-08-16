@@ -1,8 +1,8 @@
 //! ⚪️ GLTF compactness indicators.
 
 use super::geometric_analysis::{GltfGeometryContext, convex_hull_metrics, hull_sample};
-use super::super::super::modules::{inference_measures::{estimate, exact, unavailable}};
-use super::super::super::modules::measurement_contracts::*;
+use super::super::modules::{inference_measures::{estimate, exact, unavailable}};
+use super::super::modules::measurement_contracts::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

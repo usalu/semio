@@ -245,8 +245,9 @@ mod tests {
     use crate::wgpu::component::layout::ActionDescriptor;
     use crate::wgpu::component::ui::{
         ui_node_to_control, SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNumberStepperNode,
-        UiPresence, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiTextNode, UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+        UiPresence, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiTextNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     };
+    use crate::wgpu::Label;
     use crate::wgpu::events::PointerButton;
     use crate::wgpu::geometry::Rect;
     use crate::wgpu::input::InputState;
@@ -267,14 +268,14 @@ mod tests {
     }
 
     fn button_ui(id: &str, label: &str) -> UiNode {
-        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: label.into(), action: action(), style: None, presence: UiPresence::default(), menu: None })
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: Label::data(label), action: action(), style: None, presence: UiPresence::default(), menu: None })
     }
 
     #[test]
     fn apply_tree_then_frame_produces_a_non_empty_draw_list() {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
-        ui.apply_tree("main", &stack_ui(vec![UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })]));
+        ui.apply_tree("main", &stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("hi"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })]));
 
         assert!(ui.needs_frame(), "a freshly applied tree must report needing a frame");
         let draw = ui.frame("main", 400.0, 400.0, &mut atlas, None, None).expect("frame must produce a draw list once a tree was applied");
@@ -293,7 +294,7 @@ mod tests {
     fn needs_frame_is_false_once_a_stable_tree_has_been_framed() {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
-        let ui_node = stack_ui(vec![UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })]);
+        let ui_node = stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("hi"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })]);
         ui.apply_tree("main", &ui_node);
         ui.frame("main", 400.0, 400.0, &mut atlas, None, None);
         assert!(!ui.needs_frame(), "nothing changed since the last frame, so no frame should be needed");
@@ -405,10 +406,10 @@ mod tests {
         let mut atlas = FontAtlas::builtin();
         let group_node = UiNode::Group(UiGroupNode {
             id: "group".into(),
-            label: "Group".into(),
+            label: Label::data("Group"),
             default_open: None,
             presence: UiPresence::default(),
-            children: vec![UiNode::Text(UiTextNode { value: "label".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None }), component_scene_ui("surface.nested")],
+            children: vec![UiNode::Text(UiTextNode { value: Label::data("label"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None }), component_scene_ui("surface.nested")],
             menu: None,
         });
         ui.apply_tree("w", &group_node);
@@ -645,7 +646,7 @@ mod tests {
             drop_action: None,
             drop_overlay: None,
             children: vec![
-                UiNode::Text(UiTextNode { value: "hello".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None }),
+                UiNode::Text(UiTextNode { value: Label::data("hello"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None }),
                 UiNode::Separator(UiSeparatorNode { presence: UiPresence::default(), menu: None }),
             ],
             menu: None,
@@ -660,7 +661,7 @@ mod tests {
 
     #[test]
     fn golden_button() {
-        assert_equivalent("Button", &leaf(UiNode::Button(UiButtonNode { id: Some("btn".into()), icon_id: IconName::CircleDot, label: "Go".into(), action: action(), style: None, presence: UiPresence::default(), menu: None })));
+        assert_equivalent("Button", &leaf(UiNode::Button(UiButtonNode { id: Some("btn".into()), icon_id: IconName::CircleDot, label: Label::data("Go"), action: action(), style: None, presence: UiPresence::default(), menu: None })));
     }
 
     #[test]
@@ -696,7 +697,7 @@ mod tests {
             &leaf(UiNode::Select(UiSelectNode {
                 id: "sel".into(),
                 value: "a".into(),
-                items: vec![UiSelectItem { value: "a".into(), label: "Alpha".into() }, UiSelectItem { value: "b".into(), label: "Beta".into() }],
+                items: vec![UiSelectItem { value: "a".into(), label: Label::data("Alpha") }, UiSelectItem { value: "b".into(), label: Label::data("Beta") }],
                 placeholder: None,
                 on_change: action(),
                 presence: UiPresence::default(),
@@ -731,7 +732,7 @@ mod tests {
 
     #[test]
     fn golden_key_value() {
-        assert_equivalent("KeyValue", &leaf(UiNode::KeyValue(UiKeyValueNode { entries: vec![UiKeyValueEntry { label: "Name".into(), value: "Semio".into() }], presence: UiPresence::default(), menu: None })));
+        assert_equivalent("KeyValue", &leaf(UiNode::KeyValue(UiKeyValueNode { entries: vec![UiKeyValueEntry { label: Label::data("Name"), value: Label::data("Semio") }], presence: UiPresence::default(), menu: None })));
     }
 
     #[test]
@@ -785,7 +786,7 @@ mod tests {
     fn golden_tree() {
         let item = |id: &str, label: &str| UiTreeItemNode {
             id: id.into(),
-            label: label.into(),
+            label: Label::data(label),
             description: None,
             icon_id: None,
             presence: UiPresence::default(),
@@ -825,7 +826,7 @@ mod tests {
     fn golden_field_known_gap() {
         let node = UiNode::Field(UiFieldNode {
             id: "f".into(),
-            label: "Label".into(),
+            label: Label::data("Label"),
             description: None,
             required: None,
             error: None,
@@ -854,10 +855,10 @@ mod tests {
     fn golden_section_known_gap() {
         let node = UiNode::Section(UiSectionNode {
             id: "sec".into(),
-            label: Some("Section".into()),
+            label: Some(Label::data("Section")),
             default_open: Some(true),
             presence: UiPresence::default(),
-            children: vec![UiNode::Text(UiTextNode { value: "child".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })],
+            children: vec![UiNode::Text(UiTextNode { value: Label::data("child"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })],
             menu: None,
         });
         let (instances, _, _) = retained_stats(&node);
@@ -924,7 +925,7 @@ mod tests {
         assert_eq!(ui.viewport("win"), None);
         assert!(ui.tree("win").is_none());
 
-        let node = UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None });
+        let node = UiNode::Text(UiTextNode { value: Label::data("hi"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None });
         ui.apply_tree("win", &node);
         ui.set_viewport("win", 800.0, 600.0);
 
@@ -1015,7 +1016,7 @@ mod tests {
     fn measure_widget_stack_horizontal_sums_child_widths() {
         let mut atlas = FontAtlas::builtin();
         let theme = Theme::default();
-        let button = || WidgetNode::<ActionDescriptor>::Button { id: Some("b".into()), icon_id: None, label: "Go".into(), event: None };
+        let button = || WidgetNode::<ActionDescriptor>::Button { id: Some("b".into()), icon_id: None, label: Label::data("Go"), event: None };
         let node = WidgetNode::Stack { direction: "horizontal".into(), gap: Some("none".into()), padding: Some("none".into()), children: vec![button(), button()] };
         let (w, _) = measure_widget(&mut atlas, &theme, &node);
         assert!((w - theme.control_height * 2.0).abs() < 0.001, "two gap-less horizontal buttons must measure to exactly twice one control's width");
@@ -1034,8 +1035,8 @@ mod tests {
     fn measure_widget_key_value_grows_with_entry_count() {
         let mut atlas = FontAtlas::builtin();
         let theme = Theme::default();
-        let one = WidgetNode::<ActionDescriptor>::KeyValue { entries: vec![KeyValueEntry { label: "A".into(), value: "1".into() }] };
-        let two = WidgetNode::<ActionDescriptor>::KeyValue { entries: vec![KeyValueEntry { label: "A".into(), value: "1".into() }, KeyValueEntry { label: "B".into(), value: "2".into() }] };
+        let one = WidgetNode::<ActionDescriptor>::KeyValue { entries: vec![KeyValueEntry { label: Label::data("A"), value: "1".into() }] };
+        let two = WidgetNode::<ActionDescriptor>::KeyValue { entries: vec![KeyValueEntry { label: Label::data("A"), value: "1".into() }, KeyValueEntry { label: Label::data("B"), value: "2".into() }] };
         let (_, h1) = measure_widget(&mut atlas, &theme, &one);
         let (_, h2) = measure_widget(&mut atlas, &theme, &two);
         assert!((h2 - h1 * 2.0).abs() < 0.001, "KeyValue height must scale linearly with entry count");
@@ -1053,7 +1054,7 @@ mod tests {
     fn measure_widget_field_combines_label_and_child_height() {
         let mut atlas = FontAtlas::builtin();
         let theme = Theme::default();
-        let node = WidgetNode::<ActionDescriptor>::Field { id: "f".into(), label: "Label".into(), child: ControlNode::Slider { id: "s".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.1, ready: None, disabled: false, on_change: None } };
+        let node = WidgetNode::<ActionDescriptor>::Field { id: "f".into(), label: Label::data("Label"), child: ControlNode::Slider { id: "s".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.1, ready: None, disabled: false, on_change: None } };
         let (_, h) = measure_widget(&mut atlas, &theme, &node);
         assert!(h > theme.control_height, "a Field's total height must be its label plus its child control, so it must exceed the control's own height alone");
     }
@@ -1075,7 +1076,7 @@ mod tests {
         let theme = Theme::default();
         let item = |id: &str, dimmed: bool| TreeItem {
             id: id.into(),
-            label: id.into(),
+            label: Label::data(id),
             description: None,
             icon_id: None,
             selected: false,
@@ -1150,7 +1151,7 @@ mod tests {
     #[test]
     fn render_widget_select_and_toggle_register_interaction_metas() {
         let mut h = WidgetHarness::new();
-        let select = WidgetNode::Select { id: "sel".into(), value: "a".into(), items: vec![SelectItem { value: "a".into(), label: "Alpha".into() }], placeholder: None, on_change: Some(action()) };
+        let select = WidgetNode::Select { id: "sel".into(), value: "a".into(), items: vec![SelectItem { value: "a".into(), label: Label::data("Alpha") }], placeholder: None, on_change: Some(action()) };
         render_widget(&select, VIEWPORT, &mut h.ctx());
         assert!(h.maps.select_metas.contains_key("sel"));
 
@@ -1197,7 +1198,7 @@ mod tests {
     #[test]
     fn render_widget_field_draws_label_and_delegates_to_control() {
         let mut h = WidgetHarness::new();
-        let node = WidgetNode::Field { id: "f".into(), label: "Name".into(), child: ControlNode::Input { id: "in".into(), input_kind: "text".into(), value: "x".into(), placeholder: None, commit: None, on_change: Some(action()) } };
+        let node = WidgetNode::Field { id: "f".into(), label: Label::data("Name"), child: ControlNode::Input { id: "in".into(), input_kind: "text".into(), value: "x".into(), placeholder: None, commit: None, on_change: Some(action()) } };
         render_widget(&node, VIEWPORT, &mut h.ctx());
         assert!(h.maps.input_metas.contains_key("in"), "Field must render its child control (an Input here), which registers its own interaction meta");
         let total: usize = h.draw.layers.iter().map(|l| l.ui_instances.len()).sum();
@@ -1208,12 +1209,12 @@ mod tests {
     fn render_widget_section_toggles_collapsed_state_from_default_open() {
         let child = || WidgetNode::<ActionDescriptor>::Text { value: "child text".into(), emphasize: false };
         let mut h = WidgetHarness::new();
-        let closed = WidgetNode::<ActionDescriptor>::Section { id: "sec".into(), label: Some("Sec".into()), default_open: false, children: vec![child()] };
+        let closed = WidgetNode::<ActionDescriptor>::Section { id: "sec".into(), label: Some(Label::data("Sec")), default_open: false, children: vec![child()] };
         render_widget(&closed, VIEWPORT, &mut h.ctx());
         assert_eq!(h.collapsed_sections.get("section.sec"), Some(&true), "a Section with default_open: false must seed its collapsed_sections entry as collapsed");
 
         let mut h2 = WidgetHarness::new();
-        let open = WidgetNode::<ActionDescriptor>::Section { id: "sec".into(), label: Some("Sec".into()), default_open: true, children: vec![child()] };
+        let open = WidgetNode::<ActionDescriptor>::Section { id: "sec".into(), label: Some(Label::data("Sec")), default_open: true, children: vec![child()] };
         render_widget(&open, VIEWPORT, &mut h2.ctx());
         assert_eq!(h2.collapsed_sections.get("section.sec"), Some(&false));
         let closed_instances: usize = h.draw.layers.iter().map(|l| l.ui_instances.len()).sum();
@@ -1226,7 +1227,7 @@ mod tests {
         let mut h = WidgetHarness::new();
         let item = TreeItem {
             id: "i1".into(),
-            label: "Item".into(),
+            label: Label::data("Item"),
             description: None,
             icon_id: None,
             selected: false,
@@ -1243,7 +1244,7 @@ mod tests {
             children: vec![],
         };
         let node = WidgetNode::<ActionDescriptor>::Tree {
-            sections: vec![TreeSection { id: "s".into(), label: Some("Section".into()), default_open: true, items: vec![item] }],
+            sections: vec![TreeSection { id: "s".into(), label: Some(Label::data("Section")), default_open: true, items: vec![item] }],
             selected_ids: vec![],
             highlighted_ids: vec![],
             selection_change: Some(action()),
@@ -1259,7 +1260,7 @@ mod tests {
         let mut h = WidgetHarness::new();
         let item = TreeItem {
             id: "i1".into(),
-            label: "Item".into(),
+            label: Label::data("Item"),
             description: None,
             icon_id: None,
             selected: false,
@@ -1269,7 +1270,7 @@ mod tests {
             event: None,
             hover_event: None,
             unhover_event: None,
-            actions: vec![TreeItemAction { icon_id: IconName::CircleDot, label: Some("Del".into()), event: action(), placement: UiTreeActionPlacement::Row }],
+            actions: vec![TreeItemAction { icon_id: IconName::CircleDot, label: Some(Label::data("Del")), event: action(), placement: UiTreeActionPlacement::Row }],
             draggable: false,
             drag_data: StdHashMap::new(),
             control: None,
@@ -1286,7 +1287,7 @@ mod tests {
         let mut h = WidgetHarness::new();
         let item = TreeItem {
             id: "i1".into(),
-            label: "Item".into(),
+            label: Label::data("Item"),
             description: None,
             icon_id: None,
             selected: false,
@@ -1296,7 +1297,7 @@ mod tests {
             event: None,
             hover_event: None,
             unhover_event: None,
-            actions: vec![TreeItemAction { icon_id: IconName::CircleDot, label: Some("Del".into()), event: action(), placement: UiTreeActionPlacement::Menu }],
+            actions: vec![TreeItemAction { icon_id: IconName::CircleDot, label: Some(Label::data("Del")), event: action(), placement: UiTreeActionPlacement::Menu }],
             draggable: false,
             drag_data: StdHashMap::new(),
             control: None,
@@ -1313,7 +1314,7 @@ mod tests {
         let mut h = WidgetHarness::new();
         let item = TreeItem {
             id: "i1".into(),
-            label: "Item".into(),
+            label: Label::data("Item"),
             description: None,
             icon_id: None,
             selected: false,

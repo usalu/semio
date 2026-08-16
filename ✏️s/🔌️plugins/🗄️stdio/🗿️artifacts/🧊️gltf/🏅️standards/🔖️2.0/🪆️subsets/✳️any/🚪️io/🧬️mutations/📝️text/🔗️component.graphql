@@ -1,0 +1,2 @@
+# 📝 Canonical one-line mutation transport maps one-to-one to the dispatch union.
+type GltfMutationTextDocument { text: String! value: GltfMutation rejection: GltfMutationRejection }

@@ -1,0 +1,101 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.pptx",
+  "artifact": "pptx",
+  "directory": "🎞️pptx",
+  "dependencies": [
+    "s.stdio.zip",
+    "s.stdio.xml"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.pptx.standard.ecma-376",
+      "revision": "ecma-376",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.pptx.standard.ecma-376.profile.any",
+      "standard": "s.stdio.pptx.standard.ecma-376",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.pptx.standard.ecma-376.dialect.source",
+      "standard": "s.stdio.pptx.standard.ecma-376",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.pptx.standard.ecma-376.representation.document",
+      "standard": "s.stdio.pptx.standard.ecma-376",
+      "representation": "document",
+      "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "extension": ".pptx",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.pptx.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.pptx.localization.en",
+      "locale": "en",
+      "name": "PowerPoint Presentation",
+      "description": "PowerPoint Presentation artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.pptx.localization.de",
+      "locale": "de",
+      "name": "PowerPoint-Präsentation",
+      "description": "PowerPoint-Präsentation-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.pptx.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.pptx.standard.ecma-376.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

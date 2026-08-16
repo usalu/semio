@@ -1,0 +1,101 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.bcf",
+  "artifact": "bcf",
+  "directory": "💬️bcf",
+  "dependencies": [
+    "s.stdio.zip",
+    "s.stdio.xml"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.bcf.standard.2.1",
+      "revision": "2.1",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.bcf.standard.2.1.profile.any",
+      "standard": "s.stdio.bcf.standard.2.1",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.bcf.standard.2.1.dialect.source",
+      "standard": "s.stdio.bcf.standard.2.1",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.bcf.standard.2.1.representation.document",
+      "standard": "s.stdio.bcf.standard.2.1",
+      "representation": "document",
+      "mime": "application/vnd.bcf+xml",
+      "extension": ".bcf",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.bcf.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.bcf.localization.en",
+      "locale": "en",
+      "name": "BIM Collaboration Format",
+      "description": "BIM Collaboration Format artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.bcf.localization.de",
+      "locale": "de",
+      "name": "BIM-Kollaborationsformat",
+      "description": "BIM-Kollaborationsformat-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.bcf.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.bcf.standard.2.1.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

@@ -271,6 +271,7 @@ pub mod os_inference {
 
 pub use crate::os_dsl::*;
 pub use crate::os_store::*;
+pub use crate::os_store::test_support;
 pub use crate::os_spr::*;
 pub use crate::os_pack::*;
 pub use crate::os_inference::*;

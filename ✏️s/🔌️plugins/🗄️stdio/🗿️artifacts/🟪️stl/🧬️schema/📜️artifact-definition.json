@@ -1,0 +1,101 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.stl",
+  "artifact": "stl",
+  "directory": "🟪️stl",
+  "dependencies": [
+    "s.stdio.txt",
+    "s.stdio.binary"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.stl.standard.ascii",
+      "revision": "ascii",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.stl.standard.ascii.profile.any",
+      "standard": "s.stdio.stl.standard.ascii",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.stl.standard.ascii.dialect.source",
+      "standard": "s.stdio.stl.standard.ascii",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.stl.standard.ascii.representation.document",
+      "standard": "s.stdio.stl.standard.ascii",
+      "representation": "document",
+      "mime": "model/stl",
+      "extension": ".stl",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.stl.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.stl.localization.en",
+      "locale": "en",
+      "name": "Stereolithography",
+      "description": "Stereolithography artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.stl.localization.de",
+      "locale": "de",
+      "name": "Stereolithografie",
+      "description": "Stereolithografie-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.stl.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.stl.standard.ascii.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

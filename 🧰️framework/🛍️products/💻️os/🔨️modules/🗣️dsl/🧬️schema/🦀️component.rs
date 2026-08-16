@@ -264,6 +264,59 @@ impl DslValue {
     }
 }
 
+impl std::ops::Index<&str> for DslValue {
+    type Output = DslValue;
+    fn index(&self, key: &str) -> &Self::Output {
+        static NULL: DslValue = DslValue::Null;
+        self.get(key).unwrap_or(&NULL)
+    }
+}
+
+impl std::ops::Index<usize> for DslValue {
+    type Output = DslValue;
+    fn index(&self, index: usize) -> &Self::Output {
+        static NULL: DslValue = DslValue::Null;
+        match self {
+            DslValue::Array(items) => items.get(index).unwrap_or(&NULL),
+            _ => &NULL,
+        }
+    }
+}
+
+impl From<&DslValue> for serde_json::Value {
+    fn from(val: &DslValue) -> Self {
+        match val {
+            DslValue::Null => serde_json::Value::Null,
+            DslValue::Bool(b) => serde_json::Value::Bool(*b),
+            DslValue::Number(n) => serde_json::json!(*n),
+            DslValue::String(s) => serde_json::Value::String(s.clone()),
+            DslValue::Array(arr) => serde_json::Value::Array(arr.iter().map(serde_json::Value::from).collect()),
+            DslValue::Object(obj) => {
+                let map = obj.iter().map(|(k, v)| (k.clone(), serde_json::Value::from(v))).collect();
+                serde_json::Value::Object(map)
+            }
+        }
+    }
+}
+
+impl From<DslValue> for serde_json::Value {
+    fn from(val: DslValue) -> Self {
+        serde_json::Value::from(&val)
+    }
+}
+
+impl PartialEq<serde_json::Value> for DslValue {
+    fn eq(&self, other: &serde_json::Value) -> bool {
+        &serde_json::Value::from(self) == other
+    }
+}
+
+impl PartialEq<DslValue> for serde_json::Value {
+    fn eq(&self, other: &DslValue) -> bool {
+        self == &serde_json::Value::from(other)
+    }
+}
+
 /// @emoji 🕸️ One endpoint (and optional edge) of a wire-literal.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct WireNode {

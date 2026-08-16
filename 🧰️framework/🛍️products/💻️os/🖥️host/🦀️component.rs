@@ -1033,15 +1033,15 @@ pub mod host {
             let mut host = PluginHost::new();
             let draw_app = AppDefinition {
                 id: "draw-play".into(),
-                label: "Draw".into(),
+                label: LocalizedLabel::data("Draw"),
                 breadcrumb: vec!["semio".into(), "draw".into()],
                 icon_id: None,
                 controller_id: "draw-play".into(),
-                modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
                 window_kinds: semio_framework::WindowKinds::one(WindowKindDefinition {
                     id: "composite".into(),
-                    label: "Canvas".into(),
+                    label: LocalizedLabel::data("Canvas"),
                     body_key: "composite".into(),
                     surface_kind: SurfaceKind::Canvas2d,
                     icon_id: "pen-tool".into(),
@@ -1077,15 +1077,15 @@ pub mod host {
             };
             let note_app = AppDefinition {
                 id: "note-play".into(),
-                label: "Note".into(),
+                label: LocalizedLabel::data("Note"),
                 breadcrumb: vec!["semio".into(), "note".into()],
                 icon_id: None,
                 controller_id: "note-play".into(),
-                modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
                 window_kinds: semio_framework::WindowKinds::one(WindowKindDefinition {
                     id: "composite".into(),
-                    label: "Canvas".into(),
+                    label: LocalizedLabel::data("Canvas"),
                     body_key: "composite".into(),
                     surface_kind: SurfaceKind::Canvas2d,
                     icon_id: "pen-tool".into(),
@@ -1121,14 +1121,14 @@ pub mod host {
             };
             host.load_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.1.0".into(), apps: vec![draw_app.clone()], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: LocalizedLabel::data("Draw"), version: "0.1.0".into(), apps: vec![draw_app.clone()], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
             let generation_before = host.instance(instance_id).expect("instance").generation;
             let event = host.hot_swap_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.2.0".into(), apps: vec![draw_app, note_app], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: LocalizedLabel::data("Draw"), version: "0.2.0".into(), apps: vec![draw_app, note_app], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             assert_eq!(event.added_apps, vec!["note-play".to_string()]);
@@ -1144,15 +1144,15 @@ pub mod host {
             let mut host = PluginHost::new();
             let draw_app = AppDefinition {
                 id: "draw-play".into(),
-                label: "Draw".into(),
+                label: LocalizedLabel::data("Draw"),
                 breadcrumb: vec!["semio".into(), "draw".into()],
                 icon_id: None,
                 controller_id: "draw-play".into(),
-                modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
                 window_kinds: semio_framework::WindowKinds::one(WindowKindDefinition {
                     id: "composite".into(),
-                    label: "Canvas".into(),
+                    label: LocalizedLabel::data("Canvas"),
                     body_key: "composite".into(),
                     surface_kind: SurfaceKind::Canvas2d,
                     icon_id: "pen-tool".into(),
@@ -1188,14 +1188,14 @@ pub mod host {
             };
             host.load_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.1.0".into(), apps: vec![draw_app], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: LocalizedLabel::data("Draw"), version: "0.1.0".into(), apps: vec![draw_app], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
             let generation_before = host.instance(instance_id).expect("instance").generation;
             let event = host.hot_swap_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "".into(), apps: vec![], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
+                manifest: PluginManifest { plugin_id: "draw".into(), label: LocalizedLabel::data("Draw"), version: "".into(), apps: vec![], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![] },
                 artifact_uri: "program://draw".into(),
             });
             assert_eq!(event.plugin_id, "draw");
@@ -1225,7 +1225,7 @@ pub mod host {
                 plugin_id: "playbook-module-procedural".into(),
                 manifest: PluginManifest {
                     plugin_id: "playbook-module-procedural".into(),
-                    label: "Playbook Module Procedural".into(),
+                    label: LocalizedLabel::data("Playbook Module Procedural"),
                     version: "0.1.0".into(),
                     apps: vec![],
                     capabilities: vec![],
@@ -1241,7 +1241,7 @@ pub mod host {
                 plugin_id: "playbook-module-procedural".into(),
                 manifest: PluginManifest {
                     plugin_id: "playbook-module-procedural".into(),
-                    label: "Playbook Module Procedural".into(),
+                    label: LocalizedLabel::data("Playbook Module Procedural"),
                     version: "0.2.0".into(),
                     apps: vec![],
                     capabilities: vec![],
@@ -1270,15 +1270,15 @@ pub mod host {
         fn test_app_definition(id: &str, label: &str, document_schema: &str, ports: Vec<semio_framework::MediaPortSpec>) -> AppDefinition {
             AppDefinition {
                 id: id.into(),
-                label: label.into(),
+                label: LocalizedLabel::data(label),
                 breadcrumb: vec!["semio".into(), id.into()],
                 icon_id: None,
                 controller_id: format!("{id}-play"),
-                modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
                 window_kinds: semio_framework::WindowKinds::one(WindowKindDefinition {
                     id: id.into(),
-                    label: label.into(),
+                    label: LocalizedLabel::data(label),
                     body_key: id.into(),
                     surface_kind: SurfaceKind::Canvas2d,
                     icon_id: "app-window".into(),

@@ -1,0 +1,101 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.html",
+  "artifact": "html",
+  "directory": "🌐️html",
+  "dependencies": [
+    "s.stdio.txt",
+    "s.stdio.xml"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.html.standard.5",
+      "revision": "5",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.html.standard.5.profile.any",
+      "standard": "s.stdio.html.standard.5",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.html.standard.5.dialect.source",
+      "standard": "s.stdio.html.standard.5",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.html.standard.5.representation.document",
+      "standard": "s.stdio.html.standard.5",
+      "representation": "document",
+      "mime": "text/html",
+      "extension": ".html",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.html.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.html.localization.en",
+      "locale": "en",
+      "name": "Hypertext Markup Language",
+      "description": "Hypertext Markup Language artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.html.localization.de",
+      "locale": "de",
+      "name": "Hypertext-Auszeichnungssprache",
+      "description": "Hypertext-Auszeichnungssprache-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.html.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.html.standard.5.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

@@ -19,7 +19,7 @@ Use a single Opus 5 agent for creating the plan, a single Cursor Grok 4.6 High a
 ---
 
 Exhaustively plan for a workforce of as many parallel agents as you can.
-Use a single GPT 5.6 Sol Ultra agent for creating the plan, a single GPT 5.6 Sol Extra-High agent for main plan coordination, multiple GPT 5.6 Terra Extra-High agents for task execution, multiple GPT 5.6 Luna Extra-High agents for read-only exploration.
+Use the main chat with GPT 5.6 Sol Ultra for creating the plan, then use the main chat with GPT 5.6 Sol Extra-High for main plan coordination and use multiple GPT 5.6 Terra Extra-High agents for task execution and use multiple GPT 5.6 Luna Extra-High agents for read-only explorations and audits.
 
 ---
 
@@ -378,6 +378,32 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+
+The current goal of where all apps are combined into workflows nodes, remain non-destructive and have a headless engine that replays everything will not work because every single ui interactions must be saved and checked in into vcs.
+Instead we adjusted the design:
+We introduce interactions.
+Interactions are an abstraction (An edit has operations, an operation yields mutations, every mutation yields a diff, hence an operation transitiviely also yields diffs which can be merged into a total operation diff)
+An operation takes an artifact and parameters as an input and returns mutations for that artifact. 
+Nodes in a workflow are no longer apps but mutations.
+Operations have a config with parameters
+Operations are state machines (depending on some parameters others )
+- 
+
+---
+
+The current goal of where all apps are combined into workflows nodes, remain non-destructive and have a headless engine that replays everything will not work because every single ui interactions must be saved and checked in into vcs.
+Instead we adjusted the design:
+We introduce operations.
+Operations are a new level in between edits and mutations (An edit has operations, an operation yields mutations, every mutation yields a diff, hence an operation transitiviely also yields diffs which can be merged into a total operation diff)
+An operation takes an artifact and parameters as an input and returns mutations for that artifact. 
+Nodes in a workflow are no longer apps but operations.
+Operations have a config with parameters
+Operations are state machines (depending on some parameters others )
+- 
+
+
+ and introduce a new abstraction:
+
 ```
 <artifact>
   schema
@@ -409,6 +435,12 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
           component.rs
         
 ```
+
+---
+
+Mutations must be able to call other mutations.
+Plugins can depend on other plugins.
+Plugins can register mutations and inferences on artifacts defined by other plugins.
 
 ---
 

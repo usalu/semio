@@ -1,0 +1,13 @@
+{
+  "title": "Full Stdio Artifact Standards, Codecs, Inferences, and Mutations",
+  "emoji": "🗃️",
+  "status": "open",
+  "description": "Complete all 36 stdio artifacts end to end with plural standard/profile/codec registries, lossless codecs, atomic open-closed inferences and semantic mutation triads, full STEP and family engines, Rust/TypeScript/schema/WIT parity, and exhaustive conformance/runtime gates. Dependencies: FULL-GLTF-GEOMETRIC-INFERENCES-AND-SEMANTIC-MUTATIONS, SEMANTIC-MUTATIONS-OVERHAUL, DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2557"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪9162442c827441cf9a4e698d25d2961b"
+  ]
+}

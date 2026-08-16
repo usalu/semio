@@ -1483,6 +1483,13 @@ describe("validateTaxonomy", () => {
     expect(taxonomy.semanticConsumerMinimum).toBe(2);
     expect(taxonomy.semanticCollections["🔨️modules"]?.kind).toBe("module");
     expect(taxonomy.semanticCollections["💡️inferences"]?.kind).toBe("inference");
+    expect(taxonomy.semanticCollections["🚪️io/🧬️mutations"]).toEqual({ kind: "io", direction: "transport" });
+    expect(taxonomy.ioSemanticCollectionDirNames).toEqual(["💡️inferences", "🧬️mutations"]);
+    expect(artifactFacetPathIsDeclared("🚪️io/🧬️mutations/📝️text", taxonomy)).toBe(true);
+    expect(artifactFacetPathIsDeclared("🚪️io/🧬️mutations/💾️binary", taxonomy)).toBe(true);
+    expect(artifactFacetPathIsDeclared("🧬️schema/🧬️mutations/📝️text", taxonomy)).toBe(false);
+    expect(artifactFacetPathIsDeclared("🧬️schema/🧬️mutations/💾️binary", taxonomy)).toBe(false);
+    expect(validateTaxonomy({ ...taxonomy, ioSemanticCollectionDirNames: ["💡️inferences"] }).some((problem) => problem.includes('must include "🧬️mutations"'))).toBe(true);
   });
 
   test("reports an area state outside the declared enum", () => {
@@ -1667,6 +1674,23 @@ function semanticFixture(options: { readonly secondProductionConsumer?: boolean;
   return { root, taxonomy };
 }
 
+function mutationTransportFixture(): { readonly root: string; readonly taxonomy: Taxonomy } {
+  const root = mkdtempSync(join(tmpdir(), "semio-mutation-transport-"));
+  const taxonomy = loadTaxonomy();
+  const write = (path: string, content: string): void => {
+    const absolute = join(root, path);
+    mkdirSync(join(absolute, ".."), { recursive: true });
+    writeFileSync(absolute, content);
+  };
+  write("🧰️framework/🚪️io/🧬️mutations/📝️text/🟦️component.ts", "export const encodeMutationText = (value: string) => value;\n");
+  write("🧰️framework/🚪️io/🧬️mutations/💾️binary/🟦️component.ts", "export const encodeMutationBinary = (value: Uint8Array) => value;\n");
+  write("🧰️framework/🚪️io/🧬️mutations/🔣️component.json", JSON.stringify({ "x-semio": { kind: "collection", members: [
+    { directory: "📝️text", id: "framework.io.mutation-text", kind: "io", responsibility: "frozen mutation text transport", io: { format: "Semio mutation text", direction: "transport" } },
+    { directory: "💾️binary", id: "framework.io.mutation-binary", kind: "io", responsibility: "frozen mutation binary transport", io: { format: "Semio mutation binary", direction: "transport" } },
+  ] } }));
+  return { root, taxonomy };
+}
+
 describe("semantic collection census", () => {
   test("accepts a genuine two-production-component module at its lowest common owner", () => {
     const fixture = semanticFixture({ secondProductionConsumer: true });
@@ -1701,6 +1725,38 @@ describe("semantic collection census", () => {
       expect(codes).toContain("module-consumer-minimum");
       expect(codes).toContain("module-production-consumer-minimum");
       expect(codes).toContain("collection-authored-behavior");
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("includes unregistered collection-path findings beneath a semantic owner scope", () => {
+    const fixture = semanticFixture({ rootBehavior: true });
+    try {
+      const manifestPath = join(fixture.root, "🧰️framework/💡️inferences/🔣️component.json");
+      const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+      manifest["x-semio"].members[0].id = "framework.inference.width";
+      writeFileSync(manifestPath, JSON.stringify(manifest));
+      const scoped = buildSemanticCensus(fixture.root, { scope: "framework" }, fixture.taxonomy);
+      expect(scoped.records.map((record) => record.id)).toEqual(["framework.inference.width"]);
+      expect(scoped.problems.some((problem) => problem.code === "collection-authored-behavior" && problem.path.endsWith("💡️inferences/🟦️component.ts"))).toBe(true);
+      expect(scoped.problems.some((problem) => problem.code === "module-production-consumer-minimum" && problem.path.endsWith("🔨️modules/📏measure"))).toBe(true);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("accepts mutation codecs only as explicit bidirectional I/O transport boundaries", () => {
+    const fixture = mutationTransportFixture();
+    try {
+      const census = buildSemanticCensus(fixture.root, {}, fixture.taxonomy);
+      expect(census.problems).toEqual([]);
+      expect(census.records.map((record) => record.id)).toEqual(["framework.io.mutation-binary", "framework.io.mutation-text"]);
+      const manifestPath = join(fixture.root, "🧰️framework/🚪️io/🧬️mutations/🔣️component.json");
+      const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+      manifest["x-semio"].members[0].io.direction = "import";
+      writeFileSync(manifestPath, JSON.stringify(manifest));
+      expect(buildSemanticCensus(fixture.root, {}, fixture.taxonomy).problems.map((problem) => problem.code)).toContain("io-contract-missing");
     } finally {
       rmSync(fixture.root, { recursive: true, force: true });
     }

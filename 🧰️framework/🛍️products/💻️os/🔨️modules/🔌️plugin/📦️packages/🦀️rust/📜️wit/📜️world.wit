@@ -14,6 +14,81 @@ interface types {
   variant plugin-error {
     fault(list<u8>),
   }
+
+  enum inference-cache-mode {
+    cold,
+    incremental,
+    bypass,
+  }
+
+  record inference-budget {
+    allocation-bytes: u64,
+    work-units: u64,
+    recursion-depth: u32,
+  }
+
+  record inference-diagnostic {
+    code: string,
+    message: string,
+    severity: string,
+    parameters: list<tuple<string, string>>,
+  }
+
+  record inference-provenance {
+    owner: string,
+    inference-schema: string,
+    algorithm-version: u32,
+    policy-version: u32,
+    source-dialect: string,
+  }
+
+  record artifact-inference-request {
+    wire-version: u32,
+    owner: string,
+    artifact-kind: string,
+    artifact-schema: string,
+    artifact-schema-version: u32,
+    document-schema: string,
+    document-schema-version: u32,
+    inference-schema: string,
+    inference-schema-version: u32,
+    algorithm-version: u32,
+    policy-version: u32,
+    revision: u64,
+    generation: u64,
+    source-dialect: string,
+    policy: list<u8>,
+    budgets: inference-budget,
+    cancellation-id: string,
+    previous-state: option<list<u8>>,
+    requested-cache-mode: inference-cache-mode,
+    canonical-payload: list<u8>,
+  }
+
+  record artifact-inference-result {
+    wire-version: u32,
+    owner: string,
+    artifact-kind: string,
+    artifact-schema: string,
+    artifact-schema-version: u32,
+    document-schema: string,
+    document-schema-version: u32,
+    inference-schema: string,
+    inference-schema-version: u32,
+    algorithm-version: u32,
+    policy-version: u32,
+    revision: u64,
+    generation: u64,
+    source-dialect: string,
+    canonical-payload: list<u8>,
+    diagnostics: list<inference-diagnostic>,
+    provenance: inference-provenance,
+    validity: string,
+    quality: string,
+    complete: bool,
+    actual-cache-mode: inference-cache-mode,
+    cancellation-id: string,
+  }
 }
 
 interface plugin {
@@ -60,10 +135,9 @@ interface plugin {
   /// 💡️ Deterministic JSON wire roster of this plugin's executable artifact inference services.
   /// The host calls this once at plugin load and rejects conflicting ownership/version metadata.
   list-artifact-inferences: func() -> result<list<u8>, plugin-error>;
-  /// 💡️ Versioned artifact inference request/result envelopes. The semantic result inside the
-  /// response is the inference schema's canonical binary encoding; the outer bytes only carry
-  /// owner/schema/revision/generation/policy/session metadata across the component boundary.
-  artifact-infer: func(request: list<u8>) -> result<list<u8>, plugin-error>;
+  /// 💡️ Typed versioned inference boundary with revision/generation, dialect, policy, finite
+  /// budgets, cancellation, prior state, requested cache behavior, and canonical payloads.
+  artifact-infer: func(request: artifact-inference-request) -> result<artifact-inference-result, plugin-error>;
 }
 
 interface extension {

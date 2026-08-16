@@ -1,0 +1,27 @@
+dialect protocol
+
+protocol stdio.gltf.mutations
+version 1
+schema stdio.gltf.mutations
+start op
+
+# P2-FG3: real binary op-frame `protocol::OpBinary::encode_op`/`decode_op` NOW emit for
+# `GltfMutation` — upgraded from the F6-era `print_op().into_bytes()` text-as-binary shortcut (18
+# standards, gltf among them, were still on this shortcut per the P2-W0 census). `format u8` (the
+# repo-wide `store::pack_rt::OP_BINARY_FORMAT` convention byte) + `tag u8` (this variant's own
+# ordinal, with frozen tags `NoMutation`=0 .. `SetAnimation`=23 and semantic additions
+# `TransformNode`=24, `ReparentNode`=25, `BindNodeMesh`=26, `BindPrimitiveMaterial`=27) are the two
+# REAL fixed leading fields, individually, genuinely protocol-walkable — §2.5's recursive/opaque-
+# tail pattern for a data-carrying enum whose PAYLOAD shape varies per variant (`Prim::Ref` to a
+# nested struct/enum still unconditionally errors at walk time, `protocol-prim-ref-recursion`, and
+# `repeat`'s own arms are tag-DISPATCHED, not a bare "N fields of variable per-variant shape"). The
+# Rust `encode_op`/`decode_op` side (../🦀️component.rs) IS genuinely, fully structured real binary
+# per variant (real varint indices, real per-item recursive encoding via this artifact's own
+# `write_bin_*`/`read_bin_*` value codecs, reused verbatim from `../../🔺️diff/🦀️component.rs`'s
+# `RealBinary*` regions) — only the PROTOCOL DESCRIPTION stops at the fixed 2-byte header, same
+# documented boundary every other hand-rolled `OpBinary` upgrade in this program hits.
+framing record
+header fixed 2
+field format u8
+field tag u8
+chain payload bytes

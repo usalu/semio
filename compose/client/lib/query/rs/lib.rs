@@ -21,7 +21,7 @@ pub use wasm_api::{architect_compile, architect_run};
 /// 🌉️ `math::graph::manifest::PropertyValue` (Jack literal values) <-> `serde_json::Value`
 /// (GraphQL/row values) — `PropertyValue` is `#[serde(untagged)]`, so this is exactly its JSON
 /// shape; shared by `schema::call_variables`, `executor`'s `WHERE` comparisons, and `wasm_api`.
-fn property_value_to_json(value: &math::graph::manifest::PropertyValue) -> serde_json::Value {
+fn property_value_to_json(value: &graph::manifest::PropertyValue) -> serde_json::Value {
     serde_json::to_value(value).unwrap_or(serde_json::Value::Null)
 }
 
@@ -47,7 +47,7 @@ mod errors {
 //#region 🔖️Schema
 mod schema {
     use graph::dsl as jack;
-    use math::graph::manifest::PropertyValue;
+    use graph::manifest::PropertyValue;
 
     /// @emoji 🏷️ GraphQL object label in architect patterns.
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -665,7 +665,7 @@ mod executor {
     use super::transport::{OpKind, Transport};
     use futures_util::{stream, StreamExt};
     use graph::dsl as jack;
-    use math::graph::manifest::PropertyValue;
+    use graph::manifest::PropertyValue;
     use serde_json::Value;
     use std::collections::BTreeMap;
     use std::pin::Pin;

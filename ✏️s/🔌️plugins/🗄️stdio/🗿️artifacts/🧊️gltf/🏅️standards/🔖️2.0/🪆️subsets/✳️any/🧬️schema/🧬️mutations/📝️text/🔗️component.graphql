@@ -1,2 +1,0 @@
-# 📝 Canonical one-line mutation text maps one-to-one to the complete root union.
-type GltfMutationTextDocument { text: String! value: GltfMutation rejection: GltfMutationRejection }

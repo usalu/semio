@@ -341,6 +341,83 @@
         }
       }
     },
+    "stdio-quick": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts stdio quick"
+      }
+    },
+    "stdio-long": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["stdio-quick"],
+      "options": {
+        "command": "bun ./📜️script.ts stdio long"
+      }
+    },
+    "stdio-exhaustive": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["stdio-long"],
+      "options": {
+        "command": "bun ./📜️script.ts stdio exhaustive"
+      }
+    },
+    "stdio-schema-parity": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["stdio-quick"],
+      "options": {
+        "command": "bun ./📜️script.ts stdio schema-parity"
+      }
+    },
+    "stdio-standards-coverage": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["stdio-schema-parity"],
+      "options": {
+        "command": "bun ./📜️script.ts stdio standards-coverage"
+      }
+    },
+    "stdio-codec": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["stdio-standards-coverage"],
+      "options": {
+        "command": "bun ./📜️script.ts stdio codec"
+      }
+    },
+    "stdio-mutation-law": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["stdio-codec"],
+      "options": {
+        "command": "bun ./📜️script.ts stdio mutation-law"
+      }
+    },
+    "stdio-inference": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["stdio-mutation-law"],
+      "options": {
+        "command": "bun ./📜️script.ts stdio inference"
+      }
+    },
+    "stdio-runtime": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["stdio-inference"],
+      "options": {
+        "command": "bun ./📜️script.ts stdio runtime"
+      }
+    },
+    "stdio-fuzz": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["stdio-runtime"],
+      "options": {
+        "command": "bun ./📜️script.ts stdio fuzz"
+      }
+    },
+    "stdio-cross-platform": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["stdio-fuzz"],
+      "options": {
+        "command": "bun ./📜️script.ts stdio cross-platform"
+      }
+    },
     "verify": {
       "executor": "nx:run-commands",
       "dependsOn": [],

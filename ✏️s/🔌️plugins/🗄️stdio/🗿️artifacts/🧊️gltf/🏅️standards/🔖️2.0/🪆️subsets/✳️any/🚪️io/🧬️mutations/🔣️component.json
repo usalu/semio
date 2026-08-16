@@ -1,0 +1,27 @@
+{
+  "x-semio": {
+    "kind": "collection",
+    "members": [
+      {
+        "directory": "📝️text",
+        "id": "s.stdio.gltf.io.mutation.text",
+        "kind": "io",
+        "responsibility": "Canonical one-line glTF mutation transport.",
+        "io": {
+          "format": "s.stdio.gltf.mutation.text",
+          "direction": "transport"
+        }
+      },
+      {
+        "directory": "💾️binary",
+        "id": "s.stdio.gltf.io.mutation.binary",
+        "kind": "io",
+        "responsibility": "Frozen-tag glTF mutation binary transport.",
+        "io": {
+          "format": "s.stdio.gltf.mutation.binary",
+          "direction": "transport"
+        }
+      }
+    ]
+  }
+}

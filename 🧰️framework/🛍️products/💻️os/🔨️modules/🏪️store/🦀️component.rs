@@ -230,6 +230,21 @@ pub enum ArtifactCommand<Mutation> {
     /// @emoji 🧹 Clears volatile draft-lane history that must never enter a Change/Checkpoint.
     PruneDrafts,
 }
+
+impl<Mutation> ArtifactCommand<Mutation> {
+    /// 🔮️ Names the projection-invalidating transition this command performs, if it has one.
+    pub fn projection_cause(&self) -> Option<ArtifactProjectionCause> {
+        match self {
+            Self::Apply { .. } | Self::ApplyInLane { .. } | Self::AmendLast { .. } | Self::AmendLastInLane { .. } => Some(ArtifactProjectionCause::Apply),
+            Self::IngestRemote { .. } => Some(ArtifactProjectionCause::RemoteIngest),
+            Self::Undo | Self::UndoWithPolicy { .. } | Self::UndoInLane { .. } => Some(ArtifactProjectionCause::Undo),
+            Self::Redo | Self::RedoInLane { .. } => Some(ArtifactProjectionCause::Redo),
+            Self::CheckoutCheckpoint { .. } | Self::CreateAlternative { .. } | Self::SwitchAlternative { .. } => Some(ArtifactProjectionCause::Checkout),
+            Self::CommitCheckpoint { .. } => Some(ArtifactProjectionCause::Checkpoint),
+            Self::PruneDrafts => Some(ArtifactProjectionCause::PruneDrafts),
+        }
+    }
+}
 //#endregion 🔖️Schemas
 
 //#region 🔖️Composition
@@ -470,17 +485,32 @@ fn child_store_factory_registry() -> &'static std::sync::RwLock<HashMap<String, 
     CHILD_STORE_FACTORY_REGISTRY.get_or_init(|| std::sync::RwLock::new(HashMap::new()))
 }
 
-/// @emoji 📝️ Registers (or overwrites) the `ChildStoreFactory` for `kind` — idempotent, mirrors
-/// `register_document_codec`'s call-once-at-init-time contract exactly.
-pub fn register_child_store_factory(kind: crate::os_io::ArtifactKindId, factory: Arc<dyn ChildStoreFactory>) {
-    let mut registry = child_store_factory_registry().write().unwrap_or_else(|poisoned| poisoned.into_inner());
-    registry.insert(kind.as_str().to_string(), factory);
+/// ⚠️ Child-store factory registration cannot replace an owner or use an unavailable registry.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ChildStoreFactoryRegistryError {
+    Conflict { kind: String },
+    Unavailable,
 }
 
-/// @emoji 🔎️ Looks up the `ChildStoreFactory` registered for `kind`, if any.
-pub fn child_store_factory(kind: &crate::os_io::ArtifactKindId) -> Option<Arc<dyn ChildStoreFactory>> {
-    let registry = child_store_factory_registry().read().unwrap_or_else(|poisoned| poisoned.into_inner());
-    registry.get(kind.as_str()).cloned()
+/// 📝️ Registers a child-store factory only when its exact executable is already the owner.
+#[must_use]
+pub fn register_child_store_factory(kind: crate::os_io::ArtifactKindId, factory: Arc<dyn ChildStoreFactory>) -> Result<(), ChildStoreFactoryRegistryError> {
+    let mut registry = child_store_factory_registry().write().map_err(|_| ChildStoreFactoryRegistryError::Unavailable)?;
+    match registry.get(kind.as_str()) {
+        Some(existing) if Arc::ptr_eq(existing, &factory) => Ok(()),
+        Some(_) => Err(ChildStoreFactoryRegistryError::Conflict { kind: kind.as_str().to_string() }),
+        None => {
+            registry.insert(kind.as_str().to_string(), factory);
+            Ok(())
+        }
+    }
+}
+
+/// 🔎️ Looks up the `ChildStoreFactory` registered for `kind`, if any.
+#[must_use]
+pub fn child_store_factory(kind: &crate::os_io::ArtifactKindId) -> Result<Option<Arc<dyn ChildStoreFactory>>, ChildStoreFactoryRegistryError> {
+    let registry = child_store_factory_registry().read().map_err(|_| ChildStoreFactoryRegistryError::Unavailable)?;
+    Ok(registry.get(kind.as_str()).cloned())
 }
 
 /// @emoji 🏭️ The one production `ChildStoreFactory`: a `(P, Mutation)` pair plus the `schema` string
@@ -549,12 +579,13 @@ where
 /// @emoji 📝️ Registers `TypedChildStoreFactory::<P, Mutation>` for `kind` — the single line a plugin
 /// writes per composable artifact kind. Idempotent, same call-once-at-init contract as
 /// `register_child_store_factory` (which this wraps) and `register_document_codec`.
-pub fn register_typed_child_store_factory<P, Mutation>(kind: crate::os_io::ArtifactKindId, schema: impl Into<String>)
+#[must_use]
+pub fn register_typed_child_store_factory<P, Mutation>(kind: crate::os_io::ArtifactKindId, schema: impl Into<String>) -> Result<(), ChildStoreFactoryRegistryError>
 where
     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + Sync + 'static,
 {
-    register_child_store_factory(kind, Arc::new(TypedChildStoreFactory::<P, Mutation>::new(schema)));
+    register_child_store_factory(kind, Arc::new(TypedChildStoreFactory::<P, Mutation>::new(schema)))
 }
 
 //#region 🔖️CompositionDsl
@@ -789,6 +820,101 @@ pub struct CommandReceipt {
     pub edit_ids: Vec<String>,
     pub generation: u64,
 }
+
+//#region 🔮️Projection
+//#region 🧭️Stamps
+/// 🧬️ History identity for a projection input, independent of the process-local generation.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct ArtifactRevision {
+    pub artifact_id: String,
+    pub schema: String,
+    pub applied_edit_ids: Vec<String>,
+    pub redo_edit_ids: Vec<String>,
+    pub checkpoint_id: Option<String>,
+}
+
+/// 🎯️ Exact state identity a projection or inference result must match before it is accepted.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct ArtifactProjectionStamp {
+    pub revision: ArtifactRevision,
+    pub generation: u64,
+}
+
+/// 🔄️ Store transition that produced a projection input.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum ArtifactProjectionCause {
+    Apply,
+    RemoteIngest,
+    Replay,
+    Undo,
+    Redo,
+    Reset,
+    Checkout,
+    PolicyChange,
+    ExternalResourceChange,
+    Checkpoint,
+    PruneDrafts,
+}
+
+/// 🗄️ Explicit prior-result handling; projections never infer cache authority from state alone.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum ArtifactProjectionCacheMode {
+    Rebuild,
+    ReusePrevious,
+    ValidatePrevious,
+}
+//#endregion 🧭️Stamps
+
+//#region 📡️Events
+/// 📬️ Typed projection/inference input carrying the exact artifact version it observed.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ArtifactProjectionEvent<State, Previous, Policy> {
+    pub stamp: ArtifactProjectionStamp,
+    pub cause: ArtifactProjectionCause,
+    pub state: State,
+    pub previous: Option<Previous>,
+    pub cache_mode: ArtifactProjectionCacheMode,
+    pub policy: Policy,
+}
+
+/// 🧩️ Projection output plus an optional semantic-diff candidate. This layer validates freshness;
+/// strict `ArtifactDiff` application stays owned by the semantic-mutation boundary.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ArtifactProjectionResult<Output, Diff = ()> {
+    pub stamp: ArtifactProjectionStamp,
+    pub output: Output,
+    pub proposed_diff: Option<Diff>,
+}
+
+impl<State, Previous, Policy> ArtifactProjectionEvent<State, Previous, Policy> {
+    /// 🧪️ Couples an asynchronously computed result to this event's immutable stamp.
+    pub fn result<Output, Diff>(&self, output: Output, proposed_diff: Option<Diff>) -> ArtifactProjectionResult<Output, Diff> {
+        ArtifactProjectionResult { stamp: self.stamp.clone(), output, proposed_diff }
+    }
+}
+
+/// ✅️ A current projection result, intentionally separated from semantic-diff application.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AcceptedArtifactProjection<Output, Diff = ()> {
+    pub output: Output,
+    pub proposed_diff: Option<Diff>,
+}
+
+/// 🚫️ A result computed against an older state and therefore forbidden from changing current state.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct StaleArtifactProjection {
+    pub computed_for: ArtifactProjectionStamp,
+    pub current: ArtifactProjectionStamp,
+}
+
+/// 📣️ One state or dependency transition that invalidates derived artifact work.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ArtifactProjectionInvalidation {
+    pub cause: ArtifactProjectionCause,
+    pub stamp: ArtifactProjectionStamp,
+}
+//#endregion 📡️Events
+//#endregion 🔮️Projection
 
 /// @emoji 👁️ Read-only view over a document envelope — mutation is sealed through `dispatch`/`reset`.
 #[derive(Clone, Copy, Debug)]
@@ -1446,17 +1572,59 @@ impl ArtifactCodec {
     }
 }
 
-static DOCUMENT_CODEC_REGISTRY: std::sync::OnceLock<std::sync::RwLock<HashMap<String, ArtifactCodec>>> = std::sync::OnceLock::new();
+static DOCUMENT_CODEC_REGISTRY: std::sync::OnceLock<std::sync::RwLock<std::collections::BTreeMap<String, ArtifactCodec>>> = std::sync::OnceLock::new();
 
-fn document_codec_registry() -> &'static std::sync::RwLock<HashMap<String, ArtifactCodec>> {
-    DOCUMENT_CODEC_REGISTRY.get_or_init(|| std::sync::RwLock::new(HashMap::new()))
+fn document_codec_registry() -> &'static std::sync::RwLock<std::collections::BTreeMap<String, ArtifactCodec>> {
+    DOCUMENT_CODEC_REGISTRY.get_or_init(|| std::sync::RwLock::new(std::collections::BTreeMap::new()))
 }
 
-/// @emoji 📝️ Registers (or overwrites) the codec for `codec.schema` — idempotent, safe to call
-/// repeatedly (every app's registration fn calls this once per document kind at program-init time).
-pub fn register_document_codec(codec: ArtifactCodec) {
-    let mut registry = document_codec_registry().write().unwrap_or_else(|poisoned| poisoned.into_inner());
-    registry.insert(codec.schema.clone(), codec);
+/// ⚠️ A document schema already has a codec owner. The established codec is never replaced.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DocumentCodecRegistryConflict {
+    pub schema: String,
+}
+
+/// ⚠️ Document-codec registration cannot replace an owner or use an unavailable registry.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DocumentCodecRegistryError {
+    Conflict(DocumentCodecRegistryConflict),
+    Unavailable,
+}
+
+impl std::fmt::Display for DocumentCodecRegistryError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Conflict(error) => write!(formatter, "document codec registration conflicts for schema {}", error.schema),
+            Self::Unavailable => formatter.write_str("document codec registry unavailable"),
+        }
+    }
+}
+
+impl std::error::Error for DocumentCodecRegistryError {}
+
+fn same_document_codec(left: &ArtifactCodec, right: &ArtifactCodec) -> bool {
+    left.schema == right.schema
+        && left.extension == right.extension
+        && left.pack_schema_hash == right.pack_schema_hash
+        && std::ptr::fn_addr_eq(left.compile_dsl, right.compile_dsl)
+        && std::ptr::fn_addr_eq(left.print_mirror, right.print_mirror)
+        && std::ptr::fn_addr_eq(left.edit_text_from_envelope, right.edit_text_from_envelope)
+        && std::ptr::fn_addr_eq(left.apply_ops_binary, right.apply_ops_binary)
+}
+
+/// 📝️ Registers one schema codec exactly once. Collisions fail deterministically before any
+/// replacement can occur, so registration order never changes decoding behavior.
+#[must_use]
+pub fn register_document_codec(codec: ArtifactCodec) -> Result<(), DocumentCodecRegistryError> {
+    let mut registry = document_codec_registry().write().map_err(|_| DocumentCodecRegistryError::Unavailable)?;
+    match registry.get(&codec.schema) {
+        Some(existing) if same_document_codec(existing, &codec) => Ok(()),
+        Some(_) => Err(DocumentCodecRegistryError::Conflict(DocumentCodecRegistryConflict { schema: codec.schema })),
+        None => {
+            registry.insert(codec.schema.clone(), codec);
+            Ok(())
+        }
+    }
 }
 
 /// @emoji 🔎️ Looks up the codec registered for `schema`, if any.
@@ -1499,19 +1667,51 @@ fn dialect_migration_registry() -> &'static std::sync::RwLock<HashMap<(crate::os
     DIALECT_MIGRATION_REGISTRY.get_or_init(|| std::sync::RwLock::new(HashMap::new()))
 }
 
-/// @emoji 📝️ Registers (or overwrites) the migration for `(migration.from, migration.to)` —
-/// idempotent, mirrors `register_document_codec`'s call-once-at-init-time contract.
-pub fn register_dialect_migration(migration: DialectMigration) {
-    let mut registry = dialect_migration_registry().write().unwrap_or_else(|poisoned| poisoned.into_inner());
-    registry.insert((migration.from.clone(), migration.to.clone()), migration);
+/// ⚠️ Dialect-migration registration cannot overwrite an owner or cross artifact kinds.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DialectMigrationRegistryError {
+    CrossArtifactKind { from: crate::os_io::ArtifactDialect, to: crate::os_io::ArtifactDialect },
+    Conflict { from: crate::os_io::ArtifactDialect, to: crate::os_io::ArtifactDialect },
+    Unavailable,
+}
+
+/// 🚫️ A migration was unavailable or the registered executable rejected its input.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DialectMigrationError {
+    Missing { from: crate::os_io::ArtifactDialect, to: crate::os_io::ArtifactDialect },
+    Unavailable,
+    Rejected(String),
+}
+
+fn same_dialect_migration(left: &DialectMigration, right: &DialectMigration) -> bool {
+    left.from == right.from && left.to == right.to && left.lossless == right.lossless && std::ptr::fn_addr_eq(left.migrate_pack, right.migrate_pack)
+}
+
+/// 📝️ Registers a migration only when its full descriptor and executable identity match.
+#[must_use]
+pub fn register_dialect_migration(migration: DialectMigration) -> Result<(), DialectMigrationRegistryError> {
+    if migration.from.artifact_kind != migration.to.artifact_kind {
+        return Err(DialectMigrationRegistryError::CrossArtifactKind { from: migration.from, to: migration.to });
+    }
+    let key = (migration.from.clone(), migration.to.clone());
+    let mut registry = dialect_migration_registry().write().map_err(|_| DialectMigrationRegistryError::Unavailable)?;
+    match registry.get(&key) {
+        Some(existing) if same_dialect_migration(existing, &migration) => Ok(()),
+        Some(_) => Err(DialectMigrationRegistryError::Conflict { from: key.0, to: key.1 }),
+        None => {
+            registry.insert(key, migration);
+            Ok(())
+        }
+    }
 }
 
 /// @emoji 🔁️ Looks up the exact `(from, to)` migration and runs its `migrate_pack` over
 /// `pack_bytes`, or a clear `Err` naming both dialect coordinates when none is registered.
-pub fn migrate_document(from: &crate::os_io::ArtifactDialect, to: &crate::os_io::ArtifactDialect, pack_bytes: &[u8]) -> Result<Vec<u8>, String> {
-    let registry = dialect_migration_registry().read().unwrap_or_else(|poisoned| poisoned.into_inner());
-    let migration = registry.get(&(from.clone(), to.clone())).ok_or_else(|| format!("no dialect migration registered for {} -> {}", from.to_coordinate(), to.to_coordinate()))?;
-    (migration.migrate_pack)(pack_bytes)
+#[must_use]
+pub fn migrate_document(from: &crate::os_io::ArtifactDialect, to: &crate::os_io::ArtifactDialect, pack_bytes: &[u8]) -> Result<Vec<u8>, DialectMigrationError> {
+    let registry = dialect_migration_registry().read().map_err(|_| DialectMigrationError::Unavailable)?;
+    let migration = registry.get(&(from.clone(), to.clone())).ok_or_else(|| DialectMigrationError::Missing { from: from.clone(), to: to.clone() })?;
+    (migration.migrate_pack)(pack_bytes).map_err(DialectMigrationError::Rejected)
 }
 //#endregion 🔖️DialectMigration
 
@@ -3230,6 +3430,7 @@ where
     redo_edit_ids: Vec<String>,
     edit_sequence: i32,
     generation: u64,
+    last_projection_cause: Option<ArtifactProjectionCause>,
     /// @emoji 🧭️ The checkpoint new commits parent onto; advances on commit/checkout/switch. Not
     /// part of the wire envelope — callers that reconstruct the store per call (e.g. a WASM plugin)
     /// must save/restore it themselves via {@link current_checkpoint_id}/{@link set_current_checkpoint_id}.
@@ -3304,11 +3505,84 @@ where
                 (Vec::new(), Vec::new(), checkpoint_id, envelope.vcs.initial_snapshot.clone(), None)
             }
         };
-        Self { envelope, backbone: None, dag: crate::os_spr::MutationDag::new(), applied_edit_ids, redo_edit_ids, edit_sequence: 0, generation: 0, current_checkpoint_id, local_actor_id, conflicts: Vec::new(), current, tail_undo_cache: None }
+        Self { envelope, backbone: None, dag: crate::os_spr::MutationDag::new(), applied_edit_ids, redo_edit_ids, edit_sequence: 0, generation: 0, last_projection_cause: None, current_checkpoint_id, local_actor_id, conflicts: Vec::new(), current, tail_undo_cache: None }
     }
 
     pub fn generation(&self) -> u64 {
         self.generation
+    }
+
+    /// 🧬️ Returns the current history identity used to invalidate derived work.
+    pub fn artifact_revision(&self) -> ArtifactRevision {
+        ArtifactRevision {
+            artifact_id: self.envelope.id.clone(),
+            schema: self.envelope.schema.clone(),
+            applied_edit_ids: self.applied_edit_ids.clone(),
+            redo_edit_ids: self.redo_edit_ids.clone(),
+            checkpoint_id: self.current_checkpoint_id.clone(),
+        }
+    }
+
+    /// 🎯️ Returns the exact revision plus local generation a projection result must match.
+    pub fn projection_stamp(&self) -> ArtifactProjectionStamp {
+        ArtifactProjectionStamp { revision: self.artifact_revision(), generation: self.generation }
+    }
+
+    /// 📬️ Captures one immutable projection or inference input from the current reconciled snapshot.
+    pub fn projection_event<Previous, Policy>(
+        &self,
+        cause: ArtifactProjectionCause,
+        previous: Option<Previous>,
+        cache_mode: ArtifactProjectionCacheMode,
+        policy: Policy,
+    ) -> Result<ArtifactProjectionEvent<P, Previous, Policy>, VcsError> {
+        Ok(ArtifactProjectionEvent {
+            stamp: self.projection_stamp(),
+            cause,
+            state: self.snapshot()?,
+            previous,
+            cache_mode,
+            policy,
+        })
+    }
+
+    /// 📣️ Returns the last successful transition through the shared projection invalidation seam.
+    pub fn last_projection_invalidation(&self) -> Option<ArtifactProjectionInvalidation> {
+        self.last_projection_cause.map(|cause| ArtifactProjectionInvalidation { cause, stamp: self.projection_stamp() })
+    }
+
+    /// 🔄️ Invalidates projections after a verified replay that did not otherwise change history.
+    pub fn invalidate_after_replay(&mut self) -> ArtifactProjectionInvalidation {
+        self.invalidate_projections(ArtifactProjectionCause::Replay)
+    }
+
+    /// 🛂️ Invalidates projections after a policy change outside semantic event history.
+    pub fn invalidate_after_policy_change(&mut self) -> ArtifactProjectionInvalidation {
+        self.invalidate_projections(ArtifactProjectionCause::PolicyChange)
+    }
+
+    /// 🔗️ Invalidates projections after an external resource changed beneath the artifact.
+    pub fn invalidate_after_external_resource_change(&mut self) -> ArtifactProjectionInvalidation {
+        self.invalidate_projections(ArtifactProjectionCause::ExternalResourceChange)
+    }
+
+    fn invalidate_projections(&mut self, cause: ArtifactProjectionCause) -> ArtifactProjectionInvalidation {
+        self.bump();
+        self.last_projection_cause = Some(cause);
+        ArtifactProjectionInvalidation { cause, stamp: self.projection_stamp() }
+    }
+
+    /// 🛂️ Accepts only a result computed for the exact current revision and generation. Accepted
+    /// semantic diffs are returned to their owning strict-apply boundary, never applied here.
+    pub fn accept_projection_result<Output, Diff>(
+        &self,
+        result: ArtifactProjectionResult<Output, Diff>,
+    ) -> Result<AcceptedArtifactProjection<Output, Diff>, StaleArtifactProjection> {
+        let current = self.projection_stamp();
+        if result.stamp != current {
+            return Err(StaleArtifactProjection { computed_for: result.stamp, current });
+        }
+        Ok(AcceptedArtifactProjection { output: result.output, proposed_diff: result.proposed_diff })
     }
 
     pub fn envelope(&self) -> &ArtifactEnvelope<P, Mutation> {
@@ -3369,17 +3643,22 @@ where
 
     /// @emoji ♻️ Sole public reload API — replaces the former public `set_state`/`set_envelope` escape hatches.
     pub fn reset(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>, redo_edit_ids: Vec<String>) -> Result<CommandReceipt, VcsError> {
-        self.set_state(envelope, applied_edit_ids, redo_edit_ids);
+        self.set_state(envelope, applied_edit_ids, redo_edit_ids)?;
+        self.last_projection_cause = Some(ArtifactProjectionCause::Reset);
         Ok(CommandReceipt { edit_ids: self.applied_edit_ids.clone(), generation: self.generation() })
     }
 
-    pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) {
-        self.set_state(envelope, applied_edit_ids, Vec::new());
+    pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) -> Result<(), VcsError> {
+        self.set_state(envelope, applied_edit_ids, Vec::new())
     }
 
     /// @emoji 💾️ Restores full store state including the redo stack, so `Redo` survives
     /// round-tripping through a serialized envelope (e.g. one `dispatch` call per request).
-    pub(crate) fn set_state(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>, redo_edit_ids: Vec<String>) {
+    pub(crate) fn set_state(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>, redo_edit_ids: Vec<String>) -> Result<(), VcsError> {
+        if applied_edit_ids.iter().any(|id| redo_edit_ids.contains(id)) {
+            return Err(VcsError::ValidationFailed("reset history places an edit in both applied and redo lanes".to_string()));
+        }
+        let current = Self::fold_history(&envelope, &applied_edit_ids)?;
         self.backbone = None;
         self.edit_sequence = envelope.vcs.edits.iter().map(|edit| edit.sequence_number).max().unwrap_or(0);
         self.current_checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
@@ -3395,21 +3674,25 @@ where
         self.redo_edit_ids = redo_edit_ids;
         self.conflicts = Vec::new();
         self.tail_undo_cache = None;
-        self.current = self.fold_current().expect("set_state: fold_current should not fail for a consistent envelope");
+        self.current = current;
         self.bump();
+        Ok(())
     }
 
     /// @emoji 🧭️ Restores applied edits + checkout position for `checkpoint_id`, clearing redo.
     /// Shared by `createAlternative`/`switchAlternative`/`checkoutCheckpoint`. Mirrors premigration
     /// `checkoutCheckpointInternal`. Cold path: reassigns `applied_edit_ids` wholesale (not a tail
     /// append), so `current` is recomputed by a full raw-fold rather than an incremental update.
-    fn checkout_checkpoint_internal(&mut self, checkpoint_id: String) {
-        let applied = self.envelope.vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == checkpoint_id).map(|checkpoint| edit_ids_for_changes(&self.envelope, &checkpoint.change_ids)).unwrap_or_default();
+    fn checkout_checkpoint_internal(&mut self, checkpoint_id: String) -> Result<(), VcsError> {
+        let checkpoint = self.envelope.vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == checkpoint_id).ok_or_else(|| VcsError::UnknownChange(checkpoint_id.clone()))?;
+        let applied = edit_ids_for_changes(&self.envelope, &checkpoint.change_ids);
+        let current = Self::fold_history(&self.envelope, &applied)?;
         self.applied_edit_ids = applied;
         self.redo_edit_ids.clear();
         self.current_checkpoint_id = Some(checkpoint_id);
         self.tail_undo_cache = None;
-        self.current = self.fold_current().expect("checkout: fold_current should not fail for a consistent envelope");
+        self.current = current;
+        Ok(())
     }
 
     /// @emoji 📌️ Records the composed children a checkpoint was taken against. Not reachable through
@@ -3450,14 +3733,11 @@ where
     /// is an incrementally-maintained cache of. Used to recompute `current` on the cold paths that
     /// reassign `applied_edit_ids` wholesale instead of appending/popping its tail.
     fn fold_current(&self) -> Result<P, VcsError> {
-        let mut snapshot = self.envelope.vcs.initial_snapshot.clone();
-        for edit_id in &self.applied_edit_ids {
-            let edit = self.envelope.vcs.edits.iter().find(|entry| entry.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
-            for operation in &edit.forwards {
-                snapshot = apply_mutation(&snapshot, operation);
-            }
-        }
-        Ok(snapshot)
+        fold_history(&self.envelope, &self.applied_edit_ids)
+    }
+
+    fn fold_history(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Result<P, VcsError> {
+        fold_history(envelope, applied_edit_ids)
     }
 
     /// @emoji 🤝️ Conflicts from the last reconciliation pass (see {@link conflicts} field doc).
@@ -3467,10 +3747,12 @@ where
 
     pub fn dispatch(&mut self, command: ArtifactCommand<Mutation>) -> Result<CommandReceipt, VcsError> {
         self.pump()?;
+        let projection_cause = command.projection_cause();
         let skip_flush = matches!(command, ArtifactCommand::IngestRemote { .. } | ArtifactCommand::PruneDrafts);
         let is_apply = matches!(command, ArtifactCommand::Apply { .. });
         let before = self.applied_edit_ids.len();
         self.dispatch_inner(command)?;
+        self.last_projection_cause = projection_cause;
         if !skip_flush {
             self.flush_outbound(is_apply)?;
         }
@@ -3531,7 +3813,7 @@ where
             ArtifactCommand::CommitCheckpoint { message, authors } => {
                 let pending = uncommitted_edit_ids(&self.envelope, &self.applied_edit_ids);
                 if pending.is_empty() {
-                    return Ok(());
+                    return Err(VcsError::ValidationFailed("cannot create an empty checkpoint".to_string()));
                 }
                 let change = Change { id: mint_change_id(&pending, message.as_deref()), edit_ids: pending, description: message.clone(), saved_at: now_iso() };
                 let parent = self.current_checkpoint_id.as_ref().and_then(|id| self.envelope.vcs.checkpoints.iter().find(|cp| cp.id == *id));
@@ -3566,7 +3848,7 @@ where
                 let alt_id = mint_alternative_id(&name, &[checkpoint_id.clone()]);
                 self.envelope.vcs.alternatives.push(Alternative { id: alt_id.clone(), name, checkpoint_ids: vec![checkpoint_id.clone()] });
                 self.envelope.active_alternative_id = Some(alt_id);
-                self.checkout_checkpoint_internal(checkpoint_id);
+                self.checkout_checkpoint_internal(checkpoint_id)?;
                 self.bump();
                 Ok(())
             }
@@ -3576,7 +3858,7 @@ where
                 if !self.envelope.vcs.checkpoints.iter().any(|cp| cp.id == checkpoint_id) {
                     return Err(VcsError::NoCheckpoint);
                 }
-                self.checkout_checkpoint_internal(checkpoint_id);
+                self.checkout_checkpoint_internal(checkpoint_id)?;
                 self.envelope.active_alternative_id = Some(alternative_id);
                 self.bump();
                 Ok(())
@@ -3585,7 +3867,7 @@ where
                 if !self.envelope.vcs.checkpoints.iter().any(|cp| cp.id == checkpoint_id) {
                     return Err(VcsError::UnknownChange(checkpoint_id.clone()));
                 }
-                self.checkout_checkpoint_internal(checkpoint_id.clone());
+                self.checkout_checkpoint_internal(checkpoint_id.clone())?;
                 self.envelope.active_alternative_id = self.envelope.vcs.alternatives.iter().find(|alt| alt.checkpoint_ids.last() == Some(&checkpoint_id)).map(|alt| alt.id.clone());
                 self.bump();
                 Ok(())
@@ -3601,8 +3883,7 @@ where
                 Ok(())
             }
             ArtifactCommand::PruneDrafts => {
-                // Reserved for draft-lane stores ({@link DraftStore}): real prune lands with draft ops.
-                Ok(())
+                Err(VcsError::ValidationFailed("draft pruning is not implemented by ArtifactStore; no draft history was removed".to_string()))
             }
         }
     }
@@ -3654,6 +3935,7 @@ where
             let pre = self.current.clone();
             let mut folded = pre.clone();
             for operation in &edit.forwards {
+                operation.validate(&folded).map_err(VcsError::ValidationFailed)?;
                 folded = apply_mutation(&folded, operation);
             }
             self.current = folded;
@@ -3674,7 +3956,7 @@ where
         // ⚡️ `current` is always up to date (maintained by every mutating command below), so this
         // is an O(1) clone instead of a full replay — see the `current` field doc.
         let pre_snapshot = self.current.clone();
-        let (forwards, inverse, mutation_meta, post) = Self::replay_mutations(&pre_snapshot, mutations);
+        let (forwards, inverse, mutation_meta, post) = Self::replay_mutations(&pre_snapshot, mutations)?;
         let actor = edit_actor_from_meta(&mutation_meta);
         self.local_actor_id = actor.clone();
         self.edit_sequence += 1;
@@ -3710,7 +3992,7 @@ where
             // the edit was created or last amended), so it's always the correct base for the NEW
             // operations — O(1) instead of the old cache-validity dance.
             let pre_snapshot = self.current.clone();
-            let (new_forwards, new_inverse, new_mutation_meta, post) = Self::replay_mutations(&pre_snapshot, mutations);
+            let (new_forwards, new_inverse, new_mutation_meta, post) = Self::replay_mutations(&pre_snapshot, mutations)?;
             if let Some(edit) = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id) {
                 edit.forwards.extend(new_forwards);
                 edit.inverse.extend(new_inverse);
@@ -3724,7 +4006,7 @@ where
         } else {
             let started_at = now_iso();
             let pre_snapshot = self.current.clone();
-            let (forwards, inverse, mutation_meta, post) = Self::replay_mutations(&pre_snapshot, mutations);
+            let (forwards, inverse, mutation_meta, post) = Self::replay_mutations(&pre_snapshot, mutations)?;
             let actor = edit_actor_from_meta(&mutation_meta);
             self.local_actor_id = actor.clone();
             self.edit_sequence += 1;
@@ -3750,17 +4032,19 @@ where
     /// IS the artifact engine — `crate::os_engine::ArtifactEngine` never existed as a live trait
     /// (see `.claude/plans/the-mutations-are-extremely-compiled-pumpkin.md`), so `Mutation::diff`/
     /// `inverse` are called directly here on purpose, not as a placeholder for a future indirection.
-    fn replay_mutations(pre_snapshot: &P, mutations: Vec<Mutation>) -> (Vec<Mutation>, Vec<Mutation>, Vec<MutationMeta>, P) {
+    fn replay_mutations(pre_snapshot: &P, mutations: Vec<Mutation>) -> Result<(Vec<Mutation>, Vec<Mutation>, Vec<MutationMeta>, P), VcsError> {
         let mut snapshot = pre_snapshot.clone();
         let mut forwards = Vec::with_capacity(mutations.len());
         let mut inverse = Vec::new();
         let mut mutation_meta = Vec::with_capacity(mutations.len());
         for mutation in mutations {
+            mutation.validate(&snapshot).map_err(VcsError::ValidationFailed)?;
+            let encoded = mutation.encode_op().map_err(VcsError::ValidationFailed)?;
             let mut back = mutation.inverse(&snapshot);
             back.reverse();
             inverse.extend(back);
             mutation_meta.push(MutationMeta {
-                mutation_id: Some(mutation.mutation_id().unwrap_or_else(|| MutationId(mint_mutation_id(&mutation.encode_op().unwrap_or_default())))),
+                mutation_id: Some(mutation.mutation_id().unwrap_or_else(|| MutationId(mint_mutation_id(&encoded)))),
                 dependencies: mutation.dependencies(),
                 base_version: mutation.base_version().map(|version| version.0).unwrap_or(0),
                 author_id: Some(mutation.author_id().unwrap_or_else(|| ActorId("local".into()))),
@@ -3772,7 +4056,7 @@ where
                 // FILE's footer rather than hashing arbitrary bytes. 🎯️ B2: hashes the real
                 // `OpBinary` encoding, not a JSON serialization — two ops that encode identically
                 // via `encode_op()` but differ in JSON shape (or vice versa) must hash identically.
-                payload_hash: Some(crate::os_spr::PayloadHash(*blake3::hash(&mutation.encode_op().unwrap_or_default()).as_bytes())),
+                payload_hash: Some(crate::os_spr::PayloadHash(*blake3::hash(&encoded).as_bytes())),
                 semantic_kind: None,
                 label: None,
                 group_id: None,
@@ -3780,7 +4064,7 @@ where
             snapshot = apply_mutation(&snapshot, &mutation);
             forwards.push(mutation);
         }
-        (forwards, inverse, mutation_meta, snapshot)
+        Ok((forwards, inverse, mutation_meta, snapshot))
     }
 
     /// @emoji 🕹️ Parses `command_text` via [`parse_command`] and dispatches it — the op-line
@@ -4117,6 +4401,26 @@ pub fn edit_from_operation_envelope<Mutation: OpBinary>(envelope: &crate::os_spr
         started_at: String::new(),
         finished_at: None,
     })
+}
+
+fn fold_history<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Result<P, VcsError>
+where
+    P: Clone,
+    Mutation: self::Mutation<P>,
+{
+    let mut snapshot = envelope.vcs.initial_snapshot.clone();
+    let mut seen = HashSet::new();
+    for edit_id in applied_edit_ids {
+        if !seen.insert(edit_id) {
+            return Err(VcsError::ValidationFailed(format!("history repeats applied edit {edit_id}")));
+        }
+        let edit = envelope.vcs.edits.iter().find(|entry| entry.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+        for operation in &edit.forwards {
+            operation.validate(&snapshot).map_err(VcsError::ValidationFailed)?;
+            snapshot = apply_mutation(&snapshot, operation);
+        }
+    }
+    Ok(snapshot)
 }
 //#endregion 🔖️ArtifactStore
 
@@ -5589,7 +5893,7 @@ impl CompositionCoordinator {
                 return Err(VcsError::CompositionCycle(format!("creating child {child_id} in slot {} under {} would cycle", spec.slot, parent_ref.artifact_id)));
             }
             let kind = crate::os_io::ArtifactKindId::parse(&spec.dialect.artifact_kind).map_err(VcsError::ValidationFailed)?;
-            if child_store_factory(&kind).is_none() {
+            if child_store_factory(&kind).map_err(|error| VcsError::ValidationFailed(format!("child-store factory registry unavailable: {error:?}")))?.is_none() {
                 return Err(VcsError::ValidationFailed(format!("no ChildStoreFactory registered for kind {}", spec.dialect.artifact_kind)));
             }
             minted_child_ids.push(child_id);
@@ -5603,8 +5907,10 @@ impl CompositionCoordinator {
         let mut created_children: Vec<(crate::os_io::ArtifactRef, Box<dyn SpaceMember>)> = Vec::with_capacity(genesis.len());
         for (ordinal, spec) in genesis.into_iter().enumerate() {
             let child_id = minted_child_ids[ordinal].clone();
-            let kind = crate::os_io::ArtifactKindId::parse(&spec.dialect.artifact_kind).expect("validated in phase 1");
-            let factory = child_store_factory(&kind).expect("validated in phase 1");
+            let kind = crate::os_io::ArtifactKindId::parse(&spec.dialect.artifact_kind).map_err(VcsError::ValidationFailed)?;
+            let factory = child_store_factory(&kind)
+                .map_err(|error| VcsError::ValidationFailed(format!("child-store factory registry unavailable: {error:?}")))?
+                .ok_or_else(|| VcsError::ValidationFailed(format!("no ChildStoreFactory registered for kind {}", spec.dialect.artifact_kind)))?;
             // 🎯️ Nothing to compensate on a genesis failure: no `dispatch_wire` has run yet in this
             // call, and any earlier-succeeding genesis member in this same loop was never
             // registered/dispatched to anywhere — it simply gets dropped along with this `Err`.
@@ -6726,11 +7032,11 @@ impl OpBinary for DemoMutation {
 
     #[test]
     fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
-        let codec = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1");
-        assert_eq!(codec.schema, "demo/v1");
+        let codec = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("test.document-codec-roundtrip/v1");
+        assert_eq!(codec.schema, "test.document-codec-roundtrip/v1");
         assert_eq!(codec.extension, "demo.doc");
 
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 4 }, None);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("test.document-codec-roundtrip/v1", "demo", DemoSnapshot { n: 4 }, None);
         let text_files = print_document_text(&envelope).expect("print document text");
 
         let (pack_files, dsl_mirror) = (codec.compile_dsl)(&text_files.dsl, &text_files.ops).expect("codec compile_dsl");
@@ -6740,7 +7046,7 @@ impl OpBinary for DemoMutation {
         assert_eq!(mirrored.dsl, dsl_mirror, "print_mirror's dsl text agrees with compile_dsl's own mirror, no JSON round trip");
 
         let document_id = ArtifactId("demo".to_string());
-        let schema = SchemaId("demo/v1".to_string());
+        let schema = SchemaId("test.document-codec-roundtrip/v1".to_string());
         let edit = Edit {
             id: "edit-1".into(),
             actor: Some("peer".into()),
@@ -6759,30 +7065,70 @@ impl OpBinary for DemoMutation {
         assert!(edit_text.contains("set-n"), "edit text contains the printed op line: {edit_text:?}");
         assert!(!edit_text.contains('\n') || edit_text.trim_end_matches('\n').lines().count() <= 2, "one header line + one op line: {edit_text:?}");
 
-        register_document_codec(codec);
-        assert!(document_codec("demo/v1").is_some(), "registered codec is discoverable by schema string");
+        register_document_codec(codec).expect("first document codec registration");
+        assert!(document_codec("test.document-codec-roundtrip/v1").is_some(), "registered codec is discoverable by schema string");
         assert!(document_codec("no-such-schema").is_none());
     }
 
-    /// 🔎️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W1 Task
-    /// 4: confirms `register_document_codec`'s ACTUAL collision behavior for a later wave's
-    /// load-bearing "13 subsets, 13 distinct ids, same artifact_kind+standard" design — the
-    /// registry is a plain `HashMap<schema, ArtifactCodec>` and `register_document_codec` is
-    /// documented "idempotent, safe to call repeatedly", i.e. a SECOND registration under the SAME
-    /// id silently overwrites the first (last-registered-wins) rather than panicking. Distinct ids
-    /// (the semio artifact's actual design) never collide and are unaffected either way; this test
-    /// only documents what happens if two subsets' ids ever accidentally coincide (a typo, not by
-    /// design) — currently: silent data loss of the first codec, not a loud panic.
     #[test]
-    fn register_document_codec_same_id_twice_overwrites_silently_not_panics() {
+    fn register_document_codec_rejects_a_duplicate_schema_without_replacing_the_first() {
         let first = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("test.duplicate-id-probe/v1");
         let second = ArtifactCodec { pack_schema_hash: [7u8; 32], ..first.clone() };
         assert_ne!(first.pack_schema_hash, second.pack_schema_hash, "fixture precondition: the two codecs must be distinguishable");
 
-        register_document_codec(first);
-        register_document_codec(second.clone()); // must not panic — see doc comment above
+        register_document_codec(first.clone()).expect("first registration");
+        let conflict = register_document_codec(second).expect_err("a schema collision must reject rather than replace");
+        assert_eq!(conflict.schema, "test.duplicate-id-probe/v1");
         let resolved = document_codec("test.duplicate-id-probe/v1").expect("still registered after the second call");
-        assert_eq!(resolved.pack_schema_hash, second.pack_schema_hash, "second registration silently won — no panic, no error, no side channel signaling the collision");
+        assert_eq!(resolved.pack_schema_hash, first.pack_schema_hash, "the first codec remains authoritative after a conflict");
+    }
+
+    fn projection_probe(store: &ArtifactStore<DemoSnapshot, DemoMutation>, cause: ArtifactProjectionCause) -> ArtifactProjectionResult<i32, DemoDiff> {
+        let event = store
+            .projection_event(cause, Some(DemoSnapshot { n: -1 }), ArtifactProjectionCacheMode::ValidatePrevious, "deterministic")
+            .expect("capture projection event");
+        assert_eq!(event.previous, Some(DemoSnapshot { n: -1 }));
+        assert_eq!(event.cache_mode, ArtifactProjectionCacheMode::ValidatePrevious);
+        event.result(event.state.n, None)
+    }
+
+    fn assert_projection_is_stale(store: &ArtifactStore<DemoSnapshot, DemoMutation>, result: ArtifactProjectionResult<i32, DemoDiff>) {
+        assert!(matches!(store.accept_projection_result(result), Err(StaleArtifactProjection { .. })), "a result for an older projection stamp must be rejected");
+    }
+
+    #[test]
+    fn projection_result_gate_rejects_results_after_every_invalidating_store_transition() {
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "projection", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+
+        let before_apply = projection_probe(&store, ArtifactProjectionCause::Apply);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+        assert_projection_is_stale(&store, before_apply);
+
+        let before_undo = projection_probe(&store, ArtifactProjectionCause::Undo);
+        store.dispatch(ArtifactCommand::Undo).expect("undo");
+        assert_projection_is_stale(&store, before_undo);
+
+        let before_redo = projection_probe(&store, ArtifactProjectionCause::Redo);
+        store.dispatch(ArtifactCommand::Redo).expect("redo");
+        assert_projection_is_stale(&store, before_redo);
+
+        let before_remote = projection_probe(&store, ArtifactProjectionCause::RemoteIngest);
+        store.dispatch(ArtifactCommand::IngestRemote { envelope: foreign_mutation_envelope("projection-peer", DemoMutation::SetN { n: 2 }) }).expect("remote ingest");
+        assert_projection_is_stale(&store, before_remote);
+
+        let before_reset = projection_probe(&store, ArtifactProjectionCause::Reset);
+        let reset_envelope = store.envelope().clone();
+        let reset_applied = store.applied_edit_ids().to_vec();
+        let reset_redo = store.redo_edit_ids().to_vec();
+        store.reset(reset_envelope, reset_applied, reset_redo).expect("reset");
+        assert_projection_is_stale(&store, before_reset);
+
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).expect("checkpoint");
+        let checkpoint_id = store.current_checkpoint_id().expect("checkpoint id").to_string();
+        let before_checkout = projection_probe(&store, ArtifactProjectionCause::Checkout);
+        store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id }).expect("checkout");
+        assert_projection_is_stale(&store, before_checkout);
     }
 
     #[test]

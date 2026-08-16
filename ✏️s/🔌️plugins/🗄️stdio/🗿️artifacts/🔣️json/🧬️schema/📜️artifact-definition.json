@@ -1,0 +1,100 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.json",
+  "artifact": "json",
+  "directory": "🔣️json",
+  "dependencies": [
+    "s.stdio.txt"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.json.standard.rfc8259",
+      "revision": "rfc8259",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.json.standard.rfc8259.profile.any",
+      "standard": "s.stdio.json.standard.rfc8259",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.json.standard.rfc8259.dialect.source",
+      "standard": "s.stdio.json.standard.rfc8259",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.json.standard.rfc8259.representation.document",
+      "standard": "s.stdio.json.standard.rfc8259",
+      "representation": "document",
+      "mime": "application/json",
+      "extension": ".json",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.json.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.json.localization.en",
+      "locale": "en",
+      "name": "JavaScript Object Notation",
+      "description": "JavaScript Object Notation artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.json.localization.de",
+      "locale": "de",
+      "name": "JavaScript-Objektnotation",
+      "description": "JavaScript-Objektnotation-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.json.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.json.standard.rfc8259.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

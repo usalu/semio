@@ -3,7 +3,7 @@
 use semio_framework_plugin::{ArtifactInferenceExecutionError, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ArtifactInferrer, ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 pub use crate::artifacts::gltf::schema::diff::GltfDiff;
-pub use crate::artifacts::gltf::schema::mutations::GltfMutation;
+pub use crate::artifacts::gltf::schema::modules::mutation_dispatch::GltfMutation;
 pub use crate::artifacts::gltf::schema::snapshot::GltfSnapshot;
 pub use crate::artifacts::gltf::schema::GltfArtifact;
 
@@ -37,7 +37,7 @@ pub const GLTF_INFERENCE_POLICY_VERSION: u32 = 1;
 pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder(GLTF_ARTIFACT_KIND_ID)
         .schema(crate::artifacts::gltf::schema::gltf_artifact_schema_descriptor())
-        .inferences([crate::artifacts::gltf::schema::inferences::gltf_artifact_inference_descriptor()])
+        .inferences([crate::artifacts::gltf::schema::inferences::geometric_analysis::gltf_artifact_inference_descriptor()])
         .inference_services([gltf_inference_service()])
         .composers(crate::artifacts::gltf::engine::io_registry::entries())
         .languages(pilot_languages())
@@ -93,10 +93,10 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "stdio.gltf.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::artifacts::gltf::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::gltf::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::gltf::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::gltf::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::artifacts::gltf::io::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::gltf::io::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::gltf::io::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::gltf::io::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.gltf.op"),
                 },
                 dsl::LanguageSpec {
@@ -125,8 +125,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::artifacts::gltf::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::gltf::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::artifacts::gltf::io::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::gltf::io::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.gltf.spr"),
                 },
             ]

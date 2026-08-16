@@ -1,0 +1,100 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.dxf",
+  "artifact": "dxf",
+  "directory": "🖊️dxf",
+  "dependencies": [
+    "s.stdio.txt"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.dxf.standard.r12",
+      "revision": "r12",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.dxf.standard.r12.profile.any",
+      "standard": "s.stdio.dxf.standard.r12",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.dxf.standard.r12.dialect.source",
+      "standard": "s.stdio.dxf.standard.r12",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.dxf.standard.r12.representation.document",
+      "standard": "s.stdio.dxf.standard.r12",
+      "representation": "document",
+      "mime": "image/vnd.dxf",
+      "extension": ".dxf",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.dxf.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.dxf.localization.en",
+      "locale": "en",
+      "name": "Drawing Exchange Format",
+      "description": "Drawing Exchange Format artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.dxf.localization.de",
+      "locale": "de",
+      "name": "Zeichnungsaustauschformat",
+      "description": "Zeichnungsaustauschformat-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.dxf.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.dxf.standard.r12.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "x-semio": {
+    "kind": "collection",
+    "members": [
+      {
+        "directory": "🔖️2.0",
+        "id": "s.stdio.gltf.standard.2.0",
+        "kind": "standard",
+        "responsibility": "glTF 2.0 standard assembly."
+      }
+    ]
+  }
+}

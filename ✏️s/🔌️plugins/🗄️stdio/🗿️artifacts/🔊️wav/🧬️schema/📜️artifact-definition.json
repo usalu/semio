@@ -1,0 +1,100 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.wav",
+  "artifact": "wav",
+  "directory": "🔊️wav",
+  "dependencies": [
+    "s.stdio.binary"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.wav.standard.riff-pcm",
+      "revision": "riff-pcm",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.wav.standard.riff-pcm.profile.any",
+      "standard": "s.stdio.wav.standard.riff-pcm",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.wav.standard.riff-pcm.dialect.source",
+      "standard": "s.stdio.wav.standard.riff-pcm",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.wav.standard.riff-pcm.representation.document",
+      "standard": "s.stdio.wav.standard.riff-pcm",
+      "representation": "document",
+      "mime": "audio/wav",
+      "extension": ".wav",
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.wav.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.wav.localization.en",
+      "locale": "en",
+      "name": "Waveform Audio",
+      "description": "Waveform Audio artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.wav.localization.de",
+      "locale": "de",
+      "name": "Wellenform-Audio",
+      "description": "Wellenform-Audio-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.wav.conformance.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.wav.standard.riff-pcm.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

@@ -4531,7 +4531,7 @@ mod tests {
         state.pending_glb_urls.insert(url.into());
         state.parsed_instances = vec![WorldInstanceRecord { id: "capsule-1".into(), mesh_id: Some("mesh:capsule_J".into()), position: Some([0.0, 0.0, 0.0]), ..Default::default() }];
         rebuild_instance_draws(&mut state, 100.0);
-        apply_glb_bytes(&mut state, url, include_bytes!("../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/🧊️capsule_J.glb"));
+        apply_glb_bytes(&mut state, url, include_bytes!("../../../../🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/🧊️capsule_J.glb"));
         let draw = state.draws.iter().find(|draw| draw.instances.iter().any(|instance| instance.id == "capsule-1")).expect("persistent draw");
         let mesh = state.meshes.get(&draw.mesh_key).expect("decoded mesh");
         assert_eq!(draw.mesh_key, "mesh:🧊️capsule_J");

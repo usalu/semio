@@ -870,7 +870,9 @@ mod tests {
     /// wave (json/csv/zip/png/txt/binary) established.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::gltf::schema::{diff, mutations, snapshot};
+        use crate::artifacts::gltf::io::mutations as mutation_transport;
+        use crate::artifacts::gltf::schema::{diff, snapshot};
+        use crate::artifacts::gltf::schema::modules::mutation_dispatch;
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -878,11 +880,11 @@ mod tests {
         /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutation_transport::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutation_transport::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }
@@ -905,13 +907,13 @@ mod tests {
         /// for every `GltfMutation` variant (`mutations::demo_mutation_cases()`).
         #[test]
         fn ops_grammar_conformance_law() {
-            let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+            let grammar = dsl::parse_grammar(mutation_transport::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
-            let mutation_primitive = mutations::text::COMPONENT_GRAMMAR_SEMIO.lines().find(|line| line.starts_with("primitive-value =")).expect("mutations primitive grammar");
+            let mutation_primitive = mutation_transport::text::COMPONENT_GRAMMAR_SEMIO.lines().find(|line| line.starts_with("primitive-value =")).expect("mutations primitive grammar");
             let diff_primitive = diff::text::COMPONENT_GRAMMAR_SEMIO.lines().find(|line| line.starts_with("primitive-value =")).expect("diff primitive grammar");
             assert_eq!(mutation_primitive, diff_primitive, "mutation and diff primitive tuple shapes diverged");
             assert!(mutation_primitive.contains("morph-target-list"), "primitive tuple omitted morph targets");
-            for mutation in mutations::demo_mutation_cases() {
+            for mutation in mutation_dispatch::demo_mutation_cases() {
                 let printed = mutation.print_op();
                 assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
             }
@@ -942,8 +944,8 @@ mod tests {
             let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
 
-            let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
-            for mutation in mutations::demo_mutation_cases() {
+            let op_spec = dsl::parse_protocol(mutation_transport::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+            for mutation in mutation_dispatch::demo_mutation_cases() {
                 let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");

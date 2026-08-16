@@ -2563,7 +2563,7 @@ mod tests {
 
     #[test]
     fn mesh_instances_without_lines_are_valid_world_pass() {
-        use super::kernel_3d_scene::{Instance3d, SceneDraw3d, ScenePass3d};
+        use crate::wgpu::kernel_3d_scene::{Instance3d, SceneDraw3d, ScenePass3d};
 
         let pass = ScenePass3d {
             viewport: [0.0, 0.0, 320.0, 240.0],
