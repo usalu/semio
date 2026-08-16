@@ -4,9 +4,9 @@ use crate::artifacts::puzzle5d::diff::{Puzzle5dDiff, Puzzle5dFastenersDelta, Puz
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::RemovePartGrip, base: &Puzzle5dSnapshot) -> Puzzle5dDiff {
+pub fn diff(payload: &super::mutation::RemovePartGrip, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
     let Some(part) = base.parts.iter().find(|entry| entry.id == payload.part_id) else {
-        return Puzzle5dDiff::default();
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "part-grip", payload.part_id), vec![payload.part_id.clone()]);
     };
     if !part.grips.iter().any(|grip| grip.id == payload.grip_id) {
         return Puzzle5dDiff::default();
@@ -20,10 +20,10 @@ pub fn diff(payload: &super::mutation::RemovePartGrip, base: &Puzzle5dSnapshot) 
         .filter(|fastener| fastener.source == full_id || fastener.target == full_id)
         .map(|fastener| fastener.id.clone())
         .collect();
-    Puzzle5dDiff {
+    protocol::MutationOutcome::new(Puzzle5dDiff {
         parts: Some(Puzzle5dPartsDelta { patched: vec![Puzzle5dPartPatchEntry { id: payload.part_id.clone(), patch: Puzzle5dPartPatch { replacement: Some(next) } }], ..Default::default() }),
         fasteners: if severed.is_empty() { None } else { Some(Puzzle5dFastenersDelta { removed: severed, ..Default::default() }) },
         ..Default::default()
-    }
+    })
 }
 //#endregion 🔖️Diff

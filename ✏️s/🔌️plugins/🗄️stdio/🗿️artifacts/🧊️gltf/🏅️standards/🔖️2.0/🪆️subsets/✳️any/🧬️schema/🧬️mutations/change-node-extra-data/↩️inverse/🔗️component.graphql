@@ -1,0 +1,4 @@
+scalar GltfChangeNodeExtraDataInverseJsonV1
+enum GltfChangeNodeExtraDataInversePresenceStateV1 { absent present }
+input GltfChangeNodeExtraDataInversePresenceV1 { state: GltfChangeNodeExtraDataInversePresenceStateV1!, value: GltfChangeNodeExtraDataInverseJsonV1 }
+input GltfChangeNodeExtraDataInverseV1 { node: Int!, before: GltfChangeNodeExtraDataInversePresenceV1!, after: GltfChangeNodeExtraDataInversePresenceV1!, touchedPaths: [String!]! }

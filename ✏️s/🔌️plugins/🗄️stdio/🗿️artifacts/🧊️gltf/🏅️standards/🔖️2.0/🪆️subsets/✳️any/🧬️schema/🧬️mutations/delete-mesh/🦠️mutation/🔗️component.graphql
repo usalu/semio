@@ -1,0 +1,7 @@
+# delete-mesh typed mutation facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+input GltfDeleteMeshPayloadV1 {
+  index: Int!
+}
+type GltfDeleteMeshMutationV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfDeleteMeshPayloadV1! }

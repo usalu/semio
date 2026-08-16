@@ -23,7 +23,7 @@ pub fn change_edge_tips(id: String, new_source_tip: Option<String>, new_target_t
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ChangeEdgeTips {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "edge", kind: "change-edge-tips", record: "ChangedEdgeTips" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> Puzzle2dDiff {
+    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {

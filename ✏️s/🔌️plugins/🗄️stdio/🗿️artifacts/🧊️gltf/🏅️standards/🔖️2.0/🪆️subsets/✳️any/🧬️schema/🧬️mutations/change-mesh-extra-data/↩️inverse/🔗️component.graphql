@@ -1,0 +1,6 @@
+# change-mesh-extra-data inverse facet.
+input GltfChangeMeshExtraDataPayloadV1 {
+  mesh: Int!
+  data: GltfDataPresenceInput!
+}
+type GltfChangeMeshExtraDataInverseV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

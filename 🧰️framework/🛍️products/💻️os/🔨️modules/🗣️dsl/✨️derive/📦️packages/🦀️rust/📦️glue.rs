@@ -1050,7 +1050,6 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
                     ::protocol::SchemaId(format!("{}#{}", #schema, <#payload_ty as ::protocol::MutationKind<#snapshot_ty, #name>>::SEMANTICS.kind)),
                     ::protocol::SchemaVersion(1),
                     ::protocol::StateClass::Artifact,
-                    ::protocol::ConflictRule::Merge(::protocol::MergeStrategyKind::LwwRegister),
                 )
                 .with_semantics(&<#payload_ty as ::protocol::MutationKind<#snapshot_ty, #name>>::SEMANTICS),
             );
@@ -1064,7 +1063,7 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
 
         impl ::protocol::Mutation<#snapshot_ty> for #name {
             type Diff = #diff_ty;
-            fn diff(&self, base: &#snapshot_ty) -> Self::Diff {
+            fn diff(&self, base: &#snapshot_ty) -> ::protocol::MutationOutcome<Self::Diff> {
                 match self { #(#diff_arms),* }
             }
             fn inverse(&self, base: &#snapshot_ty) -> Vec<Self> {
@@ -1158,7 +1157,7 @@ pub fn derive_composite_mutation(input: TokenStream) -> TokenStream {
 
         impl ::protocol::MutationKind<#snapshot_ty, #op_ty> for #name {
             const SEMANTICS: ::protocol::SemanticDescriptor = <#name as ::protocol::CompositeMutationKind<#snapshot_ty, #op_ty>>::SEMANTICS;
-            fn diff(&self, base: &#snapshot_ty) -> <#op_ty as ::protocol::Mutation<#snapshot_ty>>::Diff {
+            fn diff(&self, base: &#snapshot_ty) -> ::protocol::MutationOutcome<<#op_ty as ::protocol::Mutation<#snapshot_ty>>::Diff> {
                 ::protocol::fold_plan_diff(self, base)
             }
             fn inverse(&self, base: &#snapshot_ty) -> Vec<#op_ty> {
@@ -1169,9 +1168,6 @@ pub fn derive_composite_mutation(input: TokenStream) -> TokenStream {
             }
             fn target(&self) -> Vec<String> {
                 ::protocol::CompositeMutationKind::target(self)
-            }
-            fn validate(&self, base: &#snapshot_ty) -> Result<(), String> {
-                ::protocol::CompositeMutationKind::validate(self, base)
             }
             fn foreign_steps(&self, base: &#snapshot_ty) -> Vec<::protocol::ForeignStep> {
                 ::protocol::plan_foreign_steps(self, base)

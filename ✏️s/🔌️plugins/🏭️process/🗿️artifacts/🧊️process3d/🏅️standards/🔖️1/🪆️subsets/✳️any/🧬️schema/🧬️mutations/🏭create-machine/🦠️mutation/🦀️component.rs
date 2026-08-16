@@ -22,7 +22,7 @@ pub struct CreateMachine {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for CreateMachine {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "machine", kind: "create-machine", record: "CreatedMachine" };
 
-    fn diff(&self, base: &Process3dSnapshot) -> Process3dDiff {
+    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::create_machine::diff::diff(self, base)
     }
 

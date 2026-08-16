@@ -1,14 +1,20 @@
 //! 💡️ euler-characteristic atomic glTF inference leaf.
-use super::super::{geometry_core::GltfGeometryContext, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
-use super::super::super::modules::{inference_measures::{exact, unavailable}, measurement_contracts::*};
+use super::super::super::modules::{
+    inference_measures::{exact, unavailable},
+    measurement_contracts::*,
+};
+use super::super::{geometry_core::GltfGeometryContext, GltfEntityIndicators, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
 
 pub struct GltfEulerCharacteristicInference;
 
 impl GltfInferenceLeaf for GltfEulerCharacteristicInference {
-    const DESCRIPTOR: GltfInferenceLeafDescriptor = GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.euler-characteristic.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.euler-characteristic.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
+    const DESCRIPTOR: GltfInferenceLeafDescriptor =
+        GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.euler-characteristic.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.euler-characteristic.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
 
-pub fn descriptor() -> GltfInferenceLeafDescriptor { GltfEulerCharacteristicInference::DESCRIPTOR }
+pub fn descriptor() -> GltfInferenceLeafDescriptor {
+    GltfEulerCharacteristicInference::DESCRIPTOR
+}
 
 pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<i64> {
     exact(context.topology.chi, GltfUnit::Unitless, context.sample_count, Some(context.topology))
@@ -19,7 +25,7 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<i64> {
 }
 
 pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
-    serde_json::to_value(&indicators.topology.eulerCharacteristic)
+    serde_json::to_value(&indicators.topology.euler_characteristic)
 }
 
 #[cfg(test)]

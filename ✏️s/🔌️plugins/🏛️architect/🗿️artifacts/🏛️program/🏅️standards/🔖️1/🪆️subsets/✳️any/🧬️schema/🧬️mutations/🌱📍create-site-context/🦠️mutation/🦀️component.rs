@@ -18,7 +18,7 @@ pub struct CreateSiteContext {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateSiteContext {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "site-context", kind: "create-site-context", record: "CreatedSiteContext" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

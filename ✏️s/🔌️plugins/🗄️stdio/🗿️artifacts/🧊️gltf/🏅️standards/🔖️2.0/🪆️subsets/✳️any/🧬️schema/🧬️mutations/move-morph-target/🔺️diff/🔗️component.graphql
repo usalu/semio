@@ -1,0 +1,8 @@
+# move-morph-target diff facet.
+input GltfMoveMorphTargetPayloadV1 {
+  mesh: Int!
+  primitive: Int!
+  target: Int!
+  position: Int!
+}
+type GltfMoveMorphTargetDiffV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

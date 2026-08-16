@@ -1,15 +1,15 @@
 //! 🧭 GLTF orientation indicators.
 
-#[path = "main-axis-direction/🦀️component.rs"]
-pub mod main_axis_direction;
 #[path = "face-normal-distribution/🦀️component.rs"]
 pub mod face_normal_distribution;
+#[path = "main-axis-direction/🦀️component.rs"]
+pub mod main_axis_direction;
 #[path = "orientation-consistency/🦀️component.rs"]
 pub mod orientation_consistency;
 
-use super::geometry_core::{GltfGeometryContext, GltfPairGeometry};
-use super::super::modules::{mesh_topology::Topology};
 use super::super::modules::measurement_contracts::*;
+use super::super::modules::mesh_topology::Topology;
+use super::geometry_core::{GltfGeometryContext, GltfPairGeometry};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -38,11 +38,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfOrientationInference {
     type Output = GltfOrientationIndicators;
 
     fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
-        Self::Output {
-            main_axis_direction: main_axis_direction::infer(context),
-            face_normal_distribution: face_normal_distribution::infer(context),
-            orientation_consistency: orientation_consistency::infer(context),
-        }
+        Self::Output { main_axis_direction: main_axis_direction::infer(context), face_normal_distribution: face_normal_distribution::infer(context), orientation_consistency: orientation_consistency::infer(context) }
     }
 
     fn unavailable(diagnostic_ids: &[String]) -> Self::Output {

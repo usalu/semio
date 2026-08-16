@@ -19,7 +19,7 @@ pub struct ReplaceOptionEvaluation {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceOptionEvaluation {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "option-evaluation", kind: "replace-option-evaluation", record: "ReplacedOptionEvaluation" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

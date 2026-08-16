@@ -25,7 +25,7 @@ pub fn add_node_handle(node_id: String, handle: Puzzle2dHandle, index: Option<us
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for AddNodeHandle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "node-handle", kind: "add-node-handle", record: "AddedNodeHandle" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> Puzzle2dDiff {
+    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {

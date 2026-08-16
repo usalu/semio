@@ -21,7 +21,7 @@ pub fn change_meta_description(new_description: String) -> Block2dMutation {
 impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for ChangeMetaDescription {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "meta", kind: "change-meta-description", record: "ChangedMetaDescription" };
 
-    fn diff(&self, base: &Block2dSnapshot) -> Block2dDiff {
+    fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {

@@ -22,7 +22,7 @@ pub fn remove_representation_attribute(id: String, key: String) -> Block5dMutati
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for RemoveRepresentationAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "representation-attribute", kind: "remove-representation-attribute", record: "RemovedRepresentationAttribute" };
 
-    fn diff(&self, base: &Block5dSnapshot) -> Block5dDiff {
+    fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {

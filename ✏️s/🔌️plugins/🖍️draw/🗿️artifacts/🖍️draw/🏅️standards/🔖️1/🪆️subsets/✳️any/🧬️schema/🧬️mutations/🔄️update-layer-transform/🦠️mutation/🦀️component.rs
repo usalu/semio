@@ -25,7 +25,7 @@ pub fn update_layer_transform(layer_id: String, transform: DrawTransform) -> Dra
 impl protocol::MutationKind<DrawSnapshot, DrawMutation> for UpdateLayerTransform {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "layer", kind: "update-layer-transform", record: "UpdatedLayerTransform" };
 
-    fn diff(&self, base: &DrawSnapshot) -> DrawDiff {
+    fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {

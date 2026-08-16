@@ -251,7 +251,10 @@ impl protocol::OpBinary for Process3dConfigMutation {
 impl Mutation<Process3dConfig> for Process3dConfigMutation {
     type Diff = Process3dConfig;
 
-    fn diff(&self, base: &Process3dConfig) -> Process3dConfig {
+    /// 📦️ Whole-config field-setter — every variant addresses the single always-present
+    /// `Process3dConfig` by value, so there is no target to be missing; message-free outcome per
+    /// the contract's root-scoped shrink-only allowlist.
+    fn diff(&self, base: &Process3dConfig) -> protocol::MutationOutcome<Process3dConfig> {
         let mut next = base.clone();
         match self {
             Process3dConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
@@ -274,7 +277,7 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
                 crate::apps::process3d::sync_process_machine_contributions(json);
             }
         }
-        next
+        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &Process3dConfig) -> Vec<Self> {
@@ -323,12 +326,12 @@ mod tests {
     #[test]
     fn process3d_config_operation_diff_applies_expected_fields() {
         let base = Process3dConfig::default();
-        let next = Process3dConfigMutation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 }.diff(&base);
+        let next = Process3dConfigMutation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 }.diff(&base).into_parts().0;
         assert_eq!(next.camera_position, [1.0, 2.0, 3.0]);
         assert_eq!(next.camera_target, [0.1, 0.2, 0.3]);
         assert_eq!(next.camera_fov, 60.0);
 
-        let next = Process3dConfigMutation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#123456".into() }.diff(&base);
+        let next = Process3dConfigMutation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#123456".into() }.diff(&base).into_parts().0;
         assert!(next.sun_enabled);
         assert_eq!(next.sun_azimuth, 10.0);
         assert_eq!(next.sun_elevation, 20.0);

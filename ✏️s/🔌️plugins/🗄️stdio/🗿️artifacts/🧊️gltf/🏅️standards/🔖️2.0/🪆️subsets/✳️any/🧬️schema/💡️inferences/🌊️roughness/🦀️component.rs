@@ -4,16 +4,16 @@
 pub mod deviation_from_ideal;
 #[path = "deviation-from-smoothed-geometry/🦀️component.rs"]
 pub mod deviation_from_smoothed_geometry;
+#[path = "irregularity/🦀️component.rs"]
+pub mod irregularity;
 #[path = "normal-variation/🦀️component.rs"]
 pub mod normal_variation;
 #[path = "surface-waviness/🦀️component.rs"]
 pub mod surface_waviness;
-#[path = "irregularity/🦀️component.rs"]
-pub mod irregularity;
 
-use super::geometry_core::{GltfGeometryContext, roughness_samples, statistics};
-use super::super::modules::{vector_operations::{cross, dot, norm, normalize, sub}};
 use super::super::modules::measurement_contracts::*;
+use super::super::modules::vector_operations::{cross, dot, norm, normalize, sub};
+use super::geometry_core::{roughness_samples, statistics, GltfGeometryContext};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -43,7 +43,9 @@ pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfRoughnessRaw {
     };
     let mut normal_angles = Vec::new();
     for (&(first, second), adjacent_faces) in &context.edge_faces {
-        if adjacent_faces.len() != 2 || norm(sub(context.points[second], context.points[first])) == 0.0 { continue; }
+        if adjacent_faces.len() != 2 || norm(sub(context.points[second], context.points[first])) == 0.0 {
+            continue;
+        }
         let normal = |face_index: usize| {
             let face = context.faces[face_index];
             normalize(cross(sub(context.points[face[1]], context.points[face[0]]), sub(context.points[face[2]], context.points[face[0]])))

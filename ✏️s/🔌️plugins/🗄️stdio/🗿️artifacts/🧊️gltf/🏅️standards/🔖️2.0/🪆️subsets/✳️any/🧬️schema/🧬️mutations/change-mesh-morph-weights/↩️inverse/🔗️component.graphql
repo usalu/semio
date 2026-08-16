@@ -1,0 +1,6 @@
+# change-mesh-morph-weights inverse facet.
+input GltfChangeMeshMorphWeightsPayloadV1 {
+  mesh: Int!
+  weights: [Float!]!
+}
+type GltfChangeMeshMorphWeightsInverseV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

@@ -6598,10 +6598,8 @@ name = "semio-framework-2d"
 version = "0.1.0"
 dependencies = [
  "blake3",
- "futures",
  "geo",
  "pollster",
- "rayon",
  "semio-framework-os-kernel",
  "serde",
  "thiserror 2.0.18",
@@ -6611,8 +6609,6 @@ dependencies = [
 name = "semio-framework-3d"
 version = "0.1.0"
 dependencies = [
- "futures",
- "rayon",
  "semio-framework-geometry",
  "semio-framework-number",
  "semio-framework-os-kernel",

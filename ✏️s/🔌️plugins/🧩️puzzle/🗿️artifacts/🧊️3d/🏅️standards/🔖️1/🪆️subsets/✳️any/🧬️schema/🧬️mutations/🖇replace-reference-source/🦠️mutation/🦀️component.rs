@@ -17,7 +17,7 @@ pub struct ReplaceReferenceSource {
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ReplaceReferenceSource {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "reference", kind: "replace-reference-source", record: "ReplacedReferenceSource" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> Puzzle3dDiff {
+    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {

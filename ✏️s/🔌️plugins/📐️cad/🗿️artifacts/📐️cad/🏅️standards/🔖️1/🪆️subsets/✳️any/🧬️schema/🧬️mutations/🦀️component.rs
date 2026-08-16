@@ -148,10 +148,10 @@ pub mod tests {
     fn inverse_inverts_every_variant_against_a_populated_scene() {
         let base = sample_scene();
         for op in every_mutation() {
-            let forward = protocol::MutationDiff::apply(&op.diff(&base), &base);
+            let forward = protocol::MutationDiff::apply(op.diff(&base).diff(), &base);
             let mut restored = forward.clone();
             for inverse in op.inverse(&base) {
-                restored = protocol::MutationDiff::apply(&inverse.diff(&restored), &restored);
+                restored = protocol::MutationDiff::apply(inverse.diff(&restored).diff(), &restored);
             }
             assert_eq!(restored, base, "inverse must restore the base scene for {op:?}");
         }
@@ -179,8 +179,8 @@ pub mod tests {
         let sample = sample_model_child("law-model-1");
         let mutation = CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.to_uri() });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = CadMutation::DeleteShapeModel(DeleteShapeModel {}).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = CadMutation::DeleteShapeModel(DeleteShapeModel {}).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -190,8 +190,8 @@ pub mod tests {
         let sample = sample_model_child("law-drawing-1");
         let mutation = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-law-1".into(), target: sample.target.to_uri() });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = CadMutation::DeleteDrawing(DeleteDrawing { child_id: "drawing-law-1".into() }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = CadMutation::DeleteDrawing(DeleteDrawing { child_id: "drawing-law-1".into() }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -200,10 +200,54 @@ pub mod tests {
         let base = sample_scene();
         let mutation = CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_hidden: true });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = CadMutation::ChangeReferenceLocked(ChangeReferenceLocked { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_locked: false }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = CadMutation::ChangeReferenceLocked(ChangeReferenceLocked { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_locked: false }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws
+
+    //#region 🧪️OutcomeLaws
+    /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
+    /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
+    #[test]
+    fn delete_missing_node_is_a_target_missing_error() {
+        let base = sample_scene();
+        protocol::testkit::assert_missing_target_is_error(&base, &CadMutation::DeleteNode(DeleteNode { node_id: "does-not-exist".into() }));
+    }
+
+    #[test]
+    fn rename_missing_node_is_a_target_missing_error() {
+        let base = sample_scene();
+        protocol::testkit::assert_missing_target_is_error(&base, &CadMutation::RenameNode(RenameNode { node_id: "does-not-exist".into(), new_label: "New".into() }));
+    }
+
+    #[test]
+    fn change_hidden_on_missing_reference_is_a_target_missing_error() {
+        let base = sample_scene();
+        protocol::testkit::assert_missing_target_is_error(&base, &CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: "spatial.shape".into(), reference_id: "does-not-exist".into(), new_hidden: true }));
+    }
+
+    #[test]
+    fn create_node_duplicate_id_never_applies() {
+        let base = sample_scene();
+        let duplicate = CadMutation::CreateNode(CreateNode { node: crate::artifacts::cad::CadNode { id: "node-1".into(), label: "Dup".into(), kind: "group".into() } });
+        protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
+    }
+
+    #[test]
+    fn delete_missing_drawing_is_a_target_missing_error() {
+        let base = sample_scene();
+        protocol::testkit::assert_missing_target_is_error(&base, &CadMutation::DeleteDrawing(DeleteDrawing { child_id: "does-not-exist".into() }));
+    }
+
+    #[test]
+    fn create_drawing_duplicate_id_never_applies() {
+        let sample = sample_model_child("dup-drawing-1");
+        let mut base = sample_scene();
+        base = protocol::MutationDiff::apply(CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.to_uri() }).diff(&base).diff(), &base);
+        let duplicate = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.to_uri() });
+        protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
+    }
+    //#endregion 🧪️OutcomeLaws
 }
 //#endregion 🧪️Tests

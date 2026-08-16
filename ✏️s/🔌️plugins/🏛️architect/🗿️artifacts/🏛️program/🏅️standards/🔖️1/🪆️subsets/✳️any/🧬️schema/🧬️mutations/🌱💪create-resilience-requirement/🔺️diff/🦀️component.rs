@@ -6,7 +6,11 @@ use crate::artifacts::program::diff::ProgramResilienceDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🌱️ `added = [payload row]` — the row lands at the end of `program.resilience` on apply.
-pub fn diff(payload: &CreateResilienceRequirement, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { resilience: Some(ProgramResilienceDelta { added: vec![payload.resilience_requirement.clone()], ..Default::default() }), ..Default::default() }
+/// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
+pub fn diff(payload: &CreateResilienceRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let id = payload.resilience_requirement.header.id.clone();
+    if base.resilience.iter().any(|row| row.header.id == id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A resilience requirement already exists with this id.", [id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { resilience: Some(ProgramResilienceDelta { added: vec![payload.resilience_requirement.clone()], ..Default::default() }), ..Default::default() })
 }

@@ -20,7 +20,7 @@ pub fn delete_node(id: String) -> TrinityGraphMutation {
 impl protocol::MutationKind<JackSnapshot, TrinityGraphMutation> for DeleteNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "node", kind: "delete-node", record: "DeletedNode" };
 
-    fn diff(&self, base: &JackSnapshot) -> JackDiff {
+    fn diff(&self, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {

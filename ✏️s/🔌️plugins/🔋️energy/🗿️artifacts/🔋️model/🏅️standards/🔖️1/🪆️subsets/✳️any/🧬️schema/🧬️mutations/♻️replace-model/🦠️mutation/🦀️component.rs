@@ -20,7 +20,7 @@ pub struct ReplaceModel {
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ReplaceModel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "model", kind: "replace-model", record: "ReplacedModel" };
 
-    fn diff(&self, base: &EnergyModelSnapshot) -> EnergyModelDiff {
+    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         crate::artifacts::model::mutations::replace_model::diff::diff(self, base)
     }
 

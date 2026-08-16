@@ -95,7 +95,7 @@ pub fn sequence_snapshot_mutations(before: &SequenceFixture, after: &SequenceFix
 
 /// ▶️ Applies `mutation` via its diff.
 pub fn apply_sequence_mutation(snapshot: &SequenceSnapshot, mutation: &SequenceMutation) -> SequenceSnapshot {
-    protocol::MutationDiff::apply(&mutation.diff(snapshot), snapshot)
+    protocol::MutationDiff::apply(mutation.diff(snapshot).diff(), snapshot)
 }
 
 pub fn inverse_sequence_mutation(snapshot: &SequenceSnapshot, mutation: &SequenceMutation) -> Vec<SequenceMutation> {
@@ -107,17 +107,18 @@ pub fn inverse_sequence_mutation(snapshot: &SequenceSnapshot, mutation: &Sequenc
 mod tests {
     use super::*;
     use crate::artifacts::sequence::{default_snapshot, SequenceStep, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
-    use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::SemanticMutation;
     use store::{create_document_envelope, ArtifactCommand};
 
     fn round_trip(snapshot: &SequenceSnapshot, mutation: &SequenceMutation) -> SequenceSnapshot {
-        let forward = vcs::apply_mutation(snapshot, mutation);
+        let (forward, _messages) = vcs::apply_mutation(snapshot, mutation);
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(snapshot);
         backward.reverse();
         for back in backward {
-            restored = vcs::apply_mutation(&restored, &back);
+            let (next, _messages) = vcs::apply_mutation(&restored, &back);
+            restored = next;
         }
         assert_eq!(&restored, snapshot, "inverse must restore the pre-mutation snapshot");
         forward
@@ -204,9 +205,9 @@ mod tests {
     fn move_step_diff_absorb_law() {
         use protocol::Mutation;
         let base = default_snapshot();
-        let d1 = move_step("step-1".into(), 10.0, 10.0).diff(&base);
+        let d1 = move_step("step-1".into(), 10.0, 10.0).diff(&base).into_parts().0;
         let mid = protocol::MutationDiff::apply(&d1, &base);
-        let d2 = move_step("step-1".into(), 20.0, 30.0).diff(&mid);
+        let d2 = move_step("step-1".into(), 20.0, 30.0).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -219,5 +220,85 @@ mod tests {
         assert_eq!(SequenceMutation::kinds().len(), 8);
     }
     //#endregion 🔖️MutationLaws
+
+    //#region 🔖️OutcomeLaws
+    // 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — one law test per verb
+    // family present in this facet (`assert_missing_target_is_error`/`assert_fatal_never_applies`,
+    // landed in `📡️spr/🧪️testkit`). `assert_outcome_policy_matrix` is NOT landed under that name
+    // (only the generic closure-based `assert_policy_matrix` exists) — see this ticket's report.
+    #[test]
+    fn create_family_fatal_never_applies() {
+        let base = default_snapshot();
+        let outcome = create_step(SequenceStep { id: "step-1".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false }).diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+        assert_fatal_never_applies(&outcome);
+    }
+
+    #[test]
+    fn delete_family_missing_target_is_error() {
+        let base = default_snapshot();
+        assert_missing_target_is_error(&base, &delete_step("missing".into()));
+    }
+
+    #[test]
+    fn move_family_missing_target_is_error() {
+        let base = default_snapshot();
+        assert_missing_target_is_error(&base, &move_step("missing".into(), 1.0, 1.0));
+    }
+
+    #[test]
+    fn move_family_fatal_never_applies() {
+        let base = default_snapshot();
+        let outcome = move_step("step-1".into(), f64::NAN, 0.0).diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+        assert_fatal_never_applies(&outcome);
+    }
+
+    #[test]
+    fn edit_family_missing_target_is_error() {
+        let base = default_snapshot();
+        assert_missing_target_is_error(&base, &edit_step_params("missing".into(), StepParams::new()));
+    }
+
+    #[test]
+    fn change_family_missing_target_is_error() {
+        let base = default_snapshot();
+        assert_missing_target_is_error(&base, &change_step_collapsed("missing".into(), true));
+    }
+
+    #[test]
+    fn connect_family_missing_target_is_error() {
+        let base = default_snapshot();
+        assert_missing_target_is_error(&base, &connect_steps("edge-99".into(), "missing".into(), "step-2".into()));
+    }
+
+    #[test]
+    fn connect_family_fatal_never_applies() {
+        let base = default_snapshot();
+        let outcome = connect_steps("edge-99".into(), "step-1".into(), "step-1".into()).diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+        assert_fatal_never_applies(&outcome);
+    }
+
+    #[test]
+    fn disconnect_family_missing_target_is_error() {
+        let base = default_snapshot();
+        assert_missing_target_is_error(&base, &disconnect_steps("missing".into()));
+    }
+
+    #[test]
+    fn duplicate_family_missing_target_is_error() {
+        let base = default_snapshot();
+        assert_missing_target_is_error(&base, &duplicate_step("missing".into(), "step-1-copy".into(), 0.0, 0.0));
+    }
+
+    #[test]
+    fn duplicate_family_fatal_never_applies() {
+        let base = default_snapshot();
+        let outcome = duplicate_step("step-1".into(), "step-2".into(), 0.0, 0.0).diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+        assert_fatal_never_applies(&outcome);
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

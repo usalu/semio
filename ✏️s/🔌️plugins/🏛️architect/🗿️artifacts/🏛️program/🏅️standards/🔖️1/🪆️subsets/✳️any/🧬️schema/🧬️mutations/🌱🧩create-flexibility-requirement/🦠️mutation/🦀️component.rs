@@ -18,7 +18,7 @@ pub struct CreateFlexibilityRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateFlexibilityRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "flexibility-requirement", kind: "create-flexibility-requirement", record: "CreatedFlexibilityRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

@@ -22,7 +22,7 @@ pub fn change_representation_lod(id: String, new_lod: Option<String>) -> Block5d
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ChangeRepresentationLod {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "representation", kind: "change-representation-lod", record: "ChangedRepresentationLod" };
 
-    fn diff(&self, base: &Block5dSnapshot) -> Block5dDiff {
+    fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {

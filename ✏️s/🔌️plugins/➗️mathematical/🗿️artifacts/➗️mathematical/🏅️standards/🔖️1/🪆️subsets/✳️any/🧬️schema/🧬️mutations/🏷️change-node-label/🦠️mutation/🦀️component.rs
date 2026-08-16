@@ -14,7 +14,7 @@ pub struct ChangeNodeLabel {
 impl protocol::MutationKind<MathematicalSnapshot, MathematicalMutation> for ChangeNodeLabel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node", kind: "change-node-label", record: "ChangedNodeLabel" };
 
-    fn diff(&self, base: &MathematicalSnapshot) -> <MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::Diff {
+    fn diff(&self, base: &MathematicalSnapshot) -> protocol::MutationOutcome<<MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {

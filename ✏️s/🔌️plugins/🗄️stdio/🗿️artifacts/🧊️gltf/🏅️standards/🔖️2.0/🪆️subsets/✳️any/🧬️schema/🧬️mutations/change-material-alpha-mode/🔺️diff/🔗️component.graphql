@@ -1,0 +1,1 @@
+type GltfChangeMaterialAlphaModeDiffV1 { material: Int!, expectedAlphaMode: GltfChangeMaterialAlphaModeValue!, alphaMode: GltfChangeMaterialAlphaModeValue!, touchedPaths: [String!]! }

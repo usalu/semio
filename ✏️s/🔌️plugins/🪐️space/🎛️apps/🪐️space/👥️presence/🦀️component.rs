@@ -123,9 +123,9 @@ pub enum SpacePresenceMutation {
 impl Mutation<SpacePresence> for SpacePresenceMutation {
     type Diff = SpacePresence;
 
-    fn diff(&self, _base: &SpacePresence) -> SpacePresence {
+    fn diff(&self, _base: &SpacePresence) -> protocol::MutationOutcome<SpacePresence> {
         match self {
-            Self::Snapshot { presence } => presence.clone(),
+            Self::Snapshot { presence } => protocol::MutationOutcome::new(presence.clone()),
         }
     }
 

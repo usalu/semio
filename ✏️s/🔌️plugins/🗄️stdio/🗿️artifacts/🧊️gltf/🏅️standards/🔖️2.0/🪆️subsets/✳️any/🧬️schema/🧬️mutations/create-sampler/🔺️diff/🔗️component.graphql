@@ -1,0 +1,13 @@
+# create-sampler typed diff facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfSamplerValueV1
+input GltfCreateSamplerPayloadV1 {
+  position: Int!
+}
+type GltfCreateSamplerDiffOperationV1 {
+  kind: String!
+  position: Int!
+  item: GltfSamplerValueV1!
+}
+type GltfCreateSamplerDiffV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfCreateSamplerPayloadV1!, operation: GltfCreateSamplerDiffOperationV1! }

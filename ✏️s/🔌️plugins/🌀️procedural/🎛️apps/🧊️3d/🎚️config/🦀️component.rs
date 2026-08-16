@@ -86,7 +86,6 @@ pub struct Procedural3dConfig {
     /// 🧰️ The active transform-gumball utility for the preview window.
     pub active_utility_id: String,
     /// 🗣️ BCP-47 locale tag.
-    pub locale: String,
     pub locale: String}
 
 //#region 🔖️ArtifactCodec

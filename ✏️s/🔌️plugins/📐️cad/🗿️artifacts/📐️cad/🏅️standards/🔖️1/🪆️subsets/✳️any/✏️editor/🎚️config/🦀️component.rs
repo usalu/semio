@@ -330,14 +330,22 @@ impl protocol::OpBinary for CadConfigMutation {
 impl Mutation<CadConfig> for CadConfigMutation {
     type Diff = CadConfig;
 
-    fn diff(&self, base: &CadConfig) -> CadConfig {
+    fn diff(&self, base: &CadConfig) -> protocol::MutationOutcome<CadConfig> {
         match self {
-            CadConfigMutation::Snapshot { config } => config.clone(),
+            CadConfigMutation::Snapshot { config } => {
+                if config == base {
+                    return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "Config snapshot is already up to date.");
+                }
+                protocol::MutationOutcome::new(config.clone())
+            }
             CadConfigMutation::SetContributions { json } => {
+                if &base.contributions_json == json {
+                    return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "Contributions are already up to date.");
+                }
                 let mut next = base.clone();
                 next.contributions_json = json.clone();
                 crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::sync_cad_computer_contributions(json);
-                next
+                protocol::MutationOutcome::new(next)
             }
         }
     }
@@ -401,11 +409,11 @@ mod tests {
         let base = CadConfig { active_utility_id: "move".into(), ..CadConfig::default() };
         let next = CadConfig { active_utility_id: "rotate".into(), selected_node_ids: vec!["node-1".into()], ..CadConfig::default() };
         let operation = CadConfigMutation::Snapshot { config: next.clone() };
-        let forward = operation.diff(&base);
+        let forward = operation.diff(&base).diff().clone();
         assert_eq!(forward, next);
         let backwards = operation.inverse(&base);
         assert_eq!(backwards, vec![CadConfigMutation::Snapshot { config: base.clone() }]);
-        let restored = backwards[0].diff(&forward);
+        let restored = backwards[0].diff(&forward).diff().clone();
         assert_eq!(restored, base);
         store::os_store::test_support::assert_op_line_round_trip(&operation);
     }
@@ -415,7 +423,7 @@ mod tests {
         let base = CadConfig::default();
         let json = r#"[{"pluginId":"cad-extension-spatial-shape","contribution":{"kind":"cadComputer","appId":"cad-play","moduleId":"spatial-shape","label":"Spatial Shape","iconId":"box","computersJson":"{}"}}]"#;
         let operation = CadConfigMutation::SetContributions { json: json.into() };
-        let next = operation.diff(&base);
+        let next = operation.diff(&base).diff().clone();
         assert_eq!(next.contributions_json, json);
         store::os_store::test_support::assert_op_line_round_trip(&operation);
     }

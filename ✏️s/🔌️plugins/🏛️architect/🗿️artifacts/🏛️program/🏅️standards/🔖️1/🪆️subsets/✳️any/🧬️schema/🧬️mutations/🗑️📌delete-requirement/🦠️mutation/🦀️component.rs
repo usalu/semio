@@ -18,7 +18,7 @@ pub struct DeleteRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "requirement", kind: "delete-requirement", record: "DeletedRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

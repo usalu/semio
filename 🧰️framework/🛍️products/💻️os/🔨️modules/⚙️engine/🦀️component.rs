@@ -50,12 +50,6 @@ impl<E: Engine> DynEngine for E {
     }
 }
 
-/// 🖥️ Object-safe host surface for derive/read (thin `&self` wrapper over `EngineCache` lands later).
-pub trait EngineHost: Send + Sync {
-    fn derive(&self, engine_id: &str, input: &[u8]) -> Result<EngineHandle, EngineFault>;
-    fn read(&self, handle: &EngineHandle) -> Result<Vec<u8>, EngineFault>;
-}
-
 /// 🧺 Opaque bag of handles an app may read during handle()/render — populated by host.
 pub struct EngineHandles {
     pub handles: Vec<EngineHandle>,

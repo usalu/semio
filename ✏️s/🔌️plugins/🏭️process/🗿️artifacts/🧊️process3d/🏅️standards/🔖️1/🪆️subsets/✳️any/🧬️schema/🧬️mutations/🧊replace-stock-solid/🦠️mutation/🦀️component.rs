@@ -26,7 +26,7 @@ pub struct ReplaceStockSolid {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ReplaceStockSolid {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "stock", kind: "replace-stock-solid", record: "ReplacedStockSolid" };
 
-    fn diff(&self, base: &Process3dSnapshot) -> Process3dDiff {
+    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::replace_stock_solid::diff::diff(self, base)
     }
 

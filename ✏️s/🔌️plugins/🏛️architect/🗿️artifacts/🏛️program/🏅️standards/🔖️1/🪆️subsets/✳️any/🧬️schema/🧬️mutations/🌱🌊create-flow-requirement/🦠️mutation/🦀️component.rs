@@ -18,7 +18,7 @@ pub struct CreateFlowRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateFlowRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "flow-requirement", kind: "create-flow-requirement", record: "CreatedFlowRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

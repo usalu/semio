@@ -2,8 +2,8 @@
 //! (nodes/edges/algorithm) and a geometry playground (a point cloud), combined into one snapshot.
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
@@ -109,12 +109,7 @@ pub struct MathematicalGeometry {
 
 impl Default for MathematicalGeometry {
     fn default() -> Self {
-        Self {
-            points: vec![(40.0, 220.0), (260.0, 40.0), (360.0, 140.0), (300.0, 260.0), (140.0, 300.0), (180.0, 160.0)]
-                .into_iter()
-                .map(MathematicalPoint::from)
-                .collect(),
-        }
+        Self { points: vec![(40.0, 220.0), (260.0, 40.0), (360.0, 140.0), (300.0, 260.0), (140.0, 300.0), (180.0, 160.0)].into_iter().map(MathematicalPoint::from).collect() }
     }
 }
 
@@ -144,10 +139,7 @@ pub type MathematicalComputedChild = store::ArtifactChild<SemioValueSnapshot>;
 /// 🌉 REAL bidirectional converter: node labels (prose/notation) <-> `text` runs, one run per node
 /// in `graph.nodes` order.
 pub fn mathematical_notation_from_graph(graph: &MathematicalGraph) -> SemioTextSnapshot {
-    SemioTextSnapshot {
-        schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(),
-        runs: graph.nodes.iter().map(|node| SemioTextRun { language: String::new(), content: node.label.clone(), marks: Vec::new() }).collect(),
-    }
+    SemioTextSnapshot { schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(), runs: graph.nodes.iter().map(|node| SemioTextRun { language: String::new(), content: node.label.clone(), marks: Vec::new() }).collect() }
 }
 
 /// 🌉 REAL bidirectional converter: node `id`/`x`/`y` (tabulated results) <-> `table` rows, one row
@@ -156,16 +148,8 @@ pub fn mathematical_notation_from_graph(graph: &MathematicalGraph) -> SemioTextS
 pub fn mathematical_results_from_graph(graph: &MathematicalGraph) -> SemioTableSnapshot {
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
-        columns: vec![
-            SemioTableColumn { name: "id".into(), kind: SemioTableCellKind::Str },
-            SemioTableColumn { name: "x".into(), kind: SemioTableCellKind::Float },
-            SemioTableColumn { name: "y".into(), kind: SemioTableCellKind::Float },
-        ],
-        rows: graph
-            .nodes
-            .iter()
-            .map(|node| SemioTableRow { cells: vec![SemioValue::Str { value: node.id.clone() }, SemioValue::Float { lexeme: format!("{}", node.x) }, SemioValue::Float { lexeme: format!("{}", node.y) }] })
-            .collect(),
+        columns: vec![SemioTableColumn { name: "id".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "x".into(), kind: SemioTableCellKind::Float }, SemioTableColumn { name: "y".into(), kind: SemioTableCellKind::Float }],
+        rows: graph.nodes.iter().map(|node| SemioTableRow { cells: vec![SemioValue::Str { value: node.id.clone() }, SemioValue::Float { lexeme: format!("{}", node.x) }, SemioValue::Float { lexeme: format!("{}", node.y) }] }).collect(),
     }
 }
 
@@ -191,10 +175,7 @@ pub fn mathematical_computed_from_state(graph: &MathematicalGraph, geometry: &Ma
             .points
             .iter()
             .map(|point| SemioValue::Map {
-                entries: vec![
-                    SemioValueEntry { key: "x".into(), value: SemioValue::Float { lexeme: format!("{}", point.x) } },
-                    SemioValueEntry { key: "y".into(), value: SemioValue::Float { lexeme: format!("{}", point.y) } },
-                ],
+                entries: vec![SemioValueEntry { key: "x".into(), value: SemioValue::Float { lexeme: format!("{}", point.x) } }, SemioValueEntry { key: "y".into(), value: SemioValue::Float { lexeme: format!("{}", point.y) } }],
             })
             .collect(),
     };
@@ -236,12 +217,8 @@ pub fn mathematical_graph_geometry_from_children(notation: &SemioTextSnapshot, r
             _ => 0.0,
         }
     }
-    let nodes: Vec<MathematicalNode> = results
-        .rows
-        .iter()
-        .enumerate()
-        .map(|(i, row)| MathematicalNode { id: cell_str(row, 0), label: notation.runs.get(i).map(|run| run.content.clone()).unwrap_or_default(), x: cell_f64(row, 1), y: cell_f64(row, 2) })
-        .collect();
+    let nodes: Vec<MathematicalNode> =
+        results.rows.iter().enumerate().map(|(i, row)| MathematicalNode { id: cell_str(row, 0), label: notation.runs.get(i).map(|run| run.content.clone()).unwrap_or_default(), x: cell_f64(row, 1), y: cell_f64(row, 2) }).collect();
 
     fn map_entries(value: &SemioValue) -> &[SemioValueEntry] {
         match value {
@@ -396,7 +373,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "computation.mathematical".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
@@ -477,19 +454,30 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.mathematical.standard.v1", "standard", "1", &[], None), ("s.mathematical.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.mathematical.schema.artifact", "schema", "s.mathematical.mathematical", &[("schema", "s.mathematical.mathematical")], None), ("s.mathematical.inference.artifact", "inference", "s.mathematical.mathematical.inference", &[("schema", "s.mathematical.mathematical.inference")], None),
-        ("s.mathematical.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None), ("s.mathematical.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.mathematical.grammar.document", "grammar", "mathematical.document", &[("grammar", "mathematical.document")], None), ("s.mathematical.grammar.op", "grammar", "mathematical.op", &[("grammar", "mathematical.op")], None),
-        ("s.mathematical.grammar.diff", "grammar", "mathematical.diff", &[("grammar", "mathematical.diff")], None), ("s.mathematical.grammar.pack", "grammar", "mathematical.pack", &[("grammar", "mathematical.pack")], None), ("s.mathematical.grammar.spr", "grammar", "mathematical.spr", &[("grammar", "mathematical.spr")], None),
+        ("s.mathematical.standard.v1", "standard", "1", &[], None),
+        ("s.mathematical.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.mathematical.schema.artifact", "schema", "s.mathematical.mathematical", &[("schema", "s.mathematical.mathematical")], None),
+        ("s.mathematical.inference.artifact", "inference", "s.mathematical.mathematical.inference", &[("schema", "s.mathematical.mathematical.inference")], None),
+        ("s.mathematical.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
+        ("s.mathematical.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.mathematical.grammar.document", "grammar", "mathematical.document", &[("grammar", "mathematical.document")], None),
+        ("s.mathematical.grammar.op", "grammar", "mathematical.op", &[("grammar", "mathematical.op")], None),
+        ("s.mathematical.grammar.diff", "grammar", "mathematical.diff", &[("grammar", "mathematical.diff")], None),
+        ("s.mathematical.grammar.pack", "grammar", "mathematical.pack", &[("grammar", "mathematical.pack")], None),
+        ("s.mathematical.grammar.spr", "grammar", "mathematical.spr", &[("grammar", "mathematical.spr")], None),
         ("s.mathematical.codec.document.v1", "codec", "semio.mathematical/v1:mathematical", &[("codec", "semio.mathematical/v1"), ("extension", "mathematical")], None),
-        ("s.mathematical.localization.en", "localization", "Mathematical", &[], Some(("en", "Mathematical"))), ("s.mathematical.localization.de", "localization", "Mathematik", &[], Some(("de", "Mathematik"))),
+        ("s.mathematical.localization.en", "localization", "Mathematical", &[], Some(("en", "Mathematical"))),
+        ("s.mathematical.localization.de", "localization", "Mathematik", &[], Some(("de", "Mathematik"))),
     ];
     let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.mathematical")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
-        for (namespace, value) in *claims { capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?; }
-        if let Some((locale, text)) = localization { capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?; }
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
         definition = definition.capability(capability)?;
     }
     Ok(definition)
@@ -530,28 +518,3 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::mathematical::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("MathematicalComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
-}
-//#endregion 🚪️DerivedIoRegistry

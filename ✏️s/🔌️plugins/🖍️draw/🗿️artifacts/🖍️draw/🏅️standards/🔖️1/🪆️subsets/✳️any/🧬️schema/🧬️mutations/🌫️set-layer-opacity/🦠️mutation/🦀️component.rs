@@ -22,7 +22,7 @@ pub fn set_layer_opacity(layer_id: String, opacity: f64) -> DrawMutation {
 impl protocol::MutationKind<DrawSnapshot, DrawMutation> for SetLayerOpacity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layer", kind: "set-layer-opacity", record: "SetLayerOpacity" };
 
-    fn diff(&self, base: &DrawSnapshot) -> DrawDiff {
+    fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {

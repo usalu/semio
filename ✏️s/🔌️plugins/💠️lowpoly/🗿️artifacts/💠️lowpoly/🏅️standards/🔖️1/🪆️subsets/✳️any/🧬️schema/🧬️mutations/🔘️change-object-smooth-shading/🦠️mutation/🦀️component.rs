@@ -14,7 +14,7 @@ pub struct ChangeObjectSmoothShading {
 impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for ChangeObjectSmoothShading {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "object", kind: "change-object-smooth-shading", record: "ChangedObjectSmoothShading" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff {
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

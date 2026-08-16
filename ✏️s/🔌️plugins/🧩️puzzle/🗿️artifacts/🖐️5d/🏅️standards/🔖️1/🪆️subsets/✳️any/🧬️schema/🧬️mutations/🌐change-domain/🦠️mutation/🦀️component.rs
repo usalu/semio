@@ -21,7 +21,7 @@ pub fn change_domain(new_domain: String) -> Puzzle5dMutation {
 impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangeDomain {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "domain", kind: "change-domain", record: "ChangedDomain" };
 
-    fn diff(&self, base: &Puzzle5dSnapshot) -> Puzzle5dDiff {
+    fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {

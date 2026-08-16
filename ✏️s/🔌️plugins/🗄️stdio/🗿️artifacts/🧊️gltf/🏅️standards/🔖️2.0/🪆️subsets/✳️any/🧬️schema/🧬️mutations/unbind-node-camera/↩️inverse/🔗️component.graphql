@@ -1,0 +1,2 @@
+# unbind-node-camera inverse typed facet.
+input GltfUnbindNodeCameraInverseV1 { operation: GltfUnbindNodeCameraPayloadV1!, before: Int, touchedPaths: [String!]! }

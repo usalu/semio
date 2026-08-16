@@ -6,7 +6,11 @@ use crate::artifacts::program::diff::ProgramDeliveryDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🌱️ `added = [payload row]` — the row lands at the end of `program.delivery` on apply.
-pub fn diff(payload: &CreateDeliveryConstraint, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { delivery: Some(ProgramDeliveryDelta { added: vec![payload.delivery_constraint.clone()], ..Default::default() }), ..Default::default() }
+/// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
+pub fn diff(payload: &CreateDeliveryConstraint, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let id = payload.delivery_constraint.header.id.clone();
+    if base.delivery.iter().any(|row| row.header.id == id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A delivery constraint already exists with this id.", [id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { delivery: Some(ProgramDeliveryDelta { added: vec![payload.delivery_constraint.clone()], ..Default::default() }), ..Default::default() })
 }

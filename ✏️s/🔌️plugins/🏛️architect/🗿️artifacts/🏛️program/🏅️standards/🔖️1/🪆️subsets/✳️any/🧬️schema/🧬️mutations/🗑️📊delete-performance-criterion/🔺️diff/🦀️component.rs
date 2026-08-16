@@ -6,7 +6,10 @@ use crate::artifacts::program::diff::ProgramPerformanceDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🗑️ `removed = [id]`.
-pub fn diff(payload: &DeletePerformanceCriterion, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { performance: Some(ProgramPerformanceDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() }
+/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
+pub fn diff(payload: &DeletePerformanceCriterion, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    if !base.performance.iter().any(|row| row.header.id == payload.id) {
+        return protocol::MutationOutcome::error("mutation.target-missing", "No performance criterion exists with this id.", [payload.id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { performance: Some(ProgramPerformanceDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() })
 }

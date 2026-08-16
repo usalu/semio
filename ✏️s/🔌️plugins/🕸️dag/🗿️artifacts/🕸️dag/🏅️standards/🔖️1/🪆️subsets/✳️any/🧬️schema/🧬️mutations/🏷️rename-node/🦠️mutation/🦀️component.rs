@@ -23,7 +23,7 @@ pub fn rename_node(id: String, new_id: String) -> DagMutation {
 impl protocol::MutationKind<DagSnapshot, DagMutation> for RenameNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "node", kind: "rename-node", record: "RenamedNode" };
 
-    fn diff(&self, base: &DagSnapshot) -> DagDiff {
+    fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {

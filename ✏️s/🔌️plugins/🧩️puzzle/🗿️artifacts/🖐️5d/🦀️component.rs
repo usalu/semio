@@ -4,7 +4,7 @@
 //! the 3d artifact's own precompute-session error, and the `artifact_kind()` spec the play app's
 //! manifest binds. Sibling nodes: `🔺️diff`, `🔧️op`, `🗣️dsl`, `🎒️pack`, `📡️spr`. No `⚙️engine` node —
 //! per ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, an artifact is a `🧬️schema` +
-//! `🚪️io` system only; behaviour lives in `crate::apps::puzzle5d`.
+//! `🚪️io` system only; behaviour lives in the sibling editor module, `crate::editor::puzzle5d`.
 
 pub use crate::artifacts::puzzle5d::schema::diff::Puzzle5dDiff;
 pub use crate::artifacts::puzzle5d::schema::mutations::Puzzle5dMutation;
@@ -22,6 +22,15 @@ pub enum Puzzle5dError {
 //#endregion ⚠️ Errors
 
 pub const PUZZLE_5D_SCHEMA: &str = "puzzle.5d";
+
+/// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1/§7.4 — lives at the
+/// ARTIFACT level (not under `editor`/`viewer`) specifically so a viewer file can read it without
+/// ever importing through the sibling editor module. `artifact_kind` matches this file's own
+/// `"s.puzzle5d.schema.artifact"` capability row descriptor (`s.puzzle.puzzle5d`), `standard`/
+/// `subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — canonical surface id
+/// `s.puzzle.puzzle5d@1/*#editor` / `s.puzzle.puzzle5d@1/*#viewer`.
+pub const PUZZLE5D_DIALECT: semio_framework_plugin::app::Dialect =
+    semio_framework_plugin::app::Dialect { artifact_kind: "s.puzzle.puzzle5d", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 
 // #region 🔖️Document
 /// 📝️ Free-text scene description — the only field seen under the fixture's top-level `meta`.
@@ -841,7 +850,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// 🔖️ Puzzle5d's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1, relocated off
 /// the former `⚙️engine` to the artifact root — `declaration()` describes the artifact itself, not
 /// engine behaviour) — replaces the `ComposerEntry` half of the old `register_io()`. The `"5d.puzzle"`
-/// OS-host mesh export/import bridge (`register_mesh_io()`, now `crate::apps::puzzle5d::register_mesh_io`
+/// OS-host mesh export/import bridge (`register_mesh_io()`, now `crate::editor::puzzle5d::register_mesh_io`
 /// per ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) has NO `ArtifactDeclaration`
 /// field — same OS media-host 14-function family flagged on puzzle2d's `declaration()` doc — so it
 /// stays wired through `🧩️puzzle/🦀️component.rs`'s own `.setup()`, not here.
@@ -888,7 +897,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::puzzle5d_artifact_inference_descriptor()])
         .composers(crate::artifacts::puzzle5d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::puzzle5d::Puzzle5dPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>()
         .try_build()
 }
 

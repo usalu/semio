@@ -1801,6 +1801,29 @@ const DEFAULT_APPS_SETTINGS_TAB_LABEL: FrozenLabel = { en: "Default apps", de: "
 export function defaultAppsSettingsTabText(locale: string): string {
   return frozenLabelText(DEFAULT_APPS_SETTINGS_TAB_LABEL, locale);
 }
+/** 👁️✏️ {@link defaultAppsSettingsTabText} as a {@link UiLabel} — for `PanelTabNode.name`, which
+ * (unlike a plain tree-item `label`) always takes the `wireLabel`-wrapped shape `shellLabel` returns. */
+export function defaultAppsSettingsTabLabel(locale: string): UiLabel {
+  return wireLabel(defaultAppsSettingsTabText(locale));
+}
+
+/** 👁️✏️ Not itself a contract-frozen string (the freeze pins the chip/"Open with…"/"Set as
+ * default"/"Default apps" vocabulary, not this one) — the text for the non-blocking notice contract
+ * freeze §2.3/§5 requires when a `"viewer.read-only"` fault surfaces, or a viewer-role dispatch is
+ * blocked client-side before it ever reaches the host. */
+const VIEWER_READ_ONLY_NOTICE_LABEL: FrozenLabel = { en: "This is a read-only viewer — editing is disabled.", de: "Dies ist ein schreibgeschützter Betrachter – Bearbeiten ist deaktiviert." };
+export function viewerReadOnlyNoticeText(locale: string): string {
+  return frozenLabelText(VIEWER_READ_ONLY_NOTICE_LABEL, locale);
+}
+
+/** 👁️✏️ The `SettingsDefaultApps` table's "no pin" option — no existing `ui.common.*` chrome key
+ * covers a bare "None" (checked: `ui.common.close`/`.none` are not registered), so this follows the
+ * same local-resolution idiom as the rest of this region rather than adding one to the out-of-lease
+ * chrome dictionary for a single call site. */
+const NONE_OPTION_LABEL: FrozenLabel = { en: "None", de: "Keine" };
+export function noneOptionText(locale: string): string {
+  return frozenLabelText(NONE_OPTION_LABEL, locale);
+}
 
 /** 👁️✏️ Palette command ids, frozen (contract freeze §5) — `owner: "os"`, no `os.` prefix (unlike the
  * wire `AppCommand`s in `💻️os/🎮️commands/`, which these are NOT the same thing as: selecting either

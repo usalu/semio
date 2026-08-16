@@ -1685,12 +1685,24 @@ export type AppCommandValue =
       };
     }
   | { readonly clearDefaultApp: { readonly seq: number; readonly artifact_kind: string; readonly standard: string; readonly subset: string; readonly role: number } }
+  | { readonly setMergePolicy: { readonly seq: number; readonly policy: number } }
+  | { readonly resolveConflict: { readonly seq: number; readonly conflict_id: string; readonly resolution: number } }
+  | { readonly readConflicts: { readonly seq: number } }
   | "Bye";
 
 export type AppFrameValue =
   | { readonly Welcome: { readonly channel_version: number; readonly instance: number; readonly manifest: readonly number[] } }
   | { readonly Done: { readonly in_reply_to: number } }
-  | { readonly Invocation: { readonly in_reply_to: number; readonly output: readonly number[]; readonly diagnostics: readonly number[]; readonly ui_scope: readonly number[]; readonly history_patch: readonly number[] } }
+  | {
+      readonly Invocation: {
+        readonly in_reply_to: number;
+        readonly output: readonly number[];
+        readonly diagnostics: readonly number[];
+        readonly ui_scope: readonly number[];
+        readonly history_patch: readonly number[];
+        readonly messages: readonly number[];
+      };
+    }
   | { readonly UiSection: { readonly in_reply_to: number | null; readonly kind: number; readonly key: string; readonly hash: number; readonly body: readonly number[] | null } }
   | { readonly Effects: { readonly in_reply_to: number | null; readonly effects: readonly (readonly number[])[] } }
   | { readonly Events: { readonly in_reply_to: number | null; readonly events: readonly (readonly number[])[] } }
@@ -1701,7 +1713,7 @@ export type AppFrameValue =
   | { readonly ContextMenu: { readonly in_reply_to: number; readonly items: readonly number[] } }
   | { readonly Media: { readonly in_reply_to: number; readonly port: string; readonly descriptor: readonly number[]; readonly data: readonly number[] } }
   | { readonly MediaFingerprint: { readonly in_reply_to: number; readonly port: string; readonly fingerprint: readonly number[] } }
-  | { readonly Error: { readonly in_reply_to: number | null; readonly fault: readonly number[] } }
+  | { readonly Error: { readonly in_reply_to: number | null; readonly fault: readonly number[]; readonly report: readonly number[] } }
   | { readonly Emit: { readonly in_reply_to: number; readonly document_ops: readonly number[]; readonly config_ops: readonly number[]; readonly draft_ops: readonly number[]; readonly output: readonly number[]; readonly diagnostics: readonly number[] } }
   | { readonly Draft: { readonly in_reply_to: number; readonly pack: readonly number[]; readonly spr: readonly number[]; readonly ops: string } }
   | { readonly Children: { readonly in_reply_to: number; readonly entries: readonly ChildPackEntry[] } }
@@ -1719,7 +1731,9 @@ export type AppFrameValue =
     }
   | { readonly transactionPrepared: { readonly txn_id: string; readonly foreign: readonly (readonly number[])[]; readonly rejection: readonly number[] } }
   | { readonly transactionCommitted: { readonly txn_id: string; readonly edit_id: string } }
-  | { readonly transactionRolledBack: { readonly txn_id: string } };
+  | { readonly transactionRolledBack: { readonly txn_id: string } }
+  | { readonly MergeReport: { readonly in_reply_to: number | null; readonly report: readonly number[] } }
+  | { readonly Conflicts: { readonly in_reply_to: number | null; readonly conflicts: readonly number[] } };
 //#endregion 🔖️Types
 
 //#region 🔖️Combinators
@@ -1780,11 +1794,13 @@ const APP_COMMAND_TAGS = {
   MediaFingerprint: 16, Bye: 17, PureCommand: 18, LoadChildren: 19, ReadChildren: 20, ReadHistory: 21,
   transactionPrepare: 22, transactionCommit: 23, transactionRollback: 24, transactionUndo: 25, transactionRedo: 26,
   openArtifact: 27, setDefaultApp: 28, clearDefaultApp: 29,
+  setMergePolicy: 30, resolveConflict: 31, readConflicts: 32,
 } as const;
 const APP_FRAME_TAGS = {
   Welcome: 0, Done: 1, Invocation: 2, UiSection: 3, Effects: 4, Events: 5, DocumentChanged: 6, Document: 7,
   Config: 8, ConfigChanged: 9, ContextMenu: 10, Media: 11, MediaFingerprint: 12, Error: 13, Emit: 14, Draft: 15, Children: 16, Ephemeral: 17, HistorySnapshot: 18,
   transactionProposal: 19, transactionPrepared: 20, transactionCommitted: 21, transactionRolledBack: 22,
+  MergeReport: 23, Conflicts: 24,
 } as const;
 
 /** 📤️ `tag u8 | fields` — the TS twin of `protocol_channel::encode_app_command` (agreed contract). */
@@ -1939,6 +1955,18 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
     writeStr(out, cmd.clearDefaultApp.standard);
     writeStr(out, cmd.clearDefaultApp.subset);
     out.push(cmd.clearDefaultApp.role);
+  } else if ("setMergePolicy" in cmd) {
+    out.push(APP_COMMAND_TAGS.setMergePolicy);
+    writeVarintU64(out, cmd.setMergePolicy.seq);
+    out.push(cmd.setMergePolicy.policy);
+  } else if ("resolveConflict" in cmd) {
+    out.push(APP_COMMAND_TAGS.resolveConflict);
+    writeVarintU64(out, cmd.resolveConflict.seq);
+    writeStr(out, cmd.resolveConflict.conflict_id);
+    out.push(cmd.resolveConflict.resolution);
+  } else if ("readConflicts" in cmd) {
+    out.push(APP_COMMAND_TAGS.readConflicts);
+    writeVarintU64(out, cmd.readConflicts.seq);
   } else {
     throw new Error("encodeAppCommand: unrecognized command variant");
   }
@@ -2072,6 +2100,21 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
       pos[0] += 1;
       return { clearDefaultApp: { seq, artifact_kind, standard, subset, role } };
     }
+    case APP_COMMAND_TAGS.setMergePolicy: {
+      const seq = readVarintU64(bytes, pos);
+      const policy = bytes[pos[0]]!;
+      pos[0] += 1;
+      return { setMergePolicy: { seq, policy } };
+    }
+    case APP_COMMAND_TAGS.resolveConflict: {
+      const seq = readVarintU64(bytes, pos);
+      const conflict_id = readStr(bytes, pos);
+      const resolution = bytes[pos[0]]!;
+      pos[0] += 1;
+      return { resolveConflict: { seq, conflict_id, resolution } };
+    }
+    case APP_COMMAND_TAGS.readConflicts:
+      return { readConflicts: { seq: readVarintU64(bytes, pos) } };
     case APP_COMMAND_TAGS.Bye:
       return "Bye";
     default:
@@ -2097,6 +2140,7 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     writeBytes(out, frame.Invocation.diagnostics);
     writeBytes(out, frame.Invocation.ui_scope);
     writeBytes(out, frame.Invocation.history_patch);
+    writeBytes(out, frame.Invocation.messages);
   } else if ("UiSection" in frame) {
     out.push(APP_FRAME_TAGS.UiSection);
     writeOptU64(out, frame.UiSection.in_reply_to);
@@ -2151,6 +2195,7 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     out.push(APP_FRAME_TAGS.Error);
     writeOptU64(out, frame.Error.in_reply_to);
     writeBytes(out, frame.Error.fault);
+    writeBytes(out, frame.Error.report);
   } else if ("Emit" in frame) {
     out.push(APP_FRAME_TAGS.Emit);
     writeVarintU64(out, frame.Emit.in_reply_to);
@@ -2198,6 +2243,14 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
   } else if ("transactionRolledBack" in frame) {
     out.push(APP_FRAME_TAGS.transactionRolledBack);
     writeStr(out, frame.transactionRolledBack.txn_id);
+  } else if ("MergeReport" in frame) {
+    out.push(APP_FRAME_TAGS.MergeReport);
+    writeOptU64(out, frame.MergeReport.in_reply_to);
+    writeBytes(out, frame.MergeReport.report);
+  } else if ("Conflicts" in frame) {
+    out.push(APP_FRAME_TAGS.Conflicts);
+    writeOptU64(out, frame.Conflicts.in_reply_to);
+    writeBytes(out, frame.Conflicts.conflicts);
   } else {
     throw new Error("encodeAppFrame: unrecognized frame variant");
   }
@@ -2223,7 +2276,8 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
       const diagnostics = readBytes(bytes, pos);
       const ui_scope = readBytes(bytes, pos);
       const history_patch = readBytes(bytes, pos);
-      return { Invocation: { in_reply_to, output, diagnostics, ui_scope, history_patch } };
+      const messages = readBytes(bytes, pos);
+      return { Invocation: { in_reply_to, output, diagnostics, ui_scope, history_patch, messages } };
     }
     case APP_FRAME_TAGS.UiSection: {
       const in_reply_to = readOptU64(bytes, pos);
@@ -2280,7 +2334,8 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
     case APP_FRAME_TAGS.Error: {
       const in_reply_to = readOptU64(bytes, pos);
       const fault = readBytes(bytes, pos);
-      return { Error: { in_reply_to, fault } };
+      const report = readBytes(bytes, pos);
+      return { Error: { in_reply_to, fault, report } };
     }
     case APP_FRAME_TAGS.Emit:
       return { Emit: { in_reply_to: readVarintU64(bytes, pos), document_ops: readBytes(bytes, pos), config_ops: readBytes(bytes, pos), draft_ops: readBytes(bytes, pos), output: readBytes(bytes, pos), diagnostics: readBytes(bytes, pos) } };
@@ -2311,6 +2366,10 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
       return { transactionCommitted: { txn_id: readStr(bytes, pos), edit_id: readStr(bytes, pos) } };
     case APP_FRAME_TAGS.transactionRolledBack:
       return { transactionRolledBack: { txn_id: readStr(bytes, pos) } };
+    case APP_FRAME_TAGS.MergeReport:
+      return { MergeReport: { in_reply_to: readOptU64(bytes, pos), report: readBytes(bytes, pos) } };
+    case APP_FRAME_TAGS.Conflicts:
+      return { Conflicts: { in_reply_to: readOptU64(bytes, pos), conflicts: readBytes(bytes, pos) } };
     default:
       throw new Error(`decodeAppFrame: unknown tag ${bytes[0]}`);
   }
@@ -2849,13 +2908,17 @@ if (import.meta.vitest) {
       { openArtifact: { seq: 28, artifact_ref: "s.cad.cad@1/*#editor", role: 1, plugin_id: "cad", app_id: "s.cad.cad@1/*#editor" } },
       { setDefaultApp: { seq: 29, artifact_kind: "s.cad.cad", standard: "1", subset: "*", role: 1, plugin_id: "cad", app_id: "s.cad.cad@1/*#editor" } },
       { clearDefaultApp: { seq: 30, artifact_kind: "s.cad.cad", standard: "1", subset: "*", role: 0 } },
+      { setMergePolicy: { seq: 31, policy: 1 } },
+      { resolveConflict: { seq: 32, conflict_id: "conflict-1", resolution: 0 } },
+      { readConflicts: { seq: 33 } },
       "Bye",
     ];
 
     const sampleFrames: readonly AppFrameValue[] = [
       { Welcome: { channel_version: 8, instance: 7, manifest: [1, 2, 3] } },
       { Done: { in_reply_to: 1 } },
-      { Invocation: { in_reply_to: 2, output: [1], diagnostics: [], ui_scope: [], history_patch: [] } },
+      { Invocation: { in_reply_to: 2, output: [1], diagnostics: [], ui_scope: [], history_patch: [], messages: [] } },
+      { Invocation: { in_reply_to: 2, output: [1], diagnostics: [], ui_scope: [], history_patch: [], messages: [9] } },
       { UiSection: { in_reply_to: 3, kind: 1, key: "panel-a", hash: 42, body: [1, 2] } },
       { UiSection: { in_reply_to: null, kind: 1, key: "panel-b", hash: 0, body: null } },
       { Effects: { in_reply_to: 4, effects: [[1], [2, 3]] } },
@@ -2866,8 +2929,8 @@ if (import.meta.vitest) {
       { ContextMenu: { in_reply_to: 7, items: [1, 2, 3] } },
       { Media: { in_reply_to: 8, port: "out-1", descriptor: [1], data: [2] } },
       { MediaFingerprint: { in_reply_to: 9, port: "fp-1", fingerprint: [1, 2, 3, 4] } },
-      { Error: { in_reply_to: 10, fault: [1, 2, 3] } },
-      { Error: { in_reply_to: null, fault: [4, 5] } },
+      { Error: { in_reply_to: 10, fault: [1, 2, 3], report: [6] } },
+      { Error: { in_reply_to: null, fault: [4, 5], report: [] } },
       { Emit: { in_reply_to: 11, document_ops: [1], config_ops: [2], draft_ops: [3], output: [4], diagnostics: [5] } },
       { Draft: { in_reply_to: 12, pack: [1], spr: [2], ops: "d" } },
       { Children: { in_reply_to: 13, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } },
@@ -2878,6 +2941,10 @@ if (import.meta.vitest) {
       { transactionPrepared: { txn_id: "txn-1", foreign: [], rejection: [1, 2] } },
       { transactionCommitted: { txn_id: "txn-1", edit_id: "edit-1" } },
       { transactionRolledBack: { txn_id: "txn-1" } },
+      { MergeReport: { in_reply_to: 16, report: [1, 2] } },
+      { MergeReport: { in_reply_to: null, report: [] } },
+      { Conflicts: { in_reply_to: 17, conflicts: [3] } },
+      { Conflicts: { in_reply_to: null, conflicts: [] } },
     ];
 
     it.each(sampleCommands.map((cmd) => [cmd] as const))("round-trips AppCommand %j", (cmd) => {
@@ -2888,7 +2955,7 @@ if (import.meta.vitest) {
       expect(decodeAppFrame(encodeAppFrame(frame))).toEqual(frame);
     });
 
-    it("tags every AppCommand variant per the agreed contract order (Hello=0 ... ClearDefaultApp=29)", () => {
+    it("tags every AppCommand variant per the agreed contract order (Hello=0 ... ReadConflicts=32)", () => {
       expect(encodeAppCommand({ Hello: { channel_version: 0, app_id: "", actor: "", config: [] } })[0]).toBe(0);
       expect(encodeAppCommand({ ConfigCommand: { seq: 0, command: [] } })[0]).toBe(1);
       expect(encodeAppCommand("Bye")[0]).toBe(17);
@@ -2902,17 +2969,22 @@ if (import.meta.vitest) {
       expect(encodeAppCommand({ openArtifact: { seq: 0, artifact_ref: "", role: 0, plugin_id: "", app_id: "" } })[0]).toBe(27);
       expect(encodeAppCommand({ setDefaultApp: { seq: 0, artifact_kind: "", standard: "", subset: "", role: 0, plugin_id: "", app_id: "" } })[0]).toBe(28);
       expect(encodeAppCommand({ clearDefaultApp: { seq: 0, artifact_kind: "", standard: "", subset: "", role: 0 } })[0]).toBe(29);
+      expect(encodeAppCommand({ setMergePolicy: { seq: 0, policy: 0 } })[0]).toBe(30);
+      expect(encodeAppCommand({ resolveConflict: { seq: 0, conflict_id: "", resolution: 0 } })[0]).toBe(31);
+      expect(encodeAppCommand({ readConflicts: { seq: 0 } })[0]).toBe(32);
     });
 
-    it("tags every AppFrame variant per the agreed contract order (Welcome=0 ... transactionRolledBack=22)", () => {
+    it("tags every AppFrame variant per the agreed contract order (Welcome=0 ... Conflicts=24)", () => {
       expect(encodeAppFrame({ Welcome: { channel_version: 0, instance: 0, manifest: [] } })[0]).toBe(0);
-      expect(encodeAppFrame({ Error: { in_reply_to: null, fault: [] } })[0]).toBe(13);
+      expect(encodeAppFrame({ Error: { in_reply_to: null, fault: [], report: [] } })[0]).toBe(13);
       expect(encodeAppFrame({ Ephemeral: { presence: [], presence_generation: 0, transient_generation: 0 } })[0]).toBe(17);
       expect(encodeAppFrame({ HistorySnapshot: { in_reply_to: 0, history_patch: [] } })[0]).toBe(18);
       expect(encodeAppFrame({ transactionProposal: { in_reply_to: 0, proposal_id: "", local_ops: [], description: "", coalesce_key: "", foreign: [] } })[0]).toBe(19);
       expect(encodeAppFrame({ transactionPrepared: { txn_id: "", foreign: [], rejection: [] } })[0]).toBe(20);
       expect(encodeAppFrame({ transactionCommitted: { txn_id: "", edit_id: "" } })[0]).toBe(21);
       expect(encodeAppFrame({ transactionRolledBack: { txn_id: "" } })[0]).toBe(22);
+      expect(encodeAppFrame({ MergeReport: { in_reply_to: null, report: [] } })[0]).toBe(23);
+      expect(encodeAppFrame({ Conflicts: { in_reply_to: null, conflicts: [] } })[0]).toBe(24);
     });
 
     /**
@@ -2977,7 +3049,7 @@ if (import.meta.vitest) {
             const frameFixtures: readonly (readonly [string, AppFrameValue])[] = [
         ["Welcome", { Welcome: { channel_version: 8, instance: 1, manifest: [1] } }],
         ["Done", { Done: { in_reply_to: 1 } }],
-        ["Invocation", { Invocation: { in_reply_to: 1, output: [1], diagnostics: [], ui_scope: [], history_patch: [] } }],
+        ["Invocation", { Invocation: { in_reply_to: 1, output: [1], diagnostics: [], ui_scope: [], history_patch: [], messages: [] } }],
         ["UiSection", { UiSection: { in_reply_to: 1, kind: 1, key: "k", hash: 1, body: null } }],
         ["Effects", { Effects: { in_reply_to: null, effects: [[1]] } }],
         ["Events", { Events: { in_reply_to: null, events: [] } }],
@@ -2988,7 +3060,7 @@ if (import.meta.vitest) {
         ["ContextMenu", { ContextMenu: { in_reply_to: 1, items: [1] } }],
         ["Media", { Media: { in_reply_to: 1, port: "p", descriptor: [1], data: [2] } }],
         ["MediaFingerprint", { MediaFingerprint: { in_reply_to: 1, port: "p", fingerprint: [1] } }],
-        ["Error", { Error: { in_reply_to: null, fault: [99] } }],
+        ["Error", { Error: { in_reply_to: null, fault: [99], report: [] } }],
         ["Emit", { Emit: { in_reply_to: 1, document_ops: [1], config_ops: [], draft_ops: [], output: [2], diagnostics: [] } }],
         ["Draft", { Draft: { in_reply_to: 1, pack: [1], spr: [2], ops: "d" } }],
         ["Children", { Children: { in_reply_to: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } }],
@@ -2998,7 +3070,7 @@ if (import.meta.vitest) {
             const frameGoldenHex: Readonly<Record<string, string>> = {
         Welcome: "0008010101",
         Done: "0101",
-        Invocation: "02010101000000",
+        Invocation: "0201010100000000",
         UiSection: "03010101016b0100",
         Effects: "0400010101",
         Events: "050000",
@@ -3009,7 +3081,7 @@ if (import.meta.vitest) {
         ContextMenu: "0a010101",
         Media: "0b01017001010102",
         MediaFingerprint: "0c0101700101",
-        Error: "0d000163",
+        Error: "0d00016300",
         Emit: "0e0101010000010200",
         Draft: "0f01010101020164",
         Children: "1001010173016301640101",
@@ -3100,6 +3172,47 @@ if (import.meta.vitest) {
       for (const [label, value] of Object.entries(commandCases)) {
         expect(hex(encodeAppCommand(value)), `AppCommand::${label}`).toBe(commandVectors[label]);
         expect(decodeAppCommand(new Uint8Array(Buffer.from(commandVectors[label]!, "hex")))).toEqual(value);
+      }
+    });
+
+    /**
+     * 🔗️ Cross-language drift guard for the C8 merge-policy/conflict variants (tags 30-32/23-24)
+     * plus the extended `Invocation`/`Error` frames: both this suite and `protocol_channel`'s
+     * `channel_merge_fixtures_match_shared_cross_language_json_vectors` Rust test load the SAME two
+     * JSON files under `🧫️fixtures/📡️channel/` — see contract-freeze.md §C8 of
+     * `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/`.
+     */
+    it("matches the shared cross-language merge fixture vectors, byte-for-byte", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, join } = await import("node:path");
+      const here = dirname(fileURLToPath(import.meta.url));
+      const channelFixturesDir = join(here, "🧫️fixtures", "📡️channel");
+      const commandVectors = JSON.parse(readFileSync(join(channelFixturesDir, "app-command-merge.json"), "utf8")) as Record<string, string>;
+      const frameVectors = JSON.parse(readFileSync(join(channelFixturesDir, "app-frame-merge.json"), "utf8")) as Record<string, string>;
+      const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+
+      const commandCases: Readonly<Record<string, AppCommandValue>> = {
+        SetMergePolicy: { setMergePolicy: { seq: 5, policy: 1 } },
+        ResolveConflict: { resolveConflict: { seq: 6, conflict_id: "conflict-1", resolution: 0 } },
+        ReadConflicts: { readConflicts: { seq: 7 } },
+      };
+      const frameCases: Readonly<Record<string, AppFrameValue>> = {
+        MergeReport: { MergeReport: { in_reply_to: 1, report: [1] } },
+        Conflicts: { Conflicts: { in_reply_to: null, conflicts: [2] } },
+        Invocation: { Invocation: { in_reply_to: 1, output: [1], diagnostics: [], ui_scope: [], history_patch: [], messages: [9] } },
+        Error: { Error: { in_reply_to: null, fault: [99], report: [7] } },
+      };
+
+      expect(Object.keys(commandVectors).sort()).toEqual(Object.keys(commandCases).sort());
+      expect(Object.keys(frameVectors).sort()).toEqual(Object.keys(frameCases).sort());
+      for (const [label, value] of Object.entries(commandCases)) {
+        expect(hex(encodeAppCommand(value)), `AppCommand::${label}`).toBe(commandVectors[label]);
+        expect(decodeAppCommand(new Uint8Array(Buffer.from(commandVectors[label]!, "hex")))).toEqual(value);
+      }
+      for (const [label, value] of Object.entries(frameCases)) {
+        expect(hex(encodeAppFrame(value)), `AppFrame::${label}`).toBe(frameVectors[label]);
+        expect(decodeAppFrame(new Uint8Array(Buffer.from(frameVectors[label]!, "hex")))).toEqual(value);
       }
     });
   });

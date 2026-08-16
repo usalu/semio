@@ -98,9 +98,16 @@ pub enum ArchitectPresenceMutation {
 impl Mutation<ArchitectPresence> for ArchitectPresenceMutation {
     type Diff = ArchitectPresence;
 
-    fn diff(&self, _base: &ArchitectPresence) -> ArchitectPresence {
+    /// ✏️ Warning `mutation.no-op` if `presence` already equals `base` (empty diff), else the
+    /// whole-snapshot replacement.
+    fn diff(&self, base: &ArchitectPresence) -> protocol::MutationOutcome<ArchitectPresence> {
         match self {
-            Self::Snapshot { presence } => presence.clone(),
+            Self::Snapshot { presence } => {
+                if presence == base {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", "Presence already matches the requested value.");
+                }
+                protocol::MutationOutcome::new(presence.clone())
+            }
         }
     }
 

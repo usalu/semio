@@ -18,7 +18,7 @@ pub struct DeleteKnowledgeRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteKnowledgeRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "knowledge-record", kind: "delete-knowledge-record", record: "DeletedKnowledgeRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

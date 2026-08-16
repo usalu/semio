@@ -1,0 +1,8 @@
+# reorder-morph-target-attributes mutation facet.
+input GltfReorderMorphTargetAttributesPayloadV1 {
+  mesh: Int!
+  primitive: Int!
+  target: Int!
+  order: [String!]!
+}
+type GltfReorderMorphTargetAttributesMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

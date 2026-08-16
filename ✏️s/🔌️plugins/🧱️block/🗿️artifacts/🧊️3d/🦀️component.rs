@@ -213,7 +213,7 @@ fn default_spacing() -> f64 {
 }
 
 fn default_active_utility() -> String {
-    crate::apps::block3d::BLOCK3D_UTILITY_SELECT.into()
+    crate::editor::block3d::BLOCK3D_UTILITY_SELECT.into()
 }
 
 impl Block3dWindowView {
@@ -241,7 +241,7 @@ pub struct Block3dBrushPreview {
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — the canonical `3d.block` declaration, stitched into
-/// `crate::apps::block3d::create_block3d_app`.
+/// `crate::editor::block3d::create_block3d_app`.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.block".into(),
@@ -258,6 +258,17 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         import_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
     }
 }
+
+/// 🎯️ Fully-qualified dialect coordinate for `s.block.block3d@1/*` (ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1/§2.4) — lives at the ARTIFACT level
+/// (not under `editor`/`viewer`) specifically so a viewer file can read it without ever importing
+/// through the sibling editor module. `artifact_kind` matches the literal 3rd-column descriptor of
+/// this file's own `("s.block3d.schema.artifact", "schema", "s.block.block3d", …)` row in
+/// `definition()` above; `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the canonical surface id is
+/// `s.block.block3d@1/*#editor` / `s.block.block3d@1/*#viewer`, exactly the contract §1 grammar.
+pub const BLOCK3D_DIALECT: semio_framework_plugin::app::Dialect =
+    semio_framework_plugin::app::Dialect { artifact_kind: "s.block.block3d", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 //#endregion 🔖️ArtifactKind
 
 //#region 🧪️Tests
@@ -279,7 +290,7 @@ mod tests {
 /// the old side-effecting `register()`, which called four different global registries directly from
 /// a plugin `.setup()` callback. `Block3dPlayApp`'s CONFIG/PRESENCE schema — an app-scope concern
 /// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) — now registers via
-/// `ArtifactApp::app_schema()` returning `crate::apps::block3d::config::schema::app_schema_descriptor()`
+/// `ArtifactEditor::app_schema()` returning `crate::editor::block3d::config::schema::app_schema_descriptor()`
 /// (ticket W1c), so `.setup()` is gone from `🧱️block/🦀️component.rs` entirely.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
@@ -324,7 +335,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::block3d::standards::v1::subsets::any::schema::inferences::block3d_artifact_inference_descriptor()])
         .composers(crate::artifacts::block3d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::block3d::Block3dPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::block3d::Block3dPlayApp>>()
         .try_build()
 }
 

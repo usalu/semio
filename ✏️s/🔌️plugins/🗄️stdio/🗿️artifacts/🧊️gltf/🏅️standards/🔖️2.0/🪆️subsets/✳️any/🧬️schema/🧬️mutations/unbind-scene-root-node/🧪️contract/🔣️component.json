@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "s.stdio.gltf.mutation.unbind-scene-root-node.v1",
+  "languageParity": ["rust", "typescript"],
+  "vectors": [{
+    "name": "remove-scene-root-at-recorded-position",
+    "base": {"schema":"s.stdio.gltf","document":{"asset":{"version":"2.0"},"scenes":[{"nodes":[0,2,1]}],"nodes":[{"children":[],"weights":[]},{"children":[],"weights":[]},{"children":[],"weights":[]},{"children":[],"weights":[]}]},"buffers":[],"sourceForm":"json"},
+    "mutation": {"scene":0,"node":1},
+    "diff": {"scene":0,"node":1,"position":2,"touchedPaths":["document/scenes/0/nodes/2"]},
+    "inverse": {"scene":0,"node":1,"position":2,"expectedNodes":[0,2],"touchedPaths":["document/scenes/0/nodes/2"]},
+    "after": {"schema":"s.stdio.gltf","document":{"asset":{"version":"2.0"},"scenes":[{"nodes":[0,2]}],"nodes":[{"children":[],"weights":[]},{"children":[],"weights":[]},{"children":[],"weights":[]},{"children":[],"weights":[]}]},"buffers":[],"sourceForm":"json"},
+    "staleDiff": {"schema":"s.stdio.gltf","document":{"asset":{"version":"2.0"},"scenes":[{"nodes":[0,1,2]}],"nodes":[{"children":[],"weights":[]},{"children":[],"weights":[]},{"children":[],"weights":[]},{"children":[],"weights":[]}]},"buffers":[],"sourceForm":"json"},
+    "staleInverse": {"schema":"s.stdio.gltf","document":{"asset":{"version":"2.0"},"scenes":[{"nodes":[0,2,3]}],"nodes":[{"children":[],"weights":[]},{"children":[],"weights":[]},{"children":[],"weights":[]},{"children":[],"weights":[]}]},"buffers":[],"sourceForm":"json"},
+    "rejected": {"index":{"scene":1,"node":1},"reference":{"scene":0,"node":4}},
+    "wire": {"malformedPayload":"{","mutation":"{\"scene\":0,\"node\":1}","diff":"{\"scene\":0,\"node\":1,\"position\":2,\"touchedPaths\":[\"document/scenes/0/nodes/2\"]}","inverse":"{\"scene\":0,\"node\":1,\"position\":2,\"expectedNodes\":[0,2],\"touchedPaths\":[\"document/scenes/0/nodes/2\"]}"},
+    "staleRejection": {"code":"gltf.mutation.stale-diff","path":"document/scenes/0/nodes/2"}
+  }]
+}

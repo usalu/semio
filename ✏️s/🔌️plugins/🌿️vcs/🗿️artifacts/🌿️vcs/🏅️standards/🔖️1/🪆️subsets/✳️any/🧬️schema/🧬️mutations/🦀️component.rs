@@ -71,9 +71,9 @@ mod tests {
     #[test]
     fn change_notes_diff_absorb_law_holds() {
         let base = empty_vcs_snapshot();
-        let d1 = change_notes("first".into()).diff(&base);
+        let d1 = change_notes("first".into()).diff(&base).into_parts().0;
         let mid = d1.apply(&base);
-        let d2 = change_notes("second".into()).diff(&mid);
+        let d2 = change_notes("second".into()).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -82,8 +82,23 @@ mod tests {
         let mut base = empty_vcs_snapshot();
         base.tags.push("wip".into());
         let payload = AddTag { tag: "wip".into() };
-        assert_eq!(MutationKind::diff(&payload, &base), crate::artifacts::vcs::VcsDiff::default());
+        let outcome = MutationKind::diff(&payload, &base);
+        assert_eq!(outcome.diff(), &crate::artifacts::vcs::VcsDiff::default());
+        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"), "a duplicate add must carry a no-op message");
         assert!(MutationKind::inverse(&payload, &base).is_empty(), "inverse of a no-op add must have nothing to undo");
+    }
+
+    /// 🪧 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS Pass 3 — the `remove`
+    /// family is this facet's only verb with a real Error `target-missing` path (`rename`/`change`/
+    /// `add` are all root-scoped or no-op-only here — see this lane's report for the full verb→family
+    /// mapping and reasoning). `assert_fatal_never_applies` has no meaningful call site: this facet
+    /// introduces no Fatal path (no `duplicate-id`/`invariant` verb in its vocabulary).
+    /// `assert_outcome_policy_matrix` is not landed under that name — only `assert_policy_matrix`.
+    #[test]
+    fn remove_tag_missing_target_is_error() {
+        let base = empty_vcs_snapshot();
+        let mutation = VcsDemoMutation::RemoveTag(RemoveTag { tag: "gone".into() });
+        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[test]

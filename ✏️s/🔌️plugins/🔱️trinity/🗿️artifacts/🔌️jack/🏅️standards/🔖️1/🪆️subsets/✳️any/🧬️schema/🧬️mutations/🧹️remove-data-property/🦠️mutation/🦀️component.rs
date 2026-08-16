@@ -21,7 +21,7 @@ pub fn remove_data_property(entity: EntityRef, key: String) -> TrinityGraphMutat
 impl protocol::MutationKind<JackSnapshot, TrinityGraphMutation> for RemoveDataProperty {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "data-property", kind: "remove-data-property", record: "RemovedDataProperty" };
 
-    fn diff(&self, base: &JackSnapshot) -> JackDiff {
+    fn diff(&self, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {

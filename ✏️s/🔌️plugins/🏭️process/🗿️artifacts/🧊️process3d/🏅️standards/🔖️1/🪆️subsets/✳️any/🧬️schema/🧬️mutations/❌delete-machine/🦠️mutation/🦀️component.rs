@@ -16,7 +16,7 @@ pub struct DeleteMachine {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for DeleteMachine {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "machine", kind: "delete-machine", record: "DeletedMachine" };
 
-    fn diff(&self, base: &Process3dSnapshot) -> Process3dDiff {
+    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::delete_machine::diff::diff(self, base)
     }
 

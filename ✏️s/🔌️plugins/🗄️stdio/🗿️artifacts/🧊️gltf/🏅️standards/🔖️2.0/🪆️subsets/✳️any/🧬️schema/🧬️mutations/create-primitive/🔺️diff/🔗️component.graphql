@@ -1,0 +1,6 @@
+# create-primitive diff facet.
+input GltfCreatePrimitivePayloadV1 {
+  mesh: Int!
+  position: Int!
+}
+type GltfCreatePrimitiveDiffV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

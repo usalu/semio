@@ -13,6 +13,18 @@ use serde::{Deserialize, Serialize};
 
 pub const DAG_DOCUMENT_SCHEMA: &str = "dag.dag";
 
+/// 🪪️ This artifact's canonical dialect (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
+/// contract §1) — lives at the ARTIFACT level (not under `editor`/`viewer`) specifically so a
+/// viewer file can read it without ever importing through the sibling `editor` module. Matches
+/// `#[artifact_schema(id = "s.dag.dag")]` on `DagArtifact`; `standard`/`subset` match this
+/// artifact's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — the canonical surface id is
+/// `s.dag.dag@1/*#editor` / `s.dag.dag@1/*#viewer`.
+pub const DAG_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect {
+    artifact_kind: "s.dag.dag",
+    standard: semio_framework_plugin::app::StandardId("1"),
+    subset: semio_framework_plugin::app::SubsetId::ANY,
+};
+
 pub use crate::artifacts::dag::snapshot::schema::{default_snapshot, DagSnapshot};
 pub use infinite_board_port_directed_dag::{DagEdgePatch, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, IoPortSpec};
 
@@ -228,7 +240,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#region 🔖️Register
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
 /// the old side-effecting `register()`, which called four different global registries directly from a
-/// plugin `.setup()` callback. `crate::apps::dag::config::schema::register_app_schema()` is the one
+/// plugin `.setup()` callback. `crate::editor::dag::config::schema::register_app_schema()` is the one
 /// exception, still called from `🕸️dag/🦀️component.rs`'s own `.setup()`: it registers the `DagPlayApp`
 /// CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has no field for
 /// (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's artifact-scoped
@@ -275,7 +287,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::dag::standards::v1::subsets::any::schema::inferences::dag_artifact_inference_descriptor()])
         .composers(crate::artifacts::dag::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::dag::DagPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::dag::DagPlayApp>>()
         .try_build()
 }
 

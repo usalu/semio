@@ -93,7 +93,7 @@ mod tests {
         let base = default_snapshot();
         let step = SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new(), x: 5.0, y: 6.0, slot: None, collapsed: false };
         let operation = crate::artifacts::sequence::mutations::create_step::mutation::create_step(step);
-        let diff: SequenceDiff = operation.diff(&base);
+        let diff: SequenceDiff = operation.diff(&base).into_parts().0;
         assert!(diff.content.is_some(), "CreateStep must produce a content diff: {diff:?}");
         assert_eq!(diff.apply(&base).to_fixture().steps.len(), base.to_fixture().steps.len() + 1);
     }

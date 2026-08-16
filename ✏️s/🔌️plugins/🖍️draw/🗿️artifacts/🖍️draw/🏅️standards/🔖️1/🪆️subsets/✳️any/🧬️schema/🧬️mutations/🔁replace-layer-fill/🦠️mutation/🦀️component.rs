@@ -25,7 +25,7 @@ pub fn replace_layer_fill(layer_id: String, fill: Option<FillStyle>) -> DrawMuta
 impl protocol::MutationKind<DrawSnapshot, DrawMutation> for ReplaceLayerFill {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "layer", kind: "replace-layer-fill", record: "ReplacedLayerFill" };
 
-    fn diff(&self, base: &DrawSnapshot) -> DrawDiff {
+    fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {

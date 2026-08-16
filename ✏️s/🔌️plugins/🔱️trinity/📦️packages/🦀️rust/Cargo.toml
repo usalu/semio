@@ -16,13 +16,13 @@ role = "plugin"
 
 [[package.metadata.semio.playground]]
 variant = "trinity-jack"
-app = "trinity-jack-play"
+app = "s.trinity.jack@1/*#editor"
 aliases = ["trinity jack"]
 ports = { react = 6054, wgpu = 6154 }
 
 [[package.metadata.semio.playground]]
 variant = "trinity-rewrite"
-app = "trinity-rewrite-play"
+app = "s.trinity.rewrite@1/*#editor"
 aliases = ["trinity rewrite"]
 ports = { react = 6056, wgpu = 6156 }
 

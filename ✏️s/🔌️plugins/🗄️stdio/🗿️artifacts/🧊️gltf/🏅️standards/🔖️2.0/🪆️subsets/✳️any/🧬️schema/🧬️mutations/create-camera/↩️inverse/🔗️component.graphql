@@ -1,0 +1,14 @@
+# create-camera typed inverse facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfCameraValueV1
+input GltfCreateCameraPayloadV1 {
+  position: Int!
+  projection: GltfCameraProjectionV1!
+}
+type GltfCreateCameraInverseOperationV1 {
+  kind: String!
+  position: Int!
+  item: GltfCameraValueV1!
+}
+type GltfCreateCameraInverseV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfCreateCameraPayloadV1!, operation: GltfCreateCameraInverseOperationV1! }

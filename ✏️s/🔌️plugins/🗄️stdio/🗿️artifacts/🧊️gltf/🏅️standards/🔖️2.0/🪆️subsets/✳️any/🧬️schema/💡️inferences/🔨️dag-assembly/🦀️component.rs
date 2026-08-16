@@ -1,12 +1,25 @@
 //! 🧩️ glTF inference DAG assembly over independently-owned leaf results.
 
-use crate::artifacts::gltf::schema::snapshot::GltfSnapshot;
+use super::super::modules::{measurement_contracts::*, mesh_topology::Topology};
 use super::{
-    adjacency::*, area_volume::*, clearance::*, compactness::*, concavity::*, curvature::*, geometry_core, geometry_core::*,
-    mass_distribution::*, orientation::*, proportion::*, roughness::*, size::*, symmetry::*, thickness::*, topology::*,
+    adjacency::GltfAdjacencyInference,
+    area_volume::GltfAreaVolumeInference,
+    clearance::GltfClearanceInference,
+    compactness::GltfCompactnessInference,
+    concavity::GltfConcavityInference,
+    curvature::GltfCurvatureInference,
+    geometry_core::{self, *},
+    mass_distribution::GltfMassInference,
+    orientation::GltfOrientationInference,
+    proportion::GltfProportionInference,
+    roughness::GltfRoughnessInference,
+    size::GltfSizeInference,
+    symmetry::GltfSymmetryInference,
+    thickness::GltfThicknessInference,
+    topology::GltfTopologyInference,
     GltfEntityIndicators, GltfGeometricInference, GltfInferenceCounts, GltfPairInference, GltfPartInference,
 };
-use super::super::modules::{measurement_contracts::*, mesh_topology::Topology};
+use crate::artifacts::gltf::schema::snapshot::GltfSnapshot;
 
 fn empty_indicators(diagnostic_ids: Vec<String>) -> GltfEntityIndicators {
     GltfEntityIndicators {
@@ -79,9 +92,15 @@ pub fn compute_gltf_inference(snapshot: &GltfSnapshot) -> GltfGeometricInference
             if let Some(pair) = pair_geometry(&raw_parts[first], &raw_parts[second], &policy) {
                 let (minimum_distance, clearance_distribution, interference_volume, overlap_volume) = GltfClearanceInference::infer_pair(&pair, &policy);
                 pairs.push(GltfPairInference {
-                    first: pair.first.clone(), second: pair.second.clone(), minimum_distance, clearance_distribution,
-                    contact_area: GltfAreaVolumeInference::infer_pair_contact(&pair), interference_volume, overlap_volume,
-                    adjacent: GltfAdjacencyInference::infer_pair(&pair), orientation_consistency: GltfOrientationInference::infer_pair(&pair),
+                    first: pair.first.clone(),
+                    second: pair.second.clone(),
+                    minimum_distance,
+                    clearance_distribution,
+                    contact_area: GltfAreaVolumeInference::infer_pair_contact(&pair),
+                    interference_volume,
+                    overlap_volume,
+                    adjacent: GltfAdjacencyInference::infer_pair(&pair),
+                    orientation_consistency: GltfOrientationInference::infer_pair(&pair),
                 });
             }
         }
@@ -100,12 +119,25 @@ pub fn compute_gltf_inference(snapshot: &GltfSnapshot) -> GltfGeometricInference
     let valid_part_count = raw_parts.iter().filter(|part| !part.triangles.is_empty()).count() as u64;
     let invalid_part_count = raw_parts.iter().filter(|part| part.triangles.is_empty()).count() as u64 + diagnostics.iter().filter(|diagnostic| diagnostic.severity == GltfSeverity::Error).count() as u64;
     let counts = GltfInferenceCounts {
-        scene_count: snapshot.document.scenes.len() as u64, node_instance_count, mesh_count: snapshot.document.meshes.len() as u64,
-        primitive_count: snapshot.document.meshes.iter().map(|mesh| mesh.primitives.len() as u64).sum(), vertex_count: all_points.len() as u64,
-        triangle_count: all_triangles.len() as u64, component_count, surface_region_count: component_count, pair_count: pairs.len() as u64,
-        valid_part_count, invalid_part_count,
+        scene_count: snapshot.document.scenes.len() as u64,
+        node_instance_count: node_instances,
+        mesh_count: snapshot.document.meshes.len() as u64,
+        primitive_count: snapshot.document.meshes.iter().map(|mesh| mesh.primitives.len() as u64).sum(),
+        vertex_count: all_points.len() as u64,
+        triangle_count: all_triangles.len() as u64,
+        component_count,
+        surface_region_count: component_count,
+        pair_count: pairs.len() as u64,
+        valid_part_count,
+        invalid_part_count,
     };
-    let validity = if counts.invalid_part_count > 0 { GltfValidity::Invalid } else if counts.valid_part_count == 0 && !snapshot.document.meshes.is_empty() { GltfValidity::Indeterminate } else { GltfValidity::Valid };
+    let validity = if counts.invalid_part_count > 0 {
+        GltfValidity::Invalid
+    } else if counts.valid_part_count == 0 && !snapshot.document.meshes.is_empty() {
+        GltfValidity::Indeterminate
+    } else {
+        GltfValidity::Valid
+    };
     let mut quality = quality(GltfComputationMethod::DeterministicEstimate, all_points.len(), Some(overall_topology));
     quality.coverage = if counts.valid_part_count + counts.invalid_part_count == 0 { u8::from(snapshot.document.meshes.is_empty()) as f64 } else { counts.valid_part_count as f64 / (counts.valid_part_count + counts.invalid_part_count) as f64 };
     let mut inference_provenance = provenance(GltfCoordinateSpace::SceneWorld);

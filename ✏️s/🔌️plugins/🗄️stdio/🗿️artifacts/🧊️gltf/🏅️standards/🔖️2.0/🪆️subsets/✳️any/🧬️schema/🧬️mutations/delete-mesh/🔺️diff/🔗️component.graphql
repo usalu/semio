@@ -1,0 +1,13 @@
+# delete-mesh typed diff facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfMeshValueV1
+input GltfDeleteMeshPayloadV1 {
+  index: Int!
+}
+type GltfDeleteMeshDiffOperationV1 {
+  kind: String!
+  index: Int!
+  removed: GltfMeshValueV1!
+}
+type GltfDeleteMeshDiffV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfDeleteMeshPayloadV1!, operation: GltfDeleteMeshDiffOperationV1! }

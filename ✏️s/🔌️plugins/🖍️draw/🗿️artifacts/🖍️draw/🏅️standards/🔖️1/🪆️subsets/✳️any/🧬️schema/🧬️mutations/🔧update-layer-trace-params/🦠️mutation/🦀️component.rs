@@ -24,7 +24,7 @@ pub fn update_layer_trace_params(layer_id: String, params: DrawTraceParams) -> D
 impl protocol::MutationKind<DrawSnapshot, DrawMutation> for UpdateLayerTraceParams {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "layer", kind: "update-layer-trace-params", record: "UpdatedLayerTraceParams" };
 
-    fn diff(&self, base: &DrawSnapshot) -> DrawDiff {
+    fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {

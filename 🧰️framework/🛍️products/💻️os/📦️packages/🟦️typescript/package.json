@@ -10,8 +10,7 @@
     "./backbone-worker": "./🟦️glue.backbone-worker.ts"
   },
   "dependencies": {
-    "@semio-tech/framework": "workspace:*",
-    "@semio-tech/framework-math-js": "workspace:*"
+    "@semio-tech/framework": "workspace:*"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/framework-os:test"

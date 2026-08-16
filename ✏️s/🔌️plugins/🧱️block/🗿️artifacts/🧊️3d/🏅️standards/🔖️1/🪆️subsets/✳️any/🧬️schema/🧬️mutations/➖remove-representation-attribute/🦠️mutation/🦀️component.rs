@@ -22,7 +22,7 @@ pub fn remove_representation_attribute(id: String, key: String) -> Block3dMutati
 impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for RemoveRepresentationAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "representation-attribute", kind: "remove-representation-attribute", record: "RemovedRepresentationAttribute" };
 
-    fn diff(&self, base: &Block3dSnapshot) -> Block3dDiff {
+    fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {

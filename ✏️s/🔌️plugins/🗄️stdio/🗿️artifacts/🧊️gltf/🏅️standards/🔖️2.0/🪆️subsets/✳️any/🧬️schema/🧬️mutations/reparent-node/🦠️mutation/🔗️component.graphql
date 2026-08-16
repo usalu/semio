@@ -1,0 +1,7 @@
+# reparent-node mutation facet.
+input GltfReparentNodePayloadV1 {
+  parent: Int!
+  child: Int!
+  position: Int!
+}
+type GltfReparentNodeMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

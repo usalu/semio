@@ -6,8 +6,7 @@
       "algorithmVersion": 1,
       "cacheKey": "s.stdio.gltf.inference.gaussian-curvature.v1:geometry-v2",
       "inputs": ["schema/snapshot", "buffers"],
-      "target": "geometricAnalysis.overall.gaussian-curvature"
+      "target": "geometry.overall.curvature.gaussianCurvature"
     }
   }
 }
-

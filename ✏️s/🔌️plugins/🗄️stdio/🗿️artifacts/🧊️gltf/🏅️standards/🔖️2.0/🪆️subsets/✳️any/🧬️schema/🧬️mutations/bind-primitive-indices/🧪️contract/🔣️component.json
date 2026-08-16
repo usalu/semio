@@ -1,0 +1,15 @@
+{
+  "id": "s.stdio.gltf.mutation.bind-primitive-indices.v1",
+  "laws": [
+    "typed validation rejection",
+    "direct sparse mesh diff",
+    "exact-base inverse",
+    "declared touched paths",
+    "reference repair or rejection",
+    "apply/replay/undo determinism"
+  ],
+  "touchedPaths": [
+    "document/meshes/*/primitives/*/indices"
+  ],
+  "referencePolicy": "requires a scalar, non-floating accessor index stream"
+}

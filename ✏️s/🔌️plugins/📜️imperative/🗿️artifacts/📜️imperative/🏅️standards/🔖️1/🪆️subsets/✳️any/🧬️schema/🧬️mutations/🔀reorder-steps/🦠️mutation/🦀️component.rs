@@ -23,7 +23,7 @@ pub fn reorder_steps(path_ref: PathRef, id: String, to_index: usize) -> Imperati
 impl protocol::MutationKind<ImperativeSnapshot, ImperativeMutation> for ReorderSteps {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "steps", kind: "reorder-steps", record: "ReorderedSteps" };
 
-    fn diff(&self, base: &ImperativeSnapshot) -> ImperativeDiff {
+    fn diff(&self, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ImperativeSnapshot) -> Vec<ImperativeMutation> {

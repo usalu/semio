@@ -151,7 +151,10 @@ pub struct ArtifactVcs<P, Mutation> {
 }
 //#endregion 🔖️Schemas
 //#region 🔖️Errors
-#[derive(Debug, Error, PartialEq, Eq)]
+// 🎞️ `Eq` dropped (was `#[derive(Debug, Error, PartialEq, Eq)]`): `Rejected` below carries
+// `Vec<crate::os_spr::MutationMessage>`, and `MutationMessage` itself only derives `PartialEq`
+// (not `Eq`) — see `📡️spr/🎮️command`'s `🔖️Message` region.
+#[derive(Debug, Error, PartialEq)]
 pub enum VcsError {
     #[error("unknown edit id: {0}")]
     UnknownEdit(String),
@@ -200,10 +203,13 @@ pub enum VcsError {
     /// `store::CompositionCoordinator::dispatch_group`'s phase-1 ownership check.
     #[error("ownership violation: {0}")]
     OwnershipViolation(String),
-    /// @emoji 🛂️ A `crate::os_spr::Mutation::validate` call rejected an operation during
-    /// `store::CompositionCoordinator::dispatch_group`'s phase-1 validate-all pass (or the
-    /// object-safe `store::SpaceMember::validate_wire`/`dispatch_wire` bridge that pass uses) — the
-    /// group is aborted with zero side effects anywhere. Additive; not raised anywhere else in this
+    /// @emoji 🛂️ A structural failure rejected an operation during
+    /// `store::CompositionCoordinator::dispatch_group`'s phase-1 pass (or the object-safe
+    /// `store::SpaceMember::preview_wire`/`dispatch_wire` bridge that pass uses) — the group is
+    /// aborted with zero side effects anywhere. Reserved for structural failures only (ticket
+    /// `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6): an ordinary
+    /// mutation-level rejection now travels as a `MutationMessage` on the op's own
+    /// `MutationOutcome`, never through this variant. Additive; not raised anywhere else in this
     /// crate (every other command path reports its own more specific `VcsError` variant).
     #[error("validation failed: {0}")]
     ValidationFailed(String),
@@ -217,6 +223,18 @@ pub enum VcsError {
     /// raised BEFORE any mutation lands.
     #[error("group dispatch failed and rollback also failed: {0}")]
     CompensationFailed(String),
+    /// @emoji 🛑️ A command was rejected WHOLESALE by the authority's own `crate::os_spr::MergePolicy`
+    /// — nothing in the command was applied (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
+    /// CLASS-CONFLICTS` §C6). Carries the policy that rejected it and every message the rejected
+    /// replay produced, so a caller can explain the rejection without re-running anything.
+    /// `ValidationFailed` survives ONLY for structural failures now — an ordinary mutation-level
+    /// rejection travels through this variant instead.
+    #[error("rejected by merge policy {policy:?}")]
+    Rejected { policy: crate::os_spr::MergePolicy, messages: Vec<crate::os_spr::MutationMessage> },
+    /// @emoji ❓️ `store::ArtifactStore::resolve_conflict` was called with an id that names no
+    /// currently-`Open` conflict on this store.
+    #[error("unknown conflict id: {0}")]
+    UnknownConflict(String),
 }
 
 crate::fault_from_thiserror!(VcsError, crate::os_dsl::FaultOrigin::Module, "module.vcs");
@@ -366,22 +384,32 @@ where
 }
 //#endregion 🔖️CollectionMutation
 //#region 🔖️Mutation
-// 🎞️ `Mutation`/`MutationDiff` live in `protocol_command`; this region just replays a snapshot
-// through an operation's forward diff — the pure per-step transform every store-level replay uses.
+// 🎞️ `Mutation`/`MutationDiff`/`MutationMessage` live in `protocol_command`; this region just
+// replays a snapshot through an operation's forward diff — the pure per-step transform every
+// store-level replay uses.
 
-pub fn apply_mutation<P, Mutation>(snapshot: &P, operation: &Mutation) -> P
+/// @emoji ▶️ Computes `operation.diff(snapshot)`, applies the resulting diff, and returns the new
+/// snapshot alongside every [`crate::os_spr::MutationMessage`] the outcome carried. A `Fatal`
+/// message's diff is `D::default()` by construction (§C2 LAW 1), so applying it is always a no-op —
+/// callers that must not silently apply a rejected op check `worst_level(&messages)` against their
+/// `MergePolicy` themselves (this fn stays policy-agnostic, matching its old unconditional-apply
+/// shape).
+pub fn apply_mutation<P, Mutation>(snapshot: &P, operation: &Mutation) -> (P, Vec<crate::os_spr::MutationMessage>)
 where
     Mutation: self::Mutation<P>,
 {
-    operation.diff(snapshot).apply(snapshot)
+    let (diff, messages) = operation.diff(snapshot).into_parts();
+    (diff.apply(snapshot), messages)
 }
 
 //#endregion 🔖️Mutation
 //#region 🔖️MergeStrategy
-// 🎞️ `merge_concurrent_diffs` (real per-`MergeStrategyKind` dispatch) lives in `protocol_crdt`. The
-// checkpoint-ancestor/merge-base helpers that used to live in this region moved to `store` along
-// with `ArtifactEnvelope` (`checkpoint_ancestors`/`merge_base`/`reconcile_alternative` all take an
-// envelope) — only the envelope-free id-minting primitive stays here.
+// 🎞️ The CRDT-era `merge_concurrent_diffs`/`protocol_crdt` this region used to point at is deleted
+// (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`) — concurrent-merge
+// arbitration is now an authority's `MergePolicy`/`📡️spr/⚔️conflict` job. The checkpoint-ancestor/
+// merge-base helpers that used to live in this region moved to `store` along with `ArtifactEnvelope`
+// (`checkpoint_ancestors`/`merge_base`/`reconcile_alternative` all take an envelope) — only the
+// envelope-free id-minting primitive stays here.
 
 /// @emoji 🔒️ Content-addressed checkpoint id: `ck-<hex16(blake3(parent_id || ordered_change_content_
 /// hashes || message || authors || timestamp [|| ordered_pin_content]))>`, replacing the old fully-

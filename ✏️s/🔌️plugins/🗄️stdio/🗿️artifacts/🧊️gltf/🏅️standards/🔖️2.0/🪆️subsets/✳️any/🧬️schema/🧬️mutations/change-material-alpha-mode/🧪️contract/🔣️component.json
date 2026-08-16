@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "s.stdio.gltf.mutation.change-material-alpha-mode.v1",
+  "languageParity": ["rust", "typescript"],
+  "vectors": [
+    {
+      "name": "opaque-to-mask",
+      "base": { "material": 0, "alphaMode": "OPAQUE" },
+      "mutation": { "material": 0, "alphaMode": "MASK" },
+      "diff": { "material": 0, "expectedAlphaMode": "OPAQUE", "alphaMode": "MASK", "touchedPaths": ["document/materials/0/alphaMode"] },
+      "inverse": { "material": 0, "expectedAlphaMode": "MASK", "alphaMode": "OPAQUE", "touchedPaths": ["document/materials/0/alphaMode"] },
+      "after": { "material": 0, "alphaMode": "MASK" },
+      "undo": { "material": 0, "alphaMode": "OPAQUE" },
+      "rejections": {
+        "staleDiff": "gltf.mutation.stale-diff",
+        "staleInverse": "gltf.mutation.stale-inverse",
+        "forgedPath": "gltf.mutation.invalid-touched-paths"
+      }
+    }
+  ]
+}

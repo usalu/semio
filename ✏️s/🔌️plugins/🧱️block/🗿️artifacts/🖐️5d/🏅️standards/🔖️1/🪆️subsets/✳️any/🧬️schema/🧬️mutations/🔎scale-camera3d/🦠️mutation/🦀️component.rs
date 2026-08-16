@@ -21,7 +21,7 @@ pub fn scale_camera3d(new_zoom: f64) -> Block5dMutation {
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ScaleCamera3d {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "camera3d", kind: "scale-camera3d", record: "ScaledCamera3d" };
 
-    fn diff(&self, base: &Block5dSnapshot) -> Block5dDiff {
+    fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {

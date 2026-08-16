@@ -22,7 +22,7 @@ pub fn change_node_kind(node_id: String, new_node_kind: String) -> WiresMutation
 impl protocol::MutationKind<WiresSnapshot, WiresMutation> for ChangeNodeKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node", kind: "change-node-kind", record: "ChangedNodeKind" };
 
-    fn diff(&self, base: &WiresSnapshot) -> WiresDiff {
+    fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {

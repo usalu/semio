@@ -19,7 +19,7 @@ pub fn remove_step_operation(step_id: &str) -> PlaybookMutation {
 impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for RemoveStep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "step", kind: "remove-step", record: "RemovedStep" };
 
-    fn diff(&self, base: &PlaybookSnapshot) -> crate::artifacts::playbook::PlaybookDiff {
+    fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {

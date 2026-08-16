@@ -18,7 +18,7 @@ pub struct DeleteConstraintRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteConstraintRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "constraint-record", kind: "delete-constraint-record", record: "DeletedConstraintRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

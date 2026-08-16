@@ -1,14 +1,14 @@
 grammar Stdio_gltf_inference_io;
 document: 'schema' SP SCHEMA_ID LF 'version' SP '2' LF 'length' SP UINT LF 'checksum' SP HEX8 LF inference EOF;
-inference: LBRACE GEOMETRIC_ANALYSIS COLON object RBRACE;
+inference: LBRACE GEOMETRY COLON object RBRACE;
 value: object | array | key | number | 'true' | 'false' | 'null';
 object: LBRACE (pair (COMMA pair)*)? RBRACE;
 pair: key COLON value;
 array: LBRACK (value (COMMA value)*)? RBRACK;
-key: STRING | GEOMETRIC_ANALYSIS;
+key: STRING | GEOMETRY;
 number: MINUS? UINT (DOT DIGIT+)? ([eE] [+-]? DIGIT+)?;
 SCHEMA_ID: 's.stdio.gltf.inference';
-GEOMETRIC_ANALYSIS: '"geometricAnalysis"';
+GEOMETRY: '"geometry"';
 STRING: '"' (ESCAPE | ~["\\\u0000-\u001F])* '"';
 fragment ESCAPE: '\\' (["\\/bfnrt] | 'u' HEX HEX HEX HEX);
 HEX8: HEX HEX HEX HEX HEX HEX HEX HEX;

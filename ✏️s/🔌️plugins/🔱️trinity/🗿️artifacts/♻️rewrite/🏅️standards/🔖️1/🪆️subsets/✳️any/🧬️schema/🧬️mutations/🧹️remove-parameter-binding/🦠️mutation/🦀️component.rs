@@ -22,7 +22,7 @@ pub fn remove_parameter_binding(key: String) -> RewriteRuleMutation {
 impl protocol::MutationKind<RewriteSnapshot, RewriteRuleMutation> for RemoveParameterBinding {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "parameter-binding", kind: "remove-parameter-binding", record: "RemovedParameterBinding" };
 
-    fn diff(&self, base: &RewriteSnapshot) -> RewriteDiff {
+    fn diff(&self, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {

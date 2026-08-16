@@ -4,7 +4,7 @@
 //! inputs/results window pair, the framework document/catalogue/inspection panel trio, the same
 //! `model:in`/`report:out` media ports, the same three commands) and differ only in their per-standard
 //! `Document` type, ids and labels. Everything that does NOT vary lives here, ONCE; every taxonomy node
-//! under `🎛️apps/<app>/` states only what genuinely varies and calls into this module. That is the
+//! under each subset's `✏️editor/`/`👁️viewer/` states only what genuinely varies and calls into this module. That is the
 //! "shared declarations belong at the shallowest common ancestor" rule taken to its conclusion — the
 //! shallowest common ancestor of fifteen sibling apps is the plugin's own `🫀️core`.
 //!
@@ -15,15 +15,51 @@
 use crate::document::{CheckReport, NormFamily, NormHost};
 use semio_framework_plugin::{
     ui_stack_vertical, ui_text, AppIo, ArtifactKindSpec, ArtifactPresentation, ArtifactView, ConfigView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType,
-    ModeDefinition, OsMediaCapability, PanelGroup, PanelTabDefinition, PanelTabKind, PortMultiplicity, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions,
+    ModeDefinition, OsMediaCapability, PanelGroup, PanelTabDefinition, PanelTabKind, PortMultiplicity, SurfaceKind, UiNode, WindowKindDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowOptions,
 };
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 //#region 🔖️Ids
-/// 🆔️ The single mode every norm app declares.
+/// 🆔️ The single mode every norm app's editor declares.
 pub const MODE_EDIT: &str = "edit";
+/// 🆔️ The single mode every norm app's viewer declares (ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET).
+pub const MODE_VIEW: &str = "view";
 //#endregion 🔖️Ids
+
+//#region 🔖️ViewerManifest
+/// ✏️ The `view` mode definition — identical for all fifteen viewers, the read-only counterpart of
+/// `edit_mode_definition`.
+pub fn view_mode_definition() -> ModeDefinition {
+    ModeDefinition { id: MODE_VIEW.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
+}
+
+/// 🪟️ Single full-pane window layout — every norm viewer has exactly one window (the compliance
+/// report table), so there is no quadrant/split layout to allocate.
+pub fn single_window_layout(window_kind_id: &str, title: &str) -> WindowLayout {
+    WindowLayout {
+        root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
+            kind: "stack".into(),
+            size: None,
+            active_window_kind_id: None,
+            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None }],
+        }),
+    }
+}
+
+/// 📊️ `TableWindowKit` column headers for a norm `CheckReport` — shared by all fifteen viewers'
+/// report windows so the table shape is declared exactly once.
+pub fn report_table_columns() -> Vec<String> {
+    vec!["Clause".into(), "Status".into(), "Utilization".into(), "Message".into()]
+}
+
+/// 📊️ `TableWindowKit` rows for a norm `CheckReport` — one row per computed check, columns matching
+/// `report_table_columns`.
+pub fn report_table_rows(report: &CheckReport) -> Vec<Vec<String>> {
+    report.checks.iter().map(|check| vec![check.clause.to_string(), format!("{:?}", check.status), format!("{:.2}", check.utilization), check.message.clone()]).collect()
+}
+//#endregion 🔖️ViewerManifest
 
 //#region 🔖️Render
 /// 📑️ Renders a whole `CheckReport` as one line per computed check.
@@ -341,6 +377,38 @@ mod tests {
         let outside = serde_json::to_string(&render_inspection(&report, Some(99))).expect("json");
         assert_eq!(inside, outside, "an out-of-range index must fall back to the first check");
         assert!(serde_json::to_string(&render_inspection(&CheckReport::default(), None)).expect("json").contains("No checks"));
+    }
+
+    #[test]
+    fn the_view_mode_is_the_same_for_every_viewer() {
+        let mode = view_mode_definition();
+        assert_eq!(mode.id, MODE_VIEW);
+        assert!(mode.tools.is_empty() && mode.commands.is_empty() && mode.layout_id.is_none());
+    }
+
+    #[test]
+    fn single_window_layout_stacks_exactly_one_window() {
+        let layout = single_window_layout("framework.window.table", "Report");
+        let WindowLayoutRoot::Stack(stack) = layout.root else { panic!("expected a stack root") };
+        assert_eq!(stack.children.len(), 1);
+        assert_eq!(stack.children[0].window_kind_id, "framework.window.table");
+    }
+
+    #[test]
+    fn report_table_columns_and_rows_line_up_with_the_check_report() {
+        let mut report = CheckReport::default();
+        report.push(crate::document::CheckResult::from_utilization(
+            crate::document::ClauseId::new("demo", "§1", "1.1"),
+            crate::document::Quantity::new(crate::document::QuantityKind::Dimensionless, 0.5),
+            crate::document::Quantity::new(crate::document::QuantityKind::Dimensionless, 1.0),
+            "demo check",
+            crate::document::AnnexChoice::De,
+        ));
+        let columns = report_table_columns();
+        let rows = report_table_rows(&report);
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].len(), columns.len());
+        assert!(rows[0][3].contains("demo check"));
     }
 
     #[test]

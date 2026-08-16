@@ -1,6 +1,10 @@
 //! 💡️ contact-area atomic glTF inference leaf.
-use super::super::{geometry_core::GltfGeometryContext, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
-use super::super::super::modules::{inference_measures::{estimate, exact, unavailable}, measurement_contracts::*, mesh_topology::Topology};
+use super::super::super::modules::{
+    inference_measures::{estimate, exact, unavailable},
+    measurement_contracts::*,
+    mesh_topology::Topology,
+};
+use super::super::{geometry_core::GltfGeometryContext, GltfEntityIndicators, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
 
 pub struct GltfContactAreaInference;
 
@@ -8,15 +12,23 @@ impl GltfInferenceLeaf for GltfContactAreaInference {
     const DESCRIPTOR: GltfInferenceLeafDescriptor = GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.contact-area.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.contact-area.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
 
-pub fn descriptor() -> GltfInferenceLeafDescriptor { GltfContactAreaInference::DESCRIPTOR }
+pub fn descriptor() -> GltfInferenceLeafDescriptor {
+    GltfContactAreaInference::DESCRIPTOR
+}
 
 pub fn infer_pair(pair: &super::super::geometry_core::GltfPairGeometry) -> GltfMeasure<f64> {
-    pair.contact_area.map(|area| if area == 0.0 { exact(area, GltfUnit::SquareMetre, pair.sample_count, None) } else { estimate(area, GltfUnit::SquareMetre, pair.sample_count, None) }).unwrap_or_else(|| unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), pair.sample_count, None))
+    pair.contact_area
+        .map(|area| if area == 0.0 { exact(area, GltfUnit::SquareMetre, pair.sample_count, None) } else { estimate(area, GltfUnit::SquareMetre, pair.sample_count, None) })
+        .unwrap_or_else(|| unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), pair.sample_count, None))
 }
 
 pub fn from_assembly(part_count: usize, area: f64, complete: bool, sample_count: usize, topology: Topology) -> GltfMeasure<f64> {
-    if part_count <= 1 { return exact(0.0, GltfUnit::SquareMetre, sample_count, Some(topology)); }
-    if complete { return estimate(area, GltfUnit::SquareMetre, sample_count, Some(topology)); }
+    if part_count <= 1 {
+        return exact(0.0, GltfUnit::SquareMetre, sample_count, Some(topology));
+    }
+    if complete {
+        return estimate(area, GltfUnit::SquareMetre, sample_count, Some(topology));
+    }
     unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), sample_count, Some(topology))
 }
 pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
@@ -28,7 +40,7 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
 }
 
 pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
-    serde_json::to_value(&indicators.area_volume.contactArea)
+    serde_json::to_value(&indicators.area_volume.contact_area)
 }
 
 #[cfg(test)]

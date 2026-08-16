@@ -1,12 +1,26 @@
 //! 📄️ Layout artifact — the document entity the layout app edits (constitutional: general).
 
 use protocol::{Identified, Patchable};
+use semio_framework::{Dialect, StandardId, SubsetId};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
 pub const LAYOUT_DOCUMENT_SCHEMA: &str = "layout.layout";
+
+/// 🪪️ This artifact's compile-time surface coordinate (ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1) — lives at the ARTIFACT level (not
+/// under `✏️editor`/`👁️viewer`) specifically so a viewer file can read it without ever importing
+/// through the sibling editor module. `artifact_kind = "s.layout.layout"` matches
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs`'s own `#[artifact_schema(id =
+/// "s.layout.layout")]`; `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — the canonical surface id is `s.layout.layout@1/*#editor`
+/// / `s.layout.layout@1/*#viewer`, exactly the contract §1 grammar. NOT the same type as
+/// `store::os_io::ArtifactDialect` used a few lines below by `background_drawing_child_handle` (a
+/// wire `ArtifactDialect` describing STDIO's drawing subset for composition purposes, unrelated to
+/// this artifact's own surface identity) — this is the SDK's compile-time `Dialect`.
+pub const LAYOUT_DIALECT: Dialect = Dialect { artifact_kind: "s.layout.layout", standard: StandardId("1"), subset: SubsetId::ANY };
 //#endregion 🔖️Constants
 
 //#region 🔖️ComposedTypes
@@ -97,7 +111,6 @@ pub fn background_drawing_content(snapshot: &LayoutSnapshot) -> Option<SemioDraw
     working_scene::cached_background_drawing_content(&child.child_id)
 }
 //#endregion 🔖️WorkingScene
-
 
 //#region 🔖️DropPreview
 /// 👻️ Ephemeral catalogue drag-ghost state (layout app config / artifact local-ui).
@@ -406,13 +419,13 @@ pub struct GridSettings {
 
 //#endregion 🔖️Types
 
-pub use crate::artifacts::layout::schema::snapshot::LayoutSnapshot;
 pub use crate::artifacts::layout::schema::diff::LayoutDiff;
 pub use crate::artifacts::layout::schema::mutations::LayoutMutation;
+pub use crate::artifacts::layout::schema::snapshot::LayoutSnapshot;
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::apps::layout::create_layout_app`'s `🔖️Manifest` region.
+/// `crate::editor::layout::create_layout_app`'s `🔖️Manifest` region.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.layout".into(),
@@ -502,7 +515,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// `.composers(…)` call below now registers once (that top-level `artifacts::layout::io_registry`
 /// module has no other caller in the repo — deleting its call here rather than keeping it, per the
 /// W1b duplicate-IO-registration finding; the module itself is left in place as inert dead code,
-/// matching `🗒️note`'s own unreferenced sibling module). `crate::apps::layout::config::schema::
+/// matching `🗒️note`'s own unreferenced sibling module). `crate::editor::layout::config::schema::
 /// register_app_schema()` is the one exception, still called from `📏️layout/🦀️component.rs`'s own
 /// `.setup()`: it registers the `LayoutPlayApp` CONFIG/PRESENCE schema, an app-scope concern
 /// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) —
@@ -510,19 +523,30 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.layout.standard.v1", "standard", "1", &[], None), ("s.layout.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.layout.schema.artifact", "schema", "s.layout.layout", &[("schema", "s.layout.layout")], None), ("s.layout.inference.artifact", "inference", "s.layout.layout.inference", &[("schema", "s.layout.layout.inference")], None),
-        ("s.layout.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None), ("s.layout.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.layout.grammar.document", "grammar", "layout.document", &[("grammar", "layout.document")], None), ("s.layout.grammar.op", "grammar", "layout.op", &[("grammar", "layout.op")], None),
-        ("s.layout.grammar.diff", "grammar", "layout.diff", &[("grammar", "layout.diff")], None), ("s.layout.grammar.pack", "grammar", "layout.pack", &[("grammar", "layout.pack")], None), ("s.layout.grammar.spr", "grammar", "layout.spr", &[("grammar", "layout.spr")], None),
+        ("s.layout.standard.v1", "standard", "1", &[], None),
+        ("s.layout.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.layout.schema.artifact", "schema", "s.layout.layout", &[("schema", "s.layout.layout")], None),
+        ("s.layout.inference.artifact", "inference", "s.layout.layout.inference", &[("schema", "s.layout.layout.inference")], None),
+        ("s.layout.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
+        ("s.layout.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.layout.grammar.document", "grammar", "layout.document", &[("grammar", "layout.document")], None),
+        ("s.layout.grammar.op", "grammar", "layout.op", &[("grammar", "layout.op")], None),
+        ("s.layout.grammar.diff", "grammar", "layout.diff", &[("grammar", "layout.diff")], None),
+        ("s.layout.grammar.pack", "grammar", "layout.pack", &[("grammar", "layout.pack")], None),
+        ("s.layout.grammar.spr", "grammar", "layout.spr", &[("grammar", "layout.spr")], None),
         ("s.layout.codec.document.v1", "codec", "layout.layout:layout", &[("codec", "layout.layout"), ("extension", "layout")], None),
-        ("s.layout.localization.en", "localization", "Layout", &[], Some(("en", "Layout"))), ("s.layout.localization.de", "localization", "Layout", &[], Some(("de", "Layout"))),
+        ("s.layout.localization.en", "localization", "Layout", &[], Some(("en", "Layout"))),
+        ("s.layout.localization.de", "localization", "Layout", &[], Some(("de", "Layout"))),
     ];
     let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.layout")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
-        for (namespace, value) in *claims { capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?; }
-        if let Some((locale, text)) = localization { capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?; }
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
         definition = definition.capability(capability)?;
     }
     Ok(definition)
@@ -534,7 +558,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::layout::standards::v1::subsets::any::schema::inferences::layout_artifact_inference_descriptor()])
         .composers(crate::artifacts::layout::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::layout::LayoutPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::layout::LayoutPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️ArtifactKind
@@ -834,28 +858,3 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::layout::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("LayoutComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
-}
-//#endregion 🚪️DerivedIoRegistry

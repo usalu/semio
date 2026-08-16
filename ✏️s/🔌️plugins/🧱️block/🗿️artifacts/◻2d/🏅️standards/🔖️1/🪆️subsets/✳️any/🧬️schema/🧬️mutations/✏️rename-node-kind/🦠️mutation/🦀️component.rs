@@ -21,7 +21,7 @@ pub fn rename_node_kind(new_name: String) -> Block2dMutation {
 impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for RenameNodeKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "node-kind", kind: "rename-node-kind", record: "RenamedNodeKind" };
 
-    fn diff(&self, base: &Block2dSnapshot) -> Block2dDiff {
+    fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {

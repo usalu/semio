@@ -22,7 +22,7 @@ pub fn move_node(id: String, x: f64, y: f64) -> DagMutation {
 impl protocol::MutationKind<DagSnapshot, DagMutation> for MoveNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "node", kind: "move-node", record: "MovedNode" };
 
-    fn diff(&self, base: &DagSnapshot) -> DagDiff {
+    fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {

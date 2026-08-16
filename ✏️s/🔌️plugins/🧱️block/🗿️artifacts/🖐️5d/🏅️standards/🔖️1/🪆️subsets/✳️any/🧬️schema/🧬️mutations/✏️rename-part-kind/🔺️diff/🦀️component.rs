@@ -4,7 +4,7 @@ use crate::artifacts::block5d::Block5dSnapshot;
 use crate::{BlockKindIdentity};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::RenamePartKind, base: &Block5dSnapshot) -> Block5dDiff {
-    Block5dDiff { part_kind: Some(BlockKindIdentity { name: payload.new_name.clone(), ..base.part_kind.clone() }), ..Default::default() }
+pub fn diff(payload: &super::mutation::RenamePartKind, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+    protocol::MutationOutcome::new(Block5dDiff { part_kind: Some(BlockKindIdentity { name: payload.new_name.clone(), ..base.part_kind.clone() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

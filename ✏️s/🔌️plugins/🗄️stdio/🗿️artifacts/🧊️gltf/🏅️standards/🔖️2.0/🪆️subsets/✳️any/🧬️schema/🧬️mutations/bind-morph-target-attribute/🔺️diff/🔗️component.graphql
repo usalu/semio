@@ -1,0 +1,9 @@
+# bind-morph-target-attribute diff facet.
+input GltfBindMorphTargetAttributePayloadV1 {
+  mesh: Int!
+  primitive: Int!
+  target: Int!
+  semantic: String!
+  accessor: Int!
+}
+type GltfBindMorphTargetAttributeDiffV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

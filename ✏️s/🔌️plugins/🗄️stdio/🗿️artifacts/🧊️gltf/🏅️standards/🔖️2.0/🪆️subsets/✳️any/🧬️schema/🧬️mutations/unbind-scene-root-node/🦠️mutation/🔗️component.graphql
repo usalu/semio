@@ -1,0 +1,6 @@
+# unbind-scene-root-node mutation facet.
+input GltfUnbindSceneRootNodePayloadV1 {
+  scene: Int!
+  node: Int!
+}
+type GltfUnbindSceneRootNodeMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

@@ -1,0 +1,2 @@
+# change-scene-extension-data diff typed facet.
+input GltfChangeSceneExtensionDataDiffV1 { operation: GltfChangeSceneExtensionDataPayloadV1!, after: GltfJson, touchedPaths: [String!]! }

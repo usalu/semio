@@ -6,7 +6,11 @@ use crate::artifacts::program::diff::ProgramStakeholdersDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🌱️ `added = [payload row]` — the row lands at the end of `program.stakeholders` on apply.
-pub fn diff(payload: &CreateStakeholder, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { stakeholders: Some(ProgramStakeholdersDelta { added: vec![payload.stakeholder.clone()], ..Default::default() }), ..Default::default() }
+/// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
+pub fn diff(payload: &CreateStakeholder, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let id = payload.stakeholder.header.id.clone();
+    if base.stakeholders.iter().any(|row| row.header.id == id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A stakeholder already exists with this id.", [id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { stakeholders: Some(ProgramStakeholdersDelta { added: vec![payload.stakeholder.clone()], ..Default::default() }), ..Default::default() })
 }

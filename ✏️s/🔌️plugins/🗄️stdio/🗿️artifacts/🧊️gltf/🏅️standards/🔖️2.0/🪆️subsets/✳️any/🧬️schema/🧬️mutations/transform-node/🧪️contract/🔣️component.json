@@ -1,0 +1,18 @@
+{
+  "id": "s.stdio.gltf.mutation.transform-node.v1",
+  "command": "transform-node",
+  "laws": [
+    "typed payload validation and typed rejection",
+    "direct sparse diff only at declared touched paths",
+    "inverse derives from exact base and restores that base when applied",
+    "reference integrity is repaired or rejected at the named typed paths",
+    "apply and replay are deterministic"
+  ],
+  "referencePolicy": "matrix and TRS are mutually exclusive; every scalar must be finite",
+  "touchedPaths": [
+    "document/nodes/*/matrix",
+    "document/nodes/*/translation",
+    "document/nodes/*/rotation",
+    "document/nodes/*/scale"
+  ]
+}

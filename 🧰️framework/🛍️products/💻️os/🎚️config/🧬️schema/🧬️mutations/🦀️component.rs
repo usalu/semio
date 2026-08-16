@@ -11,7 +11,7 @@
 // already require two supers to reach), this file's own module sits ONE level inside `🧬️mutations`,
 // so `DefaultApp`/`OpeningPreferences` (declared at the schema level) need `super::super`, not `super`.
 use super::super::{DefaultApp, OpeningPreferences};
-use protocol::{Mutation, MutationDiff, MutationKind};
+use protocol::{Mutation, MutationDiff, MutationKind, MutationOutcome};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -26,7 +26,10 @@ pub enum OpeningConfigMutation {
 impl Mutation<OpeningPreferences> for OpeningConfigMutation {
     type Diff = OpeningPreferences;
 
-    fn diff(&self, base: &OpeningPreferences) -> OpeningPreferences {
+    /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
+    /// CONFLICTS W0): both leaves already return `MutationOutcome<OpeningPreferences>` (`Self::Diff`
+    /// here IS `OpeningPreferences`, so no `.map` needed), forwarded as-is.
+    fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
         match self {
             OpeningConfigMutation::SetDefaultApp(op) => op.diff(base),
             OpeningConfigMutation::ClearDefaultApp(op) => op.diff(base),
@@ -43,7 +46,7 @@ impl Mutation<OpeningPreferences> for OpeningConfigMutation {
 
 /// 🧮️ Diff-first apply — `operation.diff(base).apply(base)`, matching every other migrated facet.
 pub fn apply_opening_config_mutation(snapshot: &mut OpeningPreferences, mutation: &OpeningConfigMutation) {
-    *snapshot = mutation.diff(snapshot).apply(snapshot);
+    *snapshot = mutation.diff(snapshot).diff().apply(snapshot);
 }
 
 pub fn inverse_opening_config_mutation(snapshot: &OpeningPreferences, mutation: &OpeningConfigMutation) -> Vec<OpeningConfigMutation> {
@@ -67,12 +70,12 @@ mod tests {
         let base = OpeningPreferences::default();
 
         let set_op = OpeningConfigMutation::SetDefaultApp(SetDefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() });
-        let after_set = set_op.diff(&base).apply(&base);
+        let after_set = set_op.diff(&base).diff().apply(&base);
         assert_eq!(after_set.defaults, vec![DefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() }]);
 
         let undo = set_op.inverse(&base);
         assert_eq!(undo, vec![OpeningConfigMutation::ClearDefaultApp(ClearDefaultApp { dialect: dialect.clone(), role: AppRole::Editor })]);
-        let restored = undo[0].diff(&after_set).apply(&after_set);
+        let restored = undo[0].diff(&after_set).diff().apply(&after_set);
         assert_eq!(restored, base);
     }
 }

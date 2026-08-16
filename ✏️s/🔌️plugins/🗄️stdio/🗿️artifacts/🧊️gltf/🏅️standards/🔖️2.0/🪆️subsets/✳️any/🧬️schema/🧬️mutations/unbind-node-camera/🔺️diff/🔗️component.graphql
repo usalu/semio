@@ -1,0 +1,2 @@
+# unbind-node-camera diff typed facet.
+input GltfUnbindNodeCameraDiffV1 { operation: GltfUnbindNodeCameraPayloadV1!, after: Int, touchedPaths: [String!]! }

@@ -1,0 +1,512 @@
+# W1-C tests — 2026-08-16T10:38:53Z
+
+## Command 1: vitest, @semio-tech/framework-renderer-react (full suite, includes ShellHost/ChromePanels/ShellHelpers/Shell)
+```
+bun /Users/ueli/.bun/bin/bun node_modules/vitest/vitest.mjs run --config 🧪️vitest.config.ts --passWithNoTests --testTimeout 15000 --hookTimeout 15000 --teardownTimeout 15000 --reporter=dot
+(run from 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react)
+```
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react
+
+stderr | 🧪️index.test.ts
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+·····························································stderr | 🧪️index.test.ts > framework plugin runtime > loads plugin modules through framework-core, refcounted
+[DEBUG] program worker mock unresponsive for 10000ms: init
+
+x······················x·············································································x····································stderr | 🧪️index.test.ts > s workflow flow routing > isolates render faults in ShellFaultBoundary
+Error: boom
+    at FaultyChild (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð§ªï¸index.test.ts:3833:7)
+    at react_stack_bottom_frame (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:25904:19)
+    at renderWithHooks (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:7662:21)
+    at updateFunctionComponent (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:10166:18)
+    at runWithFiberInDEV (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:874:12)
+    at performUnitOfWork (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17641:21)
+    at workLoopSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17469:40)
+    at renderRootSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17450:10)
+    at performWorkOnRoot (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:16583:34)
+    at performWorkOnRootViaSchedulerTask (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:18957:6)
+    at flushActQueue (/Users/ueli/Documents/semio/node_modules/react/cjs/react.development.js:590:33)
+    at /Users/ueli/Documents/semio/node_modules/react/cjs/react.development.js:884:9
+    at /Users/ueli/Documents/semio/node_modules/@testing-library/react/dist/act-compat.js:46:24
+    at renderRoot (/Users/ueli/Documents/semio/node_modules/@testing-library/react/dist/pure.js:189:17)
+    at /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð§ªï¸index.test.ts:3835:27
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:25
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:19
+    at Promise (native)
+    at runWithCancel (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:9)
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:19
+    at Promise (native)
+    at runWithTimeout (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:9)
+    at run (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1150:19)
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:12
+    at callAroundHooks (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2663:8)
+    at callAroundEachHooks (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2799:7)
+    at processTicksAndRejections (native) {
+  [message]: 'boom',
+  [stack]: 'Error: boom\n' +
+    '    at FaultyChild (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð\x9F§ªï¸\x8Findex.test.ts:3833:7)\n' +
+    '    at react_stack_bottom_frame (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:25904:19)\n' +
+    '    at renderWithHooks (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:7662:21)\n' +
+    '    at updateFunctionComponent (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:10166:18)\n' +
+    '    at runWithFiberInDEV (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:874:12)\n' +
+    '    at performUnitOfWork (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17641:21)\n' +
+    '    at workLoopSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17469:40)\n' +
+    '    at renderRootSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17450:10)\n' +
+    '    at performWorkOnRoot (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:16583:34)\n' +
+    '    at performWorkOnRootViaSchedulerTask (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:18957:6)\n' +
+    '    at flushActQueue (/Users/ueli/Documents/semio/node_modules/react/cjs/react.development.js:590:33)\n' +
+    '    at /Users/ueli/Documents/semio/node_modules/react/cjs/react.development.js:884:9\n' +
+    '    at /Users/ueli/Documents/semio/node_modules/@testing-library/react/dist/act-compat.js:46:24\n' +
+    '    at renderRoot (/Users/ueli/Documents/semio/node_modules/@testing-library/react/dist/pure.js:189:17)\n' +
+    '    at /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð\x9F§ªï¸\x8Findex.test.ts:3835:27\n' +
+    '    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:25\n' +
+    '    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:19\n' +
+    '    at Promise (native)\n' +
+    '    at runWithCancel (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:9)\n' +
+    '    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:19\n' +
+    '    at Promise (native)\n' +
+    '    at runWithTimeout (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:9)\n' +
+    '    at run (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1150:19)\n' +
+    '    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:12\n' +
+    '    at callAroundHooks (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2663:8)\n' +
+    '    at callAroundEachHooks (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2799:7)\n' +
+    '    at processTicksAndRejections (native)',
+  [line]: 0,
+  [column]: 0
+}
+
+The above error occurred in the <FaultyChild> component.
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ShellFaultBoundary.
+
+[DEBUG] shell fault test Error: boom
+    at FaultyChild (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð§ªï¸index.test.ts:3833:7)
+    at react_stack_bottom_frame (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:25904:19)
+    at renderWithHooks (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:7662:21)
+    at updateFunctionComponent (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:10166:18)
+    at runWithFiberInDEV (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:874:12)
+    at performUnitOfWork (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17641:21)
+    at workLoopSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17469:40)
+    at renderRootSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17450:10)
+    at performWorkOnRoot (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:16583:34)
+    at performWorkOnRootViaSchedulerTask (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:18957:6)
+    at flushActQueue (/Users/ueli/Documents/semio/node_modules/react/cjs/react.development.js:590:33)
+    at /Users/ueli/Documents/semio/node_modules/react/cjs/react.development.js:884:9
+    at /Users/ueli/Documents/semio/node_modules/@testing-library/react/dist/act-compat.js:46:24
+    at renderRoot (/Users/ueli/Documents/semio/node_modules/@testing-library/react/dist/pure.js:189:17)
+    at /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð§ªï¸index.test.ts:3835:27
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:25
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:19
+    at Promise (native)
+    at runWithCancel (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:9)
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:19
+    at Promise (native)
+    at runWithTimeout (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:9)
+    at run (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1150:19)
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:12
+    at callAroundHooks (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2663:8)
+    at callAroundEachHooks (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2799:7)
+    at processTicksAndRejections (native) 
+    at FaultyChild (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:3271:22)
+    at ShellFaultBoundary (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx:517:10)
+
+·················x···stderr | 🧪️index.test.ts > host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, D5 RequestMediaFrames) > runRequestMediaFrames (D5): Tier 2 failure (video element throws mid-seek) ⇒ dispatches fallbackAction exactly once with raw bytes as a data URL, no frame/done calls
+[os-shell] requestMediaFrames: decode failed, falling back to raw bytes Error: decode failed
+    at set (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð§ªï¸index.test.ts:4940:9)
+    at runTier2VideoFrames (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/ð¦ï¸component.tsx:868:5)
+    at runRequestMediaFrames (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/ð¦ï¸component.tsx:942:13)
+    at /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð§ªï¸index.test.ts:4943:11
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:25
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:19
+    at Promise (native)
+    at runWithCancel (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:9)
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:19
+    at Promise (native)
+    at runWithTimeout (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:9)
+    at run (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1150:19)
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:12
+    at callAroundHooks (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2663:8)
+    at callAroundEachHooks (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2799:7)
+    at processTicksAndRejections (native)
+
+··················x·····x·····················xx······x········································
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > framework plugin runtime > loads plugin modules through framework-core, refcounted
+Error: Test timed out in 15000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ <anonymous> 🧪️index.test.ts:738:31
+    736|   it("APPLY_TUTORIAL_UI_SNAPSHOT atomically restores layout/panels/tre…
+    737|     const state = baseState();
+    738|     const snapshot = shellReducer(state, {
+       |                               ^
+    739|       type: "APPLY_TUTORIAL_UI_SNAPSHOT",
+    740|       snapshot: {
+ ❯ processTicksAndRejections unknown:7:39
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > declarative forms parity > renders selectable builder cards with selection ring
+AssertionError: expected '<div class="relative flex min-h-0 min…' to contain 'ring-primary'
+
+Expected: "ring-primary"
+Received: "<div class="relative flex min-h-0 min-w-0 flex-1 flex-col gap-double p-double semio-ui-stack semio-ui-stack--vertical border-element border cursor-pointer rounded-md" data-ui-path="stack[0]#forms-blueprint.card.q1" role="button"><div class="flex-auto"><p class="text-foreground text-sm" data-ui-path="stack[0]#forms-blueprint.card.q1/text[0]">text · q1</p></div></div>"
+
+ ❯ ð§ªï¸index.test.ts:1541:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > framework renderer hosts > interprets virtual file system component scenes
+Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: object.
+ ❯ renderElement ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6119:14
+ ❯ retryNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:20
+ ❯ renderNodeDestructive ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6367:10
+ ❯ finishFunctionComponent ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:5106:12
+ ❯ renderElement ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:5552:10
+ ❯ retryNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:20
+ ❯ renderNodeDestructive ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6367:10
+ ❯ renderNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6905:17
+ ❯ renderChildrenArray ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6674:10
+ ❯ retryNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6441:12
+ ❯ renderNodeDestructive ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6367:10
+ ❯ renderElement ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:5672:12
+ ❯ retryNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:20
+ ❯ renderNodeDestructive ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6367:10
+ ❯ finishFunctionComponent ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:5106:12
+ ❯ renderElement ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:5552:10
+ ❯ retryNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:20
+ ❯ renderNodeDestructive ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6367:10
+ ❯ renderElement ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:5483:10
+ ❯ retryNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:20
+ ❯ performWork ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:7435:16
+ ❯ startWork ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:8270:6
+ ❯ renderToStringImpl ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:8380:6
+ ❯ ð§ªï¸index.test.ts:2881:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > s workflow flow routing > isolates render faults in ShellFaultBoundary
+Error: Invalid Chai property: toHaveTextContent
+ ❯ ð§ªï¸index.test.ts:3842:30
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > registry-derived utilities and activation (P5) > resolveWindowActions surfaces only panel-eligible definitions owned by the window
+AssertionError: expected [ 'extrude', 'undo', …(1) ] to deeply equal [ 'extrude' ]
+
+- Expected
++ Received
+
+  [
+    "extrude",
++   "undo",
++   "setActiveUtility",
+  ]
+
+ ❯ ð§ªï¸index.test.ts:4260:49
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > resolveCommands / commandCategories (footer command panel registry) > commandCategories orders and dedupes categories by first appearance
+AssertionError: expected [ { id: 'appearance', …(1) }, …(2) ] to deeply equal [ { id: 'appearance', …(1) }, …(2) ]
+
+- Expected
++ Received
+
+@@ -3,11 +3,11 @@
+      "id": "appearance",
+      "label": "Appearance",
+    },
+    {
+      "id": "document",
+-     "label": "Artifact",
++     "label": "Document",
+    },
+    {
+      "id": "view",
+      "label": "View",
+    },
+
+ ❯ ð§ªï¸index.test.ts:4340:41
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND introduction is app-specific only after the general landing tour was split out
+AssertionError: expected '/♻️mit-bestand/🧺️demonstrator/🖼️ass…' to match /♻️mit-bestand\/🧺️dem…/🧺️demonstrator\
+
+- Expected:
+/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logo\//
+
++ Received:
+"/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logos/🖼️bmwsb.png"
+
+ ❯ ð§ªï¸index.test.ts:4646:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > mit-bestand/demonstrator footer credits render the funding/partner logos, links, and locale text
+AssertionError: expected '/♻️mit-bestand/🧺️demonstrator/🖼️ass…' to match /♻️mit-bestand\/🧺️dem…/🧺️demonstrator\
+
+- Expected:
+/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logo\//
+
++ Received:
+"/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logos/🖼️luh.png"
+
+ ❯ ð§ªï¸index.test.ts:4681:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > buildCommandCategoryTree / buildCommandCategoryTabs (command palette as a real bottom-middle Panel) > buildCommandCategoryTabs builds one namespaced PanelTabLeaf per category, whose lazily-resolved tree only contains that category's commands
+AssertionError: expected "vi.fn()" to be called with arguments: [ Array(3) ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "kind": "os",
++     "commandId": "os.resetDock",
++     "owner": "os",
+    },
+-   "os.resetDock",
+    undefined,
+  ]
+
+
+Number of calls: 1
+
+ ❯ ð§ªï¸index.test.ts:4791:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  9 failed | 306 passed (315)
+   Start at  12:38:19
+   Duration  18.90s (transform 1.69s, setup 0ms, import 2.69s, tests 15.72s, environment 358ms)
+
+
+## Command 2: tsc --noEmit scoped to the 4 edited files (temp tsconfig extending root, with allowImportingTsExtensions + the vitest.config.ts alias map replicated as paths — root tsconfig has neither, see report for why plain tsc is noisy here)
+```
+bunx tsc --noEmit -p <scratch tsconfig.w1c.json>
+```
+Total diagnostics in program:     1163
+Diagnostics inside the 4 edited files:
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(219,17): error TS2322: Type '{ id: string; size: string; text: UiLabel; disabled: boolean; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(359,22): error TS2741: Property 'id' is missing in type '{ children: Element[]; value: string; onValueChange: (value: string) => void; }' but required in type 'ElementProps'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(378,16): error TS2741: Property 'id' is missing in type '{ children: Element[]; value: UiChromeLayout; onValueChange: (value: string) => void; }' but required in type 'ElementProps'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(393,16): error TS2741: Property 'id' is missing in type '{ children: Element[]; value: string; onValueChange: (value: string) => void; }' but required in type 'ElementProps'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(414,22): error TS2741: Property 'id' is missing in type '{ children: Element[]; value: "de" | "en"; onValueChange: (value: string) => void; }' but required in type 'ElementProps'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(433,22): error TS2741: Property 'id' is missing in type '{ children: Element[]; value: string; onValueChange: (value: string) => void; }' but required in type 'ElementProps'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(453,70): error TS2322: Type '{ id: string; size: string; icon: "rotate-ccw"; text: UiLabel; onClick: () => void | undefined; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(513,17): error TS2322: Type '{ id: string; size: string; text: UiLabel; disabled: boolean; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(530,74): error TS2322: Type '{ id: string; size: string; text: UiLabel; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(551,8): error TS2741: Property 'id' is missing in type '{ children: Element[]; value: string; onValueChange: (next: string) => void; }' but required in type 'ElementProps'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(715,16): error TS2741: Property 'id' is missing in type '{ children: Element[]; value: string; onValueChange: (value: string) => void; }' but required in type 'ElementProps'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(742,17): error TS2322: Type '{ id: string; size: string; text: UiLabel; disabled: boolean; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(757,66): error TS2322: Type '{ id: string; size: string; text: UiLabel; disabled: boolean; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(762,67): error TS2322: Type '{ id: string; size: string; text: UiLabel; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(767,67): error TS2322: Type '{ id: string; size: string; text: UiLabel; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(774,73): error TS2322: Type '{ id: string; size: string; text: UiLabel; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(833,19): error TS2322: Type '"keyboard"' is not assignable to type 'ControlIcon'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(841,58): error TS2345: Argument of type 'KeyboardEvent' is not assignable to parameter of type 'KeyboardEvent<Element>'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(850,82): error TS2322: Type '{ id: string; size: string; variant: "ghost"; icon: "rotate-ccw"; text: UiLabel; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(907,16): error TS2741: Property 'id' is missing in type '{ children: Element[]; value: string; onValueChange: (value: string) => void; }' but required in type 'ElementProps'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(1055,15): error TS2322: Type '{ size: string; text: UiLabel; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(1078,17): error TS2322: Type '{ size: string; text: UiLabel; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(1079,17): error TS2322: Type '{ size: string; text: UiLabel; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(1138,11): error TS2322: Type '{ id: string; size: string; text: UiLabel; disabled: boolean; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(1145,11): error TS2322: Type '{ id: string; size: string; text: UiLabel; disabled: boolean; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(1164,79): error TS2322: Type '{ id: string; size: string; text: UiLabel; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(1169,13): error TS2322: Type '{ id: string; size: string; text: UiLabel; disabled: boolean; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(1176,13): error TS2322: Type '{ id: string; size: string; text: UiLabel; disabled: boolean; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(1214,15): error TS2322: Type '{ id: string; size: string; text: UiLabel; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx(1239,82): error TS2322: Type '{ id: string; size: string; text: UiLabel; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx(135,12): error TS2300: Duplicate identifier 'label'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx(136,12): error TS2300: Duplicate identifier 'label'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx(136,12): error TS2717: Subsequent property declarations must have the same type.  Property 'label' must be of type 'string', but here has type 'readonly string[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx(145,12): error TS2300: Duplicate identifier 'label'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx(146,12): error TS2300: Duplicate identifier 'label'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx(146,12): error TS2717: Subsequent property declarations must have the same type.  Property 'label' must be of type 'string', but here has type 'readonly string[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx(1000,15): error TS2352: Conversion of type '{ [k: string]: { visible: false; size: number; path: never[]; }; }' to type 'Record<"top-left" | "top-middle" | "top-right" | "right-middle" | "bottom-right" | "bottom-middle" | "bottom-left" | "left-middle", PanelState>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx(1095,61): error TS2322: Type '{ className: string; size: string; text: UiLabel; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(936,47): error TS2322: Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'BlobPart'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1011,74): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1153,5): error TS2322: Type 'WindowLayoutNode[]' is not assignable to type 'readonly (WindowLayoutAxisNode | WindowLayoutStackNode)[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1325,7): error TS2322: Type 'string | undefined' is not assignable to type 'UiLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1336,7): error TS2322: Type 'string | undefined' is not assignable to type 'UiLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1338,7): error TS2322: Type 'string | undefined' is not assignable to type 'UiLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1351,5): error TS2322: Type 'string | undefined' is not assignable to type 'UiLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1415,53): error TS2322: Type '{ id: string; label: string | undefined; icon: Element | undefined; pressed: boolean | undefined; disabled: boolean | undefined; onPress: (() => void) | undefined; }[] | undefined' is not assignable to type 'EngagementOption[] | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1441,53): error TS2322: Type '{ id: string | undefined; value: string | undefined; placeholder: string | undefined; disabled: boolean | undefined; onChange: ((value: string) => void) | undefined; onSubmit: ((value: string) => void) | undefined; onRepeatLast: (() => void) | undefined; onAbort: (() => void) | undefined; } | undefined' is not assignable to type 'SearchInput | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1480,84): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1533,62): error TS2345: Argument of type 'string' is not assignable to parameter of type 'UiRibbonParentCategory'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1541,90): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1611,67): error TS7006: Parameter 's' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1611,87): error TS7006: Parameter 'i' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1624,44): error TS7006: Parameter 'child' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1625,48): error TS7006: Parameter 'child' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1626,47): error TS7006: Parameter 'child' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1629,37): error TS7006: Parameter 'section' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1633,44): error TS7006: Parameter 'child' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1633,51): error TS7006: Parameter 'index' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1644,40): error TS7006: Parameter 'child' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1644,47): error TS7006: Parameter 'index' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1657,41): error TS7006: Parameter 'child' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1657,48): error TS7006: Parameter 'index' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1713,37): error TS7006: Parameter 'child' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1713,44): error TS7006: Parameter 'index' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1720,41): error TS7006: Parameter 'child' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1720,48): error TS7006: Parameter 'index' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1724,7): error TS2322: Type '(TreeDataItem | undefined)[]' is not assignable to type 'TreeDataItem[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1917,5): error TS2322: Type '{ en: string; de: string; }' is not assignable to type 'string'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1918,5): error TS2322: Type '{ en: string; de: string; }' is not assignable to type 'string'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1935,3): error TS2322: Type 'string | number | (() => string) | { (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { ...; }, replaceValue: string): string; (searchValue: { ...; }, replacer: (substring: string, ...args: any...' is not assignable to type 'string'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1935,79): error TS2339: Property 'en' does not exist on type 'string'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1965,100): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1967,182): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1975,90): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1976,102): error TS2345: Argument of type '{}' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1977,97): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1978,118): error TS2345: Argument of type '{}' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1989,89): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1993,109): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(1994,107): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2026,5): error TS2353: Object literal may only specify known properties, and 'selectionJson' does not exist in type 'TutorialUiSnapshot'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2026,39): error TS2339: Property 'selectionJson' does not exist on type 'PluginViewState'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2044,58): error TS2345: Argument of type '{ id: string; label: unknown; }[]' is not assignable to parameter of type 'readonly { readonly id: string; readonly label: LocalizedLabel; }[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2077,41): error TS2339: Property 'selectionJson' does not exist on type 'TutorialUiSnapshot'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2077,76): error TS2339: Property 'selectionJson' does not exist on type 'PluginViewState'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2103,60): error TS2345: Argument of type '{ id: string; label: unknown; }[]' is not assignable to parameter of type 'readonly { readonly id: string; readonly label: LocalizedLabel; }[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2121,141): error TS2339: Property 'selectionJson' does not exist on type '{ readonly kind: "selection"; readonly domainId: string; readonly granularity: string; readonly ids: readonly string[]; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2141,37): error TS2345: Argument of type '"ui.settings.terminology.neutral"' is not assignable to parameter of type '"ui.nav.back" | "settings.layout.tablet" | "settings.layout.mobile" | "settings.layout.desktop" | "settings.keybindings.conflict" | "settings.keybindings.reset" | "settings.keybindings.capture" | ... 344 more ... | "tutorial.chapter"'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2420,6): error TS2741: Property 'id' is missing in type '{ children: Element[]; value: string; onValueChange: (value: string) => unknown; }' but required in type 'ElementProps'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2441,7): error TS2322: Type 'string' is not assignable to type 'UiLabel'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2505,47): error TS2322: Type 'string | undefined' is not assignable to type 'UiLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2512,47): error TS2322: Type 'string | undefined' is not assignable to type 'UiLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2519,47): error TS2322: Type 'string | undefined' is not assignable to type 'UiLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2574,27): error TS7006: Parameter 'val' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2591,27): error TS7006: Parameter 'val' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2597,13): error TS2322: Type '{ value: string; text: UiLabel; }' is not assignable to type 'ToggleGroupItemProps'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2598,13): error TS2322: Type '{ value: string; text: UiLabel; }' is not assignable to type 'ToggleGroupItemProps'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2599,13): error TS2322: Type '{ value: string; text: UiLabel; }' is not assignable to type 'ToggleGroupItemProps'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2600,13): error TS2322: Type '{ value: string; text: UiLabel; }' is not assignable to type 'ToggleGroupItemProps'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2696,59): error TS2322: Type 'unknown' is not assignable to type 'string | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2699,10): error TS2741: Property 'id' is missing in type '{ children: Element[]; value: string | undefined; disabled: boolean | undefined; onValueChange: (next: string) => void; }' but required in type 'ElementProps'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2701,26): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2706,17): error TS2322: Type 'unknown' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2800,62): error TS2345: Argument of type 'string' is not assignable to parameter of type 'UiRibbonParentCategory'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2850,47): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2872,13): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(2956,88): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(3049,33): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(3142,5): error TS2322: Type '{ id: string; label: UiLabel; category: string; iconId: string; kind: "shell"; inPalette: boolean; args: never[]; keybindings: never[]; }' is not assignable to type 'CommandDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(3146,5): error TS2322: Type '{ id: string; label: UiLabel; category: string; iconId: string; kind: "shell"; inPalette: boolean; keybindings: never[]; args: ActionArgDef[]; }' is not assignable to type 'CommandDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(3149,5): error TS2322: Type '{ id: string; label: UiLabel; category: string; iconId: string; kind: "shell"; inPalette: boolean; args: never[]; keybindings: never[]; }' is not assignable to type 'CommandDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(3154,7): error TS2322: Type 'string' is not assignable to type 'IconName'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(3170,7): error TS2322: Type 'string' is not assignable to type 'IconName'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(3186,7): error TS2322: Type 'string' is not assignable to type 'IconName'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(3197,91): error TS2322: Type 'string' is not assignable to type 'IconName'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(3202,7): error TS2322: Type 'string' is not assignable to type 'IconName'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(3217,7): error TS2322: Type 'string' is not assignable to type 'IconName'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(3233,7): error TS2322: Type 'string' is not assignable to type 'IconName'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(3248,5): error TS2322: Type '{ id: string; label: UiLabel; category: string; iconId: string; kind: "shell"; inPalette: boolean; args: never[]; keybindings: never[]; } | { id: string; label: UiLabel; category: string; ... 4 more ...; args: ActionArgDef[]; } | ... 8 more ... | { ...; }' is not assignable to type 'CommandDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(3355,11): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(3386,65): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(3476,17): error TS2322: Type 'unknown' is not assignable to type 'string | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(3507,7): error TS2322: Type 'unknown' is not assignable to type 'string'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx(3675,27): error TS2677: A type predicate's type must be assignable to its parameter's type.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(99,8): error TS2724: '"@semio-tech/framework"' has no exported member named 'TutorialDocumentEventKind'. Did you mean 'TutorialEventKind'?
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(571,12): error TS2339: Property 'selectionJson' does not exist on type 'TutorialUiSnapshot'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(571,42): error TS2339: Property 'selectionJson' does not exist on type 'TutorialUiSnapshot'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(571,65): error TS2339: Property 'selectionJson' does not exist on type 'TutorialUiSnapshot'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(571,114): error TS2353: Object literal may only specify known properties, and 'selectionJson' does not exist in type '{ readonly kind: "selection"; readonly domainId: string; readonly granularity: string; readonly ids: readonly string[]; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(571,134): error TS2339: Property 'selectionJson' does not exist on type 'TutorialUiSnapshot'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(658,15): error TS2353: Object literal may only specify known properties, and 'documentJson' does not exist in type 'TutorialBase'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(659,86): error TS2353: Object literal may only specify known properties, and 'document' does not exist in type 'TutorialTracks'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(1000,69): error TS2345: Argument of type 'WindowKindDefinition[]' is not assignable to parameter of type 'readonly { readonly id: string; readonly label: LocalizedLabel; }[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(1021,137): error TS2339: Property 'role' does not exist on type 'AppDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(1025,73): error TS2345: Argument of type 'WindowKindDefinition[]' is not assignable to parameter of type 'readonly { readonly id: string; readonly label: LocalizedLabel; }[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(1045,59): error TS2304: Cannot find name 'PluginInstallOutcome'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(1482,144): error TS2339: Property 'breadcrumb' does not exist on type 'SpawnedAppEntry'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(1824,100): error TS2345: Argument of type 'WindowKindDefinition[]' is not assignable to parameter of type 'readonly { readonly id: string; readonly label: LocalizedLabel; }[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(1831,9): error TS2345: Argument of type '{ pluginId: string; manifest: PluginManifest; }[]' is not assignable to parameter of type 'readonly { readonly pluginId: string; readonly manifest: PluginManifest; }[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(1866,222): error TS2345: Argument of type '{ plugins: Map<string, PluginWasmHandle>; contributorInstances: Map<string, number>; viewState: PluginViewState; }' is not assignable to parameter of type 'ExternalSlotResolverContext'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(1978,71): error TS2345: Argument of type 'WindowKindDefinition[]' is not assignable to parameter of type 'readonly { readonly id: string; readonly label: LocalizedLabel; }[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(1985,53): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(2016,9): error TS2345: Argument of type '{ pluginId: string; manifest: PluginManifest; }[]' is not assignable to parameter of type 'readonly { readonly pluginId: string; readonly manifest: PluginManifest; }[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(2111,66): error TS2345: Argument of type 'WindowKindDefinition[]' is not assignable to parameter of type 'readonly { readonly id: string; readonly label: LocalizedLabel; }[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(2161,9): error TS2353: Object literal may only specify known properties, and 'breadcrumb' does not exist in type 'SpawnedAppEntry'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(2161,29): error TS2339: Property 'breadcrumb' does not exist on type 'SpaceProgramEntry'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(2265,15): error TS18046: 'payload' is of type 'unknown'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(2265,31): error TS18046: 'payload' is of type 'unknown'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(2266,47): error TS18046: 'payload' is of type 'unknown'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(2267,46): error TS18046: 'payload' is of type 'unknown'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(2270,22): error TS18046: 'payload' is of type 'unknown'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(2271,95): error TS18046: 'payload' is of type 'unknown'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(2272,78): error TS18046: 'payload' is of type 'unknown'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(2274,121): error TS2769: No overload matches this call.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(2378,57): error TS2339: Property 'documentJson' does not exist on type '{ readonly pluginId: string; readonly appId: string; readonly osInstanceId?: string | undefined; readonly label?: string | undefined; readonly artifactJson?: string | undefined; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(2616,11): error TS2353: Object literal may only specify known properties, and 'breadcrumb' does not exist in type 'SpawnedAppEntry'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(2616,31): error TS2339: Property 'breadcrumb' does not exist on type 'SpaceProgramEntry'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(2876,29): error TS2339: Property 'role' does not exist on type 'AppDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(2974,33): error TS2304: Cannot find name 'TutorialUiBridgeContext'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(3003,24): error TS2339: Property 'documentJson' does not exist on type 'TutorialBase'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(3003,122): error TS2339: Property 'documentJson' does not exist on type 'TutorialBase'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(3444,55): error TS2345: Argument of type 'WindowKindDefinition[]' is not assignable to parameter of type 'readonly { readonly id: string; readonly label: LocalizedLabel; }[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(3470,61): error TS2345: Argument of type 'WindowKindDefinition[]' is not assignable to parameter of type 'readonly { readonly id: string; readonly label: LocalizedLabel; }[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(3494,159): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(3510,67): error TS2345: Argument of type 'WindowKindDefinition[]' is not assignable to parameter of type 'readonly { readonly id: string; readonly label: LocalizedLabel; }[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(3523,154): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(3552,118): error TS2339: Property 'dialect' does not exist on type 'AppDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(3552,132): error TS2339: Property 'dialect' does not exist on type 'AppDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(3628,66): error TS2345: Argument of type 'WindowKindDefinition[]' is not assignable to parameter of type 'readonly { readonly id: string; readonly label: LocalizedLabel; }[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(3672,56): error TS2339: Property 'dialect' does not exist on type 'AppDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(3672,155): error TS2339: Property 'dialect' does not exist on type 'AppDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(3714,35): error TS2345: Argument of type '{}' is not assignable to parameter of type 'string'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(4198,34): error TS2345: Argument of type '(event: React.KeyboardEvent<Element>) => void' is not assignable to parameter of type '(event: KeyboardEvent) => void'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(4207,56): error TS2345: Argument of type 'PanelTabNode[]' is not assignable to parameter of type 'readonly { readonly children?: readonly PanelTabNode[] | undefined; }[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(4207,90): error TS2339: Property 'id' does not exist on type '{ readonly children?: readonly PanelTabNode[] | undefined; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(4219,103): error TS2339: Property 'dialect' does not exist on type 'AppDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(4226,72): error TS2339: Property 'dialect' does not exist on type 'AppDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(4227,54): error TS2339: Property 'dialect' does not exist on type 'AppDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(4270,34): error TS2339: Property 'role' does not exist on type 'AppDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(4275,105): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(4329,21): error TS2322: Type 'readonly UtilityNode[]' is not assignable to type 'readonly FrameworkSyncUtilityLeaf[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(4366,23): error TS2339: Property 'iconId' does not exist on type '{ readonly id: string; readonly label: string; readonly documentJson: string; readonly appId: string; }'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(4412,93): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(4424,25): error TS2339: Property 'role' does not exist on type 'AppDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(4464,37): error TS2345: Argument of type '{}' is not assignable to parameter of type 'string'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(4477,23): error TS2339: Property 'role' does not exist on type 'AppDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(4530,34): error TS2345: Argument of type '(event: React.KeyboardEvent<Element>) => void' is not assignable to parameter of type '(event: KeyboardEvent) => void'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(4538,110): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(4940,36): error TS18047: 'session' is possibly 'null'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5011,36): error TS18047: 'session' is possibly 'null'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5032,68): error TS2339: Property 'role' does not exist on type 'AppDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5032,93): error TS2339: Property 'role' does not exist on type 'AppDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5033,44): error TS2339: Property 'role' does not exist on type 'AppDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5080,83): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5089,94): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5103,9): error TS2322: Type 'unknown' is not assignable to type 'string'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5130,136): error TS2339: Property 'breadcrumb' does not exist on type 'SpaceProgramEntry'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5163,28): error TS2304: Cannot find name 'ActionPaneSlice'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5185,137): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5188,11): error TS2741: Property 'iconId' is missing in type '{ id: string; title: UiLabel; fill: true; showControls: true; measures: React.ReactNode; measuresFolded: boolean | undefined; engagement: EngagementSpec | undefined; ... 6 more ...; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5190,115): error TS2339: Property 'breadcrumb' does not exist on type 'SpawnedAppEntry'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5216,103): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5221,166): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5255,107): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5292,5): error TS2322: Type '{ id: string; iconId: "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | "arrow-right-left" | ... 238 more ... | "zoom-out"; ... 14 more ...; children: Element; }[]' is not assignable to type 'ModeWindowDescriptor[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5323,72): error TS2345: Argument of type 'WindowKindDefinition[]' is not assignable to parameter of type 'readonly { readonly id: string; readonly label: LocalizedLabel; }[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5416,105): error TS2339: Property 'breadcrumb' does not exist on type 'SpawnedAppEntry'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5454,13): error TS2322: Type '{ id: string; label: string; children: null; }[]' is not assignable to type 'AppModeDescriptor[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5454,135): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5493,104): error TS2345: Argument of type 'WindowKindDefinition[]' is not assignable to parameter of type 'readonly { readonly id: string; readonly label: LocalizedLabel; }[]'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5620,112): error TS2339: Property 'role' does not exist on type 'AppDefinition'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5629,94): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LocalizedLabel | undefined'.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5662,44): error TS2769: No overload matches this call.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx(5663,60): error TS2769: No overload matches this call.

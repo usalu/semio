@@ -101,7 +101,7 @@ mod tests {
         let mut next_source = source.clone();
         next_source.kind = "video".into();
         let operation = PresentMutation::ReplaceSource(replace_source::mutation::ReplaceSource { new_source: next_source.clone() });
-        let diff: PresentDiff = operation.diff(&base);
+        let diff: PresentDiff = operation.diff(&base).into_parts().0;
         assert!(diff.presentation.is_some());
         assert!(diff.artifact.is_none());
         let (applied_source, _) = crate::artifacts::present::present_working_scene(&diff.apply(&base));

@@ -7,8 +7,14 @@ use crate::artifacts::program::registers::ScenarioPatch;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// ✏️ `patched = [{id, name: Some(new_name)}]`.
-pub fn diff(payload: &RenameScenario, _base: &ProgramSnapshot) -> ProgramDiff {
+/// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
+pub fn diff(payload: &RenameScenario, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let Some(existing) = base.scenarios.iter().find(|row| row.header.id == payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "No scenario exists with this id.", [payload.id.0.clone()]);
+    };
+    if existing.header.name == payload.new_name {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This scenario already has this name.").at([payload.id.0.clone()])]);
+    }
     let patch = ScenarioPatch { name: Some(payload.new_name.clone()), ..Default::default() };
-    ProgramDiff { scenarios: Some(ProgramScenariosDelta { patched: vec![ProgramScenariosPatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() }
+    protocol::MutationOutcome::new(ProgramDiff { scenarios: Some(ProgramScenariosDelta { patched: vec![ProgramScenariosPatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
 }

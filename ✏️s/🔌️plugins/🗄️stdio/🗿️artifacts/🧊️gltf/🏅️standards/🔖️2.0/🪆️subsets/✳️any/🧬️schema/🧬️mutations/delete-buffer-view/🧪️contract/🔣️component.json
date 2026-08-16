@@ -1,0 +1,11 @@
+{
+  "id": "s.stdio.gltf.mutation.delete-buffer-view.v1",
+  "laws": [
+    "acceptance",
+    "rejection",
+    "apply",
+    "inverse",
+    "typed-reference-repair",
+    "serialization"
+  ]
+}

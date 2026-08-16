@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.bind-node-skin.v1.inverse",
+  "title": "GltfBindNodeSkinInverse",
+  "type": "object",
+  "properties": {
+    "operation": {
+      "type": "object",
+      "properties": {
+        "node": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "skin": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "node",
+        "skin"
+      ],
+      "additionalProperties": false
+    },
+    "before": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "touchedPaths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "operation",
+    "before",
+    "touchedPaths"
+  ],
+  "additionalProperties": false,
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.bind-node-skin.v1",
+    "version": 1,
+    "phase": "inverse",
+    "kind": "bind",
+    "touchedPaths": [
+      "document/nodes/*/skin"
+    ],
+    "referencePolicy": "typed skin reference"
+  }
+}

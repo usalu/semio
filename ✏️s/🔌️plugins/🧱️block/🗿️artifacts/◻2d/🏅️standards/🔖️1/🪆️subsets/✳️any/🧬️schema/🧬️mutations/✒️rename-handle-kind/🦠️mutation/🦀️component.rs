@@ -22,7 +22,7 @@ pub fn rename_handle_kind(id: String, new_name: String) -> Block2dMutation {
 impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for RenameHandleKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "handle-kind", kind: "rename-handle-kind", record: "RenamedHandleKind" };
 
-    fn diff(&self, base: &Block2dSnapshot) -> Block2dDiff {
+    fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {

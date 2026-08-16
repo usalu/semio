@@ -67,6 +67,18 @@ impl From<LayoutPoint> for (f64, f64) {
 pub use super::snapshot::schema::RewriteSnapshot;
 
 pub const REWRITE_RULE_SCHEMA: &str = "trinity.rewrite.rule";
+
+/// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the one `Dialect` coordinate every
+/// surface (editor AND viewer) of this artifact shares — lives at the ARTIFACT level, not under
+/// `editor`, so a viewer file can read it without ever importing through the sibling `editor` module.
+/// `artifact_kind = "s.trinity.rewrite"` matches `#[artifact_schema(id = "s.trinity.rewrite")]` in
+/// this subset's own `🧬️schema/🦀️component.rs`; `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — the canonical surface id is
+/// `s.trinity.rewrite@1/*#editor` / `s.trinity.rewrite@1/*#viewer` (contract §1 grammar). NOT to be
+/// confused with the unrelated, pre-existing `const DIALECT` inside
+/// `derived_analysis::RewriteAnalyzerAnalysis` in this subset's `🧬️schema/🦀️component.rs` — a
+/// different trait (`ArtifactAnalysis`), a different string (`"s.rewrite"`), out of scope here.
+pub const TRINITY_REWRITE_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.trinity.rewrite", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
 //#endregion 🔖️Types
 
 // 📜️ `RewriteSnapshot`/`RewriteRuleMutation` derive their `store::ArtifactDsl`/`protocol::OpText`
@@ -160,8 +172,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
 /// the old side-effecting `register()`, which called four different global registries directly from
-/// a plugin `.setup()` callback. `crate::apps::rewrite::config::schema::register_app_schema()` is the
-/// one exception, kept alive via the plugin root's own narrowed `.setup()`: it registers the
+/// a plugin `.setup()` callback. `crate::editor::rewrite::config::schema::register_app_schema()` is
+/// the one exception, kept alive via the plugin root's own narrowed `.setup()`: it registers the
 /// `TrinityRewritePlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration`
 /// deliberately has no field for (see that struct's own doc).
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
@@ -207,7 +219,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::rewrite::standards::v1::subsets::any::schema::inferences::rewrite_artifact_inference_descriptor()])
         .composers(crate::artifacts::rewrite::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::rewrite::TrinityRewritePlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::rewrite::TrinityRewritePlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Register

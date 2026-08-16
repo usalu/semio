@@ -17,7 +17,7 @@ pub struct RotateTargetVolume {
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for RotateTargetVolume {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "target-volume", kind: "rotate-target-volume", record: "RotatedTargetVolume" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> Puzzle3dDiff {
+    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {

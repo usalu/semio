@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.change-asset-version.v1.diff",
+  "title": "GltfChangeAssetVersionDiff",
+  "type": "object",
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.change-asset-version.v1",
+    "version": 1,
+    "phase": "diff",
+    "touchedPaths": [
+      "document/asset/version"
+    ],
+    "referencePolicy": "none"
+  }
+}

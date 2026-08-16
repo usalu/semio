@@ -23,7 +23,7 @@ pub fn set_node_root(node_id: String, new_root: bool) -> WiresMutation {
 impl protocol::MutationKind<WiresSnapshot, WiresMutation> for SetNodeRoot {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "node", kind: "set-node-root", record: "SetNodeRoot" };
 
-    fn diff(&self, base: &WiresSnapshot) -> WiresDiff {
+    fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {

@@ -1,0 +1,6 @@
+// change-node-extra-data mutation facet.
+syntax = "proto3";
+package stdio.gltf.mutation;
+message GltfChangeNodeExtraDataPresenceV1 { oneof state { bool absent = 1; bytes present_json = 2; } }
+message GltfChangeNodeExtraDataPayloadV1 { uint32 node = 1; GltfChangeNodeExtraDataPresenceV1 data = 2; }
+message GltfChangeNodeExtraDataMutationV1 { string id = 1; uint32 version = 2; bool accepted = 3; repeated string touched_paths = 4; string rejection_code = 5; }

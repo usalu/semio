@@ -22,7 +22,7 @@ pub fn delete_layer(layer_id: String) -> DrawMutation {
 impl protocol::MutationKind<DrawSnapshot, DrawMutation> for DeleteLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "layer", kind: "delete-layer", record: "DeletedLayer" };
 
-    fn diff(&self, base: &DrawSnapshot) -> DrawDiff {
+    fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {

@@ -27,7 +27,7 @@ pub struct ReplaceStepMeasure {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ReplaceStepMeasure {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "step", kind: "replace-step-measure", record: "ReplacedStepMeasure" };
 
-    fn diff(&self, base: &Process3dSnapshot) -> Process3dDiff {
+    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::replace_step_measure::diff::diff(self, base)
     }
 

@@ -1,0 +1,2 @@
+# change-scene-extra-data inverse typed facet.
+input GltfChangeSceneExtraDataInverseV1 { operation: GltfChangeSceneExtraDataPayloadV1!, before: GltfJson, touchedPaths: [String!]! }

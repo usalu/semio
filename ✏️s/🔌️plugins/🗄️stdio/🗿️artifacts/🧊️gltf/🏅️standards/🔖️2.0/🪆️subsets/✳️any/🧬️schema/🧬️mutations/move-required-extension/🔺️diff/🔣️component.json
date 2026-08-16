@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.move-required-extension.v1.diff",
+  "title": "GltfMoveRequiredExtensionDiff",
+  "type": "object",
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.move-required-extension.v1",
+    "version": 1,
+    "phase": "diff",
+    "touchedPaths": [
+      "document/extensionsRequired"
+    ],
+    "referencePolicy": "preserves declaration identity while changing only order"
+  }
+}

@@ -24,7 +24,7 @@ pub struct ReplaceReferenceMedia {
 impl MutationKind<CadSnapshot, CadMutation> for ReplaceReferenceMedia {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "reference", kind: "replace-reference-media", record: "ReplacedReferenceMedia" };
 
-    fn diff(&self, base: &CadSnapshot) -> crate::artifacts::cad::diff::CadDiff {
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {

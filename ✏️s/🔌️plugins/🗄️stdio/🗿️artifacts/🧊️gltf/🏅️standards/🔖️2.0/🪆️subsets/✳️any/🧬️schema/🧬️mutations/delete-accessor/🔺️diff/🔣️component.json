@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.delete-accessor.v1.diff",
+  "title": "GltfDeleteAccessorDiffV1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "const": "s.stdio.gltf.mutation.delete-accessor.v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "touchedPaths": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^document/accessors/[0-9]+$"
+      }
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "index"
+      ]
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "delete"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "removed": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "bufferView": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "byteOffset": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "componentType": {
+              "type": "integer"
+            },
+            "normalized": {
+              "type": "boolean"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "type": {
+              "enum": [
+                "SCALAR",
+                "VEC2",
+                "VEC3",
+                "VEC4",
+                "MAT2",
+                "MAT3",
+                "MAT4"
+              ]
+            },
+            "max": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "min": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "sparse": {
+              "type": "object"
+            },
+            "name": {
+              "type": "string"
+            },
+            "extensions": {},
+            "extras": {}
+          },
+          "required": [
+            "byteOffset",
+            "componentType",
+            "normalized",
+            "count",
+            "type"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "index",
+        "removed"
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "touchedPaths",
+    "payload",
+    "operation"
+  ],
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.delete-accessor.v1",
+    "version": 1,
+    "phase": "diff",
+    "touchedPathPattern": "document/accessors",
+    "referencePolicy": "typed references remap, repair, or reject"
+  }
+}

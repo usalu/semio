@@ -23,7 +23,7 @@ pub fn add_attribute(attribute: BlockAttribute) -> Block2dMutation {
 impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for AddAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "attribute", kind: "add-attribute", record: "AddedAttribute" };
 
-    fn diff(&self, base: &Block2dSnapshot) -> Block2dDiff {
+    fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {

@@ -4,13 +4,13 @@
 pub mod mean_thickness;
 #[path = "minimum-thickness/🦀️component.rs"]
 pub mod minimum_thickness;
-#[path = "thickness-variability/🦀️component.rs"]
-pub mod thickness_variability;
 #[path = "thickness-distribution/🦀️component.rs"]
 pub mod thickness_distribution;
+#[path = "thickness-variability/🦀️component.rs"]
+pub mod thickness_variability;
 
-use super::geometry_core::{GltfGeometryContext, statistics, thickness_samples};
 use super::super::modules::measurement_contracts::*;
+use super::geometry_core::{statistics, thickness_samples, GltfGeometryContext};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

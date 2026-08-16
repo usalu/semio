@@ -18,7 +18,7 @@ pub struct DeleteQualityRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteQualityRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "quality-record", kind: "delete-quality-record", record: "DeletedQualityRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

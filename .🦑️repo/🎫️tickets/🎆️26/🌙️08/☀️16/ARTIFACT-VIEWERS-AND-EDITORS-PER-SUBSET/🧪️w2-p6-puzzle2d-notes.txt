@@ -1,0 +1,61 @@
+W2 Packet P6 — puzzle plugin, ◻2d (puzzle2d) kind — working notes for the coordinator.
+
+Base subset path (verified via `find`, paste this exact string, do not hand-type — emoji-typo trap):
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any
+
+Editor tree root: <base>/✏️editor/  (100 files, moved from 🎛️apps/◻2d, sed crate::apps::puzzle2d:: -> crate::editor::puzzle2d::)
+Viewer tree root: <base>/👁️viewer/  (19 files, new)
+
+Struct/fn names:
+- Editor: Puzzle2dPlayApp (impl ArtifactEditor), create_puzzle2d_app() -> AppDefinition
+- Viewer: Puzzle2dViewer (impl ArtifactViewer), create_puzzle2d_viewer() -> AppDefinition
+- Viewer Command: Puzzle2dViewCommand::Noop (#[derive(Default)], #[default] on Noop)
+
+PUZZLE2D_DIALECT (artifact root 🗿️artifacts/◻2d/🦀️component.rs):
+pub const PUZZLE2D_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect {
+    artifact_kind: "s.puzzle.puzzle2d", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY
+};
+
+Snapshot/Mutation asymmetry (intentional, pre-existing, flagged in final report):
+- Editor: Snapshot = Puzzle2dPlaySnapshot (Value newtype bridge), Mutation = Puzzle2dMutation
+- Viewer: Snapshot = Puzzle2dSnapshot (typed struct), Mutation = crate::artifacts::puzzle2d::op::Puzzle2dMutation
+  (same Puzzle2dMutation enum, derive(dsl::Mutations) generates BOTH `Mutation<Puzzle2dSnapshot>` (typed) AND a
+  hand-written `Mutation<Puzzle2dPlaySnapshot>` impl lives in 🧬️mutations/component.rs — both compile, confirmed
+  by reading, not run).
+
+include_str! fixed (only one reached outside its moved subtree):
+  old: ⚙️engine/🎲️board-host/component.rs: include_str!("../../../../🗿️artifacts/◻2d/🛂️manifest.jsondefault.manifest.json")
+  new: include_str!("../../../../../../../🛂️manifest.jsondefault.manifest.json")
+  (verified path resolves on disk via python os.path.normpath)
+
+.example_source (x2) / .workflow dropped from create_puzzle2d_app, documented in a doc comment directly above
+the fn (EditorBuilder has neither method, contract §2.4).
+
+Outside-lease referrers found (report only, NOT fixed, NOT mine to touch):
+1. ✏️s/🔌️plugins/🧩️puzzle/🦀️component.rs:43 (plugin root, off-limits to me) —
+   `.document_app::<crate::apps::puzzle2d::Puzzle2dPlayApp>(crate::apps::puzzle2d::create_puzzle2d_app())`
+   needs `.editor::<crate::editor::puzzle2d::Puzzle2dPlayApp>(...)` + `.viewer::<crate::viewer::puzzle2d::Puzzle2dViewer>(...)`.
+2. 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EngineCanvas/🧊️component.rs —
+   REAL cross-crate compile dependency on `puzzle::apps::puzzle2d::engine::BoardHost` (5 call sites: lines 72,
+   1418, 1492, 1576, 1592/1601 approx). Needs repointing to `puzzle::editor::puzzle2d::engine::BoardHost` once
+   glue.rs mounts the new tree. This is a FRAMEWORK file, outside puzzle plugin's lease entirely — flag to
+   whoever owns the renderer / the coordinator.
+3. Puzzle plugin's own 📦️packages/🦀️rust/📦️glue.rs and 📦️packages/🟦️typescript/🧪️vitest.config.ts still
+   reference the old `../../🎛️apps/◻2d/...` paths throughout (glue.rs: ~60 #[path] mounts; vitest.config.ts:
+   one `include` array entry) — expected per the packet brief, coordinator's job, not touched here.
+
+Deletion: 🎛️apps/◻2d left as empty directory tree (no files), NOT rmdir'd, per instructions (coordinator
+deletes the whole 🎛️apps/ tree once all three kinds — 2d/3d/5d — are done; 3d and 5d still have real files).
+
+Verification performed (no cargo check, per packet instructions):
+- grep for crate::apps::puzzle2d:: across the whole moved+new tree: 0 remaining.
+- grep for "🎛️apps/◻2d" across the whole moved+new tree: 0 remaining (only the doc-comment flag notes
+  above, worded without the literal path when inside a viewer file).
+- grep for "::editor::" substring across the whole 👁️viewer tree: 0 matches (policyViewerPurityBreaches).
+- grep for ".mutation(" / "Emit::mutations" / "artifact_mutations" across 👁️viewer tree: 0 matches.
+- Brace/paren balance checked programmatically (python) for every .rs file touched or created: all balanced.
+- include_str! target resolved on disk via os.path.normpath for the one path-depth fix.
+- `bun ./📜️script.ts policy` kicked off in background (repo-wide, slow); raw output, once it finishes, lands
+  in 🧪️w2-p6-policy-full.txt in this ticket folder — not waited on to completion for this report, per
+  "don't block/poll" session guidance; grep it for "puzzle2d" / "puzzle" breach rows if you want the final
+  confirmation number.

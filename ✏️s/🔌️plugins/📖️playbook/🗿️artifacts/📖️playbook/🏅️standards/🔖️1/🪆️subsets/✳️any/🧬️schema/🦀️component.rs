@@ -149,7 +149,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<PlaybookSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
-            let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
+            let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot).into_parts().0;
             self.snapshot = crate::artifacts::playbook::schema::mutations::apply_playbook_mutation(&self.snapshot, &mutation);
             (self, diff)
         }

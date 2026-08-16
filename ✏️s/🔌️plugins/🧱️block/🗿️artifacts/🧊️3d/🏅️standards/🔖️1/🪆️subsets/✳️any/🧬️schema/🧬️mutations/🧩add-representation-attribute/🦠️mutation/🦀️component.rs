@@ -24,7 +24,7 @@ pub fn add_representation_attribute(id: String, attribute: BlockAttribute) -> Bl
 impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for AddRepresentationAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "representation-attribute", kind: "add-representation-attribute", record: "AddedRepresentationAttribute" };
 
-    fn diff(&self, base: &Block3dSnapshot) -> Block3dDiff {
+    fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.reorder-animations.v1.mutation",
+  "title": "GltfReorderAnimationsPayloadV1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "order": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  },
+  "required": [
+    "order"
+  ],
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.reorder-animations.v1",
+    "version": 1,
+    "phase": "mutation",
+    "touchedPathPattern": "document/animations",
+    "referencePolicy": "typed references remap, repair, or reject"
+  }
+}

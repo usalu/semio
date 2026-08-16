@@ -27,7 +27,7 @@ pub fn connect_nodes(id: String, source: String, target: String, route_style: Ed
 impl protocol::MutationKind<DagSnapshot, DagMutation> for ConnectNodes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "nodes", kind: "connect-nodes", record: "ConnectedNodes" };
 
-    fn diff(&self, base: &DagSnapshot) -> DagDiff {
+    fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {

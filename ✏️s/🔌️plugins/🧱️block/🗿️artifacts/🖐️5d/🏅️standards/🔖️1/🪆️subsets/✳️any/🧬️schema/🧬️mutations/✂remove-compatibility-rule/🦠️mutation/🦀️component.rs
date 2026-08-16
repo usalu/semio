@@ -21,7 +21,7 @@ pub fn remove_compatibility_rule(id: String) -> Block5dMutation {
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for RemoveCompatibilityRule {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "compatibility-rule", kind: "remove-compatibility-rule", record: "RemovedCompatibilityRule" };
 
-    fn diff(&self, base: &Block5dSnapshot) -> Block5dDiff {
+    fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {

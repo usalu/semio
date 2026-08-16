@@ -8,7 +8,7 @@
 
 // #endregion 🧲️Header
 
-import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger, Section, Steps } from "@semio-tech/ui-react";
+import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger, Section } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
@@ -81,20 +81,20 @@ export const SectionDefault: Story = {
 export const StepsDefault: Story = {
   render: () => (
     <div className="w-96">
-      <Steps>
-        <div className="border p-single">
+      <ol className="flex flex-col gap-medium">
+        <li className="border p-single">
           <h3 className="font-semibold">Step 1: Create a Kit</h3>
           <p className="text-sm text-muted-foreground">Initialize a new kit with types and qualities.</p>
-        </div>
-        <div className="border p-single">
+        </li>
+        <li className="border p-single">
           <h3 className="font-semibold">Step 2: Add Types</h3>
           <p className="text-sm text-muted-foreground">Define the building blocks of your design.</p>
-        </div>
-        <div className="border p-single">
+        </li>
+        <li className="border p-single">
           <h3 className="font-semibold">Step 3: Create a Design</h3>
           <p className="text-sm text-muted-foreground">Compose types into a complete design.</p>
-        </div>
-      </Steps>
+        </li>
+      </ol>
     </div>
   ),
 };

@@ -18,7 +18,7 @@ pub struct DeleteFlexibilityRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteFlexibilityRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "flexibility-requirement", kind: "delete-flexibility-requirement", record: "DeletedFlexibilityRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

@@ -1,600 +1,332 @@
-//! 🧬️ Closed GLTF mutation command union and command-leaf dispatch.
+//! 🧭️ Open GLTF mutation runtime: immutable descriptor registry and typed envelopes.
 
-use crate::artifacts::gltf::schema::diff::GltfDiff;
-#[cfg(test)]
-use crate::artifacts::gltf::schema::snapshot::GltfScene;
-use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfAnimation, GltfAsset, GltfBuffer, GltfMaterial, GltfMesh, GltfNode};
+use crate::artifacts::gltf::schema::mutations::{gltf_mutation_leaf_descriptors, GltfMutationLeafDescriptor, GltfMutationLeafError, GltfMutationLeafPlan};
 use crate::artifacts::gltf::GltfSnapshot;
-use protocol::Mutation;
+use protocol::{Mutation, MutationDiff, MutationOutcome};
 use serde::{Deserialize, Serialize};
-use crate::artifacts::gltf::schema::mutations as command;
+use std::collections::BTreeMap;
+use std::sync::OnceLock;
 
-pub use command::bind_node_mesh::BindNodeMesh;
-pub use command::bind_primitive_material::BindPrimitiveMaterial;
-pub use command::insert_accessor::InsertAccessor;
-pub use command::insert_animation::InsertAnimation;
-pub use command::insert_buffer::InsertBuffer;
-pub use command::insert_material::InsertMaterial;
-pub use command::insert_mesh::InsertMesh;
-pub use command::insert_node::InsertNode;
-pub use command::insert_scene::InsertScene;
-pub use command::no_mutation::NoMutation;
-pub use command::remove_accessor::RemoveAccessor;
-pub use command::remove_animation::RemoveAnimation;
-pub use command::remove_buffer::RemoveBuffer;
-pub use command::remove_material::RemoveMaterial;
-pub use command::remove_mesh::RemoveMesh;
-pub use command::remove_node::RemoveNode;
-pub use command::remove_scene::RemoveScene;
-pub use command::reparent_node::ReparentNode;
-pub use command::set_accessor::SetAccessor;
-pub use command::set_animation::SetAnimation;
-pub use command::set_asset::SetAsset;
-pub use command::set_buffer::SetBuffer;
-pub use command::set_material::SetMaterial;
-pub use command::set_mesh::SetMesh;
-pub use command::set_node::SetNode;
-pub use command::set_scene::SetScene;
-pub use command::set_snapshot::SetSnapshot;
-pub use command::transform_node::TransformNode;
+//#region 🔖️Envelope
+pub const GLTF_MUTATION_MAX_COMMAND_ID_BYTES: usize = 160;
+pub const GLTF_MUTATION_MAX_PAYLOAD_BYTES: usize = 64 * 1024;
+pub const GLTF_MUTATION_MAX_DIFF_ENVELOPES: usize = 256;
+pub const GLTF_MUTATION_MAX_TOUCHED_PATHS: usize = 64;
+pub const GLTF_MUTATION_MAX_TOUCHED_PATH_BYTES: usize = 512;
 
-#[path = "🧭️planning/🦀️component.rs"]
-mod planning;
-pub(crate) use self::planning::{check_index, locate_node_owner, reject, remap_references, remove_checked, shift_insert, GltfSemanticMutation, IndexFamily};
-#[cfg(test)]
-pub(crate) use self::planning::semantic_snapshot;
-pub use self::planning::{apply_gltf_mutation, plan_gltf_mutation, validate_gltf_references, GltfMutationRejection};
-
-//#region 🔖️Mutations
-/// 📐️ Closed semantic command union for `stdio.gltf`; declaration order follows frozen tags.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
-pub enum GltfMutation {
-    NoMutation(NoMutation),
-    SetSnapshot(SetSnapshot),
-    SetAsset(SetAsset),
-    InsertScene(InsertScene),
-    RemoveScene(RemoveScene),
-    SetScene(SetScene),
-    InsertNode(InsertNode),
-    RemoveNode(RemoveNode),
-    SetNode(SetNode),
-    InsertMesh(InsertMesh),
-    RemoveMesh(RemoveMesh),
-    SetMesh(SetMesh),
-    InsertAccessor(InsertAccessor),
-    RemoveAccessor(RemoveAccessor),
-    SetAccessor(SetAccessor),
-    InsertMaterial(InsertMaterial),
-    RemoveMaterial(RemoveMaterial),
-    SetMaterial(SetMaterial),
-    InsertBuffer(InsertBuffer),
-    RemoveBuffer(RemoveBuffer),
-    SetBuffer(SetBuffer),
-    InsertAnimation(InsertAnimation),
-    RemoveAnimation(RemoveAnimation),
-    SetAnimation(SetAnimation),
-    TransformNode(TransformNode),
-    ReparentNode(ReparentNode),
-    BindNodeMesh(BindNodeMesh),
-    BindPrimitiveMaterial(BindPrimitiveMaterial),
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum GltfMutationPhase {
+    Mutation,
+    Diff,
+    Inverse,
 }
 
-impl Default for GltfMutation {
-    fn default() -> Self {
-        Self::NoMutation(NoMutation {})
+impl GltfMutationPhase {
+    pub(crate) fn binary_tag(self) -> u8 {
+        match self {
+            Self::Mutation => 1,
+            Self::Diff => 2,
+            Self::Inverse => 3,
+        }
+    }
+
+    pub(crate) fn from_binary_tag(tag: u8) -> Result<Self, GltfMutationRegistryError> {
+        match tag {
+            1 => Ok(Self::Mutation),
+            2 => Ok(Self::Diff),
+            3 => Ok(Self::Inverse),
+            _ => Err(GltfMutationRegistryError::Malformed(format!("unknown mutation phase tag {tag}"))),
+        }
     }
 }
-//#endregion 🔖️Mutations
 
-//#region 🔖️MutationTrait
-impl Mutation<GltfSnapshot> for GltfMutation {
-    type Diff = GltfDiff;
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct GltfMutationEnvelope {
+    pub command_id: String,
+    pub version: u16,
+    pub phase: GltfMutationPhase,
+    pub payload: Vec<u8>,
+}
 
-    fn diff(&self, base: &GltfSnapshot) -> Self::Diff {
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct GltfDiffEnvelope {
+    pub command_id: String,
+    pub version: u16,
+    pub phase: GltfMutationPhase,
+    pub payload: Vec<u8>,
+    pub touched_paths: Vec<String>,
+}
+//#endregion 🔖️Envelope
+
+//#region 🔖️Registry
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum GltfMutationRegistryError {
+    DuplicateCommand(String),
+    UnknownCommand(String),
+    StaleVersion { command_id: String, expected: u16, actual: u16 },
+    InvalidPhase { command_id: String, phase: GltfMutationPhase },
+    BudgetExceeded(&'static str),
+    Malformed(String),
+    Leaf(GltfMutationLeafError),
+}
+
+impl From<GltfMutationLeafError> for GltfMutationRegistryError {
+    fn from(error: GltfMutationLeafError) -> Self {
+        Self::Leaf(error)
+    }
+}
+
+impl std::fmt::Display for GltfMutationRegistryError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            GltfMutation::NoMutation(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::SetSnapshot(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::SetAsset(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::InsertScene(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::RemoveScene(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::SetScene(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::InsertNode(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::RemoveNode(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::SetNode(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::TransformNode(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::ReparentNode(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::BindNodeMesh(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::InsertMesh(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::RemoveMesh(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::SetMesh(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::InsertAccessor(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::RemoveAccessor(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::SetAccessor(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::InsertMaterial(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::RemoveMaterial(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::SetMaterial(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::BindPrimitiveMaterial(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::InsertBuffer(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::RemoveBuffer(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::SetBuffer(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::InsertAnimation(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::RemoveAnimation(payload) => protocol::MutationKind::diff(payload, base),
-            GltfMutation::SetAnimation(payload) => protocol::MutationKind::diff(payload, base),
+            Self::DuplicateCommand(id) => write!(formatter, "duplicate GLTF mutation command {id}"),
+            Self::UnknownCommand(id) => write!(formatter, "unknown GLTF mutation command {id}"),
+            Self::StaleVersion { command_id, expected, actual } => write!(formatter, "stale GLTF mutation command {command_id}: expected v{expected}, got v{actual}"),
+            Self::InvalidPhase { command_id, phase } => write!(formatter, "invalid GLTF mutation phase {phase:?} for {command_id}"),
+            Self::BudgetExceeded(what) => write!(formatter, "GLTF mutation budget exceeded: {what}"),
+            Self::Malformed(detail) => write!(formatter, "malformed GLTF mutation: {detail}"),
+            Self::Leaf(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl std::error::Error for GltfMutationRegistryError {}
+
+pub struct GltfMutationRegistry {
+    descriptors: BTreeMap<&'static str, GltfMutationLeafDescriptor>,
+}
+
+impl GltfMutationRegistry {
+    pub fn from_descriptors(descriptors: impl IntoIterator<Item = GltfMutationLeafDescriptor>) -> Result<Self, GltfMutationRegistryError> {
+        let mut registered = BTreeMap::new();
+        for descriptor in descriptors {
+            if descriptor.command_id.is_empty() || descriptor.command_id.len() > GLTF_MUTATION_MAX_COMMAND_ID_BYTES || descriptor.version == 0 {
+                return Err(GltfMutationRegistryError::Malformed("descriptor has an invalid canonical id or version".into()));
+            }
+            if registered.insert(descriptor.command_id, descriptor).is_some() {
+                return Err(GltfMutationRegistryError::DuplicateCommand(descriptor.command_id.into()));
+            }
+        }
+        Ok(Self { descriptors: registered })
+    }
+
+    pub fn descriptor(&self, command_id: &str, version: u16) -> Result<&GltfMutationLeafDescriptor, GltfMutationRegistryError> {
+        let descriptor = self.descriptors.get(command_id).ok_or_else(|| GltfMutationRegistryError::UnknownCommand(command_id.into()))?;
+        if descriptor.version != version {
+            return Err(GltfMutationRegistryError::StaleVersion { command_id: command_id.into(), expected: descriptor.version, actual: version });
+        }
+        Ok(descriptor)
+    }
+
+    pub fn validate_envelope(&self, envelope: &GltfMutationEnvelope) -> Result<(), GltfMutationRegistryError> {
+        if envelope.command_id.is_empty() || envelope.command_id.len() > GLTF_MUTATION_MAX_COMMAND_ID_BYTES {
+            return Err(GltfMutationRegistryError::BudgetExceeded("command id"));
+        }
+        if envelope.payload.len() > GLTF_MUTATION_MAX_PAYLOAD_BYTES {
+            return Err(GltfMutationRegistryError::BudgetExceeded("payload"));
+        }
+        self.descriptor(&envelope.command_id, envelope.version)?;
+        Ok(())
+    }
+
+    fn validate_plan(&self, plan: &GltfMutationLeafPlan) -> Result<(), GltfMutationRegistryError> {
+        if plan.diff_payload.len() > GLTF_MUTATION_MAX_PAYLOAD_BYTES || plan.inverse_payload.len() > GLTF_MUTATION_MAX_PAYLOAD_BYTES {
+            return Err(GltfMutationRegistryError::BudgetExceeded("planned payload"));
+        }
+        if plan.touched_paths.len() > GLTF_MUTATION_MAX_TOUCHED_PATHS || plan.touched_paths.iter().any(|path| path.len() > GLTF_MUTATION_MAX_TOUCHED_PATH_BYTES) {
+            return Err(GltfMutationRegistryError::BudgetExceeded("planned touched paths"));
+        }
+        Ok(())
+    }
+
+    fn plan(&self, envelope: &GltfMutationEnvelope, base: &GltfSnapshot) -> Result<GltfMutationLeafPlan, GltfMutationRegistryError> {
+        self.validate_envelope(envelope)?;
+        let descriptor = self.descriptor(&envelope.command_id, envelope.version)?;
+        let plan = match envelope.phase {
+            GltfMutationPhase::Mutation => (descriptor.plan)(&envelope.payload, base).map_err(Into::into),
+            GltfMutationPhase::Inverse => (descriptor.plan_inverse)(&envelope.payload, base).map_err(Into::into),
+            GltfMutationPhase::Diff => Err(GltfMutationRegistryError::InvalidPhase { command_id: envelope.command_id.clone(), phase: envelope.phase }),
+        }?;
+        self.validate_plan(&plan)?;
+        Ok(plan)
+    }
+
+    fn apply(&self, envelope: &GltfDiffEnvelope, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfMutationRegistryError> {
+        let input = GltfMutationEnvelope { command_id: envelope.command_id.clone(), version: envelope.version, phase: envelope.phase, payload: envelope.payload.clone() };
+        self.validate_envelope(&input)?;
+        if envelope.touched_paths.len() > GLTF_MUTATION_MAX_TOUCHED_PATHS || envelope.touched_paths.iter().any(|path| path.len() > GLTF_MUTATION_MAX_TOUCHED_PATH_BYTES) {
+            return Err(GltfMutationRegistryError::BudgetExceeded("touched paths"));
+        }
+        let descriptor = self.descriptor(&envelope.command_id, envelope.version)?;
+        let application = match envelope.phase {
+            GltfMutationPhase::Diff => (descriptor.apply_diff)(&envelope.payload, base).map_err(GltfMutationRegistryError::from)?,
+            GltfMutationPhase::Inverse => (descriptor.apply_inverse)(&envelope.payload, base).map_err(GltfMutationRegistryError::from)?,
+            GltfMutationPhase::Mutation => return Err(GltfMutationRegistryError::InvalidPhase { command_id: envelope.command_id.clone(), phase: envelope.phase }),
+        };
+        if application.touched_paths != envelope.touched_paths {
+            return Err(GltfMutationLeafError { code: "gltf.mutation.invalid-touched-paths".into(), path: "diff/touchedPaths".into(), detail: "the envelope paths do not match its typed leaf payload".into() }.into());
+        }
+        Ok(application.snapshot)
+    }
+
+    pub fn command_ids(&self) -> impl Iterator<Item = &'static str> + '_ {
+        self.descriptors.keys().copied()
+    }
+}
+
+fn gltf_mutation_registry() -> &'static GltfMutationRegistry {
+    static REGISTRY: OnceLock<GltfMutationRegistry> = OnceLock::new();
+    REGISTRY.get_or_init(|| GltfMutationRegistry::from_descriptors(gltf_mutation_leaf_descriptors().iter().copied()).expect("GLTF mutation descriptor assembly must be conflict-free"))
+}
+
+pub fn registered_gltf_mutation_command_ids() -> impl Iterator<Item = &'static str> {
+    gltf_mutation_registry().command_ids()
+}
+//#endregion 🔖️Registry
+
+//#region 🔖️MutationAndDiff
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct GltfMutation(GltfMutationEnvelope);
+
+impl GltfMutation {
+    pub fn new(command_id: impl Into<String>, version: u16, payload: Vec<u8>) -> Result<Self, GltfMutationRegistryError> {
+        let envelope = GltfMutationEnvelope { command_id: command_id.into(), version, phase: GltfMutationPhase::Mutation, payload };
+        gltf_mutation_registry().validate_envelope(&envelope)?;
+        Ok(Self(envelope))
+    }
+
+    pub fn envelope(&self) -> &GltfMutationEnvelope {
+        &self.0
+    }
+
+    pub(crate) fn from_transport(envelope: GltfMutationEnvelope) -> Result<Self, GltfMutationRegistryError> {
+        if envelope.phase == GltfMutationPhase::Diff {
+            return Err(GltfMutationRegistryError::InvalidPhase { command_id: envelope.command_id, phase: envelope.phase });
+        }
+        gltf_mutation_registry().validate_envelope(&envelope)?;
+        Ok(Self(envelope))
+    }
+}
+
+pub(crate) fn validate_gltf_mutation_envelope(envelope: &GltfMutationEnvelope) -> Result<(), GltfMutationRegistryError> {
+    gltf_mutation_registry().validate_envelope(envelope)
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct GltfMutationDiff {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub envelopes: Vec<GltfDiffEnvelope>,
+}
+
+impl GltfMutationDiff {
+    /// 🧭️ Applies only descriptors that validate the entire typed diff envelope.
+    pub fn try_apply(&self, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfMutationRegistryError> {
+        if self.envelopes.len() > GLTF_MUTATION_MAX_DIFF_ENVELOPES {
+            return Err(GltfMutationRegistryError::BudgetExceeded("diff envelopes"));
+        }
+        self.envelopes.iter().try_fold(base.clone(), |snapshot, envelope| gltf_mutation_registry().apply(envelope, &snapshot))
+    }
+}
+
+impl MutationDiff<GltfSnapshot> for GltfMutationDiff {
+    fn apply(&self, base: &GltfSnapshot) -> GltfSnapshot {
+        self.try_apply(base).expect("GltfMutationDiff::apply is the legacy infallible bridge; callers with untrusted envelopes must use try_apply")
+    }
+
+    fn absorb(&mut self, other: Self) {
+        self.envelopes.extend(other.envelopes);
+    }
+}
+
+impl Mutation<GltfSnapshot> for GltfMutation {
+    type Diff = GltfMutationDiff;
+
+    fn diff(&self, base: &GltfSnapshot) -> MutationOutcome<Self::Diff> {
+        match gltf_mutation_registry().plan(&self.0, base) {
+            Ok(plan) => {
+                let phase = if self.0.phase == GltfMutationPhase::Mutation { GltfMutationPhase::Diff } else { GltfMutationPhase::Inverse };
+                MutationOutcome::new(GltfMutationDiff { envelopes: vec![GltfDiffEnvelope { command_id: self.0.command_id.clone(), version: self.0.version, phase, payload: plan.diff_payload, touched_paths: plan.touched_paths }] })
+            }
+            Err(error) => MutationOutcome::error("mutation.rejected", error.to_string(), [self.0.command_id.clone()]),
         }
     }
 
     fn inverse(&self, base: &GltfSnapshot) -> Vec<Self> {
-        if plan_gltf_mutation(base, self).is_err() {
+        if self.0.phase != GltfMutationPhase::Mutation {
             return Vec::new();
         }
-        match self {
-            GltfMutation::NoMutation(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::SetSnapshot(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::SetAsset(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::InsertScene(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::RemoveScene(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::SetScene(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::InsertNode(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::RemoveNode(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::SetNode(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::TransformNode(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::ReparentNode(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::BindNodeMesh(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::InsertMesh(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::RemoveMesh(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::SetMesh(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::InsertAccessor(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::RemoveAccessor(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::SetAccessor(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::InsertMaterial(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::RemoveMaterial(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::SetMaterial(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::BindPrimitiveMaterial(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::InsertBuffer(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::RemoveBuffer(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::SetBuffer(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::InsertAnimation(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::RemoveAnimation(payload) => protocol::MutationKind::inverse(payload, base),
-            GltfMutation::SetAnimation(payload) => protocol::MutationKind::inverse(payload, base),
-        }
-    }
-
-    fn validate(&self, snapshot: &GltfSnapshot) -> Result<(), String> {
-        plan_gltf_mutation(snapshot, self).map(|_| ()).map_err(|error| error.to_string())
+        gltf_mutation_registry()
+            .plan(&self.0, base)
+            .ok()
+            .map(|plan| Self(GltfMutationEnvelope { command_id: self.0.command_id.clone(), version: self.0.version, phase: GltfMutationPhase::Inverse, payload: plan.inverse_payload }))
+            .into_iter()
+            .collect()
     }
 }
-//#endregion 🔖️MutationTrait
+//#endregion 🔖️MutationAndDiff
 
-//#region 🧪️DemoCases
-/// 🧪️ P2-FG3: representative `GltfMutation` cases — one per variant (28 total, `NoMutation`
-/// through `SetAnimation`, `GltfMutation`'s own declaration order) — used by this artifact's own
-/// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests (⚙️engine/component.rs),
-/// mirroring json's own `demo_mutation_cases()` role in its pilot report.
-pub(crate) fn demo_mutation_cases() -> Vec<GltfMutation> {
-    vec![
-        GltfMutation::NoMutation(NoMutation {}),
-        GltfMutation::SetSnapshot(SetSnapshot { snapshot: crate::artifacts::gltf::engine::demo_gltf_snapshot() }),
-        GltfMutation::SetAsset(SetAsset { asset: GltfAsset { version: "2.1".into(), generator: None, copyright: Some("(c)".into()), min_version: None, extensions: None, extras: None } }),
-        GltfMutation::InsertScene(InsertScene { index: 1, scene: crate::artifacts::gltf::schema::snapshot::GltfScene { nodes: vec![1], name: Some("s".into()), ..Default::default() } }),
-        GltfMutation::RemoveScene(RemoveScene { index: 0 }),
-        GltfMutation::SetScene(SetScene { index: 0, scene: crate::artifacts::gltf::schema::snapshot::GltfScene { nodes: vec![9], name: None, ..Default::default() } }),
-        GltfMutation::InsertNode(InsertNode { index: 1, node: GltfNode { mesh: Some(1), matrix: Some([0.0; 16]), ..GltfNode::default() } }),
-        GltfMutation::RemoveNode(RemoveNode { index: 0 }),
-        GltfMutation::SetNode(SetNode { index: 0, node: GltfNode { mesh: None, camera: Some(2), name: Some("n".into()), ..GltfNode::default() } }),
-        GltfMutation::TransformNode(TransformNode { index: 0, matrix: None, translation: Some([1.0, 2.0, 3.0]), rotation: Some([0.0, 0.0, 0.0, 1.0]), scale: Some([2.0, 2.0, 2.0]) }),
-        GltfMutation::ReparentNode(ReparentNode { index: 1, parent: Some(0), scene: None, position: 0 }),
-        GltfMutation::BindNodeMesh(BindNodeMesh { index: 0, mesh: Some(1) }),
-        GltfMutation::InsertMesh(InsertMesh { index: 0, mesh: GltfMesh { name: Some("m".into()), ..GltfMesh::default() } }),
-        GltfMutation::RemoveMesh(RemoveMesh { index: 0 }),
-        GltfMutation::SetMesh(SetMesh { index: 0, mesh: GltfMesh { name: Some("renamed-mesh".into()), ..GltfMesh::default() } }),
-        GltfMutation::InsertAccessor(InsertAccessor {
-            index: 0,
-            accessor: GltfAccessor {
-                buffer_view: None,
-                byte_offset: 0,
-                component_type: crate::artifacts::gltf::engine::GltfComponentType::UnsignedByte,
-                normalized: false,
-                count: 1,
-                kind: crate::artifacts::gltf::engine::GltfAccessorType::Scalar,
-                max: None,
-                min: None,
-                sparse: None,
-                name: None,
-                extensions: None,
-                extras: None,
-            },
-        }),
-        GltfMutation::RemoveAccessor(RemoveAccessor { index: 0 }),
-        GltfMutation::SetAccessor(SetAccessor {
-            index: 0,
-            accessor: GltfAccessor {
-                buffer_view: Some(0),
-                byte_offset: 4,
-                component_type: crate::artifacts::gltf::engine::GltfComponentType::Float,
-                normalized: true,
-                count: 9,
-                kind: crate::artifacts::gltf::engine::GltfAccessorType::Vec3,
-                max: Some(vec![1.0]),
-                min: Some(vec![-1.0]),
-                sparse: None,
-                name: None,
-                extensions: None,
-                extras: None,
-            },
-        }),
-        GltfMutation::InsertMaterial(InsertMaterial { index: 0, material: GltfMaterial { name: Some("mat".into()), double_sided: true, ..GltfMaterial::default() } }),
-        GltfMutation::RemoveMaterial(RemoveMaterial { index: 0 }),
-        GltfMutation::SetMaterial(SetMaterial { index: 0, material: GltfMaterial { double_sided: true, ..GltfMaterial::default() } }),
-        GltfMutation::BindPrimitiveMaterial(BindPrimitiveMaterial { mesh: 0, primitive: 0, material: Some(0) }),
-        GltfMutation::InsertBuffer(InsertBuffer { index: 0, buffer: GltfBuffer { byte_length: 2, uri: Some("data:...".into()), name: None, extensions: None, extras: None }, bytes: vec![7, 8] }),
-        GltfMutation::RemoveBuffer(RemoveBuffer { index: 0 }),
-        GltfMutation::SetBuffer(SetBuffer { index: 0, buffer: GltfBuffer { byte_length: 8, uri: None, name: None, extensions: None, extras: None }, bytes: vec![1, 2, 3, 4, 5, 6, 7, 8] }),
-        GltfMutation::InsertAnimation(InsertAnimation { index: 0, animation: GltfAnimation { name: Some("a".into()), ..GltfAnimation::default() } }),
-        GltfMutation::RemoveAnimation(RemoveAnimation { index: 0 }),
-        GltfMutation::SetAnimation(SetAnimation { index: 0, animation: GltfAnimation { name: Some("renamed-anim".into()), ..GltfAnimation::default() } }),
-    ]
-}
-
-//#endregion 🧪️DemoCases
-
-//#region 🧪️Tests
+//#region 🧪️RegistryLaws
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gltf::schema::snapshot::GltfDocument;
-    use crate::artifacts::gltf::STDIO_GLTF_DOCUMENT_SCHEMA;
-    use protocol::MutationDiff;
-    use protocol::{OpBinary, OpText};
+    use crate::artifacts::gltf::schema::mutations::change_material_alpha_mode::{mutation, DESCRIPTOR};
+    use crate::artifacts::gltf::schema::snapshot::GltfAlphaMode;
 
-    fn base_snapshot() -> GltfSnapshot {
-        GltfSnapshot {
-            schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(),
-            document: GltfDocument {
-                asset: GltfAsset { version: "2.0".into(), ..GltfAsset::default() },
-                scenes: vec![GltfScene { nodes: vec![0], name: Some("s0".into()), ..GltfScene::default() }],
-                nodes: vec![GltfNode { mesh: Some(0), ..GltfNode::default() }, GltfNode::default()],
-                meshes: vec![GltfMesh { primitives: vec![Default::default()], ..Default::default() }, GltfMesh::default()],
-                accessors: vec![GltfAccessor {
-                    buffer_view: None,
-                    byte_offset: 0,
-                    component_type: crate::artifacts::gltf::engine::GltfComponentType::Float,
-                    normalized: false,
-                    count: 3,
-                    kind: crate::artifacts::gltf::engine::GltfAccessorType::Vec3,
-                    max: None,
-                    min: None,
-                    sparse: None,
-                    name: None,
-                    extensions: None,
-                    extras: None,
-                }],
-                materials: vec![GltfMaterial::default()],
-                buffers: vec![GltfBuffer { byte_length: 4, uri: None, name: None, extensions: None, extras: None }],
-                animations: vec![GltfAnimation::default()],
-                ..GltfDocument::default()
-            },
-            buffers: vec![vec![1, 2, 3, 4]],
-            source_form: crate::artifacts::gltf::schema::snapshot::GltfSourceForm::Json,
-        }
+    fn base() -> GltfSnapshot {
+        let mut snapshot = GltfSnapshot::default();
+        snapshot.document.materials.push(Default::default());
+        snapshot
     }
 
-    /// 🧪️ `mutation_diff_law`: ∀ variant, `m.diff(base).apply(base) == { apply_gltf_mutation(&mut
-    /// s, m); s }`, and the returned diff equals `m.diff(base)`.
-    #[test]
-    fn mutation_diff_law_holds_for_every_variant() {
-        let base = base_snapshot();
-        let variants = vec![
-            GltfMutation::NoMutation(NoMutation {}),
-            GltfMutation::SetAsset(SetAsset { asset: GltfAsset { version: "2.1".into(), ..GltfAsset::default() } }),
-            GltfMutation::InsertScene(InsertScene { index: 1, scene: GltfScene { nodes: vec![1], ..GltfScene::default() } }),
-            GltfMutation::RemoveScene(RemoveScene { index: 0 }),
-            GltfMutation::SetScene(SetScene { index: 0, scene: GltfScene { nodes: vec![1], name: Some("renamed".into()), ..GltfScene::default() } }),
-            GltfMutation::InsertNode(InsertNode { index: 1, node: GltfNode { mesh: Some(1), ..GltfNode::default() } }),
-            GltfMutation::RemoveNode(RemoveNode { index: 1 }),
-            GltfMutation::SetNode(SetNode { index: 0, node: GltfNode { mesh: None, name: Some("n".into()), ..GltfNode::default() } }),
-            GltfMutation::TransformNode(TransformNode { index: 1, matrix: None, translation: Some([1.0, 2.0, 3.0]), rotation: None, scale: None }),
-            GltfMutation::ReparentNode(ReparentNode { index: 1, parent: Some(0), scene: None, position: 0 }),
-            GltfMutation::BindNodeMesh(BindNodeMesh { index: 1, mesh: Some(0) }),
-            GltfMutation::InsertMesh(InsertMesh { index: 0, mesh: GltfMesh { name: Some("m".into()), ..GltfMesh::default() } }),
-            GltfMutation::RemoveMesh(RemoveMesh { index: 1 }),
-            GltfMutation::SetMesh(SetMesh { index: 0, mesh: GltfMesh { name: Some("renamed-mesh".into()), ..GltfMesh::default() } }),
-            GltfMutation::InsertAccessor(InsertAccessor {
-                index: 0,
-                accessor: GltfAccessor {
-                    buffer_view: None,
-                    byte_offset: 0,
-                    component_type: crate::artifacts::gltf::engine::GltfComponentType::UnsignedByte,
-                    normalized: false,
-                    count: 1,
-                    kind: crate::artifacts::gltf::engine::GltfAccessorType::Scalar,
-                    max: None,
-                    min: None,
-                    sparse: None,
-                    name: None,
-                    extensions: None,
-                    extras: None,
-                },
-            }),
-            GltfMutation::RemoveAccessor(RemoveAccessor { index: 0 }),
-            GltfMutation::SetAccessor(SetAccessor {
-                index: 0,
-                accessor: GltfAccessor {
-                    buffer_view: None,
-                    byte_offset: 0,
-                    component_type: crate::artifacts::gltf::engine::GltfComponentType::Float,
-                    normalized: false,
-                    count: 9,
-                    kind: crate::artifacts::gltf::engine::GltfAccessorType::Vec3,
-                    max: None,
-                    min: None,
-                    sparse: None,
-                    name: None,
-                    extensions: None,
-                    extras: None,
-                },
-            }),
-            GltfMutation::InsertMaterial(InsertMaterial { index: 0, material: GltfMaterial { name: Some("mat".into()), ..GltfMaterial::default() } }),
-            GltfMutation::RemoveMaterial(RemoveMaterial { index: 0 }),
-            GltfMutation::SetMaterial(SetMaterial { index: 0, material: GltfMaterial { double_sided: true, ..GltfMaterial::default() } }),
-            GltfMutation::BindPrimitiveMaterial(BindPrimitiveMaterial { mesh: 0, primitive: 0, material: Some(0) }),
-            GltfMutation::InsertBuffer(InsertBuffer { index: 0, buffer: GltfBuffer { byte_length: 2, uri: None, name: None, extensions: None, extras: None }, bytes: vec![7, 8] }),
-            GltfMutation::RemoveBuffer(RemoveBuffer { index: 0 }),
-            GltfMutation::SetBuffer(SetBuffer { index: 0, buffer: GltfBuffer { byte_length: 8, uri: None, name: None, extensions: None, extras: None }, bytes: vec![1, 2, 3, 4, 5, 6, 7, 8] }),
-            GltfMutation::InsertAnimation(InsertAnimation { index: 0, animation: GltfAnimation { name: Some("a".into()), ..GltfAnimation::default() } }),
-            GltfMutation::RemoveAnimation(RemoveAnimation { index: 0 }),
-            GltfMutation::SetAnimation(SetAnimation { index: 0, animation: GltfAnimation { name: Some("renamed-anim".into()), ..GltfAnimation::default() } }),
-        ];
-        for m in variants {
-            let expected_diff = m.diff(&base);
-            let mut s = base.clone();
-            let actual_diff = apply_gltf_mutation(&mut s, &m).expect("valid mutation");
-            assert_eq!(actual_diff, expected_diff, "diff mismatch for mutation {m:?}");
-            assert_eq!(s, MutationDiff::apply(&expected_diff, &base), "apply(base) mismatch for mutation {m:?}");
-        }
-    }
-
-    /// 🧪️ `inverse_law` (mutation level): every variant's `inverse(base)` round-trips.
-    #[test]
-    fn inverse_law_mutation_level_round_trips_for_every_variant() {
-        let base = base_snapshot();
-        let variants = vec![
-            GltfMutation::SetAsset(SetAsset { asset: GltfAsset { version: "9.9".into(), ..GltfAsset::default() } }),
-            GltfMutation::InsertScene(InsertScene { index: 0, scene: GltfScene { nodes: vec![1], ..GltfScene::default() } }),
-            GltfMutation::RemoveScene(RemoveScene { index: 0 }),
-            GltfMutation::SetScene(SetScene { index: 0, scene: GltfScene { nodes: vec![1], name: Some("z".into()), ..GltfScene::default() } }),
-            GltfMutation::InsertNode(InsertNode { index: 0, node: GltfNode { mesh: Some(0), ..GltfNode::default() } }),
-            GltfMutation::RemoveNode(RemoveNode { index: 1 }),
-            GltfMutation::SetNode(SetNode { index: 1, node: GltfNode { mesh: None, ..GltfNode::default() } }),
-            GltfMutation::TransformNode(TransformNode { index: 1, matrix: None, translation: Some([4.0, 5.0, 6.0]), rotation: None, scale: None }),
-            GltfMutation::ReparentNode(ReparentNode { index: 1, parent: Some(0), scene: None, position: 0 }),
-            GltfMutation::BindNodeMesh(BindNodeMesh { index: 1, mesh: Some(0) }),
-            GltfMutation::InsertMesh(InsertMesh { index: 0, mesh: GltfMesh::default() }),
-            GltfMutation::RemoveMesh(RemoveMesh { index: 1 }),
-            GltfMutation::InsertMaterial(InsertMaterial { index: 0, material: GltfMaterial::default() }),
-            GltfMutation::RemoveMaterial(RemoveMaterial { index: 0 }),
-            GltfMutation::BindPrimitiveMaterial(BindPrimitiveMaterial { mesh: 0, primitive: 0, material: Some(0) }),
-            GltfMutation::InsertBuffer(InsertBuffer { index: 0, buffer: GltfBuffer { byte_length: 1, uri: None, name: None, extensions: None, extras: None }, bytes: vec![1] }),
-            GltfMutation::RemoveBuffer(RemoveBuffer { index: 0 }),
-            GltfMutation::InsertAnimation(InsertAnimation { index: 0, animation: GltfAnimation::default() }),
-            GltfMutation::RemoveAnimation(RemoveAnimation { index: 0 }),
-        ];
-        for m in variants {
-            let (_, forward_diff) = {
-                let mut s = base.clone();
-                let d = apply_gltf_mutation(&mut s, &m).expect("valid mutation");
-                (s, d)
-            };
-            let mutated = MutationDiff::apply(&forward_diff, &base);
-            let inverses = <GltfMutation as Mutation<GltfSnapshot>>::inverse(&m, &base);
-            let mut back = mutated.clone();
-            for inv in &inverses {
-                let d = apply_gltf_mutation(&mut back, inv).expect("valid inverse");
-                let _ = d;
-            }
-            assert_eq!(back, base, "inverse of {m:?} did not restore base");
-        }
+    fn payload() -> Vec<u8> {
+        serde_json::to_vec(&mutation::GltfChangeMaterialAlphaModePayload { material: 0, alpha_mode: GltfAlphaMode::Mask }).expect("canonical alpha-mode payload")
     }
 
     #[test]
-    fn structural_insert_transports_references_and_inverse_restores_exactly() {
-        let base = base_snapshot();
-        let mutation = GltfMutation::InsertNode(InsertNode { index: 0, node: GltfNode::default() });
-        let diff = plan_gltf_mutation(&base, &mutation).expect("valid insertion");
-        let next = diff.apply(&base);
-        assert_eq!(next.document.scenes[0].nodes, vec![1]);
-        assert_eq!(next.document.nodes[1].mesh, Some(0));
-        let inverse = mutation.inverse(&base);
-        let mut restored = next;
-        for operation in inverse {
-            apply_gltf_mutation(&mut restored, &operation).expect("valid inverse");
-        }
-        assert_eq!(restored, base);
+    fn registry_rejects_duplicate_unknown_and_stale_descriptors() {
+        assert!(matches!(GltfMutationRegistry::from_descriptors([DESCRIPTOR, DESCRIPTOR]), Err(GltfMutationRegistryError::DuplicateCommand(_))));
+        let registry = GltfMutationRegistry::from_descriptors([DESCRIPTOR]).expect("one descriptor");
+        assert!(matches!(registry.descriptor("s.stdio.gltf.mutation.unknown.v1", 1), Err(GltfMutationRegistryError::UnknownCommand(_))));
+        assert!(matches!(registry.descriptor(DESCRIPTOR.command_id, 2), Err(GltfMutationRegistryError::StaleVersion { expected: 1, actual: 2, .. })));
     }
 
     #[test]
-    fn inserted_node_payload_uses_the_pre_insertion_index_namespace() {
-        let base = base_snapshot();
-        let inserted = GltfNode { children: vec![1], ..GltfNode::default() };
-        let next = semantic_snapshot(&base, &GltfMutation::InsertNode(InsertNode { index: 0, node: inserted })).expect("valid node insertion");
-        assert_eq!(next.document.nodes[0].children, vec![2]);
-        assert_eq!(next.document.scenes[0].nodes, vec![1]);
+    fn descriptor_plan_apply_and_inverse_validate_stale_base_and_paths() {
+        let registry = GltfMutationRegistry::from_descriptors([DESCRIPTOR]).expect("one descriptor");
+        let before = base();
+        let plan = registry.plan(&GltfMutationEnvelope { command_id: DESCRIPTOR.command_id.into(), version: DESCRIPTOR.version, phase: GltfMutationPhase::Mutation, payload: payload() }, &before).expect("forward plan");
+        let forward = GltfDiffEnvelope { command_id: DESCRIPTOR.command_id.into(), version: DESCRIPTOR.version, phase: GltfMutationPhase::Diff, payload: plan.diff_payload.clone(), touched_paths: plan.touched_paths.clone() };
+        let mut forged = forward.clone();
+        forged.touched_paths = vec!["document/materials/99/alphaMode".into()];
+        assert!(matches!(registry.apply(&forged, &before), Err(GltfMutationRegistryError::Leaf(GltfMutationLeafError { code, .. })) if code == "gltf.mutation.invalid-touched-paths"));
+
+        let after = registry.apply(&forward, &before).expect("forward apply");
+        assert_eq!(after.document.materials[0].alpha_mode, GltfAlphaMode::Mask);
+        assert!(matches!(registry.apply(&forward, &after), Err(GltfMutationRegistryError::Leaf(GltfMutationLeafError { code, .. })) if code == "gltf.mutation.stale-diff"));
+
+        let inverse =
+            registry.plan(&GltfMutationEnvelope { command_id: DESCRIPTOR.command_id.into(), version: DESCRIPTOR.version, phase: GltfMutationPhase::Inverse, payload: plan.inverse_payload }, &after).expect("inverse plan validates after-state");
+        let restored = registry
+            .apply(&GltfDiffEnvelope { command_id: DESCRIPTOR.command_id.into(), version: DESCRIPTOR.version, phase: GltfMutationPhase::Inverse, payload: inverse.diff_payload, touched_paths: inverse.touched_paths }, &after)
+            .expect("inverse apply");
+        assert_eq!(restored, before);
     }
 
     #[test]
-    fn referenced_remove_and_out_of_range_insert_are_rejected_without_effect() {
-        let base = base_snapshot();
-        let referenced = plan_gltf_mutation(&base, &GltfMutation::RemoveNode(RemoveNode { index: 0 })).expect_err("scene root is referenced");
-        assert_eq!(referenced.code, "gltf.reference.in-use");
-        assert!(referenced.detail.contains("document/scenes/0/nodes/0"));
-        let out_of_range = plan_gltf_mutation(&base, &GltfMutation::InsertMesh(InsertMesh { index: 99, mesh: GltfMesh::default() })).expect_err("index must not clamp");
-        assert_eq!(out_of_range.code, "gltf.mutation.insert-out-of-range");
-        let mut unchanged = base.clone();
-        assert!(apply_gltf_mutation(&mut unchanged, &GltfMutation::RemoveNode(RemoveNode { index: 0 })).is_err());
-        assert_eq!(unchanged, base);
+    fn mutation_outcome_and_inverse_round_trip() {
+        let before = base();
+        let forward = GltfMutation::new(DESCRIPTOR.command_id, DESCRIPTOR.version, payload()).expect("registered mutation");
+        let outcome = forward.diff(&before);
+        assert!(outcome.messages().is_empty());
+        let after = outcome.diff().try_apply(&before).expect("planned forward diff");
+        let inverse = forward.inverse(&before).pop().expect("inverse mutation");
+        let restored = inverse.diff(&after).diff().try_apply(&after).expect("planned inverse diff");
+        assert_eq!(restored, before);
     }
-
-    #[test]
-    fn buffer_metadata_payload_misalignment_is_rejected() {
-        let base = base_snapshot();
-        let mutation = GltfMutation::SetBuffer(SetBuffer { index: 0, buffer: GltfBuffer { byte_length: 8, uri: None, name: None, extensions: None, extras: None }, bytes: vec![1, 2, 3] });
-        let rejection = plan_gltf_mutation(&base, &mutation).expect_err("short payload must be rejected");
-        assert_eq!(rejection.code, "gltf.buffer.byte-length");
-    }
-
-    #[test]
-    fn accessor_transport_includes_morph_target_dependencies() {
-        use crate::artifacts::gltf::schema::snapshot::GltfMorphTarget;
-        let mut base = base_snapshot();
-        let primitive = &mut base.document.meshes[0].primitives[0];
-        primitive.attributes = vec![("POSITION".into(), 0)];
-        primitive.indices = Some(0);
-        primitive.targets = vec![GltfMorphTarget(vec![("POSITION".into(), 0)])];
-        let accessor = base.document.accessors[0].clone();
-        let next = semantic_snapshot(&base, &GltfMutation::InsertAccessor(InsertAccessor { index: 0, accessor })).expect("valid accessor insertion");
-        let primitive = &next.document.meshes[0].primitives[0];
-        assert_eq!(primitive.attributes[0].1, 1);
-        assert_eq!(primitive.indices, Some(1));
-        assert_eq!(primitive.targets[0].0[0].1, 1);
-    }
-
-    #[test]
-    fn semantic_operations_report_stable_regions_and_round_trip() {
-        use protocol::DiffRegions as _;
-        let base = base_snapshot();
-        let operations = [
-            GltfMutation::TransformNode(TransformNode { index: 1, matrix: None, translation: Some([1.0, 2.0, 3.0]), rotation: None, scale: None }),
-            GltfMutation::ReparentNode(ReparentNode { index: 1, parent: Some(0), scene: None, position: 0 }),
-            GltfMutation::BindNodeMesh(BindNodeMesh { index: 1, mesh: Some(0) }),
-            GltfMutation::BindPrimitiveMaterial(BindPrimitiveMaterial { mesh: 0, primitive: 0, material: Some(0) }),
-        ];
-        for operation in operations {
-            let diff = plan_gltf_mutation(&base, &operation).expect("semantic operation");
-            assert!(!diff.touches().paths.is_empty(), "missing touched paths for {operation:?}");
-            let next = diff.apply(&base);
-            let mut restored = next;
-            for inverse in operation.inverse(&base) {
-                apply_gltf_mutation(&mut restored, &inverse).expect("semantic inverse");
-            }
-            assert_eq!(restored, base, "inverse mismatch for {operation:?}");
-        }
-    }
-
-    //#region 🔖️HandcraftedOpCodecTests
-    /// 🎯️ A snapshot with `bufferViews`/`textures`/`images`/`samplers`/`skins`/`cameras` populated
-    /// (`base_snapshot()` above has none of these -- they're WEAK collections only reachable via
-    /// `SetSnapshot` per F4's variant vocabulary, so `SetSnapshot`'s `OpText`/`OpBinary` needs a
-    /// dedicated fixture to actually exercise `enc_buffer_view`/`enc_texture`/`enc_image`/
-    /// `enc_sampler`/`enc_skin`/`enc_camera` — including `GltfCameraProjection::Orthographic`, the
-    /// variant `field_sweep`'s `sweep_b` (🔺️diff/component.rs) does not use).
-    fn full_snapshot() -> GltfSnapshot {
-        let mut s = base_snapshot();
-        s.document.buffer_views = vec![crate::artifacts::gltf::schema::snapshot::GltfBufferView { buffer: 0, byte_offset: 0, byte_length: 4, byte_stride: None, target: Some(34962), name: None, extensions: None, extras: None }];
-        s.document.textures = vec![crate::artifacts::gltf::schema::snapshot::GltfTexture { sampler: Some(0), source: Some(0), name: None, extensions: None, extras: None }];
-        s.document.images = vec![crate::artifacts::gltf::schema::snapshot::GltfImage { uri: Some("tex.png".into()), ..Default::default() }];
-        s.document.samplers = vec![crate::artifacts::gltf::schema::snapshot::GltfSampler::default()];
-        s.document.skins = vec![crate::artifacts::gltf::schema::snapshot::GltfSkin { joints: vec![0, 1], ..Default::default() }];
-        s.document.cameras = vec![crate::artifacts::gltf::schema::snapshot::GltfCamera {
-            projection: crate::artifacts::gltf::schema::snapshot::GltfCameraProjection::Orthographic(crate::artifacts::gltf::schema::snapshot::GltfOrthographic { xmag: 1.0, ymag: 1.0, zfar: 10.0, znear: 0.1, extensions: None, extras: None }),
-            name: Some("cam0".into()),
-            extensions: None,
-            extras: Some(crate::artifacts::gltf::schema::snapshot::GltfJson::Object(vec![("k".into(), crate::artifacts::gltf::schema::snapshot::GltfJson::Number(1.0))])),
-        }];
-        s.document.extensions = Some(crate::artifacts::gltf::schema::snapshot::GltfJson::Array(vec![crate::artifacts::gltf::schema::snapshot::GltfJson::Null, crate::artifacts::gltf::schema::snapshot::GltfJson::Bool(false)]));
-        s
-    }
-
-    /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws for the hand-rolled `GltfMutation` grammar --
-    /// every variant, incl. `SetSnapshot` against `full_snapshot()` (exercises every WEAK
-    /// collection's item codec plus `GltfCameraProjection::Orthographic` and 4 of the 6 `GltfJson`
-    /// variants at once) and a representative Insert/Remove/Set per STRONG-entity array (the same
-    /// entities `diff_codec_text_binary_roundtrip_law`'s `sweep_a`/`sweep_b`/`tristate_snapshot_*`
-    /// fixtures cover on the diff side, per `🔺️diff/component.rs`).
-    #[test]
-    fn op_text_binary_roundtrip_law() {
-        let base = base_snapshot();
-        let mutations = vec![
-            GltfMutation::NoMutation(NoMutation {}),
-            GltfMutation::SetSnapshot(SetSnapshot { snapshot: full_snapshot() }),
-            GltfMutation::SetAsset(SetAsset { asset: GltfAsset { version: "2.1".into(), generator: None, copyright: Some("(c)".into()), min_version: None, extensions: None, extras: None } }),
-            GltfMutation::InsertScene(InsertScene { index: 1, scene: GltfScene { nodes: vec![1], name: Some("s".into()), ..GltfScene::default() } }),
-            GltfMutation::RemoveScene(RemoveScene { index: 0 }),
-            GltfMutation::SetScene(SetScene { index: 0, scene: GltfScene { nodes: vec![9], name: None, ..GltfScene::default() } }),
-            GltfMutation::InsertNode(InsertNode { index: 1, node: GltfNode { mesh: Some(1), matrix: Some([0.0; 16]), ..GltfNode::default() } }),
-            GltfMutation::RemoveNode(RemoveNode { index: 0 }),
-            GltfMutation::SetNode(SetNode { index: 0, node: GltfNode { mesh: None, camera: Some(2), name: Some("n".into()), ..GltfNode::default() } }),
-            GltfMutation::TransformNode(TransformNode { index: 1, matrix: None, translation: Some([1.25, -2.5, 3.75]), rotation: Some([0.0, 0.0, 0.0, 1.0]), scale: Some([1.0, 2.0, 3.0]) }),
-            GltfMutation::ReparentNode(ReparentNode { index: 1, parent: Some(0), scene: None, position: 0 }),
-            GltfMutation::BindNodeMesh(BindNodeMesh { index: 1, mesh: None }),
-            GltfMutation::InsertMesh(InsertMesh { index: 0, mesh: GltfMesh { name: Some("m".into()), ..GltfMesh::default() } }),
-            GltfMutation::RemoveMesh(RemoveMesh { index: 0 }),
-            GltfMutation::SetMesh(SetMesh { index: 0, mesh: GltfMesh { name: Some("renamed-mesh".into()), ..GltfMesh::default() } }),
-            GltfMutation::InsertAccessor(InsertAccessor {
-                index: 0,
-                accessor: GltfAccessor {
-                    buffer_view: None,
-                    byte_offset: 0,
-                    component_type: crate::artifacts::gltf::engine::GltfComponentType::UnsignedByte,
-                    normalized: false,
-                    count: 1,
-                    kind: crate::artifacts::gltf::engine::GltfAccessorType::Scalar,
-                    max: None,
-                    min: None,
-                    sparse: None,
-                    name: None,
-                    extensions: None,
-                    extras: None,
-                },
-            }),
-            GltfMutation::RemoveAccessor(RemoveAccessor { index: 0 }),
-            GltfMutation::SetAccessor(SetAccessor {
-                index: 0,
-                accessor: GltfAccessor {
-                    buffer_view: Some(0),
-                    byte_offset: 4,
-                    component_type: crate::artifacts::gltf::engine::GltfComponentType::Float,
-                    normalized: true,
-                    count: 9,
-                    kind: crate::artifacts::gltf::engine::GltfAccessorType::Vec3,
-                    max: Some(vec![1.0]),
-                    min: Some(vec![-1.0]),
-                    sparse: None,
-                    name: None,
-                    extensions: None,
-                    extras: None,
-                },
-            }),
-            GltfMutation::InsertMaterial(InsertMaterial { index: 0, material: GltfMaterial { name: Some("mat".into()), double_sided: true, ..GltfMaterial::default() } }),
-            GltfMutation::RemoveMaterial(RemoveMaterial { index: 0 }),
-            GltfMutation::SetMaterial(SetMaterial { index: 0, material: GltfMaterial { double_sided: true, ..GltfMaterial::default() } }),
-            GltfMutation::BindPrimitiveMaterial(BindPrimitiveMaterial { mesh: 0, primitive: 0, material: None }),
-            GltfMutation::InsertBuffer(InsertBuffer { index: 0, buffer: GltfBuffer { byte_length: 2, uri: Some("data:...".into()), name: None, extensions: None, extras: None }, bytes: vec![7, 8] }),
-            GltfMutation::RemoveBuffer(RemoveBuffer { index: 0 }),
-            GltfMutation::SetBuffer(SetBuffer { index: 0, buffer: GltfBuffer { byte_length: 8, uri: None, name: None, extensions: None, extras: None }, bytes: vec![1, 2, 3, 4, 5, 6, 7, 8] }),
-            GltfMutation::InsertAnimation(InsertAnimation { index: 0, animation: GltfAnimation { name: Some("a".into()), ..GltfAnimation::default() } }),
-            GltfMutation::RemoveAnimation(RemoveAnimation { index: 0 }),
-            GltfMutation::SetAnimation(SetAnimation { index: 0, animation: GltfAnimation { name: Some("renamed-anim".into()), ..GltfAnimation::default() } }),
-        ];
-        let _ = &base;
-        for mutation in mutations {
-            let printed = mutation.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = GltfMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
-            assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
-
-            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
-            let decoded = GltfMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
-            assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
-        }
-    }
-
-    #[test]
-    fn op_codecs_reject_unknown_text_and_trailing_binary() {
-        assert!(GltfMutation::parse_op("invent-node index=0").is_err());
-        let mut bytes = GltfMutation::BindNodeMesh(BindNodeMesh { index: 1, mesh: None }).encode_op().expect("encode");
-        bytes.push(0xff);
-        assert!(GltfMutation::decode_op(&bytes).is_err());
-    }
-    //#endregion 🔖️HandcraftedOpCodecTests
 }
-//#endregion 🧪️Tests
+//#endregion 🧪️RegistryLaws

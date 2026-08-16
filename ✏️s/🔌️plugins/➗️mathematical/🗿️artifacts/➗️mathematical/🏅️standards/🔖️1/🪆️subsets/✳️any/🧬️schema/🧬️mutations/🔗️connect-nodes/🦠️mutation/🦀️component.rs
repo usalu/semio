@@ -15,7 +15,7 @@ pub struct ConnectNodes {
 impl protocol::MutationKind<MathematicalSnapshot, MathematicalMutation> for ConnectNodes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "node", kind: "connect-nodes", record: "ConnectedNodes" };
 
-    fn diff(&self, base: &MathematicalSnapshot) -> <MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::Diff {
+    fn diff(&self, base: &MathematicalSnapshot) -> protocol::MutationOutcome<<MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {

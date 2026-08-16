@@ -17,7 +17,7 @@ pub struct ScaleObject {
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ScaleObject {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "object", kind: "scale-object", record: "ScaledObject" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> Puzzle3dDiff {
+    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {

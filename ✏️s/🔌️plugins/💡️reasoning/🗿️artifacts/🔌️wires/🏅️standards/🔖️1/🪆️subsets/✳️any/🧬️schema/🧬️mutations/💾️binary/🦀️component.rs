@@ -1,7 +1,7 @@
 //! ⚖️ Wires artifact — binary command protocol surface + laws (constitutional: spr, renamed from
 //! protocol). The app-level `WiresCommand` binary command envelope (the old hand-derived enum this
-//! module used to also host) is now REBUILT by `app_commands!` in `crate::apps::wires::component` — see
-//! `crate::apps::wires::WiresCommand`'s doc there.
+//! module used to also host) is now REBUILT by `app_commands!` in `crate::editor::wires::component` — see
+//! `crate::editor::wires::WiresCommand`'s doc there.
 
 
 //#region 📡️SemioProtocol

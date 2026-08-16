@@ -33,7 +33,7 @@ use crate::brep_geometry::{dispose_geometry, export_solid_json, import_solid_jso
 // 🧾️ `create_document_envelope`/`ArtifactCommand` are unconditional (not test/wasm-only)
 // because `FlowHost`'s own undo/redo (see `impl FlowHost`'s `🔖️History` region) dispatches through
 // them in every build.
-use crate::os_spr::{collection_diff_from_mutation, inverse_collection_mutation, CollectionDiff, CollectionMutation, Identified, Mutation, MutationDiff, Patchable};
+use crate::os_spr::{collection_diff_from_mutation, inverse_collection_mutation, CollectionDiff, CollectionMutation, Identified, Mutation, MutationDiff, MutationOutcome, Patchable};
 #[cfg(test)]
 use crate::os_spr::{ArtifactId, Edit, SchemaId};
 use crate::os_store::create_document_envelope;
@@ -197,13 +197,16 @@ impl MutationDiff<FlowFixture> for FlowDiff {
 impl Mutation<FlowFixture> for FlowMutation {
     type Diff = FlowDiff;
 
-    fn diff(&self, snapshot: &FlowFixture) -> FlowDiff {
-        match self {
+    /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
+    /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet.
+    fn diff(&self, snapshot: &FlowFixture) -> MutationOutcome<FlowDiff> {
+        let diff = match self {
             FlowMutation::Widgets(operation) => FlowDiff { widgets: Some(collection_diff_from_mutation(&snapshot.widgets, operation)), ..Default::default() },
             FlowMutation::Synapses(operation) => FlowDiff { synapses: Some(collection_diff_from_mutation(&snapshot.synapses, operation)), ..Default::default() },
             FlowMutation::SetLayout { entries } => FlowDiff { layout: Some(entries.clone()), ..Default::default() },
             FlowMutation::SetFixture { fixture } => FlowDiff { fixture: Some(fixture.clone()), ..Default::default() },
-        }
+        };
+        MutationOutcome::new(diff)
     }
 
     fn inverse(&self, snapshot: &FlowFixture) -> Vec<Self> {

@@ -6,7 +6,11 @@ use crate::artifacts::program::diff::ProgramAccessibilityDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🌱️ `added = [payload row]` — the row lands at the end of `program.accessibility` on apply.
-pub fn diff(payload: &CreateAccessibilityRequirement, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { accessibility: Some(ProgramAccessibilityDelta { added: vec![payload.accessibility_requirement.clone()], ..Default::default() }), ..Default::default() }
+/// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
+pub fn diff(payload: &CreateAccessibilityRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let id = payload.accessibility_requirement.header.id.clone();
+    if base.accessibility.iter().any(|row| row.header.id == id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "An accessibility requirement already exists with this id.", [id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { accessibility: Some(ProgramAccessibilityDelta { added: vec![payload.accessibility_requirement.clone()], ..Default::default() }), ..Default::default() })
 }

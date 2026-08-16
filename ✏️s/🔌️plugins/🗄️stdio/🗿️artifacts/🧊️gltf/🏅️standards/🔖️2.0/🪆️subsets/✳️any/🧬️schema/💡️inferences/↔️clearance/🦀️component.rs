@@ -1,17 +1,17 @@
 //! ↔️ GLTF clearance indicators.
 
-#[path = "minimum-distance-to-neighbors/🦀️component.rs"]
-pub mod minimum_distance_to_neighbors;
 #[path = "clearance-distribution/🦀️component.rs"]
 pub mod clearance_distribution;
 #[path = "interference-volume/🦀️component.rs"]
 pub mod interference_volume;
+#[path = "minimum-distance-to-neighbors/🦀️component.rs"]
+pub mod minimum_distance_to_neighbors;
 #[path = "overlap-volume/🦀️component.rs"]
 pub mod overlap_volume;
 
-use super::geometry_core::{GltfGeometryContext, GltfPairGeometry};
-use super::super::modules::{mesh_topology::Topology};
 use super::super::modules::measurement_contracts::*;
+use super::super::modules::mesh_topology::Topology;
+use super::geometry_core::{GltfGeometryContext, GltfPairGeometry};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -27,19 +27,22 @@ pub struct GltfClearanceInference;
 
 impl GltfClearanceInference {
     pub(crate) fn infer_pair(pair: &GltfPairGeometry, policy: &GltfAnalysisPolicy) -> (GltfMeasure<f64>, GltfMeasure<GltfStatistics>, GltfMeasure<f64>, GltfMeasure<f64>) {
-        (
-            minimum_distance_to_neighbors::infer_pair(pair),
-            clearance_distribution::infer_pair(pair, policy),
-            interference_volume::infer_pair(pair),
-            overlap_volume::infer_pair(pair),
-        )
+        (minimum_distance_to_neighbors::infer_pair(pair), clearance_distribution::infer_pair(pair, policy), interference_volume::infer_pair(pair), overlap_volume::infer_pair(pair))
     }
 
     pub(crate) fn infer_assembly(indicators: &mut GltfClearanceIndicators, distances: &[f64], overlap_volume: f64, overlap_complete: bool, pair_count: usize, policy: &GltfAnalysisPolicy, sample_count: usize, topology: Topology) {
-        if let Some(measure) = minimum_distance_to_neighbors::from_assembly(distances, sample_count, topology) { indicators.minimum_distance_to_neighbors = measure; }
-        if let Some(measure) = clearance_distribution::from_assembly(distances, policy, sample_count, topology) { indicators.clearance_distribution = measure; }
-        if let Some(measure) = interference_volume::from_assembly(overlap_volume, overlap_complete, pair_count, sample_count, topology) { indicators.interference_volume = measure; }
-        if let Some(measure) = overlap_volume::from_assembly(overlap_volume, overlap_complete, pair_count, sample_count, topology) { indicators.overlap_volume = measure; }
+        if let Some(measure) = minimum_distance_to_neighbors::from_assembly(distances, sample_count, topology) {
+            indicators.minimum_distance_to_neighbors = measure;
+        }
+        if let Some(measure) = clearance_distribution::from_assembly(distances, policy, sample_count, topology) {
+            indicators.clearance_distribution = measure;
+        }
+        if let Some(measure) = interference_volume::from_assembly(overlap_volume, overlap_complete, pair_count, sample_count, topology) {
+            indicators.interference_volume = measure;
+        }
+        if let Some(measure) = overlap_volume::from_assembly(overlap_volume, overlap_complete, pair_count, sample_count, topology) {
+            indicators.overlap_volume = measure;
+        }
     }
 }
 

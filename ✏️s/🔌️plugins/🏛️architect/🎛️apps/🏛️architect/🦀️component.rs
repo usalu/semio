@@ -967,7 +967,7 @@ pub mod behavior {
             let mut target = crate::artifacts::program::empty_plugin();
             for operation in &operations {
                 use protocol::{Mutation, MutationDiff};
-                target = operation.diff(&target).apply(&target);
+                target = operation.diff(&target).diff().apply(&target);
             }
             assert_eq!(target.functions.len(), 1);
         }
@@ -1378,7 +1378,7 @@ pub(crate) mod testkit {
         use protocol::Mutation;
         let mut next = base.clone();
         for operation in &emit.config_mutations {
-            next = operation.diff(&next);
+            next = operation.diff(&next).into_parts().0;
         }
         next
     }

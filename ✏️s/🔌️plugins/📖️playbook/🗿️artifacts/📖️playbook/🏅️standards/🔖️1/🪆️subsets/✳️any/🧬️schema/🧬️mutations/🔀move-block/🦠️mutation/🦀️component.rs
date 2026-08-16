@@ -24,7 +24,7 @@ pub fn move_block_operation(block_id: &str, from_step_id: &str, to_step_id: &str
 impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for MoveBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "block", kind: "move-block", record: "MovedBlock" };
 
-    fn diff(&self, base: &PlaybookSnapshot) -> crate::artifacts::playbook::PlaybookDiff {
+    fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {

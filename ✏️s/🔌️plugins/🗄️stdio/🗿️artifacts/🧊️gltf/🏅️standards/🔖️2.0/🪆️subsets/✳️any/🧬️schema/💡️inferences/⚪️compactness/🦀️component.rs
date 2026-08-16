@@ -2,17 +2,17 @@
 
 #[path = "compactness/🦀️component.rs"]
 pub mod compactness;
-#[path = "surface-to-volume-ratio/🦀️component.rs"]
-pub mod surface_to_volume_ratio;
-#[path = "sphericity/🦀️component.rs"]
-pub mod sphericity;
 #[path = "compactness-index/🦀️component.rs"]
 pub mod compactness_index;
 #[path = "hull-fill-ratio/🦀️component.rs"]
 pub mod hull_fill_ratio;
+#[path = "sphericity/🦀️component.rs"]
+pub mod sphericity;
+#[path = "surface-to-volume-ratio/🦀️component.rs"]
+pub mod surface_to_volume_ratio;
 
-use super::geometry_core::{GltfGeometryContext, convex_hull_metrics, hull_sample};
 use super::super::modules::measurement_contracts::*;
+use super::geometry_core::{convex_hull_metrics, hull_sample, GltfGeometryContext};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

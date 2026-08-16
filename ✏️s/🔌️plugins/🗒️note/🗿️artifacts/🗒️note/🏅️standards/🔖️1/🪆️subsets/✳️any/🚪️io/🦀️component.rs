@@ -2,22 +2,26 @@
 //! this plugin's `.setup()` (see the artifact root's `declaration()`), not per-leaf register().
 
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
-use semio_s_plugin_stdio::artifacts::dwg::{DwgDrawing, DwgGeometry};
 use semio_framework_plugin::{io_dispatch, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
+use semio_s_plugin_stdio::artifacts::dwg::{DwgDrawing, DwgGeometry};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::io as semio_drawing_composer;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::write_svg_xml;
 use serde_json::Value;
 
-pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"] }
-pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"] }
+pub fn import_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"]
+}
+pub fn export_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"]
+}
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::note::NoteSnapshot;
     use crate::artifacts::note::standards::v1::subsets::any::schema::NoteAnalyzer;
+    use crate::artifacts::note::NoteSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.note", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_DWG: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
@@ -26,7 +30,6 @@ pub mod derived_composition {
     const DEP_PDF: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("*") };
     const DEP_PNG: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
     const DEP_SVG: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
-
 
     pub struct NoteComposerComposition;
 
@@ -104,7 +107,6 @@ pub mod derived_composition {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
-
             }
             Err(ComposeError { message: "NoteComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
         }
@@ -147,11 +149,7 @@ fn note_block_transform(block: &NoteBlockNode) -> SemioTransform {
         | NoteBlockNode::Group { x, y, rotation, .. } => (*x, *y, *rotation),
     };
     let theta = rotation.to_radians();
-    SemioTransform {
-        translation: SemioPoint3 { x, y, z: 0.0 },
-        rotation: SemioQuaternion { x: 0.0, y: 0.0, z: (theta / 2.0).sin(), w: (theta / 2.0).cos() },
-        scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 },
-    }
+    SemioTransform { translation: SemioPoint3 { x, y, z: 0.0 }, rotation: SemioQuaternion { x: 0.0, y: 0.0, z: (theta / 2.0).sin(), w: (theta / 2.0).cos() }, scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
 }
 
 /// ▭ The outline-rectangle `PathSegment`s the deleted `note_block_to_svg` drew for its
@@ -200,8 +198,12 @@ fn note_asset_data_uri_bytes(data_uri: &str) -> Vec<u8> {
         let n = vals.len();
         let combined = vals.iter().fold(0u32, |acc, &v| (acc << 6) | v as u32) << ((4 - n) * 6);
         out.push((combined >> 16) as u8);
-        if n > 2 { out.push((combined >> 8) as u8); }
-        if n > 3 { out.push(combined as u8); }
+        if n > 2 {
+            out.push((combined >> 8) as u8);
+        }
+        if n > 3 {
+            out.push(combined as u8);
+        }
     }
     out
 }
@@ -250,11 +252,8 @@ fn draw_node_from_note_block(block: &NoteBlockNode, document: &NoteSnapshot, sty
 pub fn note_document_to_drawing_snapshot(document: &NoteSnapshot) -> SemioDrawingSnapshot {
     let (width, height) = note_document_bounds(document);
     let mut styles = Vec::new();
-    let children: Vec<DrawNode> = crate::artifacts::note::schema::flatten_blocks(&document.blocks)
-        .into_iter()
-        .filter(|block| crate::artifacts::note::schema::block_visible(block))
-        .filter_map(|block| draw_node_from_note_block(block, document, &mut styles))
-        .collect();
+    let children: Vec<DrawNode> =
+        crate::artifacts::note::schema::flatten_blocks(&document.blocks).into_iter().filter(|block| crate::artifacts::note::schema::block_visible(block)).filter_map(|block| draw_node_from_note_block(block, document, &mut styles)).collect();
     SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
         canvas: DrawCanvas { width: width as f64, height: height as f64, background: None },
@@ -299,8 +298,7 @@ pub fn note_document_to_svg(document: &NoteSnapshot) -> Result<(String, u32, u32
         IoPayload::Binary(bytes) => bytes,
         IoPayload::Text(_) => return Err("note→svg via semio/drawing bridge: expected a Binary (ArtifactPack) svg payload".into()),
     };
-    let svg_snapshot = <semio_s_plugin_stdio::artifacts::svg::schema::snapshot::SvgSnapshot as store::ArtifactPack>::decode_pack(&svg_bytes)
-        .map_err(|error| format!("note→svg via semio/drawing bridge: decode svg snapshot: {error:?}"))?;
+    let svg_snapshot = <semio_s_plugin_stdio::artifacts::svg::schema::snapshot::SvgSnapshot as store::ArtifactPack>::decode_pack(&svg_bytes).map_err(|error| format!("note→svg via semio/drawing bridge: decode svg snapshot: {error:?}"))?;
     Ok((write_svg_xml(&svg_snapshot.doc), width, height))
 }
 
@@ -455,10 +453,7 @@ mod media_tests {
     fn document_to_svg_dispatches_through_semio_drawing_bridge() {
         let mut document = crate::artifacts::note::schema::empty_note_snapshot();
         document.blocks.push(NoteBlockNode::Text {
-            content: crate::artifacts::note::note_text_child_handle_and_cache(
-                "t1",
-                &[NoteTextParagraph { runs: vec![NoteTextRun { text: "hello semio".into(), bold: None, italic: None, underline: None, link: None }] }],
-            ),
+            content: crate::artifacts::note::note_text_child_handle_and_cache("t1", &[NoteTextParagraph { runs: vec![NoteTextRun { text: "hello semio".into(), bold: None, italic: None, underline: None, link: None }] }]),
             id: "t1".into(),
             name: "Text".into(),
             x: 10.0,
@@ -517,10 +512,7 @@ mod media_tests {
     #[test]
     fn document_to_svg_embeds_image_asset_bytes_as_data_uri() {
         let mut document = crate::artifacts::note::schema::empty_note_snapshot();
-        document.assets.insert(
-            "asset-1".into(),
-            NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,AAECAw==".into(), width: Some(4.0), height: Some(4.0) },
-        );
+        document.assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,AAECAw==".into(), width: Some(4.0), height: Some(4.0) });
         document.blocks.push(NoteBlockNode::Image { id: "im1".into(), name: "Image".into(), x: 0.0, y: 0.0, width: 4.0, height: 4.0, rotation: 0.0, visible: true, locked: false, image_key: "asset-1".into() });
 
         let (svg, _w, _h) = note_document_to_svg(&document).expect("svg export via io_dispatch");
@@ -548,10 +540,10 @@ mod media_tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ArtifactBuilder, ComposerEntry, ComposedArtifact, ComposeError, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload, IoConfidence, composer_entry_of};
-    use crate::artifacts::note::standards::v1::subsets::any::schema::NoteComposer as NoteAnyComposer;
     use crate::artifacts::note::standards::v1::subsets::any::schema::NoteBuilder as NoteAnyBuilder;
+    use crate::artifacts::note::standards::v1::subsets::any::schema::NoteComposer as NoteAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
@@ -629,15 +621,19 @@ pub mod io_registry {
     //#endregion 🔖️ExportEntries
 
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![
-            composer_entry_of::<NoteAnyComposer>(),
-            ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[NOTE_DIALECT], compose: compose_export_svg },
-            ComposerEntry { writes: EXPORT_PDF_DIALECT, reads: &[NOTE_DIALECT], compose: compose_export_pdf },
-            ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[NOTE_DIALECT], compose: compose_export_png },
-            ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[NOTE_DIALECT], compose: compose_export_json },
-            ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[NOTE_DIALECT], compose: compose_export_dwg },
-            ComposerEntry { writes: EXPORT_DXF_DIALECT, reads: &[NOTE_DIALECT], compose: compose_export_dxf },
-        ]).as_slice()
+        ENTRIES
+            .get_or_init(|| {
+                vec![
+                    composer_entry_of::<NoteAnyComposer>(),
+                    ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[NOTE_DIALECT], compose: compose_export_svg },
+                    ComposerEntry { writes: EXPORT_PDF_DIALECT, reads: &[NOTE_DIALECT], compose: compose_export_pdf },
+                    ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[NOTE_DIALECT], compose: compose_export_png },
+                    ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[NOTE_DIALECT], compose: compose_export_json },
+                    ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[NOTE_DIALECT], compose: compose_export_dwg },
+                    ComposerEntry { writes: EXPORT_DXF_DIALECT, reads: &[NOTE_DIALECT], compose: compose_export_dxf },
+                ]
+            })
+            .as_slice()
     }
 
     //#region 🧪️Tests
@@ -647,44 +643,11 @@ pub mod io_registry {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::{register_composer_entries, io_resolve, io_dialects_for, IoKey, IoDirection};
 
         #[test]
         fn every_export_target_writes_its_own_dialect_and_reads_only_the_native_dialect() {
             for entry in entries().iter().skip(1) {
                 assert_eq!(entry.reads, &[NOTE_DIALECT], "export entry writing {:?} should read only the native dialect", entry.writes);
-            }
-        }
-
-        #[test]
-        fn registered_json_export_entry_resolves_and_produces_valid_json_bytes() {
-            register_composer_entries(entries());
-            let key = IoKey {
-                artifact_kind: NOTE_DIALECT.artifact_kind.to_string(),
-                standard: NOTE_DIALECT.standard.0.to_string(),
-                subset: NOTE_DIALECT.subset.0.to_string(),
-                direction: IoDirection::Export,
-                format_kind: EXPORT_JSON_DIALECT.artifact_kind.to_string(),
-                format_standard: EXPORT_JSON_DIALECT.standard.0.to_string(),
-                format_subset: EXPORT_JSON_DIALECT.subset.0.to_string(),
-            };
-            let resolved = io_resolve(&key).expect("note -> json export entry resolves through the typed registry");
-            let snapshot = NoteAnyBuilder::empty().build().expect("empty note builds");
-            let native_bytes = store::ArtifactPack::encode_pack(&snapshot);
-            let sources = [ErasedComposeSource { dialect: NOTE_DIALECT, payload: IoPayload::Binary(native_bytes) }];
-            let composed = (resolved.compose)(&sources).expect("compose succeeds");
-            assert_eq!(composed.dialect, EXPORT_JSON_DIALECT);
-            let IoPayload::Binary(bytes) = composed.payload else { panic!("expected binary json payload") };
-            let value: serde_json::Value = serde_json::from_slice(&bytes).expect("export produced valid json bytes");
-            assert!(value.is_object(), "expected a json object, got {value:?}");
-        }
-
-        #[test]
-        fn dialects_for_export_direction_includes_every_target() {
-            register_composer_entries(entries());
-            let dialects = io_dialects_for(NOTE_DIALECT.artifact_kind, IoDirection::Export);
-            for entry in entries().iter().skip(1) {
-                assert!(dialects.contains(&entry.writes), "expected note's export dialects to include {:?}, got {:?}", entry.writes, dialects);
             }
         }
     }

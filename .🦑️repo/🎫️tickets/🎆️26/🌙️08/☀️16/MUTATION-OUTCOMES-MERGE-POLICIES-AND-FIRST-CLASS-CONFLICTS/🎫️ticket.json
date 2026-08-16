@@ -1,0 +1,13 @@
+{
+  "title": "Mutation Outcomes, Merge Policies and First-Class Conflicts",
+  "emoji": "💬️",
+  "status": "open",
+  "description": "Every mutation must produce a diff ALONG WITH messages (level: info, warning, error, fatal). Conflicts become first-class citizens. Introduce merge policies (laissez-faire: only fatal messages prevent the merge; normal: errors and fatals prevent, warnings ignored; vigilant: any warning or worse prevents). Working alone, errors and conflicts should not arise because illegal actions are prevented up front (apps guard gestures with the same predicate the diff leaf uses). Due to the collaborative event-sourcing system and chronological merging of mutations (new order due to timestamps), errors and conflicts can always arise — e.g. one user modifies a part while another deletes it, so the modifying mutations have no effect when merged. Extend/refactor/change clean mechanisms to properly achieve this, end to end for all non-legacy technology: kernel spine (MutationOutcome/MutationMessage/MergePolicy/Conflict), derive macros, store (chronological HLC merge, quarantine + degraded conflicts, resolve accept/discard), .spr persistence, channel + TS mirror, guest SDK, Rust wasmtime host, TS browser host, React shell UI with en/de strings, hub + db authority, and the ~1400 mutation-kind diff leaves across 33 plugins. Delete the unreachable CRDT layer (📡️spr/🔀️crdt, MergeStrategyKind, ConflictRule, db ResolutionPlan) per CLAUDE.md, and rename Severity::Hint to Info repo-wide. Master plan: 📋️master-plan.md in this ticket folder (source: /Users/ueli/.claude/plans/all-mutations-must-produce-hidden-bubble.md). Workforce: one Opus 5 coordinator agent, Sonnet 5 lane executors, Haiku 4.5 read-only scouts/auditors (the llm field records sonnet-5 because the registry has no Claude-5 Opus/Fable value).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2560"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪650e978da88244bbb89d29f1e857a987"
+  ]
+}

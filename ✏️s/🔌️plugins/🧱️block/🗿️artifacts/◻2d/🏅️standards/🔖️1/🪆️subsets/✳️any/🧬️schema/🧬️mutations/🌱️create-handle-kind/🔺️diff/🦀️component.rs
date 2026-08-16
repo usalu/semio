@@ -5,7 +5,10 @@ use crate::artifacts::block2d::Block2dSnapshot;
 use crate::artifacts::block2d::{Block2dHandleKind};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::CreateHandleKind, base: &Block2dSnapshot) -> Block2dDiff {
-    Block2dDiff { handle_kinds: Some(Block2dHandleKindsDelta { added: vec![payload.handle_kind.clone()], ..Default::default() }), ..Default::default() }
+pub fn diff(payload: &super::mutation::CreateHandleKind, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
+    if base.handle_kinds.iter().any(|item| item.id == payload.handle_kind.id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} \"{}\" already exists", "handle-kind", payload.handle_kind.id), vec![payload.handle_kind.id.clone()]);
+    }
+    protocol::MutationOutcome::new(Block2dDiff { handle_kinds: Some(Block2dHandleKindsDelta { added: vec![payload.handle_kind.clone()], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

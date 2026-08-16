@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.create-accessor.v1.mutation",
+  "title": "GltfCreateAccessorPayloadV1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "position": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "componentType": {
+      "type": "integer"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "type": {
+      "enum": [
+        "SCALAR",
+        "VEC2",
+        "VEC3",
+        "VEC4",
+        "MAT2",
+        "MAT3",
+        "MAT4"
+      ]
+    }
+  },
+  "required": [
+    "position",
+    "componentType",
+    "count",
+    "type"
+  ],
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.create-accessor.v1",
+    "version": 1,
+    "phase": "mutation",
+    "touchedPathPattern": "document/accessors",
+    "referencePolicy": "typed references remap, repair, or reject"
+  }
+}

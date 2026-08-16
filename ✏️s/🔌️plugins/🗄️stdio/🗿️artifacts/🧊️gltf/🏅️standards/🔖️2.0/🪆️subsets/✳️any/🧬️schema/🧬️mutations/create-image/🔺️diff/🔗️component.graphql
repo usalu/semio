@@ -1,0 +1,13 @@
+# create-image typed diff facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfImageValueV1
+input GltfCreateImagePayloadV1 {
+  position: Int!
+}
+type GltfCreateImageDiffOperationV1 {
+  kind: String!
+  position: Int!
+  item: GltfImageValueV1!
+}
+type GltfCreateImageDiffV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfCreateImagePayloadV1!, operation: GltfCreateImageDiffOperationV1! }

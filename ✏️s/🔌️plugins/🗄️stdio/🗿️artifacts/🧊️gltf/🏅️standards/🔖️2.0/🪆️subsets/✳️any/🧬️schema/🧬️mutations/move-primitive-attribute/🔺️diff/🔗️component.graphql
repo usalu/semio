@@ -1,0 +1,8 @@
+# move-primitive-attribute diff facet.
+input GltfMovePrimitiveAttributePayloadV1 {
+  mesh: Int!
+  primitive: Int!
+  semantic: String!
+  position: Int!
+}
+type GltfMovePrimitiveAttributeDiffV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

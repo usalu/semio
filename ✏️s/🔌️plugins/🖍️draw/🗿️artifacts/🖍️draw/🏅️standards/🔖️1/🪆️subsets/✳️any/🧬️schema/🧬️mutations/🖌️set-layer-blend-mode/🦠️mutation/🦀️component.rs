@@ -22,7 +22,7 @@ pub fn set_layer_blend_mode(layer_id: String, blend_mode: String) -> DrawMutatio
 impl protocol::MutationKind<DrawSnapshot, DrawMutation> for SetLayerBlendMode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layer", kind: "set-layer-blend-mode", record: "SetLayerBlendMode" };
 
-    fn diff(&self, base: &DrawSnapshot) -> DrawDiff {
+    fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {

@@ -23,7 +23,7 @@ pub fn change_node_shape(node_id: String, new_shape: String) -> WiresMutation {
 impl protocol::MutationKind<WiresSnapshot, WiresMutation> for ChangeNodeShape {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node", kind: "change-node-shape", record: "ChangedNodeShape" };
 
-    fn diff(&self, base: &WiresSnapshot) -> WiresDiff {
+    fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {

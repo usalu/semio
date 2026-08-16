@@ -19,6 +19,15 @@ use std::collections::{BTreeMap, HashMap};
 pub use imperative_engine::{Path, Step};
 pub use neural_engine::{Dictionary, Registry, Value};
 
+/// 🎯️ This artifact's `✏️editor`/`👁️viewer` surface coordinate (ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1) — lives at the ARTIFACT level
+/// (not under `editor`/`viewer`) specifically so a viewer file can read it without ever importing
+/// through the sibling editor module. `artifact_kind` matches the `#[artifact_schema(id = ..)]`
+/// this artifact's own schema declares (`🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs`);
+/// `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the
+/// canonical surface id is `s.imperative.imperative@1/*#editor` / `s.imperative.imperative@1/*#viewer`.
+pub const IMPERATIVE_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.imperative.imperative", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+
 /// 🌱️ View of a snapshot seed map as a neural [`Dictionary`] for execution.
 pub fn seed_dictionary(seed: &BTreeMap<String, Value>) -> Dictionary {
     serde_json::from_value(serde_json::to_value(seed).expect("seed serializes")).expect("seed is a dictionary")
@@ -77,11 +86,7 @@ pub fn flow_content_snapshot_from_path(path: &Path) -> SemioFlowSnapshot {
     let mut nodes = Vec::with_capacity(path.steps.len());
     let mut edges = Vec::new();
     for (index, step) in path.steps.iter().enumerate() {
-        let mut params: Vec<FlowParam> = step
-            .params
-            .keys()
-            .map(|key| FlowParam { key: key.clone(), value: serde_json::to_string(step.params.get(key).expect("key came from Dictionary::keys()")).unwrap_or_default() })
-            .collect();
+        let mut params: Vec<FlowParam> = step.params.keys().map(|key| FlowParam { key: key.clone(), value: serde_json::to_string(step.params.get(key).expect("key came from Dictionary::keys()")).unwrap_or_default() }).collect();
         if !step.bodies.is_empty() {
             params.push(FlowParam { key: "__bodies".into(), value: serde_json::to_string(&step.bodies).unwrap_or_default() });
         }
@@ -286,19 +291,31 @@ pub fn diff_replace_flow(path: &Path) -> ImperativeDiff {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.imperative.standard.v1", "standard", "1", &[], None), ("s.imperative.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.imperative.schema.artifact", "schema", "s.imperative.imperative", &[("schema", "s.imperative.imperative")], None), ("s.imperative.inference.artifact", "inference", "s.imperative.imperative.inference", &[("schema", "s.imperative.imperative.inference")], None),
-        ("s.imperative.composer.csv", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None), ("s.imperative.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None), ("s.imperative.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.imperative.grammar.document", "grammar", "imperative.document", &[("grammar", "imperative.document")], None), ("s.imperative.grammar.op", "grammar", "imperative.imperative.op", &[("grammar", "imperative.imperative.op")], None),
-        ("s.imperative.grammar.diff", "grammar", "imperative.imperative.diff", &[("grammar", "imperative.imperative.diff")], None), ("s.imperative.grammar.pack", "grammar", "imperative.pack", &[("grammar", "imperative.pack")], None), ("s.imperative.grammar.spr", "grammar", "imperative.spr", &[("grammar", "imperative.spr")], None),
+        ("s.imperative.standard.v1", "standard", "1", &[], None),
+        ("s.imperative.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.imperative.schema.artifact", "schema", "s.imperative.imperative", &[("schema", "s.imperative.imperative")], None),
+        ("s.imperative.inference.artifact", "inference", "s.imperative.imperative.inference", &[("schema", "s.imperative.imperative.inference")], None),
+        ("s.imperative.composer.csv", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
+        ("s.imperative.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
+        ("s.imperative.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.imperative.grammar.document", "grammar", "imperative.document", &[("grammar", "imperative.document")], None),
+        ("s.imperative.grammar.op", "grammar", "imperative.imperative.op", &[("grammar", "imperative.imperative.op")], None),
+        ("s.imperative.grammar.diff", "grammar", "imperative.imperative.diff", &[("grammar", "imperative.imperative.diff")], None),
+        ("s.imperative.grammar.pack", "grammar", "imperative.pack", &[("grammar", "imperative.pack")], None),
+        ("s.imperative.grammar.spr", "grammar", "imperative.spr", &[("grammar", "imperative.spr")], None),
         ("s.imperative.codec.document.v1", "codec", "imperative.document/v1:imperative", &[("codec", "imperative.document/v1"), ("extension", "imperative")], None),
-        ("s.imperative.localization.en", "localization", "Imperative", &[], Some(("en", "Imperative"))), ("s.imperative.localization.de", "localization", "Imperativ", &[], Some(("de", "Imperativ"))),
+        ("s.imperative.localization.en", "localization", "Imperative", &[], Some(("en", "Imperative"))),
+        ("s.imperative.localization.de", "localization", "Imperativ", &[], Some(("de", "Imperativ"))),
     ];
     let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.imperative")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
-        for (namespace, value) in *claims { capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?; }
-        if let Some((locale, text)) = localization { capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?; }
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
         definition = definition.capability(capability)?;
     }
     Ok(definition)
@@ -311,7 +328,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::imperative::standards::v1::subsets::any::schema::inferences::imperative_artifact_inference_descriptor()])
         .composers(crate::artifacts::imperative::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::imperative::ImperativePlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::imperative::ImperativePlayApp>>()
         .try_build()
 }
 
@@ -382,7 +399,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::apps::imperative::create_imperative_app`'s `🔖️Manifest` region.
+/// `crate::editor::imperative::create_imperative_app`'s `🔖️Manifest` region.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.imperative".into(),
@@ -395,7 +412,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "imperative.document".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md"],
+        export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md"],
         import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md"],
     }
 }
@@ -426,28 +443,3 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::imperative::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("ImperativeComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
-}
-//#endregion 🚪️DerivedIoRegistry

@@ -19,7 +19,7 @@ pub struct ReplaceEnvironmentalRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceEnvironmentalRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "environmental-requirement", kind: "replace-environmental-requirement", record: "ReplacedEnvironmentalRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

@@ -18,7 +18,7 @@ pub struct CreateAccessRule {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateAccessRule {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "access-rule", kind: "create-access-rule", record: "CreatedAccessRule" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

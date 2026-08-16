@@ -18,7 +18,7 @@ pub struct DeleteBlock {
 impl MutationKind<FormsSnapshot, FormMutation> for DeleteBlock {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "block", kind: "delete-block", record: "DeletedBlock" };
 
-    fn diff(&self, base: &FormsSnapshot) -> FormsDiff {
+    fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff_delete_block(self, base)
     }
     fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {

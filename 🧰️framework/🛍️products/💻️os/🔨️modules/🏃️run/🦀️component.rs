@@ -97,55 +97,6 @@ pub trait MediaCache {
     fn put(&mut self, fingerprint: &MediaFingerprint, media: &Media);
 }
 
-/// 🧠️ Process-local `MediaCache` — sufficient for a single `run()` call; nothing survives the process.
-#[derive(Default)]
-pub struct InMemoryMediaCache {
-    entries: HashMap<String, Media>,
-}
-
-impl MediaCache for InMemoryMediaCache {
-    fn get(&self, fingerprint: &MediaFingerprint) -> Option<Media> {
-        self.entries.get(&fingerprint.0).cloned()
-    }
-
-    fn put(&mut self, fingerprint: &MediaFingerprint, media: &Media) {
-        self.entries.insert(fingerprint.0.clone(), media.clone());
-    }
-}
-
-/// 💾️ Disk-backed `MediaCache` under `<space>/cache/media/<fingerprint>.json` (renamed from
-/// `<studio>/run/media/` by W4's canonical on-disk layout rewrite — see `SpaceBundle`'s own doc
-/// comment) — the persistent counterpart to `InMemoryMediaCache`, so a cold-started runner still
-/// skips re-exporting a clean node's output when a prior run already cached it.
-pub struct FileMediaCache {
-    root: PathBuf,
-}
-
-impl FileMediaCache {
-    pub fn new(root: impl Into<PathBuf>) -> Self {
-        Self { root: root.into() }
-    }
-
-    fn entry_path(&self, fingerprint: &MediaFingerprint) -> PathBuf {
-        self.root.join(format!("{}.json", fingerprint.0))
-    }
-}
-
-impl MediaCache for FileMediaCache {
-    fn get(&self, fingerprint: &MediaFingerprint) -> Option<Media> {
-        let text = std::fs::read_to_string(self.entry_path(fingerprint)).ok()?;
-        serde_json::from_str(&text).ok()
-    }
-
-    fn put(&mut self, fingerprint: &MediaFingerprint, media: &Media) {
-        if std::fs::create_dir_all(&self.root).is_err() {
-            return;
-        }
-        if let Ok(text) = serde_json::to_string(media) {
-            let _ = std::fs::write(self.entry_path(fingerprint), text);
-        }
-    }
-}
 //#endregion 🔖️MediaCache
 
 //#region 🔖️BlobStore
@@ -196,7 +147,7 @@ impl BlobStore for FileBlobStore {
     }
 }
 
-/// 🧠️ Process-local `store::BlobStore` — the `InMemoryMediaCache` counterpart for blob bytes, used
+/// 🧠️ Process-local `store::BlobStore` — the test-only map cache counterpart for blob bytes, used
 /// wherever a full `SpaceBundle` (and its `blobs/` dir) isn't in play, chiefly `SpaceRunner`'s own
 /// `FakeHost`-based unit tests.
 #[derive(Default)]
@@ -743,10 +694,6 @@ impl SpaceBundle {
         Ok(())
     }
 
-    pub fn media_cache(&self) -> FileMediaCache {
-        FileMediaCache::new(self.media_cache_dir())
-    }
-
     pub fn blob_store(&self) -> FileBlobStore {
         FileBlobStore::new(self.blobs_dir())
     }
@@ -1147,7 +1094,7 @@ impl<H: AppChannelHost> SpaceRunner<H> {
                 output_fingerprints.push(PortFingerprint { port_id: port_id.clone(), fingerprint: fingerprint.clone() });
                 cache.put(&MediaFingerprint(fingerprint.clone()), media);
                 // 📤️ The media cache is the one place this crate already persists exported output bytes
-                // durably (`FileMediaCache`, `<space>/cache/media/<fingerprint>.json`) — `RunOutputArtifact`
+                // durably (`<space>/cache/media/<fingerprint>.json`) — `RunOutputArtifact`
                 // points at that real, existing location rather than inventing a second one this wave.
                 run_outputs.push(RunOutputArtifact { port_id: port_id.clone(), artifact_id: format!("cache/media/{fingerprint}"), path: format!("cache/media/{fingerprint}.json") });
             }
@@ -1589,6 +1536,24 @@ mod tests {
     use semio_framework::{MediaPortDirection, MediaPortSpec};
     use workflow::{placeholder_media_contract, WorkflowMediaPort, WORKFLOW_SCHEMA};
 
+    //#region 🔖️TestMediaCache
+    /// 🧪️ Test-local map-backed `MediaCache` for exercising cached runner outputs.
+    #[derive(Default)]
+    struct TestMediaCache {
+        entries: HashMap<String, Media>,
+    }
+
+    impl MediaCache for TestMediaCache {
+        fn get(&self, fingerprint: &MediaFingerprint) -> Option<Media> {
+            self.entries.get(&fingerprint.0).cloned()
+        }
+
+        fn put(&mut self, fingerprint: &MediaFingerprint, media: &Media) {
+            self.entries.insert(fingerprint.0.clone(), media.clone());
+        }
+    }
+    //#endregion 🔖️TestMediaCache
+
     /// 🧪️ A fake `AppChannelHost` for tests: no wasm at all, just a per-instance document/config, a
     /// fixed structured output per port, and an in-process `InMemoryBlobStore` — enough to interpret
     /// the exact `AppCommand`/`AppFrame` frame script `SpaceRunner::compute_node` sends, so
@@ -1771,7 +1736,7 @@ mod tests {
         let mut host = FakeHost::default();
         host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
         let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()));
-        let mut cache = InMemoryMediaCache::default();
+        let mut cache = TestMediaCache::default();
         let documents = empty_documents(&graph);
         let configs = empty_configs(&graph);
 
@@ -1800,7 +1765,7 @@ mod tests {
         let mut host = FakeHost::default();
         host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
         let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()));
-        let mut cache = InMemoryMediaCache::default();
+        let mut cache = TestMediaCache::default();
         let documents = empty_documents(&graph);
         let configs = empty_configs(&graph);
         let mut sink_1 = fresh_sink();
@@ -1830,7 +1795,7 @@ mod tests {
         let mut host = FakeHost::default();
         host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
         let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()));
-        let mut cache = InMemoryMediaCache::default();
+        let mut cache = TestMediaCache::default();
         let documents = empty_documents(&graph);
         let configs_1 = empty_configs(&graph);
         let mut sink_1 = fresh_sink();
@@ -1862,7 +1827,7 @@ mod tests {
         let mut host = FakeHost::default();
         host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
         let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()));
-        let mut cache = InMemoryMediaCache::default();
+        let mut cache = TestMediaCache::default();
         let documents = empty_documents(&graph);
         let configs = empty_configs(&graph);
         let bindings = vec![WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "node-a".into(), field_path: "/threshold".into() }];
@@ -1891,7 +1856,7 @@ mod tests {
         graph.nodes[1].inputs[0].spec.media_type = MediaType { class: MediaClass::Text, form: MediaForm::Document };
         let host = FakeHost::default();
         let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()));
-        let mut cache = InMemoryMediaCache::default();
+        let mut cache = TestMediaCache::default();
         let documents = empty_documents(&graph);
         let configs = empty_configs(&graph);
         let mut sink = fresh_sink();

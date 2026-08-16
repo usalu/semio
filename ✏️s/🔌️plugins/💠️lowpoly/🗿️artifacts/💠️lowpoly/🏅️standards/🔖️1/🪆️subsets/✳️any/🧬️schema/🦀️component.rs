@@ -182,7 +182,7 @@ pub fn default_snapshot() -> crate::artifacts::lowpoly::LowpolySnapshot {
 
 /// 🕸️ Companion cache for `default_snapshot()`'s single object ("obj-1") — the live half-edge mesh
 /// JSON its `mesh` handle is content-addressed off, keyed by object id exactly like
-/// `🎛️apps/💠️lowpoly/🖌️session::LowpolyScratch`'s own `mesh_workspace` field expects. Tests and
+/// `✏️editor/🖌️session::LowpolyScratch`'s own `mesh_workspace` field expects. Tests and
 /// `LowpolyScratch::default()` seed from this so a freshly booted session can immediately reload the
 /// mesh `default_snapshot()` describes, without a real child-document resolution API (none exists
 /// yet for any WASM-guest plugin in this repo).
@@ -564,12 +564,12 @@ mod tests {
         let base = default_snapshot();
         let object_id = base.objects[0].id.clone();
         let mutation = LowpolyMutation::RenameObject(rename_object::mutation::RenameObject { id: object_id, new_name: "Renamed".into() });
-        let after = mutation.diff(&base).apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base);
         assert_eq!(after.objects[0].name, "Renamed");
         let inverse = mutation.inverse(&base);
         let mut state = after;
         for step in &inverse {
-            state = step.diff(&base).apply(&state);
+            state = step.diff(&base).diff().apply(&state);
         }
         assert_eq!(state.objects[0].name, "Unit Box");
     }

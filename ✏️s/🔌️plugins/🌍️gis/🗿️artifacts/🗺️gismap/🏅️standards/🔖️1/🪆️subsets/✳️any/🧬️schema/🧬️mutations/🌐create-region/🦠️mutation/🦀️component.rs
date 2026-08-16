@@ -20,7 +20,7 @@ pub struct CreateRegion {
 impl MutationKind<GisMapSnapshot, GisMapMutation> for CreateRegion {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "region", kind: "create-region", record: "CreatedRegion" };
 
-    fn diff(&self, base: &GisMapSnapshot) -> GisMapDiff {
+    fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
 

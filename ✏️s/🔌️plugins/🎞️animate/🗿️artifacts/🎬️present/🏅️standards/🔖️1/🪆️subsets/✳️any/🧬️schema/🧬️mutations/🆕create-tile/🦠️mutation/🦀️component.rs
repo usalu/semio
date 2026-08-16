@@ -21,7 +21,7 @@ pub struct CreateTile {
 impl MutationKind<PresentSnapshot, PresentMutation> for CreateTile {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "tile", kind: "create-tile", record: "CreatedTile" };
 
-    fn diff(&self, base: &PresentSnapshot) -> PresentDiff {
+    fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
         super::diff::diff(self, base)
     }
 

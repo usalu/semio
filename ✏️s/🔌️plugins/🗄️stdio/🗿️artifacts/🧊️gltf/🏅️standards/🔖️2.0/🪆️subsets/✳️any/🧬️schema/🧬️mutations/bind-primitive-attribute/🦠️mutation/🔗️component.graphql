@@ -1,0 +1,8 @@
+# bind-primitive-attribute mutation facet.
+input GltfBindPrimitiveAttributePayloadV1 {
+  mesh: Int!
+  primitive: Int!
+  semantic: String!
+  accessor: Int!
+}
+type GltfBindPrimitiveAttributeMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

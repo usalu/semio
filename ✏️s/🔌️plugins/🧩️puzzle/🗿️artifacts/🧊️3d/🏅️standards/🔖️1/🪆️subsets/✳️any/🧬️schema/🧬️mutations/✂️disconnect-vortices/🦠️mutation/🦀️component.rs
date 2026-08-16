@@ -21,7 +21,7 @@ pub fn disconnect_vortices(id: String) -> Puzzle3dMutation {
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for DisconnectVortices {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "disconnect", entity: "vortices", kind: "disconnect-vortices", record: "DisconnectedVortices" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> Puzzle3dDiff {
+    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {

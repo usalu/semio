@@ -16,7 +16,7 @@ pub struct ChangeLayerBlendMode {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ChangeLayerBlendMode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "layer", kind: "change-layer-blend-mode", record: "ChangedLayerBlendMode" };
 
-    fn diff(&self, base: &RasterSnapshot) -> RasterDiff {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::change_layer_blend_mode::diff::diff(self, base)
     }
 

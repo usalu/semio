@@ -119,10 +119,12 @@ pub enum Process3dPresenceMutation {
 impl Mutation<Process3dPresence> for Process3dPresenceMutation {
     type Diff = Process3dPresence;
 
-    fn diff(&self, _base: &Process3dPresence) -> Process3dPresence {
-        match self {
+    /// 📦️ Whole-value snapshot replace — no target to be missing, so a message-free outcome per the
+    /// contract's root-scoped shrink-only allowlist.
+    fn diff(&self, _base: &Process3dPresence) -> protocol::MutationOutcome<Process3dPresence> {
+        protocol::MutationOutcome::new(match self {
             Self::Snapshot { presence } => presence.clone(),
-        }
+        })
     }
 
     fn inverse(&self, base: &Process3dPresence) -> Vec<Self> {

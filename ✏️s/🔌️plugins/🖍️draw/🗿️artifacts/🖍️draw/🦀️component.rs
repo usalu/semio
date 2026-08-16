@@ -368,9 +368,9 @@ pub fn default_draw_transform() -> DrawTransform {
 pub fn default_draw_trace_params() -> DrawTraceParams {
     DrawTraceParams { threshold: 0.5, simplify_epsilon: 1.5 }
 }
-pub use crate::artifacts::draw::schema::snapshot::DrawSnapshot;
 pub use crate::artifacts::draw::schema::diff::DrawDiff;
 pub use crate::artifacts::draw::schema::mutations::DrawMutation;
+pub use crate::artifacts::draw::schema::snapshot::DrawSnapshot;
 
 //#endregion 🔖️Domain
 
@@ -459,9 +459,17 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
         .as_slice()
 }
 
+/// 🎯️ The `s.draw.draw@1/*` surface dialect (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
+/// contract §2.1) — lives at the ARTIFACT level, not under `editor`/`viewer`, specifically so a
+/// viewer file can read it without ever importing through the sibling editor module. `artifact_kind`
+/// matches this file's own `definition()` capability row `"s.draw.schema.artifact"` → descriptor
+/// `"s.draw.draw"`; `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
+pub const DRAW_DIALECT: semio_framework::Dialect = semio_framework::Dialect { artifact_kind: "s.draw.draw", standard: semio_framework::StandardId("1"), subset: semio_framework::SubsetId::ANY };
+
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) —
 /// replaces the old side-effecting `register()`, which called four different global registries
-/// directly from a plugin `.setup()` callback. `crate::apps::draw::config::schema::register_app_schema()`
+/// directly from a plugin `.setup()` callback. `crate::editor::draw::config::schema::register_app_schema()`
 /// is the one exception, still called from `🖍️draw/🦀️component.rs`'s own `.setup()`: it registers the
 /// `DrawPlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has
 /// no field for (see that struct's own doc).
@@ -472,23 +480,34 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.draw.standard.v1", "standard", "1", &[], None), ("s.draw.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.draw.standard.v1", "standard", "1", &[], None),
+        ("s.draw.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.draw.schema.artifact", "schema", "s.draw.draw", &[("schema", "s.draw.draw")], None),
         ("s.draw.inference.artifact", "inference", "s.draw.draw.inference", &[("schema", "s.draw.draw.inference")], None),
-        ("s.draw.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None), ("s.draw.composer.pdf", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
-        ("s.draw.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None), ("s.draw.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.draw.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None), ("s.draw.composer.dxf", "composer", "s.stdio.dxf@r12/*", &[("dialect", "s.stdio.dxf@r12/*")], None),
-        ("s.draw.grammar.document", "grammar", "draw.document", &[("grammar", "draw.document")], None), ("s.draw.grammar.op", "grammar", "draw.op", &[("grammar", "draw.op")], None),
-        ("s.draw.grammar.diff", "grammar", "draw.diff", &[("grammar", "draw.diff")], None), ("s.draw.grammar.pack", "grammar", "draw.pack", &[("grammar", "draw.pack")], None),
+        ("s.draw.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
+        ("s.draw.composer.pdf", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
+        ("s.draw.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.draw.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.draw.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
+        ("s.draw.composer.dxf", "composer", "s.stdio.dxf@r12/*", &[("dialect", "s.stdio.dxf@r12/*")], None),
+        ("s.draw.grammar.document", "grammar", "draw.document", &[("grammar", "draw.document")], None),
+        ("s.draw.grammar.op", "grammar", "draw.op", &[("grammar", "draw.op")], None),
+        ("s.draw.grammar.diff", "grammar", "draw.diff", &[("grammar", "draw.diff")], None),
+        ("s.draw.grammar.pack", "grammar", "draw.pack", &[("grammar", "draw.pack")], None),
         ("s.draw.grammar.spr", "grammar", "draw.spr", &[("grammar", "draw.spr")], None),
         ("s.draw.codec.document.v1", "codec", "draw.document:draw", &[("codec", "draw.document"), ("extension", "draw")], None),
-        ("s.draw.localization.en", "localization", "Drawing", &[], Some(("en", "Drawing"))), ("s.draw.localization.de", "localization", "Zeichnung", &[], Some(("de", "Zeichnung"))),
+        ("s.draw.localization.en", "localization", "Drawing", &[], Some(("en", "Drawing"))),
+        ("s.draw.localization.de", "localization", "Zeichnung", &[], Some(("de", "Zeichnung"))),
     ];
     let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.draw")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
-        for (namespace, value) in *claims { capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?; }
-        if let Some((locale, text)) = localization { capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?; }
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
         definition = definition.capability(capability)?;
     }
     Ok(definition)
@@ -500,32 +519,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::draw::schema::inferences::draw_artifact_inference_descriptor()])
         .composers(crate::artifacts::draw::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::draw::DrawPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::draw::DrawPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️ArtifactKind
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::draw::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("DrawComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
-}
-//#endregion 🚪️DerivedIoRegistry

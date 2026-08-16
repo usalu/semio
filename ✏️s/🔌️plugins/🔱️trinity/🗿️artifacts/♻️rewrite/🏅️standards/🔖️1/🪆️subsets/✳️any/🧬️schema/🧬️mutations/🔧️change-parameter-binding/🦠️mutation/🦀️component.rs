@@ -23,7 +23,7 @@ pub fn change_parameter_binding(key: String, new_value: PropertyValue) -> Rewrit
 impl protocol::MutationKind<RewriteSnapshot, RewriteRuleMutation> for ChangeParameterBinding {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "parameter-binding", kind: "change-parameter-binding", record: "ChangedParameterBinding" };
 
-    fn diff(&self, base: &RewriteSnapshot) -> RewriteDiff {
+    fn diff(&self, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {

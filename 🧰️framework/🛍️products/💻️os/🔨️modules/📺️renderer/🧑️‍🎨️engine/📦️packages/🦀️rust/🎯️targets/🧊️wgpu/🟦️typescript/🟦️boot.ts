@@ -292,6 +292,18 @@ function resolveBootLocale(): ShellLocale {
   return typeof navigator !== "undefined" && navigator.language.toLowerCase().startsWith("de") ? "de" : "en";
 }
 
+/** 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §5: `VITE_SEMIO_APP_ROLE`,
+ * values `"viewer"`/`"editor"`, default `"editor"`. This target is Trunk-served (`Trunk.toml`), not
+ * Vite-bundled, so `import.meta.env.VITE_SEMIO_APP_ROLE` is read defensively (a harmless `undefined`
+ * unless a deployment wraps this boot module through a Vite dev server) — a `?plugin=`-style URL
+ * param is the always-available fallback for this shell, mirroring `bootVariant`'s own
+ * `URLSearchParams` idiom a few lines below. */
+function resolveBootAppRole(): string {
+  const viteEnv = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_SEMIO_APP_ROLE;
+  const urlRole = new URLSearchParams(window.location.search).get("role") ?? undefined;
+  return viteEnv === "viewer" || urlRole === "viewer" ? "viewer" : "editor";
+}
+
 /** 🌐️ Surfaces a missing/incompatible plugin dependency (ticket
  * 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS) as a real, localized
  * banner instead of only a console error — non-fatal, since `boot.plugins` already excludes the
@@ -366,6 +378,13 @@ try {
   canvas.style.touchAction = "none";
   canvas.style.outline = "none";
   root.replaceChildren(canvas);
+  // 👁️✏️ Contract freeze §5: boot role, applied before mount so the very first `Shell::set_window_layout`
+  // already carries it. Guarded — `semioWgpuSetAppRole` is new (this ticket) and a stale wasm build
+  // predating it simply skips role chrome rather than throwing, same fail-soft posture as every other
+  // optional binding this file checks.
+  if (bindings.semioWgpuSetAppRole) {
+    (bindings.semioWgpuSetAppRole as (role: string) => void)(resolveBootAppRole());
+  }
   (bindings.semioWgpuMount as (canvas: HTMLCanvasElement, handles: typeof handles, pluginFilter: string) => void)(canvas, handles, pluginFilter);
 } catch (error) {
   renderBootErrorBanner(error instanceof Error ? error.message : String(error));

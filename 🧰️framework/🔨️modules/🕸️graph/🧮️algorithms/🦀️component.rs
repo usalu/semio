@@ -84,7 +84,7 @@ impl IdIndex {
         self.ids.is_empty()
     }
 
-    pub fn edges_to_indices(&self, edges: &[(String, String)]) -> Vec<(usize, usize)> {
+    fn edges_to_indices(&self, edges: &[(String, String)]) -> Vec<(usize, usize)> {
         edges.iter().filter_map(|(a, b)| Some((self.index_of(a)?, self.index_of(b)?))).collect()
     }
 }
@@ -92,7 +92,7 @@ impl IdIndex {
 
 // #region 🔖️Traversal
 /// 🌊️ Breadth-first visitation order from the given seeds.
-pub fn bfs_order(adj: &Adjacency, seeds: &[usize]) -> Vec<usize> {
+fn bfs_order(adj: &Adjacency, seeds: &[usize]) -> Vec<usize> {
     let mut visited = vec![false; adj.n];
     let mut order = Vec::new();
     let mut queue = std::collections::VecDeque::new();
@@ -112,30 +112,6 @@ pub fn bfs_order(adj: &Adjacency, seeds: &[usize]) -> Vec<usize> {
         }
     }
     order
-}
-
-/// 🌊️ Breadth-first layers (distance bands) from the given seeds.
-pub fn bfs_layers(adj: &Adjacency, seeds: &[usize]) -> Vec<Vec<usize>> {
-    let mut visited = vec![false; adj.n];
-    let mut layers = Vec::new();
-    let mut frontier: Vec<usize> = seeds.iter().copied().filter(|&s| s < adj.n).collect();
-    for &s in &frontier {
-        visited[s] = true;
-    }
-    while !frontier.is_empty() {
-        layers.push(frontier.clone());
-        let mut next = Vec::new();
-        for &u in &frontier {
-            for &v in &adj.out[u] {
-                if !visited[v] {
-                    visited[v] = true;
-                    next.push(v);
-                }
-            }
-        }
-        frontier = next;
-    }
-    layers
 }
 
 /// 📏️ Unweighted BFS distance from a single seed to every reachable node.
@@ -159,48 +135,6 @@ pub fn bfs_distances(adj: &Adjacency, seed: usize) -> Vec<Option<u32>> {
     dist
 }
 
-/// 🌲️ Depth-first preorder from a single seed.
-pub fn dfs_preorder(adj: &Adjacency, seed: usize) -> Vec<usize> {
-    let mut visited = vec![false; adj.n];
-    let mut order = Vec::new();
-    if seed >= adj.n {
-        return order;
-    }
-    let mut stack = vec![seed];
-    while let Some(u) = stack.pop() {
-        if visited[u] {
-            continue;
-        }
-        visited[u] = true;
-        order.push(u);
-        for &v in adj.out[u].iter().rev() {
-            if !visited[v] {
-                stack.push(v);
-            }
-        }
-    }
-    order
-}
-
-/// 🌲️ Depth-first postorder from a single seed.
-pub fn dfs_postorder(adj: &Adjacency, seed: usize) -> Vec<usize> {
-    let mut visited = vec![false; adj.n];
-    let mut order = Vec::new();
-    if seed >= adj.n {
-        return order;
-    }
-    fn visit(u: usize, adj: &Adjacency, visited: &mut [bool], order: &mut Vec<usize>) {
-        visited[u] = true;
-        for &v in &adj.out[u] {
-            if !visited[v] {
-                visit(v, adj, visited, order);
-            }
-        }
-        order.push(u);
-    }
-    visit(seed, adj, &mut visited, &mut order);
-    order
-}
 // #endregion 🔖️Traversal
 
 // #region 🔖️Ordering
@@ -279,22 +213,11 @@ pub fn topo_levels(adj: &Adjacency) -> Result<Vec<Vec<usize>>, CycleError> {
     }
 }
 
-/// 🪜️ Longest-path layer index per node (DAG layering for hierarchical drawing); layer 0 = roots.
-pub fn longest_path_layers(adj: &Adjacency) -> Result<Vec<u32>, CycleError> {
-    let levels = topo_levels(adj)?;
-    let mut layer = vec![0u32; adj.n];
-    for (li, level) in levels.iter().enumerate() {
-        for &u in level {
-            layer[u] = li as u32;
-        }
-    }
-    Ok(layer)
-}
 // #endregion 🔖️Ordering
 
 // #region 🔖️Cycles
 /// 🔎️ Whether `to` is reachable from `from` following out-edges.
-pub fn is_reachable(adj: &Adjacency, from: usize, to: usize) -> bool {
+fn is_reachable(adj: &Adjacency, from: usize, to: usize) -> bool {
     if from == to {
         return true;
     }
@@ -302,7 +225,7 @@ pub fn is_reachable(adj: &Adjacency, from: usize, to: usize) -> bool {
 }
 
 /// ➕️ Whether adding an edge `source -> target` would create a cycle (i.e. `target` can already reach `source`).
-pub fn would_create_cycle(adj: &Adjacency, source: usize, target: usize) -> bool {
+fn would_create_cycle(adj: &Adjacency, source: usize, target: usize) -> bool {
     source == target || is_reachable(adj, target, source)
 }
 
@@ -317,28 +240,6 @@ pub fn would_create_cycle_ids(existing: &[(String, String)], source: &str, targe
     };
     let adj = adjacency(index.len(), &index.edges_to_indices(existing), true);
     would_create_cycle(&adj, s, t)
-}
-
-/// ➕️ Batched acyclic filter: for each `candidates[i]`, whether adding it to `existing` (+ prior accepted candidates) keeps the graph acyclic.
-pub fn acyclic_edge_subset(existing: &[(String, String)], candidates: &[(String, String)]) -> Vec<bool> {
-    let all_ids = existing.iter().chain(candidates.iter()).flat_map(|(a, b)| [a.as_str(), b.as_str()]);
-    let index = IdIndex::from_ids(all_ids);
-    let mut edges = index.edges_to_indices(existing);
-    let mut accepted = Vec::with_capacity(candidates.len());
-    for (a, b) in candidates {
-        let (Some(s), Some(t)) = (index.index_of(a), index.index_of(b)) else {
-            accepted.push(false);
-            continue;
-        };
-        let adj = adjacency(index.len(), &edges, true);
-        if would_create_cycle(&adj, s, t) {
-            accepted.push(false);
-        } else {
-            edges.push((s, t));
-            accepted.push(true);
-        }
-    }
-    accepted
 }
 
 fn find_cycle_among(adj: &Adjacency, candidates: &[usize]) -> Option<Vec<usize>> {
@@ -372,11 +273,6 @@ fn find_cycle_among(adj: &Adjacency, candidates: &[usize]) -> Option<Vec<usize>>
     None
 }
 
-/// 🔎️ Finds one cycle in the graph, if any exist.
-pub fn find_cycle(adj: &Adjacency) -> Option<Vec<usize>> {
-    let all: Vec<usize> = (0..adj.n).collect();
-    find_cycle_among(adj, &all)
-}
 // #endregion 🔖️Cycles
 
 // #region 🔖️Components
@@ -485,55 +381,9 @@ pub fn strongly_connected_components(adj: &Adjacency) -> Vec<Vec<usize>> {
     st.out
 }
 
-/// ⬇️ In-degree per node.
-pub fn in_degrees(adj: &Adjacency) -> Vec<usize> {
-    (0..adj.n).map(|i| adj.inc[i].len()).collect()
-}
-
-/// ⬆️ Out-degree per node.
-pub fn out_degrees(adj: &Adjacency) -> Vec<usize> {
-    (0..adj.n).map(|i| adj.out[i].len()).collect()
-}
-
-/// 🌱️ Indices of nodes with in-degree 0 (DAG roots).
-pub fn root_indices(adj: &Adjacency) -> Vec<usize> {
-    (0..adj.n).filter(|&i| adj.inc[i].is_empty()).collect()
-}
 // #endregion 🔖️Components
 
 // #region 🔖️Paths
-/// 📏️ Shortest path (by hop count) between two nodes, if reachable.
-pub fn shortest_path_unweighted(adj: &Adjacency, from: usize, to: usize) -> Option<Vec<usize>> {
-    if from >= adj.n || to >= adj.n {
-        return None;
-    }
-    let mut visited = vec![false; adj.n];
-    let mut parent = vec![usize::MAX; adj.n];
-    visited[from] = true;
-    let mut queue = std::collections::VecDeque::new();
-    queue.push_back(from);
-    while let Some(u) = queue.pop_front() {
-        if u == to {
-            let mut path = vec![to];
-            let mut cur = to;
-            while cur != from {
-                cur = parent[cur];
-                path.push(cur);
-            }
-            path.reverse();
-            return Some(path);
-        }
-        for &v in &adj.out[u] {
-            if !visited[v] {
-                visited[v] = true;
-                parent[v] = u;
-                queue.push_back(v);
-            }
-        }
-    }
-    None
-}
-
 /// 📏️ Dijkstra shortest distances from `from` to every node, given non-negative edge weights parallel to adjacency out-edges.
 pub fn dijkstra(adj: &Adjacency, weights: &HashMap<(usize, usize), f64>, from: usize) -> Vec<Option<f64>> {
     let mut dist = vec![None; adj.n];
@@ -559,43 +409,6 @@ pub fn dijkstra(adj: &Adjacency, weights: &HashMap<(usize, usize), f64>, from: u
     dist
 }
 
-/// 📏️ Dijkstra shortest path and distance between two nodes, if reachable.
-pub fn dijkstra_path(adj: &Adjacency, weights: &HashMap<(usize, usize), f64>, from: usize, to: usize) -> Option<(Vec<usize>, f64)> {
-    if from >= adj.n || to >= adj.n {
-        return None;
-    }
-    let mut dist = vec![None; adj.n];
-    let mut parent = vec![usize::MAX; adj.n];
-    dist[from] = Some(0.0);
-    let mut heap = std::collections::BinaryHeap::new();
-    heap.push(std::cmp::Reverse(OrderedFloat(0.0, from)));
-    while let Some(std::cmp::Reverse(OrderedFloat(d, u))) = heap.pop() {
-        if dist[u].is_none_or(|cur| d > cur) {
-            continue;
-        }
-        if u == to {
-            let mut path = vec![to];
-            let mut cur = to;
-            while cur != from {
-                cur = parent[cur];
-                path.push(cur);
-            }
-            path.reverse();
-            return Some((path, d));
-        }
-        for &v in &adj.out[u] {
-            let w = weights.get(&(u, v)).copied().unwrap_or(1.0);
-            let nd = d + w;
-            if dist[v].is_none_or(|cur| nd < cur) {
-                dist[v] = Some(nd);
-                parent[v] = u;
-                heap.push(std::cmp::Reverse(OrderedFloat(nd, v)));
-            }
-        }
-    }
-    None
-}
-
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct OrderedFloat(f64, usize);
 impl Eq for OrderedFloat {}
@@ -610,24 +423,6 @@ impl Ord for OrderedFloat {
     }
 }
 
-/// 🌲️ Kruskal minimum spanning tree; returns the indices (into `edges`) of the selected edges.
-pub fn minimum_spanning_tree(node_count: usize, edges: &[(usize, usize, f64)]) -> Vec<usize> {
-    let mut order: Vec<usize> = (0..edges.len()).collect();
-    order.sort_by(|&a, &b| edges[a].2.partial_cmp(&edges[b].2).unwrap_or(std::cmp::Ordering::Equal));
-    let mut uf = UnionFind::new(node_count);
-    let mut selected = Vec::new();
-    for i in order {
-        let (a, b, _) = edges[i];
-        if a >= node_count || b >= node_count {
-            continue;
-        }
-        if !uf.same_set(a, b) {
-            uf.union(a, b);
-            selected.push(i);
-        }
-    }
-    selected
-}
 // #endregion 🔖️Paths
 
 // #region 🔖️Tests
@@ -647,24 +442,10 @@ mod tests {
     }
 
     #[test]
-    fn bfs_layers_group_by_distance() {
-        let adj = adj_from(4, &[(0, 1), (0, 2), (1, 3)], true);
-        let layers = bfs_layers(&adj, &[0]);
-        assert_eq!(layers, vec![vec![0], vec![1, 2], vec![3]]);
-    }
-
-    #[test]
     fn bfs_distances_unreachable_is_none() {
         let adj = adj_from(3, &[(0, 1)], true);
         let dist = bfs_distances(&adj, 0);
         assert_eq!(dist, vec![Some(0), Some(1), None]);
-    }
-
-    #[test]
-    fn dfs_preorder_and_postorder_agree_on_leaf_first_last() {
-        let adj = adj_from(3, &[(0, 1), (1, 2)], true);
-        assert_eq!(dfs_preorder(&adj, 0), vec![0, 1, 2]);
-        assert_eq!(dfs_postorder(&adj, 0), vec![2, 1, 0]);
     }
 
     #[test]
@@ -694,13 +475,6 @@ mod tests {
     }
 
     #[test]
-    fn longest_path_layers_assigns_root_layer_zero() {
-        let adj = adj_from(3, &[(0, 1), (1, 2)], true);
-        let layers = longest_path_layers(&adj).expect("acyclic");
-        assert_eq!(layers, vec![0, 1, 2]);
-    }
-
-    #[test]
     fn would_create_cycle_detects_back_edge() {
         let adj = adj_from(3, &[(0, 1), (1, 2)], true);
         assert!(would_create_cycle(&adj, 2, 0));
@@ -712,26 +486,6 @@ mod tests {
         let existing = vec![("a".to_string(), "b".to_string()), ("b".to_string(), "c".to_string())];
         assert!(would_create_cycle_ids(&existing, "c", "a"));
         assert!(!would_create_cycle_ids(&existing, "a", "c"));
-    }
-
-    #[test]
-    fn acyclic_edge_subset_accumulates_accepted_candidates() {
-        let existing = vec![("a".to_string(), "b".to_string())];
-        let candidates = vec![("b".to_string(), "c".to_string()), ("c".to_string(), "a".to_string()), ("c".to_string(), "d".to_string())];
-        let accepted = acyclic_edge_subset(&existing, &candidates);
-        assert_eq!(accepted, vec![true, false, true]);
-    }
-
-    #[test]
-    fn find_cycle_returns_none_for_dag() {
-        let adj = adj_from(3, &[(0, 1), (1, 2)], true);
-        assert!(find_cycle(&adj).is_none());
-    }
-
-    #[test]
-    fn find_cycle_returns_some_for_cyclic_graph() {
-        let adj = adj_from(3, &[(0, 1), (1, 2), (2, 0)], true);
-        assert!(find_cycle(&adj).is_some());
     }
 
     #[test]
@@ -754,35 +508,12 @@ mod tests {
     }
 
     #[test]
-    fn degrees_and_roots_match_edge_shape() {
-        let adj = adj_from(3, &[(0, 1), (0, 2)], true);
-        assert_eq!(out_degrees(&adj), vec![2, 0, 0]);
-        assert_eq!(in_degrees(&adj), vec![0, 1, 1]);
-        assert_eq!(root_indices(&adj), vec![0]);
-    }
-
-    #[test]
     fn union_find_unions_and_queries_sets() {
         let mut uf = UnionFind::new(4);
         uf.union(0, 1);
         uf.union(2, 3);
         assert!(uf.same_set(0, 1));
         assert!(!uf.same_set(0, 2));
-    }
-
-    #[test]
-    fn shortest_path_unweighted_finds_hop_path() {
-        let adj = adj_from(4, &[(0, 1), (1, 3), (0, 2), (2, 3)], true);
-        let path = shortest_path_unweighted(&adj, 0, 3).expect("reachable");
-        assert_eq!(path.len(), 3);
-        assert_eq!(path[0], 0);
-        assert_eq!(*path.last().unwrap(), 3);
-    }
-
-    #[test]
-    fn shortest_path_unweighted_none_when_unreachable() {
-        let adj = adj_from(3, &[(0, 1)], true);
-        assert!(shortest_path_unweighted(&adj, 0, 2).is_none());
     }
 
     #[test]
@@ -794,27 +525,6 @@ mod tests {
         weights.insert((0, 2), 5.0);
         let dist = dijkstra(&adj, &weights, 0);
         assert_eq!(dist[2], Some(2.0));
-    }
-
-    #[test]
-    fn dijkstra_path_reconstructs_cheapest_route() {
-        let adj = adj_from(3, &[(0, 1), (1, 2), (0, 2)], true);
-        let mut weights = HashMap::new();
-        weights.insert((0, 1), 1.0);
-        weights.insert((1, 2), 1.0);
-        weights.insert((0, 2), 5.0);
-        let (path, dist) = dijkstra_path(&adj, &weights, 0, 2).expect("reachable");
-        assert_eq!(path, vec![0, 1, 2]);
-        assert_eq!(dist, 2.0);
-    }
-
-    #[test]
-    fn minimum_spanning_tree_selects_cheapest_edges_without_cycles() {
-        let edges = vec![(0, 1, 1.0), (1, 2, 2.0), (0, 2, 3.0)];
-        let selected = minimum_spanning_tree(3, &edges);
-        assert_eq!(selected.len(), 2);
-        assert!(selected.contains(&0));
-        assert!(selected.contains(&1));
     }
 
     #[test]
@@ -852,23 +562,10 @@ mod tests {
     }
 
     #[test]
-    fn dfs_preorder_and_postorder_out_of_range_seed_returns_empty() {
-        let adj = adj_from(2, &[(0, 1)], true);
-        assert!(dfs_preorder(&adj, 9).is_empty());
-        assert!(dfs_postorder(&adj, 9).is_empty());
-    }
-
-    #[test]
     fn topo_levels_detects_cycle() {
         let adj = adj_from(3, &[(0, 1), (1, 2), (2, 0)], true);
         let err = topo_levels(&adj).unwrap_err();
         assert_eq!(err.cycle.len(), 3);
-    }
-
-    #[test]
-    fn longest_path_layers_propagates_cycle_error() {
-        let adj = adj_from(2, &[(0, 1), (1, 0)], true);
-        assert!(longest_path_layers(&adj).is_err());
     }
 
     #[test]
@@ -891,23 +588,10 @@ mod tests {
     }
 
     #[test]
-    fn dijkstra_path_none_when_unreachable() {
-        let adj = adj_from(2, &[], true);
-        assert!(dijkstra_path(&adj, &HashMap::new(), 0, 1).is_none());
-    }
-
-    #[test]
-    fn dijkstra_and_dijkstra_path_out_of_range_from_returns_empty_or_none() {
+    fn dijkstra_out_of_range_from_returns_empty() {
         let adj = adj_from(2, &[(0, 1)], true);
         assert_eq!(dijkstra(&adj, &HashMap::new(), 9), vec![None, None]);
-        assert!(dijkstra_path(&adj, &HashMap::new(), 9, 0).is_none());
     }
 
-    #[test]
-    fn minimum_spanning_tree_skips_out_of_range_edges() {
-        let edges = vec![(0, 1, 1.0), (0, 5, 2.0)];
-        let selected = minimum_spanning_tree(2, &edges);
-        assert_eq!(selected, vec![0]);
-    }
 }
 // #endregion 🔖️Tests

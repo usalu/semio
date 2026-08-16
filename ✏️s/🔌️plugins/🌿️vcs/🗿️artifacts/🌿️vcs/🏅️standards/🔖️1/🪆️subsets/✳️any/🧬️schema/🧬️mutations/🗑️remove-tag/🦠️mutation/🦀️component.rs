@@ -20,7 +20,7 @@ pub fn remove_tag(tag: String) -> VcsDemoMutation {
 impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for RemoveTag {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "tag", kind: "remove-tag", record: "RemovedTag" };
 
-    fn diff(&self, base: &VcsSnapshot) -> VcsDiff {
+    fn diff(&self, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {

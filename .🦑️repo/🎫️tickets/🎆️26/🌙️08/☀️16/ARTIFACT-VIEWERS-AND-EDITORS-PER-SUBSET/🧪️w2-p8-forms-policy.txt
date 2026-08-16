@@ -1,0 +1,8 @@
+=== bun ./📜️script.ts policy — forms-focused summary ===
+artifact-io/sniff-reality (pre-existing, repo-wide, forms hit is expected/unrelated to this migration):
+  artifact-io/sniff-reality  ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs" declares fn sniff(...) with an underscore-prefixed (unused) parameter
+
+taxonomy/surface-completeness breaches for 📋️forms: 0 (confirmed via compose.json cache query)
+taxonomy/surface-scaffold-residue breaches for 📋️forms: 0 (confirmed via compose.json cache query)
+repo-wide totals: surface-completeness=2 (trinity, unrelated), surface-scaffold-residue=222 (other unmigrated subsets, unrelated)
+taxonomy/viewer-purity, plugin-dependency/contributed-surface-target, taxonomy/os-config-shape: 0 hits repo-wide in this cache (no breaches of any kind found for these policy kinds)

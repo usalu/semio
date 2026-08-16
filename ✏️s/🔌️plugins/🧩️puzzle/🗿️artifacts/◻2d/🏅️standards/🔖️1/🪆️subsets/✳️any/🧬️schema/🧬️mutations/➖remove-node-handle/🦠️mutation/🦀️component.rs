@@ -23,7 +23,7 @@ pub fn remove_node_handle(node_id: String, handle_id: String) -> Puzzle2dMutatio
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for RemoveNodeHandle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "node-handle", kind: "remove-node-handle", record: "RemovedNodeHandle" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> Puzzle2dDiff {
+    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {

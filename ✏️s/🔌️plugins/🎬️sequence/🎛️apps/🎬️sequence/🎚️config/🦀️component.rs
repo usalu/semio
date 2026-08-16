@@ -212,16 +212,16 @@ impl protocol::OpBinary for SequenceConfigMutation {
 impl Mutation<SequenceConfig> for SequenceConfigMutation {
     type Diff = SequenceConfig;
 
-    fn diff(&self, base: &SequenceConfig) -> SequenceConfig {
+    fn diff(&self, base: &SequenceConfig) -> protocol::MutationOutcome<SequenceConfig> {
         let mut next = base.clone();
         match self {
-            SequenceConfigMutation::Snapshot { config } => return config.clone(),
+            SequenceConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
             SequenceConfigMutation::SetLastRun { json } => next.last_run_json = json.clone(),
             SequenceConfigMutation::SetOrientation { value } => next.orientation = value.clone(),
             SequenceConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
             SequenceConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
-        next
+        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &SequenceConfig) -> Vec<Self> {
@@ -261,10 +261,10 @@ mod tests {
 
     //#region 🔖️ConfigMutationTests
     fn round_trip_config(config: &SequenceConfig, operation: &SequenceConfigMutation) -> SequenceConfig {
-        let forward = operation.diff(config);
+        let forward = operation.diff(config).diff().clone();
         let backwards = operation.inverse(config);
         assert_eq!(backwards.len(), 1);
-        let restored = backwards[0].diff(&forward);
+        let restored = backwards[0].diff(&forward).diff().clone();
         assert_eq!(&restored, config, "backwards() must exactly restore the pre-operation config");
         forward
     }

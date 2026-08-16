@@ -21,7 +21,7 @@ pub fn change_node_kind_icon(new_icon: Option<String>) -> Block2dMutation {
 impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for ChangeNodeKindIcon {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-kind", kind: "change-node-kind-icon", record: "ChangedNodeKindIcon" };
 
-    fn diff(&self, base: &Block2dSnapshot) -> Block2dDiff {
+    fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {

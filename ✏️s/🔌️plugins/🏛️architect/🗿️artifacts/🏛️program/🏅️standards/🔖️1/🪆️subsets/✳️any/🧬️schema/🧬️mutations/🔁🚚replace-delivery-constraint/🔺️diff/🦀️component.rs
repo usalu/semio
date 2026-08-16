@@ -7,13 +7,14 @@ use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 use protocol::Patchable;
 
-/// 🔁️ `patched = [{id, full patch}]` via `Patchable::diff_patch` — every field of the payload
-/// row becomes the patch, so applying it fully overwrites the target's non-identity content.
-/// Target absent from `base` ⇒ empty diff (nothing to change).
-pub fn diff(payload: &ReplaceDeliveryConstraint, base: &ProgramSnapshot) -> ProgramDiff {
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
+pub fn diff(payload: &ReplaceDeliveryConstraint, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let Some(existing) = base.delivery.iter().find(|row| row.header.id == payload.delivery_constraint.header.id) else {
-        return ProgramDiff::default();
+        return protocol::MutationOutcome::error("mutation.target-missing", "No delivery constraint exists with this id.", [payload.delivery_constraint.header.id.0.clone()]);
     };
+    if existing == &payload.delivery_constraint {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This delivery constraint already matches the requested value.").at([existing.header.id.0.clone()])]);
+    }
     let patch = existing.diff_patch(&payload.delivery_constraint).expect("diff_patch always produces a full patch");
-    ProgramDiff { delivery: Some(ProgramDeliveryDelta { patched: vec![ProgramDeliveryPatchEntry { id: payload.delivery_constraint.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() }
+    protocol::MutationOutcome::new(ProgramDiff { delivery: Some(ProgramDeliveryDelta { patched: vec![ProgramDeliveryPatchEntry { id: payload.delivery_constraint.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
 }

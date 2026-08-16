@@ -20,7 +20,7 @@ pub struct CreateRoute {
 impl MutationKind<GisMapSnapshot, GisMapMutation> for CreateRoute {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "route", kind: "create-route", record: "CreatedRoute" };
 
-    fn diff(&self, base: &GisMapSnapshot) -> GisMapDiff {
+    fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
 

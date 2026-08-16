@@ -1,0 +1,7 @@
+# change-primitive-extra-data mutation facet.
+input GltfChangePrimitiveExtraDataPayloadV1 {
+  mesh: Int!
+  primitive: Int!
+  data: GltfDataPresenceInput!
+}
+type GltfChangePrimitiveExtraDataMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

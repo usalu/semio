@@ -17,7 +17,7 @@ pub struct ChangeStepOrigin {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ChangeStepOrigin {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "step", kind: "change-step-origin", record: "ChangedStepOrigin" };
 
-    fn diff(&self, base: &Process3dSnapshot) -> Process3dDiff {
+    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::change_step_origin::diff::diff(self, base)
     }
 

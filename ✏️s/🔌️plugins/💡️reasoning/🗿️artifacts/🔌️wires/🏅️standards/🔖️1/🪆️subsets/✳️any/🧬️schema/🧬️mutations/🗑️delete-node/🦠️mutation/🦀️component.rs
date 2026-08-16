@@ -22,7 +22,7 @@ pub fn delete_node(node_id: String) -> WiresMutation {
 impl protocol::MutationKind<WiresSnapshot, WiresMutation> for DeleteNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "node", kind: "delete-node", record: "DeletedNode" };
 
-    fn diff(&self, base: &WiresSnapshot) -> WiresDiff {
+    fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {

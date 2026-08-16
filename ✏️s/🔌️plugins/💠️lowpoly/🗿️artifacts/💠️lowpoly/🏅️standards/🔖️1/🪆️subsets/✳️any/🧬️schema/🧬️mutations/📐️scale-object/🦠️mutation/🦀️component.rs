@@ -14,7 +14,7 @@ pub struct ScaleObject {
 impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for ScaleObject {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "object", kind: "scale-object", record: "ScaledObject" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff {
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

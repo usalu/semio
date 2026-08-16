@@ -22,7 +22,7 @@ pub fn rename_representation(id: String, new_name: String) -> Block3dMutation {
 impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for RenameRepresentation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "representation", kind: "rename-representation", record: "RenamedRepresentation" };
 
-    fn diff(&self, base: &Block3dSnapshot) -> Block3dDiff {
+    fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {

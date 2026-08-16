@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.bind-node-child.v1.mutation",
+  "title": "GltfBindNodeChildMutation",
+  "type": "object",
+  "properties": {
+    "parent": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "child": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "position": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "parent",
+    "child",
+    "position"
+  ],
+  "additionalProperties": false,
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.bind-node-child.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "bind",
+    "touchedPaths": [
+      "document/nodes/*/children"
+    ],
+    "referencePolicy": "validates child identity, prevents duplicate children, self-parenting, and cycles"
+  }
+}

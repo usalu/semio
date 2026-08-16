@@ -22,7 +22,7 @@ pub fn change_vortex_kind_default_cable_kind(id: String, new_default_cable_kind:
 impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ChangeVortexKindDefaultCableKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vortex-kind", kind: "change-vortex-kind-default-cable-kind", record: "ChangedVortexKindDefaultCableKind" };
 
-    fn diff(&self, base: &Block3dSnapshot) -> Block3dDiff {
+    fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {

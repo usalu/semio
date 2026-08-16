@@ -18,7 +18,7 @@ pub struct DeletePerformanceCriterion {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeletePerformanceCriterion {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "performance-criterion", kind: "delete-performance-criterion", record: "DeletedPerformanceCriterion" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

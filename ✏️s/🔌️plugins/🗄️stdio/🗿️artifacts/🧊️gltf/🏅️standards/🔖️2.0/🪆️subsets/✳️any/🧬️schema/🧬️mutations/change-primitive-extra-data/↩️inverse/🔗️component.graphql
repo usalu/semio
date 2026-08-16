@@ -1,0 +1,7 @@
+# change-primitive-extra-data inverse facet.
+input GltfChangePrimitiveExtraDataPayloadV1 {
+  mesh: Int!
+  primitive: Int!
+  data: GltfDataPresenceInput!
+}
+type GltfChangePrimitiveExtraDataInverseV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

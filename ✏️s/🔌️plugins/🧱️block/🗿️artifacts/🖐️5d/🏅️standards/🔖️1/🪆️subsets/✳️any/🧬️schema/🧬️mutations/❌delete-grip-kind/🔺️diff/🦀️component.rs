@@ -5,7 +5,10 @@ use crate::artifacts::block5d::Block5dSnapshot;
 use crate::artifacts::block5d::{Block5dGripKind};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::DeleteGripKind, base: &Block5dSnapshot) -> Block5dDiff {
-    Block5dDiff { grip_kinds: Some(Block5dGripKindsDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() }
+pub fn diff(payload: &super::mutation::DeleteGripKind, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+    if !base.grip_kinds.iter().any(|item| item.id == payload.id) {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "grip-kind", payload.id), vec![payload.id.clone()]);
+    }
+    protocol::MutationOutcome::new(Block5dDiff { grip_kinds: Some(Block5dGripKindsDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

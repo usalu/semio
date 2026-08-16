@@ -20,7 +20,7 @@ pub fn change_counter(new_counter: i64) -> VcsDemoMutation {
 impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for ChangeCounter {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vcs", kind: "change-counter", record: "ChangedVcsCounter" };
 
-    fn diff(&self, base: &VcsSnapshot) -> VcsDiff {
+    fn diff(&self, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {

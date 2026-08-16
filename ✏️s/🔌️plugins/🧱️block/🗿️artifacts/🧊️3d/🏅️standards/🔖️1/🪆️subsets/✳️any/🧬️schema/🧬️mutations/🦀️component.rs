@@ -25,7 +25,7 @@ pub type Block3dStore = store::ArtifactStore<Block3dSnapshot, Block3dMutation>;
 /// attribute/author add/remove, the world camera's pan/zoom, and the session meta description. The
 /// old whole-document-replace and no-op sentinel variants are gone — whole-document loads (examples,
 /// DSL text edit) now decompose into this vocabulary (see
-/// `🎛️apps/🧊️3d/🎮️commands/🎨️set-active-example/🦀️component.rs`'s `replace_document_operations`).
+/// `🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️component.rs`'s `replace_document_operations`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = Block3dSnapshot, diff = Block3dDiff, schema = "block.block3d")]
@@ -129,12 +129,12 @@ mod tests {
     use protocol::MutationDiff;
 
     fn round_trip(base: &Block3dSnapshot, mutation: &Block3dMutation) -> Block3dSnapshot {
-        let forward = mutation.diff(base).apply(base);
+        let forward = mutation.diff(base).diff().apply(base);
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(base);
         backward.reverse();
         for undo in &backward {
-            restored = undo.diff(&restored).apply(&restored);
+            restored = undo.diff(&restored).diff().apply(&restored);
         }
         assert_eq!(&restored, base, "inverse must restore the pre-mutation snapshot");
         forward
@@ -299,18 +299,18 @@ mod tests {
     #[test]
     fn change_object_kind_label_diff_absorb_law() {
         let base = empty_block3d_snapshot();
-        let d1 = change_object_kind_label("first".into()).diff(&base);
+        let d1 = change_object_kind_label("first".into()).diff(&base).into_parts().0;
         let mid = d1.apply(&base);
-        let d2 = change_object_kind_label("second".into()).diff(&mid);
+        let d2 = change_object_kind_label("second".into()).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
     #[test]
     fn move_vortex_diff_absorb_law() {
         let base = seeded_snapshot();
-        let d1 = move_vortex("v0".into(), [0.5, 0.0, 0.0], [1.0, 0.0, 0.0]).diff(&base);
+        let d1 = move_vortex("v0".into(), [0.5, 0.0, 0.0], [1.0, 0.0, 0.0]).diff(&base).into_parts().0;
         let mid = d1.apply(&base);
-        let d2 = move_vortex("v0".into(), [1.1, 0.6, 0.0], [0.0, 1.0, 0.0]).diff(&mid);
+        let d2 = move_vortex("v0".into(), [1.1, 0.6, 0.0], [0.0, 1.0, 0.0]).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -323,5 +323,31 @@ mod tests {
         assert_eq!(Block3dMutation::kinds().len(), 37);
     }
     //#endregion 🔖️MutationLaws
+
+    //#region 🔖️OutcomeLaws
+    // 🎫️ 26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — see
+    // `📓️w3-f-block-puzzle-report.md` for the `assert_outcome_policy_matrix` pending-helper note.
+    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
+
+    #[test]
+    fn missing_target_is_error_per_verb_family() {
+        let base = empty_block3d_snapshot();
+        assert_missing_target_is_error(&base, &delete_vortex_kind("missing".into())); // delete
+        assert_missing_target_is_error(&base, &remove_author("missing".into())); // remove
+        assert_missing_target_is_error(&base, &change_vortex_kind_color("missing".into(), "#fff".into())); // change/set/update
+        assert_missing_target_is_error(&base, &move_vortex("missing".into(), [0.0, 0.0, 0.0], [1.0, 0.0, 0.0])); // move/drag/rotate/scale/resize
+    }
+
+    #[test]
+    fn create_duplicate_id_is_fatal_and_never_applies() {
+        let mut base = empty_block3d_snapshot();
+        let vortex_kind = crate::artifacts::block3d::Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.power".into() };
+        base.vortex_kinds.push(vortex_kind.clone());
+        let outcome = create_vortex_kind(vortex_kind).diff(&base);
+        assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal));
+        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

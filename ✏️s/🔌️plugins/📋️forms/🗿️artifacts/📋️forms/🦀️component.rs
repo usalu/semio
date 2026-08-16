@@ -11,14 +11,21 @@ use std::collections::HashMap;
 
 //#region 🔖️Types
 pub use crate::playbook::{
-    PlaybookBlock as FormQuestion, PlaybookBlockOption as FormQuestionOption, PlaybookExpr as FormExpr, PlaybookStep as FormStep,
-    PlaybookValidationError as FormValidationError, PlaybookVectorField as FormVectorField, PLAYBOOK_BUILTIN_KINDS as FORM_BUILTIN_KINDS,
+    PlaybookBlock as FormQuestion, PlaybookBlockOption as FormQuestionOption, PlaybookExpr as FormExpr, PlaybookStep as FormStep, PlaybookValidationError as FormValidationError, PlaybookVectorField as FormVectorField,
+    PLAYBOOK_BUILTIN_KINDS as FORM_BUILTIN_KINDS,
 };
 
 pub const FORMS_DOCUMENT_SCHEMA: &str = "forms.form";
-pub use crate::artifacts::forms::schema::snapshot::FormsSnapshot;
+/// 🪪️ This artifact's canonical `(artifact_kind, standard, subset)` coordinate (contract §1) — lives
+/// at the ARTIFACT level, not under `editor`/`viewer`, specifically so a viewer file can read it
+/// without ever importing through the sibling editor module. `artifact_kind` matches
+/// `#[artifact_schema(id = "s.forms.forms")]` on `FormsArtifact` (`🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs`);
+/// `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
+pub const FORMS_DIALECT: semio_framework_plugin::app::Dialect =
+    semio_framework_plugin::app::Dialect { artifact_kind: "s.forms.forms", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 pub use crate::artifacts::forms::schema::diff::FormsDiff;
 pub use crate::artifacts::forms::schema::mutations::FormMutation;
+pub use crate::artifacts::forms::schema::snapshot::FormsSnapshot;
 //#endregion 🔖️Types
 
 //#region 🔖️Composition
@@ -113,12 +120,8 @@ fn semio_f64(value: Option<&SemioValue>) -> Option<f64> {
 /// bidirectional; each variant becomes a tagged `Map{kind, ...}`.
 fn semio_value_from_expr(expr: &FormExpr) -> SemioValue {
     match expr {
-        FormExpr::Const { value } => {
-            SemioValue::Map { entries: vec![SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "const".into() } }, SemioValueEntry { key: "value".into(), value: semio_value_from_dsl(value) }] }
-        }
-        FormExpr::Var { name } => {
-            SemioValue::Map { entries: vec![SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "var".into() } }, SemioValueEntry { key: "name".into(), value: SemioValue::Str { value: name.clone() } }] }
-        }
+        FormExpr::Const { value } => SemioValue::Map { entries: vec![SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "const".into() } }, SemioValueEntry { key: "value".into(), value: semio_value_from_dsl(value) }] },
+        FormExpr::Var { name } => SemioValue::Map { entries: vec![SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "var".into() } }, SemioValueEntry { key: "name".into(), value: SemioValue::Str { value: name.clone() } }] },
         FormExpr::Eq { left, right } => SemioValue::Map {
             entries: vec![
                 SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "eq".into() } },
@@ -127,20 +130,12 @@ fn semio_value_from_expr(expr: &FormExpr) -> SemioValue {
             ],
         },
         FormExpr::And { items } => SemioValue::Map {
-            entries: vec![
-                SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "and".into() } },
-                SemioValueEntry { key: "items".into(), value: SemioValue::List { items: items.iter().map(semio_value_from_expr).collect() } },
-            ],
+            entries: vec![SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "and".into() } }, SemioValueEntry { key: "items".into(), value: SemioValue::List { items: items.iter().map(semio_value_from_expr).collect() } }],
         },
         FormExpr::Or { items } => SemioValue::Map {
-            entries: vec![
-                SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "or".into() } },
-                SemioValueEntry { key: "items".into(), value: SemioValue::List { items: items.iter().map(semio_value_from_expr).collect() } },
-            ],
+            entries: vec![SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "or".into() } }, SemioValueEntry { key: "items".into(), value: SemioValue::List { items: items.iter().map(semio_value_from_expr).collect() } }],
         },
-        FormExpr::Truthy { expr } => {
-            SemioValue::Map { entries: vec![SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "truthy".into() } }, SemioValueEntry { key: "expr".into(), value: semio_value_from_expr(expr) }] }
-        }
+        FormExpr::Truthy { expr } => SemioValue::Map { entries: vec![SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "truthy".into() } }, SemioValueEntry { key: "expr".into(), value: semio_value_from_expr(expr) }] },
     }
 }
 fn expr_from_semio_value(value: &SemioValue) -> Option<FormExpr> {
@@ -212,7 +207,9 @@ fn semio_value_from_block(block: &FormQuestion) -> SemioValue {
             value: SemioValue::List {
                 items: options
                     .iter()
-                    .map(|option| SemioValue::Map { entries: vec![SemioValueEntry { key: "value".into(), value: SemioValue::Str { value: option.value.clone() } }, SemioValueEntry { key: "label".into(), value: SemioValue::Str { value: option.label.clone() } }] })
+                    .map(|option| SemioValue::Map {
+                        entries: vec![SemioValueEntry { key: "value".into(), value: SemioValue::Str { value: option.value.clone() } }, SemioValueEntry { key: "label".into(), value: SemioValue::Str { value: option.label.clone() } }],
+                    })
                     .collect(),
             },
         });
@@ -272,13 +269,15 @@ fn block_from_semio_value(value: &SemioValue) -> FormQuestion {
         unit: semio_str(semio_value_map_get(value, "unit")),
         text: semio_str(semio_value_map_get(value, "text")),
         options: match semio_value_map_get(value, "options") {
-            Some(SemioValue::List { items }) => Some(items.iter().map(|item| FormQuestionOption { value: semio_str(semio_value_map_get(item, "value")).unwrap_or_default(), label: semio_str(semio_value_map_get(item, "label")).unwrap_or_default() }).collect()),
+            Some(SemioValue::List { items }) => {
+                Some(items.iter().map(|item| FormQuestionOption { value: semio_str(semio_value_map_get(item, "value")).unwrap_or_default(), label: semio_str(semio_value_map_get(item, "label")).unwrap_or_default() }).collect())
+            }
             _ => None,
         },
         fields: match semio_value_map_get(value, "fields") {
-            Some(SemioValue::List { items }) => {
-                Some(items.iter().map(|item| FormVectorField { key: semio_str(semio_value_map_get(item, "key")).unwrap_or_default(), label: semio_str(semio_value_map_get(item, "label")), value: semio_f64(semio_value_map_get(item, "value")) }).collect())
-            }
+            Some(SemioValue::List { items }) => Some(
+                items.iter().map(|item| FormVectorField { key: semio_str(semio_value_map_get(item, "key")).unwrap_or_default(), label: semio_str(semio_value_map_get(item, "label")), value: semio_f64(semio_value_map_get(item, "value")) }).collect(),
+            ),
             _ => None,
         },
         schema: semio_str(semio_value_map_get(value, "schema")),
@@ -315,7 +314,11 @@ fn step_from_semio_value(value: &SemioValue) -> FormStep {
 /// SOLE source of truth for reconstruction (see this region's own doc comment for why `results`
 /// is a derived, non-reconstructive projection instead).
 pub fn forms_structure_from_steps(steps: &[FormStep]) -> SemioValueSnapshot {
-    SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: SemioValue::Map { entries: vec![SemioValueEntry { key: "steps".into(), value: SemioValue::List { items: steps.iter().map(semio_value_from_step).collect() } }] }, nodes: Vec::new() }
+    SemioValueSnapshot {
+        schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(),
+        root: SemioValue::Map { entries: vec![SemioValueEntry { key: "steps".into(), value: SemioValue::List { items: steps.iter().map(semio_value_from_step).collect() } }] },
+        nodes: Vec::new(),
+    }
 }
 pub fn forms_steps_from_structure(structure: &SemioValueSnapshot) -> Vec<FormStep> {
     match semio_value_map_get(&structure.root, "steps") {
@@ -433,7 +436,7 @@ pub fn forms_snapshot_with_state(schema: String, id: String, version: String, ti
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::apps::forms::create_forms_app`'s `🔖️Manifest` region.
+/// `crate::editor::forms::create_forms_app`'s `🔖️Manifest` region.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "form.dictionary".into(),
@@ -446,7 +449,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "form.dictionary".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
@@ -520,7 +523,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
 /// the old side-effecting `register()`, which called five different global registries directly from
-/// a plugin `.setup()` callback. `crate::apps::forms::config::schema::register_app_schema()` is the
+/// a plugin `.setup()` callback. `crate::editor::forms::config::schema::register_app_schema()` is the
 /// one exception, still called from `📋️forms/🦀️component.rs`'s own `.setup()`: it registers the
 /// `FormsPlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has
 /// no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
@@ -562,7 +565,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::forms::standards::v1::subsets::any::schema::inferences::forms_artifact_inference_descriptor()])
         .composers(crate::artifacts::forms::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::forms::FormsPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::forms::FormsPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration
@@ -599,28 +602,3 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::forms::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("FormsComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
-}
-//#endregion 🚪️DerivedIoRegistry

@@ -24,7 +24,7 @@ pub fn rename_writer(new_id: String) -> WriterMutation {
 impl MutationKind<WriterSnapshot, WriterMutation> for RenameWriter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "writer", kind: "rename-writer", record: "RenamedWriter" };
 
-    fn diff(&self, base: &WriterSnapshot) -> WriterDiff {
+    fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
         super::diff::diff(self, base)
     }
 

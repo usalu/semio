@@ -10,8 +10,9 @@
 //! `🧬️mutations/<slug>/🦠️mutation/` leaves) cannot derive it either.
 //!
 //! The app's typed `ImperativeCommand` enum — which used to share the old `📡️protocol` crate with this
-//! codec — is an APP concern, not an artifact one: it now lives in `🎛️apps/📜️imperative/🦀️component.rs`,
-//! assembled from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
+//! codec — is an APP concern, not an artifact one: it now lives in the sibling `✏️editor` surface's
+//! `🦀️component.rs`, assembled from the `🎮️commands/*` payload modules by
+//! `semio_framework_plugin::app_commands!`.
 
 
 //#region 📡️SemioProtocol

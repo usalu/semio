@@ -1,0 +1,4 @@
+BASE=✏️s/🔌️plugins/🖨️raster
+APP=✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster
+SUBSET=✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any
+EDITOR=✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor

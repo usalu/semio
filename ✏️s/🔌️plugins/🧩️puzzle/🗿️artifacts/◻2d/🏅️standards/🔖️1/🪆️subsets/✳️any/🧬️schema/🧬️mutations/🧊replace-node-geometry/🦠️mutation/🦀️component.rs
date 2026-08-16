@@ -27,7 +27,7 @@ pub fn replace_node_geometry(id: String, new_shape: Option<String>, new_radius: 
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ReplaceNodeGeometry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "node", kind: "replace-node-geometry", record: "ReplacedNodeGeometry" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> Puzzle2dDiff {
+    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {

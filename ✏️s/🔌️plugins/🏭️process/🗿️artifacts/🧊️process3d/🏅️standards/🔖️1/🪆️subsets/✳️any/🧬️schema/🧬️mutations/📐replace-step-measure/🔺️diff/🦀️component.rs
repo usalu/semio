@@ -8,7 +8,8 @@ use crate::artifacts::process3d::mutations::replace_step_measure::mutation::Repl
 use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(_payload: &ReplaceStepMeasure, _base: &Process3dSnapshot) -> Process3dDiff {
-    Process3dDiff::default()
+/// 🚧️ Documented no-op — see file doc comment. Surfaced as Warning `mutation.no-op`.
+pub fn diff(_payload: &ReplaceStepMeasure, _base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+    protocol::MutationOutcome::empty().warn("mutation.no-op", "Replacing step measure is a documented no-op pending a link resolver for the composed steps child.".to_string())
 }
 //#endregion 🔖️Diff

@@ -1,0 +1,7 @@
+# change-primitive-topology-mode mutation facet.
+input GltfChangePrimitiveTopologyModePayloadV1 {
+  mesh: Int!
+  primitive: Int!
+  mode: Int!
+}
+type GltfChangePrimitiveTopologyModeMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

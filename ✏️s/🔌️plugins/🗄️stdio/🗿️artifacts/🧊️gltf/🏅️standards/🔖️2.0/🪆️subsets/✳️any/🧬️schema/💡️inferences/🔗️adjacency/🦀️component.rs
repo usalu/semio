@@ -1,15 +1,15 @@
 //! 🔗 GLTF adjacency indicators.
 
-#[path = "number-of-contacts/🦀️component.rs"]
-pub mod number_of_contacts;
-#[path = "contact-graph-degree/🦀️component.rs"]
-pub mod contact_graph_degree;
 #[path = "connected-components/🦀️component.rs"]
 pub mod connected_components;
+#[path = "contact-graph-degree/🦀️component.rs"]
+pub mod contact_graph_degree;
+#[path = "number-of-contacts/🦀️component.rs"]
+pub mod number_of_contacts;
 
-use super::geometry_core::{GltfGeometryContext, GltfPairGeometry};
-use super::super::modules::{mesh_topology::Topology};
 use super::super::modules::measurement_contracts::*;
+use super::super::modules::mesh_topology::Topology;
+use super::geometry_core::{GltfGeometryContext, GltfPairGeometry};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -37,11 +37,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfAdjacencyInference {
     type Output = GltfAdjacencyIndicators;
 
     fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
-        Self::Output {
-            number_of_contacts: number_of_contacts::infer(context),
-            contact_graph_degree: contact_graph_degree::infer(context),
-            connected_components: connected_components::infer(context),
-        }
+        Self::Output { number_of_contacts: number_of_contacts::infer(context), contact_graph_degree: contact_graph_degree::infer(context), connected_components: connected_components::infer(context) }
     }
 
     fn unavailable(diagnostic_ids: &[String]) -> Self::Output {

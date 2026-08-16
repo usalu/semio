@@ -16,7 +16,7 @@ pub struct RenameLayer {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for RenameLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "layer", kind: "rename-layer", record: "RenamedLayer" };
 
-    fn diff(&self, base: &RasterSnapshot) -> RasterDiff {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::rename_layer::diff::diff(self, base)
     }
 

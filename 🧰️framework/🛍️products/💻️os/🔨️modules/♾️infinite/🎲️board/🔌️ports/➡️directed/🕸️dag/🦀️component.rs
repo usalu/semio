@@ -1151,7 +1151,275 @@ pub fn would_create_cycle(existing: &[(String, String)], source: &str, target: &
 // #endregion 🔖️Acyclicity
 
 // #region 🔖️Layout
-use ::graph::drawing::tidy_tree::buchheim_positions;
+//#region 🌳️TidyTree
+/// 🌲️ Buchheim tidy-tree on string-labeled directed edges.
+fn buchheim_positions(roots: &[String], directed: &[(String, String)], depth: &HashMap<String, i32>) -> HashMap<String, (f64, f64)> {
+    let roots_set: HashSet<String> = roots.iter().cloned().collect();
+    let mut incoming: HashMap<String, Vec<String>> = HashMap::new();
+    for (u, v) in directed {
+        incoming.entry(v.clone()).or_default().push(u.clone());
+    }
+    for v in incoming.values_mut() {
+        v.sort();
+        v.dedup();
+    }
+    let mut chosen_parent: HashMap<String, String> = HashMap::new();
+    let mut all_ids: HashSet<String> = HashSet::new();
+    for (u, v) in directed {
+        all_ids.insert(u.clone());
+        all_ids.insert(v.clone());
+    }
+    for r in roots {
+        all_ids.insert(r.clone());
+    }
+    for id in &all_ids {
+        if roots_set.contains(id) {
+            continue;
+        }
+        let ps = incoming.get(id).cloned().unwrap_or_default();
+        if ps.is_empty() {
+            continue;
+        }
+        let best = ps
+            .iter()
+            .min_by_key(|p| {
+                let dp = depth.get(*p).copied().unwrap_or(0);
+                (dp, (*p).clone())
+            })
+            .expect("non-empty ps")
+            .clone();
+        chosen_parent.insert(id.clone(), best);
+    }
+    let mut ordered_ids: Vec<String> = all_ids.into_iter().collect();
+    ordered_ids.sort();
+    if ordered_ids.is_empty() {
+        return HashMap::new();
+    }
+    let id_to_idx: HashMap<String, usize> = ordered_ids.iter().enumerate().map(|(i, s)| (s.clone(), i)).collect();
+    let super_idx = ordered_ids.len();
+    let mut nodes: Vec<BuchheimNode> =
+        ordered_ids.iter().map(|id| BuchheimNode { ancestor: 0, change: 0.0, children: vec![], id: id.clone(), mod_: 0.0, number: 0, parent: None, shift: 0.0, synthetic: false, thread: None, x: -1.0, y: 0.0 }).collect();
+    nodes.push(BuchheimNode { ancestor: super_idx, change: 0.0, children: vec![], id: "__tree_super__".into(), mod_: 0.0, number: 0, parent: None, shift: 0.0, synthetic: true, thread: None, x: -1.0, y: 0.0 });
+    for (i, oid) in ordered_ids.iter().enumerate() {
+        let pidx = if roots_set.contains(oid) {
+            super_idx
+        } else {
+            match chosen_parent.get(oid) {
+                Some(p) => *id_to_idx.get(p).unwrap_or(&super_idx),
+                None => super_idx,
+            }
+        };
+        nodes[i].parent = Some(pidx);
+    }
+    for node in nodes.iter_mut() {
+        node.children.clear();
+    }
+    for i in 0..super_idx {
+        let pi = nodes[i].parent.expect("parent set for every non-super node in the loop above");
+        nodes[pi].children.push(i);
+    }
+    for p in 0..=super_idx {
+        let mut ch = nodes[p].children.clone();
+        ch.sort_by_key(|&c| nodes[c].id.clone());
+        nodes[p].children = ch;
+    }
+    for p in 0..=super_idx {
+        if nodes[p].children.is_empty() {
+            continue;
+        }
+        let ch = nodes[p].children.clone();
+        for (k, &c) in ch.iter().enumerate() {
+            nodes[c].number = (k + 1) as i32;
+            nodes[c].ancestor = c;
+        }
+    }
+    buchheim_first_walk(&mut nodes, super_idx, 1.0);
+    let min_x = buchheim_second_walk(&mut nodes, super_idx, 0.0, 0, f64::INFINITY);
+    if min_x.is_finite() && min_x < 0.0 {
+        buchheim_third_walk(&mut nodes, super_idx, -min_x);
+    }
+    let mut out = HashMap::new();
+    for (i, n) in nodes.iter().enumerate() {
+        if i == super_idx || n.synthetic {
+            continue;
+        }
+        out.insert(n.id.clone(), (n.x, n.y));
+    }
+    out
+}
+
+#[derive(Debug)]
+struct BuchheimNode {
+    id: String,
+    parent: Option<usize>,
+    children: Vec<usize>,
+    x: f64,
+    y: f64,
+    mod_: f64,
+    thread: Option<usize>,
+    ancestor: usize,
+    change: f64,
+    shift: f64,
+    number: i32,
+    synthetic: bool,
+}
+
+fn buchheim_left_brother(nodes: &[BuchheimNode], i: usize) -> Option<usize> {
+    let p = nodes[i].parent?;
+    let ch = &nodes[p].children;
+    let pos = ch.iter().position(|&c| c == i)?;
+    if pos == 0 {
+        return None;
+    }
+    Some(ch[pos - 1])
+}
+
+fn buchheim_leftmost_sibling(nodes: &[BuchheimNode], i: usize) -> Option<usize> {
+    let p = nodes[i].parent?;
+    let ch = &nodes[p].children;
+    if ch.first() == Some(&i) {
+        return None;
+    }
+    ch.first().copied()
+}
+
+fn buchheim_next_right(nodes: &[BuchheimNode], i: usize) -> Option<usize> {
+    if let Some(t) = nodes[i].thread {
+        return Some(t);
+    }
+    nodes[i].children.last().copied()
+}
+
+fn buchheim_next_left(nodes: &[BuchheimNode], i: usize) -> Option<usize> {
+    if let Some(t) = nodes[i].thread {
+        return Some(t);
+    }
+    nodes[i].children.first().copied()
+}
+
+fn buchheim_move_subtree(nodes: &mut [BuchheimNode], wl: usize, wr: usize, shift: f64) {
+    let subtrees = (nodes[wr].number - nodes[wl].number) as f64;
+    if subtrees <= 0.0 {
+        return;
+    }
+    nodes[wr].change -= shift / subtrees;
+    nodes[wr].shift += shift;
+    nodes[wl].change += shift / subtrees;
+    nodes[wr].x += shift;
+    nodes[wr].mod_ += shift;
+}
+
+fn buchheim_execute_shifts(nodes: &mut [BuchheimNode], v: usize) {
+    let mut shift = 0.0f64;
+    let mut change = 0.0f64;
+    for &w in nodes[v].children.iter().rev() {
+        nodes[w].x += shift;
+        nodes[w].mod_ += shift;
+        change += nodes[w].change;
+        shift += nodes[w].shift + change;
+    }
+}
+
+fn buchheim_apportion(nodes: &mut [BuchheimNode], v: usize, default_ancestor: usize, distance: f64) -> usize {
+    let w = match buchheim_left_brother(nodes, v) {
+        Some(w) => w,
+        None => return default_ancestor,
+    };
+    let mut vir = v;
+    let mut vil = w;
+    let mut vol = buchheim_leftmost_sibling(nodes, v).unwrap_or(v);
+    let mut vor = v;
+    let mut sir = nodes[v].mod_;
+    let mut sil = nodes[vil].mod_;
+    loop {
+        let vil_r = buchheim_next_right(nodes, vil);
+        let vir_l = buchheim_next_left(nodes, vir);
+        if vil_r.is_none() || vir_l.is_none() {
+            break;
+        }
+        vil = vil_r.expect("checked Some above");
+        vir = vir_l.expect("checked Some above");
+        let vol_l = buchheim_next_left(nodes, vol);
+        let vor_r = buchheim_next_right(nodes, vor);
+        if vol_l.is_none() || vor_r.is_none() {
+            break;
+        }
+        vol = vol_l.expect("checked Some above");
+        vor = vor_r.expect("checked Some above");
+        nodes[vor].ancestor = v;
+        let shift = (nodes[vil].x + sil) - (nodes[vir].x + sir) + distance;
+        if shift > 0.0 {
+            buchheim_move_subtree(nodes, default_ancestor, v, shift);
+            sir += shift;
+        }
+        sil += nodes[vil].mod_;
+        sir += nodes[vir].mod_;
+    }
+    default_ancestor
+}
+
+fn buchheim_first_walk(nodes: &mut [BuchheimNode], v: usize, distance: f64) -> usize {
+    if nodes[v].children.is_empty() {
+        if let Some(lb) = buchheim_left_brother(nodes, v) {
+            nodes[v].x = nodes[lb].x + distance;
+        } else {
+            nodes[v].x = 0.0;
+        }
+        return v;
+    }
+    let mut default_ancestor = nodes[v].children[0];
+    for &w in nodes[v].children.clone().iter() {
+        buchheim_first_walk(nodes, w, distance);
+        default_ancestor = buchheim_apportion(nodes, w, default_ancestor, distance);
+    }
+    buchheim_execute_shifts(nodes, v);
+    let c0 = nodes[v].children[0];
+    let c1 = *nodes[v].children.last().expect("children non-empty per the is_empty check above");
+    let mid = (nodes[c0].x + nodes[c1].x) * 0.5;
+    if let Some(w) = buchheim_left_brother(nodes, v) {
+        nodes[v].x = nodes[w].x + distance;
+        nodes[v].mod_ = nodes[v].x - mid;
+    } else {
+        nodes[v].x = mid;
+    }
+    v
+}
+
+fn buchheim_second_walk(nodes: &mut [BuchheimNode], v: usize, m: f64, depth: i32, min_x: f64) -> f64 {
+    nodes[v].x += m;
+    nodes[v].y = depth as f64;
+    let mut min_x = min_x.min(nodes[v].x);
+    for &w in nodes[v].children.clone().iter() {
+        min_x = buchheim_second_walk(nodes, w, m + nodes[v].mod_, depth + 1, min_x);
+    }
+    min_x
+}
+
+fn buchheim_third_walk(nodes: &mut [BuchheimNode], v: usize, n: f64) {
+    nodes[v].x += n;
+    for &c in nodes[v].children.clone().iter() {
+        buchheim_third_walk(nodes, c, n);
+    }
+}
+
+#[cfg(test)]
+mod tidy_tree_tests {
+    use super::buchheim_positions;
+
+    #[test]
+    fn buchheim_tree_two_nodes() {
+        let roots = vec!["a".into()];
+        let directed = vec![("a".into(), "b".into())];
+        let mut depth = std::collections::HashMap::new();
+        depth.insert("a".into(), 0);
+        depth.insert("b".into(), 1);
+        let pos = buchheim_positions(&roots, &directed, &depth);
+        assert!(pos.contains_key("a"));
+        assert!(pos.contains_key("b"));
+    }
+}
+//#endregion 🌳️TidyTree
+
 use serde_json::Value;
 
 /// 🧭️ Tree layout flow direction for layered DAG positions.
@@ -7261,7 +7529,7 @@ mod tests {
 // #endregion 🔖️Tests
 
 // #region 🔖️ArtifactVcs
-use crate::os_spr::{Identified, Mutation, MutationDiff, Patchable};
+use crate::os_spr::{Identified, Mutation, MutationDiff, MutationOutcome, Patchable};
 #[cfg(test)]
 use crate::os_spr::{ArtifactId, Edit, SchemaId};
 #[cfg(any(test, target_arch = "wasm32"))]
@@ -7700,7 +7968,9 @@ impl MutationDiff<DagSnapshot> for DagDiff {
 impl Mutation<DagSnapshot> for DagMutation {
     type Diff = DagDiff;
 
-    fn diff(&self, snapshot: &DagSnapshot) -> DagDiff {
+    /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
+    /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet.
+    fn diff(&self, snapshot: &DagSnapshot) -> MutationOutcome<DagDiff> {
         let mut diff = DagDiff::default();
         match self {
             DagMutation::CreateNode { node, index } => {
@@ -7792,7 +8062,7 @@ impl Mutation<DagSnapshot> for DagMutation {
                 }
             }
         }
-        diff
+        MutationOutcome::new(diff)
     }
 
     fn inverse(&self, snapshot: &DagSnapshot) -> Vec<Self> {

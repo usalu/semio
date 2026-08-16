@@ -366,7 +366,10 @@ impl protocol::MutationDiff<SpaceSnapshot> for SpaceDiff {
 impl protocol::Mutation<SpaceSnapshot> for SpaceMutation {
     type Diff = SpaceDiff;
 
-    fn diff(&self, _base: &SpaceSnapshot) -> SpaceDiff {
+    /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
+    /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet — that is the W3
+    /// fan-out's job per verb family.
+    fn diff(&self, _base: &SpaceSnapshot) -> protocol::MutationOutcome<SpaceDiff> {
         let mut diff = SpaceDiff::default();
         match self {
             SpaceMutation::SetName { name } => diff.name = Some(name.clone()),
@@ -397,7 +400,7 @@ impl protocol::Mutation<SpaceSnapshot> for SpaceMutation {
                 diff.set_extension_enabled = Some(*enabled);
             }
         }
-        diff
+        protocol::MutationOutcome::new(diff)
     }
 
     fn inverse(&self, base: &SpaceSnapshot) -> Vec<Self> {
@@ -470,11 +473,6 @@ impl protocol::Mutation<SpaceSnapshot> for SpaceMutation {
                 })
                 .unwrap_or_default(),
         }
-    }
-
-    /// 🤝️ Atelier single-author invariant — see `reconcile_space_atelier_invariant` below.
-    fn reconcile(&self, snapshot: SpaceSnapshot) -> (SpaceSnapshot, Vec<protocol::ReconcileReport>) {
-        reconcile_space_atelier_invariant(snapshot)
     }
 }
 //#endregion 🔖️SpaceMutation
@@ -1011,7 +1009,10 @@ impl protocol::MutationDiff<CollectionSnapshot> for CollectionDiff {
 impl protocol::Mutation<CollectionSnapshot> for CollectionMutation {
     type Diff = CollectionDiff;
 
-    fn diff(&self, base: &CollectionSnapshot) -> CollectionDiff {
+    /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
+    /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet — that is the W3
+    /// fan-out's job per verb family.
+    fn diff(&self, base: &CollectionSnapshot) -> protocol::MutationOutcome<CollectionDiff> {
         let mut diff = CollectionDiff::default();
         match self {
             CollectionMutation::RenameCollection { new_name } => diff.renamed_collection = Some(new_name.clone()),
@@ -1061,7 +1062,7 @@ impl protocol::Mutation<CollectionSnapshot> for CollectionMutation {
                 }
             }
         }
-        diff
+        protocol::MutationOutcome::new(diff)
     }
 
     fn inverse(&self, base: &CollectionSnapshot) -> Vec<Self> {
@@ -1124,11 +1125,6 @@ impl protocol::Mutation<CollectionSnapshot> for CollectionMutation {
             }
         }
     }
-
-    /// 🤝️ Referential-integrity pass — see `reconcile_collection_integrity` below.
-    fn reconcile(&self, snapshot: CollectionSnapshot) -> (CollectionSnapshot, Vec<protocol::ReconcileReport>) {
-        reconcile_collection_integrity(snapshot)
-    }
 }
 //#endregion 🔖️CollectionMutation
 //#endregion 🔖️Collection
@@ -1151,10 +1147,11 @@ pub fn can_write(space: &SpaceSnapshot, user_id: &str) -> bool {
 
 /// 🤝️ Atelier invariant: at most one member holds `Author`. If reconciliation finds more than one
 /// (a concurrent membership merge), every author but the lexicographically-smallest-id one is demoted
-/// to `Spectator`, deterministically across peers replaying the same operation — surfaced as conflict
-/// `"space/atelier-multi-author"`.
-pub fn reconcile_space_atelier_invariant(mut snapshot: SpaceSnapshot) -> (SpaceSnapshot, Vec<protocol::ReconcileReport>) {
-    let mut reports = Vec::new();
+/// to `Spectator`, deterministically across peers replaying the same operation — surfaced as a
+/// `mutation.clamped` message (§C2's frozen code set has no per-plugin/per-invariant codes; the
+/// original free-form `"space/atelier-multi-author"` tag now travels in `target`).
+pub fn reconcile_space_atelier_invariant(mut snapshot: SpaceSnapshot) -> (SpaceSnapshot, Vec<protocol::MutationMessage>) {
+    let mut messages = Vec::new();
     if snapshot.kind == SpaceKind::Atelier {
         let mut author_ids: Vec<String> = snapshot.users.iter().filter(|user| user.role == SpaceRole::Author).map(|user| user.id.clone()).collect();
         author_ids.sort();
@@ -1165,14 +1162,10 @@ pub fn reconcile_space_atelier_invariant(mut snapshot: SpaceSnapshot) -> (SpaceS
                     user.role = SpaceRole::Spectator;
                 }
             }
-            reports.push(protocol::ReconcileReport {
-                id: "space/atelier-multi-author".into(),
-                message: format!("atelier space retains a single author ({keep}); demoted the rest to spectator"),
-                severity: protocol::ReconcileSeverity::Warning,
-            });
+            messages.push(protocol::MutationMessage::warn("mutation.clamped", format!("atelier space retains a single author ({keep}); demoted the rest to spectator")).at(vec!["space/atelier-multi-author".to_string(), keep.clone()]));
         }
     }
-    (snapshot, reports)
+    (snapshot, messages)
 }
 
 /// 🌳️ Which folder ids are cyclic (each folder's own id is in the returned set exactly when walking
@@ -1203,7 +1196,7 @@ fn folders_in_cycle(folders: &[CollectionFolder]) -> HashSet<String> {
     in_cycle
 }
 
-fn dedupe_folder_names(folders: &mut [CollectionFolder], reports: &mut Vec<protocol::ReconcileReport>) {
+fn dedupe_folder_names(folders: &mut [CollectionFolder], messages: &mut Vec<protocol::MutationMessage>) {
     let mut seen: HashSet<(Option<String>, String)> = HashSet::new();
     for folder in folders.iter_mut() {
         let mut key = (folder.parent_id.clone(), folder.name.clone());
@@ -1214,11 +1207,7 @@ fn dedupe_folder_names(folders: &mut [CollectionFolder], reports: &mut Vec<proto
                 suffix += 1;
                 candidate = format!("{} ({suffix})", folder.name);
             }
-            reports.push(protocol::ReconcileReport {
-                id: "collection/folder-name-collision".into(),
-                message: format!("folder {} renamed to '{candidate}' to avoid a sibling name collision", folder.id),
-                severity: protocol::ReconcileSeverity::Info,
-            });
+            messages.push(protocol::MutationMessage::info("mutation.cascade", format!("folder {} renamed to '{candidate}' to avoid a sibling name collision", folder.id)).at(vec!["collection/folder-name-collision".to_string(), folder.id.clone()]));
             folder.name = candidate.clone();
             key = (folder.parent_id.clone(), candidate);
         }
@@ -1226,7 +1215,7 @@ fn dedupe_folder_names(folders: &mut [CollectionFolder], reports: &mut Vec<proto
     }
 }
 
-fn dedupe_entry_names(entries: &mut [CollectionEntry], reports: &mut Vec<protocol::ReconcileReport>) {
+fn dedupe_entry_names(entries: &mut [CollectionEntry], messages: &mut Vec<protocol::MutationMessage>) {
     let mut seen: HashSet<(Option<String>, String)> = HashSet::new();
     for entry in entries.iter_mut() {
         let mut key = (entry.folder_id.clone(), entry.name.clone());
@@ -1237,11 +1226,7 @@ fn dedupe_entry_names(entries: &mut [CollectionEntry], reports: &mut Vec<protoco
                 suffix += 1;
                 candidate = format!("{} ({suffix})", entry.name);
             }
-            reports.push(protocol::ReconcileReport {
-                id: "collection/entry-name-collision".into(),
-                message: format!("entry {} renamed to '{candidate}' to avoid a sibling name collision", entry.id),
-                severity: protocol::ReconcileSeverity::Info,
-            });
+            messages.push(protocol::MutationMessage::info("mutation.cascade", format!("entry {} renamed to '{candidate}' to avoid a sibling name collision", entry.id)).at(vec!["collection/entry-name-collision".to_string(), entry.id.clone()]));
             entry.name = candidate.clone();
             key = (entry.folder_id.clone(), candidate);
         }
@@ -1254,19 +1239,15 @@ fn dedupe_entry_names(entries: &mut [CollectionEntry], reports: &mut Vec<protoco
 /// to root, (3) sibling folders/entries with a name collision (same parent) get a numeric suffix, (4)
 /// an entry whose `folder_id` references a missing folder moves to root. Each rule operates on the
 /// state the previous one produced — mirrors os-core's `reconcile_os_workflow` ordered-rules style.
-pub fn reconcile_collection_integrity(mut snapshot: CollectionSnapshot) -> (CollectionSnapshot, Vec<protocol::ReconcileReport>) {
-    let mut reports = Vec::new();
+pub fn reconcile_collection_integrity(mut snapshot: CollectionSnapshot) -> (CollectionSnapshot, Vec<protocol::MutationMessage>) {
+    let mut messages = Vec::new();
 
     //#region OrphanFolderReparent
     let folder_ids: HashSet<String> = snapshot.folders.iter().map(|folder| folder.id.clone()).collect();
     for folder in &mut snapshot.folders {
         if let Some(parent_id) = &folder.parent_id {
             if !folder_ids.contains(parent_id) {
-                reports.push(protocol::ReconcileReport {
-                    id: "collection/folder-orphaned".into(),
-                    message: format!("folder {} referenced missing parent {parent_id}; reparented to root", folder.id),
-                    severity: protocol::ReconcileSeverity::Warning,
-                });
+                messages.push(protocol::MutationMessage::warn("mutation.clamped", format!("folder {} referenced missing parent {parent_id}; reparented to root", folder.id)).at(vec!["collection/folder-orphaned".to_string(), folder.id.clone()]));
                 folder.parent_id = None;
             }
         }
@@ -1277,15 +1258,15 @@ pub fn reconcile_collection_integrity(mut snapshot: CollectionSnapshot) -> (Coll
     let cyclic = folders_in_cycle(&snapshot.folders);
     for folder in &mut snapshot.folders {
         if cyclic.contains(&folder.id) {
-            reports.push(protocol::ReconcileReport { id: "collection/folder-cycle".into(), message: format!("folder {} participates in a parent cycle; cut to root", folder.id), severity: protocol::ReconcileSeverity::Blocking });
+            messages.push(protocol::MutationMessage::warn("mutation.clamped", format!("folder {} participates in a parent cycle; cut to root", folder.id)).at(vec!["collection/folder-cycle".to_string(), folder.id.clone()]));
             folder.parent_id = None;
         }
     }
     //#endregion FolderCycleCut
 
     //#region SiblingNameCollisionSuffix
-    dedupe_folder_names(&mut snapshot.folders, &mut reports);
-    dedupe_entry_names(&mut snapshot.entries, &mut reports);
+    dedupe_folder_names(&mut snapshot.folders, &mut messages);
+    dedupe_entry_names(&mut snapshot.entries, &mut messages);
     //#endregion SiblingNameCollisionSuffix
 
     //#region EntryMissingFolderReparent
@@ -1293,18 +1274,14 @@ pub fn reconcile_collection_integrity(mut snapshot: CollectionSnapshot) -> (Coll
     for entry in &mut snapshot.entries {
         if let Some(folder_id) = &entry.folder_id {
             if !folder_ids.contains(folder_id) {
-                reports.push(protocol::ReconcileReport {
-                    id: "collection/entry-folder-missing".into(),
-                    message: format!("entry {} referenced missing folder {folder_id}; moved to root", entry.id),
-                    severity: protocol::ReconcileSeverity::Warning,
-                });
+                messages.push(protocol::MutationMessage::warn("mutation.clamped", format!("entry {} referenced missing folder {folder_id}; moved to root", entry.id)).at(vec!["collection/entry-folder-missing".to_string(), entry.id.clone()]));
                 entry.folder_id = None;
             }
         }
     }
     //#endregion EntryMissingFolderReparent
 
-    (snapshot, reports)
+    (snapshot, messages)
 }
 
 /// 🧵️ Root-to-leaf folder path (slash-joined names), or `None` if `folder_id` is absent or its parent
@@ -2036,7 +2013,7 @@ mod tests {
 
         store::test_support::assert_operation_round_trip(&collection, CollectionMutation::DeleteFolder { folder_id: "root".into() });
 
-        let diff = CollectionMutation::DeleteFolder { folder_id: "root".into() }.diff(&collection);
+        let diff = CollectionMutation::DeleteFolder { folder_id: "root".into() }.diff(&collection).into_parts().0;
         let mut deleted_folders = diff.deleted_folder_ids.clone().unwrap_or_default();
         deleted_folders.sort();
         assert_eq!(deleted_folders, vec!["child".to_string(), "root".to_string()]);
@@ -2086,7 +2063,7 @@ mod tests {
         atelier.users.push(demo_user("u1", SpaceRole::Author));
         let (reconciled, reports) = reconcile_space_atelier_invariant(atelier);
         assert_eq!(reports.len(), 1);
-        assert_eq!(reports[0].id, "space/atelier-multi-author");
+        assert_eq!(reports[0].target.first().map(String::as_str), Some("space/atelier-multi-author"));
         assert_eq!(space_role_of(&reconciled, "u1"), Some(SpaceRole::Author));
         assert_eq!(space_role_of(&reconciled, "u2"), Some(SpaceRole::Spectator));
     }
@@ -2104,7 +2081,7 @@ mod tests {
         let mut collection = empty_collection_snapshot("Demo");
         collection.folders.push(CollectionFolder { id: "f1".into(), parent_id: Some("missing".into()), name: "Orphan".into() });
         let (reconciled, reports) = reconcile_collection_integrity(collection);
-        assert!(reports.iter().any(|r| r.id == "collection/folder-orphaned"));
+        assert!(reports.iter().any(|r| r.target.first().map(String::as_str) == Some("collection/folder-orphaned")));
         assert_eq!(reconciled.folders[0].parent_id, None);
     }
 
@@ -2114,7 +2091,7 @@ mod tests {
         collection.folders.push(CollectionFolder { id: "a".into(), parent_id: Some("b".into()), name: "A".into() });
         collection.folders.push(CollectionFolder { id: "b".into(), parent_id: Some("a".into()), name: "B".into() });
         let (reconciled, reports) = reconcile_collection_integrity(collection);
-        assert!(reports.iter().any(|r| r.id == "collection/folder-cycle"));
+        assert!(reports.iter().any(|r| r.target.first().map(String::as_str) == Some("collection/folder-cycle")));
         assert!(reconciled.folders.iter().all(|f| f.parent_id.is_none()), "both cyclic folders must be cut to root");
     }
 
@@ -2124,7 +2101,7 @@ mod tests {
         collection.folders.push(CollectionFolder { id: "f1".into(), parent_id: None, name: "Renders".into() });
         collection.folders.push(CollectionFolder { id: "f2".into(), parent_id: None, name: "Renders".into() });
         let (reconciled, reports) = reconcile_collection_integrity(collection);
-        assert!(reports.iter().any(|r| r.id == "collection/folder-name-collision"));
+        assert!(reports.iter().any(|r| r.target.first().map(String::as_str) == Some("collection/folder-name-collision")));
         let names: Vec<&str> = reconciled.folders.iter().map(|f| f.name.as_str()).collect();
         assert_eq!(names, vec!["Renders", "Renders (2)"]);
     }
@@ -2140,7 +2117,7 @@ mod tests {
             body: Box::new(ArtifactBody::Document { schema: "test.puzzle2d".into(), document_id: "doc-e1".into() }),
         });
         let (reconciled, reports) = reconcile_collection_integrity(collection);
-        assert!(reports.iter().any(|r| r.id == "collection/entry-folder-missing"));
+        assert!(reports.iter().any(|r| r.target.first().map(String::as_str) == Some("collection/entry-folder-missing")));
         assert_eq!(reconciled.entries[0].folder_id, None);
     }
     //#endregion 🧪️CollectionReconcileLaws

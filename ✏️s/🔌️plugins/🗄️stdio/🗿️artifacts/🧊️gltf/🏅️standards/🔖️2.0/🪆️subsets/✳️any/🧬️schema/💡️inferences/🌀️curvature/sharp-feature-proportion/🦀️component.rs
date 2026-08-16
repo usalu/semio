@@ -1,16 +1,24 @@
 //! 💡️ sharp-feature-proportion atomic glTF inference leaf.
-use super::super::{geometry_core::GltfGeometryContext, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
-use super::super::super::modules::{inference_measures::{estimate, exact, unavailable}, measurement_contracts::*};
+use super::super::super::modules::{
+    inference_measures::{estimate, exact, unavailable},
+    measurement_contracts::*,
+};
+use super::super::{geometry_core::GltfGeometryContext, GltfEntityIndicators, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
 
 pub struct GltfSharpFeatureProportionInference;
 
 impl GltfInferenceLeaf for GltfSharpFeatureProportionInference {
-    const DESCRIPTOR: GltfInferenceLeafDescriptor = GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.sharp-feature-proportion.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.sharp-feature-proportion.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
+    const DESCRIPTOR: GltfInferenceLeafDescriptor =
+        GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.sharp-feature-proportion.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.sharp-feature-proportion.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
 
-pub fn descriptor() -> GltfInferenceLeafDescriptor { GltfSharpFeatureProportionInference::DESCRIPTOR }
+pub fn descriptor() -> GltfInferenceLeafDescriptor {
+    GltfSharpFeatureProportionInference::DESCRIPTOR
+}
 
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> { from_raw(context, &super::raw(context)) }
+pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+    from_raw(context, &super::raw(context))
+}
 
 pub(crate) fn from_raw(context: &GltfGeometryContext<'_>, raw: &super::GltfCurvatureRaw) -> GltfMeasure<f64> {
     exact(raw.sharp_feature_proportion, GltfUnit::Unitless, context.sample_count, Some(context.topology))
@@ -21,7 +29,7 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
 }
 
 pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
-    serde_json::to_value(&indicators.curvature.sharpFeatureProportion)
+    serde_json::to_value(&indicators.curvature.sharp_feature_proportion)
 }
 
 #[cfg(test)]

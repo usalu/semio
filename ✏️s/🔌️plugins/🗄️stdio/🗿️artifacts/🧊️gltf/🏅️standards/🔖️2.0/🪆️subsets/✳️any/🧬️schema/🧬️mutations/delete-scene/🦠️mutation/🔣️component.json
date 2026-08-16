@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.delete-scene.v1",
+  "title": "GltfDeleteScenePayloadV1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "index"
+  ],
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.delete-scene.v1",
+    "version": 1,
+    "phase": "mutation",
+    "touchedPathPatterns": [
+      "document/scenes/{index}",
+      "document/scene"
+    ]
+  }
+}

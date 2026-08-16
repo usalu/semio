@@ -18,7 +18,7 @@ pub struct ChangeSchema {
 impl protocol::MutationKind<PlaygroundSnapshot, PlaygroundMutation> for ChangeSchema {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "playground", kind: "change-schema", record: "ChangedSchema" };
 
-    fn diff(&self, base: &PlaygroundSnapshot) -> <PlaygroundMutation as protocol::Mutation<PlaygroundSnapshot>>::Diff {
+    fn diff(&self, base: &PlaygroundSnapshot) -> protocol::MutationOutcome<<PlaygroundMutation as protocol::Mutation<PlaygroundSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &PlaygroundSnapshot) -> Vec<PlaygroundMutation> {

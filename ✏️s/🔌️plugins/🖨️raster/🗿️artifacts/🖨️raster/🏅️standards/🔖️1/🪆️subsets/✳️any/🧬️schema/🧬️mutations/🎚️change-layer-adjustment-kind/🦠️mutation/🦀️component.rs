@@ -18,7 +18,7 @@ pub struct ChangeLayerAdjustmentKind {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ChangeLayerAdjustmentKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "layer", kind: "change-layer-adjustment-kind", record: "ChangedLayerAdjustmentKind" };
 
-    fn diff(&self, base: &RasterSnapshot) -> RasterDiff {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::change_layer_adjustment_kind::diff::diff(self, base)
     }
 

@@ -1,0 +1,10 @@
+/** 🔺️ Minimal deterministic scene-root insertion patch. */
+import type { GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
+import { validateGltfBindSceneRootNode, type GltfBindSceneRootNodePayload } from '../../bind-scene-root-node/🦠️mutation/🟦️component.ts';
+import type { GltfMutationRejection } from '../../🔒️top-level-private/🟦️component.ts';
+export interface GltfBindSceneRootNodeDiff { scene: number; node: number; position: number; touchedPaths: readonly [string] }
+export type GltfBindSceneRootNodeDiffResult = { accepted: true; diff: GltfBindSceneRootNodeDiff } | { accepted: false; rejection: GltfMutationRejection };
+export type GltfBindSceneRootNodeDiffApplyResult = { accepted: true; snapshot: GltfSnapshot } | { accepted: false; rejection: GltfMutationRejection };
+export const deriveGltfBindSceneRootNodeDiff=(base:GltfSnapshot,payload:GltfBindSceneRootNodePayload):GltfBindSceneRootNodeDiffResult=>{const rejection=validateGltfBindSceneRootNode(payload,base);return rejection?{accepted:false,rejection}:{accepted:true,diff:{scene:payload.scene,node:payload.node,position:payload.position,touchedPaths:[`document/scenes/${payload.scene}/nodes/${payload.position}`]}};};
+export const applyGltfBindSceneRootNodeDiff=(base:GltfSnapshot,diff:GltfBindSceneRootNodeDiff):GltfBindSceneRootNodeDiffApplyResult=>{const path=`document/scenes/${diff.scene}/nodes/${diff.position}`;if(diff.touchedPaths.length!==1||diff.touchedPaths[0]!==path)return{accepted:false,rejection:{code:'gltf.mutation.invalid-touched-path',path,detail:'patch touched path does not match its root coordinates'}};const scene=base.document.scenes[diff.scene];if(!scene||diff.position>scene.nodes.length||scene.nodes.includes(diff.node)||!base.document.nodes[diff.node])return{accepted:false,rejection:{code:'gltf.mutation.stale-diff',path,detail:'scene, position, or node identity is stale'}};const snapshot=structuredClone(base);snapshot.document.scenes[diff.scene]!.nodes.splice(diff.position,0,diff.node);return{accepted:true,snapshot};};
+export const encodeGltfBindSceneRootNodeDiff=(diff:GltfBindSceneRootNodeDiff):string=>JSON.stringify(diff);

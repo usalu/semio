@@ -266,18 +266,6 @@ fn print_edge_node(node: &EdgeNode, out: &mut String) {
     }
 }
 
-fn print_edge_label(label: &EdgeLabel, out: &mut String) {
-    out.push('[');
-    if let Some(id) = &label.id {
-        out.push_str(id);
-    }
-    if let Some(kind) = &label.kind {
-        out.push(':');
-        out.push_str(kind);
-    }
-    out.push(']');
-}
-
 /// @emoji 🖨️ Canonical printer for [`EdgeValue`] — `parse_edge_text(print_edge(x)) == x` is the
 /// round-trip law every macro-production in this toolkit must satisfy.
 ///

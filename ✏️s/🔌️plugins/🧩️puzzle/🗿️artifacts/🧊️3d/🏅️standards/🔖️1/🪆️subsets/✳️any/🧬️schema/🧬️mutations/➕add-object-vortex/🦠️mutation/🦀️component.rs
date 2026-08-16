@@ -25,7 +25,7 @@ pub fn add_object_vortex(object_id: String, vortex: Puzzle3dVortex, index: Optio
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for AddObjectVortex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "object-vortex", kind: "add-object-vortex", record: "AddedObjectVortex" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> Puzzle3dDiff {
+    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {

@@ -20,7 +20,7 @@ pub fn change_status(new_status: String) -> VcsDemoMutation {
 impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for ChangeStatus {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vcs", kind: "change-status", record: "ChangedVcsStatus" };
 
-    fn diff(&self, base: &VcsSnapshot) -> VcsDiff {
+    fn diff(&self, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {

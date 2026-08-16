@@ -6,7 +6,11 @@ use crate::artifacts::program::diff::ProgramInfrastructureDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🌱️ `added = [payload row]` — the row lands at the end of `program.infrastructure` on apply.
-pub fn diff(payload: &CreateInfrastructureRequirement, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { infrastructure: Some(ProgramInfrastructureDelta { added: vec![payload.infrastructure_requirement.clone()], ..Default::default() }), ..Default::default() }
+/// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
+pub fn diff(payload: &CreateInfrastructureRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let id = payload.infrastructure_requirement.header.id.clone();
+    if base.infrastructure.iter().any(|row| row.header.id == id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "An infrastructure requirement already exists with this id.", [id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { infrastructure: Some(ProgramInfrastructureDelta { added: vec![payload.infrastructure_requirement.clone()], ..Default::default() }), ..Default::default() })
 }

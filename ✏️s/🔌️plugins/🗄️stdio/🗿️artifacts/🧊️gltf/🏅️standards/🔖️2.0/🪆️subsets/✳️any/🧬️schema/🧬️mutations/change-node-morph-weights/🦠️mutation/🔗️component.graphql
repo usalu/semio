@@ -1,0 +1,6 @@
+# change-node-morph-weights mutation facet.
+input GltfChangeNodeMorphWeightsPayloadV1 {
+  node: Int!
+  weights: [Float!]!
+}
+type GltfChangeNodeMorphWeightsMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

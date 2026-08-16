@@ -6,8 +6,7 @@
       "algorithmVersion": 1,
       "cacheKey": "s.stdio.gltf.inference.curvature-histogram.v1:geometry-v2",
       "inputs": ["schema/snapshot", "buffers"],
-      "target": "geometricAnalysis.overall.curvature-histogram"
+      "target": "geometry.overall.curvature.curvatureHistogram"
     }
   }
 }
-

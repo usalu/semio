@@ -19,7 +19,7 @@ pub struct ReplaceAssumption {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceAssumption {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "assumption", kind: "replace-assumption", record: "ReplacedAssumption" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

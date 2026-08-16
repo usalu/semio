@@ -6,8 +6,7 @@
       "algorithmVersion": 1,
       "cacheKey": "s.stdio.gltf.inference.exposed-area.v1:geometry-v2",
       "inputs": ["schema/snapshot", "buffers"],
-      "target": "geometricAnalysis.overall.exposed-area"
+      "target": "geometry.overall.areaVolume.exposedArea"
     }
   }
 }
-

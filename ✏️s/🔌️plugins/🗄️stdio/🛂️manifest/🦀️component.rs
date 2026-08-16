@@ -1,7 +1,7 @@
 //! 🛂️ Schema-derived stdio manifest assembly.
 
-use semio_framework_plugin::{ArtifactDefinition, PluginAssemblyError};
 use semio_framework_plugin::io::FormatDescriptor;
+use semio_framework_plugin::{ArtifactDefinition, PluginAssemblyError};
 
 /// 🧾️ Returns the one schema-owned definition for every stdio artifact.
 pub fn stdio_artifact_definitions() -> Result<Vec<ArtifactDefinition>, PluginAssemblyError> {

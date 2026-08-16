@@ -21,7 +21,7 @@ pub type DagStore = store::ArtifactStore<DagSnapshot, DagMutation>;
 /// ports. The old generic id-keyed-collection wrapper variants for nodes/edges, and the old
 /// whole-collection and whole-document replacement variants, are all gone with no direct
 /// replacement — whole-collection/whole-document replace is not an in-history mutation (see
-/// `crate::apps::dag::DagPlayApp` no longer overriding `whole_document_operation`; use
+/// `crate::editor::dag::DagPlayApp` no longer overriding `whole_document_operation`; use
 /// `store::ArtifactStore::reset` for a real whole-document load).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
@@ -62,7 +62,7 @@ pub use super::resize_node::mutation::{resize_node, ResizeNode};
 /// ▶️ Applies `mutation` via its diff.
 pub fn apply_dag_mutation(snapshot: &mut DagSnapshot, mutation: &DagMutation) {
     use store::MutationDiff;
-    *snapshot = <DagMutation as protocol::Mutation<DagSnapshot>>::diff(mutation, snapshot).apply(snapshot);
+    *snapshot = <DagMutation as protocol::Mutation<DagSnapshot>>::diff(mutation, snapshot).diff().apply(snapshot);
 }
 
 pub fn inverse_dag_mutation(snapshot: &DagSnapshot, mutation: &DagMutation) -> Vec<DagMutation> {
@@ -146,12 +146,13 @@ mod tests {
     use vcs::apply_mutation;
 
     fn round_trip(snapshot: &DagSnapshot, mutation: &DagMutation) -> DagSnapshot {
-        let forward = apply_mutation(snapshot, mutation);
+        let (forward, _messages) = apply_mutation(snapshot, mutation);
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(snapshot);
         backward.reverse();
         for back in backward {
-            restored = apply_mutation(&restored, &back);
+            let (next, _messages) = apply_mutation(&restored, &back);
+            restored = next;
         }
         assert_eq!(&restored, snapshot, "inverse must restore the pre-mutation snapshot");
         forward
@@ -270,9 +271,9 @@ mod tests {
         use protocol::Mutation;
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
-        let d1 = move_node(id.clone(), 10.0, 10.0).diff(&base);
+        let d1 = move_node(id.clone(), 10.0, 10.0).diff(&base).diff().clone();
         let mid = protocol::MutationDiff::apply(&d1, &base);
-        let d2 = move_node(id, 20.0, 30.0).diff(&mid);
+        let d2 = move_node(id, 20.0, 30.0).diff(&mid).diff().clone();
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 

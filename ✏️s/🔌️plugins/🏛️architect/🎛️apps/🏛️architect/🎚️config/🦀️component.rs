@@ -182,9 +182,16 @@ impl protocol::OpBinary for ArchitectConfigMutation {
 impl Mutation<ArchitectConfig> for ArchitectConfigMutation {
     type Diff = ArchitectConfig;
 
-    fn diff(&self, _base: &ArchitectConfig) -> ArchitectConfig {
+    /// ✏️ Warning `mutation.no-op` if `config` already equals `base` (empty diff), else the
+    /// whole-snapshot replacement.
+    fn diff(&self, base: &ArchitectConfig) -> protocol::MutationOutcome<ArchitectConfig> {
         match self {
-            ArchitectConfigMutation::Snapshot { config } => config.clone(),
+            ArchitectConfigMutation::Snapshot { config } => {
+                if config == base {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", "Config already matches the requested value.");
+                }
+                protocol::MutationOutcome::new(config.clone())
+            }
         }
     }
 
@@ -238,7 +245,7 @@ mod tests {
         let base = ArchitectConfig::default();
         let next = ArchitectConfig { search_query: "hall".into(), ..ArchitectConfig::default() };
         let operation = ArchitectConfigMutation::Snapshot { config: next.clone() };
-        assert_eq!(operation.diff(&base), next);
+        assert_eq!(operation.diff(&base).diff(), &next);
         assert_eq!(operation.inverse(&base), vec![ArchitectConfigMutation::Snapshot { config: base }]);
     }
 

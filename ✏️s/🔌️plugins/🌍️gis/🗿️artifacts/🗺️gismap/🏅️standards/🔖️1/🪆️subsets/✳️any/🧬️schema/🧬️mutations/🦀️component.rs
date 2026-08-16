@@ -53,11 +53,12 @@ mod tests {
     use store::{create_document_envelope, ArtifactCommand};
 
     fn round_trip(document: &GisMapSnapshot, operation: &GisMapMutation) -> GisMapSnapshot {
-        let forward = vcs::apply_mutation(document, operation);
+        let (forward, _messages) = vcs::apply_mutation(document, operation);
         let backwards = operation.inverse(document);
         let mut restored = forward.clone();
         for back in &backwards {
-            restored = vcs::apply_mutation(&restored, back);
+            let (next, _messages) = vcs::apply_mutation(&restored, back);
+            restored = next;
         }
         assert_eq!(&restored, document, "inverse must exactly restore the pre-operation document");
         forward
@@ -105,8 +106,8 @@ mod tests {
         let base = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() });
         let mutation = GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 1, item: feature("p2") });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 2, item: feature("p3") }).diff(&base);
+        let d1 = mutation.diff(&base).into_parts().0;
+        let d2 = GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 2, item: feature("p3") }).diff(&base).into_parts().0;
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -122,8 +123,8 @@ mod tests {
         let base = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { regions: vec![feature("g1")], ..Default::default() });
         let mutation = GisMapMutation::ReplaceRegionData(replace_region_data::mutation::ReplaceRegionData { id: "g1".into(), new_data: dsl_of(&json!({ "kind": "boundary" })) });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = GisMapMutation::ReplaceRegionData(replace_region_data::mutation::ReplaceRegionData { id: "g1".into(), new_data: dsl_of(&json!({ "kind": "district" })) }).diff(&base);
+        let d1 = mutation.diff(&base).into_parts().0;
+        let d2 = GisMapMutation::ReplaceRegionData(replace_region_data::mutation::ReplaceRegionData { id: "g1".into(), new_data: dsl_of(&json!({ "kind": "district" })) }).diff(&base).into_parts().0;
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -152,11 +153,47 @@ mod tests {
             .expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").positions.len(), 1);
     }
+
+    //#region 🔖️OutcomeLaws
+    /// 🪧 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS Pass 3 — one test per
+    /// verb family, calling the testkit laws landed under their frozen names
+    /// (`assert_missing_target_is_error`/`assert_fatal_never_applies`,
+    /// `📡️spr/🧪️testkit/🦀️component.rs`). `assert_outcome_policy_matrix` is not landed under that
+    /// name (only the differently-shaped `assert_policy_matrix`) — see this lane's report.
+    #[test]
+    fn delete_position_missing_target_is_error() {
+        let base = GisMapSnapshot::default();
+        let mutation = GisMapMutation::DeletePosition(delete_position::mutation::DeletePosition { id: "gone".into() });
+        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[test]
+    fn reorder_positions_missing_target_is_error() {
+        let base = GisMapSnapshot::default();
+        let mutation = GisMapMutation::ReorderPositions(reorder_positions::mutation::ReorderPositions { id: "gone".into(), to_index: 0 });
+        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[test]
+    fn replace_route_data_missing_target_is_error() {
+        let base = GisMapSnapshot::default();
+        let mutation = GisMapMutation::ReplaceRouteData(replace_route_data::mutation::ReplaceRouteData { id: "gone".into(), new_data: dsl::DslValue::Null });
+        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[test]
+    fn create_position_duplicate_id_fatal_never_applies() {
+        let base = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() });
+        let mutation = GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: feature("p1") });
+        protocol::testkit::assert_fatal_never_applies(&Mutation::diff(&mutation, &base));
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🔹Tests
 
 pub fn apply_gis_map_mutation(snapshot: &mut GisMapSnapshot, mutation: &GisMapMutation) {
-    *snapshot = vcs::apply_mutation(snapshot, mutation);
+    let (next, _messages) = vcs::apply_mutation(snapshot, mutation);
+    *snapshot = next;
     // 🕸️ `drawing`/`value` are pure functions of `(positions, routes, regions)` — re-derive them
     // after every mutation so the composed children never drift from what they actually describe
     // (see `crate::artifacts::gismap::🦀️component.rs`'s `🔖️Composition` region doc).

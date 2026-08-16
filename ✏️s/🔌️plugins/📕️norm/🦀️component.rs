@@ -4,12 +4,11 @@ use semio_framework_plugin::{Plugin, PluginAssemblyError};
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) replaces the deleted `register_norm_exports`
-/// `.setup()` fan-out with fifteen data declarations, one per norm family. `.setup()` is gone
-/// entirely (W1d): the one remaining reason, the shared `NormConfig` config/presence schema every
-/// one of the fifteen `PlayApp`s uses, is now an `ArtifactApp::app_schema()` override on each of the
-/// fifteen — all fifteen return the identical `crate::config::schema::app_schema_descriptor()`
-/// literal, and `register_document_app` (called once per `.document_app::<…>()` below)
-/// registers it, mirroring the `🗒️note` exemplar exactly.
+/// `.setup()` fan-out with fifteen data declarations, one per norm family. `.editor(…)`/`.viewer(…)`
+/// (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET) replace the retired `.document_app(…)`
+/// call per family with the role-split pair — the shared `NormConfig`/`NormPresence` config/presence
+/// schema every one of the fifteen `PlayApp`s uses is still registered idempotently by whichever
+/// editor binds first (`ArtifactEditor::app_schema()` override), mirroring the `🗒️note` exemplar.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     let din4108 = crate::artifacts::din4108::declaration(crate::artifacts::din4108::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     let din16798 = crate::artifacts::din16798::declaration(crate::artifacts::din16798::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
@@ -44,20 +43,72 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .artifact(en1999)
         .artifact(iso16757)
         .artifact(vdi3805)
-        .document_app::<crate::apps::din4108::Din4108PlayApp>(crate::apps::din4108::create_din4108_app())
-        .document_app::<crate::apps::din16798::Din16798PlayApp>(crate::apps::din16798::create_din16798_app())
-        .document_app::<crate::apps::din18599::Din18599PlayApp>(crate::apps::din18599::create_din18599_app())
-        .document_app::<crate::apps::en1990::En1990PlayApp>(crate::apps::en1990::create_en1990_app())
-        .document_app::<crate::apps::en1991::En1991PlayApp>(crate::apps::en1991::create_en1991_app())
-        .document_app::<crate::apps::en1992::En1992PlayApp>(crate::apps::en1992::create_en1992_app())
-        .document_app::<crate::apps::en1993::En1993PlayApp>(crate::apps::en1993::create_en1993_app())
-        .document_app::<crate::apps::en1994::En1994PlayApp>(crate::apps::en1994::create_en1994_app())
-        .document_app::<crate::apps::en1995::En1995PlayApp>(crate::apps::en1995::create_en1995_app())
-        .document_app::<crate::apps::en1996::En1996PlayApp>(crate::apps::en1996::create_en1996_app())
-        .document_app::<crate::apps::en1997::En1997PlayApp>(crate::apps::en1997::create_en1997_app())
-        .document_app::<crate::apps::en1998::En1998PlayApp>(crate::apps::en1998::create_en1998_app())
-        .document_app::<crate::apps::en1999::En1999PlayApp>(crate::apps::en1999::create_en1999_app())
-        .document_app::<crate::apps::iso16757::Iso16757PlayApp>(crate::apps::iso16757::create_iso16757_app())
-        .document_app::<crate::apps::vdi3805::Vdi3805PlayApp>(crate::apps::vdi3805::create_vdi3805_app())
+        .editor::<crate::editor::din4108::Din4108PlayApp>(crate::editor::din4108::create_din4108_app())
+        .viewer::<crate::viewer::din4108::Din4108Viewer>(crate::viewer::din4108::create_din4108_viewer())
+        .editor::<crate::editor::din16798::Din16798PlayApp>(crate::editor::din16798::create_din16798_app())
+        .viewer::<crate::viewer::din16798::Din16798Viewer>(crate::viewer::din16798::create_din16798_viewer())
+        .editor::<crate::editor::din18599::Din18599PlayApp>(crate::editor::din18599::create_din18599_app())
+        .viewer::<crate::viewer::din18599::Din18599Viewer>(crate::viewer::din18599::create_din18599_viewer())
+        .editor::<crate::editor::en1990::En1990PlayApp>(crate::editor::en1990::create_en1990_app())
+        .viewer::<crate::viewer::en1990::En1990Viewer>(crate::viewer::en1990::create_en1990_viewer())
+        .editor::<crate::editor::en1991::En1991PlayApp>(crate::editor::en1991::create_en1991_app())
+        .viewer::<crate::viewer::en1991::En1991Viewer>(crate::viewer::en1991::create_en1991_viewer())
+        .editor::<crate::editor::en1992::En1992PlayApp>(crate::editor::en1992::create_en1992_app())
+        .viewer::<crate::viewer::en1992::En1992Viewer>(crate::viewer::en1992::create_en1992_viewer())
+        .editor::<crate::editor::en1993::En1993PlayApp>(crate::editor::en1993::create_en1993_app())
+        .viewer::<crate::viewer::en1993::En1993Viewer>(crate::viewer::en1993::create_en1993_viewer())
+        .editor::<crate::editor::en1994::En1994PlayApp>(crate::editor::en1994::create_en1994_app())
+        .viewer::<crate::viewer::en1994::En1994Viewer>(crate::viewer::en1994::create_en1994_viewer())
+        .editor::<crate::editor::en1995::En1995PlayApp>(crate::editor::en1995::create_en1995_app())
+        .viewer::<crate::viewer::en1995::En1995Viewer>(crate::viewer::en1995::create_en1995_viewer())
+        .editor::<crate::editor::en1996::En1996PlayApp>(crate::editor::en1996::create_en1996_app())
+        .viewer::<crate::viewer::en1996::En1996Viewer>(crate::viewer::en1996::create_en1996_viewer())
+        .editor::<crate::editor::en1997::En1997PlayApp>(crate::editor::en1997::create_en1997_app())
+        .viewer::<crate::viewer::en1997::En1997Viewer>(crate::viewer::en1997::create_en1997_viewer())
+        .editor::<crate::editor::en1998::En1998PlayApp>(crate::editor::en1998::create_en1998_app())
+        .viewer::<crate::viewer::en1998::En1998Viewer>(crate::viewer::en1998::create_en1998_viewer())
+        .editor::<crate::editor::en1999::En1999PlayApp>(crate::editor::en1999::create_en1999_app())
+        .viewer::<crate::viewer::en1999::En1999Viewer>(crate::viewer::en1999::create_en1999_viewer())
+        .editor::<crate::editor::iso16757::Iso16757PlayApp>(crate::editor::iso16757::create_iso16757_app())
+        .viewer::<crate::viewer::iso16757::Iso16757Viewer>(crate::viewer::iso16757::create_iso16757_viewer())
+        .editor::<crate::editor::vdi3805::Vdi3805PlayApp>(crate::editor::vdi3805::create_vdi3805_app())
+        .viewer::<crate::viewer::vdi3805::Vdi3805Viewer>(crate::viewer::vdi3805::create_vdi3805_viewer())
         .try_build()
 }
+
+//#region 🧪️SurfaceTests
+#[cfg(test)]
+mod surface_tests {
+    //! 🧪️ `assert_viewer_never_mutates`/`assert_editor_and_viewer_share_dialect` (contract §2.5) —
+    //! local stand-ins per the pilot's `📓️w2-cad-report.md` "SDK gaps" #2: as of this packet's W0-F
+    //! handoff, the canonical `semio_framework_plugin::testkit` versions exist
+    //! (`👁️✏️SurfaceTestkit` region) and are used directly here rather than re-invented.
+    use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
+
+    macro_rules! surface_law {
+        ($name:ident, $editor:ty, $viewer:ty) => {
+            #[test]
+            fn $name() {
+                assert_viewer_never_mutates::<$viewer>();
+                assert_editor_and_viewer_share_dialect::<$editor, $viewer>();
+            }
+        };
+    }
+
+    surface_law!(din4108_surface_laws_hold, crate::editor::din4108::Din4108PlayApp, crate::viewer::din4108::Din4108Viewer);
+    surface_law!(din16798_surface_laws_hold, crate::editor::din16798::Din16798PlayApp, crate::viewer::din16798::Din16798Viewer);
+    surface_law!(din18599_surface_laws_hold, crate::editor::din18599::Din18599PlayApp, crate::viewer::din18599::Din18599Viewer);
+    surface_law!(en1990_surface_laws_hold, crate::editor::en1990::En1990PlayApp, crate::viewer::en1990::En1990Viewer);
+    surface_law!(en1991_surface_laws_hold, crate::editor::en1991::En1991PlayApp, crate::viewer::en1991::En1991Viewer);
+    surface_law!(en1992_surface_laws_hold, crate::editor::en1992::En1992PlayApp, crate::viewer::en1992::En1992Viewer);
+    surface_law!(en1993_surface_laws_hold, crate::editor::en1993::En1993PlayApp, crate::viewer::en1993::En1993Viewer);
+    surface_law!(en1994_surface_laws_hold, crate::editor::en1994::En1994PlayApp, crate::viewer::en1994::En1994Viewer);
+    surface_law!(en1995_surface_laws_hold, crate::editor::en1995::En1995PlayApp, crate::viewer::en1995::En1995Viewer);
+    surface_law!(en1996_surface_laws_hold, crate::editor::en1996::En1996PlayApp, crate::viewer::en1996::En1996Viewer);
+    surface_law!(en1997_surface_laws_hold, crate::editor::en1997::En1997PlayApp, crate::viewer::en1997::En1997Viewer);
+    surface_law!(en1998_surface_laws_hold, crate::editor::en1998::En1998PlayApp, crate::viewer::en1998::En1998Viewer);
+    surface_law!(en1999_surface_laws_hold, crate::editor::en1999::En1999PlayApp, crate::viewer::en1999::En1999Viewer);
+    surface_law!(iso16757_surface_laws_hold, crate::editor::iso16757::Iso16757PlayApp, crate::viewer::iso16757::Iso16757Viewer);
+    surface_law!(vdi3805_surface_laws_hold, crate::editor::vdi3805::Vdi3805PlayApp, crate::viewer::vdi3805::Vdi3805Viewer);
+}
+//#endregion 🧪️SurfaceTests

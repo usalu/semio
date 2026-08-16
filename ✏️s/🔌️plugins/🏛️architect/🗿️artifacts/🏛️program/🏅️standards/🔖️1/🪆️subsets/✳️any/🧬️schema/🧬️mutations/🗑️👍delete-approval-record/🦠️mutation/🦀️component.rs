@@ -18,7 +18,7 @@ pub struct DeleteApprovalRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteApprovalRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "approval-record", kind: "delete-approval-record", record: "DeletedApprovalRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

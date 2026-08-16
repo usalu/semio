@@ -1,0 +1,13 @@
+# delete-buffer-view typed diff facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfBufferViewValueV1
+input GltfDeleteBufferViewPayloadV1 {
+  index: Int!
+}
+type GltfDeleteBufferViewDiffOperationV1 {
+  kind: String!
+  index: Int!
+  removed: GltfBufferViewValueV1!
+}
+type GltfDeleteBufferViewDiffV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfDeleteBufferViewPayloadV1!, operation: GltfDeleteBufferViewDiffOperationV1! }

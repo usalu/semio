@@ -21,7 +21,7 @@ pub fn delete_grip_kind(id: String) -> Block5dMutation {
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for DeleteGripKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "grip-kind", kind: "delete-grip-kind", record: "DeletedGripKind" };
 
-    fn diff(&self, base: &Block5dSnapshot) -> Block5dDiff {
+    fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {

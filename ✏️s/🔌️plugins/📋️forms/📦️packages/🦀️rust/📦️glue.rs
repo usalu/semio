@@ -335,92 +335,92 @@ pub mod artifacts {
 
 //#endregion 🗿️Artifacts
 
-//#region 🎛️Apps
+//#region ✏️Editor
 #[path = "."]
-pub mod apps {
+pub mod editor {
     #[path = "."]
     pub mod forms {
-        #[path = "../../🎛️apps/📋️forms/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/📋️forms/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/📋️forms/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/📋️forms/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/📋️forms/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
-        #[path = "../../🎛️apps/📋️forms/🗣️terminology/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/🧪️set-try-value/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-value/🦀️component.rs"]
             pub mod set_try_value;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/🧪️set-try-values/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-values/🦀️component.rs"]
             pub mod set_try_values;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/🧪️reset-try/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️reset-try/🦀️component.rs"]
             pub mod reset_try;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/🧪️previous-step/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️previous-step/🦀️component.rs"]
             pub mod previous_step;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/🧪️next-step/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️next-step/🦀️component.rs"]
             pub mod next_step;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/🧪️submit/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️submit/🦀️component.rs"]
             pub mod submit;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/🧩️set-contributions/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️component.rs"]
             pub mod set_contributions;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/📃️add-step/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📃️add-step/🦀️component.rs"]
             pub mod add_step;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/📃️patch-step/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📃️patch-step/🦀️component.rs"]
             pub mod patch_step;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/📃️remove-step/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📃️remove-step/🦀️component.rs"]
             pub mod remove_step;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/📃️move-step/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📃️move-step/🦀️component.rs"]
             pub mod move_step;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/📃️update-form/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📃️update-form/🦀️component.rs"]
             pub mod update_form;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/❓️add-question/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❓️add-question/🦀️component.rs"]
             pub mod add_question;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/❓️remove-question/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❓️remove-question/🦀️component.rs"]
             pub mod remove_question;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/❓️patch-questions/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❓️patch-questions/🦀️component.rs"]
             pub mod patch_questions;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/❓️move-question/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❓️move-question/🦀️component.rs"]
             pub mod move_question;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/❓️drop-question-kind/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❓️drop-question-kind/🦀️component.rs"]
             pub mod drop_question_kind;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/🔘️patch-question-options/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔘️patch-question-options/🦀️component.rs"]
             pub mod patch_question_options;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/🔘️add-question-option/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔘️add-question-option/🦀️component.rs"]
             pub mod add_question_option;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/🔘️remove-question-option/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔘️remove-question-option/🦀️component.rs"]
             pub mod remove_question_option;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/📐️patch-vector-field/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️patch-vector-field/🦀️component.rs"]
             pub mod patch_vector_field;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/📐️add-vector-field/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️add-vector-field/🦀️component.rs"]
             pub mod add_vector_field;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/📐️remove-vector-field/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️remove-vector-field/🦀️component.rs"]
             pub mod remove_vector_field;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/📥️set-spec-json/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️set-spec-json/🦀️component.rs"]
             pub mod set_spec_json;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/📥️set-active-example/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️set-active-example/🦀️component.rs"]
             pub mod set_active_example;
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/📤️export-fixture/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-fixture/🦀️component.rs"]
             pub mod export_fixture;
         }
 
@@ -428,15 +428,15 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod blueprint {
-                #[path = "../../🎛️apps/📋️forms/🎭️modes/📝️blueprint/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/📋️forms/🎭️modes/📝️blueprint/🪟️windows/🧱️builder/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/🧱️builder/🦀️component.rs"]
                     pub mod builder;
-                    #[path = "../../🎛️apps/📋️forms/🎭️modes/📝️blueprint/🪟️windows/▶️try/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try/🦀️component.rs"]
                     pub mod try_wizard;
                 }
             }
@@ -444,16 +444,44 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/📋️forms/📌️panels/📄️artifact/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
-            #[path = "../../🎛️apps/📋️forms/📌️panels/🛍️catalogue/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs"]
             pub mod catalogue;
-            #[path = "../../🎛️apps/📋️forms/📌️panels/🔍️inspection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;
         }
     }
 }
-//#endregion 🎛️Apps
+//#endregion ✏️Editor
+
+//#region 👁️Viewer
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod forms {
+        #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/▶️try/🦀️component.rs"]
+                    pub mod try_wizard;
+                }
+            }
+        }
+    }
+}
+//#endregion 👁️Viewer
 
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
@@ -468,7 +496,7 @@ pub mod examples {
     #[cfg(test)]
     #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_forms_demo_tests;
-    #[path = "../../🎛️apps/📋️forms/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_forms_demo_session;
 }
 //#endregion 📚️Examples

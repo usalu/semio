@@ -24,7 +24,7 @@ pub fn edit_text(text: String) -> WriterMutation {
 impl MutationKind<WriterSnapshot, WriterMutation> for EditText {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "text", kind: "edit-text", record: "EditedText" };
 
-    fn diff(&self, base: &WriterSnapshot) -> WriterDiff {
+    fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
         super::diff::diff(self, base)
     }
 

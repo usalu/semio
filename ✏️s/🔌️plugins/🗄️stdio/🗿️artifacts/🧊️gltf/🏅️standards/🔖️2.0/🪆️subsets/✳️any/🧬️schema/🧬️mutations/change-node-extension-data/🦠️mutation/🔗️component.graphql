@@ -1,0 +1,6 @@
+# change-node-extension-data mutation facet.
+input GltfChangeNodeExtensionDataPayloadV1 {
+  node: Int!
+  data: GltfDataPresenceInput!
+}
+type GltfChangeNodeExtensionDataMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

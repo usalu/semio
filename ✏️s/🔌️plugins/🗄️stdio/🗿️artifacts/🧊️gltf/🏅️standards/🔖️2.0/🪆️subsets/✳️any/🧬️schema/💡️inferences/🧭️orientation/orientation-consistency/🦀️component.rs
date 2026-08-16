@@ -1,14 +1,21 @@
 //! 💡️ orientation-consistency atomic glTF inference leaf.
-use super::super::{geometry_core::GltfGeometryContext, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
-use super::super::super::modules::{inference_measures::{exact, unavailable}, measurement_contracts::*, mesh_topology::Topology};
+use super::super::super::modules::{
+    inference_measures::{exact, unavailable},
+    measurement_contracts::*,
+    mesh_topology::Topology,
+};
+use super::super::{geometry_core::GltfGeometryContext, GltfEntityIndicators, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
 
 pub struct GltfOrientationConsistencyInference;
 
 impl GltfInferenceLeaf for GltfOrientationConsistencyInference {
-    const DESCRIPTOR: GltfInferenceLeafDescriptor = GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.orientation-consistency.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.orientation-consistency.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
+    const DESCRIPTOR: GltfInferenceLeafDescriptor =
+        GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.orientation-consistency.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.orientation-consistency.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
 
-pub fn descriptor() -> GltfInferenceLeafDescriptor { GltfOrientationConsistencyInference::DESCRIPTOR }
+pub fn descriptor() -> GltfInferenceLeafDescriptor {
+    GltfOrientationConsistencyInference::DESCRIPTOR
+}
 
 pub fn infer_pair(pair: &super::super::geometry_core::GltfPairGeometry) -> GltfMeasure<f64> {
     unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), pair.sample_count, None)
@@ -26,7 +33,7 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
 }
 
 pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
-    serde_json::to_value(&indicators.orientation.orientationConsistency)
+    serde_json::to_value(&indicators.orientation.orientation_consistency)
 }
 
 #[cfg(test)]

@@ -27,6 +27,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/graphql-go/graphql"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/spf13/cobra"
 	_ "modernc.org/sqlite"
@@ -578,7 +579,7 @@ func TestMcpBootstrapAssetsStayRepoRelative(t *testing.T) {
 			path: filepath.Join(repoRoot, ".devcontainer", "post-create.sh"),
 			requiredFragments: []string{
 				`🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client`,
-				`🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📦️packages/🐹️go`,
+				`./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp`,
 				"bun nx run workspace:setup",
 			},
 			forbiddenFragments: []string{
@@ -591,7 +592,7 @@ func TestMcpBootstrapAssetsStayRepoRelative(t *testing.T) {
 			path: filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔩️native", "🥾️bootstrap", "⌨️script.sh"),
 			requiredFragments: []string{
 				`🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client`,
-				`🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📦️packages/🐹️go`,
+				`./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp`,
 				"bun nx run workspace:setup",
 			},
 			forbiddenFragments: []string{
@@ -604,7 +605,7 @@ func TestMcpBootstrapAssetsStayRepoRelative(t *testing.T) {
 			path: filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔩️native", "🥾️bootstrap", "🪟️script.ps1"),
 			requiredFragments: []string{
 				`🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client.exe`,
-				`./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📦️packages/🐹️go`,
+				`./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp`,
 				`@("nx", "run", "workspace:setup")`,
 			},
 			forbiddenFragments: []string{
@@ -6532,7 +6533,7 @@ func TestTicketListCommand(t *testing.T) {
 }
 
 func TestTicketOpenNoticketKeyword(t *testing.T) {
-	result := ToolTicketOpen("🎫️", "Skip Ticket", "NOTICKET skip ticket creation", "gpt-5-mini", "codex", "", true, "", "", false, "", McpClientGeneric, "", "")
+	result := ToolTicketOpen("🎫️", "Skip Ticket", "NOTICKET skip ticket creation", "gpt-5-mini", "", "codex", "", true, "", "", false, "", McpClientGeneric, "", "")
 	if result.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
 	}
@@ -6557,7 +6558,7 @@ func TestTicketOpenContinueKeyword(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(tmpDir, ".🦑️repo", "🎫️tickets"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	first := ToolTicketOpen("🌱️", "Seed Ticket", "Seed prompt", "gpt-5-mini", "codex", "", true, "TEST-GOAL", "", false, "", McpClientGeneric, "", "")
+	first := ToolTicketOpen("🌱️", "Seed Ticket", "Seed prompt", "gpt-5-mini", "", "codex", "", true, "TEST-GOAL", "", false, "", McpClientGeneric, "", "")
 	if first.Error != "" {
 		t.Fatalf("failed to seed ticket: %s", first.Error)
 	}
@@ -6565,7 +6566,7 @@ func TestTicketOpenContinueKeyword(t *testing.T) {
 	if !ok || seed == nil {
 		t.Fatalf("expected seeded ticket data")
 	}
-	second := ToolTicketOpen("🎫️", "Continue Ticket", "CONTINUE follow-up", "gpt-5-mini", "codex", "", true, "TEST-GOAL", "", false, "", McpClientGeneric, "", "")
+	second := ToolTicketOpen("🎫️", "Continue Ticket", "CONTINUE follow-up", "gpt-5-mini", "", "codex", "", true, "TEST-GOAL", "", false, "", McpClientGeneric, "", "")
 	if second.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", second.Error)
 	}
@@ -10866,14 +10867,14 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	goal, err := OpenGoal("Goal Title", "Goal Description", "Goal Prompt", "2026-02-15", "copilot-chat", "gemini-3-pro", true)
+	goal, err := OpenGoal("Goal Title", "Goal Description", "Goal Prompt", "2026-02-15", "copilot-chat", "gemini-3-pro", "", true)
 	if err != nil {
 		t.Fatalf("OpenGoal failed: %v", err)
 	}
 
 	testSessionIDOverride = "session-open-1"
 	defer func() { testSessionIDOverride = "" }()
-	ticket, err := OpenTicket("🎫️", "Test Title NoGH", "Test Prompt", "gemini-3-pro", "copilot-chat", "", false, goal.ID, "", true, "", McpClientGeneric, "", "")
+	ticket, err := OpenTicket("🎫️", "Test Title NoGH", "Test Prompt", "gemini-3-pro", "", "copilot-chat", "", false, goal.ID, "", true, "", McpClientGeneric, "", "")
 	if err != nil {
 		t.Fatalf("OpenTicket failed: %v", err)
 	}
@@ -10942,7 +10943,7 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 	}
 
 	testSessionIDOverride = "session-reopen-2"
-	err = ReopenTicket(ticket, "Reopen Prompt", "gemini-3-pro", "copilot-chat", "", "", "", true, McpClientGeneric, "", "")
+	err = ReopenTicket(ticket, "Reopen Prompt", "gemini-3-pro", "", "copilot-chat", "", "", "", true, McpClientGeneric, "", "")
 	if err != nil {
 		t.Fatalf("ReopenTicket failed: %v", err)
 	}
@@ -11067,11 +11068,11 @@ func TestTrackHookInOpenTicketUsesStableSessionIDs(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(tmpDir, ".🦑️repo", "🎫️tickets"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	goal, err := OpenGoal("Hook Goal", "Hook Goal Desc", "Hook Goal Prompt", "2026-02-15", "copilot-chat", "gemini-3-pro", true)
+	goal, err := OpenGoal("Hook Goal", "Hook Goal Desc", "Hook Goal Prompt", "2026-02-15", "copilot-chat", "gemini-3-pro", "", true)
 	if err != nil {
 		t.Fatalf("OpenGoal failed: %v", err)
 	}
-	ticket, err := OpenTicket("🪝️", "Hook Ticket", "Hook Ticket Prompt", "gemini-3-pro", "copilot-chat", "", false, goal.ID, "", true, "", McpClientGeneric, "", "")
+	ticket, err := OpenTicket("🪝️", "Hook Ticket", "Hook Ticket Prompt", "gemini-3-pro", "", "copilot-chat", "", false, goal.ID, "", true, "", McpClientGeneric, "", "")
 	if err != nil {
 		t.Fatalf("OpenTicket failed: %v", err)
 	}
@@ -12674,7 +12675,7 @@ func TestExhaustiveToolTicketLifecycle(t *testing.T) {
 	setupToolTest(t)
 	title := fmt.Sprintf("Test Lifecycle Ticket %d", time.Now().UnixNano())
 
-	result := ToolTicketOpen("🎫️", title, "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "", McpClientGeneric, "", "")
+	result := ToolTicketOpen("🎫️", title, "Test prompt", "sonnet-4-5", "", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "", McpClientGeneric, "", "")
 	if result.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
 	}
@@ -12693,7 +12694,7 @@ func TestExhaustiveToolTicketLifecycle(t *testing.T) {
 		t.Fatalf("ToolTicketClose returned error: %s", closeResult.Error)
 	}
 
-	reopenResult := ToolTicketReopen(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "Reopen prompt", "sonnet-4-5", "windsurf-chat", "", "", "", "", true, McpClientGeneric, "", "")
+	reopenResult := ToolTicketReopen(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "Reopen prompt", "sonnet-4-5", "", "windsurf-chat", "", "", "", "", true, McpClientGeneric, "", "")
 	if reopenResult.Error != "" {
 		t.Fatalf("ToolTicketReopen returned error: %s", reopenResult.Error)
 	}
@@ -12744,7 +12745,7 @@ func TestExhaustiveMcpTicketCloseAutoResolve(t *testing.T) {
 	}
 	setupToolTest(t)
 
-	result := ToolTicketOpen("🎫️", "Test Auto Resolve Close", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "", McpClientGeneric, "", "")
+	result := ToolTicketOpen("🎫️", "Test Auto Resolve Close", "Test prompt", "sonnet-4-5", "", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "", McpClientGeneric, "", "")
 	if result.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
 	}
@@ -12776,7 +12777,7 @@ func TestExhaustiveMcpTicketCloseWithFullYearPath(t *testing.T) {
 	}
 	setupToolTest(t)
 
-	result := ToolTicketOpen("🎫️", "Test Full Year Path", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "", McpClientGeneric, "", "")
+	result := ToolTicketOpen("🎫️", "Test Full Year Path", "Test prompt", "sonnet-4-5", "", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "", McpClientGeneric, "", "")
 	if result.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
 	}
@@ -23364,5 +23365,254 @@ func TestMcpStdioInitializeHandshake(t *testing.T) {
 	}
 	if !strings.Contains(line, `"result"`) || !strings.Contains(line, `jsonrpc`) {
 		t.Fatalf("unexpected initialize response: %s", line)
+	}
+}
+
+// 🧠️TestAllowedLLMsCoverage tests resolution of all latest LLMs across providers.
+func TestAllowedLLMsCoverage(t *testing.T) {
+	testModels := []string{
+		"opus-4-7", "opus-4-6", "opus-4-5", "opus-4-1", "opus-4", "opus-3",
+		"sonnet-5", "sonnet-4-6", "sonnet-4-5", "sonnet-4", "sonnet-3-7", "sonnet-3-5",
+		"haiku-4-5", "haiku-4", "haiku-3-5",
+		"gemini-3-7-pro", "gemini-3-7-flash", "gemini-3-1-pro", "gemini-3-pro", "gemini-3-flash",
+		"gemini-2-5-pro", "gemini-2-5-flash", "gemini-2-5-flash-lite", "gemini-2-pro", "gemini-2-flash", "gemini-2-flash-lite",
+		"gpt-5-5", "gpt-5-4", "gpt-5-3-codex", "gpt-5-2-codex", "gpt-5-2", "gpt-5-1-codex", "gpt-5-1", "gpt-5-codex", "gpt-5", "gpt-5-mini",
+		"o3-pro", "o3-mini", "o3", "o1-pro", "o1-mini", "o1-preview", "o1",
+		"grok-4-5", "grok-4", "grok-3-mini", "grok-3", "grok-2", "cursor-grok-4-5", "cursor-grok-4",
+		"composer-2-5", "composer-2", "composer-1-5", "composer",
+		"deepseek-r1", "deepseek-v3", "deepseek-coder",
+		"llama-4", "llama-3-3", "llama-3-2", "llama-3-1", "llama-3",
+		"qwen-3", "qwen-2-5", "swe-1-5", "swe-1",
+	}
+	for _, model := range testModels {
+		slug, err := ResolveAllowedLLM(model)
+		if err != nil {
+			t.Errorf("ResolveAllowedLLM(%q) failed: %v", model, err)
+		}
+		if slug == "" {
+			t.Errorf("ResolveAllowedLLM(%q) returned empty slug", model)
+		}
+	}
+}
+
+// 🏋️TestResolveAllowedEffort tests reasoning effort resolution and normalization.
+func TestResolveAllowedEffort(t *testing.T) {
+	cases := []struct {
+		input    string
+		expected string
+		wantErr  bool
+	}{
+		{"low", "low", false},
+		{"Low", "low", false},
+		{"MEDIUM", "medium", false},
+		{"high", "high", false},
+		{"Max", "max", false},
+		{"", "", false},
+		{"invalid-effort", "", true},
+		{"extreme", "", true},
+	}
+	for _, tc := range cases {
+		got, err := ResolveAllowedEffort(tc.input)
+		if (err != nil) != tc.wantErr {
+			t.Errorf("ResolveAllowedEffort(%q) error = %v, wantErr %v", tc.input, err, tc.wantErr)
+		}
+		if got != tc.expected {
+			t.Errorf("ResolveAllowedEffort(%q) = %q, want %q", tc.input, got, tc.expected)
+		}
+	}
+}
+
+// 🚩️TestExtractEffortFromArgs tests extracting reasoning effort from command line arguments.
+func TestExtractEffortFromArgs(t *testing.T) {
+	cases := []struct {
+		args     []string
+		expected string
+	}{
+		{[]string{"--effort", "high"}, "high"},
+		{[]string{"--effort=low"}, "low"},
+		{[]string{"--llm", "opus-4-7", "--effort", "max"}, "max"},
+		{[]string{"--other", "val"}, ""},
+	}
+	for _, tc := range cases {
+		cmd := &cobra.Command{}
+		addEffortFlags(cmd)
+		got, _ := extractEffortFromArgs(cmd, tc.args)
+		if got != tc.expected {
+			t.Errorf("extractEffortFromArgs(%v) = %q, want %q", tc.args, got, tc.expected)
+		}
+	}
+}
+
+// 🎫️TestTicketGetEffort tests retrieving effort from Ticket struct interactions.
+func TestTicketGetEffort(t *testing.T) {
+	ticket := &Ticket{
+		Interactions: []Interaction{
+			{Kind: "ticket.open", LLM: "opus-4-7", Effort: "high"},
+		},
+	}
+	if got := ticket.GetEffort(); got != "high" {
+		t.Errorf("ticket.GetEffort() = %q, want 'high'", got)
+	}
+
+	emptyTicket := &Ticket{}
+	if got := emptyTicket.GetEffort(); got != "" {
+		t.Errorf("emptyTicket.GetEffort() = %q, want ''", got)
+	}
+}
+
+// 🧪️TestTicketEffortLifecycle tests full lifecycle preservation of reasoning effort on tickets.
+func TestTicketEffortLifecycle(t *testing.T) {
+	tmpDir := t.TempDir()
+	run := func(name string, args ...string) {
+		execCommandWithTimeout(t, 30*time.Second, tmpDir, nil, name, args...)
+	}
+	run("git", "init")
+	run("git", "config", "user.email", "test@test.com")
+	run("git", "config", "user.name", "Test")
+	run("git", "config", "commit.gpgsign", "false")
+	run("git", "commit", "--allow-empty", "-m", "initial")
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".🦑️repo", "🎫️tickets"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	result := ToolTicketOpen("🎫️", "Test Effort Ticket", "Prompt with high effort", "opus-4-7", "high", "copilot-chat", "", true, "TEST-GOAL", "", false, "", McpClientGeneric, "", "")
+	if result.Error != "" {
+		t.Fatalf("ToolTicketOpen error: %s", result.Error)
+	}
+	ticket, ok := result.Data.(*Ticket)
+	if !ok || ticket == nil {
+		t.Fatal("expected valid ticket")
+	}
+	if ticket.GetEffort() != "high" {
+		t.Errorf("ticket.GetEffort() = %q, want 'high'", ticket.GetEffort())
+	}
+	if ticket.GetLLM() != "opus-4-7" {
+		t.Errorf("ticket.GetLLM() = %q, want 'opus-4-7'", ticket.GetLLM())
+	}
+
+	testFile := "work.txt"
+	if err := os.WriteFile(filepath.Join(tmpDir, testFile), []byte("done"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	run("git", "add", testFile)
+	run("git", "commit", "-m", "work done")
+
+	closeResult := ToolTicketClose(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "Close effort ticket", []string{testFile}, "", true)
+	if closeResult.Error != "" {
+		t.Fatalf("ToolTicketClose error: %s", closeResult.Error)
+	}
+
+	reopenResult := ToolTicketReopen(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "Reopen with max effort", "gemini-3-7-pro", "max", "copilot-chat", "", "", "", "", true, McpClientGeneric, "", "")
+	if reopenResult.Error != "" {
+		t.Fatalf("ToolTicketReopen error: %s", reopenResult.Error)
+	}
+	reopenedTicket, ok := reopenResult.Data.(*Ticket)
+	if !ok || reopenedTicket == nil {
+		t.Fatal("expected valid reopened ticket")
+	}
+	if reopenedTicket.GetEffort() != "max" {
+		t.Errorf("reopenedTicket.GetEffort() = %q, want 'max'", reopenedTicket.GetEffort())
+	}
+	if reopenedTicket.GetLLM() != "gemini-3-7-pro" {
+		t.Errorf("reopenedTicket.GetLLM() = %q, want 'gemini-3-7-pro'", reopenedTicket.GetLLM())
+	}
+}
+
+// 🌐️TestGraphQLEffortMutationsAndQueries tests that GraphQL mutations and queries support reasoning effort.
+func TestGraphQLEffortMutationsAndQueries(t *testing.T) {
+	tmpDir := t.TempDir()
+	run := func(name string, args ...string) {
+		execCommandWithTimeout(t, 30*time.Second, tmpDir, nil, name, args...)
+	}
+	run("git", "init")
+	run("git", "config", "user.email", "test@test.com")
+	run("git", "config", "user.name", "Test")
+	run("git", "config", "commit.gpgsign", "false")
+	run("git", "commit", "--allow-empty", "-m", "initial")
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".🦑️repo", "🎫️tickets"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	schema, err := buildSchema(NewResolver(tmpDir))
+	if err != nil {
+		t.Fatalf("buildSchema failed: %v", err)
+	}
+
+	goalMutation := `
+		mutation {
+			goalCreate(input: {
+				title: "GQL Goal",
+				description: "GQL Goal Desc",
+				prompt: "GQL Goal Prompt",
+				dueDate: "2026-12-31",
+				client: "copilot-chat",
+				llm: "gemini-3-7-pro",
+				effort: "high",
+				noManagement: true
+			}) {
+				id
+				title
+				llm
+				effort
+			}
+		}
+	`
+	result := graphql.Do(graphql.Params{
+		Schema:        schema,
+		RequestString: goalMutation,
+		Context:       context.Background(),
+	})
+	if len(result.Errors) > 0 {
+		t.Fatalf("goalCreate GraphQL errors: %v", result.Errors)
+	}
+	goalData := result.Data.(map[string]interface{})["goalCreate"].(map[string]interface{})
+	if goalData["effort"] != "high" {
+		t.Errorf("goal.effort = %v, want 'high'", goalData["effort"])
+	}
+	if goalData["llm"] != "gemini-3-7-pro" {
+		t.Errorf("goal.llm = %v, want 'gemini-3-7-pro'", goalData["llm"])
+	}
+
+	ticketMutation := `
+		mutation {
+			ticketOpen(input: {
+				emoji: "🎫️",
+				title: "GQL Ticket",
+				prompt: "GQL Ticket Prompt",
+				client: COPILOT_CHAT,
+				llm: "opus-4-7",
+				effort: "max",
+				goal: "GQL-GOAL",
+				noManagement: true
+			}) {
+				year
+				month
+				day
+				slug
+				effort
+				llm
+			}
+		}
+	`
+	tResult := graphql.Do(graphql.Params{
+		Schema:        schema,
+		RequestString: ticketMutation,
+		Context:       context.Background(),
+	})
+	if len(tResult.Errors) > 0 {
+		t.Fatalf("ticketOpen GraphQL errors: %v", tResult.Errors)
+	}
+	ticketData := tResult.Data.(map[string]interface{})["ticketOpen"].(map[string]interface{})
+	if ticketData["effort"] != "max" {
+		t.Errorf("ticket.effort = %v, want 'max'", ticketData["effort"])
+	}
+	if ticketData["llm"] != "opus-4-7" {
+		t.Errorf("ticket.llm = %v, want 'opus-4-7'", ticketData["llm"])
 	}
 }

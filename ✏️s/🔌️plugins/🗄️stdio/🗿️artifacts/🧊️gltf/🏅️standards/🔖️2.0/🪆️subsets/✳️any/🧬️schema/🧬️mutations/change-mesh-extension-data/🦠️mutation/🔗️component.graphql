@@ -1,0 +1,6 @@
+# change-mesh-extension-data mutation facet.
+input GltfChangeMeshExtensionDataPayloadV1 {
+  mesh: Int!
+  data: GltfDataPresenceInput!
+}
+type GltfChangeMeshExtensionDataMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

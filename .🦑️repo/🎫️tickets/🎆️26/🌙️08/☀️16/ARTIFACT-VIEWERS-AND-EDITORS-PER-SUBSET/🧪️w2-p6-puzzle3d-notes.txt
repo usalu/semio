@@ -1,0 +1,107 @@
+W2-P6 puzzle plugin, 3d artifact kind (puzzle3d) — scratch notes
+
+Confirmed paths (via find, never hand-typed after this):
+- App source (now empty, moved out): /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d
+- Artifact root: /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️component.rs
+- Subset root: /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any
+  - editor: .../✳️any/✏️editor
+  - viewer: .../✳️any/👁️viewer
+
+Move: 109 real files moved intact from 🎛️apps/🧊️3d into ✳️any/✏️editor (structure preserved:
+⏳️precompute, 🌉️wasm, 🎚️config+schema, 🎭️modes/✏️edit/{component.rs, 🎚️options/*, 🛠️tools/🪣️fill,
+🪟️windows/🧊️main/{component.rs, 🪛️utilities/*}}, 🎮️commands/* (85 groups), 👥️presence+schema,
+📌️panels/* (4), 📚️examples/🎬️demo-session, 🗣️terminology). Scaffold placeholders (SCAFFOLD=true
+leaves, empty.md markers about to be filled) deleted first via rm -rf before mv.
+
+Mechanical rename: crate::apps::puzzle3d:: -> crate::editor::puzzle3d:: across the whole moved tree —
+224 occurrences across 77 files, verified 0 remaining crate::apps::puzzle3d:: refs. Used a small
+Python script (not sed/perl — those choked on the emoji filenames in this shell) driven by os.walk,
+idempotent.
+
+Verification trick used: for every moved file, fetched the ORIGINAL content from `git show HEAD:<old
+apps path>`, reverted the crate::editor::puzzle3d:: rename back to crate::apps::puzzle3d:: in the
+moved copy, and diffed against the git original. 90/93 matched byte-for-byte (mechanical rename only).
+The 3 that didn't: the root component.rs (my own intentional trait/manifest/testkit edits, expected)
+and 🎚️config/🦀️component.rs + 👥️presence/🦀️component.rs — those two differ from git HEAD in their
+OWN `Mutation::diff` return shape (bare Diff -> protocol::MutationOutcome<Diff>), which is the
+26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS ticket's live concurrent refactor,
+ALREADY present in the working tree before I ever touched these files (confirmed: my only text
+operation on them was the crate::apps->crate::editor substring replace, and the diff shows a totally
+unrelated code shape). Not mine, not reverted, not touched further.
+
+Emoji-typo trap hit ONCE, self-caught immediately: typed "🏅️标准" (Chinese) instead of "🏅️standards"
+(Latin) as a literal file_path argument to Write, creating a wrong sibling
+.../🗿️artifacts/🧊️3d/🏅️标准/... tree. Caught via `ls -la` immediately after (saw the duplicate
+🏅️standards-looking dir with different bytes), rm -rf'd it before it could do any damage, then
+switched to a bash heredoc (`cat > "$VIEWER/..."`) using the shell variable for every subsequent new
+file instead of hand-typing the emoji path again.
+
+⏳️precompute: moved whole into ✏️editor/⏳️precompute/ (no taxonomy slot, matches pilot recipe step 4).
+Confirmed only editor-side files reference it (app root, fill tool, main window, brush utility — all
+inside the moved tree). Checked 🧬️schema/💡️inferences for a dependency on precompute: none, so no
+pilot-style layering wrinkle here.
+
+kit_catalog_artifact_kind(): confirmed it does NOT reference crate::apps::puzzle3d:: at all (checked
+via grep before touching) — left completely untouched, per the ticket's own conditional instruction.
+
+Outside-lease referrers found (reported in final message, NOT fixed — out of my lease):
+1. ✏️s/🔌️plugins/🧩️puzzle/🦀️component.rs:44 (plugin root) — `.document_app::<crate::apps::puzzle3d::
+   Puzzle3dPlayApp>(crate::apps::puzzle3d::create_puzzle3d_app())`. Expected: this is the coordinator's
+   own wiring job (explicitly listed as off-limits to me).
+2. ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️precompute/
+   🦀️component.rs:20,31 — puzzle5d's own editor tree (SIBLING agent's kind, explicitly off-limits to
+   me) wraps `crate::apps::puzzle3d::precompute::Puzzle3dPrecomputeSession` directly. This is a REAL
+   same-crate compile dependency that breaks the moment glue.rs stops mounting apps::puzzle3d. Not
+   fixed (outside my lease on two counts: 🖐️5d tree AND it's a same-crate cross-kind reference). Needs
+   the 🖐️5d packet or the coordinator to repoint it at crate::editor::puzzle3d::precompute::... once
+   glue.rs mounts that module.
+3. Doc-comment-only (cosmetic, not compile deps), left alone or fixed in passing:
+   - ✳️any/🧬️schema/🦀️component.rs:274/647 and 🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:42/87/132
+     — doc comments reference the old `crate::apps::puzzle3d::precompute` path. Outside my lease (not
+     artifact root, not editor, not viewer — the 🧬️schema facet is a sibling, untouched).
+   - ✏️editor/🦀️component.rs:~2805 (own file, in my lease) — a doc comment describing 26/08/12/APA's
+     ORIGINAL historical relocation off an even-older `apps::puzzle3d::register_puzzle3d_exports` path
+     that predates the apps/ split this ticket is undoing. Left as-is: it's real history, not a stale
+     reference to current code.
+   - ✏️editor/🦀️component.rs (artifact root, my lease) — one live (non-historical) doc-comment
+     reference to `crate::apps::puzzle3d::register_mesh_io()` WAS fixed to
+     `crate::editor::puzzle3d::register_mesh_io()` (mechanical, matches the real rename even though
+     `register_mesh_io` itself doesn't appear to exist as a defined fn anywhere in this tree — a
+     pre-existing doc/reality gap, not introduced here, not chased further).
+
+include_str!/include_bytes!: grepped the whole moved tree — every occurrence (demo-session's
+`🎮️demo.cmd.semio`, config schema's five sibling schema files, and its `../../👥️presence/🧬️schema/*`
+five-file set) stays INSIDE the moved subtree at the same relative depth (the whole subtree moved as
+one unit), so zero path fixes were needed. Verified by inspection, not by compiling.
+
+Viewer: genuinely independent — Snapshot = crate::artifacts::puzzle3d::Puzzle3dSnapshot (real typed
+artifact-level snapshot, objects/attractions/targetVolumes/references), Mutation =
+crate::artifacts::puzzle3d::Puzzle3dMutation (same enum the editor's own op-bridge uses; its
+`#[derive(dsl::Mutations)]` with `#[mutations(snapshot = Puzzle3dSnapshot, ...)]` generates the real
+`impl protocol::Mutation<Puzzle3dSnapshot>` this viewer's trait bound needs — confirmed by reading the
+derive attribute and the mutations file's own doc comment, not assumed). Config/Presence/Transient =
+framework NoConfig/NoPresence/NoTransient (a viewer has no persisted per-session state to render;
+camera uses `world3d_default_camera()`'s hardcoded default). Command = single-variant
+`Puzzle3dViewCommand::Noop` deriving Default (required by
+`testkit::assert_viewer_never_mutates::<V>() where V::Command: Default`).
+
+MeshWindowKit (contract §2.6) is NOT in semio_framework_plugin's crate-root pub-use list (checked
+:18185-18314 fresh) — only ArtifactEditor/ArtifactViewer/Editor/Viewer/EditorApp/ViewerApp/ViewEmit
+were added there by the w0-f gap-closure lane, not the window kits. Imported as
+`semio_framework_plugin::app::{MeshWindowKit, MeshView, WindowKit}` (same `app::` prefix workaround
+pattern the pre-existing InteractionView import already used in this file, left as-is per the ticket
+brief; documented inline, not fixed — framework file, out of this crate's remit). Dialect/StandardId/
+SubsetId WERE reachable bare (`semio_framework_plugin::Dialect` etc., confirmed via
+`pub use semio_framework::*;` at the plugin crate root and cross-checked against cad's own
+already-working `semio_framework_plugin::app::Dialect` usage — both paths resolve to the same type).
+
+policyViewerPurityBreaches self-check: grepped the whole 👁️viewer/ tree for the literal substrings
+`::editor::`, `.mutation(`, `Emit::mutations`, `artifact_mutations` — zero hits.
+
+Balanced-braces self-check: crude {}/()/[] counter across every .rs file in ✏️editor/ and 👁️viewer/.
+One pre-existing imbalance found in ⏳️precompute/🦀️component.rs (300 `{` vs 299 `}`) — confirmed via
+`git show HEAD:<old apps path>` that the ORIGINAL file (before I ever touched it) has the exact same
+imbalance, so it's a false positive of the crude counter (almost certainly a brace inside a string/doc
+literal), not something introduced by this migration. Not investigated further (outside scope to
+audit pre-existing file content byte-for-byte; the substring-replace-only diff check above already
+proves this file's substantive content is untouched).

@@ -4,7 +4,7 @@
 //! `#[derive(dsl::Mutations)]` generates `impl protocol::Mutation<JackSnapshot>` and
 //! `impl protocol::SemanticMutation<JackSnapshot>` from those payloads — no hand-written
 //! diff/inverse dispatch here. Whole-fixture replace (the old `SetFixture`) is banned; loading a
-//! preset/import routes through `HostEffect::LoadDocument` (see `apps::jack::reset_document_effect`),
+//! preset/import routes through `HostEffect::LoadDocument` (see `editor::jack::reset_document_effect`),
 //! never through this enum.
 
 use crate::artifacts::jack::diff::JackDiff;
@@ -234,8 +234,8 @@ fn property_value_matches_type_trinity(value: &PropertyValue, def: &crate::artif
 /// ▶️ Diff-based apply of one mutation — thin `Mutation::diff` + `MutationDiff::apply` delegate (P6:
 /// no per-variant hand match here anymore; each kind's real logic lives in its own triad `🔺️diff` leaf).
 pub fn apply_trinity_graph_mutation(snapshot: &mut JackSnapshot, mutation: &TrinityGraphMutation) {
-    let diff = mutation.diff(snapshot);
-    *snapshot = protocol::MutationDiff::apply(&diff, snapshot);
+    let outcome = mutation.diff(snapshot);
+    *snapshot = protocol::MutationDiff::apply(outcome.diff(), snapshot);
 }
 
 pub fn inverse_trinity_graph_mutation(projection: &JackSnapshot, mutation: &TrinityGraphMutation) -> Vec<TrinityGraphMutation> {
@@ -496,5 +496,35 @@ mod tests {
         }
         assert_eq!(<TrinityGraphMutation as protocol::SemanticMutation<JackSnapshot>>::kinds().len(), 8);
     }
+
+    //#region 🧪️OutcomeLaws
+    /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
+    /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
+    #[test]
+    fn delete_missing_node_is_a_target_missing_error() {
+        let base = mini_fixture();
+        protocol::testkit::assert_missing_target_is_error(&base, &TrinityGraphMutation::DeleteNode(DeleteNode { id: "does-not-exist".into() }));
+    }
+
+    #[test]
+    fn rename_missing_node_is_a_target_missing_error() {
+        let base = mini_fixture();
+        protocol::testkit::assert_missing_target_is_error(&base, &TrinityGraphMutation::RenameNode(RenameNode { id: "does-not-exist".into(), new_name: "New".into() }));
+    }
+
+    #[test]
+    fn create_node_duplicate_id_never_applies() {
+        let base = mini_fixture();
+        let duplicate = TrinityGraphMutation::CreateNode(CreateNode { node: mini_node("root", 0.0, 0.0, vec![]) });
+        protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
+    }
+
+    #[test]
+    fn create_edge_duplicate_id_never_applies() {
+        let base = mini_fixture();
+        let duplicate = TrinityGraphMutation::CreateEdge(CreateEdge { edge: Edge { id: "e1".into(), kind: "Connection".into(), source: "root@out-a".into(), target: "child@in-a".into(), properties: PropertyBag::new() } });
+        protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
+    }
+    //#endregion 🧪️OutcomeLaws
 }
 //#endregion 🧪️Tests

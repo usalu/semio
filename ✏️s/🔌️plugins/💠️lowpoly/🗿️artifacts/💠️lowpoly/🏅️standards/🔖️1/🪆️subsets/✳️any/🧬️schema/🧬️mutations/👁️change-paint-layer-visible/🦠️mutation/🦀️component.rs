@@ -15,7 +15,7 @@ pub struct ChangePaintLayerVisible {
 impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for ChangePaintLayerVisible {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "paint-layer", kind: "change-paint-layer-visible", record: "ChangedPaintLayerVisible" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff {
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

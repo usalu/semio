@@ -1,6 +1,8 @@
 //! 🧬️ DwgArtifact schema — full artifact state.
 
-use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::{DwgApplicationHistory, DwgApplicationInfo, DwgAuxiliaryHeader, DwgClass, DwgDependency, DwgHeaderVariables, DwgIndexedPreview, DwgLogicalDrawing, DwgRevisionHistory, DwgSummaryInfo, DwgTemplate};
+use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::{
+    DwgApplicationHistory, DwgApplicationInfo, DwgAuxiliaryHeader, DwgClass, DwgDependency, DwgHeaderVariables, DwgIndexedPreview, DwgLogicalDrawing, DwgRevisionHistory, DwgSummaryInfo, DwgTemplate,
+};
 use crate::artifacts::dwg::DwgSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};

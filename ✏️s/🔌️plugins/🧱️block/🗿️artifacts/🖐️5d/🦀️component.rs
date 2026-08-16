@@ -14,6 +14,15 @@ use serde::{Deserialize, Serialize};
 
 pub const BLOCK_5D_SCHEMA: &str = "block.5d";
 
+/// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the one `Dialect` coordinate every
+/// surface (`✏️editor`, `👁️viewer`) of the `✳️any` subset binds `ArtifactEditor::DIALECT`/
+/// `ArtifactViewer::DIALECT` to — `"s.block.block5d"` matches this file's own `definition()`'s
+/// `"s.block5d.schema.artifact"` row descriptor, standard `"1"` and subset `"*"` match this file's
+/// own `🏅️standards/🔖️1/🪆️subsets/✳️any` location. Lives at the ARTIFACT level (not under
+/// `editor`/`viewer`) so a viewer file can read it without ever importing through the sibling editor
+/// module.
+pub const BLOCK5D_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.block.block5d", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+
 // #region 🔖️Document
 /// 🔵️ The part's 2D-projection presentation (board node).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -86,7 +95,7 @@ pub struct Block5dGripTemplate {
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — the canonical `5d.block` declaration, stitched into
-/// `crate::apps::block5d::create_block5d_app`.
+/// `crate::editor::block5d::create_block5d_app`.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "5d.block".into(),
@@ -124,7 +133,7 @@ mod tests {
 /// the old side-effecting `register()`, which called four different global registries directly from
 /// a plugin `.setup()` callback. `Block5dPlayApp`'s CONFIG/PRESENCE schema — an app-scope concern
 /// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) — now registers via
-/// `ArtifactApp::app_schema()` returning `crate::apps::block5d::config::schema::app_schema_descriptor()`
+/// `ArtifactEditor::app_schema()` returning `crate::editor::block5d::config::schema::app_schema_descriptor()`
 /// (ticket W1c), so `.setup()` is gone from `🧱️block/🦀️component.rs` entirely.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
@@ -169,7 +178,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::block5d::standards::v1::subsets::any::schema::inferences::block5d_artifact_inference_descriptor()])
         .composers(crate::artifacts::block5d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::block5d::Block5dPlayApp>()
+        .document_codec::<semio_framework_plugin::app::EditorApp<crate::editor::block5d::Block5dPlayApp>>()
         .try_build()
 }
 

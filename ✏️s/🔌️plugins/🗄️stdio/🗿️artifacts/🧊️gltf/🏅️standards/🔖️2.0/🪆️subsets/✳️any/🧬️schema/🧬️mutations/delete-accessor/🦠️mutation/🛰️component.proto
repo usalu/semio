@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.gltf.mutation;
+message GltfDeleteAccessorPayloadV1 { uint32 index = 1; }
+message GltfDeleteAccessorMutationV1 { string id = 1; uint32 version = 2; repeated string touched_paths = 3; GltfDeleteAccessorPayloadV1 payload = 4; }

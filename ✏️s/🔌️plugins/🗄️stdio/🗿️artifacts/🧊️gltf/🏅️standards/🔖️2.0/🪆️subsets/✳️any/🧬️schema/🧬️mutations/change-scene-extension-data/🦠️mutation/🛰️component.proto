@@ -1,0 +1,8 @@
+// change-scene-extension-data mutation facet.
+syntax = "proto3";
+package stdio.gltf.mutation;
+message GltfChangeSceneExtensionDataPayloadV1 {
+  uint32 scene = 1;
+  bytes data = 2;
+}
+message GltfChangeSceneExtensionDataMutationV1 { string id = 1; uint32 version = 2; bool accepted = 3; repeated string touched_paths = 4; string rejection_code = 5; }

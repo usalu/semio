@@ -150,9 +150,50 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .artifact(crate::artifacts::block2d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .artifact(crate::artifacts::block3d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .artifact(crate::artifacts::block5d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .document_app::<crate::apps::block2d::Block2dPlayApp>(crate::apps::block2d::create_block2d_app())
-        .document_app::<crate::apps::block3d::Block3dPlayApp>(crate::apps::block3d::create_block3d_app())
-        .document_app::<crate::apps::block5d::Block5dPlayApp>(crate::apps::block5d::create_block5d_app())
+        .editor::<crate::editor::block2d::Block2dPlayApp>(crate::editor::block2d::create_block2d_app())
+        .viewer::<crate::viewer::block2d::Block2dViewer>(crate::viewer::block2d::create_block2d_viewer())
+        .editor::<crate::editor::block3d::Block3dPlayApp>(crate::editor::block3d::create_block3d_app())
+        .viewer::<crate::viewer::block3d::Block3dViewer>(crate::viewer::block3d::create_block3d_viewer())
+        .editor::<crate::editor::block5d::Block5dPlayApp>(crate::editor::block5d::create_block5d_app())
+        .viewer::<crate::viewer::block5d::Block5dViewer>(crate::viewer::block5d::create_block5d_viewer())
         .try_build()
 }
 //#endregion 🔌️Registration
+
+//#region 🧪️SurfaceTests
+/// 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.5: proves each subset's
+/// viewer never mutates the document/draft store at runtime and that every editor/viewer pair shares
+/// the same `Dialect` — real framework testkit functions (W0-F gap closure), not local stand-ins.
+#[cfg(test)]
+mod surface_tests {
+    #[test]
+    fn block2d_viewer_never_mutates() {
+        semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::block2d::Block2dViewer>();
+    }
+
+    #[test]
+    fn block2d_editor_and_viewer_share_dialect() {
+        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::block2d::Block2dPlayApp, crate::viewer::block2d::Block2dViewer>();
+    }
+
+    #[test]
+    fn block3d_viewer_never_mutates() {
+        semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::block3d::Block3dViewer>();
+    }
+
+    #[test]
+    fn block3d_editor_and_viewer_share_dialect() {
+        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::block3d::Block3dPlayApp, crate::viewer::block3d::Block3dViewer>();
+    }
+
+    #[test]
+    fn block5d_viewer_never_mutates() {
+        semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::block5d::Block5dViewer>();
+    }
+
+    #[test]
+    fn block5d_editor_and_viewer_share_dialect() {
+        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::block5d::Block5dPlayApp, crate::viewer::block5d::Block5dViewer>();
+    }
+}
+//#endregion 🧪️SurfaceTests

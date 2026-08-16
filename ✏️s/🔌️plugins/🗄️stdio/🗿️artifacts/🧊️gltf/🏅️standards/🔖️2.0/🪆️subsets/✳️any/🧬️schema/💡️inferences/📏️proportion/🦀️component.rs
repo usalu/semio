@@ -2,15 +2,15 @@
 
 #[path = "aspect-ratios/🦀️component.rs"]
 pub mod aspect_ratios;
-#[path = "slenderness/🦀️component.rs"]
-pub mod slenderness;
-#[path = "flatness/🦀️component.rs"]
-pub mod flatness;
 #[path = "elongation/🦀️component.rs"]
 pub mod elongation;
+#[path = "flatness/🦀️component.rs"]
+pub mod flatness;
+#[path = "slenderness/🦀️component.rs"]
+pub mod slenderness;
 
-use super::geometry_core::GltfGeometryContext;
 use super::super::modules::measurement_contracts::*;
+use super::geometry_core::GltfGeometryContext;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -28,12 +28,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfProportionInference {
     type Output = GltfProportionIndicators;
 
     fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
-        Self::Output {
-            aspect_ratios: aspect_ratios::infer(context),
-            slenderness: slenderness::infer(context),
-            flatness: flatness::infer(context),
-            elongation: elongation::infer(context),
-        }
+        Self::Output { aspect_ratios: aspect_ratios::infer(context), slenderness: slenderness::infer(context), flatness: flatness::infer(context), elongation: elongation::infer(context) }
     }
 
     fn unavailable(diagnostic_ids: &[String]) -> Self::Output {

@@ -48,7 +48,7 @@ import {
 import { type AppRef, type AppRole, type ArtifactDialect, dialectCoordinate, type NamedLayout, type WindowLayout, createNamedLayout } from "@semio-tech/framework";
 import { createWorldProjectionTemplates, encodeWorldProjectionTemplateId, type WorldProjectionTemplateDescriptor } from "@semio-tech/infinite-world-r3f";
 import { type PluginPanelStatus, type ResolvedShellLocks } from "../Shell/🟦️component.tsx";
-import { driverDisplayLabel, shellLabel, shellTabIcon, shellTerminologyLabel, surfaceRoleChipText } from "../ShellHelpers/🟦️component.tsx";
+import { defaultAppsSettingsTabLabel, defaultAppsSettingsTabText, driverDisplayLabel, noneOptionText, shellLabel, shellTabIcon, shellTerminologyLabel, surfaceRoleChipText } from "../ShellHelpers/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️os-chrome-panels
@@ -859,15 +859,15 @@ function buildSettingsKeybindingsTree(host: SettingsHostApi): TreePanelConfig {
 
 //#region 🔖️DefaultAppsPanel
 /** 👁️✏️ One `AppRef` option in a default-apps `Select` — `"none"` clears the pin. */
-const DEFAULT_APP_NONE_VALUE = "none";
+export const DEFAULT_APP_NONE_VALUE = "none";
 
-function encodeDefaultAppValue(app: AppRef): string {
-  return `${app.pluginId} ${app.appId}`;
+export function encodeDefaultAppValue(app: AppRef): string {
+  return `${app.pluginId} ${app.appId}`;
 }
 
 function decodeDefaultAppValue(value: string): AppRef | null {
   if (value === DEFAULT_APP_NONE_VALUE) return null;
-  const separator = value.indexOf(" ");
+  const separator = value.indexOf(" ");
   if (separator < 0) return null;
   return { pluginId: value.slice(0, separator), appId: value.slice(separator + 1) };
 }
@@ -919,7 +919,7 @@ function buildSettingsDefaultAppsTree(host: DefaultAppsHostApi): TreePanelConfig
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={DEFAULT_APP_NONE_VALUE}>{shellLabel("ui.common.none")}</SelectItem>
+                  <SelectItem value={DEFAULT_APP_NONE_VALUE}>{noneOptionText(host.locale)}</SelectItem>
                   {row.options.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
@@ -979,6 +979,25 @@ export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi |
         },
       },
     }),
+    // 👁️✏️ `PanelTabKind::SettingsDefaultApps` (contract freeze §1/§5) — omitted entirely when the
+    // shell has no default-apps host wired up (e.g. an embedded shell that doesn't own OS commands),
+    // same "undefined getter → tab absent" idiom the theme lock branch above uses.
+    ...(getDefaultAppsHost
+      ? [
+          singleTreeLeaf({
+            id: FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID,
+            icon: shellTabIcon("app-window"),
+            name: defaultAppsSettingsTabLabel(getDefaultAppsHost?.()?.locale ?? "en"),
+            order: 3,
+            tree: {
+              resolveTree: () => {
+                const host = getDefaultAppsHost();
+                return host ? buildSettingsDefaultAppsTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.settings.unavailable") }] }] };
+              },
+            },
+          }),
+        ]
+      : []),
   ];
   return {
     kind: "branch",

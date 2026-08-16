@@ -12,8 +12,10 @@ use crate::artifacts::process3d::mutations::create_step::mutation::CreateStep;
 use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Diff
-/// 🚧️ Documented no-op — see file doc comment.
-pub fn diff(_payload: &CreateStep, _base: &Process3dSnapshot) -> Process3dDiff {
-    Process3dDiff::default()
+/// 🚧️ Documented no-op — see file doc comment. The `steps` composed child is unresolved here, so
+/// no create-family duplicate-id check is possible against real content; surfaced as Warning
+/// `mutation.no-op` (the diff genuinely never changes anything) rather than silently succeeding.
+pub fn diff(_payload: &CreateStep, _base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+    protocol::MutationOutcome::empty().warn("mutation.no-op", "Step creation is a documented no-op pending a link resolver for the composed steps child.".to_string())
 }
 //#endregion 🔖️Diff

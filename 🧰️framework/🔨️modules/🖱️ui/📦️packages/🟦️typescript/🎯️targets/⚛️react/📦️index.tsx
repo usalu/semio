@@ -8031,11 +8031,6 @@ export { Section };
 
 // #endregion 🖲️Section
 
-// #region 🪬️Steps
-import { Steps, type StepsProps } from "../../../../🧱️elements/🐾️Steps/🟦️component.tsx";
-export { Steps, type StepsProps };
-// #endregion 🪬️Steps
-
 // #region 🏷️Field
 import { Field, type FieldProps } from "../../../../🧱️elements/📝️Field/🟦️component.tsx";
 export { Field, type FieldProps };

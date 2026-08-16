@@ -1,0 +1,5 @@
+# unbind-node-mesh mutation facet.
+input GltfUnbindNodeMeshPayloadV1 {
+  node: Int!
+}
+type GltfUnbindNodeMeshMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

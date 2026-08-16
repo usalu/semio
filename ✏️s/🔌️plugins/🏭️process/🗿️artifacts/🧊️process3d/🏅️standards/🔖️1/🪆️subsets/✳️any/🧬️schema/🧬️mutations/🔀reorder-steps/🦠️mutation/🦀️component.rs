@@ -19,7 +19,7 @@ pub struct ReorderSteps {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ReorderSteps {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "step", kind: "reorder-steps", record: "ReorderedSteps" };
 
-    fn diff(&self, base: &Process3dSnapshot) -> Process3dDiff {
+    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::reorder_steps::diff::diff(self, base)
     }
 

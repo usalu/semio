@@ -56,8 +56,8 @@ pub enum MathematicalPresenceMutation {
 impl Mutation<MathematicalPresence> for MathematicalPresenceMutation {
     type Diff = MathematicalPresence;
 
-    fn diff(&self, _base: &MathematicalPresence) -> MathematicalPresence {
-        MathematicalPresence::default()
+    fn diff(&self, _base: &MathematicalPresence) -> protocol::MutationOutcome<MathematicalPresence> {
+        protocol::MutationOutcome::new(MathematicalPresence::default())
     }
 
     fn inverse(&self, _base: &MathematicalPresence) -> Vec<Self> {

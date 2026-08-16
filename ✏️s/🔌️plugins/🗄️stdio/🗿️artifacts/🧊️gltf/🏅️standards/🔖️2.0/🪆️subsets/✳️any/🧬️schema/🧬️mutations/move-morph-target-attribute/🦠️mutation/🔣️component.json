@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.move-morph-target-attribute.v1.mutation",
+  "title": "GltfMoveMorphTargetAttributeMutation",
+  "type": "object",
+  "properties": {
+    "mesh": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "primitive": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "target": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "semantic": {
+      "type": "string"
+    },
+    "position": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "mesh",
+    "primitive",
+    "target",
+    "semantic",
+    "position"
+  ],
+  "additionalProperties": false,
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.move-morph-target-attribute.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "move",
+    "touchedPaths": [
+      "document/meshes/*/primitives/*/targets/*/attributes"
+    ],
+    "referencePolicy": "moves one target semantic in its stable ordered map"
+  }
+}

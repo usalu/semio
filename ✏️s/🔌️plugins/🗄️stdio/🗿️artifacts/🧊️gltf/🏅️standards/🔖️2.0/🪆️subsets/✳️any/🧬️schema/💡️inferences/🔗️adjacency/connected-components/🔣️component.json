@@ -6,8 +6,7 @@
       "algorithmVersion": 1,
       "cacheKey": "s.stdio.gltf.inference.connected-components.v1:geometry-v2",
       "inputs": ["schema/snapshot", "buffers"],
-      "target": "geometricAnalysis.overall.connected-components"
+      "target": "geometry.overall.adjacency.connectedComponents"
     }
   }
 }
-

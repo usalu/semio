@@ -16,7 +16,7 @@ pub struct DeleteShapeModel {}
 impl MutationKind<CadSnapshot, CadMutation> for DeleteShapeModel {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "shape-model", kind: "delete-shape-model", record: "DeletedShapeModel" };
 
-    fn diff(&self, base: &CadSnapshot) -> crate::artifacts::cad::diff::CadDiff {
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {

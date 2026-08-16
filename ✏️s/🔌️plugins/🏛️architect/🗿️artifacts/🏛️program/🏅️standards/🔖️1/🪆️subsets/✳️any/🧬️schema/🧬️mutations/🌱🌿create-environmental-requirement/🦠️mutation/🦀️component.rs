@@ -18,7 +18,7 @@ pub struct CreateEnvironmentalRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateEnvironmentalRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "environmental-requirement", kind: "create-environmental-requirement", record: "CreatedEnvironmentalRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

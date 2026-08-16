@@ -18,7 +18,7 @@ pub struct ReorderLayers {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ReorderLayers {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "layer", kind: "reorder-layers", record: "ReorderedLayers" };
 
-    fn diff(&self, base: &RasterSnapshot) -> RasterDiff {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::reorder_layers::diff::diff(self, base)
     }
 

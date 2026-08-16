@@ -16,7 +16,7 @@ pub struct RenameMachine {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for RenameMachine {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "machine", kind: "rename-machine", record: "RenamedMachine" };
 
-    fn diff(&self, base: &Process3dSnapshot) -> Process3dDiff {
+    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::rename_machine::diff::diff(self, base)
     }
 

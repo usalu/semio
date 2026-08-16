@@ -6,8 +6,7 @@
       "algorithmVersion": 1,
       "cacheKey": "s.stdio.gltf.inference.reflection-symmetry-score.v1:geometry-v2",
       "inputs": ["schema/snapshot", "buffers"],
-      "target": "geometricAnalysis.overall.reflection-symmetry-score"
+      "target": "geometry.overall.symmetry.reflectionSymmetryScore"
     }
   }
 }
-

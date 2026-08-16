@@ -1,0 +1,6 @@
+/** 🧪️ Focused delete-primitive mutation-law probe. */
+import type { GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
+import { applyGltfDeletePrimitive, type GltfDeletePrimitivePayload } from '../../delete-primitive/🦠️mutation/🟦️component.ts';
+import { deriveGltfDeletePrimitiveDiff } from '../../delete-primitive/🔺️diff/🟦️component.ts';
+import { deriveGltfDeletePrimitiveInverse } from '../../delete-primitive/↩️inverse/🟦️component.ts';
+export const assertGltfDeletePrimitiveLaws = (base: GltfSnapshot, payload: GltfDeletePrimitivePayload) => { const applied = applyGltfDeletePrimitive(base, payload); if (!applied.accepted) return applied; const replay = applyGltfDeletePrimitive(base, payload); const direct = deriveGltfDeletePrimitiveDiff(base, payload); const undo = deriveGltfDeletePrimitiveInverse(base, payload); if (!replay.accepted || !direct.accepted || !undo.accepted || JSON.stringify(applied.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(applied.diff) !== JSON.stringify(replay.diff) || JSON.stringify(applied.touchedPaths) !== JSON.stringify(undo.touchedPaths)) throw new Error('delete-primitive violates replay, direct-diff, or undo determinism'); return { applied, direct, undo }; };

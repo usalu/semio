@@ -62,13 +62,39 @@ impl From<DiagnosticCode> for FaultCode {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+/// 🚦️ Declaration order is the level order: `#[derive(PartialOrd, Ord)]` makes `Info < Warning <
+/// Error < Fatal` a structural fact, not a hand-maintained comparator. `as_u8`/`from_u8` (0..3)
+/// give a stable wire-compatible numeric mirror for TS/WIT twins.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Severity {
-    Fatal,
-    Error,
+    Info,
     Warning,
-    Hint,
+    Error,
+    Fatal,
+}
+
+impl Severity {
+    /// 🔢️ Stable numeric mirror of declaration order, 0..3.
+    pub fn as_u8(self) -> u8 {
+        match self {
+            Severity::Info => 0,
+            Severity::Warning => 1,
+            Severity::Error => 2,
+            Severity::Fatal => 3,
+        }
+    }
+
+    /// 🔢️ Inverse of [`as_u8`](Self::as_u8); `None` for any value outside 0..3.
+    pub fn from_u8(value: u8) -> Option<Self> {
+        match value {
+            0 => Some(Severity::Info),
+            1 => Some(Severity::Warning),
+            2 => Some(Severity::Error),
+            3 => Some(Severity::Fatal),
+            _ => None,
+        }
+    }
 }
 
 /// @emoji 🧭️ What the parser would have accepted at the failure point — the raw material for

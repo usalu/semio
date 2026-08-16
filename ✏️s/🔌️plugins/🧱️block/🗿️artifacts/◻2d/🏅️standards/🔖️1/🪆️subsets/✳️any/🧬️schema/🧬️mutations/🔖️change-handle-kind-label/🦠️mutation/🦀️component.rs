@@ -22,7 +22,7 @@ pub fn change_handle_kind_label(id: String, new_label: String) -> Block2dMutatio
 impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for ChangeHandleKindLabel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "handle-kind", kind: "change-handle-kind-label", record: "ChangedHandleKindLabel" };
 
-    fn diff(&self, base: &Block2dSnapshot) -> Block2dDiff {
+    fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {

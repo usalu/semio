@@ -18,7 +18,7 @@ pub struct ReplaceReferences {
 impl MutationKind<CadSnapshot, CadMutation> for ReplaceReferences {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "references", kind: "replace-references", record: "ReplacedReferences" };
 
-    fn diff(&self, base: &CadSnapshot) -> crate::artifacts::cad::diff::CadDiff {
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {

@@ -1,0 +1,12 @@
+# reorder-images typed diff facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfImageValueV1
+input GltfReorderImagesPayloadV1 {
+  order: [Int!]!
+}
+type GltfReorderImagesDiffOperationV1 {
+  kind: String!
+  order: [Int!]!
+}
+type GltfReorderImagesDiffV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfReorderImagesPayloadV1!, operation: GltfReorderImagesDiffOperationV1! }

@@ -31,4 +31,4 @@ seq:
   - id: payload
     size: payload_length
     encoding: UTF-8
-    doc: RFC 8785 canonical JSON encoding of GltfInference with geometricAnalysis root
+    doc: RFC 8785 canonical JSON encoding of GltfInference with geometry root

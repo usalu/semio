@@ -582,16 +582,11 @@
       "name": "@semio-tech/framework-schema",
       "version": "0.1.0",
     },
-    "🧰️framework/🔨️modules/🧮️math/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/framework-math-js",
-      "version": "0.1.0",
-    },
     "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-os",
       "version": "0.1.0",
       "dependencies": {
         "@semio-tech/framework": "workspace:*",
-        "@semio-tech/framework-math-js": "workspace:*",
       },
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -1903,8 +1898,6 @@
     "@semio-tech/framework": ["@semio-tech/framework@workspace:🧰️framework/📦️packages/🟦️typescript"],
 
     "@semio-tech/framework-editor-rs": ["@semio-tech/framework-editor-rs@workspace:🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust"],
-
-    "@semio-tech/framework-math-js": ["@semio-tech/framework-math-js@workspace:🧰️framework/🔨️modules/🧮️math/📦️packages/🟦️typescript"],
 
     "@semio-tech/framework-os": ["@semio-tech/framework-os@workspace:🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript"],
 

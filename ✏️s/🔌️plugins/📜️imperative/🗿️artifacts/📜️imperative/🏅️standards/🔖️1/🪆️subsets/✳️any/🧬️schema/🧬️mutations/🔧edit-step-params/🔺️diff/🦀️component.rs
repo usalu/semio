@@ -5,10 +5,15 @@ use crate::artifacts::imperative::diff::ImperativeDiff;
 use crate::artifacts::imperative::ImperativeSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::EditStepParams, base: &ImperativeSnapshot) -> ImperativeDiff {
+/// 🔺️ Error `target-missing` when the id is absent; Warning `no-op` when `new_params` already
+/// equals the step's current `params`.
+pub fn diff(payload: &super::mutation::EditStepParams, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
     let steps = crate::artifacts::imperative::mutations::resolve_steps(base, &payload.path_ref);
-    if !steps.iter().any(|step| step.id == payload.id) {
-        return ImperativeDiff::default();
+    let Some(existing) = steps.iter().find(|step| step.id == payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Step \"{}\" does not exist.", payload.id), [payload.id.clone()]);
+    };
+    if existing.params == payload.new_params {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Step \"{}\" parameters are already identical to the requested replacement.", payload.id));
     }
     let mut path = crate::artifacts::imperative::imperative_working_scene(base).path;
     if let Some(list) = crate::artifacts::imperative::mutations::resolve_path_mut(&mut path, &payload.path_ref) {
@@ -16,6 +21,6 @@ pub fn diff(payload: &super::mutation::EditStepParams, base: &ImperativeSnapshot
             step.params = payload.new_params.clone();
         }
     }
-    crate::artifacts::imperative::diff_replace_flow(&path)
+    protocol::MutationOutcome::new(crate::artifacts::imperative::diff_replace_flow(&path))
 }
 //#endregion 🔖️Diff

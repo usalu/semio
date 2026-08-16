@@ -1148,8 +1148,8 @@ pub fn encode_r2004_snapshot(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> R
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::dwg::DwgSnapshot;
     use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::DwgAnalyzer;
+    use crate::artifacts::dwg::DwgSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
@@ -1750,7 +1750,11 @@ impl<'a> DwgBitReader<'a> {
     }
 
     fn read_bt(&mut self) -> Result<f64, String> {
-        if self.read_b()? { Ok(0.0) } else { self.read_bd() }
+        if self.read_b()? {
+            Ok(0.0)
+        } else {
+            self.read_bd()
+        }
     }
 
     fn read_2rd(&mut self) -> Result<[f64; 2], String> {
@@ -1762,7 +1766,11 @@ impl<'a> DwgBitReader<'a> {
     }
 
     fn read_be(&mut self) -> Result<[f64; 3], String> {
-        if self.read_b()? { Ok([0.0, 0.0, 1.0]) } else { self.read_3bd() }
+        if self.read_b()? {
+            Ok([0.0, 0.0, 1.0])
+        } else {
+            self.read_3bd()
+        }
     }
 
     fn read_t(&mut self) -> Result<String, String> {
@@ -2472,7 +2480,11 @@ impl<'a> DwgSectionCursor<'a> {
     }
 
     fn finish(self, section: &str) -> Result<(), String> {
-        if self.position == self.bytes.len() { Ok(()) } else { Err(format!("{section} has {} trailing bytes", self.bytes.len() - self.position)) }
+        if self.position == self.bytes.len() {
+            Ok(())
+        } else {
+            Err(format!("{section} has {} trailing bytes", self.bytes.len() - self.position))
+        }
     }
 }
 
@@ -9057,7 +9069,11 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                     return Err(format!("{} {handle:#x} allowed-value helpers are invalid", object.class_name));
                 }
                 let body = DwgBlockLinearConstraintParameter { parameter, displacement_grip_node_id: property_node_ids[1], dependency_handle, expression_name, expression_description, value, allowed_values: DwgBlockParameterAllowedValues { values } };
-                if type_code == 546 { DwgLogicalObjectBody::BlockVerticalConstraintParameter(body) } else { DwgLogicalObjectBody::BlockHorizontalConstraintParameter(body) }
+                if type_code == 546 {
+                    DwgLogicalObjectBody::BlockVerticalConstraintParameter(body)
+                } else {
+                    DwgLogicalObjectBody::BlockHorizontalConstraintParameter(body)
+                }
             });
             if data.bit_position() != main_end_bit || strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit)? {
                 return Err(format!("{} {handle:#x} stream boundary is invalid", object.class_name));
@@ -12004,7 +12020,11 @@ fn arc_bulge(from: [f64; 2], to: [f64; 2], radius: f64, sweep: bool) -> f64 {
     }
     let included_angle = 2.0 * (chord * 0.5 / radius).clamp(-1.0, 1.0).asin();
     let bulge = (included_angle / 4.0).tan();
-    if sweep { bulge } else { -bulge }
+    if sweep {
+        bulge
+    } else {
+        -bulge
+    }
 }
 
 fn bulge_to_segment(from: [f64; 2], to: [f64; 2], bulge: f64) -> DwgPathSegment {
@@ -12512,7 +12532,7 @@ mod tests {
     fn well_known_fixture_lossless_system_roundtrip() {
         use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
         use crate::artifacts::dwg::schema::diff::DwgDiff;
-        use crate::artifacts::dwg::schema::mutations::{DwgMutation, apply_dwg_mutation};
+        use crate::artifacts::dwg::schema::mutations::{apply_dwg_mutation, DwgMutation};
         use crate::artifacts::dwg::schema::snapshot::encode_dwg;
         use protocol::command::DiffAlgebra;
         use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
@@ -12784,7 +12804,7 @@ mod tests {
 /// declaration()`'s `dwg_combined_composer_entries()`.
 pub mod io_registry {
     use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::DwgComposer as DwgRawAnyComposer;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();

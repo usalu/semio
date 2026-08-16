@@ -1745,57 +1745,57 @@ pub mod artifacts {
 }
 //#endregion 🗿️Artifacts
 
-//#region 🎛️Apps
+//#region ✏️Editor
 #[path = "."]
-pub mod apps {
+pub mod editor {
     #[path = "."]
     pub mod block2d {
-        #[path = "../../🎛️apps/◻2d/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/◻2d/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/◻2d/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/◻2d/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/◻2d/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
-        #[path = "../../🎛️apps/◻2d/🗣️terminology/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🏷️patch-node-kind/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️patch-node-kind/🦀️component.rs"]
             pub mod patch_node_kind;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🔘️add-handle-kind/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔘️add-handle-kind/🦀️component.rs"]
             pub mod add_handle_kind;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🔘️remove-handle-kind/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔘️remove-handle-kind/🦀️component.rs"]
             pub mod remove_handle_kind;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🌱️add-handle/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌱️add-handle/🦀️component.rs"]
             pub mod add_handle;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🌱️remove-handle/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌱️remove-handle/🦀️component.rs"]
             pub mod remove_handle;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🔗️add-compatibility-rule/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔗️add-compatibility-rule/🦀️component.rs"]
             pub mod add_compatibility_rule;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🔗️remove-compatibility-rule/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔗️remove-compatibility-rule/🦀️component.rs"]
             pub mod remove_compatibility_rule;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🎨️set-active-example/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️component.rs"]
             pub mod set_active_example;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🎨️edit/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️edit/🦀️component.rs"]
             pub mod edit;
         }
 
@@ -1803,13 +1803,13 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/📋️board/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📋️board/🦀️component.rs"]
                     pub mod board;
                 }
             }
@@ -1817,91 +1817,91 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/◻2d/📌️panels/📄️artifact/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
-            #[path = "../../🎛️apps/◻2d/📌️panels/🔍️inspection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;
         }
     }
 
     #[path = "."]
     pub mod block3d {
-        #[path = "../../🎛️apps/🧊️3d/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/🧊️3d/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🧊️3d/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/🧊️3d/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🧊️3d/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
-        #[path = "../../🎛️apps/🧊️3d/🌍️world/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌍️world/🦀️component.rs"]
         pub mod world;
-        #[path = "../../🎛️apps/🧊️3d/🗣️terminology/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🏷️patch-object-kind/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️patch-object-kind/🦀️component.rs"]
             pub mod patch_object_kind;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧱️add-representation/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-representation/🦀️component.rs"]
             pub mod add_representation;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧱️remove-representation/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️remove-representation/🦀️component.rs"]
             pub mod remove_representation;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧱️patch-representation/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️patch-representation/🦀️component.rs"]
             pub mod patch_representation;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🔘️add-vortex-kind/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔘️add-vortex-kind/🦀️component.rs"]
             pub mod add_vortex_kind;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🔘️remove-vortex-kind/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔘️remove-vortex-kind/🦀️component.rs"]
             pub mod remove_vortex_kind;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🌀️add-vortex/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌀️add-vortex/🦀️component.rs"]
             pub mod add_vortex;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🌀️remove-vortex/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌀️remove-vortex/🦀️component.rs"]
             pub mod remove_vortex;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🎨️set-active-example/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️component.rs"]
             pub mod set_active_example;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🎨️edit/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️edit/🦀️component.rs"]
             pub mod edit;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🪟️set-active-representation/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪟️set-active-representation/🦀️component.rs"]
             pub mod set_active_representation;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🪟️set-window-representations/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪟️set-window-representations/🦀️component.rs"]
             pub mod set_window_representations;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🪟️toggle-window-representation/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪟️toggle-window-representation/🦀️component.rs"]
             pub mod toggle_window_representation;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🪟️set-window-arrangement/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪟️set-window-arrangement/🦀️component.rs"]
             pub mod set_window_arrangement;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🪟️set-window-spacing/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪟️set-window-spacing/🦀️component.rs"]
             pub mod set_window_spacing;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🪟️set-active-utility/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪟️set-active-utility/🦀️component.rs"]
             pub mod set_active_utility;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🖌️set-brush-vortex-kind/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️set-brush-vortex-kind/🦀️component.rs"]
             pub mod set_brush_vortex_kind;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🖌️set-brush-radius/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️set-brush-radius/🦀️component.rs"]
             pub mod set_brush_radius;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🖌️set-brush-flip/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️set-brush-flip/🦀️component.rs"]
             pub mod set_brush_flip;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🖌️hover-surface/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️hover-surface/🦀️component.rs"]
             pub mod hover_surface;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🖌️leave-surface/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️leave-surface/🦀️component.rs"]
             pub mod leave_surface;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🖌️place-vortex/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️place-vortex/🦀️component.rs"]
             pub mod place_vortex;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🎥️set-camera/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️set-camera/🦀️component.rs"]
             pub mod set_camera;
         }
 
@@ -1909,7 +1909,7 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
@@ -1917,21 +1917,21 @@ pub mod apps {
                 pub mod windows {
                     #[path = "."]
                     pub mod world {
-                        #[path = "../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🌐️world/🦀️component.rs"]
+                        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🦀️component.rs"]
                         mod component;
                         pub use component::*;
 
                         #[path = "."]
                         pub mod options {
-                            #[path = "../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🌐️world/🎚️options/🧱️representations/🦀️component.rs"]
+                            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🎚️options/🧱️representations/🦀️component.rs"]
                             pub mod representations;
-                            #[path = "../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🌐️world/🎚️options/🔀️quick-representation/🦀️component.rs"]
+                            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🎚️options/🔀️quick-representation/🦀️component.rs"]
                             pub mod quick_representation;
-                            #[path = "../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🌐️world/🎚️options/↔️arrangement/🦀️component.rs"]
+                            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🎚️options/↔️arrangement/🦀️component.rs"]
                             pub mod arrangement;
-                            #[path = "../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🌐️world/🎚️options/📏️spacing/🦀️component.rs"]
+                            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🎚️options/📏️spacing/🦀️component.rs"]
                             pub mod spacing;
-                            #[path = "../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🌐️world/🎚️options/🖌️brush/🦀️component.rs"]
+                            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🎚️options/🖌️brush/🦀️component.rs"]
                             pub mod brush;
                         }
                     }
@@ -1941,57 +1941,57 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/🧊️3d/📌️panels/📄️artifact/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
-            #[path = "../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;
         }
     }
 
     #[path = "."]
     pub mod block5d {
-        #[path = "../../🎛️apps/🖐️5d/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/🖐️5d/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🖐️5d/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/🖐️5d/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🖐️5d/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
-        #[path = "../../🎛️apps/🖐️5d/🗣️terminology/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🏷️patch-part-kind/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️patch-part-kind/🦀️component.rs"]
             pub mod patch_part_kind;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🔘️add-grip-kind/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔘️add-grip-kind/🦀️component.rs"]
             pub mod add_grip_kind;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🔘️remove-grip-kind/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔘️remove-grip-kind/🦀️component.rs"]
             pub mod remove_grip_kind;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🌱️add-grip/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌱️add-grip/🦀️component.rs"]
             pub mod add_grip;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🌱️remove-grip/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌱️remove-grip/🦀️component.rs"]
             pub mod remove_grip;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🎨️set-active-example/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️component.rs"]
             pub mod set_active_example;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🎨️edit/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️edit/🦀️component.rs"]
             pub mod edit;
         }
 
@@ -1999,15 +1999,15 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🎛️apps/🖐️5d/🎭️modes/✏️edit/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/📋️board/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📋️board/🦀️component.rs"]
                     pub mod board;
-                    #[path = "../../🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/🌐️world/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🦀️component.rs"]
                     pub mod world;
                 }
             }
@@ -2015,14 +2015,89 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/🖐️5d/📌️panels/📄️artifact/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
-            #[path = "../../🎛️apps/🖐️5d/📌️panels/🔍️inspection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;
         }
     }
 }
-//#endregion 🎛️Apps
+//#endregion ✏️Editor
+
+//#region 👁️Viewer
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod block2d {
+        #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📋️board/🦀️component.rs"]
+                    pub mod board;
+                }
+            }
+        }
+    }
+
+    #[path = "."]
+    pub mod block3d {
+        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️world/🦀️component.rs"]
+                    pub mod world;
+                }
+            }
+        }
+    }
+
+    #[path = "."]
+    pub mod block5d {
+        #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️world/🦀️component.rs"]
+                    pub mod world;
+                }
+            }
+        }
+    }
+
+}
+//#endregion 👁️Viewer
 
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
@@ -2054,11 +2129,11 @@ pub mod examples {
     mod art_3d_hexagonal_cut_concrete_forest_left_tests;
     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️nakagin-capsule/🦀️component.rs"]
     pub mod art_3d_nakagin_capsule;
-    #[path = "../../🎛️apps/◻2d/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_2d_demo_session;
-    #[path = "../../🎛️apps/🖐️5d/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_5d_demo_session;
-    #[path = "../../🎛️apps/🧊️3d/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_3d_demo_session;
 }
 //#endregion 📚️Examples

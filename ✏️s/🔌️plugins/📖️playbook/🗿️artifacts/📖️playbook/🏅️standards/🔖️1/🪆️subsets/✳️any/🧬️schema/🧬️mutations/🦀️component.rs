@@ -48,7 +48,7 @@ pub use super::update_step::mutation::{update_step_operation, UpdateStep};
 /// ▶️ Applies `mutation` via its diff. External call site: `derived_construction`'s
 /// `ArtifactBuilder::mutate` (`../🦀️component.rs`).
 pub fn apply_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &PlaybookMutation) -> PlaybookSnapshot {
-    protocol::MutationDiff::apply(&protocol::Mutation::diff(mutation, snapshot), snapshot)
+    protocol::MutationDiff::apply(protocol::Mutation::diff(mutation, snapshot).diff(), snapshot)
 }
 
 /// ↩️ Computes `mutation`'s inverse from the pre-state `snapshot`.
@@ -62,7 +62,7 @@ mod tests {
     use super::*;
     use crate::artifacts::playbook::{PlaybookBlock, PlaybookStep};
     use protocol::MutationKind;
-    use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::testkit::{assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::SemanticMutation;
 
     fn sample_block(id: &str, kind: &str, label: &str) -> PlaybookBlock {
@@ -171,16 +171,16 @@ mod tests {
     #[test]
     fn move_step_diff_absorb_law() {
         let base = sample_snapshot();
-        let d1 = MoveStep { step_id: "s2".into(), index: 0 }.diff(&base);
+        let d1 = MoveStep { step_id: "s2".into(), index: 0 }.diff(&base).into_parts().0;
         let mid = protocol::MutationDiff::apply(&d1, &base);
-        let d2 = MoveStep { step_id: "s".into(), index: 0 }.diff(&mid);
+        let d2 = MoveStep { step_id: "s".into(), index: 0 }.diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
     #[test]
     fn move_block_cross_step_diff_never_falls_back_to_a_whole_artifact_replacement() {
         let base = sample_snapshot();
-        let diff = MoveBlock { block_id: "b1".into(), from_step_id: "s2".into(), to_step_id: "s".into(), index: 0 }.diff(&base);
+        let diff = MoveBlock { block_id: "b1".into(), from_step_id: "s2".into(), to_step_id: "s".into(), index: 0 }.diff(&base).into_parts().0;
         assert!(diff.artifact.is_none(), "cross-step MoveBlock diff must be a real per-field replacement, not the old whole-artifact fallback");
         let after = protocol::MutationDiff::apply(&diff, &base);
         let after_steps = after.steps();
@@ -197,5 +197,46 @@ mod tests {
         assert_eq!(PlaybookMutation::kinds().len(), 9);
     }
     //#endregion 🔖️MutationLaws
+
+    //#region 🔖️OutcomeLaws
+    // 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — one law test per verb
+    // family present in this facet, calling `assert_missing_target_is_error` (landed in
+    // `📡️spr/🧪️testkit`). No family in this facet reaches Fatal (playbook's only duplicate-prone
+    // family, `add`, treats a duplicate id as Warning `mutation.no-op`, never Fatal), so
+    // `assert_fatal_never_applies` has nothing meaningful to exercise here.
+    // `assert_outcome_policy_matrix` is NOT landed under that name (only the generic closure-based
+    // `assert_policy_matrix` exists) — see this ticket's report.
+    #[test]
+    fn add_family_missing_target_is_error() {
+        let base = sample_snapshot();
+        assert_missing_target_is_error(&base, &PlaybookMutation::AddBlock(AddBlock { step_id: "missing".into(), block: sample_block("b1", "text", "New"), index: None }));
+    }
+
+    #[test]
+    fn remove_family_missing_target_is_error() {
+        let base = sample_snapshot();
+        assert_missing_target_is_error(&base, &PlaybookMutation::RemoveStep(RemoveStep { step_id: "missing".into() }));
+        assert_missing_target_is_error(&base, &PlaybookMutation::RemoveBlock(RemoveBlock { step_id: "missing".into(), block_id: "b1".into() }));
+    }
+
+    #[test]
+    fn move_family_missing_target_is_error() {
+        let base = sample_snapshot();
+        assert_missing_target_is_error(&base, &PlaybookMutation::MoveStep(MoveStep { step_id: "missing".into(), index: 0 }));
+        assert_missing_target_is_error(&base, &PlaybookMutation::MoveBlock(MoveBlock { block_id: "b1".into(), from_step_id: "missing".into(), to_step_id: "s2".into(), index: 0 }));
+    }
+
+    #[test]
+    fn replace_family_missing_target_is_error() {
+        let base = sample_snapshot();
+        assert_missing_target_is_error(&base, &PlaybookMutation::ReplaceBlock(ReplaceBlock { step_id: "missing".into(), block: sample_block("b1", "text", "New") }));
+    }
+
+    #[test]
+    fn update_family_missing_target_is_error() {
+        let base = sample_snapshot();
+        assert_missing_target_is_error(&base, &PlaybookMutation::UpdateStep(UpdateStep { step_id: "missing".into(), title: "x".into(), description: None }));
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

@@ -62,7 +62,8 @@ mod tests {
         let graph = MathematicalGraph { algorithm: "bfs".into(), ..MathematicalGraph::default() };
         let mutation = MathematicalMutation::ReplaceGraph(replace_graph::mutation::ReplaceGraph { graph });
         let base = MathematicalSnapshot::default();
-        let diff = Mutation::diff(&mutation, &base);
+        let outcome = Mutation::diff(&mutation, &base);
+        let diff = outcome.diff();
         assert!(diff.notation.is_some());
         assert!(diff.results.is_some());
         assert!(diff.computed.is_some());
@@ -74,14 +75,14 @@ mod tests {
     fn create_then_delete_node_round_trips() {
         let base = MathematicalSnapshot::default();
         let create = MathematicalMutation::CreateNode(create_node::mutation::CreateNode { id: "z".into(), label: "Z".into(), x: 1.0, y: 2.0 });
-        let after_create = create.diff(&base).apply(&base);
+        let after_create = create.diff(&base).diff().apply(&base);
         assert!(mathematical_graph(&after_create).nodes.iter().any(|node| node.id == "z"));
 
         let undo = create.inverse(&base);
         assert_eq!(undo, vec![MathematicalMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "z".into() })]);
         let mut state = after_create.clone();
         for step in &undo {
-            state = step.diff(&after_create).apply(&state);
+            state = step.diff(&after_create).diff().apply(&state);
         }
         assert_eq!(mathematical_graph(&state), mathematical_graph(&base));
         assert_eq!(mathematical_geometry(&state), mathematical_geometry(&base));
@@ -91,7 +92,7 @@ mod tests {
     fn delete_node_inverse_recreates_node_and_severed_edges() {
         let base = MathematicalSnapshot::default();
         let delete = MathematicalMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "a".into() });
-        let after_delete = delete.diff(&base).apply(&base);
+        let after_delete = delete.diff(&base).diff().apply(&base);
         assert!(!mathematical_graph(&after_delete).nodes.iter().any(|node| node.id == "a"));
         assert!(!mathematical_graph(&after_delete).edges.iter().any(|edge| edge.source == "a" || edge.target == "a"));
 
@@ -124,7 +125,7 @@ mod tests {
         let undo = delete.inverse(&base);
         let mut state = after_delete;
         for step in &undo {
-            state = step.diff(&base).apply(&state);
+            state = step.diff(&base).diff().apply(&state);
         }
         assert_eq!(mathematical_graph(&state), base_graph, "delete-node's inverse must restore the node and every severed edge");
     }
@@ -134,13 +135,13 @@ mod tests {
         let base = MathematicalSnapshot::default();
         let original = mathematical_geometry(&base).points[0].clone();
         let mutation = MathematicalMutation::MovePoint(move_point::mutation::MovePoint { index: 0, x: 999.0, y: 999.0 });
-        let after = mutation.diff(&base).apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base);
         assert_eq!(mathematical_geometry(&after).points[0], MathematicalPoint { x: 999.0, y: 999.0 });
 
         let undo = mutation.inverse(&base);
         let mut state = after;
         for step in &undo {
-            state = step.diff(&base).apply(&state);
+            state = step.diff(&base).diff().apply(&state);
         }
         assert_eq!(mathematical_geometry(&state).points[0], original);
     }
@@ -149,13 +150,13 @@ mod tests {
     fn insert_point_inverse_is_remove_point_at_same_index() {
         let base = MathematicalSnapshot::default();
         let mutation = MathematicalMutation::InsertPoint(insert_point::mutation::InsertPoint { index: 1, x: 5.0, y: 6.0 });
-        let after = mutation.diff(&base).apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base);
         assert_eq!(mathematical_geometry(&after).points.len(), mathematical_geometry(&base).points.len() + 1);
 
         let undo = mutation.inverse(&base);
         let mut state = after;
         for step in &undo {
-            state = step.diff(&base).apply(&state);
+            state = step.diff(&base).diff().apply(&state);
         }
         assert_eq!(mathematical_geometry(&state), mathematical_geometry(&base));
     }
@@ -165,14 +166,14 @@ mod tests {
         let base = MathematicalSnapshot::default();
         let ids = vec!["a".to_string(), "b".to_string()];
         let mutation = MathematicalMutation::DeleteNodes(delete_nodes::mutation::DeleteNodes { ids: ids.clone() });
-        let after = mutation.diff(&base).apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base);
         assert!(mathematical_graph(&after).nodes.iter().all(|node| !ids.contains(&node.id)));
         assert!(mathematical_graph(&after).edges.iter().all(|edge| !ids.contains(&edge.source) && !ids.contains(&edge.target)));
 
         let undo = mutation.inverse(&base);
         let mut state = after;
         for step in &undo {
-            state = step.diff(&base).apply(&state);
+            state = step.diff(&base).diff().apply(&state);
         }
         assert_eq!(mathematical_graph(&state), mathematical_graph(&base));
     }
@@ -189,13 +190,13 @@ mod tests {
     fn connect_then_disconnect_nodes_round_trips() {
         let base = MathematicalSnapshot::default();
         let connect = MathematicalMutation::ConnectNodes(connect_nodes::mutation::ConnectNodes { id: "e-new".into(), source: "a".into(), target: "d".into() });
-        let after_connect = connect.diff(&base).apply(&base);
+        let after_connect = connect.diff(&base).diff().apply(&base);
         assert!(mathematical_graph(&after_connect).edges.iter().any(|edge| edge.id == "e-new"));
 
         let undo = connect.inverse(&base);
         let mut state = after_connect;
         for step in &undo {
-            state = step.diff(&base).apply(&state);
+            state = step.diff(&base).diff().apply(&state);
         }
         assert_eq!(mathematical_graph(&state), mathematical_graph(&base));
     }
@@ -248,7 +249,7 @@ mod tests {
         let base = MathematicalSnapshot::default();
         let label = base.equation.expr.label;
         let mutation = MathematicalMutation::ChangeCoefficient(change_coefficient::mutation::ChangeCoefficient { label, numer: "7".into(), denom: "1".into() });
-        let after = mutation.diff(&base).apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base);
         assert_eq!(
             after.equation.find(label).map(|node| node.kind.clone()),
             Some(crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::EquationNodeKind::Integer { lexeme: "7".to_string() })
@@ -262,10 +263,100 @@ mod tests {
         let base = MathematicalSnapshot::default();
         let unknown_label = crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel(999);
         let mutation = MathematicalMutation::ChangeCoefficient(change_coefficient::mutation::ChangeCoefficient { label: unknown_label, numer: "7".into(), denom: "1".into() });
-        let after = mutation.diff(&base).apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base);
         assert_eq!(after.equation, base.equation);
         assert_eq!(mutation.inverse(&base), Vec::new(), "no target ⇒ nothing to undo");
     }
     //#endregion ⚖️SemanticLaws
+
+    //#region 🔖️OutcomeLaws
+    /// 🪧 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS Pass 3 — one test per
+    /// verb family, calling the two testkit laws landed under their frozen names
+    /// (`assert_missing_target_is_error`/`assert_fatal_never_applies`,
+    /// `📡️spr/🧪️testkit/🦀️component.rs`). `assert_outcome_policy_matrix` is NOT landed under that
+    /// name — only the differently-shaped `assert_policy_matrix(rejects, is_applicable)` exists,
+    /// which asserts the frozen 3×4 policy table directly rather than one outcome per verb family,
+    /// so it is not a drop-in substitute here; see this lane's report to the coordinator.
+    #[test]
+    fn delete_node_missing_target_is_error() {
+        let base = MathematicalSnapshot::default();
+        let mutation = MathematicalMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "nonexistent".into() });
+        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[test]
+    fn delete_nodes_all_missing_targets_is_error() {
+        let base = MathematicalSnapshot::default();
+        let mutation = MathematicalMutation::DeleteNodes(delete_nodes::mutation::DeleteNodes { ids: vec!["nonexistent-1".into(), "nonexistent-2".into()] });
+        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[test]
+    fn remove_point_missing_target_is_error() {
+        let base = MathematicalSnapshot::default();
+        let out_of_range = mathematical_geometry(&base).points.len();
+        let mutation = MathematicalMutation::RemovePoint(remove_point::mutation::RemovePoint { index: out_of_range });
+        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[test]
+    fn move_node_missing_target_is_error() {
+        let base = MathematicalSnapshot::default();
+        let mutation = MathematicalMutation::MoveNode(move_node::mutation::MoveNode { id: "nonexistent".into(), x: 1.0, y: 1.0 });
+        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[test]
+    fn change_node_label_missing_target_is_error() {
+        let base = MathematicalSnapshot::default();
+        let mutation = MathematicalMutation::ChangeNodeLabel(change_node_label::mutation::ChangeNodeLabel { id: "nonexistent".into(), new_label: "X".into() });
+        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[test]
+    fn connect_nodes_missing_target_is_error() {
+        let base = MathematicalSnapshot::default();
+        let mutation = MathematicalMutation::ConnectNodes(connect_nodes::mutation::ConnectNodes { id: "e-new".into(), source: "nonexistent".into(), target: "a".into() });
+        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[test]
+    fn disconnect_nodes_missing_target_is_error() {
+        let base = MathematicalSnapshot::default();
+        let mutation = MathematicalMutation::DisconnectNodes(disconnect_nodes::mutation::DisconnectNodes { id: "nonexistent".into() });
+        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[test]
+    fn create_node_duplicate_id_fatal_never_applies() {
+        let base = MathematicalSnapshot::default();
+        let existing_id = mathematical_graph(&base).nodes[0].id.clone();
+        let mutation = MathematicalMutation::CreateNode(create_node::mutation::CreateNode { id: existing_id, label: "dup".into(), x: 0.0, y: 0.0 });
+        protocol::testkit::assert_fatal_never_applies(&Mutation::diff(&mutation, &base));
+    }
+
+    #[test]
+    fn connect_nodes_duplicate_id_fatal_never_applies() {
+        let base = MathematicalSnapshot::default();
+        let existing_edge_id = mathematical_graph(&base).edges[0].id.clone();
+        let mutation = MathematicalMutation::ConnectNodes(connect_nodes::mutation::ConnectNodes { id: existing_edge_id, source: "a".into(), target: "d".into() });
+        protocol::testkit::assert_fatal_never_applies(&Mutation::diff(&mutation, &base));
+    }
+
+    #[test]
+    fn move_point_non_finite_fatal_never_applies() {
+        let base = MathematicalSnapshot::default();
+        let mutation = MathematicalMutation::MovePoint(move_point::mutation::MovePoint { index: 0, x: f64::NAN, y: 0.0 });
+        protocol::testkit::assert_fatal_never_applies(&Mutation::diff(&mutation, &base));
+    }
+
+    #[test]
+    fn change_coefficient_zero_denominator_fatal_never_applies() {
+        let base = MathematicalSnapshot::default();
+        let label = base.equation.expr.label;
+        let mutation = MathematicalMutation::ChangeCoefficient(change_coefficient::mutation::ChangeCoefficient { label, numer: "1".into(), denom: "0".into() });
+        protocol::testkit::assert_fatal_never_applies(&Mutation::diff(&mutation, &base));
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

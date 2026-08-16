@@ -1,6 +1,6 @@
 //! 📦 `bounds` — one named inference: 3d bounding box across every object's transform position,
 //! plus object count. `LowpolyObject` carries no live mesh content field at all (the half-edge-mesh
-//! JSON a session's compute engine works with lives session-side, `🎛️apps/💠️lowpoly/🖌️session::LowpolyScratch`'s
+//! JSON a session's compute engine works with lives session-side, `✏️editor/🖌️session::LowpolyScratch`'s
 //! `mesh_workspace` cache — round 2 of ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's
 //! round-trip law fix); this facet reads only the typed `transform.position` field every object
 //! already carries. Simple whole-snapshot scalar: no `InferredField` caching.

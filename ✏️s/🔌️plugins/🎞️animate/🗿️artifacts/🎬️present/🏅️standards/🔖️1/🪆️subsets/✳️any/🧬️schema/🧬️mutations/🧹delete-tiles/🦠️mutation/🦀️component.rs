@@ -20,7 +20,7 @@ pub struct DeleteTiles {
 impl MutationKind<PresentSnapshot, PresentMutation> for DeleteTiles {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "tiles", kind: "delete-tiles", record: "DeletedTiles" };
 
-    fn diff(&self, base: &PresentSnapshot) -> PresentDiff {
+    fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
         super::diff::diff(self, base)
     }
 

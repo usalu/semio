@@ -19,7 +19,7 @@ pub struct RenameInfrastructureRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameInfrastructureRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "infrastructure-requirement", kind: "rename-infrastructure-requirement", record: "RenamedInfrastructureRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

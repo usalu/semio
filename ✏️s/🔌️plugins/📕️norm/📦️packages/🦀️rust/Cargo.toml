@@ -16,77 +16,77 @@ role = "plugin"
 
 [[package.metadata.semio.playground]]
 variant = "din4108"
-app = "norm-din-4108-play"
+app = "s.norm.din4108@1/*#editor"
 ports = { react = 6091, wgpu = 6191 }
 
 [[package.metadata.semio.playground]]
 variant = "din16798"
-app = "norm-din-en-16798-play"
+app = "s.norm.din16798@1/*#editor"
 ports = { react = 6092, wgpu = 6192 }
 
 [[package.metadata.semio.playground]]
 variant = "din18599"
-app = "norm-din-v-18599-play"
+app = "s.norm.din18599@1/*#editor"
 ports = { react = 6093, wgpu = 6193 }
 
 [[package.metadata.semio.playground]]
 variant = "en1990"
-app = "norm-en-1990-play"
+app = "s.norm.en1990@1/*#editor"
 ports = { react = 6094, wgpu = 6194 }
 
 [[package.metadata.semio.playground]]
 variant = "en1991"
-app = "norm-en-1991-play"
+app = "s.norm.en1991@1/*#editor"
 ports = { react = 6095, wgpu = 6195 }
 
 [[package.metadata.semio.playground]]
 variant = "en1992"
-app = "norm-en-1992-play"
+app = "s.norm.en1992@1/*#editor"
 ports = { react = 6096, wgpu = 6196 }
 
 [[package.metadata.semio.playground]]
 variant = "en1993"
-app = "norm-en-1993-play"
+app = "s.norm.en1993@1/*#editor"
 ports = { react = 6097, wgpu = 6197 }
 
 [[package.metadata.semio.playground]]
 variant = "en1994"
-app = "norm-en-1994-play"
+app = "s.norm.en1994@1/*#editor"
 ports = { react = 6098, wgpu = 6198 }
 
 [[package.metadata.semio.playground]]
 variant = "en1995"
-app = "norm-en-1995-play"
+app = "s.norm.en1995@1/*#editor"
 ports = { react = 6099, wgpu = 6199 }
 
 [[package.metadata.semio.playground]]
 variant = "en1996"
-app = "norm-en-1996-play"
+app = "s.norm.en1996@1/*#editor"
 ports = { react = 6100, wgpu = 6200 }
 
 [[package.metadata.semio.playground]]
 variant = "en1997"
-app = "norm-en-1997-play"
+app = "s.norm.en1997@1/*#editor"
 ports = { react = 6101, wgpu = 6201 }
 
 [[package.metadata.semio.playground]]
 variant = "en1998"
-app = "norm-en-1998-play"
+app = "s.norm.en1998@1/*#editor"
 ports = { react = 6102, wgpu = 6202 }
 
 [[package.metadata.semio.playground]]
 variant = "en1999"
-app = "norm-en-1999-play"
+app = "s.norm.en1999@1/*#editor"
 ports = { react = 6103, wgpu = 6203 }
 
 [[package.metadata.semio.playground]]
 variant = "iso16757"
-app = "norm-iso-16757-play"
+app = "s.norm.iso16757@1/*#editor"
 ports = { react = 6104, wgpu = 6204 }
 
 [[package.metadata.semio.playground]]
 variant = "vdi3805"
-app = "norm-vdi-3805-play"
+app = "s.norm.vdi3805@1/*#editor"
 ports = { react = 6105, wgpu = 6205 }
 
 [lib]

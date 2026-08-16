@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.reorder-required-extensions.v1.mutation",
+  "title": "GltfReorderRequiredExtensionsMutation",
+  "type": "object",
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.reorder-required-extensions.v1",
+    "version": 1,
+    "phase": "mutation",
+    "touchedPaths": [
+      "document/extensionsRequired"
+    ],
+    "referencePolicy": "exact permutation preserves all declaration identities"
+  }
+}

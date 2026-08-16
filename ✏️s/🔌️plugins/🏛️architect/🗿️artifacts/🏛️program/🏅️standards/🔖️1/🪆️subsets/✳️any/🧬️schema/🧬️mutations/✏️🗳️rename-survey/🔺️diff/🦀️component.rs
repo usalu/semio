@@ -7,8 +7,14 @@ use crate::artifacts::program::registers::SurveyPatch;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// ✏️ `patched = [{id, name: Some(new_name)}]`.
-pub fn diff(payload: &RenameSurvey, _base: &ProgramSnapshot) -> ProgramDiff {
+/// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
+pub fn diff(payload: &RenameSurvey, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let Some(existing) = base.surveys.iter().find(|row| row.header.id == payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "No survey exists with this id.", [payload.id.0.clone()]);
+    };
+    if existing.header.name == payload.new_name {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This survey already has this name.").at([payload.id.0.clone()])]);
+    }
     let patch = SurveyPatch { name: Some(payload.new_name.clone()), ..Default::default() };
-    ProgramDiff { surveys: Some(ProgramSurveysDelta { patched: vec![ProgramSurveysPatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() }
+    protocol::MutationOutcome::new(ProgramDiff { surveys: Some(ProgramSurveysDelta { patched: vec![ProgramSurveysPatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
 }

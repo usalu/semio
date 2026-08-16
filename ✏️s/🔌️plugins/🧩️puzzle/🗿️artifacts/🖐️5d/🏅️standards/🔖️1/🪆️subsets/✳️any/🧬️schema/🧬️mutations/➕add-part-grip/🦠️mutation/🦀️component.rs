@@ -25,7 +25,7 @@ pub fn add_part_grip(part_id: String, grip: Puzzle5dGrip, index: Option<usize>) 
 impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for AddPartGrip {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "part-grip", kind: "add-part-grip", record: "AddedPartGrip" };
 
-    fn diff(&self, base: &Puzzle5dSnapshot) -> Puzzle5dDiff {
+    fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {

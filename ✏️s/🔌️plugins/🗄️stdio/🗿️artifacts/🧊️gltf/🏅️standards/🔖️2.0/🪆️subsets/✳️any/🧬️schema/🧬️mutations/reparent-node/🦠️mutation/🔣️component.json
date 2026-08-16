@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.reparent-node.v1.mutation",
+  "title": "GltfReparentNodeMutation",
+  "type": "object",
+  "properties": {
+    "parent": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "child": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "position": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "parent",
+    "child",
+    "position"
+  ],
+  "additionalProperties": false,
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.reparent-node.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "reparent",
+    "touchedPaths": [
+      "document/nodes/*/children",
+      "document/scenes/*/nodes"
+    ],
+    "referencePolicy": "removes stale parent and scene-root links before binding the new parent; rejects cycles"
+  }
+}

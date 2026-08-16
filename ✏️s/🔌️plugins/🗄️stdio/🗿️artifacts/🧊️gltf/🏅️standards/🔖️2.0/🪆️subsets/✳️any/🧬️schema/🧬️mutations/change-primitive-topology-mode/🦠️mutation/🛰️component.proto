@@ -1,0 +1,9 @@
+// change-primitive-topology-mode mutation facet.
+syntax = "proto3";
+package stdio.gltf.mutation;
+message GltfChangePrimitiveTopologyModePayloadV1 {
+  uint32 mesh = 1;
+  uint32 primitive = 2;
+  uint32 mode = 3;
+}
+message GltfChangePrimitiveTopologyModeMutationV1 { string id = 1; uint32 version = 2; bool accepted = 3; repeated string touched_paths = 4; string rejection_code = 5; }

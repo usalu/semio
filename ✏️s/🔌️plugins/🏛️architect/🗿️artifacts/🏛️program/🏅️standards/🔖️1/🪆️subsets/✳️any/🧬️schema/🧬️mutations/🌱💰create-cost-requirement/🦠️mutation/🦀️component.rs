@@ -18,7 +18,7 @@ pub struct CreateCostRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateCostRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "cost-requirement", kind: "create-cost-requirement", record: "CreatedCostRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

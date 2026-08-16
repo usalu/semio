@@ -1,0 +1,15 @@
+{
+  "id": "s.stdio.gltf.mutation.unbind-morph-target-attribute.v1",
+  "laws": [
+    "typed validation rejection",
+    "direct sparse mesh diff",
+    "exact-base inverse",
+    "declared touched paths",
+    "reference repair or rejection",
+    "apply/replay/undo determinism"
+  ],
+  "touchedPaths": [
+    "document/meshes/*/primitives/*/targets/*/attributes"
+  ],
+  "referencePolicy": "removes one target semantic relationship"
+}

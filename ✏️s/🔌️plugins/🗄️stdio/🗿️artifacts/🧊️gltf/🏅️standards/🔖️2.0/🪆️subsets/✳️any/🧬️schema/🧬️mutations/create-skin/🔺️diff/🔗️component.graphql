@@ -1,0 +1,13 @@
+# create-skin typed diff facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfSkinValueV1
+input GltfCreateSkinPayloadV1 {
+  position: Int!
+}
+type GltfCreateSkinDiffOperationV1 {
+  kind: String!
+  position: Int!
+  item: GltfSkinValueV1!
+}
+type GltfCreateSkinDiffV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfCreateSkinPayloadV1!, operation: GltfCreateSkinDiffOperationV1! }

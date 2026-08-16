@@ -18,7 +18,7 @@ pub struct CreateStatusRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateStatusRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "status-record", kind: "create-status-record", record: "CreatedStatusRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

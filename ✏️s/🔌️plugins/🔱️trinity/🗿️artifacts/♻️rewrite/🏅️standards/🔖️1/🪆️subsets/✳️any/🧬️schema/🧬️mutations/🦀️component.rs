@@ -5,7 +5,7 @@
 //! from those payloads — no hand-written diff/inverse dispatch here. Whole-document replace (the
 //! old `SetState`, a whole-snapshot LWW register wearing a mutation costume) is banned outright;
 //! there is no import mutation (locked decision) — `resetRule`/`"document:in"` route through
-//! `HostEffect::LoadDocument` (see `apps::rewrite::reset_document_effect`), never through this enum.
+//! `HostEffect::LoadDocument` (see `editor::rewrite::reset_document_effect`), never through this enum.
 
 use crate::artifacts::rewrite::diff::RewriteDiff;
 use crate::artifacts::rewrite::{RewriteSnapshot, TrinityRewriteError, REWRITE_RULE_SCHEMA};
@@ -88,8 +88,8 @@ pub fn rewrite_snapshot_mutations(before: &RewriteSnapshot, after: &RewriteSnaps
 
 //#region 🔖️BatchHelpers
 pub fn apply_rewrite_rule_mutation(snapshot: &mut RewriteSnapshot, mutation: &RewriteRuleMutation) {
-    let diff = protocol::Mutation::diff(mutation, snapshot);
-    *snapshot = protocol::MutationDiff::apply(&diff, snapshot);
+    let outcome = protocol::Mutation::diff(mutation, snapshot);
+    *snapshot = protocol::MutationDiff::apply(outcome.diff(), snapshot);
 }
 
 pub fn inverse_rewrite_rule_mutation(snapshot: &RewriteSnapshot, mutation: &RewriteRuleMutation) -> Vec<RewriteRuleMutation> {
@@ -207,9 +207,9 @@ mod tests {
     #[test]
     fn edit_lhs_diff_absorb_law() {
         let base = sample_rule_state();
-        let d1 = protocol::Mutation::diff(&edit_lhs("{\"a\":1}".into()), &base);
+        let d1 = protocol::Mutation::diff(&edit_lhs("{\"a\":1}".into()), &base).diff().clone();
         let mid = protocol::MutationDiff::apply(&d1, &base);
-        let d2 = protocol::Mutation::diff(&edit_lhs("{\"a\":2}".into()), &mid);
+        let d2 = protocol::Mutation::diff(&edit_lhs("{\"a\":2}".into()), &mid).diff().clone();
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -222,5 +222,15 @@ mod tests {
         assert_eq!(<RewriteRuleMutation as protocol::SemanticMutation<RewriteSnapshot>>::kinds().len(), 7);
     }
     //#endregion 🔖️MutationLaws
+
+    // 🧪️OutcomeLaws — no `assert_missing_target_is_error`/`assert_fatal_never_applies` cases apply to
+    // this facet: every leaf here is a root-scoped scalar edit (edit-rhs/edit-lhs/edit-before-fixture,
+    // no addressable target to be missing) or a key-addressed map upsert/remove
+    // (change/remove-parameter-binding, change/remove-rule-layout-point) mapped to the `clear` family
+    // (`mutation.no-op` on an already-absent key, per this lane's report) rather than `target-missing`
+    // — a missing map key is never Fatal/Error here, matching `remove_parameter_binding("ghost")`/
+    // `remove_rule_layout_point("ghost")` in `🔖️MutationLaws` above staying inside the inverse law's
+    // "not rejected" bound. `assert_outcome_policy_matrix` is also not yet landed in
+    // `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands.
 }
 //#endregion 🧪️Tests

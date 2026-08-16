@@ -23,7 +23,7 @@ pub fn create_step(path_ref: PathRef, step: Step) -> ImperativeMutation {
 impl protocol::MutationKind<ImperativeSnapshot, ImperativeMutation> for CreateStep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "step", kind: "create-step", record: "CreatedStep" };
 
-    fn diff(&self, base: &ImperativeSnapshot) -> ImperativeDiff {
+    fn diff(&self, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ImperativeSnapshot) -> Vec<ImperativeMutation> {

@@ -6,7 +6,11 @@ use crate::artifacts::program::diff::ProgramSecurityDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🌱️ `added = [payload row]` — the row lands at the end of `program.security` on apply.
-pub fn diff(payload: &CreateSecurityRequirement, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { security: Some(ProgramSecurityDelta { added: vec![payload.security_requirement.clone()], ..Default::default() }), ..Default::default() }
+/// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
+pub fn diff(payload: &CreateSecurityRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let id = payload.security_requirement.header.id.clone();
+    if base.security.iter().any(|row| row.header.id == id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A security requirement already exists with this id.", [id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { security: Some(ProgramSecurityDelta { added: vec![payload.security_requirement.clone()], ..Default::default() }), ..Default::default() })
 }

@@ -18,7 +18,7 @@ pub struct DeleteScenario {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteScenario {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "scenario", kind: "delete-scenario", record: "DeletedScenario" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

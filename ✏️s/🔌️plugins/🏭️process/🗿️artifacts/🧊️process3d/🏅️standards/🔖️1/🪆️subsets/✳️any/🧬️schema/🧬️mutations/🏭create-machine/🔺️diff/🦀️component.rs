@@ -1,6 +1,7 @@
 //! 🔺️ `create-machine` sparse diff construction — a whole-`Workshop` value diff (the artifact's
 //! `Process3dDiff.workshop` field is a whole-value replace, matching every other machine
-//! mutation's diff shape), built directly from `base` + payload, never a snapshot clone.
+//! mutation's diff shape), built directly from `base` + payload, never a snapshot clone. Fatal
+//! `duplicate-id` on an existing machine id.
 
 use crate::artifacts::process3d::diff::Process3dDiff;
 use crate::artifacts::process3d::mutations::create_machine::mutation::CreateMachine;
@@ -8,9 +9,12 @@ use crate::artifacts::process3d::{Process3dSnapshot, Workshop};
 
 //#region 🔖️Diff
 /// 🏗️ Builds the new workshop value with the machine appended.
-pub fn diff(payload: &CreateMachine, base: &Process3dSnapshot) -> Process3dDiff {
+pub fn diff(payload: &CreateMachine, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+    if base.workshop.machines.iter().any(|machine| machine.id == payload.machine.id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A machine with id \"{}\" already exists.", payload.machine.id), [payload.machine.id.clone()]);
+    }
     let mut machines = base.workshop.machines.clone();
     machines.push(payload.machine.clone());
-    Process3dDiff { workshop: Some(Workshop { machines }), ..Default::default() }
+    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Workshop { machines }), ..Default::default() })
 }
 //#endregion 🔖️Diff

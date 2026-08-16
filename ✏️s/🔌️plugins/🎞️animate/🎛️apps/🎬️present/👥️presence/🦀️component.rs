@@ -109,9 +109,9 @@ pub enum PresentPresenceMutation {
 impl Mutation<PresentPresence> for PresentPresenceMutation {
     type Diff = PresentPresence;
 
-    fn diff(&self, _base: &PresentPresence) -> PresentPresence {
+    fn diff(&self, _base: &PresentPresence) -> protocol::MutationOutcome<PresentPresence> {
         match self {
-            Self::Snapshot { presence } => presence.clone(),
+            Self::Snapshot { presence } => protocol::MutationOutcome::new(presence.clone()),
         }
     }
 

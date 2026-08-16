@@ -1,0 +1,2 @@
+# change-node-extension-data diff typed facet.
+input GltfChangeNodeExtensionDataDiffV1 { operation: GltfChangeNodeExtensionDataPayloadV1!, after: GltfJson, touchedPaths: [String!]! }

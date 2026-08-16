@@ -17,7 +17,7 @@ pub struct RenameStep {
 
 impl MutationKind<FormsSnapshot, FormMutation> for RenameStep {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "step", kind: "rename-step", record: "RenamedStep" };
-    fn diff(&self, base: &FormsSnapshot) -> FormsDiff {
+    fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {

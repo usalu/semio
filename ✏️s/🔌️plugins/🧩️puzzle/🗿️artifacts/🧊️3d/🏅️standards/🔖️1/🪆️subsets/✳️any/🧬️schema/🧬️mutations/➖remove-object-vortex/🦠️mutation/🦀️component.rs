@@ -23,7 +23,7 @@ pub fn remove_object_vortex(object_id: String, vortex_id: String) -> Puzzle3dMut
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for RemoveObjectVortex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "object-vortex", kind: "remove-object-vortex", record: "RemovedObjectVortex" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> Puzzle3dDiff {
+    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {

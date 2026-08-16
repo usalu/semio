@@ -90,10 +90,11 @@ mod tests {
     }
 
     fn round_trip(snapshot: &WiresSnapshot, operation: &WiresMutation) -> WiresSnapshot {
-        let forward = apply_mutation(snapshot, operation);
+        let (forward, _messages) = apply_mutation(snapshot, operation);
         let mut restored = forward.clone();
         for back in operation.inverse(snapshot) {
-            restored = apply_mutation(&restored, &back);
+            let (next, _messages) = apply_mutation(&restored, &back);
+            restored = next;
         }
         assert_eq!(&restored, snapshot, "inverse() must restore the pre-mutation snapshot");
         forward
@@ -155,8 +156,8 @@ mod tests {
     #[test]
     fn connect_disconnect_nodes_round_trip() {
         let mut snapshot = empty_wires_snapshot();
-        snapshot = apply_mutation(&snapshot, &create_node(node("node-1", "A")));
-        snapshot = apply_mutation(&snapshot, &create_node(node("node-2", "B")));
+        snapshot = apply_mutation(&snapshot, &create_node(node("node-1", "A"))).0;
+        snapshot = apply_mutation(&snapshot, &create_node(node("node-2", "B"))).0;
         let edge = dsl::to_dsl_value(&json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" })).unwrap();
         let relationship = dsl::to_dsl_value(&json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1, "targetIdentityId": 2 })).unwrap();
         let with_edge = round_trip(&snapshot, &connect_nodes(edge, relationship));
@@ -187,8 +188,8 @@ mod tests {
         let base = empty_wires_snapshot();
         let mutation = create_node(node("node-1", "Alpha"));
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = create_node(node("node-2", "Beta")).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = create_node(node("node-2", "Beta")).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -199,6 +200,35 @@ mod tests {
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
     }
     //#endregion 🧪️MutationLaws
+
+    //#region 🧪️OutcomeLaws
+    /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
+    /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
+    #[test]
+    fn delete_missing_node_is_a_target_missing_error() {
+        let base = empty_wires_snapshot();
+        protocol::testkit::assert_missing_target_is_error(&base, &delete_node("does-not-exist".into()));
+    }
+
+    #[test]
+    fn move_missing_node_is_a_target_missing_error() {
+        let base = empty_wires_snapshot();
+        protocol::testkit::assert_missing_target_is_error(&base, &move_node("does-not-exist".into(), 1.0, 2.0));
+    }
+
+    #[test]
+    fn disconnect_missing_edge_is_a_target_missing_error() {
+        let base = empty_wires_snapshot();
+        protocol::testkit::assert_missing_target_is_error(&base, &disconnect_nodes("does-not-exist".into()));
+    }
+
+    #[test]
+    fn create_node_duplicate_id_never_applies() {
+        let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
+        let duplicate = create_node(node("node-1", "Alpha Again"));
+        protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
+    }
+    //#endregion 🧪️OutcomeLaws
 
     #[test]
     fn dispatch_registers_semantic_descriptors() {

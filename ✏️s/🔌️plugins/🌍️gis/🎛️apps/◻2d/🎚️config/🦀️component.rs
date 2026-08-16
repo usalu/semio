@@ -242,30 +242,61 @@ impl protocol::OpBinary for Gis2dConfigMutation {
 impl Mutation<Gis2dConfig> for Gis2dConfigMutation {
     type Diff = Gis2dConfig;
 
-    fn diff(&self, base: &Gis2dConfig) -> Gis2dConfig {
+    fn diff(&self, base: &Gis2dConfig) -> protocol::MutationOutcome<Gis2dConfig> {
         let mut next = base.clone();
         match self {
             Gis2dConfigMutation::SetLayerVisibility { layer_id, visible } => {
+                if base.layer_visibility.get(layer_id).copied().unwrap_or(true) == *visible {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Layer \"{}\" visibility is already {}.", layer_id, visible));
+                }
                 if *visible {
                     next.layer_visibility.remove(layer_id);
                 } else {
                     next.layer_visibility.insert(layer_id.clone(), *visible);
                 }
             }
-            Gis2dConfigMutation::SetCamera { camera_json } => next.camera_json = camera_json.clone(),
-            Gis2dConfigMutation::SetRenderMode { value } => next.render_mode = value.clone(),
-            Gis2dConfigMutation::SetVectorStyle { value } => next.vector_style = value.clone(),
-            Gis2dConfigMutation::SetLodMode { value } => next.lod_mode = value.clone(),
+            Gis2dConfigMutation::SetCamera { camera_json } => {
+                if &base.camera_json == camera_json {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", "Camera is already at the requested position.");
+                }
+                next.camera_json = camera_json.clone();
+            }
+            Gis2dConfigMutation::SetRenderMode { value } => {
+                if &base.render_mode == value {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Render mode is already \"{}\".", value));
+                }
+                next.render_mode = value.clone();
+            }
+            Gis2dConfigMutation::SetVectorStyle { value } => {
+                if &base.vector_style == value {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Vector style is already \"{}\".", value));
+                }
+                next.vector_style = value.clone();
+            }
+            Gis2dConfigMutation::SetLodMode { value } => {
+                if &base.lod_mode == value {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("LOD mode is already \"{}\".", value));
+                }
+                next.lod_mode = value.clone();
+            }
             Gis2dConfigMutation::SetLayerStrokeScale { layer_id, value } => {
+                if base.layer_stroke_scale.get(layer_id).copied().unwrap_or(1.0) == *value {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Layer \"{}\" stroke scale is already {}.", layer_id, value));
+                }
                 if *value == 1.0 {
                     next.layer_stroke_scale.remove(layer_id);
                 } else {
                     next.layer_stroke_scale.insert(layer_id.clone(), *value);
                 }
             }
-            Gis2dConfigMutation::SetLocale { value } => next.locale = value.clone(),
+            Gis2dConfigMutation::SetLocale { value } => {
+                if &base.locale == value {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Locale is already \"{}\".", value));
+                }
+                next.locale = value.clone();
+            }
         }
-        next
+        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &Gis2dConfig) -> Vec<Self> {
@@ -326,7 +357,7 @@ mod tests {
     #[test]
     fn gis2d_config_operation_diff_writes_the_targeted_field_and_leaves_the_rest() {
         let base = Gis2dConfig::default();
-        let next = Gis2dConfigMutation::SetRenderMode { value: "vector".into() }.diff(&base);
+        let next = Gis2dConfigMutation::SetRenderMode { value: "vector".into() }.diff(&base).diff().clone();
         assert_eq!(next.render_mode, "vector");
         assert_eq!(next.vector_style, base.vector_style, "untouched fields survive the diff");
     }
@@ -335,11 +366,11 @@ mod tests {
     fn gis2d_config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = Gis2dConfig::default();
         let operation = Gis2dConfigMutation::SetLayerVisibility { layer_id: "water".into(), visible: false };
-        let next = operation.diff(&base);
+        let next = operation.diff(&base).diff().clone();
         assert_eq!(next.layer_visibility.get("water"), Some(&false));
         let backwards = operation.inverse(&base);
         assert_eq!(backwards, vec![Gis2dConfigMutation::SetLayerVisibility { layer_id: "water".into(), visible: true }]);
-        let restored = backwards[0].diff(&next);
+        let restored = backwards[0].diff(&next).diff().clone();
         assert_eq!(restored, base, "the per-field inverse restores the exact pre-operation config, including the absent map entry");
     }
 
@@ -349,10 +380,10 @@ mod tests {
     fn gis2d_config_layer_stroke_scale_backwards_restores_an_absent_entry() {
         let base = Gis2dConfig::default();
         let operation = Gis2dConfigMutation::SetLayerStrokeScale { layer_id: "roads".into(), value: 2.0 };
-        let next = operation.diff(&base);
+        let next = operation.diff(&base).diff().clone();
         assert_eq!(next.layer_stroke_scale.get("roads"), Some(&2.0));
         let backwards = operation.inverse(&base);
-        let restored = backwards[0].diff(&next);
+        let restored = backwards[0].diff(&next).diff().clone();
         assert_eq!(restored, base);
         assert!(!restored.layer_stroke_scale.contains_key("roads"));
     }

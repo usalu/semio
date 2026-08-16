@@ -21,7 +21,7 @@ pub fn edit_lhs(new_lhs_json: String) -> RewriteRuleMutation {
 impl protocol::MutationKind<RewriteSnapshot, RewriteRuleMutation> for EditLhs {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "lhs", kind: "edit-lhs", record: "EditedLhs" };
 
-    fn diff(&self, base: &RewriteSnapshot) -> RewriteDiff {
+    fn diff(&self, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {

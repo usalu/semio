@@ -18,7 +18,7 @@ pub struct DeleteConflict {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteConflict {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "conflict", kind: "delete-conflict", record: "DeletedConflict" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

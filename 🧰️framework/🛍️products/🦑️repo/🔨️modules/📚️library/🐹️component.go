@@ -126,6 +126,7 @@ type TicketOpenPayload struct {
 	Title  string `json:"title"`
 	Prompt string `json:"prompt"`
 	LLM    string `json:"llm,omitempty"`
+	Effort string `json:"effort,omitempty"`
 	Client string `json:"client"`
 	Author string `json:"author,omitempty"`
 	Goal   string `json:"goal"`
@@ -145,6 +146,7 @@ type TicketReopenPayload struct {
 	TicketPayload
 	Prompt string `json:"prompt"`
 	LLM    string `json:"llm,omitempty"`
+	Effort string `json:"effort,omitempty"`
 	Client string `json:"client"`
 	Author string `json:"author,omitempty"`
 }
@@ -154,6 +156,8 @@ type TicketChangePayload struct {
 	TicketPayload
 	Title  *string `json:"title,omitempty"`
 	Prompt *string `json:"prompt,omitempty"`
+	LLM    *string `json:"llm,omitempty"`
+	Effort *string `json:"effort,omitempty"`
 	Goal   *string `json:"goal,omitempty"`
 	Parent *string `json:"parent,omitempty"`
 	Author string  `json:"author,omitempty"`
@@ -169,6 +173,8 @@ type GoalOpenPayload struct {
 	GoalPayload
 	Title       string `json:"title"`
 	Description string `json:"description,omitempty"`
+	LLM         string `json:"llm,omitempty"`
+	Effort      string `json:"effort,omitempty"`
 	Parent      string `json:"parent,omitempty"`
 	Author      string `json:"author,omitempty"`
 }
@@ -186,6 +192,7 @@ type GoalReopenPayload struct {
 	Prompt string `json:"prompt"`
 	Client string `json:"client"`
 	LLM    string `json:"llm,omitempty"`
+	Effort string `json:"effort,omitempty"`
 	Author string `json:"author,omitempty"`
 }
 
@@ -194,6 +201,8 @@ type GoalChangePayload struct {
 	GoalPayload
 	Title       *string `json:"title,omitempty"`
 	Description *string `json:"description,omitempty"`
+	LLM         *string `json:"llm,omitempty"`
+	Effort      *string `json:"effort,omitempty"`
 	Parent      *string `json:"parent,omitempty"`
 	Author      string  `json:"author,omitempty"`
 }

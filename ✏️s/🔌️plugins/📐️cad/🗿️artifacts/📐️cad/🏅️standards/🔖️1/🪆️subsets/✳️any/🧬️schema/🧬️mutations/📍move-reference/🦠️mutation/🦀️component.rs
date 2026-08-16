@@ -18,7 +18,7 @@ pub struct MoveReference {
 impl MutationKind<CadSnapshot, CadMutation> for MoveReference {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "reference", kind: "move-reference", record: "MovedReference" };
 
-    fn diff(&self, base: &CadSnapshot) -> crate::artifacts::cad::diff::CadDiff {
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {

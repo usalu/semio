@@ -22,7 +22,7 @@ pub fn delete_step(id: String) -> SequenceMutation {
 impl protocol::MutationKind<SequenceSnapshot, SequenceMutation> for DeleteStep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "step", kind: "delete-step", record: "DeletedStep" };
 
-    fn diff(&self, base: &SequenceSnapshot) -> SequenceDiff {
+    fn diff(&self, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {

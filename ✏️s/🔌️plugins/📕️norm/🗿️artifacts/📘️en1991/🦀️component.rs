@@ -29,28 +29,16 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     crate::app_surface::artifact_kind_spec("en1991", "EN 1991")
 }
 //#endregion 🔖️ArtifactKind
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::artifacts::en1991::standards::v1::subsets::any::io::io_registry as v1;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
-    use std::sync::OnceLock;
 
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("En1991Composer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
-}
-//#endregion 🚪️DerivedIoRegistry
+/// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1) — lives at the ARTIFACT level, not
+/// under the sibling `editor` module, so a viewer file can read it without ever importing through it.
+pub const EN1991_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect {
+    artifact_kind: "s.norm.en1991",
+    standard: semio_framework_plugin::app::StandardId("1"),
+    subset: semio_framework_plugin::app::SubsetId::ANY,
+};
+pub const EN1991_DOCUMENT_SCHEMA: &str = "semio.norm.en1991/v1";
 
 //#region 🪪️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
@@ -89,7 +77,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .inferences([crate::artifacts::en1991::standards::v1::subsets::any::schema::inferences::en1991_artifact_inference_descriptor()])
         .composers(crate::artifacts::en1991::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::en1991::En1991PlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::en1991::En1991PlayApp>>()
         .try_build()
 }
 

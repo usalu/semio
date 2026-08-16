@@ -1,6 +1,6 @@
 //! 🧾 `change-data-fields` — whole-field replace for `LayoutSnapshot::data_fields_json`. Semantic
 //! replacement for the retired `SetDataFields` generic variant; the `fields:in` workflow port's
-//! real, undoable write (see `crate::apps::layout::commands::author::import_media`).
+//! real, undoable write (see `crate::editor::layout::LayoutPlayApp::import_media`).
 
 use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot};

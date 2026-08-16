@@ -1,6 +1,9 @@
 //! 💡️ material-volume atomic glTF inference leaf.
-use super::super::{geometry_core::GltfGeometryContext, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
-use super::super::super::modules::{inference_measures::{exact, unavailable}, measurement_contracts::*};
+use super::super::super::modules::{
+    inference_measures::{exact, unavailable},
+    measurement_contracts::*,
+};
+use super::super::{geometry_core::GltfGeometryContext, GltfEntityIndicators, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
 
 pub struct GltfMaterialVolumeInference;
 
@@ -8,10 +11,15 @@ impl GltfInferenceLeaf for GltfMaterialVolumeInference {
     const DESCRIPTOR: GltfInferenceLeafDescriptor = GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.material-volume.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.material-volume.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
 
-pub fn descriptor() -> GltfInferenceLeafDescriptor { GltfMaterialVolumeInference::DESCRIPTOR }
+pub fn descriptor() -> GltfInferenceLeafDescriptor {
+    GltfMaterialVolumeInference::DESCRIPTOR
+}
 
 pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
-    context.solid.map(|metrics| exact(metrics.0, GltfUnit::CubicMetre, context.sample_count, Some(context.topology))).unwrap_or_else(|| unavailable(GltfUnit::CubicMetre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)))
+    context
+        .solid
+        .map(|metrics| exact(metrics.0, GltfUnit::CubicMetre, context.sample_count, Some(context.topology)))
+        .unwrap_or_else(|| unavailable(GltfUnit::CubicMetre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)))
 }
 
 pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
@@ -19,7 +27,7 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
 }
 
 pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
-    serde_json::to_value(&indicators.area_volume.materialVolume)
+    serde_json::to_value(&indicators.area_volume.material_volume)
 }
 
 #[cfg(test)]

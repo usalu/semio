@@ -112,7 +112,7 @@ pub struct LowpolyObject {
     /// `delete-mesh` (`🧬️mutations/🕸️create-mesh`, `🧬️mutations/🧨delete-mesh`), which replace the
     /// old whole-value `replace-object-mesh`. `LowpolySnapshot`'s hand-rolled `ArtifactDsl`/
     /// `ArtifactPack` below persist ONLY this handle for the mesh slot — the live half-edge-mesh
-    /// JSON content itself never lives on this struct at all (see `🎛️apps/💠️lowpoly/🖌️session::LowpolyScratch`'s
+    /// JSON content itself never lives on this struct at all (see `✏️editor/🖌️session::LowpolyScratch`'s
     /// `mesh_workspace` field, the session-local cache this field's content moved to, round 2 of this
     /// ticket's fix — `LowpolySnapshot`'s hand-rolled codecs already asserted "never `mesh_workspace`"
     /// in this same doc comment before the field was removed; a struct-level round-trip law
@@ -271,6 +271,14 @@ pub fn apply_paint_layers_delta(object: &mut LowpolyObject, delta: &crate::artif
 }
 //#endregion 🔖️Patches
 
+//#region 🔖️Dialect
+/// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the one `Dialect` coordinate every
+/// surface (`✏️editor`/`👁️viewer`) under this artifact's `✳️any` subset shares — lives at the
+/// ARTIFACT level (not under either surface) specifically so `👁️viewer/🦀️component.rs` can read it
+/// without ever importing through the sibling editor module.
+pub const LOWPOLY_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.lowpoly.lowpoly", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+//#endregion 🔖️Dialect
+
 //#region 🔖️ArtifactKind
 /// 🧱️ The two artifact kinds this plugin contributes — lifted out of the old ui crate's manifest
 /// builder chain so the app's `🔖️Manifest` region can stitch it in as a single passthrough.
@@ -297,7 +305,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 // Option<store::ArtifactChild<SemioMeshSnapshot>>` above, never a standalone `ArtifactKindSpec`).
 // gis's `🏔️gisterrain` declared the identical id independently — that removal belongs to whichever
 // agent owns gis, not this one. Registration call site removed from
-// `🎛️apps/💠️lowpoly/🦀️component.rs`'s `create_lowpoly_app()` (`.artifact_kind(mesh_artifact_kind())`).
+// `✏️editor/🦀️component.rs`'s `create_lowpoly_app()` (`.artifact_kind(mesh_artifact_kind())`).
 //#endregion 🔖️ArtifactKind
 
 //#region 🔖️Register
@@ -362,7 +370,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::lowpoly::standards::v1::subsets::any::schema::inferences::lowpoly_artifact_inference_descriptor()])
         .composers(crate::artifacts::lowpoly::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::lowpoly::LowpolyPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::lowpoly::LowpolyPlayApp>>()
         .try_build()
 }
 

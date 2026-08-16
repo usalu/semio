@@ -18,7 +18,7 @@ pub struct DeleteAssumption {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteAssumption {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "assumption", kind: "delete-assumption", record: "DeletedAssumption" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

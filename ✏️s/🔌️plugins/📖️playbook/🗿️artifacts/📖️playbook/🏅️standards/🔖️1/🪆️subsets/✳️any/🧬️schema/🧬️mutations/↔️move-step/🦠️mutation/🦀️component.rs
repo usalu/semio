@@ -21,7 +21,7 @@ pub fn move_step_operation(step_id: &str, index: usize) -> PlaybookMutation {
 impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for MoveStep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "step", kind: "move-step", record: "MovedStep" };
 
-    fn diff(&self, base: &PlaybookSnapshot) -> crate::artifacts::playbook::PlaybookDiff {
+    fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {

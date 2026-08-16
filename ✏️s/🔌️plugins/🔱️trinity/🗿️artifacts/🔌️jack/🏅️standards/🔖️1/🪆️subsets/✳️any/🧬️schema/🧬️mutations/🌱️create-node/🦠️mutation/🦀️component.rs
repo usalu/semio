@@ -20,7 +20,7 @@ pub fn create_node(node: Node) -> TrinityGraphMutation {
 impl protocol::MutationKind<JackSnapshot, TrinityGraphMutation> for CreateNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "node", kind: "create-node", record: "CreatedNode" };
 
-    fn diff(&self, base: &JackSnapshot) -> JackDiff {
+    fn diff(&self, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {

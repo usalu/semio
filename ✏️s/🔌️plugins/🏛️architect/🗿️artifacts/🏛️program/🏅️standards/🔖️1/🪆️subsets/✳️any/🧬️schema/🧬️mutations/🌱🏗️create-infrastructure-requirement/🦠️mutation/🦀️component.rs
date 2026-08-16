@@ -18,7 +18,7 @@ pub struct CreateInfrastructureRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateInfrastructureRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "infrastructure-requirement", kind: "create-infrastructure-requirement", record: "CreatedInfrastructureRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

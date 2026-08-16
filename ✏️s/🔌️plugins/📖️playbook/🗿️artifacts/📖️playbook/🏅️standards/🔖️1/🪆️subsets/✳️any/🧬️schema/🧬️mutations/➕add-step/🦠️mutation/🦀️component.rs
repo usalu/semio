@@ -1,5 +1,5 @@
 //! ➕ Playbook mutation — `AddStep`: inserts a new step, positioned at `index` (final-state) or
-//! appended when absent.
+//! appended when absent. A duplicate `step.id` is Warning `mutation.no-op`.
 use crate::artifacts::playbook::mutations::PlaybookMutation;
 use crate::artifacts::playbook::{PlaybookSnapshot, PlaybookStep};
 use serde::{Deserialize, Serialize};
@@ -25,7 +25,7 @@ pub fn add_step_operation(spec: &PlaybookSnapshot, step_id: String) -> PlaybookM
 impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for AddStep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "step", kind: "add-step", record: "AddedStep" };
 
-    fn diff(&self, base: &PlaybookSnapshot) -> crate::artifacts::playbook::PlaybookDiff {
+    fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {

@@ -128,9 +128,6 @@ pub mod os_pack {
   #[path = "../../🔨️modules/🎒️pack/🌐️http/🦀️component.rs"]
   pub mod http;
 
-  #[path = "../../🔨️modules/🎒️pack/🔢️index/🦀️component.rs"]
-  pub mod index;
-
   #[cfg(not(target_arch = "wasm32"))]
   #[path = "../../🔨️modules/🎒️pack/🔌️io/🦀️component.rs"]
   pub mod io;
@@ -195,8 +192,8 @@ pub mod os_spr {
   pub use self::crypto::*;
   pub use self::wire::*;
 
-  #[path = "../../🔨️modules/📡️spr/🔀️crdt/🦀️component.rs"]
-  pub mod crdt;
+  #[path = "../../🔨️modules/📡️spr/⚔️conflict/🦀️component.rs"]
+  pub mod conflict;
 
   #[path = "../../🔨️modules/📡️spr/📐️format/🦀️component.rs"]
   pub mod format;

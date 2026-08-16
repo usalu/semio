@@ -18,7 +18,7 @@ pub struct ReorderStep {
 impl MutationKind<FormsSnapshot, FormMutation> for ReorderStep {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "step", kind: "reorder-step", record: "ReorderedStep" };
 
-    fn diff(&self, base: &FormsSnapshot) -> FormsDiff {
+    fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff_reorder_step(self, base)
     }
     fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {

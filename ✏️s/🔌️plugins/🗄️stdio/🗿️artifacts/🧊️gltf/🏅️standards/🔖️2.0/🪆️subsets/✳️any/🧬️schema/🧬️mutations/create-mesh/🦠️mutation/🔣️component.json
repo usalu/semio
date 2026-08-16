@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.create-mesh.v1.mutation",
+  "title": "GltfCreateMeshPayloadV1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "position": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "position"
+  ],
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.create-mesh.v1",
+    "version": 1,
+    "phase": "mutation",
+    "touchedPathPattern": "document/meshes",
+    "referencePolicy": "typed references remap, repair, or reject"
+  }
+}

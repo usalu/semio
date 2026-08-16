@@ -53,11 +53,17 @@ mod tests {
     fn change_catalog_generation_diff_absorb_law() {
         use protocol::Mutation;
         let base = SHomeSnapshot::default();
-        let d1 = change_catalog_generation(3).diff(&base);
+        let d1 = change_catalog_generation(3).diff(&base).diff().clone();
         let mid = protocol::MutationDiff::apply(&d1, &base);
-        let d2 = change_catalog_generation(9).diff(&mid);
+        let d2 = change_catalog_generation(9).diff(&mid).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🔖️MutationLaws
+
+    // 🧪️OutcomeLaws — no `assert_missing_target_is_error`/`assert_fatal_never_applies` case applies:
+    // this facet's one mutation kind (`change-catalog-generation`) is a root scalar counter setter
+    // with no addressable target and no domain invariant to violate — it can only succeed or be a
+    // `mutation.no-op` (see the leaf's own `🔺️diff` for that check). `assert_outcome_policy_matrix`
+    // is also not yet landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands.
 }
 //#endregion 🧪️Tests

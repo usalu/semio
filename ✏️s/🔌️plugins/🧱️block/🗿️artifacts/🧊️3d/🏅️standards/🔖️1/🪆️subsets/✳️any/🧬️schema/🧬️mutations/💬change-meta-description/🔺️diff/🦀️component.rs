@@ -4,7 +4,7 @@ use crate::artifacts::block3d::Block3dSnapshot;
 use crate::{BlockMeta};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ChangeMetaDescription, base: &Block3dSnapshot) -> Block3dDiff {
-    Block3dDiff { meta: Some(BlockMeta { description: payload.new_description.clone() }), ..Default::default() }
+pub fn diff(payload: &super::mutation::ChangeMetaDescription, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+    protocol::MutationOutcome::new(Block3dDiff { meta: Some(BlockMeta { description: payload.new_description.clone() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,0 +1,60 @@
+
+warning: unused variable: `tolerance`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs:1507:55
+     |
+1507 |     fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
+     |                                                       ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tolerance`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `encoded_payload_size`
+     --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs:11078:17
+      |
+11078 |             let encoded_payload_size = encoded_frame.read_ms()? as usize;
+      |                 ^^^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_encoded_payload_size`
+
+warning: unused variable: `encoded_payload_size`
+     --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs:11117:17
+      |
+11117 |             let encoded_payload_size = encoded_frame.read_ms()? as usize;
+      |                 ^^^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_encoded_payload_size`
+
+warning: variable does not need to be mutable
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:811:9
+    |
+811 |     let mut snapshot = SvgSnapshot {
+    |         ----^^^^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `text`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:815:9
+    |
+815 |     let text = crate::artifacts::svg::schema::snapshot::write_svg_xml(&snapshot.doc);
+    |         ^^^^ help: if this is intentional, prefix it with an underscore: `_text`
+
+warning: variable does not need to be mutable
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:687:9
+    |
+687 |     let mut separate = |out: &mut String| {
+    |         ----^^^^^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: value assigned to `second` is never read
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🦀️component.rs:734:21
+    |
+734 |     let (mut first, mut second) = if denominator <= f64::EPSILON { (0.0, if cc > 0.0 { ee / cc } else { 0.0 }) } else { ((bb * ee -...
+    |                     ^^^^^^^^^^ this value is reassigned later and never used
+735 |     first = first.clamp(0.0, 1.0);
+736 |     second = if cc > 0.0 { ((bb * first + ee) / cc).clamp(0.0, 1.0) } else { 0.0 };
+    |     ------------------------------------------------------------------------------ `second` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+Some errors have detailed explanations: E0053, E0277, E0308, E0599.
+For more information about an error, try `rustc --explain E0053`.
+warning: `semio-s-plugin-stdio` (lib) generated 735 warnings
+error: could not compile `semio-s-plugin-stdio` (lib) due to 269 previous errors; 735 warnings emitted

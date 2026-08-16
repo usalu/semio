@@ -24,7 +24,7 @@ impl protocol::MutationKind<SHomeSnapshot, SHomeMutation> for ChangeCatalogGener
     const SEMANTICS: protocol::SemanticDescriptor =
         protocol::SemanticDescriptor { verb: "change", entity: "catalog-generation", kind: "change-catalog-generation", record: "ChangedCatalogGeneration" };
 
-    fn diff(&self, base: &SHomeSnapshot) -> SHomeDiff {
+    fn diff(&self, base: &SHomeSnapshot) -> protocol::MutationOutcome<SHomeDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SHomeSnapshot) -> Vec<SHomeMutation> {

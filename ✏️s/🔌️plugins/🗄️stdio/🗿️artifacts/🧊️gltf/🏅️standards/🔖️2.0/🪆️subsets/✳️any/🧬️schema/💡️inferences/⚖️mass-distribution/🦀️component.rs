@@ -2,17 +2,17 @@
 
 #[path = "centroid/🦀️component.rs"]
 pub mod centroid;
-#[path = "principal-frame/🦀️component.rs"]
-pub mod principal_frame;
-#[path = "principal-axes/🦀️component.rs"]
-pub mod principal_axes;
-#[path = "moments-of-inertia/🦀️component.rs"]
-pub mod moments_of_inertia;
 #[path = "inertia-tensor/🦀️component.rs"]
 pub mod inertia_tensor;
+#[path = "moments-of-inertia/🦀️component.rs"]
+pub mod moments_of_inertia;
+#[path = "principal-axes/🦀️component.rs"]
+pub mod principal_axes;
+#[path = "principal-frame/🦀️component.rs"]
+pub mod principal_frame;
 
-use super::geometry_core::GltfGeometryContext;
 use super::super::modules::measurement_contracts::*;
+use super::geometry_core::GltfGeometryContext;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

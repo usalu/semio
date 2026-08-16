@@ -6,7 +6,10 @@ use crate::artifacts::cad::diff::CadDiff;
 use crate::artifacts::cad::CadSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(_payload: &DeleteShapeModel, _base: &CadSnapshot) -> CadDiff {
-    CadDiff { shape_model: Some(None), ..Default::default() }
+pub fn diff(_payload: &DeleteShapeModel, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
+    if base.shape_model.is_none() {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Shape-model child is already empty.");
+    }
+    protocol::MutationOutcome::new(CadDiff { shape_model: Some(None), ..Default::default() })
 }
 //#endregion 🔖️Diff

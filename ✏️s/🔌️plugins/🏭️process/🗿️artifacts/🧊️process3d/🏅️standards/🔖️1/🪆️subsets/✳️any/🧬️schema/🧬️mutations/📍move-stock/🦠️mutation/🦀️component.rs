@@ -21,7 +21,7 @@ pub struct MoveStock {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for MoveStock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "stock", kind: "move-stock", record: "MovedStock" };
 
-    fn diff(&self, base: &Process3dSnapshot) -> Process3dDiff {
+    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::move_stock::diff::diff(self, base)
     }
 

@@ -20,7 +20,7 @@
 
 use crate::os_dsl::{from_dsl_value, to_dsl_value, DslOps, DslRecord, DslValue};
 use crate::os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId, UndoPolicy};
-use crate::os_spr::{Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText, ReconcileReport};
+use crate::os_spr::{Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -169,6 +169,10 @@ pub struct ArtifactEnvelope<P, Mutation> {
     /// JSON round trip (`ArtifactStore::envelope_json`) alongside `cursor`/`owner`/`dialect`.
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
     pub lanes: std::collections::BTreeMap<String, HistoryLane>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub edit_messages: Vec<crate::os_spr::EditMessages>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub conflicts: Vec<crate::os_spr::Conflict>,
 }
 
 /// @emoji 🧬️ Provenance stamp for an envelope produced by `migrate_document`: which prior document,
@@ -261,6 +265,15 @@ pub enum ArtifactCommand<Mutation> {
     },
     /// @emoji 🧹 Clears volatile draft-lane history that must never enter a Change/Checkpoint.
     PruneDrafts,
+    /// @emoji ⚖️ Sets this store's local `crate::os_spr::MergePolicy` — authority-local state, never
+    /// carried on a `crate::os_spr::MutationEnvelope`/`BackboneMessage`, never part of shared
+    /// history (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6). Ordinal
+    /// 15 — frozen, appended after `PruneDrafts`.
+    SetMergePolicy { policy: crate::os_spr::MergePolicy },
+    /// @emoji ⚔️ Resolves an `Open` `crate::os_spr::Conflict` by id — see
+    /// `ArtifactStore::resolve_conflict` for what `Accept`/`Discard` do for each conflict kind.
+    /// Ordinal 16 — frozen.
+    ResolveConflict { conflict_id: String, resolution: crate::os_spr::ConflictResolution },
 }
 
 impl<Mutation> ArtifactCommand<Mutation> {
@@ -274,6 +287,8 @@ impl<Mutation> ArtifactCommand<Mutation> {
             Self::CheckoutCheckpoint { .. } | Self::CreateAlternative { .. } | Self::SwitchAlternative { .. } => Some(ArtifactProjectionCause::Checkout),
             Self::CommitCheckpoint { .. } => Some(ArtifactProjectionCause::Checkpoint),
             Self::PruneDrafts => Some(ArtifactProjectionCause::PruneDrafts),
+            Self::SetMergePolicy { .. } => Some(ArtifactProjectionCause::PolicyChange),
+            Self::ResolveConflict { .. } => Some(ArtifactProjectionCause::RemoteIngest),
         }
     }
 }
@@ -856,11 +871,17 @@ impl crate::os_dsl::DslField for ArtifactLink {
 //#endregion 🔖️Composition
 
 //#region 🔖️Authority
-/// @emoji 🧾 Receipt from the sole store write gate (`dispatch` / `reset`).
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+/// @emoji 🧾 Receipt from the sole store write gate (`dispatch` / `reset`). `messages`/`worst` carry
+/// whatever `crate::os_spr::MutationMessage`s the command's own replay produced (empty/`None` for a
+/// structural command with nothing to report) — `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-
+/// FIRST-CLASS-CONFLICTS` §C6. `Eq` dropped (was `#[derive(.., PartialEq, Eq)]`): `EditMessages`
+/// only derives `PartialEq`.
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct CommandReceipt {
     pub edit_ids: Vec<String>,
     pub generation: u64,
+    pub messages: Vec<crate::os_spr::EditMessages>,
+    pub worst: Option<crate::os_dsl::Severity>,
 }
 
 //#region 🔮️Projection
@@ -983,6 +1004,12 @@ impl<'a, P, Mutation> ArtifactEnvelopeView<'a, P, Mutation> {
     pub fn cursor(&self) -> Option<&ArtifactCursor> {
         self.envelope.cursor.as_ref()
     }
+    pub fn edit_messages(&self) -> &[crate::os_spr::EditMessages] {
+        &self.envelope.edit_messages
+    }
+    pub fn conflicts(&self) -> &[crate::os_spr::Conflict] {
+        &self.envelope.conflicts
+    }
     pub fn inner(&self) -> &'a ArtifactEnvelope<P, Mutation> {
         self.envelope
     }
@@ -1033,7 +1060,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
     /// Never fails and never records history: an invalid presence value is simply the newest one.
     pub fn apply(&mut self, mutations: &[Mutation]) {
         for mutation in mutations {
-            self.local = mutation.diff(&self.local).apply(&self.local);
+            self.local = mutation.diff(&self.local).diff().apply(&self.local);
         }
         if !mutations.is_empty() {
             self.generation = self.generation.wrapping_add(1);
@@ -1102,7 +1129,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
     /// ✍️ Applies transient operations. Like presence, no history and no failure mode.
     pub fn apply(&mut self, mutations: &[Mutation]) {
         for mutation in mutations {
-            self.current = mutation.diff(&self.current).apply(&self.current);
+            self.current = mutation.diff(&self.current).diff().apply(&self.current);
         }
         if !mutations.is_empty() {
             self.generation = self.generation.wrapping_add(1);
@@ -1169,7 +1196,7 @@ impl<S: Clone, Mutation: self::Mutation<S>> InteractionStore<S, Mutation> {
     /// route through the framework's `next_hover` pure fn before landing here.
     pub fn apply(&mut self, mutations: &[Mutation]) {
         for mutation in mutations {
-            self.hover = mutation.diff(&self.hover).apply(&self.hover);
+            self.hover = mutation.diff(&self.hover).diff().apply(&self.hover);
         }
         if !mutations.is_empty() {
             self.generation = self.generation.wrapping_add(1);
@@ -2034,6 +2061,8 @@ where
         migrated_from: None,
         owner: None,
         lanes: std::collections::BTreeMap::new(),
+        edit_messages: Vec::new(),
+        conflicts: Vec::new(),
     }
 }
 
@@ -2051,57 +2080,25 @@ where
     edit_ids
 }
 
+/// @emoji 🔂️ Full raw fold of `initial_snapshot` over every `applied_edit_ids` edit's `forwards`.
+/// `crate::os_spr::command::Mutation::reconcile` and its `SpaceConflict`-returning twin
+/// `materialize_document_snapshot_with_conflicts` are GONE
+/// (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6/C10) — concurrent-merge
+/// arbitration is now `ArtifactStore::ingest_remote`/`resolve_conflict`'s job against
+/// `📡️spr/⚔️conflict`'s first-class `Conflict`/`MergeReport`, not a post-materialization hook here.
 pub fn materialize_document_snapshot<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Result<P, VcsError>
 where
     P: Clone,
     Mutation: self::Mutation<P>,
 {
-    materialize_document_snapshot_with_conflicts(envelope, applied_edit_ids).map(|(snapshot, _conflicts)| snapshot)
-}
-
-/// @emoji 🤝️ Adapts `crate::os_spr::command::Mutation::reconcile`'s new instance-based signature (`&self`,
-/// was a per-TYPE associated fn taking no instance at all) to the once-per-materialization call this
-/// crate's replay/store paths always performed: runs the LAST applied operation's `reconcile` hook
-/// against `snapshot`, or passes `snapshot` through unchanged (matching the trait's own no-op
-/// default) if no operation has ever been applied yet. Every real `Mutation` impl in this crate
-/// (`SpaceHistoryMutation`/`DemoMutation`/`TimestampedMutation`) inherits the default no-op
-/// `reconcile`, which ignores `self` entirely and only inspects `snapshot` — so which specific
-/// operation instance triggers the call is immaterial for every one of them; a technology that
-/// overrides `reconcile` to do real cross-document/graph validation (see
-/// `framework/product/os/core`'s `OsMutation`) is documented as inspecting the resulting
-/// `snapshot`, not `self`, for the same reason. Maps `crate::os_spr::ReconcileReport` to this crate's
-/// own `SpaceConflict` at this edge — `protocol_command` deliberately doesn't know about space
-/// types (see its `Mutation::reconcile` doc comment).
-fn reconcile_with_last<P, Op: Mutation<P>>(last_operation: Option<&Op>, snapshot: P) -> (P, Vec<SpaceConflict>) {
-    match last_operation {
-        Some(operation) => {
-            let (snapshot, reports) = operation.reconcile(snapshot);
-            (snapshot, reports.into_iter().map(SpaceConflict::from).collect())
-        }
-        None => (snapshot, Vec::new()),
-    }
-}
-
-/// @emoji 🤝️ Same replay as {@link materialize_document_snapshot}, additionally surfacing whatever
-/// {@link Mutation::reconcile} reports for the resulting snapshot. Kept as a twin function (rather
-/// than changing `materialize_document_snapshot`'s signature) so every existing caller across the
-/// workspace is unaffected; call sites that care about conflicts (e.g. `ArtifactStore`) opt into
-/// this one instead.
-pub fn materialize_document_snapshot_with_conflicts<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Result<(P, Vec<SpaceConflict>), VcsError>
-where
-    P: Clone,
-    Mutation: self::Mutation<P>,
-{
     let mut snapshot = envelope.vcs.initial_snapshot.clone();
-    let mut last_operation: Option<&Mutation> = None;
     for edit_id in applied_edit_ids {
         let edit = envelope.vcs.edits.iter().find(|entry| entry.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
         for operation in &edit.forwards {
-            snapshot = apply_mutation(&snapshot, operation);
-            last_operation = Some(operation);
+            snapshot = apply_mutation(&snapshot, operation).0;
         }
     }
-    Ok(reconcile_with_last(last_operation, snapshot))
+    Ok(snapshot)
 }
 
 /// 🕰️ Single timestamp source for `Edit.started_at`/`Checkpoint.timestamp` — re-exported so
@@ -2394,7 +2391,22 @@ fn protocol_undo_policy_from_ordinal(ordinal: u8) -> UndoPolicy {
     }
 }
 
-fn history_op_meta_from_operation_meta(meta: &MutationMeta) -> crate::os_spr::HistoryOpMeta {
+fn history_message_from_mutation_message(message: &crate::os_spr::MutationMessage) -> crate::os_spr::history::HistoryMessage {
+    crate::os_spr::history::HistoryMessage {
+        level: message.level.as_u8(),
+        code: message.code.0.clone(),
+        message: message.message.clone(),
+        target: message.target.clone(),
+        op_index: message.op_index,
+    }
+}
+
+fn mutation_message_from_history_message(message: crate::os_spr::history::HistoryMessage) -> Result<crate::os_spr::MutationMessage, String> {
+    let level = crate::os_dsl::Severity::from_u8(message.level).ok_or_else(|| format!("unknown mutation message severity {}", message.level))?;
+    Ok(crate::os_spr::MutationMessage { level, code: crate::os_dsl::FaultCode(message.code), message: message.message, target: message.target, op_index: message.op_index })
+}
+
+fn history_op_meta_from_operation_meta(meta: &MutationMeta, messages: impl IntoIterator<Item = crate::os_spr::history::HistoryMessage>) -> crate::os_spr::HistoryOpMeta {
     crate::os_spr::HistoryOpMeta {
         op_id: meta.mutation_id.as_ref().map(|id| id.0.clone()),
         dependencies: meta.dependencies.iter().map(|id| id.0.clone()).collect(),
@@ -2405,12 +2417,14 @@ fn history_op_meta_from_operation_meta(meta: &MutationMeta) -> crate::os_spr::Hi
         payload_hash: meta.payload_hash.as_ref().map(|hash| hash.0),
         group_id: meta.group_id.clone(),
         origin: meta.origin.clone(),
+        messages: messages.into_iter().collect(),
     }
 }
 
-fn mutation_meta_from_history_op_meta(meta: crate::os_spr::HistoryOpMeta) -> MutationMeta {
+fn mutation_meta_from_history_op_meta(meta: crate::os_spr::HistoryOpMeta) -> Result<(MutationMeta, Vec<crate::os_spr::MutationMessage>), String> {
     let (actor, physical_ms, logical) = meta.hlt.unwrap_or((0, 0, 0));
-    MutationMeta {
+    let messages = meta.messages.into_iter().map(mutation_message_from_history_message).collect::<Result<Vec<_>, _>>()?;
+    Ok((MutationMeta {
         mutation_id: meta.op_id.map(MutationId),
         dependencies: meta.dependencies.into_iter().map(MutationId).collect(),
         base_version: meta.base_version,
@@ -2422,7 +2436,7 @@ fn mutation_meta_from_history_op_meta(meta: crate::os_spr::HistoryOpMeta) -> Mut
         label: None,
         group_id: meta.group_id,
         origin: meta.origin,
-    }
+    }, messages))
 }
 
 /// @emoji 🎯️ Builds the binary op-log twin of `print_ops_log` — a `crate::os_spr::HistoryLog` carrying
@@ -2434,7 +2448,10 @@ fn history_op_payloads<Mutation: OpBinary>(mutations: &[Mutation]) -> Result<Vec
     mutations.iter().map(|op| Ok(crate::os_spr::OpPayload { text: None, binary: Some(op.encode_op().map_err(|error| VcsError::Serialize(error.to_string()))?) })).collect()
 }
 
-fn history_edit_from_edit<Mutation: OpBinary>(edit: &Edit<Mutation>) -> Result<crate::os_spr::HistoryEdit, VcsError> {
+fn history_edit_from_edit<Mutation: OpBinary>(edit: &Edit<Mutation>, messages: &[crate::os_spr::MutationMessage]) -> Result<crate::os_spr::HistoryEdit, VcsError> {
+    if messages.iter().any(|message| message.op_index.map_or(true, |index| index as usize >= edit.forwards.len())) {
+        return Err(VcsError::ValidationFailed(format!("edit {} carries a message without a valid operation index", edit.id)));
+    }
     Ok(crate::os_spr::HistoryEdit {
         id: edit.id.clone(),
         actor: edit.actor.clone(),
@@ -2449,7 +2466,81 @@ fn history_edit_from_edit<Mutation: OpBinary>(edit: &Edit<Mutation>) -> Result<c
         // forward op) is treated as ABSENT, not as `Some(vec![])` — `encode_edit` requires
         // `metas.len() == ops.len()` when meta is present at all, and an empty-but-`Some` vec
         // would spuriously fail that check for a non-empty `ops`.
-        meta: if edit.mutation_meta.is_empty() { None } else { Some(edit.mutation_meta.iter().map(history_op_meta_from_operation_meta).collect()) },
+        meta: if edit.mutation_meta.is_empty() {
+            if messages.is_empty() { None } else { return Err(VcsError::ValidationFailed(format!("edit {} carries messages without operation metadata", edit.id))) }
+        } else {
+            Some(
+                edit.mutation_meta
+                    .iter()
+                    .enumerate()
+                    .map(|(index, meta)| history_op_meta_from_operation_meta(meta, messages.iter().filter(move |message| message.op_index == Some(index as u32)).map(history_message_from_mutation_message)))
+                    .collect(),
+            )
+        },
+    })
+}
+
+fn history_conflict_from_conflict(conflict: &crate::os_spr::Conflict) -> crate::os_spr::history::HistoryConflict {
+    let (kind, edit_ids, envelopes) = match &conflict.kind {
+        crate::os_spr::ConflictKind::Quarantined { envelopes, .. } => {
+            let encoded = envelopes
+                .iter()
+                .map(|envelope| {
+                    let mut bytes = Vec::new();
+                    crate::os_spr::encode_envelope(envelope, &mut bytes);
+                    bytes
+                })
+                .collect();
+            (0, Vec::new(), encoded)
+        }
+        crate::os_spr::ConflictKind::Degraded { edit_ids } => (1, edit_ids.clone(), Vec::new()),
+    };
+    crate::os_spr::history::HistoryConflict {
+        id: conflict.id.0.clone(),
+        kind,
+        status: match conflict.status {
+            crate::os_spr::ConflictStatus::Open => 0,
+            crate::os_spr::ConflictStatus::Accepted => 1,
+            crate::os_spr::ConflictStatus::Discarded => 2,
+        },
+        actors: conflict.actors.iter().map(|actor| actor.0.clone()).collect(),
+        hlt: (conflict.timestamp.actor, conflict.timestamp.physical_ms, conflict.timestamp.logical),
+        edit_ids,
+        envelopes,
+        messages: conflict.messages.iter().map(history_message_from_mutation_message).collect(),
+    }
+}
+
+fn conflict_from_history_conflict(conflict: crate::os_spr::history::HistoryConflict) -> Result<crate::os_spr::Conflict, String> {
+    let kind = match conflict.kind {
+        0 => {
+            let mut envelopes = Vec::with_capacity(conflict.envelopes.len());
+            for bytes in conflict.envelopes {
+                let mut position = 0;
+                let envelope = crate::os_spr::decode_envelope(&bytes, &mut position).map_err(|error| error.to_string())?;
+                if position != bytes.len() {
+                    return Err("quarantined conflict envelope has trailing bytes".into());
+                }
+                envelopes.push(envelope);
+            }
+            crate::os_spr::ConflictKind::Quarantined { envelopes }
+        }
+        1 => crate::os_spr::ConflictKind::Degraded { edit_ids: conflict.edit_ids },
+        value => return Err(format!("unknown conflict kind {value}")),
+    };
+    let status = match conflict.status {
+        0 => crate::os_spr::ConflictStatus::Open,
+        1 => crate::os_spr::ConflictStatus::Accepted,
+        2 => crate::os_spr::ConflictStatus::Discarded,
+        value => return Err(format!("unknown conflict status {value}")),
+    };
+    Ok(crate::os_spr::Conflict {
+        id: crate::os_spr::ConflictId(conflict.id),
+        kind,
+        status,
+        messages: conflict.messages.into_iter().map(mutation_message_from_history_message).collect::<Result<Vec<_>, _>>()?,
+        actors: conflict.actors.into_iter().map(ActorId).collect(),
+        timestamp: HybridLogicalTimestamp { actor: conflict.hlt.0, physical_ms: conflict.hlt.1, logical: conflict.hlt.2 },
     })
 }
 
@@ -2529,9 +2620,18 @@ pub fn print_document_spr<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>)
 where
     Mutation: OpBinary,
 {
+    let mut message_ledger = std::collections::BTreeMap::new();
+    for entry in &envelope.edit_messages {
+        if message_ledger.insert(entry.edit_id.as_str(), entry.messages.as_slice()).is_some() {
+            return Err(VcsError::ValidationFailed(format!("duplicate message ledger for edit {}", entry.edit_id)));
+        }
+        if !envelope.vcs.edits.iter().any(|edit| edit.id == entry.edit_id) {
+            return Err(VcsError::ValidationFailed(format!("message ledger references unknown edit {}", entry.edit_id)));
+        }
+    }
     let mut edits = Vec::with_capacity(envelope.vcs.edits.len());
     for edit in &envelope.vcs.edits {
-        edits.push(history_edit_from_edit::<Mutation>(edit)?);
+        edits.push(history_edit_from_edit::<Mutation>(edit, message_ledger.get(edit.id.as_str()).copied().unwrap_or(&[]))?);
     }
     let log = crate::os_spr::HistoryLog {
         doc_id: envelope.id.clone(),
@@ -2555,6 +2655,7 @@ where
         active_alternative_id: envelope.active_alternative_id.clone(),
         cursor: envelope.cursor.as_ref().map(|cursor| crate::os_spr::HistoryCursor { applied_edit_ids: cursor.applied_edit_ids.clone(), redo_edit_ids: cursor.redo_edit_ids.clone(), checkpoint_id: cursor.checkpoint_id.clone() }),
         composition: history_composition_from_envelope(envelope),
+        conflicts: envelope.conflicts.iter().map(history_conflict_from_conflict).collect(),
     };
     let options = crate::os_spr::EncodeOptions { write_backwards_section: true, ..crate::os_spr::EncodeOptions::default() };
     crate::os_spr::encode_history(&log, &options).map_err(|error| VcsError::Serialize(error.to_string()))
@@ -2583,11 +2684,31 @@ where
 
     let mut snapshot = initial_snapshot.clone();
     let mut edits: Vec<Edit<Mutation>> = Vec::with_capacity(log.edits.len());
+    let mut edit_messages = Vec::new();
     for (index, history_edit) in log.edits.into_iter().enumerate() {
+        let edit_id = history_edit.id.clone();
         let forwards = history_edit.ops.iter().map(decode_op).collect::<Result<Vec<_>, _>>()?;
         let (inverse, mutation_meta) = if !history_edit.inverse.is_empty() || history_edit.meta.is_some() {
             let inverse = history_edit.inverse.iter().map(decode_op).collect::<Result<Vec<_>, _>>()?;
-            let mutation_meta = history_edit.meta.map(|metas| metas.into_iter().map(mutation_meta_from_history_op_meta).collect()).unwrap_or_default();
+            let mut durable_messages = Vec::new();
+            let mutation_meta = history_edit
+                .meta
+                .map(|metas| {
+                    metas
+                        .into_iter()
+                        .map(|meta| {
+                            let (meta, messages) = mutation_meta_from_history_op_meta(meta)?;
+                            durable_messages.extend(messages);
+                            Ok(meta)
+                        })
+                        .collect::<Result<Vec<_>, String>>()
+                })
+                .transpose()
+                .map_err(|error| TextError::new(error, TextSpan::at(1, 1)))?
+                .unwrap_or_default();
+            if !durable_messages.is_empty() {
+                edit_messages.push(crate::os_spr::EditMessages { edit_id: edit_id.clone(), messages: durable_messages });
+            }
             (inverse, mutation_meta)
         } else {
             let mut inverse = Vec::with_capacity(forwards.len());
@@ -2613,7 +2734,7 @@ where
             (inverse, mutation_meta)
         };
         for operation in &forwards {
-            snapshot = apply_mutation(&snapshot, operation);
+            snapshot = apply_mutation(&snapshot, operation).0;
         }
         edits.push(Edit {
             id: history_edit.id,
@@ -2671,6 +2792,8 @@ where
         // `ArtifactStore::envelope_json` path round-trips them. Follow-up for whichever wave wires
         // real persisted-local interaction state through this reload path.
         lanes: std::collections::BTreeMap::new(),
+        edit_messages,
+        conflicts: log.conflicts.into_iter().map(conflict_from_history_conflict).collect::<Result<Vec<_>, _>>().map_err(|error| TextError::new(error, TextSpan::at(1, 1)))?,
     };
     if let Some(composition) = &log.composition {
         apply_history_composition(&mut envelope, composition).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
@@ -2678,21 +2801,16 @@ where
 
     let snapshot = if let Some(cursor) = &cursor {
         let mut folded = envelope.vcs.initial_snapshot.clone();
-        let mut last_operation = None;
         for edit_id in &cursor.applied_edit_ids {
             if let Some(edit) = envelope.vcs.edits.iter().find(|edit| &edit.id == edit_id) {
                 for operation in &edit.forwards {
-                    folded = apply_mutation(&folded, operation);
-                    last_operation = Some(operation);
+                    folded = apply_mutation(&folded, operation).0;
                 }
             }
         }
-        let (reconciled, _conflicts) = reconcile_with_last(last_operation, folded);
-        reconciled
+        folded
     } else {
-        let last_operation = envelope.vcs.edits.last().and_then(|edit| edit.forwards.last());
-        let (reconciled, _conflicts) = reconcile_with_last(last_operation, snapshot);
-        reconciled
+        snapshot
     };
     Ok(ParsedDocumentText { envelope, snapshot })
 }
@@ -2757,7 +2875,7 @@ where
         let mut inverse = Vec::with_capacity(forwards.len());
         let mut mutation_meta = Vec::with_capacity(forwards.len());
         for operation in &forwards {
-            operation.validate(snapshot).map_err(|message| TextError::new(message, TextSpan::at(header.line_no, 1)))?;
+            // 🧮️ Mechanical wrap only — see `replay_mutations`'s matching note.
             let mut back = operation.inverse(snapshot);
             back.reverse();
             inverse.extend(back);
@@ -2774,7 +2892,7 @@ where
                 group_id: None,
                 origin: Default::default(),
             });
-            *snapshot = apply_mutation(snapshot, operation);
+            *snapshot = apply_mutation(snapshot, operation).0;
         }
         edits.push(Edit {
             id: header.id,
@@ -2848,6 +2966,8 @@ where
         migrated_from: None,
         owner: None,
         lanes: std::collections::BTreeMap::new(),
+        edit_messages: Vec::new(),
+        conflicts: Vec::new(),
     };
     // 🎯️ W4: every edit is still folded above in file order (needed for correct inverse/meta —
     // an edit's inverse depends on the snapshot state at the time it was made, which requires
@@ -2857,21 +2977,16 @@ where
     // applied, preserving the pre-W4 behavior for logs that predate this field.
     let snapshot = if let Some(cursor) = &cursor {
         let mut folded = envelope.vcs.initial_snapshot.clone();
-        let mut last_operation = None;
         for edit_id in &cursor.applied_edit_ids {
             if let Some(edit) = envelope.vcs.edits.iter().find(|edit| &edit.id == edit_id) {
                 for operation in &edit.forwards {
-                    folded = apply_mutation(&folded, operation);
-                    last_operation = Some(operation);
+                    folded = apply_mutation(&folded, operation).0;
                 }
             }
         }
-        let (reconciled, _conflicts) = reconcile_with_last(last_operation, folded);
-        reconciled
+        folded
     } else {
-        let last_operation = envelope.vcs.edits.last().and_then(|edit| edit.forwards.last());
-        let (reconciled, _conflicts) = reconcile_with_last(last_operation, snapshot);
-        reconciled
+        snapshot
     };
     Ok(ParsedDocumentText { envelope, snapshot })
 }
@@ -2966,6 +3081,18 @@ enum CommandHeaderLine {
     },
     RedoInLane {
         lane: String,
+    },
+    /// @emoji ⚖️ Text twin of `ArtifactCommand::SetMergePolicy` — `policy` is a kebab token
+    /// (`merge_policy_to_token`/`parse_merge_policy_token`), matching `Undo.policy`'s convention.
+    SetMergePolicy {
+        policy: String,
+    },
+    /// @emoji ⚔️ Text twin of `ArtifactCommand::ResolveConflict` — `resolution` is a kebab token
+    /// (`conflict_resolution_to_token`/`parse_conflict_resolution_token`).
+    ResolveConflict {
+        #[dsl(positional)]
+        conflict_id: String,
+        resolution: String,
     },
 }
 
@@ -3095,6 +3222,59 @@ fn history_lane_from_ordinal(ordinal: u8) -> Result<HistoryLane, crate::os_spr::
     }
 }
 
+/// @emoji ⚖️ `crate::os_spr::MergePolicy`'s text token — the `SetMergePolicy` command line's
+/// `policy=...` value, mirroring `undo_policy_to_token`'s convention.
+fn merge_policy_to_token(policy: crate::os_spr::MergePolicy) -> &'static str {
+    match policy {
+        crate::os_spr::MergePolicy::LaissezFaire => "laissez-faire",
+        crate::os_spr::MergePolicy::Normal => "normal",
+        crate::os_spr::MergePolicy::Vigilant => "vigilant",
+    }
+}
+
+fn parse_merge_policy_token(token: &str) -> Result<crate::os_spr::MergePolicy, TextError> {
+    match token {
+        "laissez-faire" => Ok(crate::os_spr::MergePolicy::LaissezFaire),
+        "normal" => Ok(crate::os_spr::MergePolicy::Normal),
+        "vigilant" => Ok(crate::os_spr::MergePolicy::Vigilant),
+        other => Err(crate::os_dsl::__rt::field_error(format!("unknown merge policy token {other:?}"))),
+    }
+}
+
+/// @emoji ⚔️ `crate::os_spr::ConflictResolution`'s text token — the `ResolveConflict` command line's
+/// `resolution=...` value, mirroring `undo_policy_to_token`'s convention.
+fn conflict_resolution_to_token(resolution: crate::os_spr::ConflictResolution) -> &'static str {
+    match resolution {
+        crate::os_spr::ConflictResolution::Accept => "accept",
+        crate::os_spr::ConflictResolution::Discard => "discard",
+    }
+}
+
+fn parse_conflict_resolution_token(token: &str) -> Result<crate::os_spr::ConflictResolution, TextError> {
+    match token {
+        "accept" => Ok(crate::os_spr::ConflictResolution::Accept),
+        "discard" => Ok(crate::os_spr::ConflictResolution::Discard),
+        other => Err(crate::os_dsl::__rt::field_error(format!("unknown conflict resolution token {other:?}"))),
+    }
+}
+
+/// @emoji ⚔️ `crate::os_spr::ConflictResolution`'s binary ordinal, mirroring
+/// `undo_policy_ordinal`'s convention.
+fn conflict_resolution_ordinal(resolution: crate::os_spr::ConflictResolution) -> u8 {
+    match resolution {
+        crate::os_spr::ConflictResolution::Accept => 0,
+        crate::os_spr::ConflictResolution::Discard => 1,
+    }
+}
+
+fn conflict_resolution_from_ordinal(ordinal: u8) -> Result<crate::os_spr::ConflictResolution, crate::os_spr::ProtocolError> {
+    match ordinal {
+        0 => Ok(crate::os_spr::ConflictResolution::Accept),
+        1 => Ok(crate::os_spr::ConflictResolution::Discard),
+        other => Err(crate::os_spr::ProtocolError::Malformed { what: "conflict resolution ordinal", offset: 0, detail: format!("unknown conflict resolution ordinal {other}") }),
+    }
+}
+
 /// @emoji 📤️ Prints every 2-space-indented `Op::print_op` line for one `apply`/`amend` body,
 /// erroring exactly like `print_edit_lines` if any op prints a line containing a newline.
 fn print_indented_ops<Op: OpText>(out: &mut String, mutations: &[Op]) -> Result<(), VcsError> {
@@ -3217,6 +3397,14 @@ pub fn print_command<Op: OpText>(command: &ArtifactCommand<Op>) -> Result<String
             out.push_str(&CommandHeaderLine::PruneDrafts.print_op());
             out.push('\n');
         }
+        ArtifactCommand::SetMergePolicy { policy } => {
+            out.push_str(&CommandHeaderLine::SetMergePolicy { policy: merge_policy_to_token(*policy).to_string() }.print_op());
+            out.push('\n');
+        }
+        ArtifactCommand::ResolveConflict { conflict_id, resolution } => {
+            out.push_str(&CommandHeaderLine::ResolveConflict { conflict_id: conflict_id.clone(), resolution: conflict_resolution_to_token(*resolution).to_string() }.print_op());
+            out.push('\n');
+        }
     }
     Ok(out)
 }
@@ -3288,6 +3476,8 @@ pub fn parse_command<Op: OpText>(text: &str) -> Result<ArtifactCommand<Op>, Text
         }
         CommandHeaderLine::UndoInLane { lane } => Ok(ArtifactCommand::UndoInLane { lane: parse_history_lane_token(&lane)? }),
         CommandHeaderLine::RedoInLane { lane } => Ok(ArtifactCommand::RedoInLane { lane: parse_history_lane_token(&lane)? }),
+        CommandHeaderLine::SetMergePolicy { policy } => Ok(ArtifactCommand::SetMergePolicy { policy: parse_merge_policy_token(&policy)? }),
+        CommandHeaderLine::ResolveConflict { conflict_id, resolution } => Ok(ArtifactCommand::ResolveConflict { conflict_id, resolution: parse_conflict_resolution_token(&resolution)? }),
     }
 }
 
@@ -3428,6 +3618,15 @@ impl<Op: OpBinary> OpBinary for ArtifactCommand<Op> {
                 crate::os_pack::write_varint_u64(&mut out, 14);
                 out.push(history_lane_ordinal(*lane));
             }
+            ArtifactCommand::SetMergePolicy { policy } => {
+                crate::os_pack::write_varint_u64(&mut out, 15);
+                out.push(policy.as_u8());
+            }
+            ArtifactCommand::ResolveConflict { conflict_id, resolution } => {
+                crate::os_pack::write_varint_u64(&mut out, 16);
+                write_command_str(&mut out, conflict_id);
+                out.push(conflict_resolution_ordinal(*resolution));
+            }
         }
         Ok(out)
     }
@@ -3505,6 +3704,15 @@ impl<Op: OpBinary> OpBinary for ArtifactCommand<Op> {
             }
             13 => Ok(ArtifactCommand::UndoInLane { lane: history_lane_from_ordinal(reader.read_u8()?)? }),
             14 => Ok(ArtifactCommand::RedoInLane { lane: history_lane_from_ordinal(reader.read_u8()?)? }),
+            15 => {
+                let policy = crate::os_spr::MergePolicy::from_u8(reader.read_u8()?).ok_or_else(|| crate::os_spr::ProtocolError::Malformed { what: "merge policy ordinal", offset: 1, detail: "unknown merge policy ordinal".to_string() })?;
+                Ok(ArtifactCommand::SetMergePolicy { policy })
+            }
+            16 => {
+                let conflict_id = read_command_str(&mut reader)?;
+                let resolution = conflict_resolution_from_ordinal(reader.read_u8()?)?;
+                Ok(ArtifactCommand::ResolveConflict { conflict_id, resolution })
+            }
             other => Err(crate::os_spr::ProtocolError::Malformed { what: "command variant", offset: 1, detail: format!("unknown command ordinal {other}") }),
         }
     }
@@ -3641,10 +3849,16 @@ where
     /// edits. Not part of the wire envelope — callers that reconstruct the store per call must
     /// save/restore it via {@link local_actor_id}/{@link set_local_actor_id}.
     local_actor_id: Option<String>,
-    /// @emoji 🤝️ Conflicts reported by the last {@link Mutation::reconcile} pass, refreshed after
-    /// remote ingestion (see {@link ingest_envelope}). Empty for every document kind that keeps the
-    /// default no-operation `reconcile`. Not part of the wire envelope — it is derived, not source of truth.
-    conflicts: Vec<SpaceConflict>,
+    /// @emoji ⚖️ This store's local `crate::os_spr::MergePolicy` — authority-local state, defaults
+    /// to `Normal`, never carried on the wire envelope (never part of an artifact's shared history).
+    merge_policy: crate::os_spr::MergePolicy,
+    /// @emoji 📒️ Indexed view of the envelope-owned durable mutation-message ledger. Rebuilt from
+    /// `ArtifactEnvelope::edit_messages` whenever a complete state is loaded.
+    edit_messages: HashMap<String, Vec<crate::os_spr::MutationMessage>>,
+    /// @emoji ⏰️ Monotone hybrid logical clock: `tick`s on every local apply, `merge`s in a remote
+    /// tick on every ingest — replaces the old per-call `HybridLogicalTimestamp::new(0, now_ms())`
+    /// construction in `replay_mutations`. Not part of the wire envelope.
+    clock: HybridLogicalTimestamp,
     /// @emoji ⚡️ The live, incrementally-maintained RAW fold of `initial_snapshot` over every
     /// `forwards` operation in `applied_edit_ids` order — i.e. exactly what a full
     /// {@link materialize_document_snapshot} replay computes BEFORE its single final
@@ -3661,6 +3875,22 @@ where
     /// O(1) `Undo` of exactly this edit; any other undo (not the cached tail, or `None`) falls back
     /// to `fold_current` — always correct, just not always O(1).
     tail_undo_cache: Option<(String, P)>,
+    /// @emoji 📨️ Transient handoff from whichever `dispatch_inner` arm actually produced messages
+    /// this call (`apply_command`/`amend_command`/`ingest_remote`/`resolve_conflict`) to `dispatch`,
+    /// which drains it into the returned `CommandReceipt`. Reset at the top of every `dispatch`
+    /// call; every other arm leaves it at its `Default`. Not part of the wire envelope.
+    pending_report: PendingCommandReport,
+}
+
+/// @emoji 📨️ See `ArtifactStore::pending_report`'s doc.
+#[derive(Default)]
+struct PendingCommandReport {
+    /// 🎯️ Overrides `dispatch`'s tail-diff `edit_ids` guess — needed once a merge can insert
+    /// mid-history (`ingest_remote`/`resolve_conflict`), where "everything past `before`" no longer
+    /// names only the newly-landed edits.
+    edit_ids: Option<Vec<String>>,
+    messages: Vec<crate::os_spr::EditMessages>,
+    worst: Option<crate::os_dsl::Severity>,
 }
 
 /// @emoji 🖋️ Derives an edit's authoring actor from its per-operation metadata (the author of its
@@ -3721,6 +3951,7 @@ where
         Self::validate_history_lanes(&envelope, &applied_edit_ids, &redo_edit_ids)?;
         let current = Self::fold_history(&envelope, &applied_edit_ids)?;
         let local_actor_id = applied_edit_ids.last().and_then(|edit_id| envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id)).and_then(|edit| edit.actor.clone());
+        let edit_messages = envelope.edit_messages.iter().map(|entry| (entry.edit_id.clone(), entry.messages.clone())).collect();
         Ok(Self {
             envelope,
             backbone: None,
@@ -3732,9 +3963,12 @@ where
             last_projection_cause: None,
             current_checkpoint_id,
             local_actor_id,
-            conflicts: Vec::new(),
+            merge_policy: crate::os_spr::MergePolicy::default(),
+            edit_messages,
+            clock: HybridLogicalTimestamp::new(0, now_ms()),
             current,
             tail_undo_cache: None,
+            pending_report: PendingCommandReport::default(),
         })
     }
 
@@ -3860,7 +4094,7 @@ where
     pub fn reset(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>, redo_edit_ids: Vec<String>) -> Result<CommandReceipt, VcsError> {
         self.set_state(envelope, applied_edit_ids, redo_edit_ids)?;
         self.last_projection_cause = Some(ArtifactProjectionCause::Reset);
-        Ok(CommandReceipt { edit_ids: self.applied_edit_ids.clone(), generation: self.generation() })
+        Ok(CommandReceipt { edit_ids: self.applied_edit_ids.clone(), generation: self.generation(), messages: Vec::new(), worst: None })
     }
 
     pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) -> Result<(), VcsError> {
@@ -3886,7 +4120,7 @@ where
         }
         self.applied_edit_ids = applied_edit_ids;
         self.redo_edit_ids = redo_edit_ids;
-        self.conflicts = Vec::new();
+        self.edit_messages = self.envelope.edit_messages.iter().map(|entry| (entry.edit_id.clone(), entry.messages.clone())).collect();
         self.tail_undo_cache = None;
         self.current = current;
         self.bump();
@@ -3950,24 +4184,11 @@ where
         Ok(self.invalidate_projections(ArtifactProjectionCause::Checkpoint))
     }
 
-    /// @emoji ⚡️ The live snapshot: `Mutation::reconcile` applied to the incrementally-maintained
-    /// `current` fold. Always `Ok` in practice (kept as `Result` for API stability); O(1) instead of a
-    /// full replay. See the `current` field doc for the maintenance invariant.
+    /// @emoji ⚡️ The live snapshot: the incrementally-maintained `current` fold, as-is. Always `Ok`
+    /// in practice (kept as `Result` for API stability); O(1) instead of a full replay. See the
+    /// `current` field doc for the maintenance invariant.
     pub fn snapshot(&self) -> Result<P, VcsError> {
-        Ok(reconcile_with_last(self.last_applied_operation(), self.current.clone()).0)
-    }
-
-    /// @emoji 🤝️ `current` reconciled, plus whatever conflicts {@link Mutation::reconcile} reports.
-    /// O(1) instead of a full replay — see {@link snapshot}.
-    pub fn snapshot_with_conflicts(&self) -> Result<(P, Vec<SpaceConflict>), VcsError> {
-        Ok(reconcile_with_last(self.last_applied_operation(), self.current.clone()))
-    }
-
-    /// @emoji 🎞️ The last-applied edit's last forward operation — the instance `reconcile_with_last`
-    /// runs `Mutation::reconcile` against (see that fn's doc comment for why any single instance is
-    /// equivalent to the old per-TYPE associated-fn call for every technology in this repo today).
-    fn last_applied_operation(&self) -> Option<&Mutation> {
-        self.applied_edit_ids.last().and_then(|edit_id| self.envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id)).and_then(|edit| edit.forwards.last())
+        Ok(self.current.clone())
     }
 
     /// @emoji 🔂️ Full raw fold of `initial_snapshot` over every `forwards` op in `applied_edit_ids`
@@ -3982,25 +4203,84 @@ where
         fold_history(envelope, applied_edit_ids)
     }
 
-    /// @emoji 🤝️ Conflicts from the last reconciliation pass (see {@link conflicts} field doc).
-    pub fn conflicts(&self) -> &[SpaceConflict] {
-        &self.conflicts
+    /// 🔁️ Core replay for steps 5–9 of `ingest_remote`/`resolve_conflict`/`merge_remote_snapshot`
+    /// (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6): folds
+    /// `order[k..]` from `base`, recomputing each op's `diff` outcome against the SHIFTED state so
+    /// its inverse can be rebased and its messages collected — `forwards`/`mutation_meta` for edits
+    /// already present in `edits` are read back unchanged, never rewritten. Pure: the caller decides
+    /// accept/reject and commits (or discards) the result. Returns the replayed state, each
+    /// suffix edit's rebased inverse (keyed by edit id), and each suffix edit's messages in order.
+    fn replay_suffix(base: &P, order: &[String], k: usize, edits: &HashMap<String, Edit<Mutation>>) -> (P, HashMap<String, Vec<Mutation>>, Vec<crate::os_spr::EditMessages>) {
+        let mut state = base.clone();
+        let mut rebased_inverse = HashMap::new();
+        let mut replayed = Vec::new();
+        for edit_id in &order[k..] {
+            let Some(edit) = edits.get(edit_id) else { continue };
+            let mut edit_messages = Vec::new();
+            let mut inverse = Vec::new();
+            for (op_index, op) in edit.forwards.iter().enumerate() {
+                let outcome = op.diff(&state).stamp_op_index(op_index as u32);
+                let (diff, op_messages) = outcome.into_parts();
+                edit_messages.extend(op_messages);
+                let mut back = op.inverse(&state);
+                back.reverse();
+                inverse.extend(back);
+                state = diff.apply(&state);
+            }
+            rebased_inverse.insert(edit_id.clone(), inverse);
+            replayed.push(crate::os_spr::EditMessages { edit_id: edit_id.clone(), messages: edit_messages });
+        }
+        (state, rebased_inverse, replayed)
+    }
+
+    /// @emoji ⚔️ Every conflict this store has ever raised (`Open`, `Accepted`, and `Discarded`
+    /// alike) — see {@link conflicts} field doc.
+    pub fn conflicts(&self) -> &[crate::os_spr::Conflict] {
+        &self.envelope.conflicts
+    }
+
+    /// @emoji ⚔️ The subset of {@link conflicts} still `Open` — what a UI's Conflicts panel lists.
+    pub fn open_conflicts(&self) -> impl Iterator<Item = &crate::os_spr::Conflict> {
+        self.envelope.conflicts.iter().filter(|conflict| conflict.status == crate::os_spr::ConflictStatus::Open)
+    }
+
+    /// @emoji ⚖️ This store's local `crate::os_spr::MergePolicy` (see the field doc).
+    pub fn merge_policy(&self) -> crate::os_spr::MergePolicy {
+        self.merge_policy
+    }
+
+    /// @emoji ⚖️ Sets this store's local `crate::os_spr::MergePolicy`. Local/authority state only —
+    /// never wire-carried, never part of shared history; takes effect starting with the NEXT
+    /// `dispatch`/`ingest_remote` call.
+    pub fn set_merge_policy(&mut self, policy: crate::os_spr::MergePolicy) {
+        self.merge_policy = policy;
+    }
+
+    /// @emoji 📒️ Every `crate::os_spr::MutationMessage` `edit_id`'s own replay raised — empty for an
+    /// edit that raised none (including an unknown `edit_id`), never an error (see the field doc).
+    pub fn messages_for_edit(&self, edit_id: &str) -> &[crate::os_spr::MutationMessage] {
+        self.edit_messages.get(edit_id).map(Vec::as_slice).unwrap_or(&[])
     }
 
     pub fn dispatch(&mut self, command: ArtifactCommand<Mutation>) -> Result<CommandReceipt, VcsError> {
         self.pump()?;
         let projection_cause = command.projection_cause();
-        let skip_flush = matches!(command, ArtifactCommand::IngestRemote { .. } | ArtifactCommand::PruneDrafts);
+        // 🎯️ `SetMergePolicy`/`ResolveConflict` never need a full snapshot re-broadcast: the policy
+        // is local-only (never wire-carried) and a conflict resolution either replays already-
+        // announced remote envelopes (no new local content to announce) or only flips a status.
+        let skip_flush = matches!(command, ArtifactCommand::IngestRemote { .. } | ArtifactCommand::PruneDrafts | ArtifactCommand::SetMergePolicy { .. } | ArtifactCommand::ResolveConflict { .. });
         let is_apply = matches!(command, ArtifactCommand::Apply { .. });
         let before = self.applied_edit_ids.len();
+        self.pending_report = PendingCommandReport::default();
         self.dispatch_inner(command)?;
         self.last_projection_cause = projection_cause;
         if !skip_flush {
             self.flush_outbound(is_apply)?;
         }
-        // Undo/redo shrink `applied_edit_ids`; only Apply/AmendLast append past `before`.
-        let edit_ids = if self.applied_edit_ids.len() >= before { self.applied_edit_ids[before..].to_vec() } else { Vec::new() };
-        Ok(CommandReceipt { edit_ids, generation: self.generation() })
+        // Undo/redo shrink `applied_edit_ids`; Apply/AmendLast append past `before`; a merge that
+        // rebased mid-history overrides this tail-diff guess via `pending_report.edit_ids`.
+        let edit_ids = self.pending_report.edit_ids.take().unwrap_or_else(|| if self.applied_edit_ids.len() >= before { self.applied_edit_ids[before..].to_vec() } else { Vec::new() });
+        Ok(CommandReceipt { edit_ids, generation: self.generation(), messages: std::mem::take(&mut self.pending_report.messages), worst: self.pending_report.worst.take() })
     }
 
     fn dispatch_inner(&mut self, command: ArtifactCommand<Mutation>) -> Result<(), VcsError> {
@@ -4117,11 +4397,29 @@ where
             ArtifactCommand::AmendLast { mutations, coalesce_key } => self.amend_command(mutations, coalesce_key, HistoryLane::Document),
             ArtifactCommand::AmendLastInLane { mutations, coalesce_key, lane } => self.amend_command(mutations, coalesce_key, lane),
             ArtifactCommand::IngestRemote { envelope } => {
-                let _receipt = self.ingest_remote(envelope)?;
+                let report = self.ingest_remote(envelope)?;
+                self.absorb_merge_report(&report);
                 Ok(())
             }
             ArtifactCommand::PruneDrafts => Err(VcsError::ValidationFailed("draft pruning is not implemented by ArtifactStore; no draft history was removed".to_string())),
+            ArtifactCommand::SetMergePolicy { policy } => {
+                self.merge_policy = policy;
+                Ok(())
+            }
+            ArtifactCommand::ResolveConflict { conflict_id, resolution } => {
+                let report = self.resolve_conflict(&conflict_id, resolution)?;
+                self.absorb_merge_report(&report);
+                Ok(())
+            }
         }
+    }
+
+    /// 📨️ Copies a `MergeReport`'s messages/worst level into `pending_report` for `dispatch` to
+    /// hand back as the resulting `CommandReceipt` — shared by the `IngestRemote`/`ResolveConflict`
+    /// arms above.
+    fn absorb_merge_report(&mut self, report: &crate::os_spr::MergeReport) {
+        self.pending_report.messages = report.replayed.clone();
+        self.pending_report.worst = report.worst;
     }
 
     //#region 🔖️HistoryLane
@@ -4171,8 +4469,8 @@ where
             let pre = self.current.clone();
             let mut folded = pre.clone();
             for operation in &edit.forwards {
-                operation.validate(&folded).map_err(VcsError::ValidationFailed)?;
-                folded = apply_mutation(&folded, operation);
+                // 🧮️ Mechanical wrap only — see `replay_mutations`'s matching note.
+                folded = apply_mutation(&folded, operation).0;
             }
             self.current = folded;
             self.tail_undo_cache = Some((next, pre));
@@ -4192,7 +4490,7 @@ where
         // ⚡️ `current` is always up to date (maintained by every mutating command below), so this
         // is an O(1) clone instead of a full replay — see the `current` field doc.
         let pre_snapshot = self.current.clone();
-        let (forwards, inverse, mutation_meta, post) = Self::replay_mutations(&pre_snapshot, mutations)?;
+        let (forwards, inverse, mutation_meta, post, messages) = self.replay_mutations(&pre_snapshot, mutations)?;
         let actor = edit_actor_from_meta(&mutation_meta);
         self.local_actor_id = actor.clone();
         self.edit_sequence += 1;
@@ -4212,6 +4510,7 @@ where
         if !lane.is_document() {
             self.envelope.lanes.insert(edit.id.clone(), lane);
         }
+        self.record_edit_messages(&edit.id, messages);
         self.tail_undo_cache = Some((edit.id.clone(), pre_snapshot));
         self.applied_edit_ids.push(edit.id.clone());
         self.envelope.vcs.edits.push(edit);
@@ -4237,13 +4536,14 @@ where
             // the edit was created or last amended), so it's always the correct base for the NEW
             // operations — O(1) instead of the old cache-validity dance.
             let pre_snapshot = self.current.clone();
-            let (new_forwards, new_inverse, new_mutation_meta, post) = Self::replay_mutations(&pre_snapshot, mutations)?;
+            let (new_forwards, new_inverse, new_mutation_meta, post, messages) = self.replay_mutations(&pre_snapshot, mutations)?;
             if let Some(edit) = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id) {
                 edit.forwards.extend(new_forwards);
                 edit.inverse.extend(new_inverse);
                 edit.mutation_meta.extend(new_mutation_meta);
                 edit.finished_at = Some(now_iso());
             }
+            self.record_edit_messages(&edit_id, messages);
             self.current = post;
             self.redo_edit_ids.clear();
             self.bump();
@@ -4251,7 +4551,7 @@ where
         } else {
             let started_at = now_iso();
             let pre_snapshot = self.current.clone();
-            let (forwards, inverse, mutation_meta, post) = Self::replay_mutations(&pre_snapshot, mutations)?;
+            let (forwards, inverse, mutation_meta, post, messages) = self.replay_mutations(&pre_snapshot, mutations)?;
             let actor = edit_actor_from_meta(&mutation_meta);
             self.local_actor_id = actor.clone();
             self.edit_sequence += 1;
@@ -4261,6 +4561,7 @@ where
             if !lane.is_document() {
                 self.envelope.lanes.insert(edit_id.clone(), lane);
             }
+            self.record_edit_messages(&edit_id, messages);
             self.tail_undo_cache = Some((edit_id, pre_snapshot));
             self.applied_edit_ids.push(edit.id.clone());
             self.envelope.vcs.edits.push(edit);
@@ -4272,18 +4573,51 @@ where
     }
     //#endregion 🔖️HistoryLane
 
+    /// 📨️ Records `edit_id`'s replay messages into the durable ledger and `pending_report`, shared
+    /// by `apply_command`/`amend_command` — every local dispatch's own `DispatchReport`-shaped tail.
+    fn record_edit_messages(&mut self, edit_id: &str, messages: Vec<crate::os_spr::MutationMessage>) {
+        if messages.is_empty() {
+            return;
+        }
+        self.pending_report.worst = crate::os_spr::worst_level(&messages).max(self.pending_report.worst);
+        self.edit_messages.entry(edit_id.to_string()).or_default().extend(messages.clone());
+        if let Some(entry) = self.envelope.edit_messages.iter_mut().find(|entry| entry.edit_id == edit_id) {
+            entry.messages.extend(messages.clone());
+        } else {
+            self.envelope.edit_messages.push(crate::os_spr::EditMessages { edit_id: edit_id.to_string(), messages: messages.clone() });
+        }
+        self.pending_report.messages.push(crate::os_spr::EditMessages { edit_id: edit_id.to_string(), messages });
+    }
+
+    fn replace_edit_messages(&mut self, edit_id: &str, messages: Vec<crate::os_spr::MutationMessage>) {
+        if messages.is_empty() {
+            self.edit_messages.remove(edit_id);
+            self.envelope.edit_messages.retain(|entry| entry.edit_id != edit_id);
+            return;
+        }
+        self.edit_messages.insert(edit_id.to_string(), messages.clone());
+        if let Some(entry) = self.envelope.edit_messages.iter_mut().find(|entry| entry.edit_id == edit_id) {
+            entry.messages = messages;
+        } else {
+            self.envelope.edit_messages.push(crate::os_spr::EditMessages { edit_id: edit_id.to_string(), messages });
+        }
+    }
+
     /// @emoji 🔂️ Replays `operations` over `pre_snapshot`, returning forwards, reversed-inverse,
-    /// per-operation metadata, and the resulting snapshot. Shared by `Apply` and `AmendLast`. This
-    /// IS the artifact engine — `crate::os_engine::ArtifactEngine` never existed as a live trait
-    /// (see `.claude/plans/the-mutations-are-extremely-compiled-pumpkin.md`), so `Mutation::diff`/
+    /// per-operation metadata, the resulting snapshot, and every `crate::os_spr::MutationMessage`
+    /// the replay raised. Shared by `Apply` and `AmendLast`. This IS the artifact engine —
+    /// `crate::os_engine::ArtifactEngine` never existed as a live trait (see
+    /// `.claude/plans/the-mutations-are-extremely-compiled-pumpkin.md`), so `Mutation::diff`/
     /// `inverse` are called directly here on purpose, not as a placeholder for a future indirection.
-    fn replay_mutations(pre_snapshot: &P, mutations: Vec<Mutation>) -> Result<(Vec<Mutation>, Vec<Mutation>, Vec<MutationMeta>, P), VcsError> {
+    /// ATOMIC: if `self.merge_policy.rejects(worst)`, returns `Err` before this method's caller has
+    /// touched any store field — nothing about the attempted batch is applied.
+    fn replay_mutations(&mut self, pre_snapshot: &P, mutations: Vec<Mutation>) -> Result<(Vec<Mutation>, Vec<Mutation>, Vec<MutationMeta>, P, Vec<crate::os_spr::MutationMessage>), VcsError> {
         let mut snapshot = pre_snapshot.clone();
         let mut forwards = Vec::with_capacity(mutations.len());
         let mut inverse = Vec::new();
         let mut mutation_meta = Vec::with_capacity(mutations.len());
-        for mutation in mutations {
-            mutation.validate(&snapshot).map_err(VcsError::ValidationFailed)?;
+        let mut messages = Vec::new();
+        for (op_index, mutation) in mutations.into_iter().enumerate() {
             let encoded = mutation.encode_op().map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
             let mut back = mutation.inverse(&snapshot);
             back.reverse();
@@ -4293,7 +4627,13 @@ where
                 dependencies: mutation.dependencies(),
                 base_version: mutation.base_version().map(|version| version.0).unwrap_or(0),
                 author_id: Some(mutation.author_id().unwrap_or_else(|| ActorId("local".into()))),
-                timestamp: mutation.timestamp().unwrap_or_else(|| HybridLogicalTimestamp::new(0, now_ms())),
+                // 🎯️ `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6:
+                // `self.clock.tick()` replaces the old bare `HybridLogicalTimestamp::new(0, now_ms())`
+                // fallback construction — the clock stays monotone across every local apply.
+                timestamp: mutation.timestamp().unwrap_or_else(|| {
+                    self.clock.tick(now_ms());
+                    self.clock
+                }),
                 undo_policy: mutation.undo_policy(),
                 // 🎞️ CW3: direct blake3 (same primitive `crate::os_pack::ContentHash` uses) replaces the
                 // old `framework_hash::hash_bytes` String hash — `crate::os_spr::PayloadHash` is
@@ -4307,10 +4647,18 @@ where
                 group_id: None,
                 origin: Default::default(),
             });
-            snapshot = apply_mutation(&snapshot, &mutation);
+            let outcome = mutation.diff(&snapshot).stamp_op_index(op_index as u32);
+            let (diff, op_messages) = outcome.into_parts();
+            messages.extend(op_messages);
+            snapshot = diff.apply(&snapshot);
             forwards.push(mutation);
         }
-        Ok((forwards, inverse, mutation_meta, snapshot))
+        if let Some(level) = crate::os_spr::worst_level(&messages) {
+            if self.merge_policy.rejects(level) {
+                return Err(VcsError::Rejected { policy: self.merge_policy, messages });
+            }
+        }
+        Ok((forwards, inverse, mutation_meta, snapshot, messages))
     }
 
     /// @emoji 🕹️ Parses `command_text` via [`parse_command`] and dispatches it — the op-line
@@ -4390,51 +4738,116 @@ where
 
     /// @emoji 🕸️ Feeds a remote {@link MutationEnvelope} through the causal DAG, applying it (and any
     /// now-unblocked dependents) into the edit timeline. Closes the sync gap between
-    /// `framework/sync`'s `MutationDag` and the vcs edit history.
-    /// @emoji 🕸️ Sole public remote write gate — parallel to `dispatch` for causal envelopes.
-    pub(crate) fn ingest_remote(&mut self, envelope: crate::os_spr::MutationEnvelope) -> Result<(), VcsError> {
+    /// `framework/sync`'s `MutationDag` and the vcs edit history. Sole public remote write gate —
+    /// parallel to `dispatch` for causal envelopes. Implements the ticket's 9-step algorithm
+    /// (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6): buffer in the
+    /// dag, drain whatever it (and anything it unblocks) makes ready, HLC-sort that batch into
+    /// `applied_edit_ids`, replay only the divergent suffix, then either commit atomically (dag,
+    /// history, ledger, `applied_edit_ids` all move together) or quarantine the whole batch as an
+    /// `Open` `Conflict` — state and the dag's own applied-set never move on rejection.
+    pub fn ingest_remote(&mut self, envelope: crate::os_spr::MutationEnvelope) -> Result<crate::os_spr::MergeReport, VcsError> {
+        let no_op_report = |policy: crate::os_spr::MergePolicy, insertion_index: usize| crate::os_spr::MergeReport { policy, accepted: true, insertion_index: insertion_index as u32, replayed: Vec::new(), worst: None, conflict: None };
+        // 1
         let mut candidate_dag = self.dag.clone();
         if matches!(candidate_dag.insert(envelope.clone()).map_err(|error| VcsError::Backbone(error.to_string()))?, crate::os_spr::InsertResult::AlreadyApplied) {
-            return self.assert_equivalent_remote_mutation(&envelope);
+            self.assert_equivalent_remote_mutation(&envelope)?;
+            return Ok(no_op_report(self.merge_policy, self.applied_edit_ids.len()));
         }
+        // 2
         let ready = candidate_dag.drain_applied_envelopes();
-        let mut current = self.current.clone();
-        let mut edit_sequence = self.edit_sequence;
-        let mut incoming_edits = Vec::new();
-        for envelope in ready {
-            let mut edit = edit_from_operation_envelope::<Mutation>(&envelope)?;
-            edit.actor = Some(envelope.actor.0.clone());
+        let mut batch: Vec<Edit<Mutation>> = Vec::new();
+        for ready_envelope in &ready {
+            let mut edit = edit_from_operation_envelope::<Mutation>(ready_envelope)?;
+            edit.actor = Some(ready_envelope.actor.0.clone());
             if let Some(existing) = self.envelope.vcs.edits.iter().find(|existing| existing.id == edit.id) {
-                self.assert_equivalent_remote_envelope(existing, &envelope)?;
+                self.assert_equivalent_remote_envelope(existing, ready_envelope)?;
                 continue;
             }
-            if incoming_edits.iter().any(|existing: &Edit<Mutation>| existing.id == edit.id) {
+            if batch.iter().any(|existing: &Edit<Mutation>| existing.id == edit.id) {
                 return Err(VcsError::ValidationFailed(format!("remote ingest repeats authoritative edit {}", edit.id)));
             }
-            for operation in &edit.forwards {
-                operation.validate(&current).map_err(VcsError::ValidationFailed)?;
-                current = apply_mutation(&current, operation);
+            self.clock.merge(&ready_envelope.timestamp);
+            batch.push(edit);
+        }
+        if batch.is_empty() {
+            self.dag = candidate_dag;
+            return Ok(no_op_report(self.merge_policy, self.applied_edit_ids.len()));
+        }
+        // 3 — an edit's HLC is its first forward op's stamped meta timestamp.
+        let edit_hlc = |edit: &Edit<Mutation>| edit.mutation_meta.first().map(|meta| meta.timestamp).unwrap_or_else(|| HybridLogicalTimestamp::new(0, 0));
+        batch.sort_by_key(|edit| edit_hlc(edit).cmp_key());
+        let known_hlc = |edit_id: &str, edits: &[Edit<Mutation>]| edits.iter().find(|edit| edit.id == *edit_id).map(edit_hlc);
+        let min_batch_hlc = edit_hlc(&batch[0]);
+        let mut k = self.applied_edit_ids.partition_point(|id| known_hlc(id, &self.envelope.vcs.edits).map(|hlc| hlc.cmp_key() < min_batch_hlc.cmp_key()).unwrap_or(true));
+        for edit in &batch {
+            for dependency in edit.mutation_meta.first().map(|meta| meta.dependencies.clone()).unwrap_or_default() {
+                if let Some(position) = self.applied_edit_ids.iter().position(|id| *id == dependency.0) {
+                    k = k.max(position + 1);
+                }
             }
-            edit_sequence += 1;
-            edit.sequence_number = edit_sequence;
-            edit.started_at = now_iso();
-            incoming_edits.push(edit);
         }
+        // 4 — stable HLC merge of `batch` into `applied_edit_ids[k..]`.
+        let mut order: Vec<String> = self.applied_edit_ids.clone();
+        for edit in &batch {
+            let hlc = edit_hlc(edit);
+            let insert_at = order[k..].iter().position(|id| known_hlc(id, &self.envelope.vcs.edits).map(|existing| existing.cmp_key() > hlc.cmp_key()).unwrap_or(false)).map(|offset| k + offset).unwrap_or(order.len());
+            order.insert(insert_at, edit.id.clone());
+        }
+        // 5
+        let base = if k == self.applied_edit_ids.len() { self.current.clone() } else { Self::fold_history(&self.envelope, &order[..k])? };
+        // 6
+        let mut edits_by_id: HashMap<String, Edit<Mutation>> = self.envelope.vcs.edits.iter().map(|edit| (edit.id.clone(), edit.clone())).collect();
+        for edit in &batch {
+            edits_by_id.insert(edit.id.clone(), edit.clone());
+        }
+        let (state, rebased_inverse, replayed) = Self::replay_suffix(&base, &order, k, &edits_by_id);
+        // 7
+        let worst = replayed.iter().flat_map(|edit_messages| edit_messages.messages.iter()).map(|message| message.level).max();
+        let mutation_ids: Vec<MutationId> = batch.iter().flat_map(crate::os_spr::mutation_ids_for_edit).collect();
+        let actors: Vec<ActorId> = batch.iter().filter_map(|edit| edit.actor.clone()).map(ActorId).collect();
+        let messages: Vec<crate::os_spr::MutationMessage> = replayed.iter().flat_map(|edit_messages| edit_messages.messages.clone()).collect();
+        // 8 — reject: nothing about the dag/history/state moves.
+        if worst.map(|level| self.merge_policy.rejects(level)).unwrap_or(false) {
+            let kind = crate::os_spr::ConflictKind::Quarantined { envelopes: ready.clone() };
+            let conflict_id = crate::os_spr::ConflictId::new(&kind, &ArtifactId(self.envelope.id.clone()), &mutation_ids, &self.clock);
+            self.envelope.conflicts.push(crate::os_spr::Conflict { id: conflict_id.clone(), kind, status: crate::os_spr::ConflictStatus::Open, messages, actors, timestamp: self.clock });
+            return Ok(crate::os_spr::MergeReport { policy: self.merge_policy, accepted: false, insertion_index: k as u32, replayed, worst, conflict: Some(conflict_id) });
+        }
+        // 9 — accept: commit dag, history, ledger, `applied_edit_ids`, `current` together.
         self.dag = candidate_dag;
-        if incoming_edits.is_empty() {
-            return Ok(());
+        for edit in &batch {
+            self.envelope.vcs.edits.push(edit.clone());
         }
-        let latest_operation = incoming_edits.last().and_then(|edit| edit.forwards.last());
-        let (_, conflicts) = reconcile_with_last(latest_operation, current.clone());
-        self.edit_sequence = edit_sequence;
-        self.applied_edit_ids.extend(incoming_edits.iter().map(|edit| edit.id.clone()));
-        self.envelope.vcs.edits.extend(incoming_edits);
+        for (edit_id, inverse) in rebased_inverse {
+            if let Some(edit) = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id) {
+                edit.inverse = inverse;
+            }
+        }
+        self.applied_edit_ids = order;
+        for edit_messages in &replayed {
+            if !self.envelope.edit_messages.iter().any(|entry| entry.edit_id == edit_messages.edit_id) {
+                self.replace_edit_messages(&edit_messages.edit_id, edit_messages.messages.clone());
+            }
+        }
+        for (index, edit_id) in self.applied_edit_ids.iter().enumerate() {
+            if let Some(edit) = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == *edit_id) {
+                edit.sequence_number = index as i32 + 1;
+            }
+        }
+        self.edit_sequence = self.applied_edit_ids.len() as i32;
         self.tail_undo_cache = None;
-        self.current = current;
-        self.conflicts = conflicts;
+        self.current = state;
         self.bump();
         self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
-        Ok(())
+        let mut conflict_id = None;
+        if worst.map(|level| level >= crate::os_dsl::Severity::Warning).unwrap_or(false) {
+            let edit_ids: Vec<String> = batch.iter().map(|edit| edit.id.clone()).collect();
+            let kind = crate::os_spr::ConflictKind::Degraded { edit_ids };
+            let id = crate::os_spr::ConflictId::new(&kind, &ArtifactId(self.envelope.id.clone()), &mutation_ids, &self.clock);
+            self.envelope.conflicts.push(crate::os_spr::Conflict { id: id.clone(), kind, status: crate::os_spr::ConflictStatus::Open, messages, actors, timestamp: self.clock });
+            conflict_id = Some(id);
+        }
+        Ok(crate::os_spr::MergeReport { policy: self.merge_policy, accepted: true, insertion_index: k as u32, replayed, worst, conflict: conflict_id })
     }
 
     fn assert_equivalent_remote_envelope(&self, existing: &Edit<Mutation>, incoming: &crate::os_spr::MutationEnvelope) -> Result<(), VcsError> {
@@ -4464,6 +4877,67 @@ where
         Err(VcsError::ValidationFailed(format!("remote mutation id {} was marked applied without an established payload", incoming.mutation_id.0)))
     }
 
+    /// @emoji ⚖️ Resolves an `Open` `crate::os_spr::Conflict` by id (`26/08/16/MUTATION-OUTCOMES-
+    /// MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6). `Quarantined`+`Accept` reruns
+    /// `ingest_remote` for the conflict's own quarantined envelopes under `LaissezFaire` (a `Fatal`
+    /// message still rejects — `LaissezFaire` never waives that), landing the same state
+    /// `ingest_remote` would have produced under `LaissezFaire` in the first place, and marks the
+    /// conflict `Accepted` WITHOUT raising a second one (any `Degraded` conflict the re-ingest would
+    /// otherwise have raised is discarded). `Quarantined`+`Discard` seeds the quarantined ids into
+    /// the causal dag as already-seen — never applied, never relayed — and marks the conflict
+    /// `Discarded`. `Degraded`+`Accept` only flips the status: the batch is already durable history,
+    /// resolving never rewrites it. `Degraded`+`Discard` is refused outright — shared history is
+    /// never rewritten.
+    pub fn resolve_conflict(&mut self, conflict_id: &str, resolution: crate::os_spr::ConflictResolution) -> Result<crate::os_spr::MergeReport, VcsError> {
+        let index = self.envelope.conflicts.iter().position(|conflict| conflict.id.0 == conflict_id && conflict.status == crate::os_spr::ConflictStatus::Open).ok_or_else(|| VcsError::UnknownConflict(conflict_id.to_string()))?;
+        let conflict = self.envelope.conflicts[index].clone();
+        match (conflict.kind.clone(), resolution) {
+            (crate::os_spr::ConflictKind::Quarantined { envelopes, .. }, crate::os_spr::ConflictResolution::Accept) => {
+                let saved_policy = self.merge_policy;
+                let pre_conflicts_len = self.envelope.conflicts.len();
+                self.merge_policy = crate::os_spr::MergePolicy::LaissezFaire;
+                let mut last_report = crate::os_spr::MergeReport { policy: crate::os_spr::MergePolicy::LaissezFaire, accepted: true, insertion_index: 0, replayed: Vec::new(), worst: None, conflict: None };
+                let mut failed = None;
+                for envelope in envelopes {
+                    match self.ingest_remote(envelope) {
+                        Ok(report) => last_report = report,
+                        Err(error) => {
+                            failed = Some(error);
+                            break;
+                        }
+                    }
+                }
+                self.merge_policy = saved_policy;
+                // 🎯️ "no second conflict": any `Degraded` conflict the LaissezFaire re-ingest just
+                // raised is dropped — this resolution only settles the ORIGINAL quarantine.
+                self.envelope.conflicts.truncate(pre_conflicts_len);
+                if let Some(error) = failed {
+                    return Err(error);
+                }
+                // 🎯️ "Fatal still rejects": a batch whose worst level IS Fatal is rejected by
+                // LaissezFaire too, so the re-ingest itself reports `accepted: false` — the
+                // original conflict stays `Open` (never flips to `Accepted`) in that case.
+                if last_report.accepted {
+                    self.envelope.conflicts[index].status = crate::os_spr::ConflictStatus::Accepted;
+                }
+                last_report.conflict = Some(conflict.id.clone());
+                Ok(last_report)
+            }
+            (crate::os_spr::ConflictKind::Quarantined { envelopes, .. }, crate::os_spr::ConflictResolution::Discard) => {
+                for envelope in &envelopes {
+                    self.dag.seed_applied(envelope.mutation_id.clone());
+                }
+                self.envelope.conflicts[index].status = crate::os_spr::ConflictStatus::Discarded;
+                Ok(crate::os_spr::MergeReport { policy: self.merge_policy, accepted: false, insertion_index: 0, replayed: Vec::new(), worst: None, conflict: Some(conflict.id.clone()) })
+            }
+            (crate::os_spr::ConflictKind::Degraded { .. }, crate::os_spr::ConflictResolution::Accept) => {
+                self.envelope.conflicts[index].status = crate::os_spr::ConflictStatus::Accepted;
+                Ok(crate::os_spr::MergeReport { policy: self.merge_policy, accepted: true, insertion_index: 0, replayed: Vec::new(), worst: None, conflict: Some(conflict.id.clone()) })
+            }
+            (crate::os_spr::ConflictKind::Degraded { .. }, crate::os_spr::ConflictResolution::Discard) => Err(VcsError::ValidationFailed("a Degraded conflict's batch is already durable history and can never be discarded".to_string())),
+        }
+    }
+
     fn merge_remote_snapshot(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), VcsError> {
         let remote: ArtifactEnvelope<P, Mutation> = parse_document_pack(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?.envelope;
         Self::validate_authoritative_history(&remote)?;
@@ -4489,7 +4963,7 @@ where
             self.tail_undo_cache = None;
             self.current = current;
             self.current_checkpoint_id = current_checkpoint_id;
-            self.conflicts = Vec::new();
+            self.envelope.conflicts.clear();
             self.bump();
             self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
             return Ok(());
@@ -4519,8 +4993,13 @@ where
         preflight_merge_by_id(&self.envelope.vcs.changes, &remote.vcs.changes, |change| &change.id)?;
         preflight_merge_by_id(&self.envelope.vcs.checkpoints, &remote.vcs.checkpoints, |checkpoint| &checkpoint.id)?;
         preflight_merge_by_id(&self.envelope.vcs.alternatives, &remote.vcs.alternatives, |alternative| &alternative.id)?;
-        let mut candidate = self.current.clone();
+        preflight_merge_by_id(&self.envelope.edit_messages, &remote.edit_messages, |entry| &entry.edit_id)?;
+        preflight_merge_by_id(&self.envelope.conflicts, &remote.conflicts, |conflict| &conflict.id.0)?;
+        // 🎯️ §C6 item 11: collect the genuinely-new remote edits first (same dedup-by-id-or-op-ids
+        // as before), then HLC-sort them into `applied_edit_ids` and replay only the divergent
+        // suffix via the shared `replay_suffix` (steps 5–9), exactly like `ingest_remote`.
         let mut candidate_ids = known_ids.clone();
+        let mut batch: Vec<Edit<Mutation>> = Vec::new();
         for edit in &remote.vcs.edits {
             let operation_ids = crate::os_spr::mutation_ids_for_edit(edit);
             let already_known = candidate_ids.contains(&edit.id) || (!operation_ids.is_empty() && operation_ids.iter().all(|id| candidate_ids.contains(&id.0)));
@@ -4530,49 +5009,98 @@ where
                 }
                 continue;
             }
-            for operation in &edit.forwards {
-                operation.validate(&candidate).map_err(VcsError::ValidationFailed)?;
-                candidate = apply_mutation(&candidate, operation);
-            }
             candidate_ids.insert(edit.id.clone());
             candidate_ids.extend(operation_ids.into_iter().map(|id| id.0));
+            batch.push(edit.clone());
+        }
+        if batch.is_empty() {
+            let mut candidate_envelope = self.envelope.clone();
+            merge_by_id(&mut candidate_envelope.vcs.changes, remote.vcs.changes.clone(), |change| &change.id)?;
+            merge_by_id(&mut candidate_envelope.vcs.checkpoints, remote.vcs.checkpoints.clone(), |checkpoint| &checkpoint.id)?;
+            merge_by_id(&mut candidate_envelope.vcs.alternatives, remote.vcs.alternatives.clone(), |alternative| &alternative.id)?;
+            merge_by_id(&mut candidate_envelope.edit_messages, remote.edit_messages.clone(), |entry| &entry.edit_id)?;
+            merge_by_id(&mut candidate_envelope.conflicts, remote.conflicts.clone(), |conflict| &conflict.id.0)?;
+            Self::validate_authoritative_history(&candidate_envelope)?;
+            self.envelope = candidate_envelope;
+            self.edit_messages = self.envelope.edit_messages.iter().map(|entry| (entry.edit_id.clone(), entry.messages.clone())).collect();
+            self.bump();
+            self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
+            return Ok(());
+        }
+        let edit_hlc = |edit: &Edit<Mutation>| edit.mutation_meta.first().map(|meta| meta.timestamp).unwrap_or_else(|| HybridLogicalTimestamp::new(0, 0));
+        batch.sort_by_key(|edit| edit_hlc(edit).cmp_key());
+        let known_hlc = |edit_id: &str, edits: &[Edit<Mutation>]| edits.iter().find(|edit| edit.id == *edit_id).map(edit_hlc);
+        let min_batch_hlc = edit_hlc(&batch[0]);
+        let k = self.applied_edit_ids.partition_point(|id| known_hlc(id, &self.envelope.vcs.edits).map(|hlc| hlc.cmp_key() < min_batch_hlc.cmp_key()).unwrap_or(true));
+        let mut order: Vec<String> = self.applied_edit_ids.clone();
+        for edit in &batch {
+            let hlc = edit_hlc(edit);
+            let insert_at = order[k..].iter().position(|id| known_hlc(id, &self.envelope.vcs.edits).map(|existing| existing.cmp_key() > hlc.cmp_key()).unwrap_or(false)).map(|offset| k + offset).unwrap_or(order.len());
+            order.insert(insert_at, edit.id.clone());
+        }
+        let base = if k == self.applied_edit_ids.len() { self.current.clone() } else { Self::fold_history(&self.envelope, &order[..k])? };
+        let mut edits_by_id: HashMap<String, Edit<Mutation>> = self.envelope.vcs.edits.iter().map(|edit| (edit.id.clone(), edit.clone())).collect();
+        for edit in &batch {
+            edits_by_id.insert(edit.id.clone(), edit.clone());
+        }
+        let (state, rebased_inverse, replayed) = Self::replay_suffix(&base, &order, k, &edits_by_id);
+        let worst = replayed.iter().flat_map(|edit_messages| edit_messages.messages.iter()).map(|message| message.level).max();
+        let document_id = ArtifactId(self.envelope.id.clone());
+        let schema = SchemaId(self.envelope.schema.clone());
+        let mutation_ids: Vec<MutationId> = batch.iter().flat_map(crate::os_spr::mutation_ids_for_edit).collect();
+        let actors: Vec<ActorId> = batch.iter().filter_map(|edit| edit.actor.clone()).map(ActorId).collect();
+        let messages: Vec<crate::os_spr::MutationMessage> = replayed.iter().flat_map(|edit_messages| edit_messages.messages.clone()).collect();
+        // 🎯️ Reject ⇒ one snapshot-conflict, envelopes rebuilt via `mutation_envelope_from_edit` —
+        // nothing about `self` has been touched above, so state is unchanged by construction.
+        if worst.map(|level| self.merge_policy.rejects(level)).unwrap_or(false) {
+            let envelopes: Vec<crate::os_spr::MutationEnvelope> = batch.iter().flat_map(|edit| crate::os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &document_id, &schema).unwrap_or_default()).collect();
+            let kind = crate::os_spr::ConflictKind::Quarantined { envelopes };
+            let conflict_id = crate::os_spr::ConflictId::new(&kind, &document_id, &mutation_ids, &self.clock);
+            self.envelope.conflicts.push(crate::os_spr::Conflict { id: conflict_id, kind, status: crate::os_spr::ConflictStatus::Open, messages: messages.clone(), actors, timestamp: self.clock });
+            return Err(VcsError::Rejected { policy: self.merge_policy, messages });
         }
         let mut candidate_envelope = self.envelope.clone();
         let mut candidate_dag = self.dag.clone();
-        let mut candidate_applied = self.applied_edit_ids.clone();
         let mut candidate_edit_sequence = self.edit_sequence;
-        let mut newly_merged_ids: Vec<String> = Vec::new();
-        for edit in remote.vcs.edits.iter().cloned() {
-            let operation_ids = crate::os_spr::mutation_ids_for_edit(&edit);
-            let already_known = known_ids.contains(&edit.id) || (!operation_ids.is_empty() && operation_ids.iter().all(|id| known_ids.contains(&id.0)));
-            if already_known {
-                continue;
-            }
+        for edit in &batch {
             candidate_edit_sequence = candidate_edit_sequence.max(edit.sequence_number);
-            candidate_applied.push(edit.id.clone());
-            newly_merged_ids.push(edit.id.clone());
-            known_ids.insert(edit.id.clone());
-            known_ids.extend(operation_ids.iter().map(|id| id.0.clone()));
-            for mutation_id in operation_ids {
+            for mutation_id in crate::os_spr::mutation_ids_for_edit(edit) {
                 candidate_dag.seed_applied(mutation_id);
             }
-            candidate_envelope.vcs.edits.push(edit);
+            candidate_dag.seed_applied(MutationId(edit.id.clone()));
+            candidate_envelope.vcs.edits.push(edit.clone());
         }
-        for edit_id in &newly_merged_ids {
-            candidate_dag.seed_applied(MutationId(edit_id.clone()));
+        for (edit_id, inverse) in rebased_inverse {
+            if let Some(edit) = candidate_envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id) {
+                edit.inverse = inverse;
+            }
         }
         merge_by_id(&mut candidate_envelope.vcs.changes, remote.vcs.changes.clone(), |change| &change.id)?;
         merge_by_id(&mut candidate_envelope.vcs.checkpoints, remote.vcs.checkpoints.clone(), |checkpoint| &checkpoint.id)?;
         merge_by_id(&mut candidate_envelope.vcs.alternatives, remote.vcs.alternatives.clone(), |alternative| &alternative.id)?;
+        merge_by_id(&mut candidate_envelope.edit_messages, remote.edit_messages.clone(), |entry| &entry.edit_id)?;
+        merge_by_id(&mut candidate_envelope.conflicts, remote.conflicts.clone(), |conflict| &conflict.id.0)?;
         Self::validate_authoritative_history(&candidate_envelope)?;
         self.envelope = candidate_envelope;
+        self.edit_messages = self.envelope.edit_messages.iter().map(|entry| (entry.edit_id.clone(), entry.messages.clone())).collect();
         self.dag = candidate_dag;
-        self.applied_edit_ids = candidate_applied;
+        self.applied_edit_ids = order;
         self.edit_sequence = candidate_edit_sequence;
+        for edit_messages in &replayed {
+            if !self.envelope.edit_messages.iter().any(|entry| entry.edit_id == edit_messages.edit_id) {
+                self.replace_edit_messages(&edit_messages.edit_id, edit_messages.messages.clone());
+            }
+        }
         self.tail_undo_cache = None;
-        self.current = candidate;
+        self.current = state;
         self.bump();
         self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
+        if worst.map(|level| level >= crate::os_dsl::Severity::Warning).unwrap_or(false) {
+            let edit_ids: Vec<String> = batch.iter().map(|edit| edit.id.clone()).collect();
+            let kind = crate::os_spr::ConflictKind::Degraded { edit_ids };
+            let id = crate::os_spr::ConflictId::new(&kind, &document_id, &mutation_ids, &self.clock);
+            self.envelope.conflicts.push(crate::os_spr::Conflict { id, kind, status: crate::os_spr::ConflictStatus::Open, messages, actors, timestamp: self.clock });
+        }
         Ok(())
     }
 
@@ -4695,6 +5223,36 @@ where
         for edit in &envelope.vcs.edits {
             if !edit_ids.insert(edit.id.as_str()) {
                 return Err(VcsError::ValidationFailed(format!("history repeats authoritative edit {}", edit.id)));
+            }
+        }
+        let mut message_edit_ids = HashSet::new();
+        for entry in &envelope.edit_messages {
+            if !message_edit_ids.insert(entry.edit_id.as_str()) || !edit_ids.contains(entry.edit_id.as_str()) {
+                return Err(VcsError::ValidationFailed(format!("history has an invalid message ledger for edit {}", entry.edit_id)));
+            }
+            let operation_count = envelope.vcs.edits.iter().find(|edit| edit.id == entry.edit_id).map(|edit| edit.forwards.len()).unwrap_or_default();
+            if entry.messages.is_empty()
+                || entry.messages.iter().any(|message| message.code.0.trim().is_empty() || message.op_index.map_or(true, |index| index as usize >= operation_count))
+            {
+                return Err(VcsError::ValidationFailed(format!("history has malformed messages for edit {}", entry.edit_id)));
+            }
+        }
+        let mut conflict_ids = HashSet::new();
+        for conflict in &envelope.conflicts {
+            if !conflict_ids.insert(conflict.id.0.as_str()) || conflict.id.0.trim().is_empty() {
+                return Err(VcsError::ValidationFailed(format!("history repeats or omits conflict identity {}", conflict.id.0)));
+            }
+            match &conflict.kind {
+                crate::os_spr::ConflictKind::Quarantined { envelopes } => {
+                    if envelopes.is_empty() || envelopes.iter().any(|remote| remote.document_id.0 != envelope.id) {
+                        return Err(VcsError::ValidationFailed(format!("quarantined conflict {} has invalid mutation envelopes", conflict.id.0)));
+                    }
+                }
+                crate::os_spr::ConflictKind::Degraded { edit_ids: conflict_edits } => {
+                    if conflict_edits.is_empty() || conflict_edits.iter().any(|edit_id| !edit_ids.contains(edit_id.as_str())) {
+                        return Err(VcsError::ValidationFailed(format!("degraded conflict {} has invalid edit references", conflict.id.0)));
+                    }
+                }
             }
         }
         let mut change_ids = HashSet::new();
@@ -4876,8 +5434,8 @@ where
         }
         let edit = envelope.vcs.edits.iter().find(|entry| entry.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
         for operation in &edit.forwards {
-            operation.validate(&snapshot).map_err(VcsError::ValidationFailed)?;
-            snapshot = apply_mutation(&snapshot, operation);
+            // 🧮️ Mechanical wrap only — see `replay_mutations`'s matching note.
+            snapshot = apply_mutation(&snapshot, operation).0;
         }
     }
     Ok(snapshot)
@@ -4886,30 +5444,18 @@ where
 
 //#region 🔖️Backbone
 //#region 🔖️Backbone
+/// @emoji 🗣️ A free-form `(kind, uri, message)` diagnostic — NOT `ArtifactStore`'s own merge-conflict
+/// mechanism (that's `crate::os_spr::Conflict`/`MergeReport`, see `ArtifactStore::conflicts`/
+/// `ingest_remote`/`resolve_conflict` — `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
+/// CONFLICTS` §C6/C10). Kept as a generic reporting shape other technologies build their own
+/// domain-specific conflict lists from (e.g. `workflow`'s parameter-binding/edge-type validation,
+/// `host`'s `reconcile_workflow_snapshot`) — unrelated to remote-merge arbitration.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SpaceConflict {
     pub kind: String,
     pub uri: String,
     pub message: String,
-}
-
-/// @emoji 🎞️ Maps `crate::os_spr::command::Mutation::reconcile`'s new `Vec<ReconcileReport>` result onto
-/// this crate's own conflict type — see `reconcile_with_last`'s doc comment for why the mapping
-/// happens at this edge rather than `protocol_command` knowing about `SpaceConflict` directly.
-/// `kind: report.id` verbatim (NOT prefixed with severity) — a technology's own `reconcile` override
-/// (e.g. `framework/product/os/core`'s `OsMutation`) round-trips its own `SpaceConflict.kind`
-/// through `ReconcileReport.id` on the way in (see that crate's `reconcile` wrapper), and callers
-/// pattern-match `SpaceConflict.kind` against exact strings (e.g. `"workflow/edge-orphaned"`) —
-/// mangling it here would silently break every such exact-match call site. `severity` has no
-/// `SpaceConflict` field to land in, so it is dropped (a real, structural information loss inherent
-/// to `ReconcileReport`'s frozen shape, not fixable at this edge). `ReconcileReport` also has no
-/// URI-shaped field (it targets a schema-opaque `id`, not a space member resource), so `uri` is
-/// left empty for any report that didn't originate from a `SpaceConflict` round-trip.
-impl From<ReconcileReport> for SpaceConflict {
-    fn from(report: ReconcileReport) -> Self {
-        SpaceConflict { kind: report.id, uri: String::new(), message: report.message }
-    }
 }
 
 /// @emoji 📨️ Wire message exchanged over an attached backbone channel. B-R6 "kill hand-rolled binary
@@ -5266,7 +5812,7 @@ pub fn resolve_backbone(uri: &str) -> Result<Box<dyn Backbone>, VcsError> {
 //#region 🔖️BlobStore
 /// @emoji 📦️ A content-addressed blob's identity + metadata. Never carries the bytes themselves —
 /// callers that just put/read a blob already hold those; this is what gets embedded in a document
-/// (e.g. a `MergeStrategyKind::ContentAddressedBlob` field) to reference it durably.
+/// (e.g. an `ArtifactKind::ContentAddressedBlob` field) to reference it durably.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BlobRef {
@@ -5275,11 +5821,11 @@ pub struct BlobRef {
     pub media_type: String,
 }
 
-/// @emoji 🗄️ Content-addressed blob persistence backing `MergeStrategyKind::ContentAddressedBlob` /
-/// `ArtifactKind::ContentAddressedBlob` (`framework/core/rs` 🔖️MergeStrategy region). `put` is idempotent —
-/// it dedupes by the Blake3 hash of the bytes ({@link framework_hash::hash_bytes}), so writing
-/// the same content twice never rewrites storage. Implementors decide the backing medium (sqlite here,
-/// a semio_hub HTTP route in a later ticket, an IndexedDB cache in the browser).
+/// @emoji 🗄️ Content-addressed blob persistence backing any `ArtifactKind::ContentAddressedBlob`-
+/// shaped field that needs to reference bytes durably without embedding them inline. `put` is
+/// idempotent — it dedupes by the Blake3 hash of the bytes ({@link framework_hash::hash_bytes}), so
+/// writing the same content twice never rewrites storage. Implementors decide the backing medium
+/// (sqlite here, a semio_hub HTTP route in a later ticket, an IndexedDB cache in the browser).
 pub trait BlobStore: Send + Sync {
     fn put(&self, bytes: &[u8], media_type: &str) -> Result<BlobRef, VcsError>;
     fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, VcsError>;
@@ -5325,23 +5871,35 @@ pub trait SpaceMember: Send {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
 
     // 🎯️ B2 `CompositionCoordinator` seam (`UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`, `🔖️CompositionCoordinator`
-    // region below `🔖️Space`): eight object-safe methods, in two groups. `validate_wire`/
-    // `dispatch_wire`/`tail_group_id` are the three the task brief named explicitly. The other five
-    // (`tail_edit_id`, `redo_tail`, `stamp_tail_group_id`, `set_owner`) are necessary, deliberate
-    // additions this wave makes beyond that literal list — see `📓️wave1-reports/
-    // b2-store-composition-report.md`'s "Design decisions" for why each is unavoidable given the
-    // object-safety constraint: `GroupReceipt`/`GroupUndoReport` need real edit ids (not just group
-    // membership), `dispatch_group`'s phase 2 needs a way to stamp a shared `group_id` onto a member
-    // AFTER an ordinary `Apply` already hard-codes `group_id: None`, and genesis needs a way to set
-    // `ArtifactEnvelope.owner` on a freshly-created child through the same type-erased interface.
+    // region below `🔖️Space`): nine object-safe methods, in two groups. `preview_wire`/
+    // `dispatch_wire`/`tail_group_id` are the three the task brief named explicitly (`preview_wire`
+    // itself renamed from `validate_wire` by `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
+    // CLASS-CONFLICTS` §C6, once its `Result<(), String>` early-reject shape was replaced by the
+    // `Vec<MutationMessage>` dry run every `CompositionCoordinator` phase 1 now unions across
+    // members). The other six (`tail_edit_id`, `redo_tail`, `stamp_tail_group_id`, `set_owner`,
+    // `merge_policy`) are necessary, deliberate additions beyond that literal list — see
+    // `📓️wave1-reports/b2-store-composition-report.md`'s "Design decisions" for why each is
+    // unavoidable given the object-safety constraint: `GroupReceipt`/`GroupUndoReport` need real
+    // edit ids (not just group membership), `dispatch_group`'s phase 2 needs a way to stamp a shared
+    // `group_id` onto a member AFTER an ordinary `Apply` already hard-codes `group_id: None`,
+    // genesis needs a way to set `ArtifactEnvelope.owner` on a freshly-created child through the
+    // same type-erased interface, and `merge_policy` is what lets phase 1 fold every member's
+    // `preview_wire` messages against one authority-chosen `crate::os_spr::MergePolicy` without
+    // downcasting.
     /// @emoji 🧪️ Decodes `ops` as a sequence of individually-`OpBinary`-encoded `Mutation`s (the
     /// SAME wire shape `ArtifactCommand::Apply.mutations` bundles — see `dispatch_wire`'s doc
-    /// comment) and runs `crate::os_spr::Mutation::validate` on each against a snapshot threaded
-    /// forward through the whole slice, so op `i` validates against the state ops `0..i` would
-    /// produce, never a stale base. Never applies anything. `Result<_, String>` (not `VcsError`)
-    /// because `Mutation::validate` itself returns `Result<(), String>` — a direct pass-through,
-    /// not a new error taxonomy.
-    fn validate_wire(&self, ops: &[Vec<u8>]) -> Result<(), String>;
+    /// comment) and dry-runs each against a snapshot threaded forward through the whole slice, so
+    /// op `i` previews against the state ops `0..i` would produce, never a stale base. Mirrors the
+    /// real apply algorithm (`📋️contract-freeze.md` §C6 `replay_mutations`: every op is diffed and
+    /// folded in order, nothing stops early — a `Fatal`/`Error` message's diff is a no-op by
+    /// construction (§C2 LAWS 1/2), so threading through it is always safe) and returns EVERY
+    /// message every op raised, each stamped with its `op_index`; only a structural failure (a
+    /// snapshot read error, or an op that fails to even decode) short-circuits the remaining ops,
+    /// itself reported as one `mutation.invariant` `Fatal` message. Never applies anything — the
+    /// live store is untouched no matter what this returns. `CompositionCoordinator` phase 1 unions
+    /// this across every member, computes ONE worst `crate::os_dsl::Severity`, and consults
+    /// `merge_policy()` to decide accept/reject for the whole group.
+    fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<crate::os_spr::MutationMessage>;
     /// @emoji 📡️ Decodes `cmd_bytes` as one binary `ArtifactCommand<Mutation>` and dispatches it via
     /// `dispatch_binary`. `CompositionCoordinator` builds `cmd_bytes` from a member's
     /// `ChildDispatch.ops`/`parent_ops` by replicating `write_command_ops`'s byte layout directly
@@ -5350,6 +5908,9 @@ pub trait SpaceMember: Send {
     /// is that `SpaceMember` itself must stay object-safe (no generic method can appear on a trait
     /// object), so the coordinator stays fully agnostic of every member's concrete `Mutation` type.
     fn dispatch_wire(&mut self, cmd_bytes: &[u8]) -> Result<CommandReceipt, VcsError>;
+    /// @emoji ⚖️ Applies a preflighted group command under the authority-selected policy without
+    /// changing this member's local policy after dispatch.
+    fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: crate::os_spr::MergePolicy) -> Result<CommandReceipt, VcsError>;
     /// @emoji 🏷️ The `MutationMeta.group_id` recorded on this member's TAIL applied edit's last
     /// operation, if any — lets `CompositionCoordinator::undo_group` recognize "does this member's
     /// most recent edit belong to composite gesture X" without downcasting to a concrete
@@ -5414,6 +5975,19 @@ pub trait SpaceMember: Send {
     /// a pinned reference resolves to the target's historical content rather than silently
     /// degrading to its head.
     fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, VcsError>;
+
+    /// @emoji ⚖️ This member's own `crate::os_spr::MergePolicy` — local/authority state (§C3: never
+    /// wire-carried, never part of shared history), consulted by `CompositionCoordinator` phase 1
+    /// to decide whether the group's unioned `preview_wire` messages are accepted or rejected.
+    /// Defaults to `MergePolicy::default()` (`Normal`) so every member reports a policy even before
+    /// an authority has configured one; `ArtifactStore::merge_policy`/`set_merge_policy` (§C6, lane
+    /// 1-A's `🔖️ArtifactStore` region) is the real per-store override this default defers to once
+    /// landed — override this method in the blanket impl below to delegate to it the moment that
+    /// inherent method exists (Rust picks the inherent method over this trait one automatically, the
+    /// same pattern `current_checkpoint_id` already relies on just above).
+    fn merge_policy(&self) -> crate::os_spr::MergePolicy {
+        crate::os_spr::MergePolicy::default()
+    }
 }
 
 impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
@@ -5489,18 +6063,37 @@ where
         self
     }
 
-    fn validate_wire(&self, ops: &[Vec<u8>]) -> Result<(), String> {
-        let mut running = self.snapshot().map_err(|error| error.to_string())?;
-        for op in ops {
-            let mutation = <Mutation as OpBinary>::decode_op(op).map_err(|error| error.to_string())?;
-            mutation.validate(&running)?;
-            running = apply_mutation(&running, &mutation);
+    fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<crate::os_spr::MutationMessage> {
+        let mut running = match self.snapshot() {
+            Ok(snapshot) => snapshot,
+            Err(error) => return vec![crate::os_spr::MutationMessage::fatal("mutation.invariant", error.to_string())],
+        };
+        let mut all_messages = Vec::new();
+        for (index, op) in ops.iter().enumerate() {
+            let mutation = match <Mutation as OpBinary>::decode_op(op) {
+                Ok(mutation) => mutation,
+                Err(error) => {
+                    all_messages.push(crate::os_spr::MutationMessage::fatal("mutation.invariant", error.to_string()).at_op(index as u32));
+                    break;
+                }
+            };
+            let (next, messages) = apply_mutation(&running, &mutation);
+            all_messages.extend(messages.into_iter().map(|message| message.at_op(index as u32)));
+            running = next;
         }
-        Ok(())
+        all_messages
     }
 
     fn dispatch_wire(&mut self, cmd_bytes: &[u8]) -> Result<CommandReceipt, VcsError> {
         self.dispatch_binary(cmd_bytes)
+    }
+
+    fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: crate::os_spr::MergePolicy) -> Result<CommandReceipt, VcsError> {
+        let local_policy = self.merge_policy;
+        self.merge_policy = policy;
+        let result = self.dispatch_binary(cmd_bytes);
+        self.merge_policy = local_policy;
+        result
     }
 
     fn tail_group_id(&self) -> Option<String> {
@@ -5553,6 +6146,14 @@ where
         let checkpoint = self.envelope().vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == checkpoint_id).ok_or_else(|| VcsError::UnknownChange(checkpoint_id.to_string()))?;
         let edit_ids = edit_ids_for_changes(self.envelope(), &checkpoint.change_ids);
         Ok(materialize_document_snapshot(self.envelope(), &edit_ids)?.encode_pack())
+    }
+
+    /// 🎯️ Overrides the trait default (`MergePolicy::default()`) now that lane 1-A's real
+    /// `ArtifactStore::merge_policy` inherent method has landed (§C6) — `self.merge_policy()`
+    /// resolves to the INHERENT method here (Rust prefers it over the trait one of the same name),
+    /// exactly the `current_checkpoint_id` precedent this file already documents.
+    fn merge_policy(&self) -> crate::os_spr::MergePolicy {
+        self.merge_policy()
     }
 }
 //#endregion SpaceMember
@@ -5697,15 +6298,18 @@ impl MutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {
 impl Mutation<SpaceHistorySnapshot> for SpaceHistoryMutation {
     type Diff = SpaceHistoryDiff;
 
-    fn diff(&self, _snapshot: &SpaceHistorySnapshot) -> SpaceHistoryDiff {
-        match self {
+    /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
+    /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet.
+    fn diff(&self, _snapshot: &SpaceHistorySnapshot) -> crate::os_spr::MutationOutcome<SpaceHistoryDiff> {
+        let diff = match self {
             SpaceHistoryMutation::CommitSpaceCheckpoint { checkpoint } => SpaceHistoryDiff { add_checkpoint: Some(checkpoint.clone()), ..Default::default() },
             SpaceHistoryMutation::CreateSpaceAlternative { alternative } => SpaceHistoryDiff { add_alternative: Some(alternative.clone()), set_active_alternative_id: Some(Some(alternative.id.clone())), ..Default::default() },
             SpaceHistoryMutation::SwitchSpaceAlternative { alternative_id } => SpaceHistoryDiff { set_active_alternative_id: Some(Some(alternative_id.clone())), ..Default::default() },
             SpaceHistoryMutation::RemoveSpaceCheckpoint { checkpoint_id } => SpaceHistoryDiff { remove_checkpoint_id: Some(checkpoint_id.clone()), ..Default::default() },
             SpaceHistoryMutation::RemoveSpaceAlternative { alternative_id } => SpaceHistoryDiff { remove_alternative_id: Some(alternative_id.clone()), ..Default::default() },
             SpaceHistoryMutation::SetActiveSpaceAlternative { alternative_id } => SpaceHistoryDiff { set_active_alternative_id: Some(alternative_id.clone()), ..Default::default() },
-        }
+        };
+        crate::os_spr::MutationOutcome::new(diff)
     }
 
     fn inverse(&self, snapshot: &SpaceHistorySnapshot) -> Vec<Self> {
@@ -5959,14 +6563,20 @@ impl SpaceHost {
 // 🧩️ Atomic composite dispatch across a parent `SpaceMember` and N child `SpaceMember`s — the
 // mechanism that makes ONE user gesture spanning a parent and several `🔖️Composition` children
 // into ONE undo step, by orchestrating multi-store dispatch through the object-safe
-// `SpaceMember::validate_wire`/`dispatch_wire`/`tail_group_id`/etc. seam (extended just above,
-// `🔖️Space`'s `SpaceMember` region) rather than needing to know any member's concrete `P`/
-// `Mutation`. Two-phase: `dispatch_group`'s phase 1 validates every op on every member against its
-// CURRENT snapshot with zero side effects (any failure ⇒ nothing dispatched anywhere); phase 2
-// applies in the fixed order child geneses → child edits → parent ops, stamping every resulting
-// edit's `MutationMeta.group_id` with the same minted `invocation_id` — the shared stamp a later
-// `undo_group`/`redo_group` call recognizes. `CompositionGraph` tracks the ownership forest/link
-// DAG this all leans on for cycle/ownership validation.
+// `SpaceMember::preview_wire`/`dispatch_wire`/`tail_group_id`/`merge_policy`/etc. seam (extended
+// just above, `🔖️Space`'s `SpaceMember` region) rather than needing to know any member's concrete
+// `P`/`Mutation`. Two-phase: `dispatch_group`'s phase 1 dry-runs every op on every member against
+// its CURRENT snapshot with zero side effects, unions the resulting `MutationMessage`s (each
+// prefixed with its originating member's path — `prefix_message_target`) into one set, and rejects
+// the WHOLE group (`reject_if_policy_rejects`, ALL-OR-NOTHING — no member applies anything) if the
+// parent-or-initiator's own `merge_policy()` rejects the union's worst `crate::os_dsl::Severity`
+// (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6); a structural failure
+// (unknown ownership, a graph cycle, a missing `ChildStoreFactory`) still rejects immediately,
+// exactly as before. Phase 2 applies in the fixed order child geneses → child edits → parent ops,
+// stamping every resulting edit's `MutationMeta.group_id` with the same minted `invocation_id` —
+// the shared stamp a later `undo_group`/`redo_group` call recognizes — and the SAME unioned
+// messages phase 1 computed travel through unchanged as `GroupReceipt.messages`. `CompositionGraph`
+// tracks the ownership forest/link DAG this all leans on for cycle/ownership validation.
 
 /// @emoji 📮️ One child's share of a composite dispatch: which child, its ops (each individually
 /// `crate::os_spr::OpBinary`-encoded — the SAME per-op wire shape `ArtifactCommand::Apply.mutations`
@@ -6001,10 +6611,20 @@ pub struct ChildGenesis {
 /// (unlike `children`, which the caller already owns), so this is the only way a freshly-created
 /// child ever reaches the caller for registration (e.g. into a `SpaceHost`). No `Clone`/`Debug`/
 /// `PartialEq`: `Box<dyn SpaceMember>` supports none of them.
+///
+/// 🎯️ `messages` (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6): the
+/// SAME union of every dispatched member's `preview_wire` output phase 1 already computed to decide
+/// accept/reject — carried through unchanged rather than recomputed, so a successful receipt's
+/// messages are byte-identical to what a `preview_wire` dry run of the same ops would have reported
+/// (§C2 LAW 3, determinism). Each message's `target` is prefixed with the ORIGINATING member's own
+/// `crate::os_io::ArtifactRef::to_uri()` (outermost segment), so a caller with several members in
+/// flight can always tell which member a given message came from — the same discipline §C4 mandates
+/// for composite step paths. Empty when every op's outcome was silent.
 pub struct GroupReceipt {
     pub invocation_id: String,
     pub member_edits: Vec<(crate::os_io::ArtifactRef, String)>,
     pub created_children: Vec<(crate::os_io::ArtifactRef, Box<dyn SpaceMember>)>,
+    pub messages: Vec<crate::os_spr::MutationMessage>,
 }
 
 /// @emoji 🎛️ Cross-member metadata for one `dispatch_group` call. `description` becomes every
@@ -6240,6 +6860,50 @@ fn mint_invocation_id(parent_id: &str, parent_edit_fingerprint: &[u8], child_fin
     content_addressed_entity_id("invocation", &payload)
 }
 
+/// @emoji 🏷️ Prepends `member_path` (that member's own `crate::os_io::ArtifactRef::to_uri()`) as the
+/// OUTERMOST segment of every message's `target` — the discipline §C4 mandates for composite step
+/// paths, generalized to a composition group: a caller unioning messages from several members must
+/// still be able to tell which member produced which message.
+fn prefix_message_target(messages: Vec<crate::os_spr::MutationMessage>, member_path: &str) -> Vec<crate::os_spr::MutationMessage> {
+    messages
+        .into_iter()
+        .map(|mut message| {
+            message.target.insert(0, member_path.to_string());
+            message
+        })
+        .collect()
+}
+
+/// @emoji ⚖️ Phase 1's policy gate (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
+/// CONFLICTS` §C6): folds every already-prefixed message `dispatch_relation_group` collected via
+/// `SpaceMember::preview_wire` into ONE worst `crate::os_dsl::Severity` and consults `policy` — the
+/// parent-or-initiator's own `SpaceMember::merge_policy()`, since it is the member driving/owning
+/// this atomic gesture (a policy is authority-local state per §C3, so SOME single member's policy
+/// must govern one shared accept/reject decision; the entry point is the natural, and only
+/// unambiguous, choice among a group that may otherwise mix policies). `Ok(())` when `messages` is
+/// empty or `policy` accepts the worst level; `Err(VcsError::Rejected { policy, messages })`
+/// otherwise — phase 2 never runs, so nothing has been dispatched anywhere yet (the same "zero side
+/// effects" law every other phase-1 failure upholds).
+///
+/// 🎯️ This is the GROUP-level gate only. Each member's own real `dispatch_wire` (Phase 2) ALSO
+/// independently enforces THAT member's own `merge_policy()` inside `ArtifactStore::dispatch`
+/// (lane 1-A's C6 `replay_mutations`) — a member with a stricter policy than the parent's can still
+/// reject its own op during Phase 2 even after this gate accepted the union under the parent's more
+/// lenient policy. Both checks return the SAME `VcsError::Rejected` shape; a caller relying on
+/// "accepted by the parent's policy" alone must also configure every other participating member's
+/// own policy consistently if it wants Phase 2 to actually complete (see this file's own
+/// `dispatch_group_phase1_accepts_the_same_error_scenario_under_laissez_faire` test, which sets
+/// `LaissezFaire` on BOTH members for exactly this reason).
+fn reject_if_policy_rejects(policy: crate::os_spr::MergePolicy, messages: &[crate::os_spr::MutationMessage]) -> Result<(), VcsError> {
+    let Some(worst) = crate::os_spr::worst_level(messages) else {
+        return Ok(());
+    };
+    if !policy.rejects(worst) {
+        return Ok(());
+    }
+    Err(VcsError::Rejected { policy, messages: messages.to_vec() })
+}
+
 /// @emoji 🧯️ Folds a post-validation dispatch failure with its compensation report: if every
 /// already-applied member rolled back cleanly (`report.skipped` empty), the ORIGINAL error is
 /// returned unchanged (compensation is a transparent implementation detail on the success path);
@@ -6365,17 +7029,31 @@ impl TransactionCoordinator {
     /// (order, `invocation_id` minting, `group_id` stamping, compensation) is identical, which is
     /// what "generalize, don't replace" means concretely in this method.
     ///
-    /// **Phase 1 — validate-all, zero side effects.** Every non-empty op slice (`parent_ops`, each
-    /// `ChildDispatch.ops`) is checked via `SpaceMember::validate_wire` against that member's
-    /// CURRENT snapshot. Under `Owned`, every `children` entry's claimed ownership is checked
-    /// against `self.graph` (`VcsError::OwnershipViolation` if the graph does not currently track
-    /// `parent_ref` as that child's owner). Under `Peer`, no ownership is checked; instead
+    /// **Phase 1 — preview-all, zero side effects.** Every non-empty op slice (`parent_ops`, each
+    /// `ChildDispatch.ops`) is dry-run via `SpaceMember::preview_wire` against that member's CURRENT
+    /// snapshot and its messages unioned into one `all_messages` list, each stamped with its
+    /// originating member's own `crate::os_io::ArtifactRef::to_uri()` as the outermost `target`
+    /// segment (`prefix_message_target`). Under `Owned`, every `children` entry's claimed ownership
+    /// is ALSO checked against `self.graph` (`VcsError::OwnershipViolation` if the graph does not
+    /// currently track `parent_ref` as that child's owner) — a STRUCTURAL failure, returned
+    /// immediately, never folded into `all_messages`. Under `Peer`, no ownership is checked; instead
     /// `self.graph.would_cycle_links(parent_ref, child)` guards against a peer transaction that
     /// would close a link cycle (`VcsError::CompositionCycle`), including the trivial self-cycle of
     /// an artifact transacting with itself. Every `genesis` slot's (Owned-only) deterministic id is
     /// minted and checked for a cycle (`VcsError::CompositionCycle`) and a registered
-    /// `ChildStoreFactory` (`VcsError::ValidationFailed` if none). Any failure here returns
-    /// immediately — NOTHING has been dispatched anywhere yet.
+    /// `ChildStoreFactory` (`VcsError::ValidationFailed` if none) — also structural, also immediate.
+    /// Once every member's ops have been previewed and every structural check has passed,
+    /// `reject_if_policy_rejects(parent.merge_policy(), &all_messages)` computes ONE worst
+    /// `crate::os_dsl::Severity` across the whole union and consults the parent-or-initiator's own
+    /// `merge_policy()` (§C6: a `MergePolicy` is authority-local state, so ONE member's policy must
+    /// govern the shared group decision — the entry point is the natural choice), returning
+    /// `VcsError::Rejected { policy, messages }` on rejection. A reject here is ALL-OR-NOTHING
+    /// exactly like every other phase-1 failure: NOTHING has been dispatched anywhere yet, for ANY
+    /// member, no matter which member's ops raised the worst message. This is a GROUP-level gate
+    /// only — Phase 2 below still runs each member's real `dispatch_wire`, which independently
+    /// enforces THAT member's own `merge_policy()` too (lane 1-A's C6 `ArtifactStore::dispatch`), so
+    /// a caller must configure every participating member's policy consistently to guarantee Phase 2
+    /// completes even after this gate accepts.
     ///
     /// **Phase 2 — apply in fixed order: child geneses → child edits → parent ops.** This order
     /// guarantees a parent's own `Apply` (which typically ADDS the `ArtifactChild` handle pointing
@@ -6407,8 +7085,9 @@ impl TransactionCoordinator {
         meta: GroupMeta,
     ) -> Result<GroupReceipt, VcsError> {
         //#region Phase1Validate
+        let mut all_messages: Vec<crate::os_spr::MutationMessage> = Vec::new();
         if !parent_ops.is_empty() {
-            parent.validate_wire(&parent_ops).map_err(VcsError::ValidationFailed)?;
+            all_messages.extend(prefix_message_target(parent.preview_wire(&parent_ops), &parent_ref.to_uri()));
         }
         for (member, dispatch) in children.iter() {
             match relation {
@@ -6423,7 +7102,7 @@ impl TransactionCoordinator {
                 }
             }
             if !dispatch.ops.is_empty() {
-                member.validate_wire(&dispatch.ops).map_err(VcsError::ValidationFailed)?;
+                all_messages.extend(prefix_message_target(member.preview_wire(&dispatch.ops), &dispatch.child.to_uri()));
             }
         }
         let parent_edit_fingerprint = concat_ops_fingerprint(&parent_ops);
@@ -6439,6 +7118,8 @@ impl TransactionCoordinator {
             }
             minted_child_ids.push(child_id);
         }
+        let group_policy = parent.merge_policy();
+        reject_if_policy_rejects(group_policy, &all_messages)?;
         //#endregion Phase1Validate
 
         //#region Phase2Apply
@@ -6468,7 +7149,7 @@ impl TransactionCoordinator {
                 continue;
             }
             let command_bytes = build_apply_command_bytes(&children[index].1.ops, meta.description.as_deref());
-            let receipt = match children[index].0.dispatch_wire(&command_bytes) {
+            let receipt = match children[index].0.dispatch_wire_with_policy(&command_bytes, group_policy) {
                 Ok(receipt) => receipt,
                 Err(error) => {
                     let report = Self::compensate(parent_ref, parent, children, &applied_children, None);
@@ -6498,7 +7179,7 @@ impl TransactionCoordinator {
         let mut parent_edit_id: Option<String> = None;
         if !parent_ops.is_empty() {
             let command_bytes = build_apply_command_bytes(&parent_ops, meta.description.as_deref());
-            let receipt = match parent.dispatch_wire(&command_bytes) {
+            let receipt = match parent.dispatch_wire_with_policy(&command_bytes, group_policy) {
                 Ok(receipt) => receipt,
                 Err(error) => {
                     let report = Self::compensate(parent_ref, parent, children, &applied_children, None);
@@ -6518,7 +7199,7 @@ impl TransactionCoordinator {
         if let Some(edit_id) = parent_edit_id {
             member_edits.push((parent_ref.clone(), edit_id));
         }
-        Ok(GroupReceipt { invocation_id, member_edits, created_children })
+        Ok(GroupReceipt { invocation_id, member_edits, created_children, messages: all_messages })
     }
 
     /// ↩️ Best-effort group undo: for every `(reference, member)` pair (caller-ordered — put the
@@ -6580,10 +7261,10 @@ pub mod test_support {
         P: Clone + PartialEq + std::fmt::Debug,
         Mutation: self::Mutation<P>,
     {
-        let post = apply_mutation(pre, &operation);
+        let post = apply_mutation(pre, &operation).0;
         let mut inverse = operation.inverse(pre);
         inverse.reverse();
-        let restored = inverse.iter().fold(post, |snapshot, back_operation| apply_mutation(&snapshot, back_operation));
+        let restored = inverse.iter().fold(post, |snapshot, back_operation| apply_mutation(&snapshot, back_operation).0);
         assert_eq!(&restored, pre, "operation inverse did not restore pre-state");
     }
 
@@ -7058,11 +7739,14 @@ mod tests {
         fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
             self
         }
-        fn validate_wire(&self, ops: &[Vec<u8>]) -> Result<(), String> {
-            SpaceMember::validate_wire(&self.0, ops)
+        fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<crate::os_spr::MutationMessage> {
+            SpaceMember::preview_wire(&self.0, ops)
         }
         fn dispatch_wire(&mut self, command: &[u8]) -> Result<CommandReceipt, VcsError> {
             SpaceMember::dispatch_wire(&mut self.0, command)
+        }
+        fn dispatch_wire_with_policy(&mut self, command: &[u8], policy: crate::os_spr::MergePolicy) -> Result<CommandReceipt, VcsError> {
+            SpaceMember::dispatch_wire_with_policy(&mut self.0, command, policy)
         }
         fn tail_group_id(&self) -> Option<String> {
             SpaceMember::tail_group_id(&self.0)
@@ -7167,6 +7851,13 @@ mod tests {
     enum DemoMutation {
         #[dsl(key = "set-n")]
         SetN { n: i32 },
+        /// @emoji 🗑️ Deletes `n` — modeled as the `i32::MIN` sentinel (kept on `DemoSnapshot { n:
+        /// i32 }` rather than adding a field, so every existing `DemoSnapshot { n: .. }` literal
+        /// across this test module keeps compiling unchanged). Lets `🧪️Tests` exercise a real
+        /// modify-vs-delete conflict (`SetN` on an already-deleted target ⇒
+        /// `mutation.target-missing`) without a second document-shaped test fixture.
+        #[dsl(key = "delete-n")]
+        DeleteN,
     }
 
     //#region 🔖️OpCodec
@@ -7227,9 +7918,13 @@ mod tests {
     impl Mutation<DemoSnapshot> for DemoMutation {
         type Diff = DemoDiff;
 
-        fn diff(&self, _snapshot: &DemoSnapshot) -> DemoDiff {
+        fn diff(&self, snapshot: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
             match self {
-                DemoMutation::SetN { n } => DemoDiff { n: Some(*n) },
+                // 🎯️ Verb-family rule (frozen fan-out table): `set` on an absent target ⇒ Error
+                // `mutation.target-missing`, empty diff (LAW 2) — the modify-vs-delete conflict case.
+                DemoMutation::SetN { .. } if snapshot.n == i32::MIN => crate::os_spr::MutationOutcome::error("mutation.target-missing", "n was deleted by a concurrent edit", ["n"]),
+                DemoMutation::SetN { n } => crate::os_spr::MutationOutcome::new(DemoDiff { n: Some(*n) }),
+                DemoMutation::DeleteN => crate::os_spr::MutationOutcome::new(DemoDiff { n: Some(i32::MIN) }),
             }
         }
 
@@ -7303,6 +7998,174 @@ mod tests {
         assert_eq!(local.envelope(), &before);
         assert_eq!(local.snapshot().expect("unchanged snapshot"), DemoSnapshot { n: 1 });
     }
+
+    //#region 🔖️MergePolicyTests
+    // 🎯️ `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6 acceptance —
+    // two-peer merge-policy/conflict tests, written standalone (not depending on 1-D's
+    // `📡️spr/🧪️testkit` `🔖️Laws` helpers landing first).
+
+    /// 🛰️ Builds a `MutationEnvelope` with an explicit HLC (bypassing wall-clock timing) so arrival
+    /// order and HLC order can be controlled independently — the two-peer tests below need both.
+    fn mutation_envelope_at(actor: &str, mutation_id: &str, operation: DemoMutation, hlc: HybridLogicalTimestamp, dependencies: Vec<MutationId>) -> crate::os_spr::MutationEnvelope {
+        crate::os_spr::MutationEnvelope {
+            mutation_id: MutationId(mutation_id.to_string()),
+            document_id: ArtifactId("demo".to_string()),
+            actor: ActorId(actor.to_string()),
+            dependencies,
+            diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: operation.encode_op().expect("encode demo mutation") },
+            inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: Vec::new() },
+            timestamp: hlc,
+        }
+    }
+
+    fn fresh_demo_store() -> ArtifactStore<DemoSnapshot, DemoMutation> {
+        ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None))
+    }
+
+    /// 🛰️ A `DeleteN` at an earlier HLC and a `SetN` at a later HLC — replayed in HLC order, the
+    /// `SetN` lands on an already-deleted target and raises `mutation.target-missing` (Error).
+    fn modify_vs_delete_envelopes() -> (crate::os_spr::MutationEnvelope, crate::os_spr::MutationEnvelope) {
+        let delete = mutation_envelope_at("deleter", "op-delete", DemoMutation::DeleteN, HybridLogicalTimestamp::new(1, 100), Vec::new());
+        let modify = mutation_envelope_at("modifier", "op-modify", DemoMutation::SetN { n: 42 }, HybridLogicalTimestamp::new(2, 200), Vec::new());
+        (delete, modify)
+    }
+
+    #[test]
+    fn modify_vs_delete_quarantines_under_normal_and_vigilant() {
+        for policy in [crate::os_spr::MergePolicy::Normal, crate::os_spr::MergePolicy::Vigilant] {
+            let mut store = fresh_demo_store();
+            store.set_merge_policy(policy);
+            let (delete, modify) = modify_vs_delete_envelopes();
+            store.ingest_remote(delete).expect("the delete alone raises no message and always applies");
+            let pre_merge = store.snapshot().expect("pre-merge snapshot");
+            let pre_merge_ids = store.applied_edit_ids().to_vec();
+            let report = store.ingest_remote(modify).expect("a policy rejection is a MergeReport, not an Err");
+            assert!(!report.accepted, "{policy:?} must reject an Error-level modify-vs-delete conflict");
+            assert_eq!(report.worst, Some(crate::os_dsl::Severity::Error));
+            assert_eq!(store.snapshot().expect("unchanged snapshot"), pre_merge, "{policy:?}: state stays pre-merge on reject");
+            assert_eq!(store.applied_edit_ids(), pre_merge_ids.as_slice(), "{policy:?}: applied_edit_ids stays pre-merge on reject");
+            let conflict_id = report.conflict.clone().expect("a reject must raise a conflict");
+            let conflict = store.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("conflict recorded on the store");
+            assert_eq!(conflict.status, crate::os_spr::ConflictStatus::Open);
+            assert!(matches!(conflict.kind, crate::os_spr::ConflictKind::Quarantined { .. }), "{policy:?}: a rejected batch quarantines, it never degrades");
+            assert!(store.open_conflicts().any(|conflict| conflict.id == conflict_id));
+        }
+    }
+
+    #[test]
+    fn modify_vs_delete_applies_under_laissez_faire_with_a_degraded_conflict() {
+        let mut store = fresh_demo_store();
+        store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
+        let (delete, modify) = modify_vs_delete_envelopes();
+        store.ingest_remote(delete).expect("delete applies cleanly");
+        let report = store.ingest_remote(modify).expect("LaissezFaire only rejects Fatal");
+        assert!(report.accepted);
+        assert_eq!(report.worst, Some(crate::os_dsl::Severity::Error));
+        assert_eq!(store.snapshot().expect("snapshot").n, i32::MIN, "the modify's part is absent — LAW 2 (an Error message ⇒ no change to its target)");
+        assert!(report.replayed.iter().any(|edit_messages| edit_messages.messages.iter().any(|message| message.code.0 == "mutation.target-missing")), "an Error message must be reported");
+        let conflict_id = report.conflict.expect("worst >= Warning must raise a Degraded conflict");
+        let conflict = store.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("conflict recorded");
+        assert!(matches!(conflict.kind, crate::os_spr::ConflictKind::Degraded { .. }));
+        assert_eq!(conflict.status, crate::os_spr::ConflictStatus::Open);
+    }
+
+    #[test]
+    fn chronological_determinism_any_arrival_order_converges() {
+        let a = mutation_envelope_at("actor-a", "op-a", DemoMutation::SetN { n: 10 }, HybridLogicalTimestamp::new(1, 100), Vec::new());
+        let b = mutation_envelope_at("actor-b", "op-b", DemoMutation::SetN { n: 20 }, HybridLogicalTimestamp::new(2, 300), Vec::new());
+
+        let mut forward = fresh_demo_store();
+        forward.ingest_remote(a.clone()).expect("a");
+        forward.ingest_remote(b.clone()).expect("b");
+
+        let mut reversed = fresh_demo_store();
+        reversed.ingest_remote(b).expect("b");
+        reversed.ingest_remote(a).expect("a");
+
+        assert_eq!(forward.snapshot().expect("snapshot"), reversed.snapshot().expect("snapshot"));
+        assert_eq!(forward.applied_edit_ids(), reversed.applied_edit_ids(), "both must land in the same HLC order regardless of arrival order");
+        assert_eq!(forward.applied_edit_ids(), &["op-a".to_string(), "op-b".to_string()]);
+        assert_eq!(forward.conflicts().len(), reversed.conflicts().len());
+        assert!(forward.conflicts().is_empty(), "two non-conflicting SetN edits raise no conflict");
+    }
+
+    #[test]
+    fn quarantine_accept_equals_laissez_faire_result() {
+        let mut quarantined = fresh_demo_store();
+        quarantined.set_merge_policy(crate::os_spr::MergePolicy::Normal);
+        let (delete, modify) = modify_vs_delete_envelopes();
+        quarantined.ingest_remote(delete.clone()).expect("delete applies cleanly");
+        let reject_report = quarantined.ingest_remote(modify.clone()).expect("reject is a report");
+        assert!(!reject_report.accepted);
+        let conflict_id = reject_report.conflict.expect("conflict raised");
+        quarantined.resolve_conflict(&conflict_id.0, crate::os_spr::ConflictResolution::Accept).expect("accept");
+
+        let mut laissez_faire = fresh_demo_store();
+        laissez_faire.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
+        laissez_faire.ingest_remote(delete).expect("delete applies cleanly");
+        laissez_faire.ingest_remote(modify).expect("modify applies under LaissezFaire");
+
+        assert_eq!(quarantined.snapshot().expect("snapshot"), laissez_faire.snapshot().expect("snapshot"));
+        assert_eq!(quarantined.applied_edit_ids(), laissez_faire.applied_edit_ids());
+        assert_eq!(quarantined.conflicts().iter().filter(|conflict| conflict.status == crate::os_spr::ConflictStatus::Open).count(), 0, "no Open conflict remains — accept must not raise a second conflict");
+        assert_eq!(quarantined.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("original conflict kept").status, crate::os_spr::ConflictStatus::Accepted);
+    }
+
+    #[test]
+    fn quarantine_discard_preserves_state() {
+        let mut store = fresh_demo_store();
+        store.set_merge_policy(crate::os_spr::MergePolicy::Normal);
+        let (delete, modify) = modify_vs_delete_envelopes();
+        store.ingest_remote(delete).expect("delete applies cleanly");
+        let pre_discard = store.snapshot().expect("pre-discard snapshot");
+        let pre_discard_ids = store.applied_edit_ids().to_vec();
+        let reject_report = store.ingest_remote(modify).expect("reject is a report");
+        let conflict_id = reject_report.conflict.expect("conflict raised");
+        store.resolve_conflict(&conflict_id.0, crate::os_spr::ConflictResolution::Discard).expect("discard");
+        assert_eq!(store.snapshot().expect("snapshot"), pre_discard, "a discarded batch must never be applied");
+        assert_eq!(store.applied_edit_ids(), pre_discard_ids.as_slice());
+        assert_eq!(store.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("conflict kept").status, crate::os_spr::ConflictStatus::Discarded);
+    }
+
+    #[test]
+    fn ledger_matches_a_fresh_replay_of_the_same_envelopes() {
+        let (delete, modify) = modify_vs_delete_envelopes();
+        let modify_edit_id = modify.mutation_id.0.clone();
+
+        let mut first = fresh_demo_store();
+        first.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
+        first.ingest_remote(delete.clone()).expect("delete applies cleanly");
+        first.ingest_remote(modify.clone()).expect("modify applies under LaissezFaire");
+
+        let mut replay = fresh_demo_store();
+        replay.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
+        replay.ingest_remote(delete).expect("delete applies cleanly");
+        replay.ingest_remote(modify).expect("modify applies under LaissezFaire");
+
+        assert_eq!(first.messages_for_edit(&modify_edit_id), replay.messages_for_edit(&modify_edit_id));
+        assert!(!first.messages_for_edit(&modify_edit_id).is_empty(), "the modify edit must have raised a message");
+        assert_eq!(first.snapshot().expect("snapshot"), replay.snapshot().expect("snapshot"));
+    }
+
+    #[test]
+    fn applied_edit_ids_stay_sorted_by_hlc_after_a_backdated_remote_insert() {
+        let mut store = fresh_demo_store();
+        // Local edits get large physical-ms HLCs (the local clock ticks off the real wall clock).
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("local apply 1");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("local apply 2");
+        let local_ids = store.applied_edit_ids().to_vec();
+
+        // A remote edit stamped with a tiny HLC — guaranteed to sort before both local edits.
+        let backdated = mutation_envelope_at("backdated-actor", "op-backdated", DemoMutation::SetN { n: 99 }, HybridLogicalTimestamp::new(9, 1), Vec::new());
+        store.ingest_remote(backdated).expect("backdated insert");
+
+        assert_eq!(store.applied_edit_ids()[0], "op-backdated", "the backdated edit must sort before both local edits");
+        assert_eq!(&store.applied_edit_ids()[1..], local_ids.as_slice());
+
+        let hlcs: Vec<HybridLogicalTimestamp> = store.applied_edit_ids().iter().map(|id| store.envelope().vcs.edits.iter().find(|edit| edit.id == *id).and_then(|edit| edit.mutation_meta.first()).map(|meta| meta.timestamp).expect("meta")).collect();
+        assert!(hlcs.windows(2).all(|pair| pair[0].cmp_key() <= pair[1].cmp_key()), "applied_edit_ids must stay HLC-sorted: {hlcs:?}");
+    }
+    //#endregion 🔖️MergePolicyTests
 
     #[test]
     fn composition_pins_rederive_checkpoint_identity_without_partial_mutation() {
@@ -7916,7 +8779,10 @@ mod tests {
     }
 
     #[test]
-    fn reset_and_apply_reject_malformed_history_or_invalid_mutations_before_persisting() {
+    // 🎞️ The final paragraph this test used to have (`ValidatedMutation`/`Mutation::validate`
+    // rejecting `n < 0` before persisting) is gone — `Mutation::validate` is deleted (§C4/C10); the
+    // real outcome-messages/`MergePolicy` rejection this replaces is lane 1-A's C6 work.
+    fn reset_and_apply_reject_malformed_history_before_persisting() {
         let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "reset-invalid", DemoSnapshot { n: 0 }, None);
         let mut malformed_constructor = envelope.clone();
         malformed_constructor.cursor = Some(ArtifactCursor { applied_edit_ids: vec!["missing".into()], redo_edit_ids: Vec::new(), checkpoint_id: None });
@@ -7934,12 +8800,6 @@ mod tests {
         let generation = store.generation();
         assert!(matches!(store.reset(envelope, vec!["missing".into()], Vec::new()), Err(VcsError::UnknownEdit(id)) if id == "missing"));
         assert_eq!(store.generation(), generation, "failed reset must preserve the live store");
-
-        let mut validated = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", "apply-invalid", DemoSnapshot { n: 0 }, None));
-        let error = validated.dispatch(ArtifactCommand::Apply { mutations: vec![ValidatedMutation::SetN { n: -1 }], description: None }).expect_err("invalid mutation must fail before inverse or persistence");
-        assert!(matches!(error, VcsError::ValidationFailed(_)));
-        assert!(validated.envelope().vcs.edits.is_empty());
-        assert_eq!(validated.snapshot().expect("unchanged snapshot"), DemoSnapshot { n: 0 });
     }
 
     #[test]
@@ -8200,8 +9060,8 @@ mod tests {
 
         impl Mutation<DemoSnapshot> for LossyMutation {
             type Diff = LossyDiff;
-            fn diff(&self, _snapshot: &DemoSnapshot) -> LossyDiff {
-                LossyDiff
+            fn diff(&self, _snapshot: &DemoSnapshot) -> crate::os_spr::MutationOutcome<LossyDiff> {
+                crate::os_spr::MutationOutcome::new(LossyDiff)
             }
             fn inverse(&self, _snapshot: &DemoSnapshot) -> Vec<Self> {
                 vec![self.clone()]
@@ -8414,10 +9274,11 @@ mod tests {
     impl Mutation<DemoSnapshot> for TimestampedMutation {
         type Diff = DemoDiff;
 
-        fn diff(&self, _snapshot: &DemoSnapshot) -> DemoDiff {
-            match self {
+        fn diff(&self, _snapshot: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
+            let diff = match self {
                 TimestampedMutation::SetN { n, .. } => DemoDiff { n: Some(*n) },
-            }
+            };
+            crate::os_spr::MutationOutcome::new(diff)
         }
 
         fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
@@ -8577,21 +9438,18 @@ mod tests {
     }
 
     #[test]
-    fn default_reconcile_hook_is_a_no_op_for_existing_document_kinds() {
-        let snapshot = DemoSnapshot { n: 4 };
-        let (reconciled, conflicts) = DemoMutation::SetN { n: 4 }.reconcile(snapshot.clone());
-        assert_eq!(reconciled, snapshot, "default reconcile leaves the snapshot untouched");
-        assert!(conflicts.is_empty(), "default reconcile reports no conflicts");
-
+    // 🎞️ `Mutation::reconcile`/`reconcile_with_last`/`snapshot_with_conflicts` are all deleted
+    // (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS §C4/C6/C10) — concurrent-
+    // merge arbitration is now `ingest_remote`/`resolve_conflict` against first-class `Conflict`s.
+    fn snapshot_matches_materialize_and_conflicts_stay_empty_absent_remote_ingestion() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = ArtifactStore::new(envelope);
         store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply");
         let replayed = materialize_document_snapshot(store.envelope(), store.applied_edit_ids()).expect("replay");
-        assert_eq!(replayed.n, 3, "materialize_document_snapshot is unaffected by the no-operation default reconcile hook");
-        let (with_conflicts, conflicts) = store.snapshot_with_conflicts().expect("snapshot with conflicts");
-        assert_eq!(with_conflicts.n, 3);
-        assert!(conflicts.is_empty());
+        assert_eq!(replayed.n, 3);
+        assert_eq!(store.snapshot().expect("snapshot").n, 3);
         assert!(store.conflicts().is_empty(), "no remote ingestion happened, so the store's conflict buffer stays empty");
+        assert!(store.open_conflicts().next().is_none());
     }
 
     #[test]
@@ -8615,6 +9473,182 @@ mod tests {
     }
 
     //#endregion 🏛️StudioTests
+
+    //#region 🔖️PreviewWireTests
+    /// @emoji 🧪️ Fixture producing one message per non-clean variant, each using one of the frozen
+    /// seven `mutation.*` codes (`📋️contract-freeze.md` §C2's table) — `preview_wire`'s and
+    /// `CompositionCoordinator` phase 1's shared dry-run fixture. `WarnN` ⇒ `mutation.clamped`
+    /// (Warning, non-empty diff), `ErrorN` ⇒ `mutation.target-missing` (Error, empty diff — LAW 2),
+    /// `FatalN` ⇒ `mutation.invariant` (Fatal, empty diff — LAW 1), `CleanN` ⇒ silent.
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslOps)]
+    #[serde(tag = "operation")]
+    enum SeverityMutation {
+        #[dsl(key = "clean-n")]
+        CleanN { n: i32 },
+        #[dsl(key = "warn-n")]
+        WarnN { n: i32 },
+        #[dsl(key = "error-n")]
+        ErrorN { n: i32 },
+        #[dsl(key = "fatal-n")]
+        FatalN { n: i32 },
+    }
+
+    /// 🎞️ Handcrafted OpText (P6).
+    impl OpText for SeverityMutation {
+        fn parse_op(line: &str) -> Result<Self, TextError> {
+            let variants = <Self as crate::os_dsl::DslVariants>::variants();
+            for (keyword, spec_fn) in &variants {
+                let probe = format!("{} ", keyword);
+                if line == keyword.as_str() || line.starts_with(&probe) {
+                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+                }
+            }
+            Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        }
+        fn print_op(&self) -> String {
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+            let variants = <Self as crate::os_dsl::DslVariants>::variants();
+            let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+        }
+    }
+
+    /// 🎯️ Handcrafted OpBinary (P6).
+    impl OpBinary for SeverityMutation {
+        fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+            const OP_BINARY_FORMAT: u8 = 1;
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+            let variants = <Self as crate::os_dsl::DslVariants>::variants();
+            let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
+            let spec = (variants[ordinal].1)();
+            let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+            let mut out = Vec::with_capacity(body.len() + 3);
+            out.push(OP_BINARY_FORMAT);
+            crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
+            out.extend_from_slice(&body);
+            Ok(out)
+        }
+        fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+            const OP_BINARY_FORMAT: u8 = 1;
+            let mut reader = crate::os_pack::ByteReader::new(bytes);
+            let format = reader.read_u8()?;
+            if format != OP_BINARY_FORMAT {
+                return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+            }
+            let ordinal = reader.read_varint_u64()?;
+            let variants = <Self as crate::os_dsl::DslVariants>::variants();
+            let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
+            let spec = spec_fn();
+            let body = &bytes[reader.position()..];
+            let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
+        }
+    }
+
+    impl Mutation<DemoSnapshot> for SeverityMutation {
+        type Diff = DemoDiff;
+        fn diff(&self, _snapshot: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
+            match self {
+                SeverityMutation::CleanN { n } => crate::os_spr::MutationOutcome::new(DemoDiff { n: Some(*n) }),
+                SeverityMutation::WarnN { n } => crate::os_spr::MutationOutcome::new(DemoDiff { n: Some(*n) }).warn("mutation.clamped", "n was clamped to a safe range"),
+                SeverityMutation::ErrorN { .. } => crate::os_spr::MutationOutcome::error("mutation.target-missing", "target n is missing", ["n"]),
+                SeverityMutation::FatalN { .. } => crate::os_spr::MutationOutcome::fatal("mutation.invariant", "n invariant violated", ["n"]),
+            }
+        }
+        fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
+            vec![SeverityMutation::CleanN { n: snapshot.n }]
+        }
+    }
+
+    /// @emoji 🧪️ `preview_wire`'s headline law (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-
+    /// FIRST-CLASS-CONFLICTS` §C6): its output is exactly what independently folding the same ops
+    /// through the diff engine (`apply_mutation`, the same primitive `replay_mutations` itself calls
+    /// on the real apply path) computes, stamped with `op_index`, and the live store is byte-
+    /// identical before and after — a pure dry run all the way through, never applying anything even
+    /// though it threads state forward internally to preview op `i` against `0..i`'s outcome.
+    #[test]
+    fn preview_wire_reports_the_same_messages_the_real_apply_would_produce_and_changes_nothing() {
+        let envelope: ArtifactEnvelope<DemoSnapshot, SeverityMutation> = create_document_envelope("demo/v1", "preview-demo", DemoSnapshot { n: 0 }, None);
+        let store = ArtifactStore::new(envelope);
+        let before = store.envelope().clone();
+
+        let ops: Vec<Vec<u8>> = vec![
+            SeverityMutation::CleanN { n: 1 }.encode_op().expect("encode clean"),
+            SeverityMutation::WarnN { n: 2 }.encode_op().expect("encode warn"),
+            SeverityMutation::ErrorN { n: 99 }.encode_op().expect("encode error"),
+            SeverityMutation::FatalN { n: 99 }.encode_op().expect("encode fatal"),
+        ];
+
+        let messages = store.preview_wire(&ops);
+
+        // 🧮️ Independently folds the SAME ops through the exact primitive the real apply path
+        // (`replay_mutations`) itself calls (`apply_mutation`) — the ground truth `preview_wire`
+        // must match. `replay_mutations` does not yet surface its own messages (lane 1-A's pending
+        // C6 work, see `📓️w1-e-report.md`), so this recomputation is the closest available proof.
+        let mut expected = Vec::new();
+        let mut running = DemoSnapshot { n: 0 };
+        for (index, op) in ops.iter().enumerate() {
+            let mutation = SeverityMutation::decode_op(op).expect("decode");
+            let (next, op_messages) = apply_mutation(&running, &mutation);
+            expected.extend(op_messages.into_iter().map(|message| message.at_op(index as u32)));
+            running = next;
+        }
+        assert_eq!(messages, expected, "preview_wire must report exactly the messages the real diff engine computes");
+        assert_eq!(messages.len(), 3, "one message each for warn/error/fatal; the clean op is silent");
+        assert_eq!(messages[0].level, crate::os_dsl::Severity::Warning);
+        assert_eq!(messages[0].op_index, Some(1));
+        assert_eq!(messages[1].level, crate::os_dsl::Severity::Error);
+        assert_eq!(messages[1].op_index, Some(2));
+        assert_eq!(messages[2].level, crate::os_dsl::Severity::Fatal);
+        assert_eq!(messages[2].op_index, Some(3));
+
+        assert_eq!(store.envelope(), &before, "preview_wire is a pure dry run: the live store is byte-identical afterward");
+        assert_eq!(store.snapshot().expect("snapshot unaffected"), DemoSnapshot { n: 0 }, "preview_wire never advances the live cursor");
+    }
+
+    #[test]
+    fn preview_wire_reports_a_fatal_message_for_undecodable_op_bytes_and_stops_there() {
+        let envelope: ArtifactEnvelope<DemoSnapshot, SeverityMutation> = create_document_envelope("demo/v1", "preview-malformed", DemoSnapshot { n: 0 }, None);
+        let store = ArtifactStore::new(envelope);
+        let ops: Vec<Vec<u8>> = vec![SeverityMutation::CleanN { n: 1 }.encode_op().expect("encode"), vec![0xff, 0xff, 0xff]];
+
+        let messages = store.preview_wire(&ops);
+
+        assert_eq!(messages.len(), 1, "the clean op is silent; the malformed op reports one structural message and stops");
+        assert_eq!(messages[0].level, crate::os_dsl::Severity::Fatal);
+        assert_eq!(messages[0].code.0, "mutation.invariant");
+        assert_eq!(messages[0].op_index, Some(1));
+    }
+
+    #[test]
+    fn spr_round_trip_preserves_edit_messages_and_conflicts() {
+        let initial = DemoSnapshot { n: 0 };
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "durable-outcomes", initial.clone(), None));
+        store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
+        let receipt = store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::WarnN { n: 2 }], description: None }).expect("warning is accepted");
+        let edit_id = receipt.edit_ids.first().expect("one durable edit").clone();
+        let messages = store.messages_for_edit(&edit_id).to_vec();
+        store.0.envelope.conflicts.push(crate::os_spr::Conflict {
+            id: crate::os_spr::ConflictId("conflict-durable-outcomes".into()),
+            kind: crate::os_spr::ConflictKind::Degraded { edit_ids: vec![edit_id.clone()] },
+            status: crate::os_spr::ConflictStatus::Open,
+            messages: messages.clone(),
+            actors: vec![ActorId("local".into())],
+            timestamp: HybridLogicalTimestamp::new(7, 42),
+        });
+
+        let pack = initial.encode_pack();
+        let spr = print_document_spr(store.envelope()).expect("outcome history encodes");
+        let parsed = parse_document_spr::<DemoSnapshot, SeverityMutation>(&pack, &spr).expect("outcome history decodes");
+        assert_eq!(parsed.envelope.edit_messages, store.envelope().edit_messages);
+        assert_eq!(parsed.envelope.conflicts, store.envelope().conflicts);
+
+        let restored = ArtifactStore::new(parsed.envelope);
+        assert_eq!(restored.messages_for_edit(&edit_id), messages);
+        assert_eq!(restored.conflicts(), store.conflicts());
+    }
+    //#endregion 🔖️PreviewWireTests
 
     //#region 🔖️TextFormatHelpers
     #[test]
@@ -9175,24 +10209,18 @@ mod tests {
         }
     }
 
-    /// @emoji 🛂️ `Mutation::validate` override the atomicity/compensation tests below trigger
-    /// deterministically (`n < 0` fails) — `DemoMutation` always accepts, so it cannot exercise
-    /// `SpaceMember::validate_wire`'s failure path.
+    /// @emoji 🛂️ The composition fixture's negative value is a fatal outcome, so the dry-run
+    /// rejects it before group dispatch can alter either member's history.
     impl Mutation<DemoSnapshot> for ValidatedMutation {
         type Diff = DemoDiff;
-        fn diff(&self, _snapshot: &DemoSnapshot) -> DemoDiff {
+        fn diff(&self, _snapshot: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
             match self {
-                ValidatedMutation::SetN { n } => DemoDiff { n: Some(*n) },
+                ValidatedMutation::SetN { n } if *n < 0 => crate::os_spr::MutationOutcome::fatal("mutation.invariant", "n must be non-negative", ["n"]),
+                ValidatedMutation::SetN { n } => crate::os_spr::MutationOutcome::new(DemoDiff { n: Some(*n) }),
             }
         }
         fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
             vec![ValidatedMutation::SetN { n: snapshot.n }]
-        }
-        fn validate(&self, _snapshot: &DemoSnapshot) -> Result<(), String> {
-            match self {
-                ValidatedMutation::SetN { n } if *n < 0 => Err(format!("n must be >= 0, got {n}")),
-                ValidatedMutation::SetN { .. } => Ok(()),
-            }
         }
     }
 
@@ -9437,8 +10465,7 @@ mod tests {
         assert_ne!(id_replica_1, id_different_slot, "a different slot must mint a different id");
     }
 
-    /// @emoji 🧪️ TASK 2's "validate-all atomicity" law: one bad op anywhere ⇒ nothing applied on
-    /// ANY member, parent included.
+    /// @emoji 🧪️ One fatal preview anywhere ⇒ nothing applied on ANY member, parent included.
     #[test]
     fn dispatch_group_validate_all_atomicity_one_bad_member_applies_nothing() {
         let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-atomic-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
@@ -9459,8 +10486,16 @@ mod tests {
         let result = coordinator.dispatch_group(&parent_ref, &mut parent_store as &mut dyn SpaceMember, &mut children, parent_ops, Vec::new(), GroupMeta::default());
         match result {
             Ok(_) => panic!("expected the group dispatch to fail phase-1 validation, but it succeeded"),
-            Err(VcsError::ValidationFailed(_)) => {}
-            Err(other) => panic!("expected ValidationFailed, got a different VcsError: {other}"),
+            // 🎞️ `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6: an
+            // ordinary mutation-level (message-based) rejection now travels as `VcsError::Rejected`,
+            // not `ValidationFailed` (reserved for structural failures only — see its own doc
+            // comment). The default policy (`Normal`, via `SpaceMember::merge_policy`'s trait
+            // default, since neither member's policy is configured here) rejects Fatal.
+            Err(VcsError::Rejected { policy, messages }) => {
+                assert_eq!(policy, crate::os_spr::MergePolicy::Normal);
+                assert!(messages.iter().any(|message| message.level == crate::os_dsl::Severity::Fatal));
+            }
+            Err(other) => panic!("expected Rejected, got a different VcsError: {other}"),
         }
         assert!(parent_store.envelope().vcs.edits.is_empty(), "parent must have zero edits after a failed group dispatch");
         assert!(child_store.envelope().vcs.edits.is_empty(), "child must have zero edits after a failed group dispatch");
@@ -9849,6 +10884,169 @@ mod tests {
         assert_eq!(child_origin, crate::os_spr::MutationOrigin::Owner, "Owned relation never stamps a Transaction origin on an owned child either");
     }
     //#endregion 🔖️TransactionPeerTests
+
+    //#region 🔖️PhasePolicyTests
+    /// @emoji 🧪️ Normal (the default policy) rejects an Error-level message exactly like it already
+    /// rejects Fatal (`dispatch_group_validate_all_atomicity_one_bad_member_applies_nothing` above)
+    /// — the SAME all-or-nothing law, now driven by `reject_if_policy_rejects` off the UNIONED
+    /// `preview_wire` messages rather than an immediate per-member `Err`. Exercises lane 1-A's REAL
+    /// `ArtifactStore::set_merge_policy` (§C6, landed) end to end — no test-only policy fixture
+    /// needed now that it exists.
+    #[test]
+    fn dispatch_group_phase1_rejects_under_normal_when_a_member_yields_an_error_and_nothing_applies() {
+        let parent_ref = crate::os_io::ArtifactRef { artifact_id: "policy-parent-normal".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+        let child_ref = crate::os_io::ArtifactRef { artifact_id: "policy-child-normal".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+
+        // 🎯️ The REAL `super::ArtifactStore` (not this module's `SpaceMember`-object-safe test
+        // wrapper): the wrapper's own `impl SpaceMember for ArtifactStore` block does not override
+        // `merge_policy` (it would just re-delegate to this exact same real inherent method — see
+        // that block's own comment), so coercing the WRAPPER to `&mut dyn SpaceMember` would read
+        // the trait's `Normal` default via its vtable instead of whatever `set_merge_policy` below
+        // sets. Going straight to the real type sidesteps that indirection entirely.
+        let mut parent_store = super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None)).expect("valid parent envelope");
+        parent_store.set_merge_policy(crate::os_spr::MergePolicy::Normal);
+        assert_eq!(parent_store.merge_policy(), crate::os_spr::MergePolicy::Normal, "Normal is also the default, but set it explicitly so this test does not rely on that");
+        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+
+        let mut coordinator = CompositionCoordinator::new();
+        coordinator.graph_mut().insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).expect("seed ownership");
+
+        let parent_ops = vec![SeverityMutation::CleanN { n: 1 }.encode_op().expect("encode parent op")];
+        let child_op = SeverityMutation::ErrorN { n: 99 }.encode_op().expect("encode child op");
+        let dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![child_op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
+        let mut children: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut child_store as &mut dyn SpaceMember, dispatch)];
+
+        let result = coordinator.dispatch_group(&parent_ref, &mut parent_store as &mut dyn SpaceMember, &mut children, parent_ops, Vec::new(), GroupMeta::default());
+        match result {
+            Ok(_) => panic!("expected Normal policy to reject an Error-level message, but the dispatch succeeded"),
+            Err(VcsError::Rejected { policy, messages }) => {
+                assert_eq!(policy, crate::os_spr::MergePolicy::Normal, "the rejection must name the policy that actually rejected it");
+                assert!(messages.iter().any(|message| message.level == crate::os_dsl::Severity::Error), "the rejection must carry the Error message that triggered it");
+            }
+            Err(other) => panic!("expected Rejected, got a different VcsError: {other}"),
+        }
+        assert!(parent_store.envelope().vcs.edits.is_empty(), "parent must have zero edits after a policy-rejected group dispatch");
+        assert!(child_store.envelope().vcs.edits.is_empty(), "child must have zero edits after a policy-rejected group dispatch");
+    }
+
+    /// @emoji 🧪️ The SAME Error-level scenario `dispatch_group_phase1_rejects_under_normal_when_a_
+    /// member_yields_an_error_and_nothing_applies` rejects is accepted end-to-end under
+    /// `LaissezFaire` (only `Fatal` is rejected) — both members get a real edit, and the child's own
+    /// diff stays empty (§C2 LAW 2: an `Error` message's diff carries no change for the target) even
+    /// though the group as a whole succeeded.
+    ///
+    /// 🎯️ Sets `LaissezFaire` on BOTH members, not just the parent: `reject_if_policy_rejects` is
+    /// only the coordinator's GROUP-level gate (checked once, against the parent's own policy,
+    /// before Phase 2 starts). Phase 2 still dispatches through each member's REAL `dispatch_wire`,
+    /// which (lane 1-A's now-landed C6 `ArtifactStore::dispatch`) independently enforces THAT
+    /// member's own `merge_policy()` — a child left at the Normal default would still reject its own
+    /// Error-level op right here, even though the coordinator's gate already accepted the group.
+    #[test]
+    fn dispatch_group_phase1_accepts_the_same_error_scenario_under_laissez_faire() {
+        let parent_ref = crate::os_io::ArtifactRef { artifact_id: "policy-parent-lf".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+        let child_ref = crate::os_io::ArtifactRef { artifact_id: "policy-child-lf".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+
+        // 🎯️ The REAL `super::ArtifactStore` (not this module's `SpaceMember`-object-safe test
+        // wrapper): the wrapper's own `impl SpaceMember for ArtifactStore` block does not override
+        // `merge_policy` (it would just re-delegate to this exact same real inherent method — see
+        // that block's own comment), so coercing the WRAPPER to `&mut dyn SpaceMember` would read
+        // the trait's `Normal` default via its vtable instead of whatever `set_merge_policy` below
+        // sets. Going straight to the real type sidesteps that indirection entirely.
+        let mut parent_store = super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None)).expect("valid parent envelope");
+        parent_store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
+        let mut child_store = super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None)).expect("valid child envelope");
+        child_store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
+
+        let mut coordinator = CompositionCoordinator::new();
+        coordinator.graph_mut().insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).expect("seed ownership");
+
+        let parent_ops = vec![SeverityMutation::CleanN { n: 1 }.encode_op().expect("encode parent op")];
+        let child_op = SeverityMutation::ErrorN { n: 99 }.encode_op().expect("encode child op");
+        let dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![child_op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
+        let mut children: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut child_store as &mut dyn SpaceMember, dispatch)];
+
+        let receipt = coordinator.dispatch_group(&parent_ref, &mut parent_store as &mut dyn SpaceMember, &mut children, parent_ops, Vec::new(), GroupMeta::default()).expect("LaissezFaire accepts an Error-level message");
+
+        assert_eq!(receipt.member_edits.len(), 2, "both parent and child got a real edit despite the child's Error message");
+        assert_eq!(parent_store.snapshot().expect("parent snapshot").n, 1, "the parent's own clean op still applied");
+        assert_eq!(child_store.snapshot().expect("child snapshot").n, 0, "the child's Error-level op's diff carries no change for its target (LAW 2), even though the group was accepted");
+        assert!(receipt.messages.iter().any(|message| message.code.0 == "mutation.target-missing" && message.level == crate::os_dsl::Severity::Error), "the child's Error message must still be reported, even on acceptance");
+    }
+
+    /// @emoji 🧪️ `Vigilant` rejects a plain `Warning` — the strictest of the three policies, and the
+    /// one level `Normal` (the OTHER two policy tests above/below use) would have accepted.
+    #[test]
+    fn dispatch_group_phase1_rejects_under_vigilant_on_a_members_warning() {
+        let parent_ref = crate::os_io::ArtifactRef { artifact_id: "policy-parent-vigilant".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+        let child_ref = crate::os_io::ArtifactRef { artifact_id: "policy-child-vigilant".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+
+        // 🎯️ The REAL `super::ArtifactStore` (not this module's `SpaceMember`-object-safe test
+        // wrapper): the wrapper's own `impl SpaceMember for ArtifactStore` block does not override
+        // `merge_policy` (it would just re-delegate to this exact same real inherent method — see
+        // that block's own comment), so coercing the WRAPPER to `&mut dyn SpaceMember` would read
+        // the trait's `Normal` default via its vtable instead of whatever `set_merge_policy` below
+        // sets. Going straight to the real type sidesteps that indirection entirely.
+        let mut parent_store = super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None)).expect("valid parent envelope");
+        parent_store.set_merge_policy(crate::os_spr::MergePolicy::Vigilant);
+        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+
+        let mut coordinator = CompositionCoordinator::new();
+        coordinator.graph_mut().insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).expect("seed ownership");
+
+        let child_op = SeverityMutation::WarnN { n: 5 }.encode_op().expect("encode child op");
+        let dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![child_op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
+        let mut children: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut child_store as &mut dyn SpaceMember, dispatch)];
+
+        let result = coordinator.dispatch_group(&parent_ref, &mut parent_store as &mut dyn SpaceMember, &mut children, Vec::new(), Vec::new(), GroupMeta::default());
+        match result {
+            Ok(_) => panic!("expected Vigilant policy to reject a Warning-level message, but the dispatch succeeded"),
+            Err(VcsError::Rejected { policy, messages }) => {
+                assert_eq!(policy, crate::os_spr::MergePolicy::Vigilant, "the rejection must name the policy that actually rejected it");
+                assert!(messages.iter().any(|message| message.level == crate::os_dsl::Severity::Warning), "the rejection must carry the Warning message that triggered it");
+            }
+            Err(other) => panic!("expected Rejected, got a different VcsError: {other}"),
+        }
+        assert!(child_store.envelope().vcs.edits.is_empty(), "child must have zero edits after a policy-rejected group dispatch");
+    }
+
+    /// @emoji 🧪️ `GroupReceipt.messages` carries the FULL union (both parent's own and the child's),
+    /// each `target` prefixed with the ORIGINATING member's own `crate::os_io::ArtifactRef::
+    /// to_uri()` — the discipline that lets a caller with several members in flight tell messages
+    /// apart. Parent-first ordering matches phase 1's own collection order.
+    #[test]
+    fn group_receipt_messages_contains_the_union_with_member_path_prefixed_targets() {
+        let parent_ref = crate::os_io::ArtifactRef { artifact_id: "policy-parent-union".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+        let child_ref = crate::os_io::ArtifactRef { artifact_id: "policy-child-union".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+
+        // 🎯️ The REAL `super::ArtifactStore` (not this module's `SpaceMember`-object-safe test
+        // wrapper): the wrapper's own `impl SpaceMember for ArtifactStore` block does not override
+        // `merge_policy` (it would just re-delegate to this exact same real inherent method — see
+        // that block's own comment), so coercing the WRAPPER to `&mut dyn SpaceMember` would read
+        // the trait's `Normal` default via its vtable instead of whatever `set_merge_policy` below
+        // sets. Going straight to the real type sidesteps that indirection entirely.
+        let mut parent_store = super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None)).expect("valid parent envelope");
+        parent_store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
+        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+
+        let mut coordinator = CompositionCoordinator::new();
+        coordinator.graph_mut().insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).expect("seed ownership");
+
+        let parent_ops = vec![SeverityMutation::WarnN { n: 3 }.encode_op().expect("encode parent op")];
+        let child_op = SeverityMutation::WarnN { n: 5 }.encode_op().expect("encode child op");
+        let dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![child_op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
+        let mut children: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut child_store as &mut dyn SpaceMember, dispatch)];
+
+        let receipt = coordinator.dispatch_group(&parent_ref, &mut parent_store as &mut dyn SpaceMember, &mut children, parent_ops, Vec::new(), GroupMeta::default()).expect("LaissezFaire accepts a Warning-level message");
+
+        assert_eq!(receipt.messages.len(), 2, "one Warning from the parent, one from the child");
+        assert_eq!(receipt.messages[0].level, crate::os_dsl::Severity::Warning);
+        assert_eq!(receipt.messages[0].code.0, "mutation.clamped");
+        assert_eq!(receipt.messages[0].target, vec![parent_ref.to_uri()], "the parent's own message is prefixed with the parent's own path, collected before any child's");
+        assert_eq!(receipt.messages[1].level, crate::os_dsl::Severity::Warning);
+        assert_eq!(receipt.messages[1].code.0, "mutation.clamped");
+        assert_eq!(receipt.messages[1].target, vec![child_ref.to_uri()], "the child's message is prefixed with the CHILD's own path, not the parent's");
+    }
+    //#endregion 🔖️PhasePolicyTests
     //#endregion 🔖️CompositionTests
 }
 //#endregion 🧪️Tests

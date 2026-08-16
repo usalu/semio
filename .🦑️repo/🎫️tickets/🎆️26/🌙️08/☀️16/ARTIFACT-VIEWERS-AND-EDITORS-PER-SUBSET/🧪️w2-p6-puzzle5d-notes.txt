@@ -1,0 +1,12 @@
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer
+
+=== Summary of work done (see final chat report for full details) ===
+Moved: whole app tree apps/puzzle5d -> artifacts/puzzle5d/.../editor (mechanical crate::apps::puzzle5d -> crate::editor::puzzle5d, 59 files touched).
+Added: editor root DIALECT const + ArtifactEditor impl, create_puzzle5d_app -> AppDefinition via Editor::builder, dropped .example()x3/.workflow(), testkit fixes (EditorApp<Puzzle5dPlayApp> wrapping).
+Added: PUZZLE5D_DIALECT const + document_codec fix in artifacts root component.rs.
+Built: viewer tree from scratch - Puzzle5dViewer (ArtifactViewer), Puzzle5dViewCommand::Noop, world3d window using MeshWindowKit on typed Puzzle5dSnapshot/Puzzle5dMutation.
+Verified: 0 ::editor:: substring in viewer tree, 0 crate::apps::puzzle5d remaining outside plugin root (untouched per scope), brace/paren balance on all 77 rust files + 5 new ts files.
+Outside-lease (reported, not touched): plugin root ✏️s/🔌️plugins/🧩️puzzle/🦀️component.rs:45 still has .document_app::<crate::apps::puzzle5d::...>; Cargo.toml:42 app="puzzle5d-play"; glue.rs and vitest.config.ts still reference old app path.

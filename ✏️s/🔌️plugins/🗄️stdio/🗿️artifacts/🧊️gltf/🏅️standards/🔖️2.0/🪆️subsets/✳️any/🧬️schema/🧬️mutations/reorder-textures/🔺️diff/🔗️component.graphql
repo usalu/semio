@@ -1,0 +1,12 @@
+# reorder-textures typed diff facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfTextureValueV1
+input GltfReorderTexturesPayloadV1 {
+  order: [Int!]!
+}
+type GltfReorderTexturesDiffOperationV1 {
+  kind: String!
+  order: [Int!]!
+}
+type GltfReorderTexturesDiffV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfReorderTexturesPayloadV1!, operation: GltfReorderTexturesDiffOperationV1! }

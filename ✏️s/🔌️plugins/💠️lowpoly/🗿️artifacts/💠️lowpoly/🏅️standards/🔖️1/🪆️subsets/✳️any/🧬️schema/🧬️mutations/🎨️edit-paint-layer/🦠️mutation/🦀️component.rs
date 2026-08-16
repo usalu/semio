@@ -22,7 +22,7 @@ pub struct EditPaintLayer {
 impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for EditPaintLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "paint-layer", kind: "edit-paint-layer", record: "EditedPaintLayer" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff {
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

@@ -23,7 +23,7 @@ pub fn add_compatibility_rule(rule: BlockCompatibilityRule) -> Block3dMutation {
 impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for AddCompatibilityRule {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "compatibility-rule", kind: "add-compatibility-rule", record: "AddedCompatibilityRule" };
 
-    fn diff(&self, base: &Block3dSnapshot) -> Block3dDiff {
+    fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {

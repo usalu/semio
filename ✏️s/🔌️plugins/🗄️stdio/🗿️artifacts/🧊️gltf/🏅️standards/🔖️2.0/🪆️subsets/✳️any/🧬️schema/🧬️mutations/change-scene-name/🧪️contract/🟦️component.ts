@@ -1,0 +1,6 @@
+/** 🧪️ Mutation-law probe for change-scene-name. */
+import type { GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
+import { applyGltfChangeSceneName, type GltfChangeSceneNamePayload } from '../../change-scene-name/🦠️mutation/🟦️component.ts';
+import { deriveGltfChangeSceneNameDiff } from '../../change-scene-name/🔺️diff/🟦️component.ts';
+import { deriveGltfChangeSceneNameInverse } from '../../change-scene-name/↩️inverse/🟦️component.ts';
+export const assertGltfChangeSceneNameLaws = (base: GltfSnapshot, payload: GltfChangeSceneNamePayload) => { const first = applyGltfChangeSceneName(base, payload); if (!first.accepted) return first; const replay = applyGltfChangeSceneName(base, payload); if (!replay.accepted || JSON.stringify(first.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(first.diff) !== JSON.stringify(replay.diff)) throw new Error('change-scene-name replay is non-deterministic'); const direct = deriveGltfChangeSceneNameDiff(base, payload); const inverse = deriveGltfChangeSceneNameInverse(base, payload); if (!direct.accepted || !inverse.accepted || JSON.stringify(direct.touchedPaths) !== JSON.stringify(first.touchedPaths) || JSON.stringify(inverse.touchedPaths) !== JSON.stringify(first.touchedPaths)) throw new Error('change-scene-name diff or inverse law failed'); return { first, direct, inverse }; };

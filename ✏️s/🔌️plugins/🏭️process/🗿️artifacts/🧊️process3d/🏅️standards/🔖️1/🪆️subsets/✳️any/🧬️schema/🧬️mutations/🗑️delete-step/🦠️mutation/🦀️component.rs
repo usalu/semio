@@ -16,7 +16,7 @@ pub struct DeleteStep {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for DeleteStep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "step", kind: "delete-step", record: "DeletedStep" };
 
-    fn diff(&self, base: &Process3dSnapshot) -> Process3dDiff {
+    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::delete_step::diff::diff(self, base)
     }
 

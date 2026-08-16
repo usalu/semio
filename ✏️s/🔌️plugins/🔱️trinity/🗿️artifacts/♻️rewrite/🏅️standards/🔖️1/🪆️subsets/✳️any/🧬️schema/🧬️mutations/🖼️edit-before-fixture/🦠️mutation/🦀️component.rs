@@ -22,7 +22,7 @@ pub fn edit_before_fixture(new_before_fixture_json: String) -> RewriteRuleMutati
 impl protocol::MutationKind<RewriteSnapshot, RewriteRuleMutation> for EditBeforeFixture {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "before-fixture", kind: "edit-before-fixture", record: "EditedBeforeFixture" };
 
-    fn diff(&self, base: &RewriteSnapshot) -> RewriteDiff {
+    fn diff(&self, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {

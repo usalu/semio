@@ -6,4 +6,6 @@ export const gltfExposedAreaInference = {
   reads: ['document/scene', 'document/scenes', 'document/nodes', 'document/meshes', 'document/accessors', 'document/bufferViews', 'document/buffers', 'buffers'],
 } as const;
 export type GltfExposedAreaInference = typeof gltfExposedAreaInference;
-
+import { bounds, exact, unavailable, signedVolume, surfaceArea, type GltfTsBounds3, type GltfTsGeometryContext, type GltfTsMeasure } from '../../🔨️geometry-core/🟦️component.ts';
+export const inferGltfExposedArea = (context: GltfTsGeometryContext): GltfTsMeasure<number> => { const value = surfaceArea(context); return context.valid && value !== undefined ? exact(context, value, 'square-metre') : unavailable(context, 'square-metre'); };
+export const unavailableGltfExposedArea = (context: GltfTsGeometryContext): GltfTsMeasure<number> => unavailable(context, 'square-metre');

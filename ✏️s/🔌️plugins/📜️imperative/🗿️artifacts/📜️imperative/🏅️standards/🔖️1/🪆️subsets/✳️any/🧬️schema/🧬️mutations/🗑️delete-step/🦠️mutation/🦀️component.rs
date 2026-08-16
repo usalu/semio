@@ -22,7 +22,7 @@ pub fn delete_step(path_ref: PathRef, id: String) -> ImperativeMutation {
 impl protocol::MutationKind<ImperativeSnapshot, ImperativeMutation> for DeleteStep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "step", kind: "delete-step", record: "DeletedStep" };
 
-    fn diff(&self, base: &ImperativeSnapshot) -> ImperativeDiff {
+    fn diff(&self, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ImperativeSnapshot) -> Vec<ImperativeMutation> {

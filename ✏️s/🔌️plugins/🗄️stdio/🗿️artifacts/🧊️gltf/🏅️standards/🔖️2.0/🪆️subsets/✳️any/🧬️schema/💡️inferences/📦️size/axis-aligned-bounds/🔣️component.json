@@ -1,13 +1,1 @@
-{
-  "x-semio": {
-    "id": "s.stdio.gltf.inference.axis-aligned-bounds.v1",
-    "kind": "inference",
-    "inference": {
-      "algorithmVersion": 1,
-      "cacheKey": "s.stdio.gltf.inference.axis-aligned-bounds.v1:geometry-v2",
-      "inputs": ["schema/snapshot", "buffers"],
-      "target": "geometricAnalysis.overall.axis-aligned-bounds"
-    }
-  }
-}
-
+{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"s.stdio.gltf.inference.axis-aligned-bounds.v1","type":"object","required":["value","unit","availability","validity","diagnosticIds","quality","provenance"],"properties":{"value":{"type":["object","null"],"properties":{"min":{"$ref":"#/$defs/vec3"},"max":{"$ref":"#/$defs/vec3"},"dimensions":{"$ref":"#/$defs/vec3"}},"required":["min","max","dimensions"]},"unit":{"const":"metre"},"availability":{"enum":["available","unavailable"]},"validity":{"type":"string"},"diagnosticIds":{"type":"array","items":{"type":"string"}},"quality":{"type":"object"},"provenance":{"type":"object"}},"$defs":{"vec3":{"type":"array","items":{"type":"number"},"minItems":3,"maxItems":3}},"x-semio":{"id":"s.stdio.gltf.inference.axis-aligned-bounds.v1","kind":"inference","inference":{"algorithmVersion":1,"cacheKey":"s.stdio.gltf.inference.axis-aligned-bounds.v1:geometry-v2","inputs":["schema/snapshot","buffers"],"target":"geometry.overall.size.axisAlignedBounds"}}}

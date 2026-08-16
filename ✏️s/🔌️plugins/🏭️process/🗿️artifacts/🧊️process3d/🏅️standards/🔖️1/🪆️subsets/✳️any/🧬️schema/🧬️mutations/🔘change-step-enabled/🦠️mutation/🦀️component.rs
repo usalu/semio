@@ -17,7 +17,7 @@ pub struct ChangeStepEnabled {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ChangeStepEnabled {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "step", kind: "change-step-enabled", record: "ChangedStepEnabled" };
 
-    fn diff(&self, base: &Process3dSnapshot) -> Process3dDiff {
+    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::change_step_enabled::diff::diff(self, base)
     }
 

@@ -23,7 +23,7 @@ pub fn change_uri(new_uri: String) -> WriterMutation {
 impl MutationKind<WriterSnapshot, WriterMutation> for ChangeUri {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "uri", kind: "change-uri", record: "ChangedUri" };
 
-    fn diff(&self, base: &WriterSnapshot) -> WriterDiff {
+    fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
         super::diff::diff(self, base)
     }
 

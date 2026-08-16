@@ -8,7 +8,8 @@ use serde::{Deserialize, Serialize};
 
 //#region 🌱️CreateStep
 /// 🌱️ Brings a new [`FormStep`] into existence at an optional FINAL-state `index` (`None` appends).
-/// A duplicate `step.id` is a no-op (an id-keyed entity that already exists cannot be re-created).
+/// A duplicate `step.id` is Fatal `mutation.duplicate-id` (an id-keyed entity that already exists
+/// cannot be re-created).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CreateStep {
     pub step: FormStep,
@@ -18,7 +19,7 @@ pub struct CreateStep {
 impl MutationKind<FormsSnapshot, FormMutation> for CreateStep {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "step", kind: "create-step", record: "CreatedStep" };
 
-    fn diff(&self, base: &FormsSnapshot) -> FormsDiff {
+    fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff_create_step(self, base)
     }
     fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {

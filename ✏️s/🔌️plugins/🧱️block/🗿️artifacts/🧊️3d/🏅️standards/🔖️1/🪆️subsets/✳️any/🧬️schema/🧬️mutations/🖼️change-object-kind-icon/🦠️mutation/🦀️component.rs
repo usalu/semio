@@ -21,7 +21,7 @@ pub fn change_object_kind_icon(new_icon: Option<String>) -> Block3dMutation {
 impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ChangeObjectKindIcon {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "object-kind", kind: "change-object-kind-icon", record: "ChangedObjectKindIcon" };
 
-    fn diff(&self, base: &Block3dSnapshot) -> Block3dDiff {
+    fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {

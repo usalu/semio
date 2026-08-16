@@ -6,7 +6,11 @@ use crate::artifacts::program::diff::ProgramActivitiesDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🌱️ `added = [payload row]` — the row lands at the end of `program.activities` on apply.
-pub fn diff(payload: &CreateActivity, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { activities: Some(ProgramActivitiesDelta { added: vec![payload.activity.clone()], ..Default::default() }), ..Default::default() }
+/// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
+pub fn diff(payload: &CreateActivity, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let id = payload.activity.header.id.clone();
+    if base.activities.iter().any(|row| row.header.id == id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "An activity already exists with this id.", [id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { activities: Some(ProgramActivitiesDelta { added: vec![payload.activity.clone()], ..Default::default() }), ..Default::default() })
 }

@@ -1,0 +1,156 @@
+w3-h-g2 inventory — lane 3-H group G2 (lowpoly, process, sourcing, demonstrator)
+==================================================================================
+
+## 💠️ lowpoly (crate semio-s-plugin-lowpoly)
+
+Root schema diff dir (✳️any/🧬️schema/🔺️diff) — struct-only (LowpolyDiff), no `pub fn diff`, not a
+mutation leaf. NOT in scope.
+
+17 mutation triads, all converted (Pass 1 + Pass 2, real verb-family logic):
+  create-object            create    Fatal duplicate-id (existing object id)
+  delete-object             delete    Error target-missing
+  move-object                move    Error target-missing / Warning no-op (unchanged) / Fatal invariant (non-finite position)
+  scale-object                move-family (scale)  Error target-missing / Warning no-op / Fatal invariant (non-finite or <=0 scale)
+  rotate-object               move-family (rotate)  Error target-missing / Warning no-op / Fatal invariant (non-finite rotation)
+  rename-object                rename    Error target-missing / Warning no-op (same name) — no duplicate-id: name is a non-unique display string, not a key
+  change-object-smooth-shading change    Error target-missing / Warning no-op (unchanged)
+  reorder-objects              reorder   Error target-missing / Warning no-op (order unchanged)
+  insert-paint-layer           insert    Error target-missing (owning object absent) / Warning clamped (index out of range)
+  remove-paint-layer           remove    Error target-missing (object or layer index absent)
+  change-paint-layer-opacity   change    Error target-missing / Warning no-op (unchanged)
+  change-paint-layer-blend-mode change   Error target-missing / Warning no-op (unchanged)
+  change-paint-layer-visible   change    Error target-missing / Warning no-op (unchanged)
+  rename-paint-layer           rename    Error target-missing / Warning no-op (same name, no unique-key duplicate case)
+  edit-paint-layer             edit      Error target-missing / Warning no-op (empty pixel-run list)
+  create-mesh                  add (domain verb, mapped to "add" family) Error target-missing (owner absent); overwrite-aware, no duplicate-id (docstring says overwrite-aware)
+  delete-mesh                  clear (domain verb, mapped to "clear" family, not "delete") Error target-missing (object absent) / Warning no-op (mesh slot already empty)
+
+Hand-written impl Mutation<P> blocks (outside 🧬️mutations/ triads), both converted:
+  ✏️editor/👥️presence/🦀️component.rs   LowpolyPresenceMutation   whole-value snapshot replace — message-free (root-scoped allowlist)
+  ✏️editor/🎚️config/🦀️component.rs     LowpolyConfigMutation     whole-config field-setter/snapshot — message-free (root-scoped allowlist)
+
+Test/call-site fixes: 🧬️schema/🦀️component.rs (2 sites: `mutation.diff(&base).apply()` →
+`.diff(&base).diff().apply()`), 🧬️mutations/🦀️component.rs (absorb-law test: `.into_parts().0`,
+plus new 🔖️OutcomeLaws region — 3x assert_missing_target_is_error + 1x assert_fatal_never_applies),
+✏️editor/🎚️config/🦀️component.rs (2 test call sites unwrapped via `.into_parts().0`).
+
+Leaves compiled (pending cargo check) / with real verb-family messages / still bare: 17 / 17 / 0
+(triads) + 2 / 2 / 0 (hand-written).
+
+## 🏭️ process (crate semio-s-plugin-process)
+
+Root schema diff dir — struct-only, no `pub fn diff`. NOT in scope.
+
+16 mutation triads. 7 are PRE-EXISTING documented no-ops (ticket 26/08/12/
+UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `steps` composes an unresolved `s.stdio.semio.flow`
+CHILD HANDLE, no LinkResolver, so the diff leaf cannot inspect real step content at all) — mapped
+uniformly to Warning `mutation.no-op` (diff is genuinely always `Process3dDiff::default()`,
+matching the frozen no-op semantics) rather than a silent bare wrap, with a doc comment explaining
+why no verb-family check (duplicate-id/target-missing/invariant) is possible:
+  create-step, rename-step, delete-step, change-step-enabled, change-step-origin,
+  replace-step-measure, reorder-steps   →  Warning mutation.no-op (documented, pending resolver)
+
+9 real leaves, converted with real verb-family logic:
+  create-machine     create   Fatal duplicate-id (existing machine id)
+  delete-machine     delete   Error target-missing
+  rename-machine     rename   Error target-missing / Warning no-op (same label) — no duplicate-id: label not a key
+  change-machine-icon change  Error target-missing / Warning no-op (unchanged)
+  replace-machine-capabilities replace Error target-missing / Warning no-op (capabilities list unchanged)
+  move-stock         move (document singleton, no target) Warning no-op (pose unchanged) / Fatal invariant (non-finite pose)
+  change-stock-label change (document singleton, no target) Warning no-op (unchanged) — root-scoped allowlist + no-op
+  replace-stock-solid replace (document singleton, no target) Warning no-op (handle unchanged) — root-scoped allowlist + no-op
+  change-cursor      change (document singleton, no target) Warning no-op (cursor unchanged) — root-scoped allowlist + no-op
+
+Hand-written impl Mutation<P> blocks, both converted:
+  🎛️apps/🧊️3d/🎚️config/🦀️component.rs    Process3dConfigMutation   whole-config field-setter — message-free (root-scoped allowlist)
+  🎛️apps/🧊️3d/👥️presence/🦀️component.rs  Process3dPresenceMutation whole-value snapshot replace — message-free (root-scoped allowlist)
+
+Test/call-site fixes: 🧬️mutations/🦀️component.rs — `round_trip` helper's `vcs::apply_mutation`
+destructured to `(P, Vec<MutationMessage>)` (2 call sites), 7 documented-no-op assertions changed
+to `.diff(&base).diff()`, 3 absorb-law tests unwrapped via `.into_parts().0`, plus new
+🔖️OutcomeLaws region (2x assert_missing_target_is_error + 1x assert_fatal_never_applies).
+🎛️apps/🧊️3d/🎚️config/🦀️component.rs — 2 test call sites unwrapped via `.into_parts().0`.
+
+Leaves compiled (pending cargo check) / with real verb-family messages / still bare: 16 / 16 / 0
+(triads — the 7 documented no-ops count as "real" since Warning no-op is the honest, deliberate
+mapping, not a bare `MutationOutcome::new(diff)` wrap) + 2 / 2 / 0 (hand-written).
+
+## 🪵️ sourcing (crate semio-s-plugin-sourcing)
+
+Root schema diff dir — struct-only, no `pub fn diff`. NOT in scope.
+
+3 mutation triads, all converted:
+  create-curated-item    create   Fatal duplicate-id (object already curated)
+  delete-curated-item    delete   Error target-missing
+  change-curated-item-count change Error target-missing / Warning no-op (count unchanged)
+
+Hand-written impl Mutation<P> blocks, both converted:
+  🎛️apps/🗂️curate/🎚️config/🦀️component.rs    SourcingCurateConfigMutation   whole-config field-setter/snapshot — message-free (root-scoped allowlist)
+  🎛️apps/🗂️curate/👥️presence/🦀️component.rs  SourcingCuratePresenceMutation whole-value snapshot replace — message-free (root-scoped allowlist)
+
+Test/call-site fixes: 🧬️mutations/🦀️component.rs — `round_trip` helper's `vcs::apply_mutation`
+destructured (2 call sites), 3 absorb-law tests unwrapped via `.into_parts().0`, plus new
+🔖️OutcomeLaws region (2x assert_missing_target_is_error + 1x assert_fatal_never_applies).
+🎛️apps/🗂️curate/🎚️config/🦀️component.rs — local `round_trip` test helper unwrapped via
+`.into_parts().0` (2 sites).
+
+Leaves compiled (pending cargo check) / with real verb-family messages / still bare: 3 / 3 / 0
+(triads) + 2 / 2 / 0 (hand-written).
+
+## 🎪️ demonstrator (crate semio-s-plugin-demonstrator)
+
+Root schema diff dir — struct-only, no `pub fn diff`. NOT in scope.
+
+1 mutation triad, converted:
+  change-schema   change (root-scoped change-<artifact>-<field> on the document's single metadata
+                  string) Warning no-op (schema value unchanged) — the field IS checked for no-op
+                  even though the contract's allowlist would have permitted a bare message-free
+                  wrap here, since a real cheap equality check was available.
+
+No hand-written impl Mutation<P> blocks found outside the one triad (✏️editor/🎚️config,
+✏️editor/👥️presence, 👁️viewer/🎚️config, 👁️viewer/👥️presence directories exist but contain no
+hand-rolled Mutation impl — confirmed via grep, nothing to convert there).
+
+Test/call-site fixes: 🧬️mutations/🦀️component.rs — 2 call sites `.diff(&base).apply()` →
+`.diff(&base).diff().apply()`, absorb-law test unwrapped via `.into_parts().0` (2 sites), plus new
+🔖️OutcomeLaws region (assert_outcome_deterministic — this facet's one kind has no target-missing
+or duplicate-id case since it's a root-scoped single-field setter, so
+assert_missing_target_is_error/assert_fatal_never_applies do not apply here — plus a direct
+no-op-message assertion).
+
+Leaves compiled (pending cargo check) / with real verb-family messages / still bare: 1 / 1 / 0.
+
+## fn validate audit (all 4 plugins)
+
+Grepped `fn validate` across all 4 plugin trees: zero real `impl Mutation<P>`/`impl MutationKind<P,Op>`
+trait-override `fn validate` found. The one hit (`process3d/…/💡️inferences/🦀️component.rs:330
+pub fn validate_capability(capability: &Capability, ctx: &ValidationContext) -> Vec<ValidationFailure>`)
+is an unrelated free function (domain validation helper, different signature) — left untouched per
+the ticket's explicit guidance.
+
+## Domain-verb → family mapping table (all non-obvious mappings, with rationale)
+
+| plugin | verb (kind)         | family chosen        | why |
+|---|---|---|---|
+| lowpoly | create-mesh        | add                  | Sets an existing object's `mesh` CHILD slot; the object must already exist (owner-absence check), but the mutation's own docstring calls it "overwrite-aware" (matching stdio's `create-mesh` convention) — so no Fatal duplicate-id, matching "add ⇒ Error owner absent" rather than "create ⇒ Fatal duplicate-id". |
+| lowpoly | delete-mesh        | clear                | Clears a single optional slot (`Option<ArtifactChild>`) on an existing object, not a removal from a collection — "delete ⇒ Error absent" doesn't fit an idempotent slot-clear; mapped to "clear ⇒ Warning no-op when already empty" instead (plus Error target-missing for the owning object, since object-absence is still a real miss). |
+| lowpoly | rename-object, rename-paint-layer | rename (no duplicate-id case) | `rename` family's Fatal duplicate-id sub-case only applies when the renamed field is a uniqueness key; both `name` fields here are non-unique display strings (the real key is `id`/index), so the Fatal branch is omitted and only Error/Warning apply. |
+| process | move-stock, change-stock-label, replace-stock-solid, change-cursor | move / change / replace (singleton, no target) | The document has exactly one `stock`/cursor (not id-keyed), so there is no "target" that can be missing — matches the contract's explicit allowance for a message-free outcome on a document-level facet setter; Warning no-op is still added wherever a cheap equality check exists. |
+| process | create-step, rename-step, delete-step, change-step-enabled, change-step-origin, replace-step-measure, reorder-steps | (all families, pre-empted by a documented no-op) | `steps` composes an unresolved `s.stdio.semio.flow` CHILD HANDLE (ticket UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4) — there is no `Vec<ProcessStep>` on `Process3dSnapshot` to inspect, so none of the verb-family's Error/Fatal checks (which all require reading real content) can be implemented. Uniformly mapped to Warning `mutation.no-op`, since the diff leaf's own pre-existing behavior is "return `Process3dDiff::default()` always" — i.e. it IS a no-op by construction, and Warning `mutation.no-op` is the one frozen code that means exactly that, rather than silently succeeding with zero messages. |
+| demonstrator | change-schema | change (root-scoped, single field) | Playground's whole persistent snapshot is one opaque `schema` string (`📓️derivation-rules.md`'s metadata-only-mutation allowance) — no target, so only the Warning no-op branch applies. |
+
+## Blockers / deviations
+
+- None inside the 4 leased plugin trees. No framework file was touched. No new fault code was
+  introduced (all messages use the frozen 7: mutation.target-missing, mutation.no-op,
+  mutation.clamped, mutation.duplicate-id, mutation.invariant — mutation.partial and
+  mutation.cascade were not needed by any leaf in these 4 plugins, since none of them has a batch
+  verb (group/merge/delete-plural) or a cascade-producing delete).
+- `assert_outcome_policy_matrix` is NOT landed in
+  `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs` as of this session
+  (checked via grep) — every facet's new 🔖️OutcomeLaws test region carries a TODO(1-D testkit laws
+  pending) comment naming it. `assert_missing_target_is_error` and `assert_fatal_never_applies` ARE
+  landed and used.
+- `🧰️framework/` itself may still be red (other lanes' unfinished work per the ticket brief) — see
+  🧪️w3-h-g2-cargo.txt for the actual cargo check/test output and which errors (if any) are
+  framework-path vs plugin-path.

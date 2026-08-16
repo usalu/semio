@@ -1240,3 +1240,47 @@ pub fn upload_icon_atlas(width: u32, height: u32, pixels: &[u8], entries_json: &
 thread_local! {
     static ICON_ATLAS_RUNTIME: RefCell<Option<IconAtlas>> = RefCell::new(None);
 }
+
+//#region 🔖️RoleBoot
+/// 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §5: boot role from
+/// `SEMIO_APP_ROLE` (native, read directly)/`VITE_SEMIO_APP_ROLE` (wasm — wasm has no env var
+/// access, so `🟦️boot.ts` reads `import.meta.env.VITE_SEMIO_APP_ROLE` and calls
+/// `semioWgpuSetAppRole` before/at mount), default `editor` (`ChromeRole::from_boot_env`'s own
+/// fallback). Deliberately additive, same idiom as `ICON_ATLAS_RUNTIME` immediately above: a
+/// `thread_local` a caller opts into reading (`boot_app_role`) rather than a parameter threaded
+/// through every existing mount/native entry point — this crate currently fails to build clean for
+/// reasons entirely outside this lease (a concurrent, unrelated plugin-crate refactor breaks a
+/// transitive dependency; confirmed via `git status` showing 70+ uncommitted stdio-plugin files —
+/// see `📓️w1-d-report.md`), so a signature change on `run_native`/`semio_wgpu_mount` could not be
+/// verified to compile and was avoided.
+thread_local! {
+    static BOOT_APP_ROLE: RefCell<ui_wgpu::wgpu::component::role_chrome::ChromeRole> = RefCell::new(resolve_native_boot_role());
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn resolve_native_boot_role() -> ui_wgpu::wgpu::component::role_chrome::ChromeRole {
+    ui_wgpu::wgpu::component::role_chrome::ChromeRole::from_boot_env(std::env::var("SEMIO_APP_ROLE").ok().as_deref())
+}
+
+#[cfg(target_arch = "wasm32")]
+fn resolve_native_boot_role() -> ui_wgpu::wgpu::component::role_chrome::ChromeRole {
+    ui_wgpu::wgpu::component::role_chrome::ChromeRole::Editor
+}
+
+/// 🌐️ wasm boot hook — `🟦️boot.ts` calls this once, before/at mount time, with
+/// `import.meta.env.VITE_SEMIO_APP_ROLE ?? "editor"`.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = semioWgpuSetAppRole)]
+pub fn semio_wgpu_set_app_role(role: String) {
+    BOOT_APP_ROLE.with(|cell| *cell.borrow_mut() = ui_wgpu::wgpu::component::role_chrome::ChromeRole::from_boot_env(Some(role.as_str())));
+}
+
+/// 👁️✏️ The boot-resolved role, contract freeze §5 — `SemioApp`'s session/window-open path is meant
+/// to read this to call `Shell::set_window_role`/`set_locale`; wiring that specific call site is
+/// this lease's documented gap (see `📓️w1-d-report.md` — this crate's own build break blocks
+/// verifying any change deep inside `SemioApp`, so this stops at the boundary of what compiles
+/// standalone).
+pub fn boot_app_role() -> ui_wgpu::wgpu::component::role_chrome::ChromeRole {
+    BOOT_APP_ROLE.with(|cell| *cell.borrow())
+}
+//#endregion 🔖️RoleBoot

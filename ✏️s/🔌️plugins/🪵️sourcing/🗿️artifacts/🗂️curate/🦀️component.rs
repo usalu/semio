@@ -257,7 +257,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "sourcing.curate".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
+        export_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
         import_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
     }
 }
@@ -277,21 +277,33 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.curate.standard.v1", "standard", "1", &[], None), ("s.curate.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.curate.schema.artifact", "schema", "s.sourcing.curate", &[("schema", "s.sourcing.curate")], None), ("s.curate.inference.artifact", "inference", "s.sourcing.curate.inference", &[("schema", "s.sourcing.curate.inference")], None),
-        ("s.curate.composer.zip", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None), ("s.curate.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
-        ("s.curate.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None), ("s.curate.composer.stl", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
+        ("s.curate.standard.v1", "standard", "1", &[], None),
+        ("s.curate.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.curate.schema.artifact", "schema", "s.sourcing.curate", &[("schema", "s.sourcing.curate")], None),
+        ("s.curate.inference.artifact", "inference", "s.sourcing.curate.inference", &[("schema", "s.sourcing.curate.inference")], None),
+        ("s.curate.composer.zip", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
+        ("s.curate.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.curate.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.curate.composer.stl", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
         ("s.curate.composer.obj", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
-        ("s.curate.grammar.document", "grammar", "sourcing.curate", &[("grammar", "sourcing.curate")], None), ("s.curate.grammar.op", "grammar", "sourcing.curate.op", &[("grammar", "sourcing.curate.op")], None),
-        ("s.curate.grammar.diff", "grammar", "sourcing.curate.diff", &[("grammar", "sourcing.curate.diff")], None), ("s.curate.grammar.pack", "grammar", "curate.pack", &[("grammar", "curate.pack")], None), ("s.curate.grammar.spr", "grammar", "curate.spr", &[("grammar", "curate.spr")], None),
+        ("s.curate.grammar.document", "grammar", "sourcing.curate", &[("grammar", "sourcing.curate")], None),
+        ("s.curate.grammar.op", "grammar", "sourcing.curate.op", &[("grammar", "sourcing.curate.op")], None),
+        ("s.curate.grammar.diff", "grammar", "sourcing.curate.diff", &[("grammar", "sourcing.curate.diff")], None),
+        ("s.curate.grammar.pack", "grammar", "curate.pack", &[("grammar", "curate.pack")], None),
+        ("s.curate.grammar.spr", "grammar", "curate.spr", &[("grammar", "curate.spr")], None),
         ("s.curate.codec.document.v1", "codec", "sourcing.curate/v1:curate", &[("codec", "sourcing.curate/v1"), ("extension", "curate")], None),
-        ("s.curate.localization.en", "localization", "Sourcing", &[], Some(("en", "Sourcing"))), ("s.curate.localization.de", "localization", "Beschaffung", &[], Some(("de", "Beschaffung"))),
+        ("s.curate.localization.en", "localization", "Sourcing", &[], Some(("en", "Sourcing"))),
+        ("s.curate.localization.de", "localization", "Beschaffung", &[], Some(("de", "Beschaffung"))),
     ];
     let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.curate")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
-        for (namespace, value) in *claims { capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?; }
-        if let Some((locale, text)) = localization { capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?; }
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
         definition = definition.capability(capability)?;
     }
     Ok(definition)
@@ -388,28 +400,3 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::curate::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("CurateComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
-}
-//#endregion 🚪️DerivedIoRegistry

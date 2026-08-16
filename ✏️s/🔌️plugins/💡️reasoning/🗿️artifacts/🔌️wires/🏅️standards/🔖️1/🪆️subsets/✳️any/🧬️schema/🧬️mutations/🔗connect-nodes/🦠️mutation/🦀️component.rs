@@ -26,7 +26,7 @@ pub fn connect_nodes(edge: DslValue, relationship: DslValue) -> WiresMutation {
 impl protocol::MutationKind<WiresSnapshot, WiresMutation> for ConnectNodes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "relationship", kind: "connect-nodes", record: "ConnectedNodes" };
 
-    fn diff(&self, base: &WiresSnapshot) -> WiresDiff {
+    fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {

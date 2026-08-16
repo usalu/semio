@@ -23,7 +23,7 @@ pub fn edit_step_params(id: String, params: StepParams) -> SequenceMutation {
 impl protocol::MutationKind<SequenceSnapshot, SequenceMutation> for EditStepParams {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "step", kind: "edit-step-params", record: "EditedStep" };
 
-    fn diff(&self, base: &SequenceSnapshot) -> SequenceDiff {
+    fn diff(&self, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {

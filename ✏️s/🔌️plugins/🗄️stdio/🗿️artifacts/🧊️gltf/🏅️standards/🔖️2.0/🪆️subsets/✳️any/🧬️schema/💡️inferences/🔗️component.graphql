@@ -8,3 +8,12 @@ type GltfInferenceLeafReferenceV1 {
 type GltfInferenceDagV1 {
   leaves: [GltfInferenceLeafReferenceV1!]!
 }
+type GltfOverallSizeMeasureV1 { value: Float, unit: String!, availability: String!, validity: String!, diagnosticIds: [String!]!, quality: GltfOverallSizeQualityV1!, provenance: GltfOverallSizeProvenanceV1! }
+type GltfOverallSizeQualityV1 { method: String!, coverage: Float!, sampleCount: Int!, watertight: Boolean, manifold: Boolean, consistentlyOriented: Boolean }
+type GltfOverallSizeProvenanceV1 { algorithm: String!, algorithmVersion: Int!, toleranceFingerprint: String!, samplingSeed: String }
+type GltfInferenceBoundsVec3V1 { x: Float!, y: Float!, z: Float! }
+type GltfAxisAlignedBoundsMeasureV1 { value: GltfInferenceBounds3V1, unit: String!, availability: String!, validity: String!, diagnosticIds: [String!]!, quality: GltfOverallSizeQualityV1!, provenance: GltfOverallSizeProvenanceV1! }
+type GltfInferenceBounds3V1 { min: GltfInferenceBoundsVec3V1!, max: GltfInferenceBoundsVec3V1!, dimensions: GltfInferenceBoundsVec3V1! }
+type GltfSizeInferenceV1 { overallSize: GltfOverallSizeMeasureV1!, axisAlignedBounds: GltfAxisAlignedBoundsMeasureV1! }
+type GltfGeometryInferenceV1 { size: GltfSizeInferenceV1! }
+type GltfInference { geometry: GltfGeometryInferenceV1! }

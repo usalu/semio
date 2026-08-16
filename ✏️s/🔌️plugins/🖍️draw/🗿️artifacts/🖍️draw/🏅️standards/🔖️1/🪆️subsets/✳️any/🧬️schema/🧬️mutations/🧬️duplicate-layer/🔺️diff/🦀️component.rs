@@ -5,14 +5,19 @@ use crate::artifacts::draw::schema::{clone_draw_layer_node, find_draw_layer, fin
 use crate::artifacts::draw::DrawSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::DuplicateLayer, base: &DrawSnapshot) -> DrawDiff {
+pub fn diff(payload: &super::mutation::DuplicateLayer, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
     let Some(layer) = find_draw_layer(base, &payload.layer_id) else {
-        return DrawDiff::default();
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.clone()]);
     };
     let duplicate = clone_draw_layer_node(layer, " copy");
-    match find_draw_layer_location(base, &payload.layer_id) {
+    let new_id = crate::artifacts::draw::schema::layer_id(&duplicate);
+    if find_draw_layer(base, new_id).is_some() {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A layer with id \"{}\" already exists.", new_id), [new_id.to_string()]);
+    }
+    let diff = match find_draw_layer_location(base, &payload.layer_id) {
         Some(location) => diff_create_layer(location.parent_id.as_deref(), location.index + 1, duplicate),
         None => diff_create_layer(None, base.layers.len(), duplicate),
-    }
+    };
+    protocol::MutationOutcome::new(diff)
 }
 //#endregion 🔖️Diff

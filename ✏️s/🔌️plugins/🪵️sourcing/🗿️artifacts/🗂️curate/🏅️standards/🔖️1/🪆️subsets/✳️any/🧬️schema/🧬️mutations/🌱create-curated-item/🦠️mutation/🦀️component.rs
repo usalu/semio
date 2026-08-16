@@ -25,7 +25,7 @@ impl protocol::MutationKind<CurateSnapshot, SourcingMutation> for CreateCuratedI
     const SEMANTICS: protocol::SemanticDescriptor =
         protocol::SemanticDescriptor { verb: "create", entity: "curated-item", kind: "create-curated-item", record: "CreatedCuratedItem" };
 
-    fn diff(&self, base: &CurateSnapshot) -> CurateDiff {
+    fn diff(&self, base: &CurateSnapshot) -> protocol::MutationOutcome<CurateDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CurateSnapshot) -> Vec<SourcingMutation> {

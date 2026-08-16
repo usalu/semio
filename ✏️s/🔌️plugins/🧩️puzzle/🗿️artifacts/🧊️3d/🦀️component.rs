@@ -25,6 +25,15 @@ pub enum Puzzle3dError {
 
 pub const PUZZLE_3D_SCHEMA: &str = "puzzle.3d";
 
+/// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the one `Dialect` coordinate every
+/// surface (`✏️editor`, `👁️viewer`) of the `✳️any` subset binds `ArtifactEditor::DIALECT`/
+/// `ArtifactViewer::DIALECT` to — `"s.puzzle.puzzle3d"` matches the artifact-kind id this subset's
+/// own mutation/inference descriptors already key off (see `definition()`'s own
+/// `"s.puzzle3d.schema.artifact"` row), standard `"1"` and subset `"*"` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location. Lives at the artifact level (not under the two
+/// surfaces) so a viewer file can read it without ever importing through the sibling editor module.
+pub const PUZZLE3D_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.puzzle.puzzle3d", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+
 //#region 📐️Scale
 /// 📐️ A placed object's / target volume's freeform pose scale: either a single scalar broadcast
 /// to all three axes, or an explicit per-axis `[x, y, z]` triple — the ONLY two shapes the engine
@@ -526,7 +535,7 @@ pub fn kit_catalog_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// 🔖️ Puzzle3d's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1, relocated off
 /// the former `⚙️engine` to the artifact root — `declaration()` describes the artifact itself, never
 /// engine/app behaviour) — replaces the `ComposerEntry` half of the old `register_io()`. The
-/// `"3d.puzzle"` OS-host mesh export/import bridge (`crate::apps::puzzle3d::register_mesh_io()`, moved
+/// `"3d.puzzle"` OS-host mesh export/import bridge (`crate::editor::puzzle3d::register_mesh_io()`, moved
 /// app-side by ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) has NO `ArtifactDeclaration`
 /// field — it belongs to the same OS media-host 14-function family flagged on puzzle2d's
 /// `declaration()` doc, a different mechanism from the nine §6 registrars this struct covers — so it
@@ -577,7 +586,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::puzzle3d::standards::v1::subsets::any::schema::inferences::puzzle3d_artifact_inference_descriptor()])
         .composers(crate::artifacts::puzzle3d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::puzzle3d::Puzzle3dPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::puzzle3d::Puzzle3dPlayApp>>()
         .try_build()
 }
 

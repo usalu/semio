@@ -24,7 +24,7 @@ pub struct ReplaceAttractionGeometry {
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ReplaceAttractionGeometry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "attraction", kind: "replace-attraction-geometry", record: "ReplacedAttractionGeometry" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> Puzzle3dDiff {
+    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {

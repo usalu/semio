@@ -18,7 +18,7 @@ pub struct DeletePriorityRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeletePriorityRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "priority-record", kind: "delete-priority-record", record: "DeletedPriorityRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

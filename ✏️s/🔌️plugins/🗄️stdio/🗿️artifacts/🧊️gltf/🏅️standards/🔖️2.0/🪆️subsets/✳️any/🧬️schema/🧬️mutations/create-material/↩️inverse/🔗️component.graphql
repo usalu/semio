@@ -1,0 +1,13 @@
+# create-material typed inverse facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfMaterialValueV1
+input GltfCreateMaterialPayloadV1 {
+  position: Int!
+}
+type GltfCreateMaterialInverseOperationV1 {
+  kind: String!
+  position: Int!
+  item: GltfMaterialValueV1!
+}
+type GltfCreateMaterialInverseV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfCreateMaterialPayloadV1!, operation: GltfCreateMaterialInverseOperationV1! }

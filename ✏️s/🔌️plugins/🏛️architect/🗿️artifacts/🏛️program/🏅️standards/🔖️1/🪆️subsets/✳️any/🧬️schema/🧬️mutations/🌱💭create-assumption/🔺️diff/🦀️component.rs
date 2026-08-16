@@ -6,7 +6,11 @@ use crate::artifacts::program::diff::ProgramAssumptionsDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🌱️ `added = [payload row]` — the row lands at the end of `program.assumptions` on apply.
-pub fn diff(payload: &CreateAssumption, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { assumptions: Some(ProgramAssumptionsDelta { added: vec![payload.assumption.clone()], ..Default::default() }), ..Default::default() }
+/// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
+pub fn diff(payload: &CreateAssumption, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let id = payload.assumption.header.id.clone();
+    if base.assumptions.iter().any(|row| row.header.id == id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "An assumption already exists with this id.", [id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { assumptions: Some(ProgramAssumptionsDelta { added: vec![payload.assumption.clone()], ..Default::default() }), ..Default::default() })
 }

@@ -1,0 +1,10 @@
+syntax = "proto3";
+package stdio.gltf.mutation;
+enum GltfCreateSceneDiffPhaseV1 { GLTF_CREATE_SCENE_DIFF_PHASE_V1_UNSPECIFIED = 0; GLTF_CREATE_SCENE_DIFF_PHASE_V1_DIFF = 1; }
+message GltfCreateSceneJsonArrayV1 { repeated GltfCreateSceneJsonV1 values = 1; }
+message GltfCreateSceneJsonObjectFieldV1 { string key = 1; GltfCreateSceneJsonV1 value = 2; }
+message GltfCreateSceneJsonObjectV1 { repeated GltfCreateSceneJsonObjectFieldV1 fields = 1; }
+message GltfCreateSceneJsonV1 { oneof value { bool null_value = 1; bool boolean_value = 2; double number_value = 3; string string_value = 4; GltfCreateSceneJsonArrayV1 array_value = 5; GltfCreateSceneJsonObjectV1 object_value = 6; } }
+message GltfCreateSceneValueV1 { repeated uint32 nodes = 1; }
+message GltfCreateSceneAnchorV1 { repeated uint32 nodes = 1; optional string name = 2; GltfCreateSceneJsonV1 extensions = 3; GltfCreateSceneJsonV1 extras = 4; }
+message GltfCreateSceneDiffV1 { string id = 1; uint32 version = 2; GltfCreateSceneDiffPhaseV1 phase = 3; repeated string touched_paths = 4; uint32 position = 5; GltfCreateSceneValueV1 scene = 6; uint32 expected_scene_count = 7; optional uint32 expected_default_scene_before = 8; GltfCreateSceneAnchorV1 expected_next_scene = 9; }

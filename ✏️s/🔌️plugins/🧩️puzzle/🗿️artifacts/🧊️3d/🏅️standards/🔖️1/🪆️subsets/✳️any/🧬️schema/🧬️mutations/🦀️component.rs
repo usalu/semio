@@ -291,7 +291,7 @@ impl MutationDiff<Value> for Puzzle3dDiff {
 impl Mutation<Value> for Puzzle3dMutation {
     type Diff = Puzzle3dDiff;
 
-    fn diff(&self, projection: &Value) -> Puzzle3dDiff {
+    fn diff(&self, projection: &Value) -> protocol::MutationOutcome<Puzzle3dDiff> {
         let base: Puzzle3dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
         Mutation::<Puzzle3dSnapshot>::diff(self, &base)
     }
@@ -368,7 +368,7 @@ impl MutationDiff<Puzzle3dPlaySnapshot> for Puzzle3dDiff {
 impl Mutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
     type Diff = Puzzle3dDiff;
 
-    fn diff(&self, projection: &Puzzle3dPlaySnapshot) -> Puzzle3dDiff {
+    fn diff(&self, projection: &Puzzle3dPlaySnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         Mutation::<Value>::diff(self, &projection.0)
     }
 
@@ -412,11 +412,11 @@ mod tests {
         let mut inverses = Vec::new();
         for operation in &operations {
             inverses.extend(Mutation::<Value>::inverse(operation, &forward));
-            forward = Mutation::<Value>::diff(operation, &forward).apply(&forward);
+            forward = Mutation::<Value>::diff(operation, &forward).diff().apply(&forward);
         }
         assert_eq!(forward, canonical(&after));
         for inverse in inverses.iter().rev() {
-            forward = Mutation::<Value>::diff(inverse, &forward).apply(&forward);
+            forward = Mutation::<Value>::diff(inverse, &forward).diff().apply(&forward);
         }
         assert_eq!(forward, canonical(&before), "backwards operations must restore the pre-edit document");
     }
@@ -430,10 +430,10 @@ mod tests {
         use crate::artifacts::puzzle3d::Puzzle3dObject;
         let base = empty();
         let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
-        let with_object = MutationDiff::<Puzzle3dSnapshot>::apply(&create_object(object, None).diff(&base), &base);
-        let d1 = move_object("o1".into(), [10.0, 10.0, 10.0]).diff(&with_object);
+        let with_object = MutationDiff::<Puzzle3dSnapshot>::apply(create_object(object, None).diff(&base).diff(), &base);
+        let d1 = move_object("o1".into(), [10.0, 10.0, 10.0]).diff(&with_object).into_parts().0;
         let mid = MutationDiff::<Puzzle3dSnapshot>::apply(&d1, &with_object);
-        let d2 = move_object("o1".into(), [20.0, 30.0, 40.0]).diff(&mid);
+        let d2 = move_object("o1".into(), [20.0, 30.0, 40.0]).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&with_object, d1, d2);
     }
 
@@ -447,7 +447,7 @@ mod tests {
         let base = empty();
         let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
         assert_mutation_inverse_law(&base, &create_object(object.clone(), None));
-        let with_object = MutationDiff::<Puzzle3dSnapshot>::apply(&create_object(object, None).diff(&base), &base);
+        let with_object = MutationDiff::<Puzzle3dSnapshot>::apply(create_object(object, None).diff(&base).diff(), &base);
         assert_mutation_inverse_law(&with_object, &delete_object("o1".into()));
     }
 
@@ -460,7 +460,7 @@ mod tests {
             vortices: vec![Puzzle3dVortex { id: "v1".into(), vortex_kind: None, label: None, position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }],
             hidden: false, locked: false,
         };
-        let with_object = MutationDiff::<Puzzle3dSnapshot>::apply(&create_object(object, None).diff(&base), &base);
+        let with_object = MutationDiff::<Puzzle3dSnapshot>::apply(create_object(object, None).diff(&base).diff(), &base);
         assert_mutation_inverse_law(&with_object, &move_object("o1".into(), [1.0, 2.0, 3.0]));
         assert_mutation_inverse_law(&with_object, &rotate_object("o1".into(), Some([0.0, 0.0, 0.0, 1.0])));
         assert_mutation_inverse_law(&with_object, &scale_object("o1".into(), Some(Puzzle3dScale::Uniform(2.0))));
@@ -482,14 +482,14 @@ mod tests {
         let object_a = Puzzle3dObject { id: "a".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: vec![Puzzle3dVortex { id: "va".into(), vortex_kind: None, label: None, position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }], hidden: false, locked: false };
         let object_b = Puzzle3dObject { id: "b".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: vec![Puzzle3dVortex { id: "vb".into(), vortex_kind: None, label: None, position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }], hidden: false, locked: false };
         let mut projection = base;
-        projection = MutationDiff::<Puzzle3dSnapshot>::apply(&create_object(object_a, None).diff(&projection), &projection);
-        projection = MutationDiff::<Puzzle3dSnapshot>::apply(&create_object(object_b, None).diff(&projection), &projection);
+        projection = MutationDiff::<Puzzle3dSnapshot>::apply(create_object(object_a, None).diff(&projection).diff(), &projection);
+        projection = MutationDiff::<Puzzle3dSnapshot>::apply(create_object(object_b, None).diff(&projection).diff(), &projection);
         assert_mutation_inverse_law(&projection, &connect_vortices("t1".into(), "a:va".into(), "b:vb".into(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
-        let connected = MutationDiff::<Puzzle3dSnapshot>::apply(&connect_vortices("t1".into(), "a:va".into(), "b:vb".into(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0).diff(&projection), &projection);
+        let connected = MutationDiff::<Puzzle3dSnapshot>::apply(connect_vortices("t1".into(), "a:va".into(), "b:vb".into(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0).diff(&projection).diff(), &projection);
         assert_mutation_inverse_law(&connected, &disconnect_vortices("t1".into()));
         assert_mutation_inverse_law(&connected, &replace_attraction_geometry("t1".into(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0));
         let deleted = delete_object("a".into());
-        let after_delete = MutationDiff::<Puzzle3dSnapshot>::apply(&deleted.diff(&connected), &connected);
+        let after_delete = MutationDiff::<Puzzle3dSnapshot>::apply(deleted.diff(&connected).diff(), &connected);
         assert!(!after_delete.attractions.iter().any(|attraction| attraction.id == "t1"), "delete-object must sever attractions touching its vortices");
         assert_mutation_inverse_law(&connected, &deleted);
     }
@@ -500,7 +500,7 @@ mod tests {
         let base = empty();
         let volume = Puzzle3dTargetVolume { id: "tv1".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, hidden: false, locked: false };
         assert_mutation_inverse_law(&base, &create_target_volume(volume.clone(), None));
-        let with_volume = MutationDiff::<Puzzle3dSnapshot>::apply(&create_target_volume(volume, None).diff(&base), &base);
+        let with_volume = MutationDiff::<Puzzle3dSnapshot>::apply(create_target_volume(volume, None).diff(&base).diff(), &base);
         assert_mutation_inverse_law(&with_volume, &move_target_volume("tv1".into(), [1.0, 2.0, 3.0]));
         assert_mutation_inverse_law(&with_volume, &rotate_target_volume("tv1".into(), Some([0.0, 0.0, 0.0, 1.0])));
         assert_mutation_inverse_law(&with_volume, &scale_target_volume("tv1".into(), None));
@@ -510,7 +510,7 @@ mod tests {
 
         let reference = Puzzle3dReference { id: "r1".into(), source: Puzzle3dReferenceSource::default(), origin: [0.0, 0.0, 0.0], width_world: 1.0, locked: false, hidden: false };
         assert_mutation_inverse_law(&base, &create_reference(reference.clone(), None));
-        let with_reference = MutationDiff::<Puzzle3dSnapshot>::apply(&create_reference(reference, None).diff(&base), &base);
+        let with_reference = MutationDiff::<Puzzle3dSnapshot>::apply(create_reference(reference, None).diff(&base).diff(), &base);
         assert_mutation_inverse_law(&with_reference, &move_reference("r1".into(), [1.0, 2.0, 3.0]));
         assert_mutation_inverse_law(&with_reference, &resize_reference("r1".into(), 4.0));
         assert_mutation_inverse_law(&with_reference, &replace_reference_source("r1".into(), Puzzle3dReferenceSource { url: "/x.png".into(), media_kind: Some("image".into()) }));
@@ -525,7 +525,7 @@ mod tests {
         let base = empty();
         assert_mutation_inverse_law(&base, &change_domain("mechanical".into()));
         assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle3dCompatSpecificity::Vortex));
-        let connected = MutationDiff::<Puzzle3dSnapshot>::apply(&connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle3dCompatSpecificity::Vortex).diff(&base), &base);
+        let connected = MutationDiff::<Puzzle3dSnapshot>::apply(connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle3dCompatSpecificity::Vortex).diff(&base).diff(), &base);
         assert_mutation_inverse_law(&connected, &disconnect_kind_compatibility("a".into(), "b".into()));
         assert_mutation_inverse_law(&base, &replace_kind_catalogs(Some(Puzzle3dKindCatalogs::default())));
     }
@@ -539,5 +539,34 @@ mod tests {
         assert_eq!(Puzzle3dMutation::kinds().len(), 35);
     }
     //#endregion 🔖️MutationLaws
+
+    //#region 🔖️OutcomeLaws
+    // 🎫️ 26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — see
+    // `📓️w3-f-block-puzzle-report.md` for the `assert_outcome_policy_matrix` pending-helper note.
+    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
+
+    #[test]
+    fn missing_target_is_error_per_verb_family() {
+        let base = empty();
+        assert_missing_target_is_error(&base, &delete_object("missing".into())); // delete
+        assert_missing_target_is_error(&base, &remove_object_vortex("missing".into(), "v0".into())); // remove
+        assert_missing_target_is_error(&base, &change_object_hidden("missing".into(), true)); // change/set/update
+        assert_missing_target_is_error(&base, &move_object("missing".into(), [1.0, 1.0, 1.0])); // move/drag/rotate/scale/resize
+        assert_missing_target_is_error(&base, &edit_object_label("missing".into(), Some("x".into()))); // edit/replace
+        assert_missing_target_is_error(&base, &disconnect_vortices("missing".into())); // disconnect/unbind
+    }
+
+    #[test]
+    fn create_duplicate_id_is_fatal_and_never_applies() {
+        use crate::artifacts::puzzle3d::Puzzle3dObject;
+        let mut base = empty();
+        let object = Puzzle3dObject { id: "o0".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
+        base.objects.push(object.clone());
+        let outcome = create_object(object, None).diff(&base);
+        assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal));
+        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

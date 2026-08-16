@@ -22,7 +22,7 @@ pub fn move_camera3d(new_position: [f64; 3], new_target: [f64; 3]) -> Block3dMut
 impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for MoveCamera3d {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "camera3d", kind: "move-camera3d", record: "MovedCamera3d" };
 
-    fn diff(&self, base: &Block3dSnapshot) -> Block3dDiff {
+    fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {

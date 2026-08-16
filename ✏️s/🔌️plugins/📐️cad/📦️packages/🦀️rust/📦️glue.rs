@@ -661,6 +661,39 @@ pub mod editor {
 }
 //#endregion ✏️Editor
 
+//#region 👁️Viewer
+/// 👁️ The read-only surface (contract §2.2/§2.6) — a genuinely independent module tree from
+/// `editor` above, never `#[path]`-mounting anything under `✏️editor/`: that would let
+/// `policyViewerPurityBreaches`' `::editor::` substring check catch a real dependency, but the
+/// deeper reason is architectural — `CadViewer` must stay constructible without ever touching
+/// `CadPlayApp`'s mutation-capable types.
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod cad {
+        #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📐️shape/🦀️component.rs"]
+                    pub mod shape;
+                }
+            }
+        }
+    }
+}
+//#endregion 👁️Viewer
+
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;

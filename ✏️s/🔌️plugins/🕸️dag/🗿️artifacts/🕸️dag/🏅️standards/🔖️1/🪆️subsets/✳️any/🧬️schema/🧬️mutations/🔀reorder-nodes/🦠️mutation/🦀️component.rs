@@ -21,7 +21,7 @@ pub fn reorder_nodes(order: Vec<String>) -> DagMutation {
 impl protocol::MutationKind<DagSnapshot, DagMutation> for ReorderNodes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "nodes", kind: "reorder-nodes", record: "ReorderedNodes" };
 
-    fn diff(&self, base: &DagSnapshot) -> DagDiff {
+    fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {

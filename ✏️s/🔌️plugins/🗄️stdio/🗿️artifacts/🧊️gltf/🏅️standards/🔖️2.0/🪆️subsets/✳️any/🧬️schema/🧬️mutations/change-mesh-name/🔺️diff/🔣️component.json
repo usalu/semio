@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.change-mesh-name.v1.diff",
+  "title": "GltfChangeMeshNameDiff",
+  "type": "object",
+  "properties": {
+    "diff": {
+      "type": "object"
+    },
+    "touchedPaths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "diff",
+    "touchedPaths"
+  ],
+  "additionalProperties": false,
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.change-mesh-name.v1",
+    "version": 1,
+    "phase": "diff",
+    "kind": "change",
+    "touchedPaths": [
+      "document/meshes/*/name"
+    ],
+    "referencePolicy": "none"
+  }
+}

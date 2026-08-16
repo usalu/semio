@@ -23,7 +23,7 @@ pub fn move_step(id: String, x: f64, y: f64) -> SequenceMutation {
 impl protocol::MutationKind<SequenceSnapshot, SequenceMutation> for MoveStep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "step", kind: "move-step", record: "MovedStep" };
 
-    fn diff(&self, base: &SequenceSnapshot) -> SequenceDiff {
+    fn diff(&self, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {

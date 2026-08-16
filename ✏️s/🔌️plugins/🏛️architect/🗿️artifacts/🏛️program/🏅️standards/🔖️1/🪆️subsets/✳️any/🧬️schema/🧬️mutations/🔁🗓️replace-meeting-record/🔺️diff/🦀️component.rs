@@ -7,13 +7,14 @@ use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 use protocol::Patchable;
 
-/// 🔁️ `patched = [{id, full patch}]` via `Patchable::diff_patch` — every field of the payload
-/// row becomes the patch, so applying it fully overwrites the target's non-identity content.
-/// Target absent from `base` ⇒ empty diff (nothing to change).
-pub fn diff(payload: &ReplaceMeetingRecord, base: &ProgramSnapshot) -> ProgramDiff {
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
+pub fn diff(payload: &ReplaceMeetingRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let Some(existing) = base.meetings.iter().find(|row| row.header.id == payload.meeting_record.header.id) else {
-        return ProgramDiff::default();
+        return protocol::MutationOutcome::error("mutation.target-missing", "No meeting record exists with this id.", [payload.meeting_record.header.id.0.clone()]);
     };
+    if existing == &payload.meeting_record {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This meeting record already matches the requested value.").at([existing.header.id.0.clone()])]);
+    }
     let patch = existing.diff_patch(&payload.meeting_record).expect("diff_patch always produces a full patch");
-    ProgramDiff { meetings: Some(ProgramMeetingsDelta { patched: vec![ProgramMeetingsPatchEntry { id: payload.meeting_record.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() }
+    protocol::MutationOutcome::new(ProgramDiff { meetings: Some(ProgramMeetingsDelta { patched: vec![ProgramMeetingsPatchEntry { id: payload.meeting_record.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
 }

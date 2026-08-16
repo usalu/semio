@@ -20,7 +20,7 @@ pub struct ReorderTiles {
 impl MutationKind<PresentSnapshot, PresentMutation> for ReorderTiles {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "tiles", kind: "reorder-tiles", record: "ReorderedTiles" };
 
-    fn diff(&self, base: &PresentSnapshot) -> PresentDiff {
+    fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
         super::diff::diff(self, base)
     }
 

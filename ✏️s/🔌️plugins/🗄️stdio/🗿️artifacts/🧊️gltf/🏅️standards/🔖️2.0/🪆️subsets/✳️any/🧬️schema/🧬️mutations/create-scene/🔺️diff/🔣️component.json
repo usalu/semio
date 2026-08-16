@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.create-scene.v1",
+  "title": "GltfCreateSceneDiffV1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "const": "s.stdio.gltf.mutation.create-scene.v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "phase": {
+      "const": "diff"
+    },
+    "touchedPaths": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "items": {
+        "anyOf": [
+          {
+            "const": "document/scene"
+          },
+          {
+            "type": "string",
+            "pattern": "^document/scenes/[0-9]+$"
+          }
+        ]
+      }
+    },
+    "position": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "expectedSceneCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "expectedDefaultSceneBefore": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "expectedNextScene": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "nodes": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "name": {
+              "type": "string"
+            },
+            "extensions": {},
+            "extras": {}
+          },
+          "required": [
+            "nodes"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "scene": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "maxItems": 0,
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "required": [
+        "nodes"
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "phase",
+    "touchedPaths",
+    "position",
+    "expectedSceneCount",
+    "expectedDefaultSceneBefore",
+    "expectedNextScene",
+    "scene"
+  ],
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.create-scene.v1",
+    "version": 1,
+    "phase": "diff",
+    "touchedPathPatterns": [
+      "document/scenes/{position}",
+      "document/scene"
+    ]
+  }
+}

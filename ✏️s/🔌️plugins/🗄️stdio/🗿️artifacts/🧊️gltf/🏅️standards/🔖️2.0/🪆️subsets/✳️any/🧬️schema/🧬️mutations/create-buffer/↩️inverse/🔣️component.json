@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.create-buffer.v1.inverse",
+  "title": "GltfCreateBufferInverseV1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "const": "s.stdio.gltf.mutation.create-buffer.v1.inverse"
+    },
+    "version": {
+      "const": 1
+    },
+    "touchedPaths": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^(document/buffers|buffers)/[0-9]+$"
+      }
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "position": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      },
+      "required": [
+        "position",
+        "bytes"
+      ]
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "insert"
+        },
+        "position": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "item": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "byteLength": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "uri": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "extensions": {},
+            "extras": {}
+          },
+          "required": [
+            "byteLength"
+          ]
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "position",
+        "item",
+        "bytes"
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "touchedPaths",
+    "payload",
+    "operation"
+  ],
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.create-buffer.v1.inverse",
+    "version": 1,
+    "phase": "inverse",
+    "touchedPathPattern": "document/buffers",
+    "referencePolicy": "typed references remap, repair, or reject"
+  }
+}

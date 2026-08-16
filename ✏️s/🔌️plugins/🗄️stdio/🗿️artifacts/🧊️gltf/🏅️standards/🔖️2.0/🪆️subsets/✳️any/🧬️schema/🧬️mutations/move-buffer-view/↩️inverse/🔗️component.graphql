@@ -1,0 +1,14 @@
+# move-buffer-view typed inverse facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfBufferViewValueV1
+input GltfMoveBufferViewPayloadV1 {
+  index: Int!
+  position: Int!
+}
+type GltfMoveBufferViewInverseOperationV1 {
+  kind: String!
+  index: Int!
+  position: Int!
+}
+type GltfMoveBufferViewInverseV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfMoveBufferViewPayloadV1!, operation: GltfMoveBufferViewInverseOperationV1! }

@@ -1,0 +1,14 @@
+# move-scene typed inverse facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfSceneValueV1
+input GltfMoveScenePayloadV1 {
+  index: Int!
+  position: Int!
+}
+type GltfMoveSceneInverseOperationV1 {
+  kind: String!
+  index: Int!
+  position: Int!
+}
+type GltfMoveSceneInverseV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfMoveScenePayloadV1!, operation: GltfMoveSceneInverseOperationV1! }

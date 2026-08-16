@@ -1,0 +1,50 @@
+W3-D 🏛️architect — Mutation triad inventory
+Source: ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/
+
+Verb family counts (266 mutation-kind triads, all hand-written impl MutationKind<ProgramSnapshot, ProgramMutation>):
+  create      64   (62 standard Delta-based entities + 2 content-addressed-table entities: benchmark-record, knowledge-record)
+  delete      64   (62 standard + 2 content-addressed-table)
+  rename      67   (62 standard + 2 content-addressed-table + 3 root-scoped singletons: governance, meta, project)
+  replace     67   (62 standard + 2 content-addressed-table + 3 root-scoped singletons)
+  connect      2   (connect-adjacency, connect-trace)
+  disconnect   2   (disconnect-adjacency, disconnect-trace)
+  ------------------
+  total      266
+
+Plus 1 non-mutation 🔺️diff dir at the schema root (ProgramDiff struct definition itself — no `diff` fn,
+just the Diff type used as Mutation::Diff / MutationKind::Op::Diff). Census counts this as the 267th
+"diff leaf"; it needs no signature change since it is a type, not a function.
+
+Hand-written impl Mutation<P>/MutationKind<P,Op> blocks outside 🧬️mutations/ (found via repo-wide grep,
+not in census's per-kind count but counted in its 268 impl-block total):
+  ✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎚️config/🦀️component.rs   — impl Mutation<ArchitectConfig> for ArchitectConfigMutation
+  ✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/👥️presence/🦀️component.rs — impl Mutation<ArchitectPresence> for ArchitectPresenceMutation
+  266 (mutations) + 2 (config/presence) = 268 impl blocks — matches census exactly.
+
+fn validate overrides found: 0 (matches census). One unrelated `pub fn validate_plugin(...)` free
+function in 💡️inferences/component.rs is a diagnostics helper, not a MutationKind::validate override —
+left untouched.
+
+62 standard entities carrying full create/delete/rename/replace quads (auto-generated from a
+per-entity template after cross-checking base-collection field, ProgramDiff field, Delta type and
+PatchEntry type all agree — flagged one legitimate mismatch: `document`'s ProgramSnapshot collection
+is `base.artifacts` while its ProgramDiff field is `documents`; template uses base_field for lookups,
+diff_field for the delta write):
+access-rule, accessibility-requirement, activity, analysis-record, approval-record, assumption,
+audit-event, change-record, collaboration-record, communication-requirement, compliance-record,
+conflict, constraint-record, cost-requirement, decision, delivery-constraint, document,
+environmental-requirement, equipment, flexibility-requirement, flow-requirement, function,
+growth-plan, human-factor-requirement, information-requirement, infrastructure-requirement, issue,
+meeting-record, operational-requirement, option-evaluation, organizational-requirement,
+performance-criterion, priority-record, privacy-requirement, process, program-element,
+quality-record, quantity-requirement, regulatory-requirement, relationship, report-record,
+requirement, resilience-requirement, resource, risk, safety-requirement, scenario,
+schedule-requirement, search-filter, security-requirement, service-requirement, site-context,
+stakeholder, status-record, storage-requirement, survey, sustainability-requirement,
+template-record, user-profile, validation-record, wayfinding-requirement, workshop
+
+2 content-addressed-table entities (working-scene-cache + re-mint pattern, hand-edited individually):
+benchmark-record, knowledge-record
+
+3 root-scoped singleton entities (rename/replace only, no create/delete — always present):
+governance, meta, project

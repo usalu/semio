@@ -1,0 +1,5 @@
+syntax = "proto3";
+package stdio.gltf.mutation;
+enum GltfCreateSceneInversePhaseV1 { GLTF_CREATE_SCENE_INVERSE_PHASE_V1_UNSPECIFIED = 0; GLTF_CREATE_SCENE_INVERSE_PHASE_V1_INVERSE = 1; }
+message GltfCreateSceneValueV1 { repeated uint32 nodes = 1; }
+message GltfCreateSceneInverseV1 { string id = 1; uint32 version = 2; GltfCreateSceneInversePhaseV1 phase = 3; repeated string touched_paths = 4; uint32 position = 5; GltfCreateSceneValueV1 expected_scene = 6; optional uint32 default_scene_before = 7; optional uint32 expected_default_scene_after = 8; }

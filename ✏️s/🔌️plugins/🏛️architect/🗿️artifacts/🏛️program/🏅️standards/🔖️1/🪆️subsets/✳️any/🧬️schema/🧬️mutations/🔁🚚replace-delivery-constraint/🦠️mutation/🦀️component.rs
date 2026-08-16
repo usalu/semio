@@ -19,7 +19,7 @@ pub struct ReplaceDeliveryConstraint {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceDeliveryConstraint {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "delivery-constraint", kind: "replace-delivery-constraint", record: "ReplacedDeliveryConstraint" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

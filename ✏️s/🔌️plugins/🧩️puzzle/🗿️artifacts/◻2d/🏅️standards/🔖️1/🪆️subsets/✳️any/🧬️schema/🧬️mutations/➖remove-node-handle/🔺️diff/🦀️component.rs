@@ -4,9 +4,9 @@ use crate::artifacts::puzzle2d::diff::{Puzzle2dDiff, Puzzle2dEdgesDelta, Puzzle2
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::RemoveNodeHandle, base: &Puzzle2dSnapshot) -> Puzzle2dDiff {
+pub fn diff(payload: &super::mutation::RemoveNodeHandle, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
     let Some(node) = base.nodes.iter().find(|entry| entry.id == payload.node_id) else {
-        return Puzzle2dDiff::default();
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "node-handle", payload.node_id), vec![payload.node_id.clone()]);
     };
     if !node.handles.iter().any(|handle| handle.id == payload.handle_id) {
         return Puzzle2dDiff::default();
@@ -19,10 +19,10 @@ pub fn diff(payload: &super::mutation::RemoveNodeHandle, base: &Puzzle2dSnapshot
         .filter(|edge| edge.source == payload.handle_id || edge.target == payload.handle_id)
         .map(|edge| edge.id.clone())
         .collect();
-    Puzzle2dDiff {
+    protocol::MutationOutcome::new(Puzzle2dDiff {
         nodes: Some(Puzzle2dNodesDelta { patched: vec![Puzzle2dNodePatchEntry { id: payload.node_id.clone(), patch: Puzzle2dNodePatch { replacement: Some(next) } }], ..Default::default() }),
         edges: if severed.is_empty() { None } else { Some(Puzzle2dEdgesDelta { removed: severed, ..Default::default() }) },
         ..Default::default()
-    }
+    })
 }
 //#endregion 🔖️Diff

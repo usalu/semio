@@ -23,7 +23,7 @@ pub struct ReplaceTiles {
 impl MutationKind<PresentSnapshot, PresentMutation> for ReplaceTiles {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "tiles", kind: "replace-tiles", record: "ReplacedTiles" };
 
-    fn diff(&self, base: &PresentSnapshot) -> PresentDiff {
+    fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
         super::diff::diff(self, base)
     }
 

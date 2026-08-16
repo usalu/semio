@@ -17,7 +17,7 @@ pub struct ChangeStepDescription {
 
 impl MutationKind<FormsSnapshot, FormMutation> for ChangeStepDescription {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "step-description", kind: "change-step-description", record: "ChangedStepDescription" };
-    fn diff(&self, base: &FormsSnapshot) -> FormsDiff {
+    fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {

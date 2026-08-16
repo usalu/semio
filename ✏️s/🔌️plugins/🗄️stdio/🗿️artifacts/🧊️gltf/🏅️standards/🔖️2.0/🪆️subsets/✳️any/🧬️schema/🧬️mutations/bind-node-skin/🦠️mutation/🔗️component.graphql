@@ -1,0 +1,6 @@
+# bind-node-skin mutation facet.
+input GltfBindNodeSkinPayloadV1 {
+  node: Int!
+  skin: Int!
+}
+type GltfBindNodeSkinMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

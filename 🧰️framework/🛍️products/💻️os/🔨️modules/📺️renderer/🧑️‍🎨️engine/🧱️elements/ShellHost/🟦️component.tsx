@@ -32,13 +32,10 @@ import {
   type AppRouterManifest,
   type ArtifactDialect,
   dialectCoordinate,
-  type DefaultApp,
-  decodeOpeningConfigMutation,
   EMPTY_OPENING_PREFERENCES,
   foldOpeningPreferences,
   type OpeningConfigMutation,
   type OpeningPreferences,
-  resolveOpeningApp,
   SemioFaultError,
   SURFACE_FAULT_CODES,
   type CommandAddress,
@@ -114,7 +111,6 @@ import {
   type WindowMeasure,
 } from "@semio-tech/framework";
 import {
-  AppChannelClient,
   type BackboneWorkerRequest,
   type BackboneWorkerResponse,
   buildFileBackboneUri,
@@ -347,14 +343,21 @@ import {
   dispatchOsCommand,
   downloadDataUrl,
   downloadMediaExport,
+  filterDefinitionsForRole,
   flattenPanelTabLeaves,
+  groupOpenWithEntries,
   introductionTargetsWindow,
   isEditableEventTarget,
+  isMutationKindDefinition,
   isOsCommandAddress,
   keyboardEventMatchesChord,
   loadPluginModuleResilient,
   makeEffectDispatchOne,
   mergeRecordPreservingIdentity,
+  openArtifactWithText,
+  OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID,
+  OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID,
+  type OpenWithEntry,
   panelAnchorForGroup,
   panelJsonFromState,
   panelTabDefinitionToNode,
@@ -384,13 +387,16 @@ import {
   runRequestMediaFrames,
   scheduleDispatchAction,
   sessionWindowInstances,
+  setAsDefaultText,
   shellLabel,
   shellTabIcon,
   spawnedWindowChromeForKind,
   studioPanelFocusingSpawned,
+  surfaceRoleChipText,
   syncDocumentId,
   synthesizeLocalizedLabel,
   toolIdFromPanelTabId,
+  viewerReadOnlyNoticeText,
   useUIHistory,
   utilityBarNode,
   utilityNodeTreeContainsId,
@@ -410,6 +416,10 @@ import {
   createFrameworkDisplayPanelTabs,
   createFrameworkMarketplacePanelTab,
   createFrameworkSettingsPanelTab,
+  DEFAULT_APP_NONE_VALUE,
+  type DefaultAppRow,
+  type DefaultAppsHostApi,
+  encodeDefaultAppValue,
   FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID,
   FRAMEWORK_SETTINGS_PANEL_ID,
   type DisplayHostApi,
@@ -803,7 +813,7 @@ function FrameworkOsShellInner({
   const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId, activeToolId } = shellState.actionPane;
   const { expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
   const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, mobilePanelVisible, extraWindowInstances, windowTitlesById, windowIconsById } = shellState.layout;
-  const { searchOpen, findOpen, introductionStepIndex, introductionCompletedInteractions, dialog: overlayDialog } = shellState.overlays;
+  const { searchOpen, findOpen, introductionStepIndex, introductionCompletedInteractions, dialog: overlayDialog, transientNotice, openWithFocusRole } = shellState.overlays;
   const { activeTutorialId, playing: tutorialPlaying, rate: tutorialRate, muted: tutorialMuted, captionsOn: tutorialCaptionsOn, recording: tutorialRecording, deviated: tutorialDeviated } = shellState.tutorial;
   const { uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft, uiKeybindingOverrides } = shellState.uiPrefs;
   const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
@@ -1005,7 +1015,10 @@ function FrameworkOsShellInner({
           })()
         : (() => {
             const defaultAppId = pluginFilter ? resolvePlaygroundDefaultAppId(PLUGIN_CATALOG, pluginFilter) : undefined;
-            return (defaultAppId ? manifest.apps.find((app) => app.id === defaultAppId) : undefined) ?? manifest.apps[0];
+            // 👁️✏️ An unpinned `appId` still prefers the boot-time role (contract freeze §5) — the
+            // role of an OPEN session always comes from `session.app.role`, never `appRole` itself;
+            // this only breaks a tie among apps the manifest already offers for the default dialect.
+            return (defaultAppId ? manifest.apps.find((app) => app.id === defaultAppId) : undefined) ?? manifest.apps.find((app) => app.role === appRole) ?? manifest.apps[0];
           })();
       if (!primaryApp) return;
       const instanceId = await handle.createApp(primaryApp.id);
@@ -1021,7 +1034,7 @@ function FrameworkOsShellInner({
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
       dispatch({ type: "SET_ERROR", value: null });
     },
-    [hostConfig, appId, pluginFilter, uiTerminology, uiLocale],
+    [hostConfig, appId, appRole, pluginFilter, uiTerminology, uiLocale],
   );
 
   /** 🔌️ Installs a registry entry that isn't loaded yet: acquires its module (worker-backed, refcounted
@@ -2853,6 +2866,17 @@ function FrameworkOsShellInner({
         console.warn("[DEBUG] skipping undeclared action", action.action, targetSession.app.id);
         return;
       }
+      // 👁️✏️ Client-side half of the read-only guarantee (contract freeze §2.3/§5) — the SDK-side
+      // `VcsArtifactApp` guard is the source of truth (a `ArtifactViewer`-declared session can never
+      // even construct a `Mutation`-kind action), this just avoids a pointless round trip and shows the
+      // same notice a `"viewer.read-only"` fault reply gets in the `.catch` below. `showTransientNotice`/
+      // `isViewerReadOnlyFault` are deliberately NOT in this callback's dep list below — both are stable
+      // across renders (refs + `dispatch` only), and are declared later in this component, so adding
+      // them would read a not-yet-initialized `const` on the render that first creates this callback.
+      if (targetSession.app.role === "viewer" && targetSession.app.windowKinds.some((kind) => (kind.actions ?? []).some((entry) => entry.id === action.action && entry.kind === "mutation"))) {
+        showTransientNotice(viewerReadOnlyNoticeText(uiLocale), "info", SURFACE_FAULT_CODES.ViewerReadOnly);
+        return;
+      }
 
       const interactiveAction = action.action !== "suggestionsTick" && action.action !== "fillBuildTick";
       if (interactiveAction) beginInteractivePluginAction();
@@ -2863,6 +2887,10 @@ function FrameworkOsShellInner({
           return applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope));
         })
         .catch((actionError) => {
+          if (isViewerReadOnlyFault(actionError)) {
+            showTransientNotice(viewerReadOnlyNoticeText(uiLocale), "info", SURFACE_FAULT_CODES.ViewerReadOnly);
+            return;
+          }
           console.error("[DEBUG] action failed", action.action, action.args, actionError);
         })
         .finally(() => {
@@ -2893,6 +2921,7 @@ function FrameworkOsShellInner({
       reloadPlugin,
       uninstallPlugin,
       pluginSupervisorById,
+      uiLocale,
     ],
   );
 
@@ -3499,6 +3528,170 @@ function FrameworkOsShellInner({
   });
   displayHostRef.current = displayHost;
 
+  //#region 🔖️SurfaceRoles
+  /** 👁️✏️ `(dialect, role) -> AppRef[]`, contract freeze §3 — built fresh from every loaded plugin's
+   * manifest. `AppRouter.build` throws on a genuine authoring conflict (`surface.conflict`/
+   * `surface.contribution-not-permitted`); that's a real defect in the loaded plugin set, not
+   * something a session should crash over, so it's caught and logged, leaving "Open with…"/Settings
+   * empty rather than the whole shell. */
+  const appRouter = useMemo((): AppRouter | null => {
+    try {
+      return AppRouter.build(loadedPlugins.map((entry): AppRouterManifest => ({ pluginId: entry.handle.pluginId, apps: entry.manifest.apps as unknown as Record<string, unknown>[], artifactKinds: entry.manifest.artifactKinds, dependencies: entry.manifest.dependencies })));
+    } catch (buildError) {
+      console.error("[DEBUG] AppRouter.build failed", buildError);
+      return null;
+    }
+  }, [loadedPlugins]);
+  const pluginLabelById = useMemo(() => new Map(loadedPlugins.map((entry) => [entry.handle.pluginId, entry.manifest.label || entry.handle.pluginId])), [loadedPlugins]);
+  /** 👁️✏️ Every dialect any loaded app declares — read straight off `AppDefinition.dialect`
+   * (contract freeze §1), never inferred from a surface id string. Feeds the Settings
+   * `SettingsDefaultApps` table; `appRouter` itself has no public "every registered dialect"
+   * accessor (by design — it's addressed one `(dialect, role)` pair at a time). */
+  const knownDialects = useMemo((): readonly ArtifactDialect[] => {
+    const byCoordinate = new Map<string, ArtifactDialect>();
+    for (const entry of loadedPlugins) for (const app of entry.manifest.apps) byCoordinate.set(dialectCoordinate(app.dialect), app.dialect);
+    return [...byCoordinate.values()];
+  }, [loadedPlugins]);
+
+  /** 🎚️ Client-side fold of `os.config.opening` (contract freeze §4) — event-sourced the same way
+   * the host materializes it (`foldOpeningPreferences`), never a mutated map. There is no host
+   * readback call on {@link AppChannelClient} yet (only the two write commands), so this mirror is
+   * advanced ONLY by this shell's own `setDefaultApp`/`clearDefaultApp` calls below — a pin made by
+   * another session/shell is not reflected here until that gap closes. See `📓️w1-c-report.md`. */
+  const [openingPreferences, setOpeningPreferences] = useState<OpeningPreferences>(EMPTY_OPENING_PREFERENCES);
+  const pinnedAppFor = useCallback((dialect: ArtifactDialect, role: AppRole): AppRef | undefined => openingPreferences.defaults.find((entry) => dialectCoordinate(entry.dialect) === dialectCoordinate(dialect) && entry.role === role)?.app, [openingPreferences]);
+
+  /** 👁️✏️ `PluginRuntime`'s `PluginWasmHandle` (out of this lease) wraps the raw `exchange` ABI
+   * behind typed methods — `transactionPrepare`/`transactionCommit`/`transactionUndo`/`transactionRedo`
+   * are already wrapped that way (`adaptPluginHandle`, `PluginRuntime/🟦️component.tsx`), each
+   * internally riding its own `AppChannelClient`. `openArtifact`/`setDefaultApp`/`clearDefaultApp`
+   * (contract freeze §3) are NOT wrapped yet — the raw `exchange` method itself isn't re-exposed, so
+   * this lease cannot construct its own `AppChannelClient` from the handle it's given. Feature-detected
+   * here (structurally optional, not a type-lying cast) so this activates the moment `PluginRuntime`
+   * adds the same three methods the transaction family already has, with zero changes on this side.
+   * See `📓️w1-c-report.md` "NOT done" — until then these are local-only (the opening-prefs fold below
+   * and the session switch in `openArtifactWithAppRef` both still work; only the wire notify is inert). */
+  type PendingAppChannelMethods = {
+    readonly openArtifact?: (artifactRef: string, role: number, pluginId?: string, appId?: string) => Promise<unknown>;
+    readonly setDefaultApp?: (artifactKind: string, standard: string, subset: string, role: number, pluginId: string, appId: string) => Promise<unknown>;
+    readonly clearDefaultApp?: (artifactKind: string, standard: string, subset: string, role: number) => Promise<unknown>;
+  };
+  const pendingAppChannelFor = useCallback(
+    (pluginId: string): PendingAppChannelMethods | undefined => loadedPlugins.find((entry) => entry.handle.pluginId === pluginId)?.handle as PendingAppChannelMethods | undefined,
+    [loadedPlugins],
+  );
+
+  const dispatchSetDefaultApp = useCallback(
+    (dialect: ArtifactDialect, role: AppRole, app: AppRef) => {
+      const mutation: OpeningConfigMutation = { mutation: "setDefaultApp", dialect, role, app };
+      setOpeningPreferences((current) => foldOpeningPreferences([mutation], current));
+      const roleNum = role === "editor" ? 1 : 0;
+      void pendingAppChannelFor(app.pluginId)
+        ?.setDefaultApp?.(dialect.artifactKind, dialect.standard, dialect.subset, roleNum, app.pluginId, app.appId)
+        ?.catch((commandError) => console.error("[DEBUG] setDefaultApp failed", commandError));
+    },
+    [pendingAppChannelFor],
+  );
+  const dispatchClearDefaultApp = useCallback(
+    (dialect: ArtifactDialect, role: AppRole) => {
+      const mutation: OpeningConfigMutation = { mutation: "clearDefaultApp", dialect, role };
+      setOpeningPreferences((current) => foldOpeningPreferences([mutation], current));
+      const roleNum = role === "editor" ? 1 : 0;
+      void pendingAppChannelFor(session?.pluginId ?? "")
+        ?.clearDefaultApp?.(dialect.artifactKind, dialect.standard, dialect.subset, roleNum)
+        ?.catch((commandError) => console.error("[DEBUG] clearDefaultApp failed", commandError));
+    },
+    [pendingAppChannelFor, session?.pluginId],
+  );
+
+  /** 👁️✏️ Re-points the primary session at a different registered `AppRef` for the SAME artifact
+   * (contract freeze §3/§5's "Open with…") — installs the target plugin first if it isn't loaded
+   * yet, then mirrors `establishPrimarySession`'s non-studio create/seed/dispatch sequence. Also
+   * best-effort notifies the host once `openArtifact` is wrapped (see `PendingAppChannelMethods`
+   * above); `artifactRef` is approximated as the dialect coordinate — there is no per-document
+   * identity surfaced to the shell yet, only per-dialect (see `📓️w1-c-report.md`). */
+  const openArtifactWithAppRef = useCallback(
+    async (target: AppRef, dialect: ArtifactDialect, role: AppRole) => {
+      let plugin = loadedPlugins.find((entry) => entry.handle.pluginId === target.pluginId);
+      if (!plugin) {
+        const outcome = await installPlugin(target.pluginId);
+        if (outcome !== "loaded" && outcome !== "already-loaded") return;
+        plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === target.pluginId);
+      }
+      const app = plugin?.manifest.apps.find((candidate) => candidate.id === target.appId);
+      if (!plugin || !app) {
+        console.error(`[DEBUG] openArtifactWithAppRef: ${target.pluginId}/${target.appId} not found after install`);
+        return;
+      }
+      void (plugin.handle as PendingAppChannelMethods).openArtifact?.(dialectCoordinate(dialect), role === "editor" ? 1 : 0, target.pluginId, target.appId)?.catch((commandError) => console.error("[DEBUG] openArtifact failed", commandError));
+      const instanceId = await plugin.handle.createApp(app.id);
+      const seeded = applyFrameworkLayoutSeed(app.defaultLayout, app.windowKinds, EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
+      extraWindowInstancesRef.current = seeded.extraInstances;
+      extraWindowCounterRef.current = seeded.extraInstances.length;
+      dispatch({ type: "SET_SESSION", value: { pluginId: plugin.handle.pluginId, instanceId, app, viewState: { activeModeId: app.defaultModeId ?? app.modes[0]?.id } } });
+      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+      dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+    },
+    [loadedPlugins, installPlugin, uiTerminology, uiLocale],
+  );
+
+  /** 👁️✏️ `DefaultAppsHostApi.rows` — one row per `(dialect, role)` pair among `knownDialects`, both
+   * roles even when only one has registered surfaces (an empty `options` list still renders the row,
+   * matching the Settings table's "dialect × {viewer, editor}" framing in contract freeze §5). */
+  const defaultAppsRows = useMemo((): readonly DefaultAppRow[] => {
+    if (!appRouter) return [];
+    const rows: DefaultAppRow[] = [];
+    for (const dialect of knownDialects) {
+      for (const role of ["viewer", "editor"] as const) {
+        const entries = appRouter.entriesFor(dialect, role);
+        const pinned = pinnedAppFor(dialect, role);
+        rows.push({
+          dialect,
+          role,
+          options: entries.map((app) => ({ value: encodeDefaultAppValue(app), label: pluginLabelById.get(app.pluginId) ?? app.pluginId })),
+          value: pinned ? encodeDefaultAppValue(pinned) : DEFAULT_APP_NONE_VALUE,
+        });
+      }
+    }
+    return rows;
+  }, [appRouter, knownDialects, pinnedAppFor, pluginLabelById]);
+
+  const defaultAppsHost: DefaultAppsHostApi = useMemo(
+    () => ({ rows: defaultAppsRows, locale: uiLocale, setDefault: dispatchSetDefaultApp, clearDefault: dispatchClearDefaultApp }),
+    [defaultAppsRows, uiLocale, dispatchSetDefaultApp, dispatchClearDefaultApp],
+  );
+  const defaultAppsHostRef = useRef(defaultAppsHost);
+  defaultAppsHostRef.current = defaultAppsHost;
+
+  /** 👁️✏️ "Open with…" entries for the CURRENT session's own dialect, grouped by role — the Document
+   * panel section, and what the context-menu/palette entries focus. `undefined` with no session or
+   * router (nothing to list yet). */
+  const openWithEntries = useMemo(() => {
+    if (!session || !appRouter) return undefined;
+    return groupOpenWithEntries(appRouter, session.app.dialect, { pluginId: session.pluginId, appId: session.app.id }, (role) => pinnedAppFor(session.app.dialect, role), pluginLabelById);
+  }, [session, appRouter, pinnedAppFor, pluginLabelById]);
+  const hasOpenArtifactSurfaces = (openWithEntries?.viewer.length ?? 0) + (openWithEntries?.editor.length ?? 0) > 0;
+
+  const transientNoticeIdRef = useRef(0);
+  const transientNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** 🧯️ Shows a non-blocking, auto-dismissing notice (contract freeze §2.3/§5) — replaces whatever
+   * notice is currently showing rather than queuing, since only one can render at a time. */
+  const showTransientNotice = useCallback(
+    (message: string, kind: "info" | "error" = "info", code?: string) => {
+      if (transientNoticeTimerRef.current) clearTimeout(transientNoticeTimerRef.current);
+      transientNoticeIdRef.current += 1;
+      const id = transientNoticeIdRef.current;
+      dispatch({ type: "SET_TRANSIENT_NOTICE", value: { id, message, kind, code } });
+      transientNoticeTimerRef.current = setTimeout(() => dispatch({ type: "SET_TRANSIENT_NOTICE", value: null }), 4000);
+    },
+    [dispatch],
+  );
+  /** 🧯️ `true` for a `SemioFaultError` carrying `"viewer.read-only"` — the one host-raised fault this
+   * lease knows to render as a notice instead of letting it crash into `ShellFaultBoundary`. */
+  const isViewerReadOnlyFault = useCallback((error: unknown): boolean => error instanceof SemioFaultError && error.fault.code === SURFACE_FAULT_CODES.ViewerReadOnly, []);
+  //#endregion 🔖️SurfaceRoles
+
   //#region 🔖️ThemeMutators
   const uiThemeBase = uiThemeDraft ?? uiTheme;
   const uiThemeDirty = uiThemeDraft !== null;
@@ -3507,8 +3700,8 @@ function FrameworkOsShellInner({
   const keysByActionId = useMemo(() => buildKeysByActionId(session?.app.keybindings ?? []), [session?.app.keybindings]);
   const controlKeybindings = useMemo(() => composeControlKeybindings(keysByActionId, uiKeybindingOverrides), [keysByActionId, uiKeybindingOverrides]);
   const osCommands = useMemo(
-    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])], activeIntroduction != null, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable, uiTerminology, uiLocale),
-    [uiThemeList, session?.app.terminologies, activeIntroduction, uiLocale, uiTerminology, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable],
+    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])], activeIntroduction != null, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable, uiTerminology, uiLocale, hasOpenArtifactSurfaces),
+    [uiThemeList, session?.app.terminologies, activeIntroduction, uiLocale, uiTerminology, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable, hasOpenArtifactSurfaces],
   );
 
   /** 🧭️ Direct theme/appearance/locale/terminology/driver/layout setters below (settings panel, theme/driver
@@ -3848,7 +4041,7 @@ function FrameworkOsShellInner({
   settingsHostRef.current = settingsHost;
 
   const frameworkDisplayTabs = useMemo(() => createFrameworkDisplayPanelTabs(() => displayHostRef.current), [displayHost, uiLocale]);
-  const frameworkSettingsTab = useMemo(() => createFrameworkSettingsPanelTab(() => settingsHostRef.current), [settingsHost]);
+  const frameworkSettingsTab = useMemo(() => createFrameworkSettingsPanelTab(() => settingsHostRef.current, () => defaultAppsHostRef.current), [settingsHost, defaultAppsHost]);
 
   const marketplaceHostRef = useRef<MarketplaceHostApi | null>(null);
   const marketplaceHost: MarketplaceHostApi = useMemo(
@@ -4013,6 +4206,32 @@ function FrameworkOsShellInner({
     if (hostMode && session.app.id === hostAppId && pluginLeftTabs.length > 0) return pluginLeftTabs;
     const hasPluginArtifactTab = flattenPanelTabLeaves(pluginLeftTabs).some((tab) => tab.id === FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
     if (hasPluginArtifactTab) return pluginLeftTabs;
+    // 👁️✏️ "Open with…" — contract freeze §5's Document-panel surface: one section per role,
+    // `AppRouter` entries owner-first, each row opens that surface for the SAME artifact; the
+    // pinned default gets a "Set as default" toggle already on, everyone else gets it off.
+    const openWithSection = (role: AppRole, entries: readonly OpenWithEntry[]) => ({
+      id: `artifact.openWith.${role}`,
+      label: `${openArtifactWithText(uiLocale)} — ${surfaceRoleChipText(role, uiLocale)}`,
+      defaultOpen: openWithFocusRole == null || openWithFocusRole === role,
+      items: entries.map((entry) => ({
+        id: `artifact.openWith.${role}.${entry.app.pluginId}.${entry.app.appId}`,
+        label: entry.current ? `${entry.pluginLabel} ✓` : entry.pluginLabel,
+        onClick: entry.current ? undefined : () => void openArtifactWithAppRef(entry.app, session.app.dialect, role),
+        control: (
+          <button
+            type="button"
+            aria-pressed={entry.isDefault}
+            onClick={(event) => {
+              event.stopPropagation();
+              if (entry.isDefault) dispatchClearDefaultApp(session.app.dialect, role);
+              else dispatchSetDefaultApp(session.app.dialect, role, entry.app);
+            }}
+          >
+            {entry.isDefault ? "★" : "☆"} {setAsDefaultText(uiLocale)}
+          </button>
+        ),
+      })),
+    });
     const artifactTab = singleTreeLeaf({
       id: FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
       icon: shellTabIcon(FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID),
@@ -4025,11 +4244,13 @@ function FrameworkOsShellInner({
             label: shellLabel("ui.panel.artifact"),
             items: [{ id: "artifact.empty", label: hostMode ? `${panel?.spawnedApps.length ?? 0} ${shellLabel("ui.panel.spawnedAppsSuffix")}` : shellLabel("ui.panel.artifactEmpty") }],
           },
+          ...(openWithEntries && openWithEntries.viewer.length > 0 ? [openWithSection("viewer", openWithEntries.viewer)] : []),
+          ...(openWithEntries && openWithEntries.editor.length > 0 ? [openWithSection("editor", openWithEntries.editor)] : []),
         ],
       }),
     });
     return [artifactTab, ...pluginLeftTabs];
-  }, [appLabelsOverlay, onAction, panel?.spawnedApps.length, panelUiByKey, session, hostMode, uiLocale, uiTerminology, hostAppId]);
+  }, [appLabelsOverlay, onAction, panel?.spawnedApps.length, panelUiByKey, session, hostMode, uiLocale, uiTerminology, hostAppId, openWithEntries, openWithFocusRole, openArtifactWithAppRef, dispatchSetDefaultApp, dispatchClearDefaultApp]);
 
   const detailsRightTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
@@ -4042,6 +4263,11 @@ function FrameworkOsShellInner({
     if (!session) return null;
     const tab = session.app.panelTabs.find((candidate) => panelTabKindId(candidate.kind) === FRAMEWORK_PANEL_TAB_HISTORY_ID);
     if (!tab) return null;
+    // 👁️✏️ "renders the history panel read-only" (contract freeze §2.3) — undo/redo stay visible but
+    // disabled (contract freeze §5's "disables undo/redo"), checkpoint/revert-to-command (both
+    // mutating) are hidden outright rather than disabled, since neither has a meaningful disabled
+    // affordance for a session that can never enable them.
+    const isViewer = session.app.role === "viewer";
     const entries = Object.values(historyProjection.entries).sort((left, right) => right.seq - left.seq);
     return singleTreeLeaf({
       id: FRAMEWORK_PANEL_TAB_HISTORY_ID,
@@ -4054,9 +4280,9 @@ function FrameworkOsShellInner({
             id: "framework.history.actions",
             label: shellLabel("ui.panel.history"),
             items: [
-              { id: "framework.history.undo", label: "", control: <button type="button" disabled={!historyProjection.canUndo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "undo" })}>Undo</button> },
-              { id: "framework.history.redo", label: "", control: <button type="button" disabled={!historyProjection.canRedo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "redo" })}>Redo</button> },
-              { id: "framework.history.checkpoint", label: "", control: <button type="button" onClick={() => onAction({ controllerId: session.app.controllerId, action: "commitCheckpoint" })}>Checkpoint</button> },
+              { id: "framework.history.undo", label: "", control: <button type="button" disabled={isViewer || !historyProjection.canUndo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "undo" })}>Undo</button> },
+              { id: "framework.history.redo", label: "", control: <button type="button" disabled={isViewer || !historyProjection.canRedo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "redo" })}>Redo</button> },
+              ...(isViewer ? [] : [{ id: "framework.history.checkpoint", label: "", control: <button type="button" onClick={() => onAction({ controllerId: session.app.controllerId, action: "commitCheckpoint" })}>Checkpoint</button> }]),
             ],
           },
           {
@@ -4067,7 +4293,7 @@ function FrameworkOsShellInner({
               label: entry.count && entry.count > 1 ? `${entry.label} ×${entry.count}` : entry.label,
               description: entry.opLines?.join(" · "),
               dimmed: entry.applied === false,
-              control: entry.revertible ? <button type="button" onClick={() => onAction({ controllerId: session.app.controllerId, action: "revertToCommand", args: { entrySeq: entry.seq } })}>↶</button> : undefined,
+              control: entry.revertible && !isViewer ? <button type="button" onClick={() => onAction({ controllerId: session.app.controllerId, action: "revertToCommand", args: { entrySeq: entry.seq } })}>↶</button> : undefined,
             })),
           },
         ],
@@ -4191,10 +4417,12 @@ function FrameworkOsShellInner({
     );
   }, [session, activeModeId, applyModeChange, appLabelsOverlay, uiTerminology, uiLocale]);
 
-  const resolvedCommands = useMemo(
-    () => resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale),
-    [osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale],
-  );
+  const resolvedCommands = useMemo(() => {
+    const resolved = resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale);
+    // 👁️✏️ Hides every `Mutation`-kind command from a viewer session's palette (contract freeze §5) —
+    // `resolveCommands` itself stays role-agnostic (os hosts/tests call it without a session at all).
+    return session?.app.role === "viewer" ? resolved.filter((entry) => !isMutationKindDefinition(entry.definition)) : resolved;
+  }, [osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale]);
 
   const commandCategoryList = useMemo(() => commandCategories(resolvedCommands), [resolvedCommands, uiLocale]);
 
@@ -4245,6 +4473,11 @@ function FrameworkOsShellInner({
       if (!ownerPluginId || ownerPluginId !== session.pluginId) return;
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === ownerPluginId)?.handle;
       if (!plugin?.handleCommand) return;
+      // 👁️✏️ Same client-side half of the read-only guarantee `onAction` applies above, for commands.
+      if (session.app.role === "viewer" && resolvedCommands.find((entry) => commandAddressKey(entry.address) === commandAddressKey(address))?.definition.kind === "mutation") {
+        showTransientNotice(viewerReadOnlyNoticeText(uiLocale), "info", SURFACE_FAULT_CODES.ViewerReadOnly);
+        return;
+      }
       const dispatchViewState = injectActiveUtility(session.viewState);
       const invocation: CommandInvocation = { address, arguments: args ?? {} };
       void plugin
@@ -4253,9 +4486,15 @@ function FrameworkOsShellInner({
           applyHistoryPatch(response.historyPatch);
           return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope));
         })
-        .catch((error) => console.error("Command execution failed", error));
+        .catch((error) => {
+          if (isViewerReadOnlyFault(error)) {
+            showTransientNotice(viewerReadOnlyNoticeText(uiLocale), "info", SURFACE_FAULT_CODES.ViewerReadOnly);
+            return;
+          }
+          console.error("Command execution failed", error);
+        });
     },
-    [applyHostEffects, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session, locks, resolvedCommands, noteShellCommand],
+    [applyHostEffects, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session, locks, resolvedCommands, noteShellCommand, showTransientNotice, isViewerReadOnlyFault, uiLocale],
   );
 
   const handleCommandKeydown = useCallback(
@@ -4787,6 +5026,11 @@ function FrameworkOsShellInner({
         {brand?.logoSvg ? <ShellBrandLogo svg={brand.logoSvg} className="size-workbench shrink-0" /> : <SemioLogo className="size-workbench shrink-0" />}
         <span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>
           {appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology))}
+        </span>
+        {/* 👁️✏️ Window title chip / read-only badge (contract freeze §5) — role read off the resolved
+         * `session.app.role`, never parsed out of `session.app.id`. */}
+        <span data-slot="surface-role-chip" data-role={session.app.role} title={session.app.role === "viewer" ? viewerReadOnlyNoticeText(uiLocale) : undefined} className="rounded-sm border border-border px-single text-xs text-muted-foreground">
+          {surfaceRoleChipText(session.app.role, uiLocale)}
         </span>
       </div>
     );
@@ -5345,6 +5589,15 @@ function FrameworkOsShellInner({
         dispatch({ type: "SET_SEARCH_OPEN", value: true });
         return;
       }
+      // 👁️✏️ Artifact/document context-menu "Open with…" (contract freeze §5) — same local-only
+      // navigation the palette's `open-artifact-with-viewer`/`open-artifact-with-editor` commands do,
+      // not scoped to either role here since the menu row is one generic "Open with…" entry.
+      if (action === "shell.openArtifactWith") {
+        dispatch({ type: "SET_OPEN_WITH_FOCUS_ROLE", value: null });
+        dispatch({ type: "SET_PANEL_PATH", anchor: "top-left", value: [FRAMEWORK_PANEL_TAB_ARTIFACT_ID] });
+        dispatch({ type: "SET_PANEL_VISIBLE", anchor: "top-left", value: true });
+        return;
+      }
       onAction({ controllerId: session.app.controllerId, action });
     },
     [session, activeWindowId, onAction, dispatch],
@@ -5362,7 +5615,9 @@ function FrameworkOsShellInner({
     const specs: ContextMenuItemSpec[] = [];
     const categoryByActionId = new Map<string, string>();
     if (windowKind) {
-      for (const action of resolveWindowActions(session.app, windowKind)) {
+      // 👁️✏️ Hides every `Mutation`-kind window action from a viewer session's fallback menu
+      // (contract freeze §5) — same predicate `resolvedCommands` filters the palette with.
+      for (const action of filterDefinitionsForRole(resolveWindowActions(session.app, windowKind), session.app.role)) {
         // 🧹️ Same curation as the command palette (`if (!action.inPalette) continue`) — most apps
         // declare internal/pointer-tracking view actions (worldHover, engagementInput, ...) as window
         // actions purely for dispatch plumbing; only palette-worthy ones belong in a user-facing menu.
@@ -5381,6 +5636,11 @@ function FrameworkOsShellInner({
       }
     }
     if (specs.length > 0) specs.push({ id: "shell-menu.separator", separator: true });
+    // 👁️✏️ Artifact/document context-menu "Open with…" (contract freeze §5) — only when the current
+    // dialect actually has at least one registered surface to list.
+    if (hasOpenArtifactSurfaces) {
+      specs.push({ id: "shell.openArtifactWith", label: openArtifactWithText(uiLocale), icon: "app-window", action: "shell.openArtifactWith" });
+    }
     specs.push({
       id: "shell.openPalette",
       label: shellLabel("ui.search.toggle"),
@@ -5389,7 +5649,7 @@ function FrameworkOsShellInner({
     });
     const organized = organizeContextMenu(specs, (id) => categoryByActionId.get(id));
     return mapContextMenuSpecs(organized, dispatchShellMenuAction, keysByActionId);
-  }, [session, activeWindowId, appLabelsOverlay, keysByActionId, dispatchShellMenuAction, uiTerminology, uiLocale]);
+  }, [session, activeWindowId, appLabelsOverlay, keysByActionId, dispatchShellMenuAction, uiTerminology, uiLocale, hasOpenArtifactSurfaces]);
 
   useEffect(() => {
     const handleContextMenu = (event: MouseEvent) => {
@@ -5415,6 +5675,22 @@ function FrameworkOsShellInner({
     <UIFindProvider>
       <LevelProvider level="base">
         <div className="flex h-screen min-h-0 w-screen flex-col bg-transparent" data-level="base">
+          {/* 🧯️ Non-blocking notice — e.g. a `"viewer.read-only"` fault (contract freeze §2.3/§5): never
+           * a crash, never blocks interaction with the rest of the shell. */}
+          {transientNotice ? (
+            <div
+              role="status"
+              aria-live="polite"
+              data-semio-transient-notice=""
+              data-notice-code={transientNotice.code}
+              className={cn("pointer-events-auto absolute top-workbench left-1/2 z-50 -translate-x-1/2 rounded-sm border px-double py-single text-sm shadow-sm", transientNotice.kind === "error" ? "border-destructive bg-destructive text-destructive-foreground" : "border-border bg-popover text-popover-foreground")}
+            >
+              {transientNotice.message}
+              <button type="button" className="ml-single underline" onClick={() => dispatch({ type: "SET_TRANSIENT_NOTICE", value: null })}>
+                {shellLabel("ui.common.close")}
+              </button>
+            </div>
+          ) : null}
           <PanelDockProvider dock={dock} onTabDockDrop={handleTabDockDrop} onTreeUnitDockDrop={handleTreeUnitDockDrop}>
             <Layout
               mobile={mobile}

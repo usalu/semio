@@ -21,7 +21,7 @@ pub struct ResizeSourceFrame {
 impl MutationKind<PresentSnapshot, PresentMutation> for ResizeSourceFrame {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "source-frame", kind: "resize-source-frame", record: "ResizedSourceFrame" };
 
-    fn diff(&self, base: &PresentSnapshot) -> PresentDiff {
+    fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
         super::diff::diff(self, base)
     }
 

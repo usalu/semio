@@ -385,58 +385,58 @@ pub mod artifacts {
 }
 //#endregion 🗿️Artifacts
 
-//#region 🎛️Apps
+//#region ✏️Editor
 #[path = "."]
-pub mod apps {
+pub mod editor {
     #[path = "."]
     pub mod wires {
-        #[path = "../../🎛️apps/🔌️wires/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/🔌️wires/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🔌️wires/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/🔌️wires/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🔌️wires/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
-        #[path = "../../🎛️apps/🔌️wires/🗣️terminology/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🧬️set-active-example/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️set-active-example/🦀️component.rs"]
             pub mod set_active_example;
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🔵️add-node/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔵️add-node/🦀️component.rs"]
             pub mod add_node;
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🔗️add-relationship/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔗️add-relationship/🦀️component.rs"]
             pub mod add_relationship;
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🗑️delete-selection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-selection/🦀️component.rs"]
             pub mod delete_selection;
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🔄️force-layout/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️force-layout/🦀️component.rs"]
             pub mod force_layout;
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🔄️reorganize/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️reorganize/🦀️component.rs"]
             pub mod reorganize;
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs"]
             pub mod canvas_pointer_down;
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🖱️canvas-pointer-move/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-move/🦀️component.rs"]
             pub mod canvas_pointer_move;
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🖱️canvas-pointer-up/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-up/🦀️component.rs"]
             pub mod canvas_pointer_up;
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
         }
 
@@ -444,13 +444,13 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🎛️apps/🔌️wires/🎭️modes/✏️edit/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/🔌️wires/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🦀️component.rs"]
                     pub mod canvas;
                 }
             }
@@ -458,16 +458,44 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/🔌️wires/📌️panels/📄️artifact/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
-            #[path = "../../🎛️apps/🔌️wires/📌️panels/🛍️catalogue/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs"]
             pub mod catalogue;
-            #[path = "../../🎛️apps/🔌️wires/📌️panels/🔍️inspection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;
         }
     }
 }
-//#endregion 🎛️Apps
+//#endregion ✏️Editor
+
+//#region 👁️Viewer
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod wires {
+        #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🕸️canvas/🦀️component.rs"]
+                    pub mod canvas;
+                }
+            }
+        }
+    }
+}
+//#endregion 👁️Viewer
 
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
@@ -482,7 +510,7 @@ pub mod examples {
     #[cfg(test)]
     #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_wires_demo_tests;
-    #[path = "../../🎛️apps/🔌️wires/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_wires_demo_session;
 }
 //#endregion 📚️Examples

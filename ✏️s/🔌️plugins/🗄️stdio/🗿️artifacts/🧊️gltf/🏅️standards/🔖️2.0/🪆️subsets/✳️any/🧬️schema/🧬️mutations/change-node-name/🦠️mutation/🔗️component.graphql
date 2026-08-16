@@ -1,0 +1,6 @@
+# change-node-name mutation facet.
+input GltfChangeNodeNamePayloadV1 {
+  node: Int!
+  value: String
+}
+type GltfChangeNodeNameMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

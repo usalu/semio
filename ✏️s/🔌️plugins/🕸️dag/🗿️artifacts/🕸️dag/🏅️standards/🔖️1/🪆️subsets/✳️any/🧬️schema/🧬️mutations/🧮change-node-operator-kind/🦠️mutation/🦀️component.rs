@@ -20,7 +20,7 @@ pub fn change_node_operator_kind(id: String, new_operator_kind: Option<String>) 
 impl protocol::MutationKind<DagSnapshot, DagMutation> for ChangeNodeOperatorKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node", kind: "change-node-operator-kind", record: "ChangedNodeOperatorKind" };
 
-    fn diff(&self, base: &DagSnapshot) -> DagDiff {
+    fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {

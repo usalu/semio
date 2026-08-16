@@ -1,0 +1,2 @@
+# bind-node-skin diff typed facet.
+input GltfBindNodeSkinDiffV1 { operation: GltfBindNodeSkinPayloadV1!, after: Int, touchedPaths: [String!]! }

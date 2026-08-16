@@ -19,7 +19,7 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ReplaceMac
     const SEMANTICS: protocol::SemanticDescriptor =
         protocol::SemanticDescriptor { verb: "replace", entity: "machine", kind: "replace-machine-capabilities", record: "ReplacedMachineCapabilities" };
 
-    fn diff(&self, base: &Process3dSnapshot) -> Process3dDiff {
+    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::replace_machine_capabilities::diff::diff(self, base)
     }
 

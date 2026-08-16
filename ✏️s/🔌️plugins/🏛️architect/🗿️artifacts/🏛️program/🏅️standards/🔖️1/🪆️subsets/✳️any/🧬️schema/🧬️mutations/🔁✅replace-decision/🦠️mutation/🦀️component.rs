@@ -19,7 +19,7 @@ pub struct ReplaceDecision {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceDecision {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "decision", kind: "replace-decision", record: "ReplacedDecision" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

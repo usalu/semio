@@ -21,7 +21,7 @@ pub fn remove_rule_layout_point(key: String) -> RewriteRuleMutation {
 impl protocol::MutationKind<RewriteSnapshot, RewriteRuleMutation> for RemoveRuleLayoutPoint {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "rule-layout-point", kind: "remove-rule-layout-point", record: "RemovedRuleLayoutPoint" };
 
-    fn diff(&self, base: &RewriteSnapshot) -> RewriteDiff {
+    fn diff(&self, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {

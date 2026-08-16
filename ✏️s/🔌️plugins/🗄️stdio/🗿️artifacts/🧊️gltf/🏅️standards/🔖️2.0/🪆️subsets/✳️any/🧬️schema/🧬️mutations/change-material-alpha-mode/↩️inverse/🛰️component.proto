@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.gltf.mutation;
+enum GltfChangeMaterialAlphaModeInverseValue { GLTF_CHANGE_MATERIAL_ALPHA_MODE_INVERSE_VALUE_OPAQUE = 0; GLTF_CHANGE_MATERIAL_ALPHA_MODE_INVERSE_VALUE_MASK = 1; GLTF_CHANGE_MATERIAL_ALPHA_MODE_INVERSE_VALUE_BLEND = 2; }
+message GltfChangeMaterialAlphaModeInverseV1 { uint64 material = 1; GltfChangeMaterialAlphaModeInverseValue expected_alpha_mode = 2; GltfChangeMaterialAlphaModeInverseValue alpha_mode = 3; repeated string touched_paths = 4; }

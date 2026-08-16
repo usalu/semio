@@ -18,7 +18,7 @@ pub struct CreateStakeholder {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateStakeholder {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "stakeholder", kind: "create-stakeholder", record: "CreatedStakeholder" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

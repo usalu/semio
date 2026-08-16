@@ -142,15 +142,14 @@ pub fn frame_flags(compressed: bool, critical: bool, codec: u8) -> u8 {
 
 
 //#region 🔖️Policies
-// UndoPolicy moved from vcs/rs (unchanged variants); MergeStrategyKind moved from framework/core
-// L6636-6668 (unchanged variants). New: ConflictRule, the per-operation conflict declaration
-// surface today's code lacks (crate::os_store::merge_concurrent_diffs collapses everything to absorb
-// regardless of declared strategy — protocol_crdt fixes this using ConflictRule).
-//
-// Note: the contract's prose also mentions `ArtifactKind` moving alongside `MergeStrategyKind`,
-// but the frozen signature block below only defines `UndoPolicy`/`MergeStrategyKind`/
-// `ConflictRule` — `ArtifactKind` is not redefined here (it stays in `framework/core` until a
-// later wave's contract actually specifies its new home).
+// UndoPolicy moved from vcs/rs (unchanged variants), untouched by
+// `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`. `MergeStrategyKind`/
+// `ConflictRule` (the CRDT-era per-operation conflict declaration surface, `protocol_crdt`'s five
+// blind merge combinators) are GONE — CLAUDE.md forbids CRDTs outright, and the mechanism was
+// unreachable from the real store path. `MergePolicy` replaces them: authority-local state (never
+// carried on a `MutationEnvelope`/`BackboneMessage`, never part of shared history) that decides
+// whether a `MutationOutcome`'s worst `crate::os_dsl::Severity` gets accepted or quarantined as a
+// `Conflict` (`📡️spr/⚔️conflict`).
 
 /// @emoji ↩️ How an undo of this operation kind should be computed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -161,25 +160,49 @@ pub enum UndoPolicy {
     CompensatingAction,
 }
 
-/// @emoji 🧩️ Which CRDT-style merge algorithm reconciles concurrent diffs of this kind.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum MergeStrategyKind {
-    LwwRegister,
-    OrderedSequence,
-    TextSequence,
-    TombstonedGraphSet,
-    ContentAddressedBlob,
+/// @emoji ⚖️ How strict an authority is about accepting a `MutationOutcome` whose messages reach a
+/// given `crate::os_dsl::Severity`. Local/authority state only — never wire-carried, never part of
+/// an artifact's shared history (see the region doc above). `Normal` is the default: the
+/// least-surprising choice for a fresh authority that has never been configured.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum MergePolicy {
+    LaissezFaire,
+    #[default]
+    Normal,
+    Vigilant,
 }
 
-/// @emoji ⚖️ The per-operation conflict declaration surface: how two concurrent instances of the
-/// same operation kind resolve. `Commutes`/`Transform` need no merge strategy; `Merge`/`Crdt`
-/// carry the `MergeStrategyKind` that arbitrates them (see `protocol_crdt`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum ConflictRule {
-    Commutes,
-    Transform,
-    Merge(MergeStrategyKind),
-    Crdt(MergeStrategyKind),
+impl MergePolicy {
+    /// @emoji 🚫️ Whether this policy rejects an outcome whose worst level is `level`:
+    /// `LaissezFaire` only rejects `Fatal`; `Normal` rejects `Error` and `Fatal`; `Vigilant` rejects
+    /// `Warning`, `Error`, and `Fatal`. `Info` is never rejected by any policy.
+    pub fn rejects(self, level: crate::os_dsl::Severity) -> bool {
+        let floor = match self {
+            MergePolicy::LaissezFaire => crate::os_dsl::Severity::Fatal,
+            MergePolicy::Normal => crate::os_dsl::Severity::Error,
+            MergePolicy::Vigilant => crate::os_dsl::Severity::Warning,
+        };
+        level >= floor
+    }
+
+    /// 🔢️ Stable numeric mirror of declaration order, 0..2.
+    pub fn as_u8(self) -> u8 {
+        match self {
+            MergePolicy::LaissezFaire => 0,
+            MergePolicy::Normal => 1,
+            MergePolicy::Vigilant => 2,
+        }
+    }
+
+    /// 🔢️ Inverse of [`as_u8`](Self::as_u8); `None` for any value outside 0..2.
+    pub fn from_u8(value: u8) -> Option<Self> {
+        match value {
+            0 => Some(MergePolicy::LaissezFaire),
+            1 => Some(MergePolicy::Normal),
+            2 => Some(MergePolicy::Vigilant),
+            _ => None,
+        }
+    }
 }
 //#endregion 🔖️Policies
 
@@ -858,13 +881,35 @@ mod tests {
 
     //#region 🔖️Policies
     #[test]
-    fn conflict_rule_carries_merge_strategy_variants() {
-        let commutes = ConflictRule::Commutes;
-        let merge = ConflictRule::Merge(MergeStrategyKind::LwwRegister);
-        let crdt = ConflictRule::Crdt(MergeStrategyKind::TextSequence);
-        assert_ne!(commutes, merge);
-        assert_ne!(merge, crdt);
-        assert_eq!(ConflictRule::Merge(MergeStrategyKind::LwwRegister), merge);
+    fn merge_policy_default_is_normal() {
+        assert_eq!(MergePolicy::default(), MergePolicy::Normal);
+    }
+
+    #[test]
+    fn merge_policy_rejects_matches_the_frozen_matrix() {
+        use crate::os_dsl::Severity;
+        assert!(!MergePolicy::LaissezFaire.rejects(Severity::Info));
+        assert!(!MergePolicy::LaissezFaire.rejects(Severity::Warning));
+        assert!(!MergePolicy::LaissezFaire.rejects(Severity::Error));
+        assert!(MergePolicy::LaissezFaire.rejects(Severity::Fatal));
+
+        assert!(!MergePolicy::Normal.rejects(Severity::Info));
+        assert!(!MergePolicy::Normal.rejects(Severity::Warning));
+        assert!(MergePolicy::Normal.rejects(Severity::Error));
+        assert!(MergePolicy::Normal.rejects(Severity::Fatal));
+
+        assert!(!MergePolicy::Vigilant.rejects(Severity::Info));
+        assert!(MergePolicy::Vigilant.rejects(Severity::Warning));
+        assert!(MergePolicy::Vigilant.rejects(Severity::Error));
+        assert!(MergePolicy::Vigilant.rejects(Severity::Fatal));
+    }
+
+    #[test]
+    fn merge_policy_as_u8_from_u8_round_trips() {
+        for policy in [MergePolicy::LaissezFaire, MergePolicy::Normal, MergePolicy::Vigilant] {
+            assert_eq!(MergePolicy::from_u8(policy.as_u8()), Some(policy));
+        }
+        assert_eq!(MergePolicy::from_u8(3), None);
     }
 
     #[test]

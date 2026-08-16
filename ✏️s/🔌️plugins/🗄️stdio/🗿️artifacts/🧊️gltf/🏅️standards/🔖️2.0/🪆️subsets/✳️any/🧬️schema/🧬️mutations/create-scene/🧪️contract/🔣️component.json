@@ -1,0 +1,119 @@
+{
+  "id": "s.stdio.gltf.mutation.create-scene.v1",
+  "vectors": [
+    {
+      "name": "insertsAtZeroAndRemapsDefaultScene",
+      "base": {
+        "scene": 0,
+        "scenes": [
+          {
+            "nodes": []
+          }
+        ]
+      },
+      "payload": {
+        "position": 0
+      },
+      "after": {
+        "scene": 1,
+        "scenes": [
+          {
+            "nodes": []
+          },
+          {
+            "nodes": []
+          }
+        ]
+      },
+      "undo": {
+        "scene": 0,
+        "scenes": [
+          {
+            "nodes": []
+          }
+        ]
+      },
+      "diff": {
+        "id": "s.stdio.gltf.mutation.create-scene.v1",
+        "version": 1,
+        "phase": "diff",
+        "touchedPaths": [
+          "document/scenes/0",
+          "document/scene"
+        ],
+        "position": 0,
+        "expectedSceneCount": 1,
+        "expectedDefaultSceneBefore": 0,
+        "expectedNextScene": {
+          "nodes": []
+        },
+        "scene": {
+          "nodes": []
+        }
+      },
+      "inverse": {
+        "id": "s.stdio.gltf.mutation.create-scene.v1",
+        "version": 1,
+        "phase": "inverse",
+        "touchedPaths": [
+          "document/scenes/0",
+          "document/scene"
+        ],
+        "position": 0,
+        "expectedScene": {
+          "nodes": []
+        },
+        "defaultSceneBefore": 0,
+        "expectedDefaultSceneAfter": 1
+      },
+      "rejections": [
+        {
+          "name": "outOfRangePosition",
+          "payload": {
+            "position": 2
+          },
+          "code": "gltf.mutation.insert-out-of-range"
+        },
+        {
+          "name": "staleDiffReplay",
+          "code": "gltf.mutation.stale-diff"
+        },
+        {
+          "name": "staleDefaultScene",
+          "code": "gltf.mutation.stale-diff"
+        },
+        {
+          "name": "staleInsertionAnchor",
+          "scene": {
+            "nodes": [
+              0
+            ]
+          },
+          "code": "gltf.mutation.stale-diff"
+        },
+        {
+          "name": "staleInverse",
+          "scene": {
+            "nodes": [
+              0
+            ]
+          },
+          "code": "gltf.mutation.stale-inverse"
+        }
+      ]
+    }
+  ],
+  "laws": [
+    "acceptance",
+    "typed-rejection",
+    "concrete-touched-path",
+    "diff-apply",
+    "stale-diff-rejection",
+    "stale-default-scene-rejection",
+    "stale-insertion-anchor-rejection",
+    "inverse-restores-base",
+    "stale-inverse-rejection",
+    "json-serialization",
+    "canonical-id-across-phases"
+  ]
+}

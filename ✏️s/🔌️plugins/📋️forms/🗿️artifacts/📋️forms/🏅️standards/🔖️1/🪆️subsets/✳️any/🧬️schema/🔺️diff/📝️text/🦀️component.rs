@@ -236,7 +236,7 @@ mod tests {
         let base = crate::artifacts::forms::forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, Vec::new());
         let step = FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() };
         let operation = FormMutation::CreateStep(create_step::mutation::CreateStep { step, index: None });
-        let diff: FormsDiff = operation.diff(&base);
+        let diff: FormsDiff = operation.diff(&base).into_parts().0;
         assert_eq!(crate::artifacts::forms::forms_steps(&diff.apply(&base)).len(), 1);
     }
 }

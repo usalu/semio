@@ -1,0 +1,6 @@
+# change-node-extra-data mutation facet.
+scalar GltfChangeNodeExtraDataJsonV1
+enum GltfChangeNodeExtraDataPresenceStateV1 { absent present }
+input GltfChangeNodeExtraDataPresenceV1 { state: GltfChangeNodeExtraDataPresenceStateV1!, value: GltfChangeNodeExtraDataJsonV1 }
+input GltfChangeNodeExtraDataPayloadV1 { node: Int!, data: GltfChangeNodeExtraDataPresenceV1! }
+type GltfChangeNodeExtraDataMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

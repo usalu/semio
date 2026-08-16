@@ -3,10 +3,10 @@
 //! The declarative `spatial.interaction` spec types live beside this file in
 //! `🎬️interaction-spec/🦀️component.rs`.
 
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Domain
 pub const CAD_DOCUMENT_SCHEMA: &str = "cad.scene";
@@ -20,7 +20,7 @@ pub const CAD_PLAY_DOCUMENT_SCHEMA: &str = "cad.document";
 /// row), standard `"1"` and subset `"*"` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any`
 /// location. Lives at the artifact level (not under `editor`/`viewer`) so `policyViewerPurityBreaches`
 /// never sees a viewer file importing through an `::editor::` path just to read this constant.
-pub const CAD_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.cad.cad", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+pub const CAD_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.cad.cad", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "kebab-case")]
@@ -341,10 +341,10 @@ pub fn cad_pane_from_model_definition_id(model_definition_id: &str) -> Option<Ca
 }
 
 //#region 🔖️Snapshot
-/// 📸️ Re-export persisted snapshot type (defined in snapshot schema facet).
-pub use crate::artifacts::cad::schema::snapshot::CadSnapshot;
 pub use crate::artifacts::cad::schema::diff::CadDiff;
 pub use crate::artifacts::cad::schema::mutations::CadMutation;
+/// 📸️ Re-export persisted snapshot type (defined in snapshot schema facet).
+pub use crate::artifacts::cad::schema::snapshot::CadSnapshot;
 //#endregion 🔖️Snapshot
 
 //#endregion 🔖️Domain
@@ -435,32 +435,41 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
         .as_slice()
 }
 
-/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1/W1b) —
-/// replaces the old side-effecting `register()`, which called five different global registries
-/// directly from a plugin `.setup()` callback. `crate::apps::cad::config::schema::register_app_schema()`
-/// is the one exception, still called from `📐️cad/🦀️component.rs`'s own `.setup()`: it registers
-/// `CadPlayApp`'s own config/presence schema, an app-scope concern `ArtifactDeclaration` deliberately
-/// has no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
-/// artifact-scoped function set.
+/// 🔖️ This artifact's declaration freezes its schema, inference, codec, composer, and language
+/// contributions before plugin assembly.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.cad.standard.v1", "standard", "1", &[], None), ("s.cad.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.cad.schema.artifact", "schema", "s.cad.cad", &[("schema", "s.cad.cad")], None), ("s.cad.inference.artifact", "inference", "s.cad.cad.inference", &[("schema", "s.cad.cad.inference")], None),
-        ("s.cad.composer.ifc", "composer", "s.stdio.ifc@4/*", &[("dialect", "s.stdio.ifc@4/*")], None), ("s.cad.composer.step", "composer", "s.stdio.step@ap214/*", &[("dialect", "s.stdio.step@ap214/*")], None),
-        ("s.cad.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None), ("s.cad.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.cad.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None), ("s.cad.composer.stl", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
-        ("s.cad.composer.gltf", "composer", "s.stdio.gltf@2.0/*", &[("dialect", "s.stdio.gltf@2.0/*")], None), ("s.cad.composer.obj", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
-        ("s.cad.grammar.document", "grammar", "cad.document", &[("grammar", "cad.document")], None), ("s.cad.grammar.op", "grammar", "cad.op", &[("grammar", "cad.op")], None),
-        ("s.cad.grammar.diff", "grammar", "cad.diff", &[("grammar", "cad.diff")], None), ("s.cad.grammar.pack", "grammar", "cad.pack", &[("grammar", "cad.pack")], None), ("s.cad.grammar.spr", "grammar", "cad.spr", &[("grammar", "cad.spr")], None),
+        ("s.cad.standard.v1", "standard", "1", &[], None),
+        ("s.cad.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.cad.schema.artifact", "schema", "s.cad.cad", &[("schema", "s.cad.cad")], None),
+        ("s.cad.inference.artifact", "inference", "s.cad.cad.inference", &[("schema", "s.cad.cad.inference")], None),
+        ("s.cad.composer.ifc", "composer", "s.stdio.ifc@4/*", &[("dialect", "s.stdio.ifc@4/*")], None),
+        ("s.cad.composer.step", "composer", "s.stdio.step@ap214/*", &[("dialect", "s.stdio.step@ap214/*")], None),
+        ("s.cad.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.cad.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.cad.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
+        ("s.cad.composer.stl", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
+        ("s.cad.composer.gltf", "composer", "s.stdio.gltf@2.0/*", &[("dialect", "s.stdio.gltf@2.0/*")], None),
+        ("s.cad.composer.obj", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.cad.grammar.document", "grammar", "cad.document", &[("grammar", "cad.document")], None),
+        ("s.cad.grammar.op", "grammar", "cad.op", &[("grammar", "cad.op")], None),
+        ("s.cad.grammar.diff", "grammar", "cad.diff", &[("grammar", "cad.diff")], None),
+        ("s.cad.grammar.pack", "grammar", "cad.pack", &[("grammar", "cad.pack")], None),
+        ("s.cad.grammar.spr", "grammar", "cad.spr", &[("grammar", "cad.spr")], None),
         ("s.cad.codec.document.v1", "codec", "cad.document:cad", &[("codec", "cad.document"), ("extension", "cad")], None),
-        ("s.cad.localization.en", "localization", "CAD", &[], Some(("en", "CAD"))), ("s.cad.localization.de", "localization", "CAD-Modellierung", &[], Some(("de", "CAD-Modellierung"))),
+        ("s.cad.localization.en", "localization", "CAD", &[], Some(("en", "CAD"))),
+        ("s.cad.localization.de", "localization", "CAD-Modellierung", &[], Some(("de", "CAD-Modellierung"))),
     ];
     let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.cad")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
-        for (namespace, value) in *claims { capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?; }
-        if let Some((locale, text)) = localization { capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?; }
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
         definition = definition.capability(capability)?;
     }
     Ok(definition)
@@ -472,7 +481,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_artifact_inference_descriptor()])
         .composers(crate::artifacts::cad::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::cad::CadPlayApp>()
+        .document_codec::<semio_framework_plugin::app::EditorApp<crate::editor::cad::CadPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️ArtifactKind
@@ -490,10 +499,7 @@ pub(crate) mod testkit {
     pub fn sample_model_child(child_id: &str) -> CadModelChild {
         store::ArtifactChild::new(
             child_id.into(),
-            store::os_io::ArtifactRef {
-                artifact_id: format!("crate-{child_id}"),
-                dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() },
-            },
+            store::os_io::ArtifactRef { artifact_id: format!("crate-{child_id}"), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() } },
         )
     }
 
@@ -523,28 +529,3 @@ pub(crate) mod testkit {
     }
 }
 //#endregion 🧪️Testkit
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::cad::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("CadComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
-}
-//#endregion 🚪️DerivedIoRegistry

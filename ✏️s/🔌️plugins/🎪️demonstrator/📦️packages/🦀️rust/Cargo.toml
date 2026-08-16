@@ -34,7 +34,7 @@ ports = { react = 6027, wgpu = 6127 }
 
 [[package.metadata.semio.playground]]
 variant = "koordinator"
-app = "cad-play"
+app = "s.cad.cad@1/*#editor"
 brand = "entwerfen-mit-bestand-koordinator"
 aliases = ["entwerfen-mit-bestand-koordinator"]
 ports = { react = 6028, wgpu = 6128 }
@@ -71,7 +71,7 @@ engines = ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/�
 [[package.metadata.semio.assets]]
 kind = "static-dir"
 route = "/cad-fixture"
-app = "cad-play"
+app = "s.cad.cad@1/*#editor"
 root = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧫️fixtures"
 
 [[package.metadata.semio.assets]]

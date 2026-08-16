@@ -414,64 +414,66 @@ pub mod artifacts {
 
 //#endregion 🗿️Artifacts
 
-//#region 🎛️Apps
+//#region ✏️Editor
+/// ✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the mutation-capable surface, migrated
+/// wholesale from the retired `🎛️apps/🕸️dag/` app tree into the owned subset's `✏️editor/` facet.
 #[path = "."]
-pub mod apps {
+pub mod editor {
     #[path = "."]
     pub mod dag {
-        #[path = "../../🎛️apps/🕸️dag/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/🕸️dag/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🕸️dag/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/🕸️dag/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🕸️dag/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
-        #[path = "../../🎛️apps/🕸️dag/🗣️terminology/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🔧️add-node/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️add-node/🦀️component.rs"]
             pub mod add_node;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🔧️remove-node/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️remove-node/🦀️component.rs"]
             pub mod remove_node;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🔧️rename-dag-node/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️rename-dag-node/🦀️component.rs"]
             pub mod rename_dag_node;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🔧️patch-dag-nodes/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️patch-dag-nodes/🦀️component.rs"]
             pub mod patch_dag_nodes;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🕸️delete-selection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️delete-selection/🦀️component.rs"]
             pub mod delete_selection;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🕸️node-graph-edit/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-edit/🦀️component.rs"]
             pub mod node_graph_edit;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🕸️connect-media-ports/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️connect-media-ports/🦀️component.rs"]
             pub mod connect_media_ports;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🕸️disconnect/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️disconnect/🦀️component.rs"]
             pub mod disconnect;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🕸️move-media-node/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️move-media-node/🦀️component.rs"]
             pub mod move_media_node;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🕸️reorganize/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️reorganize/🦀️component.rs"]
             pub mod reorganize;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🗂️node-graph-viewport/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️node-graph-viewport/🦀️component.rs"]
             pub mod node_graph_viewport;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🗂️graph-pointer-down/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️graph-pointer-down/🦀️component.rs"]
             pub mod graph_pointer_down;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
         }
 
@@ -479,15 +481,15 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🎛️apps/🕸️dag/🎭️modes/✏️edit/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/🕸️dag/🎭️modes/✏️edit/🪟️windows/🕸️main/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️main/🦀️component.rs"]
                     pub mod main;
-                    #[path = "../../🎛️apps/🕸️dag/🎭️modes/✏️edit/🪟️windows/🧬️compiled/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧬️compiled/🦀️component.rs"]
                     pub mod compiled;
                 }
             }
@@ -495,16 +497,46 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/🕸️dag/📌️panels/📄️artifact/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
-            #[path = "../../🎛️apps/🕸️dag/📌️panels/🛍️catalogue/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs"]
             pub mod catalogue;
-            #[path = "../../🎛️apps/🕸️dag/📌️panels/🔍️inspection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;
         }
     }
 }
-//#endregion 🎛️Apps
+//#endregion ✏️Editor
+
+//#region 👁️Viewer
+/// 👁️ The read-only surface (contract §2.2/§2.6) — a genuinely independent module tree from
+/// `editor` above, never `#[path]`-mounting anything under `✏️editor/`.
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod dag {
+        #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🕸️main/🦀️component.rs"]
+                    pub mod main;
+                }
+            }
+        }
+    }
+}
+//#endregion 👁️Viewer
 
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
@@ -519,7 +551,7 @@ pub mod examples {
     #[cfg(test)]
     #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_dag_demo_tests;
-    #[path = "../../🎛️apps/🕸️dag/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_dag_demo_session;
 }
 //#endregion 📚️Examples

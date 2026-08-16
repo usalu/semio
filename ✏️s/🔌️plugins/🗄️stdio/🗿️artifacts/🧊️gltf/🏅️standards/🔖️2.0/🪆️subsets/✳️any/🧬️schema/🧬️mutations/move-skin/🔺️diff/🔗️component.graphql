@@ -1,0 +1,14 @@
+# move-skin typed diff facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfSkinValueV1
+input GltfMoveSkinPayloadV1 {
+  index: Int!
+  position: Int!
+}
+type GltfMoveSkinDiffOperationV1 {
+  kind: String!
+  index: Int!
+  position: Int!
+}
+type GltfMoveSkinDiffV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfMoveSkinPayloadV1!, operation: GltfMoveSkinDiffOperationV1! }

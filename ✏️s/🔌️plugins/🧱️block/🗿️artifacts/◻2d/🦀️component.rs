@@ -62,8 +62,17 @@ pub struct Block2dHandleTemplate {
 // #endregion 🔖️Document
 
 //#region 🔖️ArtifactKind
+/// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the one `Dialect` coordinate every
+/// surface (`✏️editor`, `👁️viewer`) of the `✳️any` subset binds `ArtifactEditor::DIALECT`/
+/// `ArtifactViewer::DIALECT` to — `"s.block.block2d"` matches this file's own `definition()` row
+/// (`"s.block2d.schema.artifact"`, descriptor `"s.block.block2d"`), standard `"1"` and subset `"*"`
+/// match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location. Lives at the artifact level
+/// (not under `editor`/`viewer`) so `policyViewerPurityBreaches` never sees a viewer file importing
+/// through the sibling editor module just to read this constant.
+pub const BLOCK2D_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.block.block2d", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+
 /// 🗂️ This artifact's `ArtifactKindSpec` — the canonical `2d.block` declaration, stitched into
-/// `crate::apps::block2d::create_block2d_app`.
+/// `crate::editor::block2d::create_block2d_app`.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.block".into(),
@@ -98,10 +107,10 @@ mod tests {
 //#endregion 🧪️Tests
 //#region 🪪️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
-/// the old side-effecting `crate::apps::block2d::register()`, which called four different global
+/// the old side-effecting `register()` this app used to carry, which called four different global
 /// registries directly, and the plugin root's `.setup(crate::register_block_exports)` escape hatch
-/// that invoked it. `crate::apps::block2d::config::schema::app_schema_descriptor()` is handed to
-/// `ArtifactApp::app_schema` instead (ticket W1c), not declared here: an app-scope concern
+/// that invoked it. `crate::editor::block2d::config::schema::app_schema_descriptor()` is handed to
+/// `ArtifactEditor::app_schema` instead (ticket W1c), not declared here: an app-scope concern
 /// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc).
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
@@ -146,7 +155,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::block2d::standards::v1::subsets::any::schema::inferences::block2d_artifact_inference_descriptor()])
         .composers(crate::artifacts::block2d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::block2d::Block2dPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::block2d::Block2dPlayApp>>()
         .try_build()
 }
 

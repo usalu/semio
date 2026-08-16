@@ -19,7 +19,7 @@ pub struct ReplaceInformationRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceInformationRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "information-requirement", kind: "replace-information-requirement", record: "ReplacedInformationRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

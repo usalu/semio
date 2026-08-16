@@ -245,7 +245,7 @@ impl MutationDiff<Value> for Puzzle2dDiff {
 impl Mutation<Value> for Puzzle2dMutation {
     type Diff = Puzzle2dDiff;
 
-    fn diff(&self, projection: &Value) -> Puzzle2dDiff {
+    fn diff(&self, projection: &Value) -> protocol::MutationOutcome<Puzzle2dDiff> {
         let base: Puzzle2dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
         Mutation::<Puzzle2dSnapshot>::diff(self, &base)
     }
@@ -327,7 +327,7 @@ impl MutationDiff<Puzzle2dPlaySnapshot> for Puzzle2dDiff {
 impl Mutation<Puzzle2dPlaySnapshot> for Puzzle2dMutation {
     type Diff = Puzzle2dDiff;
 
-    fn diff(&self, projection: &Puzzle2dPlaySnapshot) -> Puzzle2dDiff {
+    fn diff(&self, projection: &Puzzle2dPlaySnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
         Mutation::<Value>::diff(self, &projection.0)
     }
 
@@ -361,11 +361,11 @@ mod tests {
         let mut inverses = Vec::new();
         for operation in &operations {
             inverses.extend(Mutation::<Value>::inverse(operation, &forward));
-            forward = Mutation::<Value>::diff(operation, &forward).apply(&forward);
+            forward = Mutation::<Value>::diff(operation, &forward).diff().apply(&forward);
         }
         assert_eq!(forward, canonical(&after));
         for inverse in inverses.iter().rev() {
-            forward = Mutation::<Value>::diff(inverse, &forward).apply(&forward);
+            forward = Mutation::<Value>::diff(inverse, &forward).diff().apply(&forward);
         }
         assert_eq!(forward, canonical(&before), "backwards operations must restore the pre-edit document");
     }
@@ -389,7 +389,7 @@ mod tests {
         let base = empty_puzzle2d_snapshot();
         let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
         assert_mutation_inverse_law(&base, &create_node(node.clone(), None));
-        let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(&create_node(node, None).diff(&base), &base);
+        let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node, None).diff(&base).diff(), &base);
         assert_mutation_inverse_law(&with_node, &delete_node("n1".into()));
     }
 
@@ -398,11 +398,11 @@ mod tests {
         use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
         let base = empty_puzzle2d_snapshot();
         let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
-        let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(&create_node(node, None).diff(&base), &base);
+        let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node, None).diff(&base).diff(), &base);
         assert_mutation_inverse_law(&with_node, &move_node("n1".into(), 5.0, 6.0));
-        let d1 = move_node("n1".into(), 10.0, 10.0).diff(&with_node);
+        let d1 = move_node("n1".into(), 10.0, 10.0).diff(&with_node).into_parts().0;
         let mid = MutationDiff::<Puzzle2dSnapshot>::apply(&d1, &with_node);
-        let d2 = move_node("n1".into(), 20.0, 30.0).diff(&mid);
+        let d2 = move_node("n1".into(), 20.0, 30.0).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&with_node, d1, d2);
     }
 
@@ -411,7 +411,7 @@ mod tests {
         use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode, Puzzle2dNodeAnchor};
         let base = empty_puzzle2d_snapshot();
         let node = Puzzle2dNode { id: "n1".into(), handles: vec![Puzzle2dHandle { id: "h1".into(), ..Default::default() }], ..Default::default() };
-        let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(&create_node(node, None).diff(&base), &base);
+        let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node, None).diff(&base).diff(), &base);
         assert_mutation_inverse_law(&with_node, &replace_node_geometry("n1".into(), Some("rectangle".into()), None, Some(4.0), Some(2.0)));
         assert_mutation_inverse_law(&with_node, &change_node_kind("n1".into(), Some("core.capsule".into())));
         assert_mutation_inverse_law(&with_node, &edit_node_text("n1".into(), Some("hello".into())));
@@ -433,10 +433,10 @@ mod tests {
         let node_a = Puzzle2dNode { id: "a".into(), handles: vec![Puzzle2dHandle { id: "ha".into(), ..Default::default() }], ..Default::default() };
         let node_b = Puzzle2dNode { id: "b".into(), handles: vec![Puzzle2dHandle { id: "hb".into(), ..Default::default() }], ..Default::default() };
         let mut projection = base.clone();
-        projection = MutationDiff::<Puzzle2dSnapshot>::apply(&create_node(node_a, None).diff(&projection), &projection);
-        projection = MutationDiff::<Puzzle2dSnapshot>::apply(&create_node(node_b, None).diff(&projection), &projection);
+        projection = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node_a, None).diff(&projection).diff(), &projection);
+        projection = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node_b, None).diff(&projection).diff(), &projection);
         assert_mutation_inverse_law(&projection, &connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None));
-        let connected = MutationDiff::<Puzzle2dSnapshot>::apply(&connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None).diff(&projection), &projection);
+        let connected = MutationDiff::<Puzzle2dSnapshot>::apply(connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None).diff(&projection).diff(), &projection);
         assert_mutation_inverse_law(&connected, &disconnect_handles("e1".into()));
         assert_mutation_inverse_law(&connected, &replace_edge_geometry("e1".into(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0));
         assert_mutation_inverse_law(&connected, &change_edge_kind("e1".into(), Some("core.link".into())));
@@ -452,12 +452,12 @@ mod tests {
         let node_a = Puzzle2dNode { id: "a".into(), handles: vec![Puzzle2dHandle { id: "ha".into(), ..Default::default() }], ..Default::default() };
         let node_b = Puzzle2dNode { id: "b".into(), handles: vec![Puzzle2dHandle { id: "hb".into(), ..Default::default() }], ..Default::default() };
         let mut projection = base;
-        projection = MutationDiff::<Puzzle2dSnapshot>::apply(&create_node(node_a, None).diff(&projection), &projection);
-        projection = MutationDiff::<Puzzle2dSnapshot>::apply(&create_node(node_b, None).diff(&projection), &projection);
-        projection = MutationDiff::<Puzzle2dSnapshot>::apply(&connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None).diff(&projection), &projection);
+        projection = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node_a, None).diff(&projection).diff(), &projection);
+        projection = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node_b, None).diff(&projection).diff(), &projection);
+        projection = MutationDiff::<Puzzle2dSnapshot>::apply(connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None).diff(&projection).diff(), &projection);
         assert!(projection.edges.iter().any(|edge| edge.id == "e1"));
         let removed = delete_node("a".into());
-        let after = MutationDiff::<Puzzle2dSnapshot>::apply(&removed.diff(&projection), &projection);
+        let after = MutationDiff::<Puzzle2dSnapshot>::apply(removed.diff(&projection).diff(), &projection);
         assert!(!after.edges.iter().any(|edge| edge.id == "e1"), "delete-node must sever edges touching its handles");
         assert_mutation_inverse_law(&projection, &removed);
     }
@@ -468,7 +468,7 @@ mod tests {
         let base = empty_puzzle2d_snapshot();
         assert_mutation_inverse_law(&base, &change_manifest_id(Some("manifest-1".into())));
         assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle2dCompatSpecificity::Handle));
-        let connected = MutationDiff::<Puzzle2dSnapshot>::apply(&connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle2dCompatSpecificity::Handle).diff(&base), &base);
+        let connected = MutationDiff::<Puzzle2dSnapshot>::apply(connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle2dCompatSpecificity::Handle).diff(&base).diff(), &base);
         assert_mutation_inverse_law(&connected, &disconnect_kind_compatibility("a".into(), "b".into()));
         assert_mutation_inverse_law(&base, &replace_kind_catalogs(Some(Puzzle2dKindCatalogs::default())));
     }
@@ -482,5 +482,35 @@ mod tests {
         assert_eq!(Puzzle2dMutation::kinds().len(), 26);
     }
     //#endregion 🔖️MutationLaws
+
+    //#region 🔖️OutcomeLaws
+    // 🎫️ 26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — see
+    // `📓️w3-f-block-puzzle-report.md` for the `assert_outcome_policy_matrix` pending-helper note.
+    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
+
+    #[test]
+    fn missing_target_is_error_per_verb_family() {
+        use crate::artifacts::puzzle2d::schema::empty_puzzle2d_snapshot;
+        let base = empty_puzzle2d_snapshot();
+        assert_missing_target_is_error(&base, &delete_node("missing".into())); // delete
+        assert_missing_target_is_error(&base, &remove_node_handle("missing".into(), "h0".into())); // remove
+        assert_missing_target_is_error(&base, &change_node_visible("missing".into(), Some(false))); // change/set/update
+        assert_missing_target_is_error(&base, &move_node("missing".into(), 1.0, 1.0)); // move/drag/rotate/scale/resize
+        assert_missing_target_is_error(&base, &edit_node_text("missing".into(), Some("x".into()))); // edit/replace
+        assert_missing_target_is_error(&base, &disconnect_handles("missing".into())); // disconnect/unbind
+    }
+
+    #[test]
+    fn create_duplicate_id_is_fatal_and_never_applies() {
+        use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
+        let mut base = empty_puzzle2d_snapshot();
+        let node = Puzzle2dNode { id: "n0".into(), ..Default::default() };
+        base.nodes.push(node.clone());
+        let outcome = create_node(node, None).diff(&base);
+        assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal));
+        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

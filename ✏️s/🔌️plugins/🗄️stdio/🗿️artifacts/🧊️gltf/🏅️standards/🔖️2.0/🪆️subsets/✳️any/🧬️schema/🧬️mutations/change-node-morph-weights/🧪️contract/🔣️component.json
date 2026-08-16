@@ -1,0 +1,15 @@
+{
+  "id": "s.stdio.gltf.mutation.change-node-morph-weights.v1",
+  "command": "change-node-morph-weights",
+  "laws": [
+    "typed payload validation and typed rejection",
+    "direct sparse diff only at declared touched paths",
+    "inverse derives from exact base and restores that base when applied",
+    "reference integrity is repaired or rejected at the named typed paths",
+    "apply and replay are deterministic"
+  ],
+  "referencePolicy": "requires finite weights and verifies the bound mesh target arity",
+  "touchedPaths": [
+    "document/nodes/*/weights"
+  ]
+}

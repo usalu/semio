@@ -315,6 +315,16 @@ pub use crate::artifacts::raster::schema::diff::RasterDiff;
 pub use crate::artifacts::raster::schema::mutations::RasterMutation;
 pub use crate::artifacts::raster::schema::snapshot::RasterSnapshot;
 
+//#region 🔖️Dialect
+/// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the one `Dialect` coordinate every
+/// raster surface (editor and viewer) shares — lives at the ARTIFACT level, not under `editor`/
+/// `viewer`, so a viewer file can read it without ever importing through the sibling `editor` module.
+/// `artifact_kind` matches `definition()`'s own `"s.raster.schema.artifact"` row descriptor
+/// (`"s.raster.raster"`); `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
+pub const RASTER_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.raster.raster", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+//#endregion 🔖️Dialect
+
 //#region 🔖️ArtifactKind
 /// 🏷️ The `2d.raster` artifact kind — lifted out of `create_raster_app`'s `.artifact_kind(…)` call so
 /// both the app manifest and (in the future) any other consumer can share one definition.
@@ -339,7 +349,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 //#region 🔖️Register
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) —
 /// replaces the old side-effecting `register()`, which called four different global registries
-/// directly from a plugin `.setup()` callback. `crate::apps::raster::config::schema::
+/// directly from a plugin `.setup()` callback. `crate::editor::raster::config::schema::
 /// register_app_schema()` is the one exception, still called from `🖨️raster/🦀️component.rs`'s own
 /// `.setup()`: it registers the `RasterPlayApp` CONFIG schema, an app-scope concern
 /// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) —
@@ -397,7 +407,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::raster::schema::inferences::raster_artifact_inference_descriptor()])
         .composers(crate::artifacts::raster::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::raster::RasterPlayApp>()
+        .document_codec::<semio_framework_plugin::app::EditorApp<crate::editor::raster::RasterPlayApp>>()
         .try_build()
 }
 

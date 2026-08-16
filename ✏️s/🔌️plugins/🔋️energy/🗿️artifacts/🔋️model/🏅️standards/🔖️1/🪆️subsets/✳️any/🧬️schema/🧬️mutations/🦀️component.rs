@@ -60,10 +60,10 @@ mod tests {
     }
 
     fn round_trip(base: &EnergyModelSnapshot, mutation: &EnergyModelMutation) -> EnergyModelSnapshot {
-        let forward = mutation.diff(base).apply(base);
+        let forward = mutation.diff(base).diff().apply(base);
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            restored = back.diff(&restored).apply(&restored);
+            restored = back.diff(&restored).diff().apply(&restored);
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
         forward
@@ -92,10 +92,19 @@ mod tests {
         let base = EnergyModelSnapshot::default();
         let mutation = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: demo_model_json("a") });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: demo_model_json("b") }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: demo_model_json("b") }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws
+
+    // 🧪️OutcomeLaws — no `assert_missing_target_is_error`/`assert_fatal_never_applies` case applies:
+    // this facet's one mutation kind (`replace-model`) is a root-scoped composed-children overwrite
+    // with no addressable target to be missing, and malformed `new_model_json` is documented, honest
+    // degradation to `Model::default()` (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's own
+    // converter-honesty rule) rather than a Fatal — turning that into `mutation.invariant` would fight
+    // that documented, pre-existing behavior, so this leaf stays a message-free
+    // `MutationOutcome::new(diff)`. `assert_outcome_policy_matrix` is also not yet landed in
+    // `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands.
 }
 //#endregion 🧪️Tests

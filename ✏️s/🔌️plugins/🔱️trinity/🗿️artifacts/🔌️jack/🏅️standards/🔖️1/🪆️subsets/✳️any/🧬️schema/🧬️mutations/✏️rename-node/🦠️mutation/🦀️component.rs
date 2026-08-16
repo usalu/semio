@@ -20,7 +20,7 @@ pub fn rename_node(id: String, new_name: String) -> TrinityGraphMutation {
 impl protocol::MutationKind<JackSnapshot, TrinityGraphMutation> for RenameNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "node", kind: "rename-node", record: "RenamedNode" };
 
-    fn diff(&self, base: &JackSnapshot) -> JackDiff {
+    fn diff(&self, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {

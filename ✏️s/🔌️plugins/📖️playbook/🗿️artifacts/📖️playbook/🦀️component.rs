@@ -10,26 +10,32 @@
 //! its `blocks`/`description` JSON-encoded into params, sequential `FlowEdge`s witnessing step
 //! order) — see `🔖️ContentBridge` below.
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, EditorApp, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{
     FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,
 };
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use std::cell::RefCell;
 use std::collections::HashMap;
 
 //#region 🔖️Types
-pub use crate::playbook::{
-    PlaybookBlock, PlaybookBlockOption, PlaybookExpr, PlaybookStep, PlaybookVectorField, PLAYBOOK_BUILTIN_KINDS,
-    PLAYBOOK_DOCUMENT_SCHEMA,
-};
 pub use crate::artifacts::playbook::schema::diff::{PlaybookDiff, PlaybookStringList};
-pub use crate::artifacts::playbook::schema::PlaybookArtifact;
-pub use crate::artifacts::playbook::schema::snapshot::PlaybookSnapshot;
 pub use crate::artifacts::playbook::schema::mutations::PlaybookMutation;
+pub use crate::artifacts::playbook::schema::snapshot::PlaybookSnapshot;
+pub use crate::artifacts::playbook::schema::PlaybookArtifact;
+pub use crate::playbook::{PlaybookBlock, PlaybookBlockOption, PlaybookExpr, PlaybookStep, PlaybookVectorField, PLAYBOOK_BUILTIN_KINDS, PLAYBOOK_DOCUMENT_SCHEMA};
 
 pub const PLAYBOOK_ARTIFACT_SCHEMA_ID: &str = "s.playbook.playbook";
+
+/// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1/§7.4 — the canonical
+/// `(artifact_kind, standard, subset)` coordinate for this artifact's `✳️any` subset, at the ARTIFACT
+/// level (not under `✏️editor`/`👁️viewer`) so the viewer can read it without ever importing through
+/// the sibling `editor` module. `artifact_kind` matches this file's own `#[artifact_schema(id = …)]`
+/// row (`🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs`); `standard`/`subset` match this
+/// location on disk — the canonical surface id is `s.playbook.playbook@1/*#editor` /
+/// `s.playbook.playbook@1/*#viewer`.
+pub const PLAYBOOK_DIALECT: Dialect = Dialect { artifact_kind: "s.playbook.playbook", standard: StandardId("1"), subset: SubsetId::ANY };
 
 /// 📸️ Default persisted playbook document for new stores and demos.
 pub fn empty_playbook_snapshot() -> PlaybookSnapshot {
@@ -38,10 +44,7 @@ pub fn empty_playbook_snapshot() -> PlaybookSnapshot {
 
 /// 🧱️ Flattens all blocks across steps — delegates to the kernel helper.
 pub fn flatten_playbook_blocks(snapshot: &PlaybookSnapshot) -> Vec<PlaybookBlock> {
-    crate::playbook::flatten_playbook_blocks(&snapshot.as_kernel())
-        .into_iter()
-        .cloned()
-        .collect()
+    crate::playbook::flatten_playbook_blocks(&snapshot.as_kernel()).into_iter().cloned().collect()
 }
 //#endregion 🔖️Types
 
@@ -76,12 +79,7 @@ pub fn flow_content_snapshot_from_steps(steps: &[PlaybookStep]) -> SemioFlowSnap
         .collect();
     let edges: Vec<SemioFlowEdge> = steps
         .windows(2)
-        .map(|pair| SemioFlowEdge {
-            id: format!("seq-{}-{}", pair[0].id, pair[1].id),
-            from: SemioPortRef { node: pair[0].id.clone(), port: "next".into() },
-            to: SemioPortRef { node: pair[1].id.clone(), port: "prev".into() },
-            kind: "sequence".into(),
-        })
+        .map(|pair| SemioFlowEdge { id: format!("seq-{}-{}", pair[0].id, pair[1].id), from: SemioPortRef { node: pair[0].id.clone(), port: "next".into() }, to: SemioPortRef { node: pair[1].id.clone(), port: "prev".into() }, kind: "sequence".into() })
         .collect();
     SemioFlowSnapshot { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes, edges }
 }
@@ -268,7 +266,7 @@ pub fn playbook_snapshot_with_steps(schema: &str, id: &str, version: &str, title
 //#region 🔖️Register
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
 /// the old side-effecting `register()`, which called five different global registries directly from
-/// a plugin `.setup()` callback. `crate::apps::playbook::config::schema::register_app_schema()` is the
+/// a plugin `.setup()` callback. `crate::editor::playbook::config::schema::register_app_schema()` is the
 /// one exception, still called from this file's own `.setup()`: it registers the `PlaybookPlayApp`
 /// CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has no field for
 /// (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's artifact-scoped
@@ -298,8 +296,12 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.playbook")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
-        for (namespace, value) in *claims { capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?; }
-        if let Some((locale, text)) = localization { capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?; }
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
         definition = definition.capability(capability)?;
     }
     Ok(definition)
@@ -311,7 +313,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::playbook::standards::v1::subsets::any::schema::inferences::playbook_artifact_inference_descriptor()])
         .composers(crate::artifacts::playbook::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::playbook::PlaybookPlayApp>()
+        .document_codec::<EditorApp<crate::editor::playbook::PlaybookPlayApp>>()
         .try_build()
 }
 
@@ -382,7 +384,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::apps::playbook::create_playbook_play_app`'s `🔖️Manifest` region.
+/// `crate::editor::playbook::create_playbook_play_app`'s `🔖️Manifest` region.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "text.playbook".into(),
@@ -395,7 +397,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: PLAYBOOK_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
@@ -496,28 +498,3 @@ mod tests {
     //#endregion 🌉️ContentBridgeLaws
 }
 //#endregion 🧪️Tests
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::playbook::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("PlaybookComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
-}
-//#endregion 🚪️DerivedIoRegistry

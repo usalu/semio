@@ -1,14 +1,24 @@
 //! 💡️ clearance-distribution atomic glTF inference leaf.
-use super::super::{geometry_core::{statistics, GltfGeometryContext, GltfPairGeometry}, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
-use super::super::super::modules::{inference_measures::{estimate, unavailable}, measurement_contracts::*, mesh_topology::Topology};
+use super::super::super::modules::{
+    inference_measures::{estimate, unavailable},
+    measurement_contracts::*,
+    mesh_topology::Topology,
+};
+use super::super::{
+    geometry_core::{statistics, GltfGeometryContext, GltfPairGeometry},
+    GltfEntityIndicators, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS,
+};
 
 pub struct GltfClearanceDistributionInference;
 
 impl GltfInferenceLeaf for GltfClearanceDistributionInference {
-    const DESCRIPTOR: GltfInferenceLeafDescriptor = GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.clearance-distribution.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.clearance-distribution.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
+    const DESCRIPTOR: GltfInferenceLeafDescriptor =
+        GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.clearance-distribution.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.clearance-distribution.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
 
-pub fn descriptor() -> GltfInferenceLeafDescriptor { GltfClearanceDistributionInference::DESCRIPTOR }
+pub fn descriptor() -> GltfInferenceLeafDescriptor {
+    GltfClearanceDistributionInference::DESCRIPTOR
+}
 
 pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
     unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology))
@@ -27,7 +37,7 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfStatistics> {
 }
 
 pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
-    serde_json::to_value(&indicators.clearance.clearanceDistribution)
+    serde_json::to_value(&indicators.clearance.clearance_distribution)
 }
 
 #[cfg(test)]

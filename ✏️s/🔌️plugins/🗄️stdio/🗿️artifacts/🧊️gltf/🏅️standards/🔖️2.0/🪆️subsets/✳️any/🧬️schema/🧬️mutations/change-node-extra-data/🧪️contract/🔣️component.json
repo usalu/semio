@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "s.stdio.gltf.mutation.change-node-extra-data.v1",
+  "languageParity": ["rust", "typescript"],
+  "vectors": [{
+    "name": "set-absent-node-extras-to-present-null",
+    "base": {"schema":"s.stdio.gltf","document":{"asset":{"version":"2.0"},"scenes":[],"nodes":[{"children":[],"weights":[]}]},"buffers":[],"sourceForm":"json"},
+    "mutation": {"node":0,"data":{"state":"present","value":null}},
+    "diff": {"node":0,"before":{"state":"absent"},"after":{"state":"present","value":null},"touchedPaths":["document/nodes/0/extras"]},
+    "inverse": {"node":0,"before":{"state":"absent"},"after":{"state":"present","value":null},"touchedPaths":["document/nodes/0/extras"]},
+    "after": {"schema":"s.stdio.gltf","document":{"asset":{"version":"2.0"},"scenes":[],"nodes":[{"children":[],"weights":[],"extras":null}]},"buffers":[],"sourceForm":"json"},
+    "staleRejection": {"code":"gltf.mutation.stale-diff","path":"document/nodes/0/extras"}
+  }]
+}

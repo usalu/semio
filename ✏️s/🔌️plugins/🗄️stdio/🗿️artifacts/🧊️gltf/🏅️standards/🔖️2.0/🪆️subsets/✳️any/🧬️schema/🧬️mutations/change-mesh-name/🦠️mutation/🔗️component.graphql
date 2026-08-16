@@ -1,0 +1,6 @@
+# change-mesh-name mutation facet.
+input GltfChangeMeshNamePayloadV1 {
+  mesh: Int!
+  value: String
+}
+type GltfChangeMeshNameMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

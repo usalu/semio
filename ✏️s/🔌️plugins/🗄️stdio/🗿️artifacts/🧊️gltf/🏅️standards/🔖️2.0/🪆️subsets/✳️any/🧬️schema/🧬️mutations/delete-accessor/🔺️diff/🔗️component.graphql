@@ -1,0 +1,13 @@
+# delete-accessor typed diff facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfAccessorValueV1
+input GltfDeleteAccessorPayloadV1 {
+  index: Int!
+}
+type GltfDeleteAccessorDiffOperationV1 {
+  kind: String!
+  index: Int!
+  removed: GltfAccessorValueV1!
+}
+type GltfDeleteAccessorDiffV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfDeleteAccessorPayloadV1!, operation: GltfDeleteAccessorDiffOperationV1! }

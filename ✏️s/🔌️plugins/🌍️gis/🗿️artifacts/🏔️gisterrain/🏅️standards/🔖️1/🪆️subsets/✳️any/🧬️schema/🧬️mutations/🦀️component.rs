@@ -53,8 +53,8 @@ mod tests {
         let base = crate::artifacts::gisterrain::gis_terrain_snapshot_with_derived_mesh(GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: "null".into(), ..Default::default() });
         let mutation = GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 4.0 });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 8.0 }).diff(&base);
+        let d1 = mutation.diff(&base).into_parts().0;
+        let d2 = GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 8.0 }).diff(&base).into_parts().0;
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -68,7 +68,8 @@ mod tests {
 //#endregion 🔹Tests
 
 pub fn apply_gis_terrain_mutation(snapshot: &mut GisTerrainSnapshot, mutation: &GisTerrainMutation) {
-    *snapshot = vcs::apply_mutation(snapshot, mutation);
+    let (next, _messages) = vcs::apply_mutation(snapshot, mutation);
+    *snapshot = next;
     // 🕸️ `mesh` is a pure function of `(exaggeration, imported_features_json)` — re-derive it after
     // every mutation so the composed child handle never drifts from what
     // `gis_terrain_mesh_from_snapshot` would actually build (see `GisTerrainSnapshot.mesh`'s doc).

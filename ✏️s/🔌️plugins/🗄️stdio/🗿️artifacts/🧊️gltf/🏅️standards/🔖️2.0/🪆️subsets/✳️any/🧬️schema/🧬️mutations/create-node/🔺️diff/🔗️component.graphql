@@ -1,0 +1,13 @@
+# create-node typed diff facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfNodeValueV1
+input GltfCreateNodePayloadV1 {
+  position: Int!
+}
+type GltfCreateNodeDiffOperationV1 {
+  kind: String!
+  position: Int!
+  item: GltfNodeValueV1!
+}
+type GltfCreateNodeDiffV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfCreateNodePayloadV1!, operation: GltfCreateNodeDiffOperationV1! }

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.change-mesh-extra-data.v1.inverse",
+  "title": "GltfChangeMeshExtraDataInverse",
+  "type": "object",
+  "properties": {
+    "inverse": {
+      "type": "object"
+    },
+    "touchedPaths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "inverse",
+    "touchedPaths"
+  ],
+  "additionalProperties": false,
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.change-mesh-extra-data.v1",
+    "version": 1,
+    "phase": "inverse",
+    "kind": "change",
+    "touchedPaths": [
+      "document/meshes/*/extras"
+    ],
+    "referencePolicy": "none"
+  }
+}

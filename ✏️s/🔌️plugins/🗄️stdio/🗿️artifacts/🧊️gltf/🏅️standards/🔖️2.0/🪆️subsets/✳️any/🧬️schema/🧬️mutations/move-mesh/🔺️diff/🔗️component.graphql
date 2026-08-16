@@ -1,0 +1,14 @@
+# move-mesh typed diff facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfMeshValueV1
+input GltfMoveMeshPayloadV1 {
+  index: Int!
+  position: Int!
+}
+type GltfMoveMeshDiffOperationV1 {
+  kind: String!
+  index: Int!
+  position: Int!
+}
+type GltfMoveMeshDiffV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfMoveMeshPayloadV1!, operation: GltfMoveMeshDiffOperationV1! }

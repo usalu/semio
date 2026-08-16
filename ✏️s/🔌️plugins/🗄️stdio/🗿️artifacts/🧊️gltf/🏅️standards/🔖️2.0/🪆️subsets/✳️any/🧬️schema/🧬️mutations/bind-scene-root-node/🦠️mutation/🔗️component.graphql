@@ -1,0 +1,7 @@
+# bind-scene-root-node mutation facet.
+input GltfBindSceneRootNodePayloadV1 {
+  scene: Int!
+  node: Int!
+  position: Int!
+}
+type GltfBindSceneRootNodeMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

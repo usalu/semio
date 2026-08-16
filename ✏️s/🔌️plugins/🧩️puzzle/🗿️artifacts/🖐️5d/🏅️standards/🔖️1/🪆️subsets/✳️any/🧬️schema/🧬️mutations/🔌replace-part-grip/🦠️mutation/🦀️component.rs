@@ -25,7 +25,7 @@ pub fn replace_part_grip(part_id: String, grip_id: String, new_grip: Puzzle5dGri
 impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ReplacePartGrip {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "part-grip", kind: "replace-part-grip", record: "ReplacedPartGrip" };
 
-    fn diff(&self, base: &Puzzle5dSnapshot) -> Puzzle5dDiff {
+    fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {

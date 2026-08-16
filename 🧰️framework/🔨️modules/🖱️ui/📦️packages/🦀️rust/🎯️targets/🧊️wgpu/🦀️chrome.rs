@@ -90,4 +90,20 @@ pub fn item_bg(theme: &Theme, pressed: bool, hovered: bool) -> Rgba {
 pub fn item_text(theme: &Theme, pressed: bool, hovered: bool) -> Rgba {
     chrome_item_text(theme, pressed, hovered)
 }
+
+/// 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §5: the read-only badge a
+/// viewer session's window chrome shows — a small lock-icon chip pinned to `rect`'s top-right
+/// corner. Distinct from `shell.rs`'s `build_window` role-chrome handling (which swaps the WINDOW-
+/// CAP/tab icon to `IconName::Lock` — that lives one level up, in the declarative `WindowLayout`
+/// vocabulary, not raw draw calls): this fn is for whoever paints a window's own content chrome
+/// (e.g. a title bar inside the canvas itself) and wants the same badge there. Pure paint helper —
+/// it does not decide WHEN to show the badge (`role_chrome::ChromeRole::is_read_only`'s job).
+pub fn push_read_only_badge(draw: &mut DrawList, icons: &IconAtlas, theme: &Theme, rect: Rect) {
+    let size = ICON_TINY;
+    let margin = theme.padding_standard;
+    let x = rect.x + rect.w - size - margin;
+    let y = rect.y + margin;
+    push_control_border(draw, Rect::new(x - margin * 0.5, y - margin * 0.5, size + margin, size + margin), theme, theme.border_normal, theme.button_hover);
+    push_icon(draw, icons, "lock", x, y, size, theme.text_element);
+}
 // #endregion chrome

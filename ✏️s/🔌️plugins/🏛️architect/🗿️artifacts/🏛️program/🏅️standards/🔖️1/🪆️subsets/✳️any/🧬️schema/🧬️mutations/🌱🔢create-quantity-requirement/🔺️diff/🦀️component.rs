@@ -6,7 +6,11 @@ use crate::artifacts::program::diff::ProgramQuantitiesDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🌱️ `added = [payload row]` — the row lands at the end of `program.quantities` on apply.
-pub fn diff(payload: &CreateQuantityRequirement, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { quantities: Some(ProgramQuantitiesDelta { added: vec![payload.quantity_requirement.clone()], ..Default::default() }), ..Default::default() }
+/// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
+pub fn diff(payload: &CreateQuantityRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let id = payload.quantity_requirement.header.id.clone();
+    if base.quantities.iter().any(|row| row.header.id == id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A quantity requirement already exists with this id.", [id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { quantities: Some(ProgramQuantitiesDelta { added: vec![payload.quantity_requirement.clone()], ..Default::default() }), ..Default::default() })
 }

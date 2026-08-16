@@ -21,7 +21,7 @@ pub fn move_node(id: String, x: f64, y: f64) -> TrinityGraphMutation {
 impl protocol::MutationKind<JackSnapshot, TrinityGraphMutation> for MoveNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "node", kind: "move-node", record: "MovedNode" };
 
-    fn diff(&self, base: &JackSnapshot) -> JackDiff {
+    fn diff(&self, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {

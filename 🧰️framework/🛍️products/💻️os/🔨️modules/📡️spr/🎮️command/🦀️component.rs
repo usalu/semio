@@ -21,8 +21,10 @@ pub trait MutationDiff<P>: Clone + Default + serde::Serialize + serde::de::Deser
     /// artifact, including out-of-range/no-op cases — never panics), **base-free** (no snapshot
     /// parameter; the two diffs alone determine the result), and **sequential-coalesce only**
     /// (this composes two diffs known to have been applied in sequence by the same actor;
-    /// concurrent-edit merging is `protocol_crdt::merge_concurrent_diffs`'s job, never this
-    /// method's). LAW: `absorb(d1, d2).apply(base) == d2.apply(&d1.apply(base))`, associative
+    /// concurrent-edit merging is an authority's `MergePolicy`/`📡️spr/⚔️conflict` job, never this
+    /// method's — the CRDT-era `protocol_crdt::merge_concurrent_diffs` this docstring used to point
+    /// at is deleted, see `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`).
+    /// LAW: `absorb(d1, d2).apply(base) == d2.apply(&d1.apply(base))`, associative
     /// over further absorbs of the same artifact's diff vocabulary.
     fn absorb(&mut self, other: Self);
 }
@@ -45,19 +47,20 @@ pub trait DiffAlgebra<P>: Sized {
     fn is_empty(&self) -> bool;
 }
 
-/// @emoji 🔁️ Stored operation: emits a diff and computes inverse from pre-state. Moved from
-/// `crate::os_store::Mutation` verbatim except: `mutation_id`/`dependencies`/`author_id` now return the
-/// `protocol_core` id newtypes (were bare `String`) and `base_version` now returns
-/// `Option<crate::os_spr::ids::ArtifactVersion>` (was a bare `u64` defaulting to `0`, which conflated
-/// "no base" with "based on version 0" — `None` fixes that); `conflict_rule`/`state_class` are new
-/// defaulted methods so every existing `impl` recompiles unchanged; `reconcile` becomes an instance
-/// method (`&self`) returning this crate's own `ReconcileReport` instead of `crate::os_store::SpaceConflict`,
-/// so `vcs` maps `ReconcileReport -> SpaceConflict` at its own edge instead of this crate knowing
-/// about space types.
+/// @emoji 🔁️ Stored operation: emits a [`MutationOutcome`] (diff plus messages) and computes inverse
+/// from pre-state. Moved from `crate::os_store::Mutation` verbatim except: `mutation_id`/
+/// `dependencies`/`author_id` now return the `protocol_core` id newtypes (were bare `String`) and
+/// `base_version` now returns `Option<crate::os_spr::ids::ArtifactVersion>` (was a bare `u64`
+/// defaulting to `0`, which conflated "no base" with "based on version 0" — `None` fixes that);
+/// `state_class` is a new defaulted method so every existing `impl` recompiles unchanged.
+/// `validate`/`merge_strategy`/`conflict_rule`/`reconcile` are GONE (ticket
+/// `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C4): every rejection or
+/// merge-policy concern a technology used to express through those hooks now travels as a
+/// [`MutationMessage`] on `diff`'s own [`MutationOutcome`].
 pub trait Mutation<P>: Clone + serde::Serialize + serde::de::DeserializeOwned {
     type Diff: MutationDiff<P>;
 
-    fn diff(&self, base: &P) -> Self::Diff;
+    fn diff(&self, base: &P) -> MutationOutcome<Self::Diff>;
     fn inverse(&self, base: &P) -> Vec<Self>;
 
     fn mutation_id(&self) -> Option<crate::os_spr::ids::MutationId> {
@@ -78,26 +81,9 @@ pub trait Mutation<P>: Clone + serde::Serialize + serde::de::DeserializeOwned {
     fn undo_policy(&self) -> crate::os_spr::UndoPolicy {
         crate::os_spr::UndoPolicy::ExactBaseOnly
     }
-    fn merge_strategy(&self) -> crate::os_spr::MergeStrategyKind {
-        crate::os_spr::MergeStrategyKind::LwwRegister
-    }
-    /// @emoji ⚖️ Per-operation conflict declaration; defaults to `Merge(self.merge_strategy())` so a
-    /// technology that only overrode `merge_strategy` keeps its exact prior collapse-to-merge shape.
-    fn conflict_rule(&self) -> crate::os_spr::ConflictRule {
-        crate::os_spr::ConflictRule::Merge(self.merge_strategy())
-    }
     /// @emoji 🗂️ Which durability/visibility class this operation's diffs belong to.
     fn state_class(&self) -> crate::os_spr::StateClass {
         crate::os_spr::StateClass::Artifact
-    }
-    /// @emoji 🤝️ Post-materialization reconciliation pass (e.g. cross-document studio graph checks).
-    /// Defaults to a no-op so every existing document kind keeps its exact prior behavior.
-    fn reconcile(&self, snapshot: P) -> (P, Vec<ReconcileReport>) {
-        (snapshot, Vec::new())
-    }
-    /// @emoji 🛂️ Pre-apply validation against the current snapshot. Defaults to `Ok`.
-    fn validate(&self, _snapshot: &P) -> Result<(), String> {
-        Ok(())
     }
     /// @emoji 🌐️ Foreign steps this operation additionally dispatches to OTHER artifacts — empty
     /// for every ordinary single-artifact operation. Defaults to `Vec::new()` so no existing
@@ -107,23 +93,177 @@ pub trait Mutation<P>: Clone + serde::Serialize + serde::de::DeserializeOwned {
         Vec::new()
     }
 }
-
-/// @emoji 📋️ One `reconcile` finding.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct ReconcileReport {
-    pub id: String,
-    pub message: String,
-    pub severity: ReconcileSeverity,
-}
-
-/// @emoji 🚦️ How serious a `ReconcileReport` is.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum ReconcileSeverity {
-    Info,
-    Warning,
-    Blocking,
-}
 //#endregion 🔖️Mutation
+
+//#region 🔖️Message
+/// @emoji 📨️ One outcome-carried diagnostic from a `Mutation`/`MutationKind::diff` — the level
+/// vocabulary is [`crate::os_dsl::Severity`] (`Info < Warning < Error < Fatal`, that declaration
+/// order IS the level order via `derive(Ord)`); `code` is one of the frozen seven `mutation.*`
+/// codes (`.🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/
+/// 📋️contract-freeze.md` §C2 — closed set, no per-plugin codes, ever); `message` is English prose
+/// (UI localizes by `code`, never by parsing `message`); `target` is the address of the offending
+/// element (outermost segment first, matching [`MutationKind::target`]'s convention); `op_index` is
+/// stamped by a batch replay ([`MutationOutcome::stamp_op_index`]) once this message's originating
+/// op's position within the batch is known.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MutationMessage {
+    pub level: crate::os_dsl::Severity,
+    pub code: crate::os_dsl::FaultCode,
+    pub message: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub target: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub op_index: Option<u32>,
+}
+
+impl MutationMessage {
+    fn at_level(level: crate::os_dsl::Severity, code: impl Into<crate::os_dsl::FaultCode>, message: impl Into<String>) -> Self {
+        Self { level, code: code.into(), message: message.into(), target: Vec::new(), op_index: None }
+    }
+
+    pub fn info(code: impl Into<crate::os_dsl::FaultCode>, message: impl Into<String>) -> Self {
+        Self::at_level(crate::os_dsl::Severity::Info, code, message)
+    }
+    pub fn warn(code: impl Into<crate::os_dsl::FaultCode>, message: impl Into<String>) -> Self {
+        Self::at_level(crate::os_dsl::Severity::Warning, code, message)
+    }
+    pub fn error(code: impl Into<crate::os_dsl::FaultCode>, message: impl Into<String>) -> Self {
+        Self::at_level(crate::os_dsl::Severity::Error, code, message)
+    }
+    pub fn fatal(code: impl Into<crate::os_dsl::FaultCode>, message: impl Into<String>) -> Self {
+        Self::at_level(crate::os_dsl::Severity::Fatal, code, message)
+    }
+
+    /// 🎯️ Attaches the target address (outermost segment first).
+    pub fn at(mut self, target: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        self.target = target.into_iter().map(Into::into).collect();
+        self
+    }
+
+    /// 🔢️ Stamps which op (within a batch) produced this message.
+    pub fn at_op(mut self, op_index: u32) -> Self {
+        self.op_index = Some(op_index);
+        self
+    }
+}
+
+/// @emoji 🚦️ The worst (highest) [`crate::os_dsl::Severity`] across `messages`, or `None` if empty.
+pub fn worst_level(messages: &[MutationMessage]) -> Option<crate::os_dsl::Severity> {
+    messages.iter().map(|message| message.level).max()
+}
+
+/// @emoji 🗂️ A `Mutation`/`MutationKind::diff`'s full result: the diff plus every
+/// [`MutationMessage`] it raised. LAWS (`📋️contract-freeze.md` §C2): (1) a `Fatal` message ⇒
+/// `diff == D::default()`; (2) an `Error` message ⇒ `diff` carries no change for the named target;
+/// (3) deterministic — equal `(op, base)` ⇒ equal `messages`. Laws 1/2 are upheld by every `diff`
+/// leaf's own construction (via [`MutationOutcome::fatal`]/[`MutationOutcome::error`], or by simply
+/// never writing to a rejected target before calling [`MutationOutcome::info`]/
+/// [`MutationOutcome::warn`]/[`MutationOutcome::absorb_messages`]), not enforced by this type
+/// itself — see `🧪️testkit`'s `assert_fatal_never_applies`/`assert_missing_target_is_error`.
+///
+/// 🎯️ Naming note: the frozen contract's prose also lists chainable `.error(..)`/`.fatal(..)`
+/// instance builders alongside the static `::error(code,msg,target)`/`::fatal(code,msg,target)`
+/// whole-outcome shortcuts — those two forms cannot share a name on the same inherent type (Rust
+/// E0592: an instance method and an associated function of the same name conflict across impl
+/// blocks whenever their `D` bounds overlap). This crate keeps `fatal`/`error` as the static,
+/// whole-outcome-rejecting shortcuts (the common case for a simple non-batch verb) and `info`/`warn`
+/// as the 2-arg chainable instance builders (the fan-out recipe's own `.info("mutation.cascade", ..)`
+/// example); a leaf needing a TARGETED error/warning alongside a non-empty diff (the batch-verb case)
+/// builds the message directly (`MutationMessage::error(code, msg).at(target)`) and attaches it via
+/// [`MutationOutcome::absorb_messages`].
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MutationOutcome<D> {
+    diff: D,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    messages: Vec<MutationMessage>,
+}
+
+impl<D: Default> MutationOutcome<D> {
+    /// 🕳️ No change, no messages — the algebra's identity element.
+    pub fn empty() -> Self {
+        Self { diff: D::default(), messages: Vec::new() }
+    }
+
+    /// 🚨️ Forces `diff = D::default()` (LAW 1) with one `Fatal` message.
+    pub fn fatal(code: impl Into<crate::os_dsl::FaultCode>, message: impl Into<String>, target: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        Self { diff: D::default(), messages: vec![MutationMessage::fatal(code, message).at(target)] }
+    }
+
+    /// 🚫️ Empty diff with one `Error` message — the caller's `diff` leaf never touched `target`.
+    pub fn error(code: impl Into<crate::os_dsl::FaultCode>, message: impl Into<String>, target: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        Self { diff: D::default(), messages: vec![MutationMessage::error(code, message).at(target)] }
+    }
+}
+
+impl<D> MutationOutcome<D> {
+    /// ✅️ A successful diff, no messages.
+    pub fn new(diff: D) -> Self {
+        Self { diff, messages: Vec::new() }
+    }
+
+    pub fn diff(&self) -> &D {
+        &self.diff
+    }
+
+    pub fn messages(&self) -> &[MutationMessage] {
+        &self.messages
+    }
+
+    /// ➡️ Consumes `self` into its raw `(diff, messages)` parts.
+    pub fn into_parts(self) -> (D, Vec<MutationMessage>) {
+        (self.diff, self.messages)
+    }
+
+    /// ➕️ Appends one `Info`-level message (e.g. a cascade note).
+    pub fn info(mut self, code: impl Into<crate::os_dsl::FaultCode>, message: impl Into<String>) -> Self {
+        self.messages.push(MutationMessage::info(code, message));
+        self
+    }
+
+    /// ➕️ Appends one `Warning`-level message.
+    pub fn warn(mut self, code: impl Into<crate::os_dsl::FaultCode>, message: impl Into<String>) -> Self {
+        self.messages.push(MutationMessage::warn(code, message));
+        self
+    }
+
+    /// ➕️ Appends every message in `messages`, in order — the general escape hatch for a targeted
+    /// message that the 2-arg `info`/`warn` builders can't express (see the naming note above).
+    pub fn absorb_messages(mut self, messages: impl IntoIterator<Item = MutationMessage>) -> Self {
+        self.messages.extend(messages);
+        self
+    }
+
+    /// 🔢️ Stamps `op_index` onto every message currently carried — called once per op during a
+    /// batch replay, right after that op's `diff` is computed.
+    pub fn stamp_op_index(mut self, op_index: u32) -> Self {
+        for message in &mut self.messages {
+            message.op_index = Some(op_index);
+        }
+        self
+    }
+
+    /// 🚦️ The worst level across `self.messages`, or `None` if there are none.
+    pub fn worst_level(&self) -> Option<crate::os_dsl::Severity> {
+        worst_level(&self.messages)
+    }
+
+    /// ✅️ Whether `policy` would accept this outcome (i.e. does NOT reject its worst level). An
+    /// outcome with no messages is always applicable.
+    pub fn is_applicable(&self, policy: crate::os_spr::MergePolicy) -> bool {
+        match self.worst_level() {
+            Some(level) => !policy.rejects(level),
+            None => true,
+        }
+    }
+
+    /// 🔀️ Maps the diff, keeping every message unchanged.
+    pub fn map<D2>(self, f: impl FnOnce(D) -> D2) -> MutationOutcome<D2> {
+        MutationOutcome { diff: f(self.diff), messages: self.messages }
+    }
+}
+//#endregion 🔖️Message
 
 //#region 🔖️Inference
 /// @emoji 💡️ All information inferable from a snapshot — the fourth schema family alongside
@@ -308,7 +448,7 @@ where
 {
     const SEMANTICS: SemanticDescriptor;
 
-    fn diff(&self, base: &P) -> <Op as Mutation<P>>::Diff;
+    fn diff(&self, base: &P) -> MutationOutcome<<Op as Mutation<P>>::Diff>;
     /// Missing/already-absent target ⇒ `Vec::new()` (the semantic replacement for the old
     /// `NoMutation` sentinel variant — there is no "no-op mutation", only an inverse with nothing
     /// to undo).
@@ -319,9 +459,6 @@ where
     /// empty means whole-artifact scope.
     fn target(&self) -> Vec<String> {
         Vec::new()
-    }
-    fn validate(&self, _base: &P) -> Result<(), String> {
-        Ok(())
     }
     /// @emoji 🌐️ Foreign steps this kind additionally dispatches to OTHER artifacts. Defaults to
     /// `Vec::new()` so no existing handcrafted `impl MutationKind` breaks; `#[derive(Mutations)]`
@@ -578,13 +715,14 @@ where
 
 //#region 🔖️Descriptor
 /// @emoji 🪪️ A registered operation kind's runtime descriptor: schema identity/version, its
-/// `StateClass`/`ConflictRule`, and a content-addressed `fingerprint` over those four fields.
+/// `StateClass`, and a content-addressed `fingerprint` over those three fields. Lost `conflict_rule`
+/// (ticket `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C4) — merge
+/// policy is authority-local state now (`MergePolicy`), never a per-schema descriptor field.
 #[derive(Clone, Debug, PartialEq, serde::Serialize)]
 pub struct MutationDescriptor {
     pub id: crate::os_spr::ids::SchemaId,
     pub schema_version: crate::os_spr::ids::SchemaVersion,
     pub state_class: crate::os_spr::StateClass,
-    pub conflict_rule: crate::os_spr::ConflictRule,
     pub fingerprint: [u8; 32],
     /// @emoji 🗣️ Semantic identity, present once a mutation kind moves off generic vocabulary —
     /// additive fields, `None` for descriptors registered before the semantic-mutations overhaul.
@@ -605,12 +743,13 @@ pub struct MutationDescriptor {
 
 impl MutationDescriptor {
     /// @emoji 🏗️ Constructs a descriptor, computing `fingerprint` deterministically from the other
-    /// four fields. The contract fixes the struct's shape but not how `fingerprint` is derived; our
-    /// choice is a canonical-JSON encoding of `(id, schema_version, state_class, conflict_rule)`
-    /// hashed with blake3 — stable across process runs and platforms, pinned by a golden test below.
-    pub fn new(id: crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: crate::os_spr::StateClass, conflict_rule: crate::os_spr::ConflictRule) -> Self {
-        let fingerprint = descriptor_fingerprint(&id, schema_version, state_class, conflict_rule);
-        Self { id, schema_version, state_class, conflict_rule, fingerprint, verb: None, entity: None, record: None, contributor: None, artifact_kind: None }
+    /// three fields. The contract fixes the struct's shape but not how `fingerprint` is derived; our
+    /// choice is a canonical-JSON encoding of `(id, schema_version, state_class)` hashed with
+    /// blake3 — stable across process runs and platforms, pinned by a golden test below (re-baked
+    /// when `conflict_rule` left this encoding, see the golden pin's own comment).
+    pub fn new(id: crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: crate::os_spr::StateClass) -> Self {
+        let fingerprint = descriptor_fingerprint(&id, schema_version, state_class);
+        Self { id, schema_version, state_class, fingerprint, verb: None, entity: None, record: None, contributor: None, artifact_kind: None }
     }
 
     /// @emoji 🗣️ Attaches semantic identity (`SemanticDescriptor`'s fields) to an already-built
@@ -638,15 +777,14 @@ impl MutationDescriptor {
     }
 }
 
-fn descriptor_fingerprint(id: &crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: crate::os_spr::StateClass, conflict_rule: crate::os_spr::ConflictRule) -> [u8; 32] {
+fn descriptor_fingerprint(id: &crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: crate::os_spr::StateClass) -> [u8; 32] {
     #[derive(serde::Serialize)]
     struct Canonical<'a> {
         id: &'a str,
         schema_version: u32,
         state_class: crate::os_spr::StateClass,
-        conflict_rule: crate::os_spr::ConflictRule,
     }
-    let canonical = Canonical { id: &id.0, schema_version: schema_version.0, state_class, conflict_rule };
+    let canonical = Canonical { id: &id.0, schema_version: schema_version.0, state_class };
     let bytes = serde_json::to_vec(&canonical).expect("descriptor canonical encoding never fails");
     *blake3::hash(&bytes).as_bytes()
 }
@@ -787,11 +925,19 @@ pub struct Planner<P, Op: Mutation<P>> {
     steps: Vec<PlanStep<Op>>,
     depth: u8,
     seen: Vec<(String, [u8; 32])>,
+    messages: Vec<MutationMessage>,
+}
+
+/// 🎯️ Prefixes `message.target` with `prefix` as its new outermost segment — how [`Planner::call`]
+/// attributes each local step's messages back to "the step path" (§C4).
+fn prefix_message(mut message: MutationMessage, prefix: &str) -> MutationMessage {
+    message.target.insert(0, prefix.to_string());
+    message
 }
 
 impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
     pub fn new(base: &P) -> Self {
-        Self { base: base.clone(), steps: Vec::new(), depth: 0, seen: Vec::new() }
+        Self { base: base.clone(), steps: Vec::new(), depth: 0, seen: Vec::new(), messages: Vec::new() }
     }
 
     /// 🪞️ The snapshot as it stands after every step `call`ed so far.
@@ -799,12 +945,30 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
         &self.base
     }
 
-    /// ▶️ Validates `op` against the current `base`, records it as a [`PlanStep::Local`], then
-    /// advances `base` by `op.diff(base).apply(base)` — so the NEXT `call`/`call_foreign` sees the
-    /// post-state, matching what sequential application of the resulting plan would do.
+    /// 📨️ Every message folded in so far, across every `call`ed step (including the failing one, if
+    /// any — a caller reading `Err(PlanError::StepRejected(..))` still finds the `Fatal` message(s)
+    /// that caused it here).
+    pub fn messages(&self) -> &[MutationMessage] {
+        &self.messages
+    }
+
+    /// ▶️ Computes `op.diff(base)`, folds its [`MutationMessage`]s (target-prefixed by this step's
+    /// index) into `self.messages`, and — unless any message is `Fatal` — advances `base` by the
+    /// diff and records `op` as a [`PlanStep::Local`], so the NEXT `call`/`call_foreign` sees the
+    /// post-state, matching what sequential application of the resulting plan would do. A `Fatal`
+    /// message stops the plan outright (`Err(PlanError::StepRejected)`) without advancing `base`;
+    /// a merely `Error`/`Warning`/`Info` message still advances `base` and continues planning — only
+    /// [`fold_plan_diff`]'s all-or-nothing fold treats those as poisoning the composite's own diff.
     pub fn call(&mut self, op: Op) -> Result<(), PlanError> {
-        op.validate(&self.base).map_err(PlanError::StepRejected)?;
-        let diff = op.diff(&self.base);
+        let step_index = self.steps.len();
+        let (diff, messages) = op.diff(&self.base).into_parts();
+        let is_fatal = messages.iter().any(|message| message.level == crate::os_dsl::Severity::Fatal);
+        let reason = messages.iter().filter(|message| message.level == crate::os_dsl::Severity::Fatal).map(|message| message.message.clone()).collect::<Vec<_>>().join("; ");
+        let prefix = format!("step-{step_index}");
+        self.messages.extend(messages.into_iter().map(|message| prefix_message(message, &prefix)));
+        if is_fatal {
+            return Err(PlanError::StepRejected(reason));
+        }
         self.base = diff.apply(&self.base);
         self.steps.push(PlanStep::Local(op));
         Ok(())
@@ -832,6 +996,11 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
     pub fn into_steps(self) -> Vec<PlanStep<Op>> {
         self.steps
     }
+
+    /// ➡️ Consumes `self` into its raw `(steps, messages)` parts — [`fold_plan_diff`]'s primitive.
+    pub fn into_parts(self) -> (Vec<PlanStep<Op>>, Vec<MutationMessage>) {
+        (self.steps, self.messages)
+    }
 }
 
 /// @emoji 🕸️ A mutation kind whose effect is a PLAN over one-or-more concrete `Op`s (this
@@ -852,43 +1021,50 @@ pub trait CompositeMutationKind<P, Op: Mutation<P>>: Clone + serde::Serialize + 
     fn target(&self) -> Vec<String> {
         Vec::new()
     }
-    fn validate(&self, _base: &P) -> Result<(), String> {
-        Ok(())
-    }
 }
 
-/// @emoji 🏗️ Runs `kind.plan` against a fresh [`Planner`] seeded at `base`, first rejecting via
-/// [`CompositeMutationKind::validate`]. NOT a blanket `impl<T: CompositeMutationKind> MutationKind
-/// for T` — coherence rejects that against the ~200 concrete `impl MutationKind` in the tree — so
-/// every other free helper here, and the `#[derive(CompositeMutation)]` delegation, is built on top
-/// of this one instead.
+/// @emoji 🏗️ Runs `kind.plan` against a fresh [`Planner`] seeded at `base`. NOT a blanket
+/// `impl<T: CompositeMutationKind> MutationKind for T` — coherence rejects that against the ~200
+/// concrete `impl MutationKind` in the tree — so every other free helper here, and the
+/// `#[derive(CompositeMutation)]` delegation, is built on top of this one instead.
 pub fn plan_of<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Result<Vec<PlanStep<Op>>, PlanError> {
-    kind.validate(base).map_err(PlanError::StepRejected)?;
     let mut planner = Planner::new(base);
     kind.plan(base, &mut planner)?;
     Ok(planner.into_steps())
 }
 
-/// @emoji 🧬️ Folds a composite's LOCAL steps into one diff via [`MutationDiff::absorb`], applying
-/// each step against the snapshot as it stood right before that step (matching [`Planner::call`]'s
-/// own advance-as-you-go semantics) — so `fold_plan_diff(k, b).apply(&b)` equals sequential
-/// application of the plan's local steps. Foreign steps never contribute (LAW 5 of the contract
-/// freeze). A planning failure folds to `Default::default()` (the algebra's identity element) rather
-/// than propagating `Result`, matching this fn's frozen non-`Result` signature — never a panic.
-pub fn fold_plan_diff<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> <Op as Mutation<P>>::Diff {
-    let Ok(steps) = plan_of(kind, base) else {
-        return <Op as Mutation<P>>::Diff::default();
-    };
+/// @emoji 🧬️ Folds a composite's LOCAL steps into one [`MutationOutcome`] via
+/// [`MutationDiff::absorb`], applying each step against the snapshot as it stood right before that
+/// step (matching [`Planner::call`]'s own advance-as-you-go semantics) — so a successful
+/// `fold_plan_diff(k, b).diff().apply(&b)` equals sequential application of the plan's local steps.
+/// Foreign steps never contribute to the folded diff (LAW 5 of the contract freeze). **All-or-
+/// nothing** (§C4): if planning itself fails (`PlanError`) or any step's messages reach `Error` or
+/// worse, the returned diff is empty (`Default::default()`) — but every message collected along the
+/// way is still kept, so a caller sees exactly why. A `PlanError` additionally contributes one
+/// `Fatal` `"mutation.invariant"` message. Never panics, matching this fn's frozen non-`Result`
+/// signature.
+pub fn fold_plan_diff<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> MutationOutcome<<Op as Mutation<P>>::Diff> {
+    let mut planner = Planner::new(base);
+    let plan_result = kind.plan(base, &mut planner);
+    let (steps, mut messages) = planner.into_parts();
+    if let Err(error) = &plan_result {
+        messages.push(MutationMessage::fatal("mutation.invariant", error.to_string()));
+    }
+    let rejected = plan_result.is_err() || matches!(worst_level(&messages), Some(level) if level >= crate::os_dsl::Severity::Error);
+    if rejected {
+        return MutationOutcome::new(<Op as Mutation<P>>::Diff::default()).absorb_messages(messages);
+    }
+
     let mut current = base.clone();
     let mut folded = <Op as Mutation<P>>::Diff::default();
     for step in steps {
         if let PlanStep::Local(op) = step {
-            let diff = op.diff(&current);
+            let diff = op.diff(&current).into_parts().0;
             current = diff.apply(&current);
             folded.absorb(diff);
         }
     }
-    folded
+    MutationOutcome::new(folded).absorb_messages(messages)
 }
 
 /// @emoji ↩️ The inverse of [`fold_plan_diff`]'s effect: each local step's `Mutation::inverse` is
@@ -905,7 +1081,7 @@ pub fn fold_plan_inverse<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, 
     for step in steps {
         if let PlanStep::Local(op) = step {
             let pre_state = current.clone();
-            let diff = op.diff(&current);
+            let diff = op.diff(&current).into_parts().0;
             current = diff.apply(&current);
             local_steps.push((op, pre_state));
         }
@@ -961,8 +1137,8 @@ mod tests {
     }
     impl Mutation<i64> for AddOp {
         type Diff = AddDiff;
-        fn diff(&self, _base: &i64) -> AddDiff {
-            AddDiff { delta: self.delta }
+        fn diff(&self, _base: &i64) -> MutationOutcome<AddDiff> {
+            MutationOutcome::new(AddDiff { delta: self.delta })
         }
         fn inverse(&self, _base: &i64) -> Vec<Self> {
             vec![AddOp { delta: -self.delta }]
@@ -1078,10 +1254,10 @@ mod tests {
     fn operation_diff_apply_matches_backwards_inverse() {
         let base: i64 = 10;
         let op = AddOp { delta: 5 };
-        let forward = op.diff(&base).apply(&base);
+        let forward = op.diff(&base).diff().apply(&base);
         assert_eq!(forward, 15);
         let [undo] = <[AddOp; 1]>::try_from(op.inverse(&base)).unwrap();
-        let restored = undo.diff(&forward).apply(&forward);
+        let restored = undo.diff(&forward).diff().apply(&forward);
         assert_eq!(restored, base);
     }
 
@@ -1101,13 +1277,8 @@ mod tests {
         assert_eq!(op.author_id(), None);
         assert_eq!(op.timestamp(), None);
         assert_eq!(op.undo_policy(), crate::os_spr::UndoPolicy::ExactBaseOnly);
-        assert_eq!(op.merge_strategy(), crate::os_spr::MergeStrategyKind::LwwRegister);
-        assert_eq!(op.conflict_rule(), crate::os_spr::ConflictRule::Merge(crate::os_spr::MergeStrategyKind::LwwRegister));
         assert_eq!(op.state_class(), crate::os_spr::StateClass::Artifact);
-        assert!(op.validate(&0).is_ok());
-        let (snapshot, reports) = op.reconcile(42);
-        assert_eq!(snapshot, 42);
-        assert!(reports.is_empty());
+        assert!(op.foreign_steps(&0).is_empty());
     }
     //#endregion 🧪️MutationLaws
 
@@ -1330,7 +1501,7 @@ mod tests {
     #[test]
     fn mutation_descriptor_with_semantics_attaches_without_changing_fingerprint() {
         let semantics = SemanticDescriptor { verb: "rename", entity: "widget", kind: "rename-widget", record: "RenamedWidget" };
-        let base = MutationDescriptor::new(crate::os_spr::ids::SchemaId("demo.rename-widget".into()), crate::os_spr::ids::SchemaVersion(1), crate::os_spr::StateClass::Artifact, crate::os_spr::ConflictRule::Merge(crate::os_spr::MergeStrategyKind::LwwRegister));
+        let base = MutationDescriptor::new(crate::os_spr::ids::SchemaId("demo.rename-widget".into()), crate::os_spr::ids::SchemaVersion(1), crate::os_spr::StateClass::Artifact);
         let fingerprint_before = base.fingerprint;
         let with_semantics = base.with_semantics(&semantics);
         assert_eq!(with_semantics.fingerprint, fingerprint_before, "attaching semantics must not change the fingerprint");
@@ -1375,8 +1546,8 @@ mod tests {
         }
         impl MutationKind<MiniDoc, MiniMutation> for RenameMini {
             const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "mini", kind: "rename-mini", record: "RenamedMini" };
-            fn diff(&self, _base: &MiniDoc) -> MiniDiff {
-                MiniDiff { name: Some(self.new_name.clone()) }
+            fn diff(&self, _base: &MiniDoc) -> MutationOutcome<MiniDiff> {
+                MutationOutcome::new(MiniDiff { name: Some(self.new_name.clone()) })
             }
             fn inverse(&self, base: &MiniDoc) -> Vec<MiniMutation> {
                 vec![MiniMutation::RenameMini(RenameMini { new_name: base.name.clone() })]
@@ -1398,13 +1569,13 @@ mod tests {
         let base = MiniDoc { name: "a".into() };
         let mutation = MiniMutation::RenameMini(rename_mini::RenameMini { new_name: "b".into() });
 
-        let after = mutation.diff(&base).apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base);
         assert_eq!(after.name, "b");
 
         let inverse = mutation.inverse(&base);
         assert_eq!(inverse.len(), 1, "inverse of a single rename is a single rename back");
         let MiniMutation::RenameMini(undo) = &inverse[0];
-        assert_eq!(undo.diff(&after).apply(&after), base, "inverse computed from base must restore base");
+        assert_eq!(undo.diff(&after).diff().apply(&after), base, "inverse computed from base must restore base");
 
         assert_eq!(MiniMutation::kinds().len(), 1);
         assert_eq!(MiniMutation::kinds()[0].kind, "rename-mini");
@@ -1424,15 +1595,14 @@ mod tests {
     //#region 🧪️DescriptorLaws
     #[test]
     fn operation_descriptor_fingerprint_is_golden_pinned() {
-        let descriptor =
-            MutationDescriptor::new(crate::os_spr::ids::SchemaId("note.append".into()), crate::os_spr::ids::SchemaVersion(1), crate::os_spr::StateClass::Artifact, crate::os_spr::ConflictRule::Merge(crate::os_spr::MergeStrategyKind::TextSequence));
+        let descriptor = MutationDescriptor::new(crate::os_spr::ids::SchemaId("note.append".into()), crate::os_spr::ids::SchemaVersion(1), crate::os_spr::StateClass::Artifact);
         let hex: String = descriptor.fingerprint.iter().map(|b| format!("{b:02x}")).collect();
         // Golden pin computed once from `descriptor_fingerprint`'s canonical-JSON+blake3 encoding;
         // any change to that encoding (or to serde's field order/derives on the id/enum types it
         // hashes) is a breaking change to every persisted `MutationDescriptor` and must update this.
-        // Re-pinned when `StateClass` collapsed onto its four canonical lanes and this descriptor's
-        // hashed variant name went `Persistent` -> `Artifact`.
-        assert_eq!(hex, "2fe60b82fe1f81e30c2c67123e629cf30d04824b3df6b009de648f7bf7818890");
+        // Re-baked (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS §C4):
+        // `conflict_rule` dropped out of both the struct and this canonical encoding.
+        assert_eq!(hex, "334fc1a502f10a879eec47edbbd526249432f67f4ccee1daa10a1f40821c8bdd");
     }
     //#endregion 🧪️DescriptorLaws
 
@@ -1586,28 +1756,28 @@ mod tests {
         let base: i64 = 10;
         let kind = DoubleAdd { delta: 3 };
         let diff = fold_plan_diff(&kind, &base);
-        assert_eq!(diff.apply(&base), 16);
+        assert_eq!(diff.diff().apply(&base), 16);
 
         let steps = plan_of(&kind, &base).expect("plan succeeds");
         let mut sequential = base;
         for step in &steps {
             if let PlanStep::Local(op) = step {
-                sequential = op.diff(&sequential).apply(&sequential);
+                sequential = op.diff(&sequential).diff().apply(&sequential);
             }
         }
-        assert_eq!(diff.apply(&base), sequential, "fold_plan_diff must equal sequential application of the plan's local steps");
+        assert_eq!(diff.diff().apply(&base), sequential, "fold_plan_diff must equal sequential application of the plan's local steps");
     }
 
     #[test]
     fn fold_plan_inverse_restores_base() {
         let base: i64 = 10;
         let kind = DoubleAdd { delta: 3 };
-        let forward = fold_plan_diff(&kind, &base).apply(&base);
+        let forward = fold_plan_diff(&kind, &base).diff().apply(&base);
         assert_ne!(forward, base);
         let inverses = fold_plan_inverse(&kind, &base);
         let mut restored = forward;
         for op in &inverses {
-            restored = op.diff(&restored).apply(&restored);
+            restored = op.diff(&restored).diff().apply(&restored);
         }
         assert_eq!(restored, base, "fold_plan_inverse applied after the composite must restore base");
     }
@@ -1617,7 +1787,7 @@ mod tests {
         let base: i64 = 0;
         let quad = QuadAdd { delta: 2 };
         let diff = fold_plan_diff(&quad, &base);
-        assert_eq!(diff.apply(&base), 8, "two nested DoubleAdd{{delta:2}} embeds must fold to +8");
+        assert_eq!(diff.diff().apply(&base), 8, "two nested DoubleAdd{{delta:2}} embeds must fold to +8");
 
         let steps = plan_of(&quad, &base).expect("plan succeeds");
         let local_deltas: Vec<i64> = steps
@@ -1630,9 +1800,9 @@ mod tests {
         assert_eq!(local_deltas, vec![2, 2, 2, 2], "nesting must flatten to four local steps, identical to the un-nested plan");
 
         let inverses = fold_plan_inverse(&quad, &base);
-        let mut restored = diff.apply(&base);
+        let mut restored = diff.diff().apply(&base);
         for op in &inverses {
-            restored = op.diff(&restored).apply(&restored);
+            restored = op.diff(&restored).diff().apply(&restored);
         }
         assert_eq!(restored, base);
     }
@@ -1659,7 +1829,7 @@ mod tests {
         let base: i64 = 5;
         let kind = AddThenNotifyForeign { delta: 4, foreign_count: 2 };
         let diff = fold_plan_diff(&kind, &base);
-        assert_eq!(diff.apply(&base), 9, "only the local AddOp{{delta:4}} may contribute to the folded diff");
+        assert_eq!(diff.diff().apply(&base), 9, "only the local AddOp{{delta:4}} may contribute to the folded diff");
 
         let foreign = plan_foreign_steps(&kind, &base);
         assert_eq!(foreign.len(), 2);
@@ -1693,11 +1863,11 @@ mod tests {
         let base: i64 = 1;
         let kind = DerivedDoubleAdd { delta: 5 };
         let diff = MutationKind::<i64, AddOp>::diff(&kind, &base);
-        assert_eq!(diff.apply(&base), 11);
+        assert_eq!(diff.diff().apply(&base), 11);
         let inverse = MutationKind::<i64, AddOp>::inverse(&kind, &base);
-        let mut restored = diff.apply(&base);
+        let mut restored = diff.diff().apply(&base);
         for op in &inverse {
-            restored = op.diff(&restored).apply(&restored);
+            restored = op.diff(&restored).diff().apply(&restored);
         }
         assert_eq!(restored, base);
         assert_eq!(<DerivedDoubleAdd as MutationKind<i64, AddOp>>::SEMANTICS.kind, "derived-double-add");

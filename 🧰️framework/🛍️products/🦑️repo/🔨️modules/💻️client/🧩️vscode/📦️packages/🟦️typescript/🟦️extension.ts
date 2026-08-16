@@ -699,6 +699,7 @@ export type TicketCheckpointInput = {
 };
 
 export type TicketOpenInput = {
+  effort?: InputMaybe<Scalars['String']['input']>;
   llm: Scalars['String']['input'];
   planPath?: InputMaybe<Scalars['String']['input']>;
   prompt: Scalars['String']['input'];
@@ -1422,6 +1423,7 @@ export interface TicketFrontmatter {
 export interface TicketInteraction {
   prompt: string;
   llm: string;
+  effort?: string;
   client: string;
   author: string;
   date: string;

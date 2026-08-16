@@ -22,7 +22,7 @@ pub fn change_representation_mesh_url(id: String, new_mesh_url: Option<String>) 
 impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ChangeRepresentationMeshUrl {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "representation", kind: "change-representation-mesh-url", record: "ChangedRepresentationMeshUrl" };
 
-    fn diff(&self, base: &Block3dSnapshot) -> Block3dDiff {
+    fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {

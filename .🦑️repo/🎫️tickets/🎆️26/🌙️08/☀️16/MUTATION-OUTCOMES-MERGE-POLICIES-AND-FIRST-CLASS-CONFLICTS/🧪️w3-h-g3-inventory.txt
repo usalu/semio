@@ -1,0 +1,23 @@
+Lane 3-H, Group G3 — mutation outcome fan-out inventory
+Plugins: mathematical, gis, vcs, imperative
+
+=== ➗️mathematical (15 mutation kinds, 1 root schema-diff-struct dir excluded from leaf count) ===
+create-node        create      -> Fatal duplicate-id on existing id
+delete-node         delete      -> Error target-missing / Info cascade (incident edges)
+delete-nodes        delete(plural) -> Error target-missing (all missing) / Warning partial (some missing) / Info cascade
+insert-point        insert      -> Warning clamped (index out of range)
+remove-point        remove      -> Error target-missing (index out of range)
+replace-points       replace(edit/replace) -> Warning no-op (unchanged)
+move-point          move        -> Error target-missing / Warning no-op / Fatal invariant (non-finite)
+change-node-label     change      -> Error target-missing / Warning no-op (same label)
+change-graph-directed  change      -> Warning no-op (unchanged), root-scoped bool
+replace-graph        replace     -> Warning no-op (unchanged), root-scoped whole replace
+change-coefficient     change      -> Error target-missing (label unresolved/non-numeric) / Warning no-op (same value) / Fatal invariant (zero denominator)
+connect-nodes        connect     -> Fatal duplicate-id (dup edge id) / Error target-missing (missing endpoint) / Warning no-op (parallel edge forbidden)
+disconnect-nodes      disconnect  -> Error target-missing
+move-node           move        -> Error target-missing / Warning no-op / Fatal invariant (non-finite)
+update-graph-algorithm  update(change)  -> Warning no-op (unchanged), root-scoped
+
+Hand-written impl Mutation/MutationKind outside triads:
+  🎛️apps/➗️mathematical/🎚️config/🦀️component.rs (config mutation enum)
+  🎛️apps/➗️mathematical/👥️presence/🦀️component.rs (presence mutation enum)

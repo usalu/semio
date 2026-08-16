@@ -1,6 +1,6 @@
 //! 🖇️ `add-layer-asset` — attaches a real `RasterImageAsset` (event-log content) to the document's
 //! id-keyed asset collection. NOT one of the coordinator's ten mandated derivations; added so
-//! `image:in` media import (`crate::apps::raster::wasm`/the app's `import_media`) can stay a real,
+//! `image:in` media import (`crate::editor::raster::wasm`/the app's `import_media`) can stay a real,
 //! undoable operation now that whole-document replace is gone — `assets: BTreeMap<String,
 //! store::ArtifactChild<SemioImageSnapshot>>` (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`:
 //! the persisted document field holds only a composed-child HANDLE; this mutation's own payload still
@@ -25,7 +25,7 @@ pub struct AddLayerAsset {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for AddLayerAsset {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "asset", kind: "add-layer-asset", record: "AddedLayerAsset" };
 
-    fn diff(&self, base: &RasterSnapshot) -> RasterDiff {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::add_layer_asset::diff::diff(self, base)
     }
 

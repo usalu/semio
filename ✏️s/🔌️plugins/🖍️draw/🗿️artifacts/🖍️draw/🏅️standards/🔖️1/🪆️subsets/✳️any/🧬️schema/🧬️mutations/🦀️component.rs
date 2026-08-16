@@ -91,7 +91,7 @@ pub fn draw_op_for_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, 
 pub fn patch_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, value: &serde_json::Value) -> DrawSnapshot {
     use protocol::{Mutation, MutationDiff};
     match draw_op_for_layer_field(doc, layer_id, field, value) {
-        Some(operation) => operation.diff(doc).apply(doc),
+        Some(operation) => operation.diff(doc).diff().apply(doc),
         None => doc.clone(),
     }
 }
@@ -117,7 +117,7 @@ pub use super::update_layer_transform::mutation::{update_layer_transform, Update
 mod tests {
     use super::*;
     use crate::artifacts::draw::schema::{create_draw_path_layer, create_draw_shape_layer_rect, default_draw_document};
-    use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     fn base_document() -> DrawSnapshot {
@@ -178,11 +178,41 @@ mod tests {
     fn set_layer_opacity_diff_absorb_law() {
         let base = base_document();
         let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
-        let d1 = set_layer_opacity(layer_id.clone(), 0.5).diff(&base);
+        let d1 = set_layer_opacity(layer_id.clone(), 0.5).diff(&base).diff().clone();
         let mid = d1.apply(&base);
-        let d2 = set_layer_opacity(layer_id, 0.25).diff(&mid);
+        let d2 = set_layer_opacity(layer_id, 0.25).diff(&mid).diff().clone();
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
+
+    //#region 🧪️OutcomeLaws
+    /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
+    /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
+    #[test]
+    fn delete_missing_layer_is_a_target_missing_error() {
+        let base = base_document();
+        assert_missing_target_is_error(&base, &delete_layer("does-not-exist".into()));
+    }
+
+    #[test]
+    fn rename_missing_layer_is_a_target_missing_error() {
+        let base = base_document();
+        assert_missing_target_is_error(&base, &rename_layer("does-not-exist".into(), "New Name".into()));
+    }
+
+    #[test]
+    fn set_layer_opacity_missing_layer_is_a_target_missing_error() {
+        let base = base_document();
+        assert_missing_target_is_error(&base, &set_layer_opacity("does-not-exist".into(), 0.5));
+    }
+
+    #[test]
+    fn create_layer_duplicate_id_never_applies() {
+        let base = base_document();
+        // Re-creating the exact existing node collides on id for real (ids are content-addressed).
+        let duplicate = create_layer(None, None, base.layers[0].clone());
+        assert_fatal_never_applies(&duplicate.diff(&base));
+    }
+    //#endregion 🧪️OutcomeLaws
 
     #[test]
     fn dispatch_registers_semantic_descriptors() {

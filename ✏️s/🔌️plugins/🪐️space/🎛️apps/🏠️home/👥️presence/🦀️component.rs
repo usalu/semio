@@ -70,8 +70,8 @@ pub enum HomePresenceMutation {
 impl Mutation<HomePresence> for HomePresenceMutation {
     type Diff = HomePresence;
 
-    fn diff(&self, _base: &HomePresence) -> HomePresence {
-        HomePresence::default()
+    fn diff(&self, _base: &HomePresence) -> protocol::MutationOutcome<HomePresence> {
+        protocol::MutationOutcome::new(HomePresence::default())
     }
 
     fn inverse(&self, _base: &HomePresence) -> Vec<Self> {

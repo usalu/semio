@@ -18,7 +18,7 @@ pub struct ReplaceMeta {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceMeta {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "meta", kind: "replace-meta", record: "ReplacedMeta" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

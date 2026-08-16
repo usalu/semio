@@ -6,8 +6,7 @@
       "algorithmVersion": 1,
       "cacheKey": "s.stdio.gltf.inference.material-volume.v1:geometry-v2",
       "inputs": ["schema/snapshot", "buffers"],
-      "target": "geometricAnalysis.overall.material-volume"
+      "target": "geometry.overall.areaVolume.materialVolume"
     }
   }
 }
-

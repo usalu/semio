@@ -110,9 +110,9 @@ mod tests {
     }
 
     #[test]
-    fn delete_step_missing_target_is_a_noop_inverse() {
+    fn delete_step_missing_target_is_error() {
         let base = default_snapshot();
-        assert_mutation_inverse_law(&base, &delete_step(PathRef::default(), "step-missing".into()));
+        protocol::testkit::assert_missing_target_is_error(&base, &delete_step(PathRef::default(), "step-missing".into()));
     }
 
     #[test]
@@ -122,9 +122,9 @@ mod tests {
     }
 
     #[test]
-    fn reorder_steps_missing_target_is_a_noop_inverse() {
+    fn reorder_steps_missing_target_is_error() {
         let base = default_snapshot();
-        assert_mutation_inverse_law(&base, &reorder_steps(PathRef::default(), "step-missing".into(), 0));
+        protocol::testkit::assert_missing_target_is_error(&base, &reorder_steps(PathRef::default(), "step-missing".into(), 0));
     }
 
     #[test]
@@ -135,18 +135,25 @@ mod tests {
     }
 
     #[test]
-    fn edit_step_params_missing_target_is_a_noop_inverse() {
+    fn edit_step_params_missing_target_is_error() {
         let base = default_snapshot();
-        assert_mutation_inverse_law(&base, &edit_step_params(PathRef::default(), "step-missing".into(), Dictionary::new()));
+        protocol::testkit::assert_missing_target_is_error(&base, &edit_step_params(PathRef::default(), "step-missing".into(), Dictionary::new()));
+    }
+
+    #[test]
+    fn create_step_duplicate_id_fatal_never_applies() {
+        let base = default_snapshot();
+        let mutation = create_step(PathRef::default(), step("step-1", "log.print"));
+        protocol::testkit::assert_fatal_never_applies(&protocol::Mutation::diff(&mutation, &base));
     }
 
     #[test]
     fn create_step_diff_absorb_law() {
         use protocol::Mutation;
         let base = default_snapshot();
-        let d1 = create_step(PathRef::default(), step("step-97", "log.print")).diff(&base);
+        let d1 = create_step(PathRef::default(), step("step-97", "log.print")).diff(&base).into_parts().0;
         let mid = protocol::MutationDiff::apply(&d1, &base);
-        let d2 = create_step(PathRef::default(), step("step-98", "log.print")).diff(&mid);
+        let d2 = create_step(PathRef::default(), step("step-98", "log.print")).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 

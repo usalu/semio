@@ -23,7 +23,7 @@ pub fn replace_kind_catalogs(new_catalogs: Option<Puzzle3dKindCatalogs>) -> Puzz
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ReplaceKindCatalogs {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "kind-catalogs", kind: "replace-kind-catalogs", record: "ReplacedKindCatalogs" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> Puzzle3dDiff {
+    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {

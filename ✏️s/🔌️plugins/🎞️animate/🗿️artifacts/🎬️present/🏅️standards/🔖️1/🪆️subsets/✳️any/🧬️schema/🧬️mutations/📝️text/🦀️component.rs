@@ -58,10 +58,11 @@ mod tests {
     use store::os_store::test_support;
 
     fn round_trip(deck: &PresentSnapshot, operation: &PresentMutation) -> PresentSnapshot {
-        let forward = vcs::apply_mutation(deck, operation);
+        let (forward, _messages) = vcs::apply_mutation(deck, operation);
         let mut restored = forward.clone();
         for back in protocol::Mutation::inverse(operation, deck) {
-            restored = vcs::apply_mutation(&restored, &back);
+            let (next, _messages) = vcs::apply_mutation(&restored, &back);
+            restored = next;
         }
         assert_eq!(&restored, deck, "inverse() must exactly restore the pre-operation deck");
         forward

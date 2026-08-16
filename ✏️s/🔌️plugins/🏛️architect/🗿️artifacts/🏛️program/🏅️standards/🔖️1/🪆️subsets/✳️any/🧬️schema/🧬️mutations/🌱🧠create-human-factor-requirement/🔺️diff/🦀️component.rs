@@ -6,7 +6,11 @@ use crate::artifacts::program::diff::ProgramHumanFactorsDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🌱️ `added = [payload row]` — the row lands at the end of `program.human_factors` on apply.
-pub fn diff(payload: &CreateHumanFactorRequirement, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { human_factors: Some(ProgramHumanFactorsDelta { added: vec![payload.human_factor_requirement.clone()], ..Default::default() }), ..Default::default() }
+/// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
+pub fn diff(payload: &CreateHumanFactorRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let id = payload.human_factor_requirement.header.id.clone();
+    if base.human_factors.iter().any(|row| row.header.id == id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A human factor requirement already exists with this id.", [id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { human_factors: Some(ProgramHumanFactorsDelta { added: vec![payload.human_factor_requirement.clone()], ..Default::default() }), ..Default::default() })
 }

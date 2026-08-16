@@ -6,7 +6,7 @@
 //! equivalence law.
 //!
 //! The app's typed `PlaybookCommand` enum — which used to share the old `📡️protocol` crate with this
-//! codec — is an APP concern, not an artifact one: it now lives in `🎛️apps/📖️playbook/🦀️component.rs`,
+//! codec — is an EDITOR concern, not an artifact one: it now lives in `✏️editor/🦀️component.rs`,
 //! assembled from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
 
 

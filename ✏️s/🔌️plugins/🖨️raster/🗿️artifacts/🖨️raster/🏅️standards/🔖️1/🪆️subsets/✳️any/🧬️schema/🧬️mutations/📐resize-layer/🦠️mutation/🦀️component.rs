@@ -19,7 +19,7 @@ pub struct ResizeLayer {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ResizeLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "resize", entity: "layer", kind: "resize-layer", record: "ResizedLayer" };
 
-    fn diff(&self, base: &RasterSnapshot) -> RasterDiff {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::resize_layer::diff::diff(self, base)
     }
 

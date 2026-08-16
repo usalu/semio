@@ -6,8 +6,7 @@
       "algorithmVersion": 1,
       "cacheKey": "s.stdio.gltf.inference.compactness-index.v1:geometry-v2",
       "inputs": ["schema/snapshot", "buffers"],
-      "target": "geometricAnalysis.overall.compactness-index"
+      "target": "geometry.overall.compactness.compactnessIndex"
     }
   }
 }
-

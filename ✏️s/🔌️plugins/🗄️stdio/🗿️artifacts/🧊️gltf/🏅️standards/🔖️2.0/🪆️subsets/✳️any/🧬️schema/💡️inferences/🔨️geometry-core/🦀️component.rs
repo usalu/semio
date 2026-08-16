@@ -356,6 +356,52 @@ fn bounds(points: &[V3]) -> Option<(V3, V3, V3)> {
     }
     Some((lo, hi, sub(hi, lo)))
 }
+
+/// 🧩️ Internal pairwise geometry evidence; leaves decide their public result records.
+pub(crate) struct GltfPairGeometry {
+    pub(crate) first: GltfEntityAddress,
+    pub(crate) second: GltfEntityAddress,
+    pub(crate) minimum_distance: f64,
+    pub(crate) adjacent: bool,
+    pub(crate) contact_area: Option<f64>,
+    pub(crate) overlap: Option<(f64, usize)>,
+    pub(crate) sample_count: usize,
+}
+
+fn sampled_points(points: &[V3], limit: usize) -> impl Iterator<Item = V3> + '_ {
+    let step = points.len().div_ceil(limit.max(1));
+    points.iter().step_by(step).copied()
+}
+
+pub(crate) fn pair_geometry(first: &RawPart, second: &RawPart, policy: &GltfAnalysisPolicy) -> Option<GltfPairGeometry> {
+    let (first_lo, first_hi, _) = bounds(&first.points)?;
+    let (second_lo, second_hi, _) = bounds(&second.points)?;
+    let point_limit = ((policy.sampling_budget as f64).sqrt() as usize).max(1);
+    let first_samples = sampled_points(&first.points, point_limit).collect::<Vec<_>>();
+    let second_samples = sampled_points(&second.points, point_limit).collect::<Vec<_>>();
+    let minimum_distance = first_samples.iter().flat_map(|a| second_samples.iter().map(move |b| norm(sub(*a, *b)))).fold(f64::INFINITY, f64::min);
+    let sample_count = first_samples.len().saturating_mul(second_samples.len());
+    let tolerance = ((norm(sub(first_hi, first_lo)).max(norm(sub(second_hi, second_lo))) * policy.relative_tolerance).max(policy.absolute_length_tolerance));
+    let overlap_dimensions =
+        [(first_hi[0].min(second_hi[0]) - first_lo[0].max(second_lo[0])).max(0.0), (first_hi[1].min(second_hi[1]) - first_lo[1].max(second_lo[1])).max(0.0), (first_hi[2].min(second_hi[2]) - first_lo[2].max(second_lo[2])).max(0.0)];
+    let overlap_volume = overlap_dimensions.iter().product::<f64>();
+    let contact_area = if minimum_distance <= policy.contact_tolerance.max(tolerance) {
+        let normal_axis = overlap_dimensions.iter().enumerate().min_by(|(_, left), (_, right)| left.total_cmp(right)).map(|(axis, _)| axis).unwrap_or(0);
+        overlap_dimensions.iter().enumerate().filter(|(axis, _)| *axis != normal_axis).map(|(_, extent)| *extent).product()
+    } else {
+        0.0
+    };
+    Some(GltfPairGeometry {
+        first: first.address.clone(),
+        second: second.address.clone(),
+        minimum_distance,
+        adjacent: minimum_distance <= policy.contact_tolerance.max(tolerance),
+        contact_area: Some(contact_area),
+        overlap: Some((overlap_volume, sample_count)),
+        sample_count,
+    })
+}
+
 pub(crate) fn triangle_area(a: V3, b: V3, c: V3) -> f64 {
     0.5 * norm(cross(sub(b, a), sub(c, a)))
 }
@@ -632,6 +678,76 @@ fn topology(points: &[V3], faces: &[[usize; 3]]) -> (Topology, Vec<V3>, Vec<[usi
 
 pub(crate) fn topology_summary(points: &[V3], faces: &[[usize; 3]]) -> Topology {
     topology(points, faces).0
+}
+
+fn point_triangle_distance_squared(point: V3, a: V3, b: V3, c: V3) -> f64 {
+    let ab = sub(b, a);
+    let ac = sub(c, a);
+    let ap = sub(point, a);
+    let d1 = dot(ab, ap);
+    let d2 = dot(ac, ap);
+    if d1 <= 0.0 && d2 <= 0.0 {
+        return dot(ap, ap);
+    }
+    let bp = sub(point, b);
+    let d3 = dot(ab, bp);
+    let d4 = dot(ac, bp);
+    if d3 >= 0.0 && d4 <= d3 {
+        return dot(bp, bp);
+    }
+    let vc = d1 * d4 - d3 * d2;
+    if vc <= 0.0 && d1 >= 0.0 && d3 <= 0.0 {
+        let projection = add(a, mul(ab, d1 / (d1 - d3)));
+        return dot(sub(point, projection), sub(point, projection));
+    }
+    let cp = sub(point, c);
+    let d5 = dot(ab, cp);
+    let d6 = dot(ac, cp);
+    if d6 >= 0.0 && d5 <= d6 {
+        return dot(cp, cp);
+    }
+    let vb = d5 * d2 - d1 * d6;
+    if vb <= 0.0 && d2 >= 0.0 && d6 <= 0.0 {
+        let projection = add(a, mul(ac, d2 / (d2 - d6)));
+        return dot(sub(point, projection), sub(point, projection));
+    }
+    let va = d3 * d6 - d5 * d4;
+    if va <= 0.0 && d4 - d3 >= 0.0 && d5 - d6 >= 0.0 {
+        let projection = add(b, mul(sub(c, b), (d4 - d3) / ((d4 - d3) + (d5 - d6))));
+        return dot(sub(point, projection), sub(point, projection));
+    }
+    let denominator = 1.0 / (va + vb + vc);
+    let projection = add(a, add(mul(ab, vb * denominator), mul(ac, vc * denominator)));
+    dot(sub(point, projection), sub(point, projection))
+}
+
+fn segment_distance_squared(first_start: V3, first_end: V3, second_start: V3, second_end: V3) -> f64 {
+    let first_direction = sub(first_end, first_start);
+    let second_direction = sub(second_end, second_start);
+    let between = sub(first_start, second_start);
+    let aa = dot(first_direction, first_direction);
+    let bb = dot(first_direction, second_direction);
+    let cc = dot(second_direction, second_direction);
+    let dd = dot(first_direction, between);
+    let ee = dot(second_direction, between);
+    let denominator = aa * cc - bb * bb;
+    let (mut first, mut second) = if denominator <= f64::EPSILON { (0.0, if cc > 0.0 { ee / cc } else { 0.0 }) } else { ((bb * ee - cc * dd) / denominator, (aa * ee - bb * dd) / denominator) };
+    first = first.clamp(0.0, 1.0);
+    second = if cc > 0.0 { ((bb * first + ee) / cc).clamp(0.0, 1.0) } else { 0.0 };
+    first = if aa > 0.0 { ((bb * second - dd) / aa).clamp(0.0, 1.0) } else { 0.0 };
+    let delta = sub(add(first_start, mul(first_direction, first)), add(second_start, mul(second_direction, second)));
+    dot(delta, delta)
+}
+
+fn triangle_distance(first: [V3; 3], second: [V3; 3]) -> f64 {
+    let mut squared =
+        first.iter().map(|point| point_triangle_distance_squared(*point, second[0], second[1], second[2])).chain(second.iter().map(|point| point_triangle_distance_squared(*point, first[0], first[1], first[2]))).fold(f64::INFINITY, f64::min);
+    for first_edge in [(first[0], first[1]), (first[1], first[2]), (first[2], first[0])] {
+        for second_edge in [(second[0], second[1]), (second[1], second[2]), (second[2], second[0])] {
+            squared = squared.min(segment_distance_squared(first_edge.0, first_edge.1, second_edge.0, second_edge.1));
+        }
+    }
+    squared.sqrt()
 }
 
 fn point_in_closed_mesh(point: V3, points: &[V3], faces: &[[usize; 3]], tolerance: f64) -> Option<bool> {
@@ -911,3 +1027,44 @@ impl<'a> GltfGeometryContext<'a> {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::super::{
+        area_volume::contact_area,
+        clearance::{interference_volume, overlap_volume},
+    };
+    use super::*;
+
+    fn box_part(lo: V3, hi: V3) -> RawPart {
+        RawPart {
+            address: GltfEntityAddress { scope: GltfEntityScope::Primitive, scene: Some(0), node_path: vec![0], mesh: Some(0), primitive: Some(0), component: None, surface_region: None, content_fingerprint: "pair-geometry-test".into() },
+            name: None,
+            points: [lo[0], hi[0]].into_iter().flat_map(|x| [lo[1], hi[1]].into_iter().flat_map(move |y| [lo[2], hi[2]].into_iter().map(move |z| [x, y, z]))).collect(),
+            triangles: Vec::new(),
+            diagnostic_ids: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn pair_geometry_preserves_contact_distance_and_box_overlap_leaf_semantics() {
+        let first = box_part([0.0, 0.0, 0.0], [4.0, 3.0, 3.0]);
+        let contact = box_part([4.0, 0.0, 0.0], [5.0, 3.0, 3.0]);
+        let overlapping = box_part([2.0, 1.0, -1.0], [5.0, 5.0, 4.0]);
+        let separated = box_part([6.0, 0.0, 0.0], [8.0, 3.0, 3.0]);
+
+        let contact_pair = pair_geometry(&first, &contact, &policy()).expect("finite contact boxes");
+        let overlapping_pair = pair_geometry(&first, &overlapping, &policy()).expect("finite overlapping boxes");
+        let separated_pair = pair_geometry(&first, &separated, &policy()).expect("finite separated boxes");
+
+        assert_eq!(contact_pair.minimum_distance, 0.0);
+        assert_eq!(contact_pair.contact_area, Some(9.0));
+        assert_eq!(contact_area::infer_pair(&contact_pair).quality.method, GltfComputationMethod::DeterministicEstimate);
+        assert_eq!(overlap_volume::infer_pair(&overlapping_pair).value, Some(12.0));
+        assert_eq!(interference_volume::infer_pair(&overlapping_pair).value, Some(12.0));
+        assert_eq!(overlap_volume::infer_pair(&separated_pair).value, Some(0.0));
+        assert_eq!(interference_volume::infer_pair(&separated_pair).value, Some(0.0));
+        assert_eq!(overlap_volume::infer_pair(&overlapping_pair).quality.method, GltfComputationMethod::DeterministicEstimate);
+        assert_eq!(separated_pair.minimum_distance, 2.0);
+        assert_eq!(contact_area::infer_pair(&separated_pair).quality.method, GltfComputationMethod::Exact);
+    }
+}

@@ -1,0 +1,2 @@
+# change-asset-descriptive-metadata diff facet.
+type GltfChangeAssetDescriptiveMetadataDiffV1 { id: ID!, version: Int!, touchedPaths: [String!]!, accepted: Boolean!, rejectionCode: String }

@@ -22,7 +22,7 @@ pub struct ResizeTileCrop {
 impl MutationKind<PresentSnapshot, PresentMutation> for ResizeTileCrop {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "tile-crop", kind: "resize-tile-crop", record: "ResizedTileCrop" };
 
-    fn diff(&self, base: &PresentSnapshot) -> PresentDiff {
+    fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
         super::diff::diff(self, base)
     }
 

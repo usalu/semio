@@ -14,7 +14,7 @@ pub struct ReplacePoints {
 impl protocol::MutationKind<MathematicalSnapshot, MathematicalMutation> for ReplacePoints {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "points", kind: "replace-points", record: "ReplacedPoints" };
 
-    fn diff(&self, base: &MathematicalSnapshot) -> <MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::Diff {
+    fn diff(&self, base: &MathematicalSnapshot) -> protocol::MutationOutcome<<MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {

@@ -102,7 +102,7 @@ pub use derived_composition::*;
 /// 🚧️ All fallible layout-engine operations funnel through this — document parsing, scene/hit-test
 /// resolution, and export (SVG/PDF/PNG/zip package). Relocated from the deleted `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES); the app engine's scene/export functions
-/// (`🎛️apps/📏️layout/⚙️engine`) reach it by qualified path — an app depending on its artifact is normal
+/// (`✏️editor/⚙️engine`) reach it by qualified path — an app depending on its artifact is normal
 /// direction, not a layering violation.
 #[derive(Debug, thiserror::Error)]
 pub enum LayoutError {

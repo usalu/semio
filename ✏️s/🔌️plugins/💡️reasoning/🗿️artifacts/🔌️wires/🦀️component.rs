@@ -15,9 +15,17 @@
 //! every call site that used to read `snapshot.board_fixture` now goes through.
 
 use dsl::DslValue;
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
 //#region 🔖️Constants
+/// 🪪️ This artifact's coordinate (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract
+/// §2.1) — lives at the ARTIFACT level (not under `editor`/`viewer`) specifically so `👁️viewer` can
+/// read it without ever importing through the sibling editor module. `artifact_kind` matches
+/// `#[artifact_schema(id = "s.reasoning.wires")]` on `WiresArtifact`
+/// (`🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs`); `standard`/`subset` match this
+/// file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — the canonical surface id is
+/// `s.reasoning.wires@1/*#editor` / `s.reasoning.wires@1/*#viewer`.
+pub const WIRES_DIALECT: Dialect = Dialect { artifact_kind: "s.reasoning.wires", standard: StandardId("1"), subset: SubsetId::ANY };
 pub use crate::artifacts::wires::schema::mutations::WiresMutation;
 
 pub use crate::artifacts::wires::schema::diff::WiresDiff;
@@ -248,7 +256,7 @@ pub fn wires_working_board(snapshot: &WiresSnapshot) -> DslValue {
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::apps::wires::create_wires_app`'s `🔖️Manifest` region.
+/// `crate::editor::wires::create_wires_app`'s `🔖️Manifest` region.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "graph.wires".into(),
@@ -378,7 +386,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .schema(crate::artifacts::wires::schema::wires_artifact_schema_descriptor())
         .inferences([crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::wires_artifact_inference_descriptor()])
         .composers(crate::artifacts::wires::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<crate::apps::wires::ReasoningWiresPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::wires::ReasoningWiresPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration

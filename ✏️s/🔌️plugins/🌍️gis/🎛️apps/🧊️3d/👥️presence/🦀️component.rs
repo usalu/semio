@@ -117,9 +117,14 @@ pub enum Gis3dPresenceMutation {
 impl Mutation<Gis3dPresence> for Gis3dPresenceMutation {
     type Diff = Gis3dPresence;
 
-    fn diff(&self, _base: &Gis3dPresence) -> Gis3dPresence {
+    fn diff(&self, base: &Gis3dPresence) -> protocol::MutationOutcome<Gis3dPresence> {
         match self {
-            Self::Snapshot { presence } => presence.clone(),
+            Self::Snapshot { presence } => {
+                if base == presence {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", "Presence snapshot is already identical to the requested replacement.");
+                }
+                protocol::MutationOutcome::new(presence.clone())
+            }
         }
     }
 

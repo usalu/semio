@@ -11,5 +11,5 @@ message GltfFootprintAreaInferenceV1 {
   string quality = 5;
   repeated string diagnostic_ids = 6;
   repeated string provenance = 7;
-  bytes value_json = 8;
+  optional double value = 8;
 }

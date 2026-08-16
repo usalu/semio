@@ -1,0 +1,15 @@
+{
+  "id": "s.stdio.gltf.mutation.change-mesh-morph-weights.v1",
+  "laws": [
+    "typed validation rejection",
+    "direct sparse mesh diff",
+    "exact-base inverse",
+    "declared touched paths",
+    "reference repair or rejection",
+    "apply/replay/undo determinism"
+  ],
+  "touchedPaths": [
+    "document/meshes/*/weights"
+  ],
+  "referencePolicy": "requires finite weights whose arity matches every primitive target list"
+}

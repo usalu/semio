@@ -1,0 +1,9 @@
+# move-morph-target-attribute mutation facet.
+input GltfMoveMorphTargetAttributePayloadV1 {
+  mesh: Int!
+  primitive: Int!
+  target: Int!
+  semantic: String!
+  position: Int!
+}
+type GltfMoveMorphTargetAttributeMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

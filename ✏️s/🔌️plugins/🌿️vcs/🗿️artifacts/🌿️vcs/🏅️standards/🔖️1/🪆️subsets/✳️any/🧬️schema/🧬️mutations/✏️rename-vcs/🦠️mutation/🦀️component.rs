@@ -20,7 +20,7 @@ pub fn rename_vcs(new_title: String) -> VcsDemoMutation {
 impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for RenameVcs {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "vcs", kind: "rename-vcs", record: "RenamedVcs" };
 
-    fn diff(&self, base: &VcsSnapshot) -> VcsDiff {
+    fn diff(&self, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {

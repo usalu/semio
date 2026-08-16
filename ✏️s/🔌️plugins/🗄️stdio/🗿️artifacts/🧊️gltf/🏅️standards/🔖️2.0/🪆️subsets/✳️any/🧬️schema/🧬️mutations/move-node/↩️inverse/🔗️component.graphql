@@ -1,0 +1,14 @@
+# move-node typed inverse facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfNodeValueV1
+input GltfMoveNodePayloadV1 {
+  index: Int!
+  position: Int!
+}
+type GltfMoveNodeInverseOperationV1 {
+  kind: String!
+  index: Int!
+  position: Int!
+}
+type GltfMoveNodeInverseV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfMoveNodePayloadV1!, operation: GltfMoveNodeInverseOperationV1! }

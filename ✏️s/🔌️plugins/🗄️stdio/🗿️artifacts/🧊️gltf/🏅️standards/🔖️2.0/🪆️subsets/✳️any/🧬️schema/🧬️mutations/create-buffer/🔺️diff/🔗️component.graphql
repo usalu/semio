@@ -1,0 +1,15 @@
+# create-buffer typed diff facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfBufferValueV1
+input GltfCreateBufferPayloadV1 {
+  position: Int!
+  bytes: [Int!]!
+}
+type GltfCreateBufferDiffOperationV1 {
+  kind: String!
+  position: Int!
+  item: GltfBufferValueV1!
+  bytes: [Int!]!
+}
+type GltfCreateBufferDiffV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfCreateBufferPayloadV1!, operation: GltfCreateBufferDiffOperationV1! }

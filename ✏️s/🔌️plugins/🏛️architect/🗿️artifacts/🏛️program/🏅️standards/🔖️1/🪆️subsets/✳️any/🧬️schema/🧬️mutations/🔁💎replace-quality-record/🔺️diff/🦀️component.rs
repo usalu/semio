@@ -7,13 +7,14 @@ use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 use protocol::Patchable;
 
-/// 🔁️ `patched = [{id, full patch}]` via `Patchable::diff_patch` — every field of the payload
-/// row becomes the patch, so applying it fully overwrites the target's non-identity content.
-/// Target absent from `base` ⇒ empty diff (nothing to change).
-pub fn diff(payload: &ReplaceQualityRecord, base: &ProgramSnapshot) -> ProgramDiff {
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
+pub fn diff(payload: &ReplaceQualityRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let Some(existing) = base.quality.iter().find(|row| row.header.id == payload.quality_record.header.id) else {
-        return ProgramDiff::default();
+        return protocol::MutationOutcome::error("mutation.target-missing", "No quality record exists with this id.", [payload.quality_record.header.id.0.clone()]);
     };
+    if existing == &payload.quality_record {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This quality record already matches the requested value.").at([existing.header.id.0.clone()])]);
+    }
     let patch = existing.diff_patch(&payload.quality_record).expect("diff_patch always produces a full patch");
-    ProgramDiff { quality: Some(ProgramQualityDelta { patched: vec![ProgramQualityPatchEntry { id: payload.quality_record.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() }
+    protocol::MutationOutcome::new(ProgramDiff { quality: Some(ProgramQualityDelta { patched: vec![ProgramQualityPatchEntry { id: payload.quality_record.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
 }

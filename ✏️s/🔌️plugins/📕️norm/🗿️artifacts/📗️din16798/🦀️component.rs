@@ -12,34 +12,24 @@ use serde::{Deserialize, Serialize};
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 //#endregion 🔖️Types
 
-// `)` so the
+//#region 🔖️ArtifactKind
+/// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port —
+/// lifted out of the pre-migration manifest's inline `.artifact_kind(ArtifactKindSpec { .. })` so the
 /// artifact node, not the app, owns its own kind declaration.
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     crate::app_surface::artifact_kind_spec("din16798", "DIN EN 16798")
 }
 //#endregion 🔖️ArtifactKind
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::artifacts::din16798::standards::v1::subsets::any::io::io_registry as v1;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
-    use std::sync::OnceLock;
 
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("Din16798Composer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
-}
-//#endregion 🚪️DerivedIoRegistry
+/// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1) — lives at the ARTIFACT level, not
+/// under the sibling `editor` module, so a viewer file can read it without ever importing through it.
+pub const DIN16798_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect {
+    artifact_kind: "s.norm.din16798",
+    standard: semio_framework_plugin::app::StandardId("1"),
+    subset: semio_framework_plugin::app::SubsetId::ANY,
+};
+pub const DIN16798_DOCUMENT_SCHEMA: &str = "semio.norm.din16798/v1";
 
 //#region 🪪️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
@@ -78,7 +68,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .inferences([crate::artifacts::din16798::standards::v1::subsets::any::schema::inferences::din16798_artifact_inference_descriptor()])
         .composers(crate::artifacts::din16798::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::din16798::Din16798PlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::din16798::Din16798PlayApp>>()
         .try_build()
 }
 

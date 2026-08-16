@@ -22,13 +22,13 @@ extern crate semio_framework_schema as schema;
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
-// 🎭️ `fsm::statechart!` (used by `apps::draw::commands::canvas_pointer_down`'s gesture machine) generates code
+// 🎭️ `fsm::statechart!` (used by `editor::draw::commands::canvas_pointer_down`'s gesture machine) generates code
 // containing `#[cfg(feature = "serde")]` gates meant for `fsm`'s OWN crate; macro hygiene splices
 // that cfg check into the CALLING crate's feature list instead (a `fsm`/rustc macro-expansion
 // limitation, not a real conditional-compilation bug here) — this crate declares no `serde` feature
 // at all (the dependency is always-on), so rustc flags the value as unrecognized. Harmless, but a
 // hard error under `-D warnings` without this crate-wide allow.
-// 🪶️ Needed by `apps::draw::semio_plugin_bundle_installer_link_shim`'s `#[linkage = "weak"]` —
+// 🪶️ Needed by `editor::draw::semio_plugin_bundle_installer_link_shim`'s `#[linkage = "weak"]` —
 // satisfies the plugin runtime when this app is linked as its own standalone WASM module. Gated to
 // wasm32 only: the attribute using it is itself `#[cfg(target_arch = "wasm32")]`, and an unused
 // nightly feature is a hard error under this crate's `-D warnings` gate on native targets.
@@ -431,90 +431,90 @@ pub mod artifacts {
 
 //#endregion 🗿️Artifacts
 
-//#region 🎛️Apps
+//#region ✏️Editor
 #[path = "."]
-pub mod apps {
+pub mod editor {
     #[path = "."]
     pub mod draw {
-        #[path = "../../🎛️apps/🖍️draw/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/🖍️draw/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🖍️draw/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/🖍️draw/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🖍️draw/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
-        #[path = "../../🎛️apps/🖍️draw/🗣️terminology/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/📄️set-snapshot/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️set-snapshot/🦀️component.rs"]
             pub mod set_snapshot;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/📄️commit-document/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️commit-document/🦀️component.rs"]
             pub mod commit_document;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/📄️set-fixture-json/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️set-fixture-json/🦀️component.rs"]
             pub mod set_fixture_json;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/📄️set-active-example/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️set-active-example/🦀️component.rs"]
             pub mod set_active_example;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️add-layer/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️add-layer/🦀️component.rs"]
             pub mod add_layer;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️drop-layer-kind/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️drop-layer-kind/🦀️component.rs"]
             pub mod drop_layer_kind;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️move-layer/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️move-layer/🦀️component.rs"]
             pub mod move_layer;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️delete-layer/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️delete-layer/🦀️component.rs"]
             pub mod delete_layer;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️duplicate-layer/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️duplicate-layer/🦀️component.rs"]
             pub mod duplicate_layer;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️toggle-layer-visible/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️toggle-layer-visible/🦀️component.rs"]
             pub mod toggle_layer_visible;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️combine-boolean/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️combine-boolean/🦀️component.rs"]
             pub mod combine_boolean;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️patch-layer/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️patch-layer/🦀️component.rs"]
             pub mod patch_layer;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️patch-layers/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️patch-layers/🦀️component.rs"]
             pub mod patch_layers;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️set-selected-opacity/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️set-selected-opacity/🦀️component.rs"]
             pub mod set_selected_opacity;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️engagement-submit/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️engagement-submit/🦀️component.rs"]
             pub mod engagement_submit;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️set-active-utility/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-active-utility/🦀️component.rs"]
             pub mod set_active_utility;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️set-camera/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-camera/🦀️component.rs"]
             pub mod set_camera;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️set-camera-zoom/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-camera-zoom/🦀️component.rs"]
             pub mod set_camera_zoom;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️engagement-input/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️engagement-input/🦀️component.rs"]
             pub mod engagement_input;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️set-locale/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-locale/🦀️component.rs"]
             pub mod set_locale;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs"]
             pub mod canvas_pointer_down;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🖱️canvas-pointer-move/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-move/🦀️component.rs"]
             pub mod canvas_pointer_move;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🖱️canvas-pointer-up/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-up/🦀️component.rs"]
             pub mod canvas_pointer_up;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🖱️canvas-double-click/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-double-click/🦀️component.rs"]
             pub mod canvas_double_click;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🖱️canvas-commit-draft/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-commit-draft/🦀️component.rs"]
             pub mod canvas_commit_draft;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🖱️canvas-escape/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-escape/🦀️component.rs"]
             pub mod canvas_escape;
         }
 
@@ -522,13 +522,13 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🎛️apps/🖍️draw/🎭️modes/✏️edit/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/🖍️draw/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🦀️component.rs"]
                     pub mod canvas;
                 }
             }
@@ -536,16 +536,44 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/🖍️draw/📌️panels/🗂️layers/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️layers/🦀️component.rs"]
             pub mod layers;
-            #[path = "../../🎛️apps/🖍️draw/📌️panels/🛍️catalogue/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs"]
             pub mod catalogue;
-            #[path = "../../🎛️apps/🖍️draw/📌️panels/🔍️properties/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️properties/🦀️component.rs"]
             pub mod properties;
         }
     }
 }
-//#endregion 🎛️Apps
+//#endregion ✏️Editor
+
+//#region 👁️Viewer
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod draw {
+        #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️canvas/🦀️component.rs"]
+                    pub mod canvas;
+                }
+            }
+        }
+    }
+}
+//#endregion 👁️Viewer
 
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
@@ -557,7 +585,7 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 pub mod examples {
     #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_draw_demo;
-    #[path = "../../🎛️apps/🖍️draw/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_draw_demo_session;
 }
 //#endregion 📚️Examples

@@ -7,7 +7,7 @@
 //! the thin artifact-facing `encode_op`/`decode_op` wrappers plus the op text↔binary equivalence law.
 //!
 //! The app's typed `LayoutCommand` enum — which used to share the old `📡️protocol` crate with this
-//! codec — is an APP concern, not an artifact one: it lives in `🎛️apps/📏️layout/🦀️component.rs`,
+//! codec — is an APP concern, not an artifact one: it lives in `✏️editor/🦀️component.rs`,
 //! assembled from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
 
 

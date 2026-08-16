@@ -20,7 +20,7 @@ pub struct ChangeImportedFeatures {
 impl MutationKind<GisTerrainSnapshot, GisTerrainMutation> for ChangeImportedFeatures {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "imported-features", kind: "change-imported-features", record: "ChangedImportedFeatures" };
 
-    fn diff(&self, base: &GisTerrainSnapshot) -> GisTerrainDiff {
+    fn diff(&self, base: &GisTerrainSnapshot) -> protocol::MutationOutcome<GisTerrainDiff> {
         super::diff::diff(self, base)
     }
 

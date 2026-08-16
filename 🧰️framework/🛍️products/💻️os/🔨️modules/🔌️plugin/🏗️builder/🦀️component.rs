@@ -1,6 +1,9 @@
 //! 🏗️ Typestate `PluginBuilder` — missing label/version is a compile error.
 
-use crate::app::{App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError, PluginCommandHandler};
+use crate::app::{
+    App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError,
+    PluginCommandHandler,
+};
 use semio_framework::{kernel::CapabilityRequirement, CommandDefinition};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::marker::PhantomData;
@@ -456,9 +459,9 @@ mod plugin_builder_dependency_tests {
     }
     impl protocol::Mutation<DependencyTestSnapshot> for DependencyTestOp {
         type Diff = DependencyTestDiff;
-        fn diff(&self, _base: &DependencyTestSnapshot) -> DependencyTestDiff {
+        fn diff(&self, _base: &DependencyTestSnapshot) -> protocol::MutationOutcome<DependencyTestDiff> {
             let DependencyTestOp::Add(delta) = self;
-            DependencyTestDiff { delta: *delta }
+            protocol::MutationOutcome::new(DependencyTestDiff { delta: *delta })
         }
         fn inverse(&self, _base: &DependencyTestSnapshot) -> Vec<Self> {
             let DependencyTestOp::Add(delta) = self;
@@ -565,13 +568,7 @@ mod plugin_builder_dependency_tests {
         let manifest = FlowExtensionManifest::new("builder-test-flow", "Builder Test Flow", "0.1.0").expect("typed manifest");
         let executable = FlowExtensionExecutableIdentity::native("semio.builder-test.flow", "semio.builder-test.flow.module", "activate").expect("typed executable identity");
         let declaration = FlowExtensionDeclaration::new("builder-test.flow.contribution", manifest.clone(), executable.clone()).expect("flow declaration");
-        let plugin = Plugin::builder("builder-test-flow")
-            .label("Builder Test Flow")
-            .version("0.1.0")
-            .flow_extension(declaration.clone())
-            .flow_extension(declaration)
-            .try_build()
-            .expect("identical frozen flow declarations are idempotent");
+        let plugin = Plugin::builder("builder-test-flow").label("Builder Test Flow").version("0.1.0").flow_extension(declaration.clone()).flow_extension(declaration).try_build().expect("identical frozen flow declarations are idempotent");
         assert_eq!(plugin.flow_extensions().len(), 1);
         let conflict = FlowExtensionDeclaration::new("builder-test.flow.other", manifest, executable).expect("conflicting target descriptor");
         let error = Plugin::builder("builder-test-flow-conflict")

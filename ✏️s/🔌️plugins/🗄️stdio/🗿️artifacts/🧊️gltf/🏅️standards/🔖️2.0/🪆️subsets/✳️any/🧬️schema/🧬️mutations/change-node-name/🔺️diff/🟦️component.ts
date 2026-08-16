@@ -1,0 +1,10 @@
+/** 🔺️ Exact node-name replacement patch. */
+import type { GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
+import { validateGltfChangeNodeName, type GltfChangeNodeNamePayload } from '../../change-node-name/🦠️mutation/🟦️component.ts';
+import type { GltfMutationRejection } from '../../🔒️top-level-private/🟦️component.ts';
+export interface GltfChangeNodeNameDiff { node: number; before: string | null; after: string | null; touchedPaths: readonly [string] }
+export type GltfChangeNodeNameDiffResult = { accepted: true; diff: GltfChangeNodeNameDiff } | { accepted: false; rejection: GltfMutationRejection };
+export type GltfChangeNodeNameDiffApplyResult = { accepted: true; snapshot: GltfSnapshot } | { accepted: false; rejection: GltfMutationRejection };
+export const deriveGltfChangeNodeNameDiff = (base: GltfSnapshot, payload: GltfChangeNodeNamePayload): GltfChangeNodeNameDiffResult => { const rejection = validateGltfChangeNodeName(payload, base); return rejection ? { accepted: false, rejection } : { accepted: true, diff: { node: payload.node, before: base.document.nodes[payload.node]!.name ?? null, after: payload.value, touchedPaths: [`document/nodes/${payload.node}/name`] } }; };
+export const applyGltfChangeNodeNameDiff = (base: GltfSnapshot, diff: GltfChangeNodeNameDiff): GltfChangeNodeNameDiffApplyResult => { const path = `document/nodes/${diff.node}/name`; if (diff.touchedPaths.length !== 1 || diff.touchedPaths[0] !== path) return { accepted: false, rejection: { code: 'gltf.mutation.invalid-touched-path', path, detail: 'serialized touched paths must equal the exact node-name path' } }; const node = base.document.nodes[diff.node]; if (!node || (node.name ?? null) !== diff.before) return { accepted: false, rejection: { code: 'gltf.mutation.stale-diff', path, detail: 'node or expected previous name is stale' } }; const snapshot = structuredClone(base); snapshot.document.nodes[diff.node]!.name = diff.after ?? undefined; return { accepted: true, snapshot }; };
+export const encodeGltfChangeNodeNameDiff = (diff: GltfChangeNodeNameDiff): string => JSON.stringify(diff);

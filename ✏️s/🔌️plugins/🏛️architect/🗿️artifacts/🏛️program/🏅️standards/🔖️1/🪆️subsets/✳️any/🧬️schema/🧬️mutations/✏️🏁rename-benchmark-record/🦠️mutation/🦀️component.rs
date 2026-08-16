@@ -19,7 +19,7 @@ pub struct RenameBenchmarkRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameBenchmarkRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "benchmark-record", kind: "rename-benchmark-record", record: "RenamedBenchmarkRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

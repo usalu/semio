@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.gltf.mutation;
+message GltfCreateSamplerPayloadV1 { uint32 position = 1; }
+message GltfCreateSamplerMutationV1 { string id = 1; uint32 version = 2; repeated string touched_paths = 3; GltfCreateSamplerPayloadV1 payload = 4; }

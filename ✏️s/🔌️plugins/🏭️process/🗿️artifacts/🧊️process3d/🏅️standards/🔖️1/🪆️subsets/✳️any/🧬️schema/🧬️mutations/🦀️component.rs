@@ -112,10 +112,11 @@ mod tests {
     }
 
     fn round_trip(base: &Process3dSnapshot, mutation: &Process3dMutation) -> Process3dSnapshot {
-        let forward = vcs::apply_mutation(base, mutation);
+        let (forward, _messages) = vcs::apply_mutation(base, mutation);
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            restored = vcs::apply_mutation(&restored, &back);
+            let (next, _messages) = vcs::apply_mutation(&restored, &back);
+            restored = next;
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
         forward
@@ -165,7 +166,7 @@ mod tests {
     fn create_step_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-9") });
-        assert_eq!(mutation.diff(&base), Process3dDiff::default());
+        assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
         assert!(mutation.inverse(&base).is_empty());
     }
 
@@ -173,7 +174,7 @@ mod tests {
     fn delete_step_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() });
-        assert_eq!(mutation.diff(&base), Process3dDiff::default());
+        assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
         assert!(mutation.inverse(&base).is_empty());
     }
 
@@ -181,7 +182,7 @@ mod tests {
     fn rename_step_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::RenameStep(RenameStep { id: "step-1".into(), new_label: "Renamed".into() });
-        assert_eq!(mutation.diff(&base), Process3dDiff::default());
+        assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
         assert!(mutation.inverse(&base).is_empty());
     }
 
@@ -189,7 +190,7 @@ mod tests {
     fn change_step_enabled_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: "step-1".into(), new_enabled: false });
-        assert_eq!(mutation.diff(&base), Process3dDiff::default());
+        assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
         assert!(mutation.inverse(&base).is_empty());
     }
 
@@ -198,7 +199,7 @@ mod tests {
         let base = empty_process3d_snapshot();
         let origin = StepOrigin { machine_id: "saw".into(), capability_id: "cut".into() };
         let mutation = Process3dMutation::ChangeStepOrigin(ChangeStepOrigin { id: "step-1".into(), new_origin: Some(origin) });
-        assert_eq!(mutation.diff(&base), Process3dDiff::default());
+        assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
         assert!(mutation.inverse(&base).is_empty());
     }
 
@@ -207,7 +208,7 @@ mod tests {
         let base = empty_process3d_snapshot();
         let new_measure = ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose::default() };
         let mutation = Process3dMutation::ReplaceStepMeasure(ReplaceStepMeasure { id: "step-1".into(), new_measure });
-        assert_eq!(mutation.diff(&base), Process3dDiff::default());
+        assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
         assert!(mutation.inverse(&base).is_empty());
     }
 
@@ -215,7 +216,7 @@ mod tests {
     fn reorder_steps_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::ReorderSteps(ReorderSteps { id: "b".into(), to_index: 0 });
-        assert_eq!(mutation.diff(&base), Process3dDiff::default());
+        assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
         assert!(mutation.inverse(&base).is_empty());
     }
     //#endregion 🔖️StepMutationsAreDocumentedNoOps
@@ -306,8 +307,8 @@ mod tests {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-fresh") });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() }).diff(&base);
+        let d1 = mutation.diff(&base).into_parts().0;
+        let d2 = Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() }).diff(&base).into_parts().0;
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -316,8 +317,8 @@ mod tests {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateMachine(CreateMachine { index: 0, machine: saw_machine("machine-fresh") });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(1) }).diff(&base);
+        let d1 = mutation.diff(&base).into_parts().0;
+        let d2 = Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(1) }).diff(&base).into_parts().0;
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -326,10 +327,42 @@ mod tests {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(2) }).diff(&base);
+        let d1 = mutation.diff(&base).into_parts().0;
+        let d2 = Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(2) }).diff(&base).into_parts().0;
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws
+
+    //#region 🔖️OutcomeLaws
+    /// ✅️ 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS §C2 laws, landed
+    /// testkit helpers only (`assert_missing_target_is_error`/`assert_fatal_never_applies`) — one per
+    /// representative verb family across `machine`s (id-keyed) and `step`s (documented no-op).
+    /// `assert_outcome_policy_matrix` is not landed yet (checked at
+    /// `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`); TODO(1-D testkit
+    /// laws pending): add a `MergePolicy` × `Severity` matrix test per verb family here once it lands.
+    #[test]
+    fn delete_machine_missing_target_is_an_error() {
+        let base = empty_process3d_snapshot();
+        let mutation = Process3dMutation::DeleteMachine(DeleteMachine { id: "does-not-exist".into() });
+        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[test]
+    fn rename_machine_missing_target_is_an_error() {
+        let base = empty_process3d_snapshot();
+        let mutation = Process3dMutation::RenameMachine(RenameMachine { id: "does-not-exist".into(), new_label: "X".into() });
+        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[test]
+    fn create_machine_duplicate_id_is_fatal_and_never_applies() {
+        let mut base = empty_process3d_snapshot();
+        base.workshop.machines.push(saw_machine("machine-1"));
+        let mutation = Process3dMutation::CreateMachine(CreateMachine { index: 0, machine: saw_machine("machine-1") });
+        let outcome = mutation.diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Fatal));
+        protocol::testkit::assert_fatal_never_applies(&outcome);
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

@@ -6,8 +6,7 @@
       "algorithmVersion": 1,
       "cacheKey": "s.stdio.gltf.inference.bounding-box-dimensions.v1:geometry-v2",
       "inputs": ["schema/snapshot", "buffers"],
-      "target": "geometricAnalysis.overall.bounding-box-dimensions"
+      "target": "geometry.overall.size.boundingBoxDimensions"
     }
   }
 }
-

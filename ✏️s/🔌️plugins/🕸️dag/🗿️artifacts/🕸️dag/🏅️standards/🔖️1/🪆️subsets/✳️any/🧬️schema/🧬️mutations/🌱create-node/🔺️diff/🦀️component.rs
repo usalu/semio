@@ -5,10 +5,13 @@ use crate::artifacts::dag::schema::diff::text::diff_replace_content;
 use crate::artifacts::dag::{dag_working_scene, DagSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::CreateNode, base: &DagSnapshot) -> DagDiff {
+pub fn diff(payload: &super::mutation::CreateNode, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
     let scene = dag_working_scene(base);
+    if scene.nodes.iter().any(|node| node.id == payload.node.id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A node with id \"{}\" already exists.", payload.node.id), [payload.node.id.clone()]);
+    }
     let mut nodes = scene.nodes;
     nodes.push(payload.node.clone());
-    diff_replace_content(nodes, scene.edges)
+    protocol::MutationOutcome::new(diff_replace_content(nodes, scene.edges))
 }
 //#endregion 🔖️Diff

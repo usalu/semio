@@ -6,7 +6,8 @@ use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
 
 use super::super::modules::{measurement_contracts::*, mesh_topology::Topology};
-use self::{adjacency::*, area_volume::*, clearance::*, compactness::*, concavity::*, curvature::*, geometry_core::*, mass_distribution::*, orientation::*, proportion::*, roughness::*, size::*, symmetry::*, thickness::*, topology::*};
+use super::{adjacency, area_volume, clearance, compactness, concavity, curvature, geometry_core, mass_distribution, orientation, proportion, roughness, size, symmetry, thickness, topology};
+use super::{adjacency::*, area_volume::*, clearance::*, compactness::*, concavity::*, curvature::*, geometry_core::*, mass_distribution::*, orientation::*, proportion::*, roughness::*, size::*, symmetry::*, thickness::*, topology::*};
 
 //#region 🔖️PublicRecords
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -89,14 +90,12 @@ pub struct GltfGeometricInference {
 #[artifact_schema(id = "s.stdio.gltf.inference")]
 pub struct GltfInference {
     #[derived]
-    pub geometric_analysis: GltfGeometricInference,
+    pub geometry: GltfGeometricInference,
 }
 //#endregion 🔖️PublicRecords
 
 //#region 🧭️LeafDag
-pub const GLTF_GEOMETRY_READS: &[&str] = &[
-    "document/scene", "document/scenes", "document/nodes", "document/meshes", "document/accessors", "document/bufferViews", "document/buffers", "buffers",
-];
+pub const GLTF_GEOMETRY_READS: &[&str] = &["document/scene", "document/scenes", "document/nodes", "document/meshes", "document/accessors", "document/bufferViews", "document/buffers", "buffers"];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct GltfInferenceLeafDescriptor {
@@ -119,252 +118,67 @@ pub struct GltfInferenceLeafServiceDescriptor {
 }
 
 pub const GLTF_INFERENCE_LEAF_SERVICE_DESCRIPTORS: &[GltfInferenceLeafServiceDescriptor] = &[
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.overall-size.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.overall-size.v1:geometry-v2",
-        encode: size::overall_size::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.axis-aligned-bounds.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.axis-aligned-bounds.v1:geometry-v2",
-        encode: size::axis_aligned_bounds::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.oriented-bounds.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.oriented-bounds.v1:geometry-v2",
-        encode: size::oriented_bounds::encode_result,
-    },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.overall-size.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.overall-size.v1:geometry-v2", encode: size::overall_size::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.axis-aligned-bounds.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.axis-aligned-bounds.v1:geometry-v2", encode: size::axis_aligned_bounds::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.oriented-bounds.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.oriented-bounds.v1:geometry-v2", encode: size::oriented_bounds::encode_result },
     GltfInferenceLeafServiceDescriptor {
         id: "s.stdio.gltf.inference.bounding-box-dimensions.v1",
         algorithm_version: 1,
         cache_key: "s.stdio.gltf.inference.bounding-box-dimensions.v1:geometry-v2",
         encode: size::bounding_box_dimensions::encode_result,
     },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.characteristic-length.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.characteristic-length.v1:geometry-v2",
-        encode: size::characteristic_length::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.footprint-area.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.footprint-area.v1:geometry-v2",
-        encode: size::footprint_area::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.projected-area.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.projected-area.v1:geometry-v2",
-        encode: size::projected_area::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.surface-area.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.surface-area.v1:geometry-v2",
-        encode: area_volume::surface_area::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.total-area.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.total-area.v1:geometry-v2",
-        encode: area_volume::total_area::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.exposed-area.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.exposed-area.v1:geometry-v2",
-        encode: area_volume::exposed_area::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.contact-area.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.contact-area.v1:geometry-v2",
-        encode: area_volume::contact_area::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.volume.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.volume.v1:geometry-v2",
-        encode: area_volume::volume::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.enclosed-volume.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.enclosed-volume.v1:geometry-v2",
-        encode: area_volume::enclosed_volume::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.material-volume.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.material-volume.v1:geometry-v2",
-        encode: area_volume::material_volume::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.void-volume.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.void-volume.v1:geometry-v2",
-        encode: area_volume::void_volume::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.compactness.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.compactness.v1:geometry-v2",
-        encode: compactness::compactness::encode_result,
-    },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.characteristic-length.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.characteristic-length.v1:geometry-v2", encode: size::characteristic_length::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.footprint-area.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.footprint-area.v1:geometry-v2", encode: size::footprint_area::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.projected-area.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.projected-area.v1:geometry-v2", encode: size::projected_area::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.surface-area.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.surface-area.v1:geometry-v2", encode: area_volume::surface_area::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.total-area.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.total-area.v1:geometry-v2", encode: area_volume::total_area::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.exposed-area.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.exposed-area.v1:geometry-v2", encode: area_volume::exposed_area::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.contact-area.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.contact-area.v1:geometry-v2", encode: area_volume::contact_area::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.volume.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.volume.v1:geometry-v2", encode: area_volume::volume::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.enclosed-volume.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.enclosed-volume.v1:geometry-v2", encode: area_volume::enclosed_volume::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.material-volume.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.material-volume.v1:geometry-v2", encode: area_volume::material_volume::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.void-volume.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.void-volume.v1:geometry-v2", encode: area_volume::void_volume::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.compactness.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.compactness.v1:geometry-v2", encode: compactness::compactness::encode_result },
     GltfInferenceLeafServiceDescriptor {
         id: "s.stdio.gltf.inference.surface-to-volume-ratio.v1",
         algorithm_version: 1,
         cache_key: "s.stdio.gltf.inference.surface-to-volume-ratio.v1:geometry-v2",
         encode: compactness::surface_to_volume_ratio::encode_result,
     },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.sphericity.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.sphericity.v1:geometry-v2",
-        encode: compactness::sphericity::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.compactness-index.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.compactness-index.v1:geometry-v2",
-        encode: compactness::compactness_index::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.hull-fill-ratio.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.hull-fill-ratio.v1:geometry-v2",
-        encode: compactness::hull_fill_ratio::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.aspect-ratios.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.aspect-ratios.v1:geometry-v2",
-        encode: proportion::aspect_ratios::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.slenderness.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.slenderness.v1:geometry-v2",
-        encode: proportion::slenderness::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.flatness.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.flatness.v1:geometry-v2",
-        encode: proportion::flatness::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.elongation.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.elongation.v1:geometry-v2",
-        encode: proportion::elongation::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.centroid.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.centroid.v1:geometry-v2",
-        encode: mass_distribution::centroid::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.principal-frame.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.principal-frame.v1:geometry-v2",
-        encode: mass_distribution::principal_frame::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.principal-axes.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.principal-axes.v1:geometry-v2",
-        encode: mass_distribution::principal_axes::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.moments-of-inertia.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.moments-of-inertia.v1:geometry-v2",
-        encode: mass_distribution::moments_of_inertia::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.inertia-tensor.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.inertia-tensor.v1:geometry-v2",
-        encode: mass_distribution::inertia_tensor::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.mean-curvature.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.mean-curvature.v1:geometry-v2",
-        encode: curvature::mean_curvature::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.gaussian-curvature.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.gaussian-curvature.v1:geometry-v2",
-        encode: curvature::gaussian_curvature::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.curvature-histogram.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.curvature-histogram.v1:geometry-v2",
-        encode: curvature::curvature_histogram::encode_result,
-    },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.sphericity.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.sphericity.v1:geometry-v2", encode: compactness::sphericity::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.compactness-index.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.compactness-index.v1:geometry-v2", encode: compactness::compactness_index::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.hull-fill-ratio.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.hull-fill-ratio.v1:geometry-v2", encode: compactness::hull_fill_ratio::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.aspect-ratios.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.aspect-ratios.v1:geometry-v2", encode: proportion::aspect_ratios::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.slenderness.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.slenderness.v1:geometry-v2", encode: proportion::slenderness::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.flatness.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.flatness.v1:geometry-v2", encode: proportion::flatness::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.elongation.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.elongation.v1:geometry-v2", encode: proportion::elongation::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.centroid.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.centroid.v1:geometry-v2", encode: mass_distribution::centroid::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.principal-frame.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.principal-frame.v1:geometry-v2", encode: mass_distribution::principal_frame::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.principal-axes.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.principal-axes.v1:geometry-v2", encode: mass_distribution::principal_axes::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.moments-of-inertia.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.moments-of-inertia.v1:geometry-v2", encode: mass_distribution::moments_of_inertia::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.inertia-tensor.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.inertia-tensor.v1:geometry-v2", encode: mass_distribution::inertia_tensor::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.mean-curvature.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.mean-curvature.v1:geometry-v2", encode: curvature::mean_curvature::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.gaussian-curvature.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.gaussian-curvature.v1:geometry-v2", encode: curvature::gaussian_curvature::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.curvature-histogram.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.curvature-histogram.v1:geometry-v2", encode: curvature::curvature_histogram::encode_result },
     GltfInferenceLeafServiceDescriptor {
         id: "s.stdio.gltf.inference.sharp-feature-proportion.v1",
         algorithm_version: 1,
         cache_key: "s.stdio.gltf.inference.sharp-feature-proportion.v1:geometry-v2",
         encode: curvature::sharp_feature_proportion::encode_result,
     },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.mean-thickness.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.mean-thickness.v1:geometry-v2",
-        encode: thickness::mean_thickness::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.minimum-thickness.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.minimum-thickness.v1:geometry-v2",
-        encode: thickness::minimum_thickness::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.thickness-variability.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.thickness-variability.v1:geometry-v2",
-        encode: thickness::thickness_variability::encode_result,
-    },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.mean-thickness.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.mean-thickness.v1:geometry-v2", encode: thickness::mean_thickness::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.minimum-thickness.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.minimum-thickness.v1:geometry-v2", encode: thickness::minimum_thickness::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.thickness-variability.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.thickness-variability.v1:geometry-v2", encode: thickness::thickness_variability::encode_result },
     GltfInferenceLeafServiceDescriptor {
         id: "s.stdio.gltf.inference.thickness-distribution.v1",
         algorithm_version: 1,
         cache_key: "s.stdio.gltf.inference.thickness-distribution.v1:geometry-v2",
         encode: thickness::thickness_distribution::encode_result,
     },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.convex-hull-gap.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.convex-hull-gap.v1:geometry-v2",
-        encode: concavity::convex_hull_gap::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.reentrant-area.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.reentrant-area.v1:geometry-v2",
-        encode: concavity::reentrant_area::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.reentrant-volume.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.reentrant-volume.v1:geometry-v2",
-        encode: concavity::reentrant_volume::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.concavity-index.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.concavity-index.v1:geometry-v2",
-        encode: concavity::concavity_index::encode_result,
-    },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.convex-hull-gap.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.convex-hull-gap.v1:geometry-v2", encode: concavity::convex_hull_gap::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.reentrant-area.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.reentrant-area.v1:geometry-v2", encode: concavity::reentrant_area::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.reentrant-volume.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.reentrant-volume.v1:geometry-v2", encode: concavity::reentrant_volume::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.concavity-index.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.concavity-index.v1:geometry-v2", encode: concavity::concavity_index::encode_result },
     GltfInferenceLeafServiceDescriptor {
         id: "s.stdio.gltf.inference.minimum-distance-to-neighbors.v1",
         algorithm_version: 1,
@@ -377,42 +191,12 @@ pub const GLTF_INFERENCE_LEAF_SERVICE_DESCRIPTORS: &[GltfInferenceLeafServiceDes
         cache_key: "s.stdio.gltf.inference.clearance-distribution.v1:geometry-v2",
         encode: clearance::clearance_distribution::encode_result,
     },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.interference-volume.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.interference-volume.v1:geometry-v2",
-        encode: clearance::interference_volume::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.overlap-volume.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.overlap-volume.v1:geometry-v2",
-        encode: clearance::overlap_volume::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.number-of-contacts.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.number-of-contacts.v1:geometry-v2",
-        encode: adjacency::number_of_contacts::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.contact-graph-degree.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.contact-graph-degree.v1:geometry-v2",
-        encode: adjacency::contact_graph_degree::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.connected-components.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.connected-components.v1:geometry-v2",
-        encode: adjacency::connected_components::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.main-axis-direction.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.main-axis-direction.v1:geometry-v2",
-        encode: orientation::main_axis_direction::encode_result,
-    },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.interference-volume.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.interference-volume.v1:geometry-v2", encode: clearance::interference_volume::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.overlap-volume.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.overlap-volume.v1:geometry-v2", encode: clearance::overlap_volume::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.number-of-contacts.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.number-of-contacts.v1:geometry-v2", encode: adjacency::number_of_contacts::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.contact-graph-degree.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.contact-graph-degree.v1:geometry-v2", encode: adjacency::contact_graph_degree::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.connected-components.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.connected-components.v1:geometry-v2", encode: adjacency::connected_components::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.main-axis-direction.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.main-axis-direction.v1:geometry-v2", encode: orientation::main_axis_direction::encode_result },
     GltfInferenceLeafServiceDescriptor {
         id: "s.stdio.gltf.inference.face-normal-distribution.v1",
         algorithm_version: 1,
@@ -437,96 +221,30 @@ pub const GLTF_INFERENCE_LEAF_SERVICE_DESCRIPTORS: &[GltfInferenceLeafServiceDes
         cache_key: "s.stdio.gltf.inference.rotational-symmetry-score.v1:geometry-v2",
         encode: symmetry::rotational_symmetry_score::encode_result,
     },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.reflection-symmetries.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.reflection-symmetries.v1:geometry-v2",
-        encode: symmetry::reflection_symmetries::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.rotational-symmetries.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.rotational-symmetries.v1:geometry-v2",
-        encode: symmetry::rotational_symmetries::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.repetition-ratio.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.repetition-ratio.v1:geometry-v2",
-        encode: symmetry::repetition_ratio::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.modularity-ratio.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.modularity-ratio.v1:geometry-v2",
-        encode: symmetry::modularity_ratio::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.deviation-from-ideal.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.deviation-from-ideal.v1:geometry-v2",
-        encode: roughness::deviation_from_ideal::encode_result,
-    },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.reflection-symmetries.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.reflection-symmetries.v1:geometry-v2", encode: symmetry::reflection_symmetries::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.rotational-symmetries.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.rotational-symmetries.v1:geometry-v2", encode: symmetry::rotational_symmetries::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.repetition-ratio.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.repetition-ratio.v1:geometry-v2", encode: symmetry::repetition_ratio::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.modularity-ratio.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.modularity-ratio.v1:geometry-v2", encode: symmetry::modularity_ratio::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.deviation-from-ideal.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.deviation-from-ideal.v1:geometry-v2", encode: roughness::deviation_from_ideal::encode_result },
     GltfInferenceLeafServiceDescriptor {
         id: "s.stdio.gltf.inference.deviation-from-smoothed-geometry.v1",
         algorithm_version: 1,
         cache_key: "s.stdio.gltf.inference.deviation-from-smoothed-geometry.v1:geometry-v2",
         encode: roughness::deviation_from_smoothed_geometry::encode_result,
     },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.normal-variation.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.normal-variation.v1:geometry-v2",
-        encode: roughness::normal_variation::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.surface-waviness.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.surface-waviness.v1:geometry-v2",
-        encode: roughness::surface_waviness::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.irregularity.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.irregularity.v1:geometry-v2",
-        encode: roughness::irregularity::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.holes.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.holes.v1:geometry-v2",
-        encode: topology::holes::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.handles.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.handles.v1:geometry-v2",
-        encode: topology::handles::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.boundary-loops.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.boundary-loops.v1:geometry-v2",
-        encode: topology::boundary_loops::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.euler-characteristic.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.euler-characteristic.v1:geometry-v2",
-        encode: topology::euler_characteristic::encode_result,
-    },
-    GltfInferenceLeafServiceDescriptor {
-        id: "s.stdio.gltf.inference.genus.v1",
-        algorithm_version: 1,
-        cache_key: "s.stdio.gltf.inference.genus.v1:geometry-v2",
-        encode: topology::genus::encode_result,
-    },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.normal-variation.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.normal-variation.v1:geometry-v2", encode: roughness::normal_variation::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.surface-waviness.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.surface-waviness.v1:geometry-v2", encode: roughness::surface_waviness::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.irregularity.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.irregularity.v1:geometry-v2", encode: roughness::irregularity::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.holes.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.holes.v1:geometry-v2", encode: topology::holes::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.handles.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.handles.v1:geometry-v2", encode: topology::handles::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.boundary-loops.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.boundary-loops.v1:geometry-v2", encode: topology::boundary_loops::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.euler-characteristic.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.euler-characteristic.v1:geometry-v2", encode: topology::euler_characteristic::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.genus.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.genus.v1:geometry-v2", encode: topology::genus::encode_result },
 ];
 
 pub fn gltf_inference_leaf_service_descriptor(id: &str) -> Option<&'static GltfInferenceLeafServiceDescriptor> {
     GLTF_INFERENCE_LEAF_SERVICE_DESCRIPTORS.iter().find(|descriptor| descriptor.id == id)
 }
-
 
 pub const GLTF_INFERENCE_FIELDS: &[protocol::InferenceFieldSpec] = &[
     protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.overall-size.v1", reads: GLTF_GEOMETRY_READS },
@@ -609,17 +327,27 @@ pub use super::dag_assembly::compute_gltf_inference;
 
 //#region 🧠️InferenceContract
 impl protocol::Inference<GltfSnapshot> for GltfInference {
-    fn infer(snapshot: &GltfSnapshot) -> Self { Self { geometric_analysis: compute_gltf_inference(snapshot) } }
+    fn infer(snapshot: &GltfSnapshot) -> Self {
+        Self { geometry: compute_gltf_inference(snapshot) }
+    }
 }
 
 impl Default for GltfInference {
-    fn default() -> Self { <Self as protocol::Inference<GltfSnapshot>>::infer(&GltfSnapshot::default()) }
+    fn default() -> Self {
+        <Self as protocol::Inference<GltfSnapshot>>::infer(&GltfSnapshot::default())
+    }
 }
 
 impl protocol::InferenceSpec<GltfSnapshot> for GltfInference {
-    fn inference_schema_id() -> &'static str { "s.stdio.gltf.inference" }
-    fn schema_version() -> u32 { 2 }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] { GLTF_INFERENCE_FIELDS }
+    fn inference_schema_id() -> &'static str {
+        "s.stdio.gltf.inference"
+    }
+    fn schema_version() -> u32 {
+        2
+    }
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+        GLTF_INFERENCE_FIELDS
+    }
 }
 
 impl ArtifactInferrer for crate::artifacts::gltf::standards::v2_0::subsets::any::schema::GltfBuilder {
@@ -1298,7 +1026,7 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 json_schema: include_str!("🕸️topology/genus/🔣️component.json"),
                 proto: include_str!("🕸️topology/genus/🛰️component.proto"),
             },
-        }
+        },
     ]
 }
 //#endregion 🧠️InferenceContract

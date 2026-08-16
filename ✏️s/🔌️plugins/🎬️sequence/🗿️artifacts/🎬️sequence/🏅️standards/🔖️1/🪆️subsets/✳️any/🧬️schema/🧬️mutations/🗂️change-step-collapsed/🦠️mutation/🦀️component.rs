@@ -22,7 +22,7 @@ pub fn change_step_collapsed(id: String, collapsed: bool) -> SequenceMutation {
 impl protocol::MutationKind<SequenceSnapshot, SequenceMutation> for ChangeStepCollapsed {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "step", kind: "change-step-collapsed", record: "ChangedStepCollapsed" };
 
-    fn diff(&self, base: &SequenceSnapshot) -> SequenceDiff {
+    fn diff(&self, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {

@@ -6,7 +6,11 @@ use crate::artifacts::program::diff::ProgramAuditEventsDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🌱️ `added = [payload row]` — the row lands at the end of `program.audit_events` on apply.
-pub fn diff(payload: &CreateAuditEvent, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { audit_events: Some(ProgramAuditEventsDelta { added: vec![payload.audit_event.clone()], ..Default::default() }), ..Default::default() }
+/// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
+pub fn diff(payload: &CreateAuditEvent, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let id = payload.audit_event.header.id.clone();
+    if base.audit_events.iter().any(|row| row.header.id == id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "An audit event already exists with this id.", [id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { audit_events: Some(ProgramAuditEventsDelta { added: vec![payload.audit_event.clone()], ..Default::default() }), ..Default::default() })
 }

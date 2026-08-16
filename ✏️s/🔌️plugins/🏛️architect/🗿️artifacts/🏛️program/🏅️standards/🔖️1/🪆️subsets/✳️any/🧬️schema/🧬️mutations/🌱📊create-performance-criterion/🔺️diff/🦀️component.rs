@@ -6,7 +6,11 @@ use crate::artifacts::program::diff::ProgramPerformanceDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🌱️ `added = [payload row]` — the row lands at the end of `program.performance` on apply.
-pub fn diff(payload: &CreatePerformanceCriterion, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { performance: Some(ProgramPerformanceDelta { added: vec![payload.performance_criterion.clone()], ..Default::default() }), ..Default::default() }
+/// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
+pub fn diff(payload: &CreatePerformanceCriterion, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let id = payload.performance_criterion.header.id.clone();
+    if base.performance.iter().any(|row| row.header.id == id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A performance criterion already exists with this id.", [id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { performance: Some(ProgramPerformanceDelta { added: vec![payload.performance_criterion.clone()], ..Default::default() }), ..Default::default() })
 }

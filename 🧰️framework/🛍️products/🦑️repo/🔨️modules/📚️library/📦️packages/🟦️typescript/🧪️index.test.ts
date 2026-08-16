@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyCanonicalArtifactKindBreaches, policyChildSlotKindDagBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
+import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyCanonicalArtifactKindBreaches, policyChildSlotKindDagBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyPluginDependencyParityBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
 import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { defineLint, type FileLinter } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
@@ -2231,3 +2231,51 @@ describe("computeWorkspaces", () => {
     expect(result).not.toContain("🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg");
   });
 });
+
+//#region 🧪️PluginDependencyParityPolicy
+describe("policyPluginDependencyParityBreaches", () => {
+  test("excludes nested extensions from parent plugin walk while checking extensions independently", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-plugin-parity-policy-"));
+    try {
+      const pluginDir = join(root, "✏️s", "🔌️plugins", "📐️cad");
+      const extDir = join(pluginDir, "🧩️extensions", "🏢️aec-building");
+      mkdirSync(join(pluginDir, "📦️packages", "🦀️rust"), { recursive: true });
+      mkdirSync(join(extDir, "📦️packages", "🦀️rust"), { recursive: true });
+      writeFileSync(join(pluginDir, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-cad"\n`);
+      writeFileSync(join(pluginDir, "🦀️component.rs"), `pub struct CadPlugin;\n`);
+      writeFileSync(join(extDir, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-cad-aec-building"\n[dependencies]\nsemio-s-plugin-cad = { path = "../../../📦️packages/🦀️rust" }\n`);
+      writeFileSync(join(extDir, "🦀️component.rs"), `pub fn configure() { b.depends_on("cad", "^1.0.0"); }\n`);
+
+      const breaches = policyPluginDependencyParityBreaches(root);
+      expect(breaches.filter((b) => b.scope === "✏️s/🔌️plugins/📐️cad" && b.priority === "high")).toEqual([]);
+      expect(breaches.filter((b) => b.scope === "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building")).toEqual([]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("flags declared runtime dependency with missing Cargo dependency at extension scope", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-plugin-parity-policy-"));
+    try {
+      const pluginDir = join(root, "✏️s", "🔌️plugins", "📐️cad");
+      const extDir = join(pluginDir, "🧩️extensions", "🏢️aec-building");
+      mkdirSync(join(pluginDir, "📦️packages", "🦀️rust"), { recursive: true });
+      mkdirSync(join(extDir, "📦️packages", "🦀️rust"), { recursive: true });
+      writeFileSync(join(pluginDir, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-cad"\n`);
+      writeFileSync(join(pluginDir, "🦀️component.rs"), `pub struct CadPlugin;\n`);
+      writeFileSync(join(extDir, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-cad-aec-building"\n`);
+      writeFileSync(join(extDir, "🦀️component.rs"), `pub fn configure() { b.depends_on("cad", "^1.0.0"); }\n`);
+
+      const breaches = policyPluginDependencyParityBreaches(root);
+      expect(breaches.filter((b) => b.scope === "✏️s/🔌️plugins/📐️cad")).toEqual([]);
+      const extBreaches = breaches.filter((b) => b.scope === "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building");
+      expect(extBreaches.length).toBe(1);
+      expect(extBreaches[0]!.priority).toBe("high");
+      expect(extBreaches[0]!.id).toBe("plugin-dependency-missing-cargo-✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building-cad");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+//#endregion 🧪️PluginDependencyParityPolicy
+

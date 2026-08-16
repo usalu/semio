@@ -72,9 +72,15 @@ pub fn encode_gltf_inference_leaf_text(value: &GltfInferenceLeafEnvelope) -> Res
 }
 
 pub fn decode_gltf_inference_leaf_text(input: &str) -> Result<GltfInferenceLeafEnvelope, GltfInferenceTextError> {
-    if input.contains('\r') { return Err(GltfInferenceTextError::CarriageReturn); }
+    if input.contains('\r') {
+        return Err(GltfInferenceTextError::CarriageReturn);
+    }
     let mut parts = input.splitn(5, '\n');
-    let schema = parts.next().ok_or(GltfInferenceTextError::MissingPayload)?.strip_prefix("schema ").ok_or_else(|| GltfInferenceTextError::Header { line: 1, expected: "schema <canonical-leaf-id>".into(), actual: input.lines().next().unwrap_or_default().into() })?;
+    let schema = parts.next().ok_or(GltfInferenceTextError::MissingPayload)?.strip_prefix("schema ").ok_or_else(|| GltfInferenceTextError::Header {
+        line: 1,
+        expected: "schema <canonical-leaf-id>".into(),
+        actual: input.lines().next().unwrap_or_default().into(),
+    })?;
     validate_leaf_id(schema)?;
     check_header(2, parts.next(), &format!("version {GLTF_INFERENCE_LEAF_ENVELOPE_VERSION}"))?;
     let length_line = parts.next().ok_or(GltfInferenceTextError::MissingPayload)?;
@@ -82,17 +88,29 @@ pub fn decode_gltf_inference_leaf_text(input: &str) -> Result<GltfInferenceLeafE
     let payload = parts.next().ok_or(GltfInferenceTextError::MissingPayload)?.as_bytes();
     let length_text = length_line.strip_prefix("length ").ok_or_else(|| GltfInferenceTextError::Header { line: 3, expected: "length <canonical-decimal>".into(), actual: length_line.into() })?;
     let length = length_text.parse::<usize>().map_err(|_| GltfInferenceTextError::LengthSyntax(length_text.into()))?;
-    if length_text != length.to_string() { return Err(GltfInferenceTextError::LengthSyntax(length_text.into())); }
-    if length != payload.len() { return Err(GltfInferenceTextError::LengthMismatch { declared: length, actual: payload.len() }); }
+    if length_text != length.to_string() {
+        return Err(GltfInferenceTextError::LengthSyntax(length_text.into()));
+    }
+    if length != payload.len() {
+        return Err(GltfInferenceTextError::LengthMismatch { declared: length, actual: payload.len() });
+    }
     let checksum_text = checksum_line.strip_prefix("checksum ").ok_or_else(|| GltfInferenceTextError::Header { line: 4, expected: "checksum <eight-lowercase-hex>".into(), actual: checksum_line.into() })?;
-    if checksum_text.len() != 8 || !checksum_text.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)) { return Err(GltfInferenceTextError::ChecksumSyntax(checksum_text.into())); }
+    if checksum_text.len() != 8 || !checksum_text.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)) {
+        return Err(GltfInferenceTextError::ChecksumSyntax(checksum_text.into()));
+    }
     let checksum = u32::from_str_radix(checksum_text, 16).map_err(|_| GltfInferenceTextError::ChecksumSyntax(checksum_text.into()))?;
     let actual_checksum = crc32_iso_hdlc(payload);
-    if checksum != actual_checksum { return Err(GltfInferenceTextError::ChecksumMismatch { declared: checksum, actual: actual_checksum }); }
+    if checksum != actual_checksum {
+        return Err(GltfInferenceTextError::ChecksumMismatch { declared: checksum, actual: actual_checksum });
+    }
     let value: GltfInferenceLeafEnvelope = serde_json::from_slice(payload).map_err(|error| GltfInferenceTextError::Json(error.to_string()))?;
-    if value.id != schema { return Err(GltfInferenceTextError::Header { line: 1, expected: format!("schema {}", value.id), actual: format!("schema {schema}") }); }
+    if value.id != schema {
+        return Err(GltfInferenceTextError::Header { line: 1, expected: format!("schema {}", value.id), actual: format!("schema {schema}") });
+    }
     validate_leaf_id(&value.id)?;
-    if canonical_json_bytes(&value)? != payload { return Err(GltfInferenceTextError::NonCanonical); }
+    if canonical_json_bytes(&value)? != payload {
+        return Err(GltfInferenceTextError::NonCanonical);
+    }
     Ok(value)
 }
 
@@ -102,7 +120,9 @@ fn validate_leaf_id(id: &str) -> Result<(), GltfInferenceTextError> {
 
 fn check_header(line: u8, actual: Option<&str>, expected: &str) -> Result<(), GltfInferenceTextError> {
     let actual = actual.ok_or(GltfInferenceTextError::MissingPayload)?;
-    if actual != expected { return Err(GltfInferenceTextError::Header { line, expected: expected.into(), actual: actual.into() }); }
+    if actual != expected {
+        return Err(GltfInferenceTextError::Header { line, expected: expected.into(), actual: actual.into() });
+    }
     Ok(())
 }
 
@@ -121,7 +141,12 @@ fn write_canonical_json(value: &Value, output: &mut String) -> Result<(), GltfIn
         Value::String(value) => output.push_str(&serde_json::to_string(value).map_err(|error| GltfInferenceTextError::Serialization(error.to_string()))?),
         Value::Array(values) => {
             output.push('[');
-            for (index, value) in values.iter().enumerate() { if index != 0 { output.push(','); } write_canonical_json(value, output)?; }
+            for (index, value) in values.iter().enumerate() {
+                if index != 0 {
+                    output.push(',');
+                }
+                write_canonical_json(value, output)?;
+            }
             output.push(']');
         }
         Value::Object(values) => {
@@ -129,7 +154,9 @@ fn write_canonical_json(value: &Value, output: &mut String) -> Result<(), GltfIn
             entries.sort_by(|(left, _), (right, _)| utf16_cmp(left, right));
             output.push('{');
             for (index, (key, value)) in entries.into_iter().enumerate() {
-                if index != 0 { output.push(','); }
+                if index != 0 {
+                    output.push(',');
+                }
                 output.push_str(&serde_json::to_string(key).map_err(|error| GltfInferenceTextError::Serialization(error.to_string()))?);
                 output.push(':');
                 write_canonical_json(value, output)?;
@@ -140,30 +167,46 @@ fn write_canonical_json(value: &Value, output: &mut String) -> Result<(), GltfIn
     Ok(())
 }
 
-fn utf16_cmp(left: &str, right: &str) -> Ordering { left.encode_utf16().cmp(right.encode_utf16()) }
+fn utf16_cmp(left: &str, right: &str) -> Ordering {
+    left.encode_utf16().cmp(right.encode_utf16())
+}
 
 fn canonical_number(value: &serde_json::Number) -> Result<String, GltfInferenceTextError> {
-    if let Some(value) = value.as_i64() { return Ok(value.to_string()); }
-    if let Some(value) = value.as_u64() { return Ok(value.to_string()); }
+    if let Some(value) = value.as_i64() {
+        return Ok(value.to_string());
+    }
+    if let Some(value) = value.as_u64() {
+        return Ok(value.to_string());
+    }
     let value = value.as_f64().ok_or_else(|| GltfInferenceTextError::Serialization("non-finite JSON number".into()))?;
-    if value == 0.0 { return Ok("0".into()); }
+    if value == 0.0 {
+        return Ok("0".into());
+    }
     let negative = value.is_sign_negative();
     let raw = serde_json::to_string(&value.abs()).map_err(|error| GltfInferenceTextError::Serialization(error.to_string()))?;
     let (coefficient, exponent) = raw.split_once('e').or_else(|| raw.split_once('E')).map_or((raw.as_str(), 0), |(coefficient, exponent)| (coefficient, exponent.parse::<i32>().unwrap_or(0)));
     let integer_digits = coefficient.find('.').unwrap_or(coefficient.len()) as i32;
     let mut digits = coefficient.bytes().filter(|byte| *byte != b'.').map(char::from).collect::<String>();
-    while digits.len() > 1 && digits.ends_with('0') { digits.pop(); }
+    while digits.len() > 1 && digits.ends_with('0') {
+        digits.pop();
+    }
     let decimal_position = integer_digits + exponent;
     let mut result = if value.abs() >= 1e-6 && value.abs() < 1e21 {
-        if decimal_position <= 0 { format!("0.{}{}", "0".repeat((-decimal_position) as usize), digits) }
-        else if decimal_position as usize >= digits.len() { format!("{}{}", digits, "0".repeat(decimal_position as usize - digits.len())) }
-        else { format!("{}.{}", &digits[..decimal_position as usize], &digits[decimal_position as usize..]) }
+        if decimal_position <= 0 {
+            format!("0.{}{}", "0".repeat((-decimal_position) as usize), digits)
+        } else if decimal_position as usize >= digits.len() {
+            format!("{}{}", digits, "0".repeat(decimal_position as usize - digits.len()))
+        } else {
+            format!("{}.{}", &digits[..decimal_position as usize], &digits[decimal_position as usize..])
+        }
     } else {
         let coefficient = if digits.len() == 1 { digits } else { format!("{}.{}", &digits[..1], &digits[1..]) };
         let exponent = decimal_position - 1;
         format!("{coefficient}e{}{exponent}", if exponent >= 0 { "+" } else { "" })
     };
-    if negative { result.insert(0, '-'); }
+    if negative {
+        result.insert(0, '-');
+    }
     Ok(result)
 }
 
@@ -171,7 +214,9 @@ pub(crate) fn crc32_iso_hdlc(bytes: &[u8]) -> u32 {
     let mut crc = u32::MAX;
     for byte in bytes {
         crc ^= u32::from(*byte);
-        for _ in 0..8 { crc = (crc >> 1) ^ (0xedb8_8320 & (0u32.wrapping_sub(crc & 1))); }
+        for _ in 0..8 {
+            crc = (crc >> 1) ^ (0xedb8_8320 & (0u32.wrapping_sub(crc & 1)));
+        }
     }
     !crc
 }

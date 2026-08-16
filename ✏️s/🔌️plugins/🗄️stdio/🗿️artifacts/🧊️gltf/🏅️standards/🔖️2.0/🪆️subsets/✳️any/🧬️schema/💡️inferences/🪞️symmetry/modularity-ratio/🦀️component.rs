@@ -1,16 +1,22 @@
 //! 💡️ modularity-ratio atomic glTF inference leaf.
-use super::super::{geometry_core::GltfGeometryContext, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
-use super::super::super::modules::{inference_measures::{estimate, unavailable}, measurement_contracts::*};
-use super::super::GltfPartInference;
 use super::super::super::modules::mesh_topology::Topology;
+use super::super::super::modules::{
+    inference_measures::{estimate, unavailable},
+    measurement_contracts::*,
+};
+use super::super::GltfPartInference;
+use super::super::{geometry_core::GltfGeometryContext, GltfEntityIndicators, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
 
 pub struct GltfModularityRatioInference;
 
 impl GltfInferenceLeaf for GltfModularityRatioInference {
-    const DESCRIPTOR: GltfInferenceLeafDescriptor = GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.modularity-ratio.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.modularity-ratio.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
+    const DESCRIPTOR: GltfInferenceLeafDescriptor =
+        GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.modularity-ratio.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.modularity-ratio.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
 
-pub fn descriptor() -> GltfInferenceLeafDescriptor { GltfModularityRatioInference::DESCRIPTOR }
+pub fn descriptor() -> GltfInferenceLeafDescriptor {
+    GltfModularityRatioInference::DESCRIPTOR
+}
 
 pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology))
@@ -25,7 +31,7 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
 }
 
 pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
-    serde_json::to_value(&indicators.symmetry.modularityRatio)
+    serde_json::to_value(&indicators.symmetry.modularity_ratio)
 }
 
 #[cfg(test)]

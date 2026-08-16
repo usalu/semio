@@ -18,7 +18,7 @@ pub struct DeleteResource {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteResource {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "resource", kind: "delete-resource", record: "DeletedResource" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

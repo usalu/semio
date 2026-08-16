@@ -1,0 +1,3 @@
+enum GltfChangeMaterialAlphaModeValue { OPAQUE MASK BLEND }
+input GltfChangeMaterialAlphaModeMutationV1Input { material: Int!, alphaMode: GltfChangeMaterialAlphaModeValue! }
+type GltfChangeMaterialAlphaModeMutationV1 { id: ID!, version: Int!, material: Int!, alphaMode: GltfChangeMaterialAlphaModeValue!, touchedPaths: [String!]!, accepted: Boolean!, rejectionCode: String }

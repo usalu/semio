@@ -46,6 +46,7 @@ pub struct Dialect {
 /// generators) should read/write THIS type, converting to/from `Dialect` only at the point a
 /// `'static` compose call actually needs one.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ArtifactDialect {
     pub artifact_kind: String,

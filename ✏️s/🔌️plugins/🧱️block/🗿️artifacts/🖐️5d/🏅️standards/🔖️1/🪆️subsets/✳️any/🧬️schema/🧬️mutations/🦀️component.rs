@@ -25,7 +25,7 @@ pub type Block5dStore = store::ArtifactStore<Block5dSnapshot, Block5dMutation>;
 /// grip is placed in both projections at once), set-like compatibility-rule/attribute/author
 /// add/remove, both cameras' pan/zoom, and the session meta description. The old whole-document-
 /// replace and no-op sentinel variants are gone — whole-document loads now decompose into this
-/// vocabulary (see `🎛️apps/🖐️5d/🎮️commands/🎨️set-active-example/🦀️component.rs`'s
+/// vocabulary (see `🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️component.rs`'s
 /// `replace_document_operations`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
@@ -138,12 +138,12 @@ mod tests {
     use protocol::MutationDiff;
 
     fn round_trip(base: &Block5dSnapshot, mutation: &Block5dMutation) -> Block5dSnapshot {
-        let forward = mutation.diff(base).apply(base);
+        let forward = mutation.diff(base).diff().apply(base);
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(base);
         backward.reverse();
         for undo in &backward {
-            restored = undo.diff(&restored).apply(&restored);
+            restored = undo.diff(&restored).diff().apply(&restored);
         }
         assert_eq!(&restored, base, "inverse must restore the pre-mutation snapshot");
         forward
@@ -321,18 +321,18 @@ mod tests {
     #[test]
     fn change_part_kind_label_diff_absorb_law() {
         let base = empty_block5d_snapshot();
-        let d1 = change_part_kind_label("first".into()).diff(&base);
+        let d1 = change_part_kind_label("first".into()).diff(&base).into_parts().0;
         let mid = d1.apply(&base);
-        let d2 = change_part_kind_label("second".into()).diff(&mid);
+        let d2 = change_part_kind_label("second".into()).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
     #[test]
     fn move_grip_2d_diff_absorb_law() {
         let base = seeded_snapshot();
-        let d1 = move_grip_2d("g0".into(), 0.5, 0.3).diff(&base);
+        let d1 = move_grip_2d("g0".into(), 0.5, 0.3).diff(&base).into_parts().0;
         let mid = d1.apply(&base);
-        let d2 = move_grip_2d("g0".into(), 1.1, 0.6).diff(&mid);
+        let d2 = move_grip_2d("g0".into(), 1.1, 0.6).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -345,5 +345,31 @@ mod tests {
         assert_eq!(Block5dMutation::kinds().len(), 41);
     }
     //#endregion 🔖️MutationLaws
+
+    //#region 🔖️OutcomeLaws
+    // 🎫️ 26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — see
+    // `📓️w3-f-block-puzzle-report.md` for the `assert_outcome_policy_matrix` pending-helper note.
+    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
+
+    #[test]
+    fn missing_target_is_error_per_verb_family() {
+        let base = empty_block5d_snapshot();
+        assert_missing_target_is_error(&base, &delete_grip_kind("missing".into())); // delete
+        assert_missing_target_is_error(&base, &remove_author("missing".into())); // remove
+        assert_missing_target_is_error(&base, &change_grip_kind_color("missing".into(), "#fff".into())); // change/set/update
+        assert_missing_target_is_error(&base, &move_grip_2d("missing".into(), 1.0, 1.0)); // move/drag/rotate/scale/resize
+    }
+
+    #[test]
+    fn create_duplicate_id_is_fatal_and_never_applies() {
+        let mut base = empty_block5d_snapshot();
+        let grip_kind = crate::artifacts::block5d::Block5dGripKind { id: "gk0".into(), name: "gk0".into(), label: "GK0".into(), color: "#888".into(), default_rope_kind: "rope.standard".into() };
+        base.grip_kinds.push(grip_kind.clone());
+        let outcome = create_grip_kind(grip_kind).diff(&base);
+        assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal));
+        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

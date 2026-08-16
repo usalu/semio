@@ -1,0 +1,8 @@
+# move-scene typed mutation facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+input GltfMoveScenePayloadV1 {
+  index: Int!
+  position: Int!
+}
+type GltfMoveSceneMutationV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfMoveScenePayloadV1! }

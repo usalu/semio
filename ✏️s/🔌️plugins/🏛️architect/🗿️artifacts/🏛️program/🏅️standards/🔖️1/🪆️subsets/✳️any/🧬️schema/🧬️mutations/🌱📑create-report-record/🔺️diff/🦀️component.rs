@@ -6,7 +6,11 @@ use crate::artifacts::program::diff::ProgramReportsDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🌱️ `added = [payload row]` — the row lands at the end of `program.reports` on apply.
-pub fn diff(payload: &CreateReportRecord, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { reports: Some(ProgramReportsDelta { added: vec![payload.report_record.clone()], ..Default::default() }), ..Default::default() }
+/// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
+pub fn diff(payload: &CreateReportRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let id = payload.report_record.header.id.clone();
+    if base.reports.iter().any(|row| row.header.id == id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A report record already exists with this id.", [id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { reports: Some(ProgramReportsDelta { added: vec![payload.report_record.clone()], ..Default::default() }), ..Default::default() })
 }

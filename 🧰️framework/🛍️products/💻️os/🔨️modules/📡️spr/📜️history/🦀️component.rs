@@ -12,7 +12,7 @@ use crate::os_dsl::schema::{FieldSpec, FieldValue, JoinMode, ParseOptions, Recor
 use crate::os_pack::{ByteReader, ByteWriter, CodecId, PackSink};
 use crate::os_spr::wire::{DictBuilder, DictReader, ProtocolError, ProtocolLimits, RecordHasher};
 use crate::os_spr::format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions, HEADER_SIZE};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Model
 // Every field of crate::os_store::OpsHeaderLine (Doc/Edit/Change/Checkpoint/Alternative/Active) has exactly
@@ -35,6 +35,13 @@ pub struct HistoryLog {
     /// materializes as, and each checkpoint's child pins. Absent for every non-composed document
     /// (the overwhelming majority) and for logs predating the record.
     pub composition: Option<HistoryComposition>,
+    /// @emoji ⚔️ First-class merge conflicts (`REC_CONFLICT`), durable per
+    /// `.🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/
+    /// 📋️contract-freeze.md` §C7: a `Quarantined` batch rejected outright, or a `Degraded`
+    /// accepted-but-messy merge — see `crate::os_spr::conflict::ConflictKind`. Empty for the
+    /// overwhelming majority of documents and for logs predating the record; no record is written
+    /// when empty.
+    pub conflicts: Vec<HistoryConflict>,
 }
 
 /// @emoji 🧩️ The durable form of a document's composition facts, carried as ONE extension record
@@ -51,6 +58,42 @@ pub struct HistoryComposition {
     pub dialect: Option<(String, String, String)>,
     /// 📌️ `(checkpoint_id, [(child_artifact_uri, child_checkpoint_id)])` — the cascade pins.
     pub checkpoint_pins: Vec<(String, Vec<(String, String)>)>,
+}
+
+/// @emoji ⚔️ Durable form of `crate::os_spr::conflict::Conflict` (`REC_CONFLICT`): `kind`/`status`
+/// are the numeric mirrors of `crate::os_spr::conflict::ConflictKind`/`ConflictStatus`
+/// (`kind`: 0 = `Quarantined`, 1 = `Degraded`; `status`: 0 = `Open`, 1 = `Accepted`, 2 =
+/// `Discarded`) — `envelopes` is populated only for `Quarantined` (opaque, already-serialized
+/// `crate::os_spr::causal::MutationEnvelope` bytes — this crate never interprets them, same stance
+/// as every other opaque payload here), `edit_ids` only for `Degraded`. No `policy` field: a merge
+/// policy is local/authority state per the frozen contract, never part of an artifact's shared
+/// history.
+#[derive(Clone, Debug, PartialEq)]
+pub struct HistoryConflict {
+    pub id: String,
+    pub kind: u8,
+    pub status: u8,
+    pub actors: Vec<String>,
+    /// ⏰️ `(actor, physical_ms, logical)` — field order/types mirror
+    /// `crate::os_spr::ids::HybridLogicalTimestamp` exactly.
+    pub hlt: (u64, u64, u64),
+    pub edit_ids: Vec<String>,
+    pub envelopes: Vec<Vec<u8>>,
+    pub messages: Vec<HistoryMessage>,
+}
+
+/// @emoji 📨️ Durable form of `crate::os_spr::command::MutationMessage`: `level` is the numeric
+/// mirror of `crate::os_dsl::Severity` (`as_u8`/`from_u8`, 0..3), `code` is dict-interned (the
+/// frozen seven `mutation.*` codes repeat heavily across one document's history — see
+/// `📋️contract-freeze.md` §C2), `message`/`target` are plain strings (English prose / element
+/// address, never interned — they vary per occurrence).
+#[derive(Clone, Debug, PartialEq)]
+pub struct HistoryMessage {
+    pub level: u8,
+    pub code: String,
+    pub message: String,
+    pub target: Vec<String>,
+    pub op_index: Option<u32>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -120,6 +163,14 @@ pub struct HistoryOpMeta {
     /// (`Default`) whenever absent from the byte log, matching `group_id`'s own "absent for logs
     /// predating this field" contract.
     pub origin: crate::os_spr::command::MutationOrigin,
+    /// @emoji 📨️ Durable ledger twin of `crate::os_spr::command::MutationOutcome::messages` — every
+    /// diagnostic this op's `diff` raised, persisted rather than recomputed (unlike inverse/meta's
+    /// general "a fresh replay never touches this field" contract, messages are NOT reproducible
+    /// from a replay alone — they are the durable record of what actually happened at write time).
+    /// Dict-interned per-message `code` (bit6 of the same presence byte, same "absent for logs
+    /// predating this field" contract as `group_id`/`origin`) — empty `Vec` for logs predating
+    /// this field.
+    pub messages: Vec<HistoryMessage>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -559,6 +610,57 @@ fn read_id_field<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_t
     .map_err(ProtocolError::from)
 }
 
+//#region 🔖️Message
+// Shared wire shape for one `HistoryMessage`, used by both `HistoryOpMeta.messages` (🔖️Edit) and
+// `HistoryConflict.messages` (🔖️Conflict) — one definition, both call sites.
+
+/// @emoji 🎯️ `level u8 | code(idfield, dict-interned) | message(strfield) | target_count varint +
+/// target(strfield)* | op_index presence u8 + [varint]`.
+fn write_history_message(out: &mut ByteWriter, message: &HistoryMessage, dict: &mut DictBuilder) -> Result<(), ProtocolError> {
+    out.write_u8(message.level);
+    write_id_field(out, &message.code, dict, &|_: &str| None)?;
+    write_str_field(out, &message.message);
+    out.write_varint_u64(message.target.len() as u64);
+    for target in &message.target {
+        write_str_field(out, target);
+    }
+    match message.op_index {
+        Some(index) => {
+            out.write_u8(1);
+            out.write_varint_u64(index as u64);
+        }
+        None => out.write_u8(0),
+    }
+    Ok(())
+}
+
+/// @emoji 🎯️ Inverse of [`write_history_message`].
+fn read_history_message(input: &mut ByteReader<'_>, dict: &DictReader) -> Result<HistoryMessage, ProtocolError> {
+    let level = input.read_u8()?;
+    if crate::os_dsl::Severity::from_u8(level).is_none() {
+        return Err(ProtocolError::Malformed { what: "history message severity", offset: input.position() as u64 - 1, detail: format!("unknown severity {level}") });
+    }
+    let code = read_id_field(input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
+    let message = read_str_field(input)?;
+    let target_count = input.read_varint_u64()?;
+    let mut target = Vec::with_capacity(target_count as usize);
+    for _ in 0..target_count {
+        target.push(read_str_field(input)?);
+    }
+    let has_op_index = input.read_u8()?;
+    let op_index = match has_op_index {
+        0 => None,
+        1 => Some(u32::try_from(input.read_varint_u64()?).map_err(|_| ProtocolError::Malformed {
+            what: "history message operation index",
+            offset: input.position() as u64,
+            detail: "exceeds u32".to_string(),
+        })?),
+        value => return Err(ProtocolError::Malformed { what: "history message operation index presence", offset: input.position() as u64 - 1, detail: format!("expected 0 or 1, got {value}") }),
+    };
+    Ok(HistoryMessage { level, code, message, target, op_index })
+}
+//#endregion 🔖️Message
+
 //#region 🔖️Doc
 pub fn encode_doc(doc_id: &str, schema: &str, dict: &mut DictBuilder) -> Vec<u8> {
     let mut out = ByteWriter::new();
@@ -645,6 +747,9 @@ fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut DictBuil
     if !meta.origin.is_owner() {
         presence |= 1 << 5;
     }
+    if !meta.messages.is_empty() {
+        presence |= 1 << 6;
+    }
     out.write_u8(presence);
     if let Some(op_id) = &meta.op_id {
         write_id_field(out, op_id, dict, edit_ordinal_of)?;
@@ -682,6 +787,14 @@ fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut DictBuil
         let encoded = serde_json::to_string(&meta.origin).expect("MutationOrigin canonical encoding never fails");
         write_str_field(out, &encoded);
     }
+    // 🎯️ Appended past `origin` (bit6 of the same presence byte, same "absent for logs predating
+    // this field" contract) — the durable message ledger, not reproducible from a fresh replay.
+    if !meta.messages.is_empty() {
+        out.write_varint_u64(meta.messages.len() as u64);
+        for message in &meta.messages {
+            write_history_message(out, message, dict)?;
+        }
+    }
     Ok(())
 }
 
@@ -712,7 +825,17 @@ fn read_op_meta<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to
     } else {
         crate::os_spr::command::MutationOrigin::Owner
     };
-    Ok(HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id, origin })
+    let messages = if presence & (1 << 6) != 0 {
+        let count = input.read_varint_u64()?;
+        let mut messages = Vec::with_capacity(count as usize);
+        for _ in 0..count {
+            messages.push(read_history_message(input, dict)?);
+        }
+        messages
+    } else {
+        Vec::new()
+    };
+    Ok(HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id, origin, messages })
 }
 
 pub fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
@@ -1114,6 +1237,119 @@ pub fn decode_composition<'d>(payload: &[u8], dict: &'d DictReader) -> Result<Hi
     Ok(HistoryComposition { owner, dialect, checkpoint_pins })
 }
 //#endregion 🔖️Composition
+
+//#region 🔖️Conflict
+/// @emoji ⚔️ Third caller-defined extension record (`REC_CURSOR`'s/`REC_COMPOSITION`'s neighbour in
+/// the 0x40..=0x7E range), written NON-critical for the same reason: a reader that doesn't know
+/// about first-class conflicts (`📋️contract-freeze.md` §C5/§C7) skips the whole record and still
+/// reads a fully valid document. Unlike `REC_EDIT` (one frame per edit, the hot streaming path),
+/// the whole `HistoryLog.conflicts` list is written as ONE frame — conflicts are not append-only
+/// hot data, an authority's open/resolved set is small and always persisted together, so a single
+/// frame keeps the shape symmetric with `encode_cursor`'s own single-payload framing while still
+/// carrying a list. Absent for every log with no open or historical conflicts (the overwhelming
+/// majority) and for logs predating the record — no frame is written when `conflicts` is empty.
+pub const REC_CONFLICT: u8 = 0x42;
+
+fn write_conflict(out: &mut ByteWriter, conflict: &HistoryConflict, dict: &mut DictBuilder, edit_ordinal_of: &dyn Fn(&str) -> Option<u64>) -> Result<(), ProtocolError> {
+    write_id_field(out, &conflict.id, dict, &|_: &str| None)?;
+    out.write_u8(conflict.kind);
+    out.write_u8(conflict.status);
+    out.write_varint_u64(conflict.actors.len() as u64);
+    for actor in &conflict.actors {
+        write_id_field(out, actor, dict, &|_: &str| None)?;
+    }
+    out.write_varint_u64(conflict.hlt.0);
+    out.write_varint_u64(conflict.hlt.1);
+    out.write_varint_u64(conflict.hlt.2);
+    out.write_varint_u64(conflict.edit_ids.len() as u64);
+    for edit_id in &conflict.edit_ids {
+        write_id_field(out, edit_id, dict, edit_ordinal_of)?;
+    }
+    out.write_varint_u64(conflict.envelopes.len() as u64);
+    for envelope in &conflict.envelopes {
+        out.write_varint_u64(envelope.len() as u64);
+        out.write_bytes(envelope);
+    }
+    out.write_varint_u64(conflict.messages.len() as u64);
+    for message in &conflict.messages {
+        write_history_message(out, message, dict)?;
+    }
+    Ok(())
+}
+
+fn read_conflict<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryConflict, ProtocolError> {
+    let id = read_id_field(input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
+    let kind = input.read_u8()?;
+    let status = input.read_u8()?;
+    let actor_count = input.read_varint_u64()?;
+    let mut actors = Vec::with_capacity(actor_count as usize);
+    for _ in 0..actor_count {
+        actors.push(read_id_field(input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?);
+    }
+    let hlt = (input.read_varint_u64()?, input.read_varint_u64()?, input.read_varint_u64()?);
+    let edit_id_count = input.read_varint_u64()?;
+    let mut edit_ids = Vec::with_capacity(edit_id_count as usize);
+    for _ in 0..edit_id_count {
+        edit_ids.push(read_id_field(input, dict, ordinal_to_id)?);
+    }
+    let envelope_count = input.read_varint_u64()?;
+    let mut envelopes = Vec::with_capacity(envelope_count as usize);
+    for _ in 0..envelope_count {
+        let len = input.read_varint_u64()? as usize;
+        envelopes.push(input.read_bytes(len)?.to_vec());
+    }
+    let message_count = input.read_varint_u64()?;
+    let mut messages = Vec::with_capacity(message_count as usize);
+    for _ in 0..message_count {
+        messages.push(read_history_message(input, dict)?);
+    }
+    Ok(HistoryConflict { id, kind, status, actors, hlt, edit_ids, envelopes, messages })
+}
+
+/// @emoji 🎯️ `format u8 (=1) | count varint + count x conflict entry` — mirrors [`encode_cursor`]'s
+/// shape (single top-level format byte, then the payload) with the payload being a length-prefixed
+/// list instead of one struct: each entry is `id(idfield) | kind u8 | status u8 | actor_count
+/// varint + actor(idfield)* | hlt(actor varint, physical_ms varint, logical varint) |
+/// edit_id_count varint + edit_id(idfield, edit-ordinal-eligible)* | envelope_count varint +
+/// (len varint + raw bytes)* | message_count varint + message*` (see [`write_history_message`] for
+/// one message's shape). Envelopes are opaque bytes to this crate (already-serialized
+/// `crate::os_spr::causal::MutationEnvelope`s) — same "never interprets" stance the module
+/// docstring states for op payloads.
+pub fn encode_conflicts(conflicts: &[HistoryConflict], dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
+    let edit_ordinal_of: &dyn Fn(&str) -> Option<u64> = &edit_ordinal_of;
+    let mut out = ByteWriter::new();
+    out.write_u8(1);
+    out.write_varint_u64(conflicts.len() as u64);
+    for conflict in conflicts {
+        write_conflict(&mut out, conflict, dict, edit_ordinal_of)?;
+    }
+    Ok(out.into_bytes())
+}
+
+/// @emoji 🎯️ Inverse of [`encode_conflicts`].
+pub fn decode_conflicts<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<Vec<HistoryConflict>, ProtocolError> {
+    let ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &ordinal_to_id;
+    let mut input = ByteReader::new(payload);
+    let format = input.read_u8()?;
+    if format > 1 {
+        return Err(malformed_fmt("conflict", format));
+    }
+    let count = input.read_varint_u64()?;
+    let mut conflicts = Vec::with_capacity(count as usize);
+    let mut ids = HashSet::new();
+    for _ in 0..count {
+        let conflict = read_conflict(&mut input, dict, ordinal_to_id)?;
+        if !ids.insert(conflict.id.clone()) {
+            return Err(ProtocolError::Malformed { what: "conflict", offset: input.position() as u64, detail: format!("duplicate conflict id {}", conflict.id) });
+        }
+        conflicts.push(conflict);
+    }
+    if input.remaining() != 0 {
+        return Err(ProtocolError::Malformed { what: "conflict", offset: input.position() as u64, detail: "trailing payload bytes".to_string() });
+    }
+    Ok(conflicts)
+}
+//#endregion 🔖️Conflict
 //#endregion 🔖️Payloads
 
 //#region 🔖️Codec
@@ -1251,6 +1487,12 @@ pub fn encode_history(log: &HistoryLog, options: &EncodeOptions) -> Result<Vec<u
         writer.write_record(REC_COMPOSITION, false, &composition_payload, CodecId(0))?;
     }
 
+    if !log.conflicts.is_empty() {
+        let conflicts_payload = encode_conflicts(&log.conflicts, &mut dict, |id| ordinals.get(id).copied())?;
+        flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
+        writer.write_record(REC_CONFLICT, false, &conflicts_payload, CodecId(0))?;
+    }
+
     writer.commit()?;
     Ok(writer.into_sink())
 }
@@ -1264,6 +1506,7 @@ fn decode_history_from(trusted: &[u8], options: &DecodeOptions) -> Result<Histor
     let full = options.verification == VerificationLevel::Full;
     let mut running_chain = if full { hasher.hash(&trusted[..HEADER_SIZE]) } else { [0u8; 32] };
     let mut pending_digests: Vec<[u8; 32]> = Vec::new();
+    let mut saw_conflicts = false;
 
     while let Some(frame) = cursor.next_frame()? {
         if full && frame.kind != crate::os_spr::REC_COMMIT {
@@ -1297,6 +1540,14 @@ fn decode_history_from(trusted: &[u8], options: &DecodeOptions) -> Result<Histor
                 log.cursor = Some(decode_cursor(frame.payload(), &dict, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)))?);
             }
             REC_COMPOSITION => log.composition = Some(decode_composition(frame.payload(), &dict)?),
+            REC_CONFLICT => {
+                if saw_conflicts {
+                    return Err(ProtocolError::Malformed { what: "history", offset: frame.offset, detail: "duplicate conflict record".to_string() });
+                }
+                let edit_ids_ref = &edit_ids;
+                log.conflicts = decode_conflicts(frame.payload(), &dict, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)))?;
+                saw_conflicts = true;
+            }
             crate::os_spr::REC_COMMIT if full => {
                 let (commit_seq, chain_hash) = parse_commit_fields(frame.payload())?;
                 let mut concat = running_chain.to_vec();
@@ -1788,6 +2039,7 @@ mod tests {
                             mutation_id: crate::os_spr::ids::SchemaId("widget.doc#recolor".to_string()),
                             payload_hash: crate::os_spr::ids::PayloadHash([3u8; 32]),
                         },
+                        messages: Vec::new(),
                     }]),
                 },
             ],
@@ -1804,7 +2056,36 @@ mod tests {
             active_alternative_id: Some("alt-1".to_string()),
             cursor: None,
             composition: None,
+            conflicts: Vec::new(),
         }
+    }
+
+    fn sample_conflicts() -> Vec<HistoryConflict> {
+        vec![
+            HistoryConflict {
+                id: "conflict-quarantine-1".to_string(),
+                kind: 0,
+                status: 0,
+                actors: vec!["alice".to_string(), "bob".to_string()],
+                hlt: (1, 1_700_000_000_000, 4),
+                edit_ids: Vec::new(),
+                envelopes: vec![vec![1, 2, 3], vec![4, 5, 6, 7]],
+                messages: vec![HistoryMessage { level: 2, code: "mutation.duplicate-id".to_string(), message: "id collided".to_string(), target: vec!["node-1".to_string()], op_index: Some(0) }],
+            },
+            HistoryConflict {
+                id: "conflict-degraded-1".to_string(),
+                kind: 1,
+                status: 1,
+                actors: vec!["carol".to_string()],
+                hlt: (2, 1_700_000_001_000, 0),
+                edit_ids: vec!["edit-1".to_string(), "edit-2".to_string()],
+                envelopes: Vec::new(),
+                messages: vec![
+                    HistoryMessage { level: 0, code: "mutation.cascade".to_string(), message: "cascaded".to_string(), target: Vec::new(), op_index: None },
+                    HistoryMessage { level: 1, code: "mutation.partial".to_string(), message: "partial apply".to_string(), target: vec!["a".to_string(), "b".to_string()], op_index: Some(1) },
+                ],
+            },
+        ]
     }
 
     //#region 🔖️Composition
@@ -1831,6 +2112,131 @@ mod tests {
         assert!(!bytes.windows(1).any(|window| window == [REC_COMPOSITION]) || decode_history(&bytes, &DecodeOptions::default()).is_ok());
     }
     //#endregion 🔖️Composition
+
+    //#region 🔖️Conflict
+    #[test]
+    fn conflict_payload_round_trips_both_kinds_byte_identically() {
+        let log = HistoryLog { conflicts: sample_conflicts(), ..sample_log() };
+        let bytes = encode_history(&log, &EncodeOptions::default()).expect("encode");
+        let decoded = decode_history(&bytes, &DecodeOptions::default()).expect("decode");
+        assert_eq!(decoded, log, "conflicts of both kinds must survive the binary round trip structurally");
+        let re_encoded = encode_history(&decoded, &EncodeOptions::default()).expect("re-encode");
+        assert_eq!(re_encoded, bytes, "re-encoding the decoded log must reproduce byte-identical output");
+    }
+
+    #[test]
+    fn encode_conflicts_round_trips_with_dict_and_ordinal_refs() {
+        let conflicts = sample_conflicts();
+        let mut dict = DictBuilder::new();
+        let ordinals: HashMap<&str, u64> = [("edit-1", 0u64), ("edit-2", 1u64)].into_iter().collect();
+        let payload = encode_conflicts(&conflicts, &mut dict, |id| ordinals.get(id).copied()).unwrap();
+        let mut reader = DictReader::new();
+        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
+        let edit_ids = ["edit-1".to_string(), "edit-2".to_string()];
+        let decoded = decode_conflicts(&payload, &reader, |ord| edit_ids.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).unwrap();
+        assert_eq!(decoded, conflicts);
+    }
+
+    #[test]
+    fn encode_conflicts_round_trips_empty() {
+        let mut dict = DictBuilder::new();
+        let payload = encode_conflicts(&Vec::new(), &mut dict, |_| None).unwrap();
+        let mut reader = DictReader::new();
+        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
+        let decoded = decode_conflicts(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).unwrap();
+        assert_eq!(decoded, Vec::new());
+    }
+
+    #[test]
+    fn a_log_without_conflicts_writes_no_conflict_record() {
+        let bytes = encode_history(&sample_log(), &EncodeOptions::default()).expect("encode");
+        assert_eq!(decode_history(&bytes, &DecodeOptions::default()).expect("decode").conflicts, Vec::new());
+        // 🎯️ Scans actual frames (not a raw byte-window guess like the composition precedent
+        // above) — the rigorous form of "no conflicts ⇒ no REC_CONFLICT record emitted".
+        let mut cursor = FrameCursor::new(&bytes, HEADER_SIZE as u64);
+        let mut saw_conflict_record = false;
+        while let Some(frame) = cursor.next_frame().expect("scan") {
+            if frame.kind == REC_CONFLICT {
+                saw_conflict_record = true;
+            }
+        }
+        assert!(!saw_conflict_record, "no REC_CONFLICT frame should be emitted when conflicts is empty");
+    }
+    //#endregion 🔖️Conflict
+
+    //#region 🔖️Message
+    #[test]
+    fn op_meta_messages_round_trip_every_severity_and_target_shape() {
+        let meta = HistoryOpMeta {
+            op_id: Some("op-9".to_string()),
+            dependencies: Vec::new(),
+            base_version: 1,
+            author_id: None,
+            hlt: None,
+            undo_policy: 0,
+            payload_hash: None,
+            group_id: None,
+            origin: crate::os_spr::command::MutationOrigin::Owner,
+            messages: vec![
+                HistoryMessage { level: 0, code: "mutation.cascade".to_string(), message: "cascaded".to_string(), target: Vec::new(), op_index: None },
+                HistoryMessage { level: 1, code: "mutation.clamped".to_string(), message: "clamped".to_string(), target: vec!["a".to_string()], op_index: Some(0) },
+                HistoryMessage { level: 2, code: "mutation.target-missing".to_string(), message: "missing".to_string(), target: vec!["a".to_string(), "b".to_string()], op_index: Some(3) },
+                HistoryMessage { level: 3, code: "mutation.invariant".to_string(), message: "broken".to_string(), target: vec!["x".to_string(), "y".to_string(), "z".to_string()], op_index: None },
+            ],
+        };
+        let edit = HistoryEdit {
+            id: "edit-m".to_string(),
+            actor: None,
+            started_at: "2024-01-01T00:00:00Z".to_string(),
+            finished_at: None,
+            coalesce_key: None,
+            description: None,
+            ops: vec![OpPayload { text: Some("noop".to_string()), binary: None }],
+            inverse: Vec::new(),
+            meta: Some(vec![meta.clone()]),
+        };
+        let mut dict = DictBuilder::new();
+        let payload = encode_edit(&edit, &mut dict, |_| None).unwrap();
+        let mut reader = DictReader::new();
+        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
+        let decoded = decode_edit(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).unwrap();
+        assert_eq!(decoded.meta, Some(vec![meta]));
+    }
+
+    #[test]
+    fn op_meta_without_messages_writes_no_messages_section() {
+        let meta = HistoryOpMeta { op_id: None, dependencies: Vec::new(), base_version: 0, author_id: None, hlt: None, undo_policy: 0, payload_hash: None, group_id: None, origin: crate::os_spr::command::MutationOrigin::Owner, messages: Vec::new() };
+        let mut dict = DictBuilder::new();
+        let mut out = ByteWriter::new();
+        write_op_meta(&mut out, &meta, &mut dict, &|_: &str| None).unwrap();
+        let payload = out.into_bytes();
+        // presence byte is the very first byte written by write_op_meta; bit6 (0x40) must be unset.
+        assert_eq!(payload[0] & 0b0100_0000, 0, "bit6 must be unset for empty messages");
+        let mut reader = DictReader::new();
+        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
+        let mut input = ByteReader::new(&payload);
+        let decoded = read_op_meta(&mut input, &reader, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).unwrap();
+        assert_eq!(decoded.messages, Vec::new());
+    }
+
+    #[test]
+    fn message_code_interning_does_not_grow_the_dictionary_linearly() {
+        let mut dict = DictBuilder::new();
+        let mut out = ByteWriter::new();
+        for _ in 0..500 {
+            let message = HistoryMessage { level: 1, code: "mutation.clamped".to_string(), message: String::new(), target: Vec::new(), op_index: None };
+            write_history_message(&mut out, &message, &mut dict).unwrap();
+        }
+        assert_eq!(dict.len(), 1, "500 identical codes must intern to a single dictionary entry, not 500");
+        let payload_len = out.into_bytes().len();
+        let bytes_per_message = payload_len / 500;
+        // 🎯️ A raw (non-interned) code string would cost len("mutation.clamped")=17 bytes alone
+        // per repeat; interning collapses every repeat after the first to a small dictref (tag +
+        // varint index), so the true per-message average must stay far below the raw string's own
+        // length — proof the growth is sub-linear, not just "small on average by luck".
+        assert!(bytes_per_message < 10, "expected sub-10-byte-per-message average from interning, got {bytes_per_message}");
+    }
+    //#endregion 🔖️Message
 
     //#region 🔖️TextGrammar
     #[test]

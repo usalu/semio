@@ -1,0 +1,60 @@
+//! ↩️ change-material-double-sided reconstructs the prior render-state value.
+use crate::artifacts::gltf::schema::mutations::change_material_double_sided::mutation::{validate, GltfChangeMaterialDoubleSidedPayload, GltfChangeMaterialDoubleSidedRejection};
+use crate::artifacts::gltf::GltfSnapshot;
+use serde::{Deserialize, Serialize};
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GltfChangeMaterialDoubleSidedInverse {
+    pub material: usize,
+    pub expected_double_sided: bool,
+    pub double_sided: bool,
+    pub touched_paths: Vec<String>,
+}
+impl GltfChangeMaterialDoubleSidedInverse {
+    pub fn expected_touched_paths(&self) -> Vec<String> {
+        vec![format!("document/materials/{}/doubleSided", self.material)]
+    }
+    pub fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfChangeMaterialDoubleSidedRejection> {
+        if self.touched_paths != self.expected_touched_paths() {
+            return Err(GltfChangeMaterialDoubleSidedRejection { code: "gltf.mutation.invalid-touched-paths".into(), path: "inverse/touchedPaths".into(), detail: "touched paths must equal the concrete material double-sided path".into() });
+        }
+        let material = snapshot.document.materials.get_mut(self.material).ok_or_else(|| GltfChangeMaterialDoubleSidedRejection {
+            code: "gltf.mutation.index-out-of-range".into(),
+            path: "document/materials".into(),
+            detail: "the addressed index must exist".into(),
+        })?;
+        if material.double_sided != self.expected_double_sided {
+            return Err(GltfChangeMaterialDoubleSidedRejection {
+                code: "gltf.mutation.stale-inverse".into(),
+                path: format!("document/materials/{}/doubleSided", self.material),
+                detail: "current double-sided value does not equal the planned forward result".into(),
+            });
+        }
+        material.double_sided = self.double_sided;
+        Ok(())
+    }
+}
+pub fn reconstruct(payload: &GltfChangeMaterialDoubleSidedPayload, base: &GltfSnapshot) -> Result<GltfChangeMaterialDoubleSidedInverse, GltfChangeMaterialDoubleSidedRejection> {
+    validate(payload, base)?;
+    Ok(GltfChangeMaterialDoubleSidedInverse {
+        material: payload.material,
+        expected_double_sided: payload.double_sided,
+        double_sided: base.document.materials[payload.material].double_sided,
+        touched_paths: vec![format!("document/materials/{}/doubleSided", payload.material)],
+    })
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn inverse_restores_prior_value_and_rejects_stale_state() {
+        let mut base = GltfSnapshot::default();
+        base.document.materials.push(Default::default());
+        let payload = GltfChangeMaterialDoubleSidedPayload { material: 0, double_sided: true };
+        let inverse = reconstruct(&payload, &base).unwrap();
+        crate::artifacts::gltf::schema::mutations::change_material_double_sided::mutation::apply(&mut base, &payload).unwrap();
+        inverse.apply(&mut base).unwrap();
+        assert!(!base.document.materials[0].double_sided);
+        assert_eq!(inverse.apply(&mut base).unwrap_err().code, "gltf.mutation.stale-inverse");
+    }
+}

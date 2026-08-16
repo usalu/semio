@@ -243,10 +243,10 @@ impl protocol::OpBinary for WriterConfigMutation {
 impl Mutation<WriterConfig> for WriterConfigMutation {
     type Diff = WriterConfig;
 
-    fn diff(&self, base: &WriterConfig) -> WriterConfig {
+    fn diff(&self, base: &WriterConfig) -> protocol::MutationOutcome<WriterConfig> {
         let mut next = base.clone();
         match self {
-            WriterConfigMutation::Snapshot { config } => return config.clone(),
+            WriterConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
             WriterConfigMutation::SetEditorSelection { selection } => next.editor_selection = selection.clone(),
             WriterConfigMutation::SetFormatSignal { value } => next.format_signal = *value,
             WriterConfigMutation::SetLintSignal { value } => next.lint_signal = *value,
@@ -256,7 +256,7 @@ impl Mutation<WriterConfig> for WriterConfigMutation {
             WriterConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
             WriterConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
-        next
+        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &WriterConfig) -> Vec<Self> {

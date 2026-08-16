@@ -18,7 +18,7 @@ pub struct DeleteRoute {
 impl MutationKind<GisMapSnapshot, GisMapMutation> for DeleteRoute {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "route", kind: "delete-route", record: "DeletedRoute" };
 
-    fn diff(&self, base: &GisMapSnapshot) -> GisMapDiff {
+    fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
 

@@ -288,12 +288,12 @@ mod tests {
         let base = semio_s_plugin_cad::artifacts::cad::empty_cad_snapshot();
         let kind = CreateBuildingStorey { storey_id: "storey-1".into(), level_index: 2, storey_name: "Level Two".into() };
 
-        let folded = MutationDiff::apply(&protocol::fold_plan_diff(&kind, &base), &base);
+        let folded = MutationDiff::apply(protocol::fold_plan_diff(&kind, &base).diff(), &base);
 
         let create = CadMutation::CreateNode(CreateNode { node: CadNode { id: "storey-1".into(), label: kind.storey_label(), kind: "building-storey".into() } });
-        let after_create = MutationDiff::apply(&create.diff(&base), &base);
+        let after_create = MutationDiff::apply(create.diff(&base).diff(), &base);
         let switch = CadMutation::ChangeActiveModelDefinition(ChangeActiveModelDefinition { new_model_definition_id: "aec.building".into() });
-        let after_switch = MutationDiff::apply(&switch.diff(&after_create), &after_create);
+        let after_switch = MutationDiff::apply(switch.diff(&after_create).diff(), &after_create);
 
         assert_eq!(folded, after_switch);
         assert_eq!(after_switch.active_model_definition_id, "aec.building");

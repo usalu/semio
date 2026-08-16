@@ -52,18 +52,20 @@ pub enum PresentMutation {
 mod tests {
     use super::*;
     use crate::artifacts::present::{default_present_snapshot, present_snapshot_with_tiles, present_working_scene, FigureTileDraft, FigureTileFrame};
+    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
     fn tile(id: &str) -> FigureTileDraft {
         FigureTileDraft { id: id.into(), name: id.into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } }
     }
 
     fn round_trip(base: &PresentSnapshot, mutation: &PresentMutation) -> PresentSnapshot {
-        let forward = vcs::apply_mutation(base, mutation);
+        let (forward, _messages) = vcs::apply_mutation(base, mutation);
         let mut backward = mutation.inverse(base);
         backward.reverse();
         let mut restored = forward.clone();
         for undo in &backward {
-            restored = vcs::apply_mutation(&restored, undo);
+            let (next, _messages) = vcs::apply_mutation(&restored, undo);
+            restored = next;
         }
         // 🔒️ Structural equality, not just working-scene equality: `presentation_child_handle_and_cache`
         // content-addresses deterministically off `(source, tiles)`, so restoring the exact pre-mutation
@@ -132,8 +134,8 @@ mod tests {
         let base = present_snapshot_with_tiles(&source, &[tile("t1")]);
         let mutation = PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 1, tile: tile("t2") });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 2, tile: tile("t3") }).diff(&base);
+        let d1 = mutation.diff(&base).into_parts().0;
+        let d2 = PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 2, tile: tile("t3") }).diff(&base).into_parts().0;
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -156,8 +158,8 @@ mod tests {
         source_b.src = "/other.png".into();
         let mutation = PresentMutation::ReplaceSource(replace_source::mutation::ReplaceSource { new_source: source_a });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = PresentMutation::ReplaceSource(replace_source::mutation::ReplaceSource { new_source: source_b }).diff(&base);
+        let d1 = mutation.diff(&base).into_parts().0;
+        let d2 = PresentMutation::ReplaceSource(replace_source::mutation::ReplaceSource { new_source: source_b }).diff(&base).into_parts().0;
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -178,13 +180,62 @@ mod tests {
             assert!(kinds.contains(&expected), "missing semantic kind {expected}");
         }
     }
+
+    //#region 🔖️OutcomeLaws
+    // 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — one law test per verb
+    // family present in this facet (`assert_missing_target_is_error`/`assert_fatal_never_applies`,
+    // landed in `📡️spr/🧪️testkit`). `replace` has no addressable target here (whole-collection
+    // `replace-tiles` / singleton `replace-source`), so it has no missing-target case to exercise.
+    // `assert_outcome_policy_matrix` is NOT landed under that name (only the generic closure-based
+    // `assert_policy_matrix` exists) — see this ticket's report.
+    #[test]
+    fn create_family_fatal_never_applies() {
+        let base = present_snapshot_with_tiles(&present_working_scene(&default_present_snapshot()).0, &[tile("t1")]);
+        let outcome = PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 0, tile: tile("t1") }).diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+        assert_fatal_never_applies(&outcome);
+    }
+
+    #[test]
+    fn delete_family_missing_target_is_error() {
+        let base = default_present_snapshot();
+        assert_missing_target_is_error(&base, &PresentMutation::DeleteTile(delete_tile::mutation::DeleteTile { id: "missing".into() }));
+        assert_missing_target_is_error(&base, &PresentMutation::DeleteTiles(delete_tiles::mutation::DeleteTiles { ids: vec!["missing".into()] }));
+    }
+
+    #[test]
+    fn rename_family_missing_target_is_error() {
+        let base = default_present_snapshot();
+        assert_missing_target_is_error(&base, &PresentMutation::RenameTile(rename_tile::mutation::RenameTile { id: "missing".into(), new_name: "x".into() }));
+    }
+
+    #[test]
+    fn resize_family_missing_target_is_error() {
+        let base = default_present_snapshot();
+        assert_missing_target_is_error(&base, &PresentMutation::ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop { id: "missing".into(), new_crop: FigureTileFrame { x: 0.0, y: 0.0, width: 0.1, height: 0.1 } }));
+    }
+
+    #[test]
+    fn resize_family_fatal_never_applies() {
+        let base = default_present_snapshot();
+        let outcome = PresentMutation::ResizeSourceFrame(resize_source_frame::mutation::ResizeSourceFrame { new_frame: FigureTileFrame { x: 0.0, y: 0.0, width: -1.0, height: 1.0 } }).diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+        assert_fatal_never_applies(&outcome);
+    }
+
+    #[test]
+    fn reorder_family_missing_target_is_error() {
+        let base = default_present_snapshot();
+        assert_missing_target_is_error(&base, &PresentMutation::ReorderTiles(reorder_tiles::mutation::ReorderTiles { id: "missing".into(), to_index: 0 }));
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests
 
 //#region 🔖️Apply
 /// 📦️ Applies `mutation` onto `snapshot`, returning the resulting snapshot.
 pub fn apply_present_mutation(snapshot: &PresentSnapshot, mutation: &PresentMutation) -> PresentSnapshot {
-    vcs::apply_mutation(snapshot, mutation)
+    vcs::apply_mutation(snapshot, mutation).0
 }
 
 /// ↩️ Computes `mutation`'s inverse mutations against `snapshot` (pre-state).

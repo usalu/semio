@@ -1,0 +1,52 @@
+import assert from 'node:assert/strict';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+const mutations = '✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations';
+const facet = (slug, phase) => pathToFileURL(join(process.cwd(), mutations, slug, phase, '🟦️component.ts')).href;
+const component = slug => facet(slug, '🦠️mutation');
+const diff = slug => facet(slug, '🔺️diff');
+const inverse = slug => facet(slug, '↩️inverse');
+const base = () => ({ schema: 's.stdio.gltf', sourceForm: 'json', buffers: [], document: { asset: { version: '2.0' }, scenes: [], nodes: [], meshes: [], accessors: [], bufferViews: [], buffers: [], materials: [], textures: [], images: [], samplers: [], skins: [], animations: [], cameras: [], extensionsUsed: [], extensionsRequired: [] } });
+const check = async (slug, payload, invalid, prepare, changedPath, prepareInvalid = prepare) => {
+  const mutation = await import(component(slug));
+  const diffFacet = await import(diff(slug));
+  const inverseFacet = await import(inverse(slug));
+  const name = `Gltf${slug.split('-').map(part => part[0].toUpperCase() + part.slice(1)).join('')}`;
+  const apply = mutation[`apply${name}`];
+  const deriveDiff = diffFacet[`derive${name}Diff`];
+  const deriveInverse = inverseFacet[`derive${name}Inverse`];
+  const acceptedBase = prepare(base());
+  const serialized = JSON.parse(JSON.stringify(payload));
+  assert.equal(mutation[`${name}Descriptor`].id, `s.stdio.gltf.mutation.${slug}.v1`);
+  assert.deepEqual(serialized, payload);
+  const rejected = apply(prepareInvalid(base()), invalid);
+  assert.equal(rejected.accepted, false, `${slug} must reject its invalid payload`);
+  const accepted = apply(acceptedBase, payload);
+  assert.equal(accepted.accepted, true, `${slug} must apply its valid payload`);
+  const direct = deriveDiff(acceptedBase, payload);
+  assert.equal(direct.accepted, true, `${slug} must derive its direct diff`);
+  assert.ok(Object.hasOwn(direct.diff, changedPath), `${slug} must only emit its named diff region`);
+  const undo = deriveInverse(acceptedBase, payload);
+  assert.equal(undo.accepted, true, `${slug} must derive an inverse from base`);
+  assert.ok(Object.hasOwn(undo.inverse, changedPath), `${slug} inverse must name the original diff region`);
+};
+
+await check('change-asset-version', { version: '2.1' }, { version: '' }, value => value, 'asset');
+await check('change-asset-descriptive-metadata', { generator: 'semio', copyright: 'c', minVersion: '2.0' }, { generator: null, copyright: null, minVersion: null }, value => value, 'asset');
+await check('change-asset-extension-data', { data: { KHR_example: true } }, { data: null }, value => value, 'asset');
+await check('change-asset-extra-data', { data: { owner: 'semio' } }, { data: null }, value => value, 'asset');
+await check('change-document-extension-data', { data: { KHR_example: true } }, { data: null }, value => value, 'extensions');
+await check('change-document-extra-data', { data: { owner: 'semio' } }, { data: null }, value => value, 'extras');
+await check('bind-default-scene', { scene: 0 }, { scene: 1 }, value => { value.document.scenes = [{ nodes: [] }]; return value; }, 'scene');
+await check('unbind-default-scene', {}, {}, value => { value.document.scenes = [{ nodes: [] }]; value.document.scene = 0; return value; }, 'scene', value => value);
+await check('declare-used-extension', { extension: 'KHR_a', position: 0 }, { extension: '', position: 0 }, value => value, 'extensionsUsed');
+await check('withdraw-used-extension', { extension: 'KHR_a' }, { extension: 'KHR_missing' }, value => { value.document.extensionsUsed = ['KHR_a']; return value; }, 'extensionsUsed');
+await check('move-used-extension', { extension: 'KHR_b', position: 0 }, { extension: 'KHR_b', position: 1 }, value => { value.document.extensionsUsed = ['KHR_a', 'KHR_b']; return value; }, 'extensionsUsed');
+await check('reorder-used-extensions', { order: ['KHR_b', 'KHR_a'] }, { order: ['KHR_a', 'KHR_b'] }, value => { value.document.extensionsUsed = ['KHR_a', 'KHR_b']; return value; }, 'extensionsUsed');
+await check('require-extension', { extension: 'KHR_a', position: 0 }, { extension: 'KHR_missing', position: 0 }, value => { value.document.extensionsUsed = ['KHR_a']; return value; }, 'extensionsRequired');
+await check('unrequire-extension', { extension: 'KHR_a' }, { extension: 'KHR_missing' }, value => { value.document.extensionsUsed = ['KHR_a']; value.document.extensionsRequired = ['KHR_a']; return value; }, 'extensionsRequired');
+await check('move-required-extension', { extension: 'KHR_b', position: 0 }, { extension: 'KHR_b', position: 1 }, value => { value.document.extensionsUsed = ['KHR_a', 'KHR_b']; value.document.extensionsRequired = ['KHR_a', 'KHR_b']; return value; }, 'extensionsRequired');
+await check('reorder-required-extensions', { order: ['KHR_b', 'KHR_a'] }, { order: ['KHR_a', 'KHR_b'] }, value => { value.document.extensionsUsed = ['KHR_a', 'KHR_b']; value.document.extensionsRequired = ['KHR_a', 'KHR_b']; return value; }, 'extensionsRequired');
+
+console.log('[DEBUG] w1-a glTF document core: 16 acceptance/rejection/apply/inverse/reference/serialization contracts verified');

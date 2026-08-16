@@ -23,7 +23,7 @@ pub struct MoveBlockToStep {
 impl MutationKind<FormsSnapshot, FormMutation> for MoveBlockToStep {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "block", kind: "move-block-to-step", record: "MovedBlockToStep" };
 
-    fn diff(&self, base: &FormsSnapshot) -> FormsDiff {
+    fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff_move_block_to_step(self, base)
     }
     fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {

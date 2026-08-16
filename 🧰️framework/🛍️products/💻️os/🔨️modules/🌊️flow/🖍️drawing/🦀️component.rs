@@ -354,8 +354,8 @@ impl StoredNode {
     }
 }
 
-/// 🗄️ [`DrawingKernel`] using engine derive (process-local [`semio_framework_2d::EngineCache`]
-/// stand-in until the OS host wires `EngineHost`) — flow's own ephemeral node-evaluation kernel,
+/// 🗄️ [`DrawingKernel`] using engine derive through the WIT `engine-derive`/`engine-read` guest↔host
+/// boundary (process-local [`semio_framework_2d::EngineCache`]) — flow's own ephemeral node-evaluation kernel,
 /// not a persisted artifact store.
 pub struct DrawingStore {
     cache: semio_framework_2d::EngineCache,
@@ -381,7 +381,7 @@ impl DrawingStore {
         Self { cache, live: HashSet::new() }
     }
 
-    /// 🧠 Mutable engine cache (stand-in host surface for WASM guests until real `EngineHost` injection).
+    /// 🧠 Mutable engine cache backing the WIT `engine-derive`/`engine-read` guest↔host boundary.
     pub fn engine_cache_mut(&mut self) -> &mut semio_framework_2d::EngineCache {
         &mut self.cache
     }

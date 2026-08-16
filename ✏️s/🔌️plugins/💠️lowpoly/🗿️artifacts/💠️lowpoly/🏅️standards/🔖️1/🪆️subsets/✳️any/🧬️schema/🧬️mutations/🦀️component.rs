@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Shared
 /// @emoji 🩸 A contiguous run of RGBA bytes written into a paint-layer buffer at `offset` —
 /// `edit-paint-layer`'s payload field; its inverse holds the bytes overwritten (read from base).
-/// Kept here (not re-derived per triad) because `🎛️apps/💠️lowpoly/🖌️session/🦀️component.rs`
+/// Kept here (not re-derived per triad) because `✏️editor/🖌️session/🦀️component.rs`
 /// (plugin-shared, out of this facet's boundary) constructs values of this exact type.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -85,9 +85,9 @@ mod tests {
         let base = default_snapshot();
         let create = LowpolyMutation::CreateObject(super::super::create_object::mutation::CreateObject { index: base.objects.len(), object: tiny_object("obj-99", "Extra") });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &create);
-        let d1 = create.diff(&base);
+        let d1 = create.diff(&base).into_parts().0;
         let after = d1.apply(&base);
-        let d2 = LowpolyMutation::RenameObject(super::super::rename_object::mutation::RenameObject { id: "obj-99".into(), new_name: "Renamed".into() }).diff(&after);
+        let d2 = LowpolyMutation::RenameObject(super::super::rename_object::mutation::RenameObject { id: "obj-99".into(), new_name: "Renamed".into() }).diff(&after).into_parts().0;
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -106,6 +106,44 @@ mod tests {
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
     }
     //#endregion ⚖️SemanticLaws
+
+    //#region 🔖️OutcomeLaws
+    /// ✅️ 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS §C2 laws, landed
+    /// testkit helpers only (`assert_missing_target_is_error`/`assert_fatal_never_applies`) — one
+    /// per representative verb family. `assert_outcome_policy_matrix` is not landed yet (checked at
+    /// `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`); TODO(1-D testkit
+    /// laws pending): add a `MergePolicy` × `Severity` matrix test per verb family here once it lands.
+    #[test]
+    fn delete_object_missing_target_is_an_error() {
+        let base = default_snapshot();
+        let mutation = LowpolyMutation::DeleteObject(super::super::delete_object::mutation::DeleteObject { id: "does-not-exist".into() });
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[test]
+    fn move_object_missing_target_is_an_error() {
+        let base = default_snapshot();
+        let mutation = LowpolyMutation::MoveObject(super::super::move_object::mutation::MoveObject { id: "does-not-exist".into(), new_position: [1.0, 2.0, 3.0] });
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[test]
+    fn rename_object_missing_target_is_an_error() {
+        let base = default_snapshot();
+        let mutation = LowpolyMutation::RenameObject(super::super::rename_object::mutation::RenameObject { id: "does-not-exist".into(), new_name: "X".into() });
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[test]
+    fn create_object_duplicate_id_is_fatal_and_never_applies() {
+        let base = default_snapshot();
+        let existing_id = base.objects[0].id.clone();
+        let mutation = LowpolyMutation::CreateObject(super::super::create_object::mutation::CreateObject { index: 0, object: tiny_object(&existing_id, "Dup") });
+        let outcome = mutation.diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Fatal));
+        protocol::os_spr::testkit::assert_fatal_never_applies(&outcome);
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests
 

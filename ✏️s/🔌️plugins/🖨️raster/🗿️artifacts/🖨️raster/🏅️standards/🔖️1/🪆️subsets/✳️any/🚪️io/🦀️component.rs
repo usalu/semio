@@ -221,7 +221,7 @@ pub fn raster_asset_from_semio_image_snapshot(image: &SemioImageSnapshot) -> Res
 /// 🌉️🌉️ Round-trips raw PNG bytes through `s.stdio.semio/v1/image` (import then export) via the
 /// real 2-hop `io_compose_via` seam — canonicalizes a renderer's raw output through stdio's own
 /// codec rather than trusting it verbatim.
-/// 🌉️🌉️ `pub` (not `fn` as it was inside `⚙️engine`): now called cross-module from `🎛️apps/🖨️raster/
+/// 🌉️🌉️ `pub` (not `fn` as it was inside `⚙️engine`): now called cross-module from `🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/
 /// 🦀️component.rs`'s `raster_composite_media` (rule 4: `AppIo`-adjacent behaviour lives in the app).
 pub fn canonicalize_png_bytes(raw_png_bytes: &[u8]) -> Result<Vec<u8>, String> {
     ensure_stdio_semio_and_png_registered();

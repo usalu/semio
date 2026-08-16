@@ -1,0 +1,2 @@
+# bind-node-mesh diff typed facet.
+input GltfBindNodeMeshDiffV1 { operation: GltfBindNodeMeshPayloadV1!, after: Int, touchedPaths: [String!]! }

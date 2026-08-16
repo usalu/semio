@@ -272,7 +272,7 @@ impl MutationDiff<Value> for Puzzle5dDiff {
 impl Mutation<Value> for Puzzle5dMutation {
     type Diff = Puzzle5dDiff;
 
-    fn diff(&self, projection: &Value) -> Puzzle5dDiff {
+    fn diff(&self, projection: &Value) -> protocol::MutationOutcome<Puzzle5dDiff> {
         let base: Puzzle5dSnapshot = serde_json::from_value(normalize_kind_catalogs_for_snapshot_value(projection)).unwrap_or_default();
         Mutation::<Puzzle5dSnapshot>::diff(self, &base)
     }
@@ -349,7 +349,7 @@ impl MutationDiff<Puzzle5dPlaySnapshot> for Puzzle5dDiff {
 impl Mutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
     type Diff = Puzzle5dDiff;
 
-    fn diff(&self, projection: &Puzzle5dPlaySnapshot) -> Puzzle5dDiff {
+    fn diff(&self, projection: &Puzzle5dPlaySnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         Mutation::<Value>::diff(self, &projection.0)
     }
 
@@ -393,11 +393,11 @@ mod tests {
         let mut inverses = Vec::new();
         for operation in &operations {
             inverses.extend(Mutation::<Value>::inverse(operation, &forward));
-            forward = Mutation::<Value>::diff(operation, &forward).apply(&forward);
+            forward = Mutation::<Value>::diff(operation, &forward).diff().apply(&forward);
         }
         assert_eq!(forward, canonical(&after));
         for inverse in inverses.iter().rev() {
-            forward = Mutation::<Value>::diff(inverse, &forward).apply(&forward);
+            forward = Mutation::<Value>::diff(inverse, &forward).diff().apply(&forward);
         }
         assert_eq!(forward, canonical(&before), "backwards operations must restore the pre-edit document");
     }
@@ -411,10 +411,10 @@ mod tests {
         use crate::artifacts::puzzle5d::Puzzle5dPart;
         let base = empty();
         let part = Puzzle5dPart { id: "p1".into(), ..Default::default() };
-        let with_part = MutationDiff::<Puzzle5dSnapshot>::apply(&create_part(part, None).diff(&base), &base);
-        let d1 = move_part_2d("p1".into(), 10.0, 10.0).diff(&with_part);
+        let with_part = MutationDiff::<Puzzle5dSnapshot>::apply(create_part(part, None).diff(&base).diff(), &base);
+        let d1 = move_part_2d("p1".into(), 10.0, 10.0).diff(&with_part).into_parts().0;
         let mid = MutationDiff::<Puzzle5dSnapshot>::apply(&d1, &with_part);
-        let d2 = move_part_2d("p1".into(), 20.0, 30.0).diff(&mid);
+        let d2 = move_part_2d("p1".into(), 20.0, 30.0).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&with_part, d1, d2);
     }
 
@@ -428,7 +428,7 @@ mod tests {
         let base = empty();
         let part = Puzzle5dPart { id: "p1".into(), ..Default::default() };
         assert_mutation_inverse_law(&base, &create_part(part.clone(), None));
-        let with_part = MutationDiff::<Puzzle5dSnapshot>::apply(&create_part(part, None).diff(&base), &base);
+        let with_part = MutationDiff::<Puzzle5dSnapshot>::apply(create_part(part, None).diff(&base).diff(), &base);
         assert_mutation_inverse_law(&with_part, &delete_part("p1".into()));
     }
 
@@ -437,7 +437,7 @@ mod tests {
         use crate::artifacts::puzzle5d::{Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dScale};
         let base = empty();
         let part = Puzzle5dPart { id: "p1".into(), grips: vec![Puzzle5dGrip { id: "g1".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
-        let with_part = MutationDiff::<Puzzle5dSnapshot>::apply(&create_part(part, None).diff(&base), &base);
+        let with_part = MutationDiff::<Puzzle5dSnapshot>::apply(create_part(part, None).diff(&base).diff(), &base);
         assert_mutation_inverse_law(&with_part, &move_part_2d("p1".into(), 5.0, 6.0));
         assert_mutation_inverse_law(&with_part, &replace_part_2d_geometry("p1".into(), Some("rectangle".into()), None, Some(4.0), Some(2.0)));
         assert_mutation_inverse_law(&with_part, &edit_part_2d_text("p1".into(), Some("hi".into())));
@@ -463,15 +463,15 @@ mod tests {
         let part_a = Puzzle5dPart { id: "a".into(), grips: vec![Puzzle5dGrip { id: "ga".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
         let part_b = Puzzle5dPart { id: "b".into(), grips: vec![Puzzle5dGrip { id: "gb".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
         let mut projection = base;
-        projection = MutationDiff::<Puzzle5dSnapshot>::apply(&create_part(part_a, None).diff(&projection), &projection);
-        projection = MutationDiff::<Puzzle5dSnapshot>::apply(&create_part(part_b, None).diff(&projection), &projection);
+        projection = MutationDiff::<Puzzle5dSnapshot>::apply(create_part(part_a, None).diff(&projection).diff(), &projection);
+        projection = MutationDiff::<Puzzle5dSnapshot>::apply(create_part(part_b, None).diff(&projection).diff(), &projection);
         assert_mutation_inverse_law(&projection, &connect_grips("f1".into(), "a:ga".into(), "b:gb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
-        let connected = MutationDiff::<Puzzle5dSnapshot>::apply(&connect_grips("f1".into(), "a:ga".into(), "b:gb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0).diff(&projection), &projection);
+        let connected = MutationDiff::<Puzzle5dSnapshot>::apply(connect_grips("f1".into(), "a:ga".into(), "b:gb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0).diff(&projection).diff(), &projection);
         assert_mutation_inverse_law(&connected, &disconnect_grips("f1".into()));
         assert_mutation_inverse_law(&connected, &replace_fastener_geometry("f1".into(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0));
         assert_mutation_inverse_law(&connected, &change_fastener_kind("f1".into(), Some("core.link".into())));
         let deleted = delete_part("a".into());
-        let after_delete = MutationDiff::<Puzzle5dSnapshot>::apply(&deleted.diff(&connected), &connected);
+        let after_delete = MutationDiff::<Puzzle5dSnapshot>::apply(deleted.diff(&connected).diff(), &connected);
         assert!(!after_delete.fasteners.iter().any(|fastener| fastener.id == "f1"), "delete-part must sever fasteners touching its grips");
         assert_mutation_inverse_law(&connected, &deleted);
     }
@@ -484,7 +484,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &change_domain("mechanical".into()));
         assert_mutation_inverse_law(&base, &change_description("a scene".into()));
         assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle5dCompatSpecificity::Grip));
-        let connected = MutationDiff::<Puzzle5dSnapshot>::apply(&connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle5dCompatSpecificity::Grip).diff(&base), &base);
+        let connected = MutationDiff::<Puzzle5dSnapshot>::apply(connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle5dCompatSpecificity::Grip).diff(&base).diff(), &base);
         assert_mutation_inverse_law(&connected, &disconnect_kind_compatibility("a".into(), "b".into()));
         assert_mutation_inverse_law(&base, &replace_kind_catalogs(Some(Puzzle5dKindCatalogs::default())));
     }
@@ -498,5 +498,34 @@ mod tests {
         assert_eq!(Puzzle5dMutation::kinds().len(), 28);
     }
     //#endregion 🔖️MutationLaws
+
+    //#region 🔖️OutcomeLaws
+    // 🎫️ 26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — see
+    // `📓️w3-f-block-puzzle-report.md` for the `assert_outcome_policy_matrix` pending-helper note.
+    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
+
+    #[test]
+    fn missing_target_is_error_per_verb_family() {
+        let base = empty();
+        assert_missing_target_is_error(&base, &delete_part("missing".into())); // delete
+        assert_missing_target_is_error(&base, &remove_part_grip("missing".into(), "g0".into())); // remove
+        assert_missing_target_is_error(&base, &change_part_2d_icon("missing".into(), Some("star".into()))); // change/set/update
+        assert_missing_target_is_error(&base, &move_part_2d("missing".into(), 1.0, 1.0)); // move/drag/rotate/scale/resize
+        assert_missing_target_is_error(&base, &edit_part_3d_label("missing".into(), Some("x".into()))); // edit/replace
+        assert_missing_target_is_error(&base, &disconnect_grips("missing".into())); // disconnect/unbind
+    }
+
+    #[test]
+    fn create_duplicate_id_is_fatal_and_never_applies() {
+        use crate::artifacts::puzzle5d::Puzzle5dPart;
+        let mut base = empty();
+        let part = Puzzle5dPart { id: "p0".into(), ..Default::default() };
+        base.parts.push(part.clone());
+        let outcome = create_part(part, None).diff(&base);
+        assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal));
+        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

@@ -24,7 +24,7 @@ pub fn duplicate_step(source_id: String, new_id: String, x: f64, y: f64) -> Sequ
 impl protocol::MutationKind<SequenceSnapshot, SequenceMutation> for DuplicateStep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "duplicate", entity: "step", kind: "duplicate-step", record: "DuplicatedStep" };
 
-    fn diff(&self, base: &SequenceSnapshot) -> SequenceDiff {
+    fn diff(&self, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {

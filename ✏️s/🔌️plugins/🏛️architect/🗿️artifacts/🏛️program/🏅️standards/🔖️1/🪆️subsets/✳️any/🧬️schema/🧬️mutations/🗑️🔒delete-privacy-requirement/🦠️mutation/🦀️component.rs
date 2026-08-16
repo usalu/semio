@@ -18,7 +18,7 @@ pub struct DeletePrivacyRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeletePrivacyRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "privacy-requirement", kind: "delete-privacy-requirement", record: "DeletedPrivacyRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

@@ -188,14 +188,14 @@ impl protocol::OpBinary for HomeConfigMutation {
 impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
     type Diff = HomeConfig;
 
-    fn diff(&self, base: &HomeConfig) -> HomeConfig {
+    fn diff(&self, base: &HomeConfig) -> protocol::MutationOutcome<HomeConfig> {
         let mut next = base.clone();
         match self {
-            HomeConfigMutation::Snapshot { config } => return config.clone(),
+            HomeConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
             HomeConfigMutation::SetActivePanelTab { tab_id } => next.active_panel_tab = tab_id.clone(),
             HomeConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
-        next
+        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &HomeConfig) -> Vec<Self> {
@@ -233,10 +233,10 @@ mod tests {
     fn home_config_operation_round_trips_via_apply_and_backwards() {
         let config = HomeConfig::default();
         let operation = HomeConfigMutation::SetLocale { value: "de".into() };
-        let next = operation.diff(&config);
+        let next = operation.diff(&config).diff().clone();
         assert_eq!(next.locale, "de");
         let backwards = operation.inverse(&config);
-        let restored = backwards[0].diff(&next);
+        let restored = backwards[0].diff(&next).diff().clone();
         assert_eq!(restored, config);
     }
 }

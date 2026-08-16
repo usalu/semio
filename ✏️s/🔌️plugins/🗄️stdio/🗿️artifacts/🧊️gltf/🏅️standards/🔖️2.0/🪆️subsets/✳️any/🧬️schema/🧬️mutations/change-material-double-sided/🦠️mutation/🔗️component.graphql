@@ -1,0 +1,2 @@
+input GltfChangeMaterialDoubleSidedMutationV1Input { material: Int!, doubleSided: Boolean! }
+type GltfChangeMaterialDoubleSidedMutationV1 { id: ID!, version: Int!, material: Int!, doubleSided: Boolean!, touchedPaths: [String!]!, accepted: Boolean!, rejectionCode: String }

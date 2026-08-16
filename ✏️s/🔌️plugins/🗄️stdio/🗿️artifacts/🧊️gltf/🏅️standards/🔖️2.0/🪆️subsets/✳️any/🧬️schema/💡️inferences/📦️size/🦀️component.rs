@@ -1,22 +1,22 @@
 //! 📦 GLTF size indicators.
 
-#[path = "overall-size/🦀️component.rs"]
-pub mod overall_size;
 #[path = "axis-aligned-bounds/🦀️component.rs"]
 pub mod axis_aligned_bounds;
-#[path = "oriented-bounds/🦀️component.rs"]
-pub mod oriented_bounds;
 #[path = "bounding-box-dimensions/🦀️component.rs"]
 pub mod bounding_box_dimensions;
 #[path = "characteristic-length/🦀️component.rs"]
 pub mod characteristic_length;
 #[path = "footprint-area/🦀️component.rs"]
 pub mod footprint_area;
+#[path = "oriented-bounds/🦀️component.rs"]
+pub mod oriented_bounds;
+#[path = "overall-size/🦀️component.rs"]
+pub mod overall_size;
 #[path = "projected-area/🦀️component.rs"]
 pub mod projected_area;
 
-use super::geometry_core::GltfGeometryContext;
 use super::super::modules::measurement_contracts::*;
+use super::geometry_core::GltfGeometryContext;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

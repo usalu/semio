@@ -1,0 +1,8 @@
+// reorder-node-children mutation facet.
+syntax = "proto3";
+package stdio.gltf.mutation;
+message GltfReorderNodeChildrenPayloadV1 {
+  uint32 parent = 1;
+  repeated uint32 order = 2;
+}
+message GltfReorderNodeChildrenMutationV1 { string id = 1; uint32 version = 2; bool accepted = 3; repeated string touched_paths = 4; string rejection_code = 5; }

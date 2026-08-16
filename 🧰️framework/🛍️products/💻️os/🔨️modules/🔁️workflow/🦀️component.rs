@@ -1276,8 +1276,10 @@ impl protocol::MutationDiff<WorkflowSnapshot> for WorkflowDiff {
 impl protocol::Mutation<WorkflowSnapshot> for WorkflowMutation {
     type Diff = WorkflowDiff;
 
-    fn diff(&self, _document: &WorkflowSnapshot) -> WorkflowDiff {
-        match self {
+    /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
+    /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet.
+    fn diff(&self, _document: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
+        let diff = match self {
             WorkflowMutation::AddNode { node } => WorkflowDiff::AddNode { node: node.clone() },
             WorkflowMutation::RemoveNode { node_id } => WorkflowDiff::RemoveNode { node_id: node_id.clone() },
             WorkflowMutation::ConnectPorts { edge } => WorkflowDiff::ConnectPorts { edge: edge.clone() },
@@ -1296,7 +1298,8 @@ impl protocol::Mutation<WorkflowSnapshot> for WorkflowMutation {
             WorkflowMutation::UnbindInput { input_id } => WorkflowDiff::UnbindInput { input_id: input_id.clone() },
             WorkflowMutation::BindOutput { binding } => WorkflowDiff::BindOutput { binding: binding.clone() },
             WorkflowMutation::UnbindOutput { node_id, port_id } => WorkflowDiff::UnbindOutput { node_id: node_id.clone(), port_id: port_id.clone() },
-        }
+        };
+        protocol::MutationOutcome::new(diff)
     }
 
     fn inverse(&self, document: &WorkflowSnapshot) -> Vec<Self> {
@@ -2068,8 +2071,10 @@ impl protocol::MutationDiff<RunArtifact> for RunDiff {
 impl protocol::Mutation<RunArtifact> for RunMutation {
     type Diff = RunDiff;
 
-    fn diff(&self, _document: &RunArtifact) -> RunDiff {
-        match self {
+    /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
+    /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet.
+    fn diff(&self, _document: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
+        let diff = match self {
             RunMutation::Start { workflow_ref, workflow_checkpoint_id, input_collection_ref, input_snapshot_id, parameter_values, output_collection_ref, trigger } => {
                 RunDiff::Start { workflow_ref: workflow_ref.clone(), workflow_checkpoint_id: workflow_checkpoint_id.clone(), input_collection_ref: input_collection_ref.clone(), input_snapshot_id: input_snapshot_id.clone(), parameter_values: parameter_values.clone(), output_collection_ref: output_collection_ref.clone(), trigger: trigger.clone() }
             }
@@ -2077,7 +2082,8 @@ impl protocol::Mutation<RunArtifact> for RunMutation {
             RunMutation::NodeFinished { node_record } => RunDiff::NodeFinished { node_record: node_record.clone() },
             RunMutation::Log { node_id, level, message, at } => RunDiff::Log { node_id: node_id.clone(), level: level.clone(), message: message.clone(), at: at.clone() },
             RunMutation::Seal { status } => RunDiff::Seal { status: *status },
-        }
+        };
+        protocol::MutationOutcome::new(diff)
     }
 
     fn inverse(&self, base: &RunArtifact) -> Vec<Self> {
@@ -2091,17 +2097,20 @@ impl protocol::Mutation<RunArtifact> for RunMutation {
         }
     }
 
+}
+
+impl RunMutation {
     /// 🔒️ THE law this whole wave exists to prove: once `RunArtifact.sealed` is true, no further
     /// operation may apply — a sealed run's per-node bytes are immutable history, never re-mutated by
-    /// a later invocation. Unlike `WorkflowMutation` (whose `validate` stays the trait's no-op
-    /// default), `RunMutation` overrides it for real. `store::ArtifactStore::dispatch`'s `Apply` arm
-    /// never calls `Mutation::validate` on its own (verified directly in `store/rs/lib.rs` — no
-    /// caller anywhere in this crate family invokes it outside `protocol_command`'s own unit tests),
-    /// so this hook alone would be silently unenforced if a caller went straight through
-    /// `ArtifactStore`; `run::SpaceRunner`'s write path instead always goes through
-    /// `apply_run_operation_checked` (below), which calls this before ever calling
-    /// `apply_run_operation` — the one real write seam this crate ships for a `RunArtifact`.
-    fn validate(&self, snapshot: &RunArtifact) -> Result<(), String> {
+    /// a later invocation. Was `Mutation::validate` before that trait method was deleted (ticket
+    /// `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C4/C10 — "no `validate`
+    /// may survive anywhere"); kept as a plain inherent method with the exact same check since this
+    /// is the one real write seam this crate ships for a `RunArtifact` — `run::SpaceRunner`'s write
+    /// path always goes through `apply_run_operation_checked` (below), which calls this before ever
+    /// calling `apply_run_operation`, never through `ArtifactStore::dispatch` directly. A future wave
+    /// migrating this to `Mutation::diff`'s own `Fatal` `"mutation.invariant"` message is tracked but
+    /// out of scope for W0's mechanical return-type adaptation.
+    fn check_not_sealed(&self, snapshot: &RunArtifact) -> Result<(), String> {
         if snapshot.sealed {
             return Err(format!("run document is sealed; cannot apply {self:?}"));
         }
@@ -2113,7 +2122,7 @@ impl protocol::Mutation<RunArtifact> for RunMutation {
 /// delegating to `apply_run_operation`. `run::SpaceRunner` calls this, never `apply_run_operation`
 /// directly, for every operation it emits.
 pub fn apply_run_operation_checked(document: &RunArtifact, operation: RunMutation) -> Result<RunArtifact, String> {
-    <RunMutation as protocol::Mutation<RunArtifact>>::validate(&operation, document)?;
+    operation.check_not_sealed(document)?;
     Ok(apply_run_operation(document, &operation))
 }
 //#endregion 🔖️RunMutation

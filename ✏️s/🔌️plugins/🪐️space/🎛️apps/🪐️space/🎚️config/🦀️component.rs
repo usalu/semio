@@ -297,10 +297,10 @@ impl protocol::OpBinary for SpaceConfigMutation {
 impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
     type Diff = SpaceConfig;
 
-    fn diff(&self, base: &SpaceConfig) -> SpaceConfig {
+    fn diff(&self, base: &SpaceConfig) -> protocol::MutationOutcome<SpaceConfig> {
         let mut next = base.clone();
         match self {
-            SpaceConfigMutation::Snapshot { config } => return config.clone(),
+            SpaceConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
             SpaceConfigMutation::SetActiveNode { node_id } => next.active_node_id = node_id.clone(),
             SpaceConfigMutation::SetFocusedNode { node_id } => next.focused_node_id = node_id.clone(),
             SpaceConfigMutation::SetClipboard { node_ids } => next.clipboard_node_ids = node_ids.clone(),
@@ -323,7 +323,7 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
             SpaceConfigMutation::SetActivePanelTab { tab_id } => next.active_panel_tab = tab_id.clone(),
             SpaceConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
-        next
+        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &SpaceConfig) -> Vec<Self> {
@@ -341,11 +341,12 @@ mod tests {
     use protocol::Mutation;
 
     fn round_trip(config: &SpaceConfig, operation: &SpaceConfigMutation) -> SpaceConfig {
-        let forward = vcs::apply_mutation(config, operation);
+        let (forward, _messages) = vcs::apply_mutation(config, operation);
         let backwards = operation.inverse(config);
         let mut restored = forward.clone();
         for back in &backwards {
-            restored = vcs::apply_mutation(&restored, back);
+            let (next, _messages) = vcs::apply_mutation(&restored, back);
+            restored = next;
         }
         assert_eq!(&restored, config, "backwards() must exactly restore the pre-operation config");
         forward

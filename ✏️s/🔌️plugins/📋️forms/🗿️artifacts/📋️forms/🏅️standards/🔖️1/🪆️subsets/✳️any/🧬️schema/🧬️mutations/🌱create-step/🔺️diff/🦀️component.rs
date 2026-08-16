@@ -6,10 +6,10 @@ use crate::artifacts::forms::schema::diff::text::forms_diff_from_delta;
 use crate::artifacts::forms::{forms_steps, FormsDiff, FormsSnapshot};
 
 //#region 🔖️Diff
-pub fn diff_create_step(payload: &CreateStep, base: &FormsSnapshot) -> FormsDiff {
+pub fn diff_create_step(payload: &CreateStep, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
     let steps = forms_steps(base);
     if steps.iter().any(|step| step.id == payload.step.id) {
-        return FormsDiff::default();
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A step with id \"{}\" already exists.", payload.step.id), [payload.step.id.clone()]);
     }
     let mut delta = FormsStepsDelta { added: vec![payload.step.clone()], ..Default::default() };
     if let Some(index) = payload.index {
@@ -18,6 +18,6 @@ pub fn diff_create_step(payload: &CreateStep, base: &FormsSnapshot) -> FormsDiff
         order.insert(at, payload.step.id.clone());
         delta.reordered = Some(order);
     }
-    forms_diff_from_delta(delta, base)
+    protocol::MutationOutcome::new(forms_diff_from_delta(delta, base))
 }
 //#endregion 🔖️Diff

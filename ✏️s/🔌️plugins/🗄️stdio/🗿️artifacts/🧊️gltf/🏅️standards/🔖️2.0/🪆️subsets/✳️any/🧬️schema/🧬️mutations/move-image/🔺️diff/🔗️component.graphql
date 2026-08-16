@@ -1,0 +1,14 @@
+# move-image typed diff facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfImageValueV1
+input GltfMoveImagePayloadV1 {
+  index: Int!
+  position: Int!
+}
+type GltfMoveImageDiffOperationV1 {
+  kind: String!
+  index: Int!
+  position: Int!
+}
+type GltfMoveImageDiffV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfMoveImagePayloadV1!, operation: GltfMoveImageDiffOperationV1! }

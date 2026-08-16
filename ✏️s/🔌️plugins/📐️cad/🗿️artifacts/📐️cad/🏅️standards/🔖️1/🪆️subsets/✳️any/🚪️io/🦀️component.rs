@@ -1,7 +1,11 @@
 //! 🚪️ IO s.cad (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from ⚙️engine::register), not per-leaf register().
-pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl"] }
-pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl"] }
+pub fn import_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl"]
+}
+pub fn export_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl"]
+}
 pub fn cad_to_wire(from: &crate::artifacts::cad::CadSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(from)
 }
@@ -13,10 +17,10 @@ pub fn pack_err_as_text(err: store::PackError) -> store::TextError {
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::cad::CadSnapshot;
     use crate::artifacts::cad::standards::v1::subsets::any::schema::CadAnalyzer;
+    use crate::artifacts::cad::CadSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.cad", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_DWG: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
@@ -27,7 +31,6 @@ pub mod derived_composition {
     const DEP_PNG: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
     const DEP_STEP: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("*") };
     const DEP_STL: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
-
 
     pub struct CadComposerComposition;
 
@@ -139,7 +142,6 @@ pub mod derived_composition {
                         }
                     }
                 }
-
             }
             Err(ComposeError { message: "CadComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
         }
@@ -155,10 +157,10 @@ pub use derived_composition::*;
 // (`🗿️artifacts/📐️cad/🦀️component.rs`)'s own shadowing `io_registry` wrapper module and
 // `declaration()`'s `.composers(...)` call were repointed here.
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ArtifactBuilder, ComposerEntry, ComposedArtifact, ComposeError, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload, IoConfidence, composer_entry_of};
-    use crate::artifacts::cad::standards::v1::subsets::any::schema::CadComposer as CadAnyComposer;
     use crate::artifacts::cad::standards::v1::subsets::any::schema::CadBuilder as CadAnyBuilder;
+    use crate::artifacts::cad::standards::v1::subsets::any::schema::CadComposer as CadAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
@@ -247,19 +249,22 @@ pub mod io_registry {
     }
     //#endregion 🔖️ExportEntries
 
-
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![
-            composer_entry_of::<CadAnyComposer>(),
-            ComposerEntry { writes: EXPORT_IFC_DIALECT, reads: &[CAD_DIALECT], compose: compose_export_ifc },
-            ComposerEntry { writes: EXPORT_STEP_DIALECT, reads: &[CAD_DIALECT], compose: compose_export_step },
-            ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[CAD_DIALECT], compose: compose_export_png },
-            ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[CAD_DIALECT], compose: compose_export_json },
-            ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[CAD_DIALECT], compose: compose_export_dwg },
-            ComposerEntry { writes: EXPORT_STL_DIALECT, reads: &[CAD_DIALECT], compose: compose_export_stl },
-            ComposerEntry { writes: EXPORT_GLTF_DIALECT, reads: &[CAD_DIALECT], compose: compose_export_gltf },
-            ComposerEntry { writes: EXPORT_OBJ_DIALECT, reads: &[CAD_DIALECT], compose: compose_export_obj },
-        ]).as_slice()
+        ENTRIES
+            .get_or_init(|| {
+                vec![
+                    composer_entry_of::<CadAnyComposer>(),
+                    ComposerEntry { writes: EXPORT_IFC_DIALECT, reads: &[CAD_DIALECT], compose: compose_export_ifc },
+                    ComposerEntry { writes: EXPORT_STEP_DIALECT, reads: &[CAD_DIALECT], compose: compose_export_step },
+                    ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[CAD_DIALECT], compose: compose_export_png },
+                    ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[CAD_DIALECT], compose: compose_export_json },
+                    ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[CAD_DIALECT], compose: compose_export_dwg },
+                    ComposerEntry { writes: EXPORT_STL_DIALECT, reads: &[CAD_DIALECT], compose: compose_export_stl },
+                    ComposerEntry { writes: EXPORT_GLTF_DIALECT, reads: &[CAD_DIALECT], compose: compose_export_gltf },
+                    ComposerEntry { writes: EXPORT_OBJ_DIALECT, reads: &[CAD_DIALECT], compose: compose_export_obj },
+                ]
+            })
+            .as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry
@@ -270,22 +275,22 @@ pub mod io_registry {
 // to stdio's real semio/mesh + semio/brep codecs is io by definition (rule 5), not artifact-engine
 // compute.
 use base64::Engine as _;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, BrepKernel, GeometryHandle};
 use semio_framework::MeshImporter;
 use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
+use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::engine::encode_obj;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
-#[cfg(test)]
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::gltf::v2_0::any::SemioMeshToGltf;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::io::export::serializers::artifacts::step::v_ap214::any::SemioBrepToStep;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::io::import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, BrepKernel, GeometryHandle};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::engine::encode_obj;
-use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::engine::encode_stl_binary;
+#[cfg(test)]
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::gltf::v2_0::any::SemioMeshToGltf;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::engine::part21::{parse_part21, write_part21};
 use semio_s_plugin_stdio::artifacts::step::StepSnapshot;
+use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::engine::encode_stl_binary;
 use serde_json::Value;
 
 /// @emoji 📤️ A native-geometry export ready to be wrapped into a `HostEffect::DownloadMediaExport`.
@@ -341,16 +346,7 @@ fn semio_mesh_snapshot_from_solids(kernel: &mut dyn BrepKernel, solids: &[Geomet
         let normals: Vec<SemioPoint3> = transfer.normal.chunks_exact(3).map(|c| SemioPoint3 { x: c[0] as f64, y: c[1] as f64, z: c[2] as f64 }).collect();
         meshes.push(SemioMesh {
             id: format!("{}-{index}", handle.as_str()),
-            primitives: vec![SemioPrimitive {
-                id: format!("{}-{index}-prim-0", handle.as_str()),
-                topology: SemioTopology::Triangles,
-                positions,
-                normals,
-                uvs: Vec::new(),
-                colors: Vec::new(),
-                indices: transfer.index.clone(),
-                material_id: None,
-            }],
+            primitives: vec![SemioPrimitive { id: format!("{}-{index}-prim-0", handle.as_str()), topology: SemioTopology::Triangles, positions, normals, uvs: Vec::new(), colors: Vec::new(), indices: transfer.index.clone(), material_id: None }],
         });
     }
     if meshes.is_empty() {
@@ -516,14 +512,7 @@ pub fn import_glb_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::artifacts
 fn model_element_from_solid_handle(id: String, handle: GeometryHandle) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement};
-    SemioModelElement {
-        id,
-        class: ElementClass::Other { name: "spatial.shape.imported".into() },
-        placement: SemioTransform::identity(),
-        geometry: GeometryRef::Brep { brep_id: handle.0 },
-        spatial_id: None,
-        psets: Vec::new(),
-    }
+    SemioModelElement { id, class: ElementClass::Other { name: "spatial.shape.imported".into() }, placement: SemioTransform::identity(), geometry: GeometryRef::Brep { brep_id: handle.0 }, spatial_id: None, psets: Vec::new() }
 }
 
 /// 🌉️ Same OBJ-text bridge `cad_object_from_mesh` used before this wave's rewrite (reused, not
@@ -592,7 +581,7 @@ pub fn unwrap_spatial_load_payload(raw: &Value) -> Option<Value> {
 
 /// 🌉 Real per-pane object extraction from a `spatial.modelspace`/`spatial.model` payload — the
 /// SAME fixture-import machinery (`geometry_import::parse_geometry` + `objects_from_fixture_model`)
-/// the Concrete Forest Left quad fixture is built from (`crate::apps::cad::forest_working_scene`),
+/// the Concrete Forest Left quad fixture is built from (`crate::editor::cad::forest_working_scene`),
 /// since both are the identical `spatial.model`-shaped wire form. A `spatial.modelspace` payload
 /// wraps zero or more `{id|modelDefinitionId, model}` entries in `models[]`; a bare `spatial.model`
 /// payload IS one implicit entry. Each entry that resolves to a known `CadPaneId` and carries real
@@ -601,8 +590,8 @@ pub fn unwrap_spatial_load_payload(raw: &Value) -> Option<Value> {
 /// panes with no objects, or an id this document doesn't recognize, are left `None` rather than
 /// fabricating an empty child. Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3.
 pub fn scene_from_spatial_payload(payload: &Value) -> Option<crate::artifacts::cad::CadSnapshot> {
-    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{cad_brep_kernel, default_document, CAD_MODEL_DEFINITION_SHAPE};
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{objects_from_fixture_model, parse_geometry, semio_model_snapshot_from_objects};
+    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{cad_brep_kernel, default_document, CAD_MODEL_DEFINITION_SHAPE};
     use crate::artifacts::cad::{cad_model_child_handle, cad_pane_from_model_definition_id, CadPaneId};
     let schema = payload.get("schema").and_then(|value| value.as_str());
     if schema != Some("spatial.modelspace") && schema != Some("spatial.model") {
@@ -669,7 +658,8 @@ pub fn cad_working_scene_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg
         .iter()
         .enumerate()
         .filter_map(|(layer_index, layer)| {
-            let filtered = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing { layers: drawing.layers.clone(), entities: drawing.entities.iter().filter(|entity| entity.layer == layer_index).cloned().collect(), extmin: drawing.extmin, extmax: drawing.extmax };
+            let filtered =
+                semio_s_plugin_stdio::artifacts::dwg::DwgDrawing { layers: drawing.layers.clone(), entities: drawing.entities.iter().filter(|entity| entity.layer == layer_index).cloned().collect(), extmin: drawing.extmin, extmax: drawing.extmax };
             if filtered.entities.is_empty() {
                 return None;
             }
@@ -712,54 +702,6 @@ pub fn cad_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Resul
     serde_json::to_value(default_document()).map_err(|err| err.to_string())
 }
 //#endregion 🌉️GeometryBridges
-
-//#region 🔌️HostIoRegistration
-/// 🏷️ The artifact kind `📐️cad` owns; every registration below keys on it and on nothing else.
-pub const CAD_KIND: &str = "3d.cad";
-/// 🏷️ File stem the OS media pipeline names cad exports with (`cad.obj`, `cad.dwg`, …).
-pub const CAD_FORMAT: &str = "cad";
-
-/// 🔌️ Self-registers cad's OWN kind into the process-global OS media registries that have no
-/// artifact-io equivalent yet — the compliant shape 🌀️procedural already uses for `"3d.procedural"`
-/// (`register_dwg_mesh_bridge`, called from that plugin root's `.setup()`).
-///
-/// Relocated verbatim from `🎪️demonstrator/🎪️panes/📐️koordinator/🦀️component.rs` (ticket
-/// 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION D2): the demonstrator was the
-/// SOLE registrant of these handlers even though it neither declares nor owns `"3d.cad"`, so a
-/// standalone `cad-play` booted outside the demonstrator bundle had no solid/mesh/dwg IO at all,
-/// and inside the bundle plugin load order silently decided the winner for an OS-global key. Living
-/// here, the owner registers once and every host that loads 📐️cad gets the same table.
-///
-/// 🚪️ Ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave IO1: the
-/// `register_solid_exporter`/`register_solid_importer`/`register_dwg_import_handler` calls that
-/// used to live here are DELETED, not migrated to a new leaf, because they were dead weight, not a
-/// gap. `register_solid_exporter`/`importer` fed an OS registry (`export_registered_solid`/
-/// `import_registered_solid`) with ZERO production callers repo-wide (proved by census, not
-/// assumed) — this file's own `export_solids_as`/`import_step_object`/`import_obj_object`/
-/// `import_stl_object` above are cad's REAL per-solid export/import path, and they already call the
-/// genuine `ArtifactSerializer`/`ArtifactDeserializer` leaves (`SemioMeshToObj`, `SemioMeshToStl`,
-/// `SemioBrepToStep`, `SemioBrepFromStep`) directly — i.e. they already flowed over the artifact io
-/// mechanism, just not through this now-redundant escape hatch. `register_dwg_import_handler` is
-/// deleted because `registry_import_media` (host `🦀️component.rs`) now resolves `"3d.cad"`'s DWG
-/// import via `io_dispatch` against this facet's OWN `io_registry::entries()` (`DEP_DWG`/
-/// `EXPORT_DWG_DIALECT` above) once two host-side dispatch bugs are fixed (same wave): the native
-/// dialect kind must be built from `component_kind` (`"cad"`), not the raw workflow kind id
-/// (`"3d.cad"`), and the target dialect must not double-prefix `"stdio."`. `register_mesh_exporter`/
-/// `register_mesh_importer` for GLB stay below — no `"s.stdio.glb"` dialect exists in stdio's
-/// format catalog yet (only `"s.stdio.gltf"`, JSON text, `is_binary: false`), so binary-glTF
-/// export/import has no artifact-io equivalent to migrate to; adding one means adding a new format
-/// to stdio's manifest, which is out of this wave's write scope (stdio is pending a separate
-/// session's handoff) — reported as a genuine remainder, not silently dropped.
-#[cfg(not(target_arch = "wasm32"))]
-pub fn register_host_io() {
-    semio_framework_os::register_mesh_exporter(CAD_KIND, CAD_FORMAT, cad_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
-    semio_framework_os::register_mesh_importer(CAD_KIND, cad_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
-    semio_framework_os::register_mesh_dwg_export_handler(CAD_KIND, CAD_FORMAT, cad_mesh_from_document);
-}
-
-#[cfg(target_arch = "wasm32")]
-pub fn register_host_io() {}
-//#endregion 🔌️HostIoRegistration
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -858,16 +800,8 @@ mod tests {
         assert_eq!(position_accessor.count, mesh_positions.len(), "gltf POSITION accessor count must match the semio/mesh vertex count");
         let buffer_view = &gltf.document.buffer_views[position_accessor.buffer_view.expect("POSITION accessor must reference a bufferView")];
         let raw = &gltf.buffers[0][buffer_view.byte_offset..buffer_view.byte_offset + buffer_view.byte_length];
-        let decoded_positions: Vec<[f64; 3]> = raw
-            .chunks_exact(12)
-            .map(|triple| {
-                [
-                    f32::from_le_bytes(triple[0..4].try_into().unwrap()) as f64,
-                    f32::from_le_bytes(triple[4..8].try_into().unwrap()) as f64,
-                    f32::from_le_bytes(triple[8..12].try_into().unwrap()) as f64,
-                ]
-            })
-            .collect();
+        let decoded_positions: Vec<[f64; 3]> =
+            raw.chunks_exact(12).map(|triple| [f32::from_le_bytes(triple[0..4].try_into().unwrap()) as f64, f32::from_le_bytes(triple[4..8].try_into().unwrap()) as f64, f32::from_le_bytes(triple[8..12].try_into().unwrap()) as f64]).collect();
         assert_eq!(decoded_positions.len(), mesh_positions.len(), "decoded gltf buffer must carry exactly the semio/mesh vertex count");
         let (gltf_min, gltf_max) = vertex_bounds(decoded_positions.into_iter());
         for axis in 0..3 {
@@ -897,35 +831,5 @@ mod tests {
         assert_eq!(repair_step_trailing_comma_before_close_paren("('weird,)name', #1)"), "('weird,)name', #1)");
     }
     //#endregion 🔖️SemioBrepBridge
-
-    //#region 🔌️HostIoRegistration
-    /// 🧪️ 📐️cad — and only 📐️cad — puts `"3d.cad"`'s remaining escape-hatch registrations (GLB
-    /// mesh export/import, mesh-DWG export) into the OS registry. Before ticket
-    /// 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION D2 the sole registrant was
-    /// `🎪️demonstrator`'s koordinator pane, so this crate on its own registered nothing and a
-    /// standalone `cad-play` had no solid IO; the assertion runs entirely inside the owner crate,
-    /// which is exactly the property that was missing.
-    ///
-    /// 🚪️ Ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave IO1: the
-    /// `solid_exporter_for`-keyed assertions this test used to run are GONE along with
-    /// `register_solid_exporter`/`register_solid_importer` themselves (see `register_host_io`'s doc
-    /// comment for why deleting rather than migrating them is correct) -- the real per-solid
-    /// export/import path those three formats now exercise unconditionally is covered by
-    /// `export_solids_as_obj_uses_real_stdio_mesh_codec_not_hand_rolled_bytes`,
-    /// `export_solids_as_stl_uses_real_stdio_mesh_codec`, and
-    /// `export_solids_as_step_round_trips_through_real_semio_brep_bridge` above, which call the
-    /// SAME `export_solids_as`/`import_*_object` functions `register_host_io` used to merely shadow
-    /// with a parallel, unread registry. What remains observable here is exactly what remains
-    /// registered: the OS media handler map exposes no membership predicate (only
-    /// `export_os_app_instance_media_kind`, gated behind the `os-host-full` `WorkflowNode` type
-    /// plugins do not get), so this test pins kind-ownership (never a foreign kind) and idempotence
-    /// (the registry is keyed, not appended -- a second `register_host_io()` must not panic/duplicate).
-    #[test]
-    fn cad_owns_the_host_io_registration_for_its_own_kind() {
-        assert_eq!(CAD_KIND, crate::artifacts::cad::artifact_kind().id, "register_host_io must key on the kind this artifact itself declares");
-        register_host_io();
-        register_host_io();
-    }
-    //#endregion 🔌️HostIoRegistration
 }
 //#endregion 🧪️Tests

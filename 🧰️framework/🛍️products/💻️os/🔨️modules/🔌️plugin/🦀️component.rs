@@ -10,7 +10,10 @@ pub mod component {
     //! 🧩️ WASI P2 component exports for the plugin world contract.
     #![allow(unsafe_op_in_unsafe_fn)]
 
-    use crate::plugin_runtime::{ensure_plugin_initialized, plugin_clear_instance_guard, plugin_create_app, plugin_exchange, plugin_manifest, plugin_wire_artifact_infer, plugin_wire_artifact_mutation_plan, plugin_wire_list_artifact_inference_services, plugin_wire_list_artifact_mutations};
+    use crate::plugin_runtime::{
+        ensure_plugin_initialized, plugin_clear_instance_guard, plugin_create_app, plugin_exchange, plugin_manifest, plugin_wire_artifact_infer, plugin_wire_artifact_mutation_plan, plugin_wire_list_artifact_inference_services,
+        plugin_wire_list_artifact_mutations,
+    };
     use wit_bindgen::generate;
 
     generate!({
@@ -20,7 +23,10 @@ pub mod component {
 
     use exports::semio::framework::contributor::Guest as ContributorGuest;
     use exports::semio::framework::plugin::Guest;
-    use semio::framework::types::{ArtifactInferenceRequest as ComponentInferenceRequest, ArtifactInferenceResult as ComponentInferenceResult, InferenceBudget as ComponentInferenceBudget, InferenceCacheMode as ComponentInferenceCacheMode, InferenceDiagnostic as ComponentInferenceDiagnostic, InferenceProvenance as ComponentInferenceProvenance, MigrateArtifactInput as MigrateDocumentInput, MigrateArtifactOutput as MigrateDocumentOutput, PluginError};
+    use semio::framework::types::{
+        ArtifactInferenceRequest as ComponentInferenceRequest, ArtifactInferenceResult as ComponentInferenceResult, InferenceBudget as ComponentInferenceBudget, InferenceCacheMode as ComponentInferenceCacheMode,
+        InferenceDiagnostic as ComponentInferenceDiagnostic, InferenceProvenance as ComponentInferenceProvenance, MigrateArtifactInput as MigrateDocumentInput, MigrateArtifactOutput as MigrateDocumentOutput, PluginError,
+    };
     use semio_framework::{Fault, FaultCode, FaultOrigin};
 
     pub struct ComponentGuest;
@@ -100,7 +106,9 @@ pub mod component {
                 dependencies: request.dependencies,
             };
             let bytes = serde_json::to_vec(&request).map_err(|error| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.artifact-infer-request"), error.to_string()))))?;
-            let result: crate::app::WireArtifactInferenceResult = serde_json::from_slice(&plugin_wire_artifact_infer(&bytes).map_err(|error| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new(error.code), error.message))))?).map_err(|error| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.artifact-infer-result"), error.to_string()))))?;
+            let result: crate::app::WireArtifactInferenceResult =
+                serde_json::from_slice(&plugin_wire_artifact_infer(&bytes).map_err(|error| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new(error.code), error.message))))?)
+                    .map_err(|error| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.artifact-infer-result"), error.to_string()))))?;
             Ok(ComponentInferenceResult {
                 wire_version: result.wire_version,
                 owner: result.owner,
@@ -126,7 +134,11 @@ pub mod component {
                 },
                 canonical_payload: result.canonical_payload,
                 dependencies: result.dependencies,
-                diagnostics: result.diagnostics.into_iter().map(|diagnostic| ComponentInferenceDiagnostic { code: diagnostic.code, message: diagnostic.message, severity: diagnostic.severity, parameters: diagnostic.parameters.into_iter().collect() }).collect(),
+                diagnostics: result
+                    .diagnostics
+                    .into_iter()
+                    .map(|diagnostic| ComponentInferenceDiagnostic { code: diagnostic.code, message: diagnostic.message, severity: diagnostic.severity, parameters: diagnostic.parameters.into_iter().collect() })
+                    .collect(),
                 provenance: ComponentInferenceProvenance {
                     owner: result.provenance.owner,
                     inference_schema: result.provenance.inference_schema,
@@ -309,21 +321,21 @@ pub mod app {
     use dsl::{to_dsl_value, DslValue};
     use protocol::OpText;
     use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
+    /// 🪪️ Declarative app manifest shared by plugin builders and surface registrations.
+    pub use semio_framework::AppDefinition;
     use semio_framework::{
         clipboard_action_definitions, element_id_segment, history_action_definitions, is_element_id,
         kernel::{
-            ActorId, AppEvent, ArtifactDiff, ArtifactHandle, ArtifactKind, ArtifactVersion, CapabilityRequirement, ClipboardError, ClipboardFragment, EditRef, HistoryEntry, HistoryPatch, HostEffect, HybridLogicalTimestamp, InverseMutation, InvocationId, InvocationResult,
-            KernelMutation, MutationId, PastePlacement, Rights, SchemaId, Scope, UndoGroup, UndoPolicy,
+            ActorId, AppEvent, ArtifactDiff, ArtifactHandle, ArtifactKind, ArtifactVersion, CapabilityRequirement, ClipboardError, ClipboardFragment, EditRef, HistoryEntry, HistoryPatch, HostEffect, HybridLogicalTimestamp, InverseMutation,
+            InvocationId, InvocationResult, KernelMutation, MutationId, PastePlacement, Rights, SchemaId, Scope, UndoGroup, UndoPolicy,
         },
         note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition,
-        start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppIo, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, ExampleDefinition, Fault, FaultCode, FaultFrom, FaultOrigin,
-        IconName, InteractionDefinition, InteractionRef, IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind,
-        PluginManifest, ToolDefinition, ToolRef, TutorialDefinition, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition, WindowKinds, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID,
-        NOTE_SHELL_COMMAND_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SELECT_ALL_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID,
-        SET_SELECTION_MODE_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, UI_FOOTER_ELEMENT_ID, UI_NAVBAR_ELEMENT_ID,
+        start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppIo, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, ExampleDefinition, Fault, FaultCode, FaultFrom, FaultOrigin, IconName,
+        InteractionDefinition, InteractionRef, IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest,
+        ToolDefinition, ToolRef, TutorialDefinition, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition, WindowKinds, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, NOTE_SHELL_COMMAND_ACTION_ID,
+        RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SELECT_ALL_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID,
+        START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, UI_FOOTER_ELEMENT_ID, UI_NAVBAR_ELEMENT_ID,
     };
-    /// 🪪️ Declarative app manifest shared by plugin builders and surface registrations.
-    pub use semio_framework::AppDefinition;
     use serde::de::DeserializeOwned;
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
@@ -1232,11 +1244,7 @@ pub mod app {
     /// 🚨️ Typed failure from the native inference-service registry.
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub enum ArtifactInferenceRegistrationError {
-        Conflict {
-            key: ArtifactInferenceServiceKey,
-            existing: ArtifactInferenceServiceMetadata,
-            incoming: ArtifactInferenceServiceMetadata,
-        },
+        Conflict { key: ArtifactInferenceServiceKey, existing: ArtifactInferenceServiceMetadata, incoming: ArtifactInferenceServiceMetadata },
         Unavailable,
     }
 
@@ -1329,24 +1337,17 @@ pub mod app {
     }
 
     pub fn artifact_inference_service(artifact_kind: &str, inference_schema: &str) -> Result<Option<ArtifactInferenceService>, ArtifactInferenceExecutionError> {
-        Ok(artifact_inference_service_registry()
-            .read()
-            .map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "artifact inference registry is poisoned"))?
-            .get(artifact_kind, inference_schema)
-            .copied())
+        Ok(artifact_inference_service_registry().read().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "artifact inference registry is poisoned"))?.get(artifact_kind, inference_schema).copied())
     }
 
     pub fn list_artifact_inference_services() -> Result<Vec<ArtifactInferenceServiceMetadata>, ArtifactInferenceExecutionError> {
-        Ok(artifact_inference_service_registry()
-            .read()
-            .map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "artifact inference registry is poisoned"))?
-            .metadata())
+        Ok(artifact_inference_service_registry().read().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "artifact inference registry is poisoned"))?.metadata())
     }
 
     /// 💡️ Runs one bounded native inference through its immutable request contract.
     pub fn infer_artifact(artifact_kind: &str, inference_schema: &str, request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
-        let service = artifact_inference_service(artifact_kind, inference_schema)?
-            .ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.not-registered", format!("no native inference service for {artifact_kind}/{inference_schema}")))?;
+        let service =
+            artifact_inference_service(artifact_kind, inference_schema)?.ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.not-registered", format!("no native inference service for {artifact_kind}/{inference_schema}")))?;
         service.infer(request)
     }
 
@@ -1586,10 +1587,7 @@ pub mod app {
         if !active.contains(cancellation_id) {
             return Err(ArtifactInferenceExecutionError::new("artifact-inference.cancellation", format!("no active inference has cancellation id {cancellation_id:?}")));
         }
-        cancelled_artifact_inferences()
-            .lock()
-            .map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "cancelled inference registry is poisoned"))?
-            .insert(cancellation_id.to_owned());
+        cancelled_artifact_inferences().lock().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "cancelled inference registry is poisoned"))?.insert(cancellation_id.to_owned());
         Ok(())
     }
 
@@ -1602,10 +1600,7 @@ pub mod app {
     }
 
     fn inference_cancelled(cancellation_id: &str) -> Result<bool, ArtifactInferenceExecutionError> {
-        cancelled_artifact_inferences()
-            .lock()
-            .map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "cancelled inference registry is poisoned"))
-            .map(|cancelled| cancelled.contains(cancellation_id))
+        cancelled_artifact_inferences().lock().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "cancelled inference registry is poisoned")).map(|cancelled| cancelled.contains(cancellation_id))
     }
 
     fn bounded_len(value: u64, field: &str) -> Result<usize, ArtifactInferenceExecutionError> {
@@ -1663,7 +1658,11 @@ pub mod app {
             return Err(ArtifactInferenceExecutionError::new("artifact-inference.cache-mode", "inference execution did not honor the requested cache mode"));
         }
         let diagnostics = execution.diagnostics.iter().fold(0usize, |total, diagnostic| {
-            total.saturating_add(diagnostic.code.len()).saturating_add(diagnostic.message.len()).saturating_add(diagnostic.severity.len()).saturating_add(diagnostic.parameters.iter().fold(0usize, |total, (key, value)| total.saturating_add(key.len()).saturating_add(value.len())))
+            total
+                .saturating_add(diagnostic.code.len())
+                .saturating_add(diagnostic.message.len())
+                .saturating_add(diagnostic.severity.len())
+                .saturating_add(diagnostic.parameters.iter().fold(0usize, |total, (key, value)| total.saturating_add(key.len()).saturating_add(value.len())))
         });
         let total = execution.canonical_payload.len().saturating_add(diagnostics);
         let allocation = bounded_len(request.budgets.allocation_bytes, "allocation-bytes")?;
@@ -1674,9 +1673,7 @@ pub mod app {
     }
 
     pub fn wire_list_artifact_inference_services() -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
-        let registry = artifact_inference_service_registry()
-            .read()
-            .map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "artifact inference registry is poisoned"))?;
+        let registry = artifact_inference_service_registry().read().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "artifact inference registry is poisoned"))?;
         wire_list_artifact_inference_services_from(&registry)
     }
 
@@ -1686,9 +1683,7 @@ pub mod app {
     }
 
     pub fn wire_artifact_infer(request: &[u8]) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
-        let registry = artifact_inference_service_registry()
-            .read()
-            .map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "artifact inference registry is poisoned"))?;
+        let registry = artifact_inference_service_registry().read().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "artifact inference registry is poisoned"))?;
         wire_artifact_infer_from(&registry, request)
     }
 
@@ -1697,7 +1692,9 @@ pub mod app {
         if request.wire_version != ARTIFACT_INFERENCE_WIRE_VERSION {
             return Err(ArtifactInferenceExecutionError::new("artifact-inference.wire-version", format!("expected {}, got {}", ARTIFACT_INFERENCE_WIRE_VERSION, request.wire_version)));
         }
-        let service = registry.get(&request.artifact_kind, &request.inference_schema).copied()
+        let service = registry
+            .get(&request.artifact_kind, &request.inference_schema)
+            .copied()
             .ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.not-registered", format!("no inference service for {}/{}", request.artifact_kind, request.inference_schema)))?;
         wire_artifact_infer_with_service(request, service)
     }
@@ -2468,7 +2465,11 @@ pub mod app {
         /// 🎭️ Declares a representation leaf, optionally claiming its MIME identity.
         pub fn representation(self, revision: impl AsRef<str>, representation: impl AsRef<str>, mime: Option<ArtifactMime>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
             let identity = self.identity.standard(revision)?.representation(representation)?;
-            let capability = mime.map(|mime| ArtifactCapability::new(identity.clone(), ArtifactCapabilityKind::representation()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::mime(), mime.as_str())?)).transpose()?.unwrap_or_else(|| ArtifactCapability::new(identity, ArtifactCapabilityKind::representation())).descriptor(descriptor)?;
+            let capability = mime
+                .map(|mime| ArtifactCapability::new(identity.clone(), ArtifactCapabilityKind::representation()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::mime(), mime.as_str())?))
+                .transpose()?
+                .unwrap_or_else(|| ArtifactCapability::new(identity, ArtifactCapabilityKind::representation()))
+                .descriptor(descriptor)?;
             self.capability(capability)
         }
 
@@ -2514,17 +2515,8 @@ pub mod app {
         }
 
         /// 🔐️ Requires one exact immutable capability before runtime registration.
-        pub fn require_declared_capability(
-            &self,
-            kind: &ArtifactCapabilityKind,
-            id: &ArtifactIdentity,
-            claims: &[ArtifactIdentityClaim],
-            descriptor: Option<&[u8]>,
-        ) -> Result<&ArtifactCapability, ArtifactDefinitionError> {
-            let capability = self
-                .capabilities
-                .get(id)
-                .ok_or_else(|| ArtifactDefinitionError::new("artifact-definition.runtime-capability", format!("runtime registration names undeclared capability {id}")))?;
+        pub fn require_declared_capability(&self, kind: &ArtifactCapabilityKind, id: &ArtifactIdentity, claims: &[ArtifactIdentityClaim], descriptor: Option<&[u8]>) -> Result<&ArtifactCapability, ArtifactDefinitionError> {
+            let capability = self.capabilities.get(id).ok_or_else(|| ArtifactDefinitionError::new("artifact-definition.runtime-capability", format!("runtime registration names undeclared capability {id}")))?;
             if capability.kind != *kind {
                 return Err(ArtifactDefinitionError::new("artifact-definition.runtime-category", format!("runtime registration for {id} requires {}, declared {}", kind.as_str(), capability.kind.as_str())));
             }
@@ -2671,7 +2663,8 @@ pub mod app {
             let Some(subtype) = segments.next() else {
                 return Err(ArtifactDefinitionError::new("artifact-definition.mime", "MIME must contain a type and subtype"));
             };
-            if segments.next().is_some() || kind.is_empty() || subtype.is_empty() || !value.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'!' | b'#' | b'$' | b'&' | b'^' | b'_' | b'.' | b'+' | b'-' | b'/')) {
+            if segments.next().is_some() || kind.is_empty() || subtype.is_empty() || !value.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'!' | b'#' | b'$' | b'&' | b'^' | b'_' | b'.' | b'+' | b'-' | b'/'))
+            {
                 return Err(ArtifactDefinitionError::new("artifact-definition.mime", format!("MIME {value:?} is not lower-case ASCII type/subtype")));
             }
             Ok(Self(value))
@@ -2755,12 +2748,7 @@ pub mod app {
     }
 
     /// 🔐️ Locates the one immutable typed capability whose complete claim set authorizes a runtime facet.
-    fn require_declared_capability_or_record(
-        definition: &ArtifactDefinition,
-        definition_error: &mut Option<ArtifactDefinitionError>,
-        kind: ArtifactCapabilityKind,
-        claims: Result<Vec<ArtifactIdentityClaim>, ArtifactDefinitionError>,
-    ) {
+    fn require_declared_capability_or_record(definition: &ArtifactDefinition, definition_error: &mut Option<ArtifactDefinitionError>, kind: ArtifactCapabilityKind, claims: Result<Vec<ArtifactIdentityClaim>, ArtifactDefinitionError>) {
         if definition_error.is_some() {
             return;
         }
@@ -2894,12 +2882,7 @@ pub mod app {
         /// 🧬️ Sets the artifact's four-facet schema descriptor — mandatory, so this is the one call
         /// that unlocks every other declaration method.
         pub fn schema(mut self, descriptor: ::semio_framework_schema::ArtifactSchemaDescriptor) -> ArtifactDeclarationBuilder<DeclarationReady> {
-            require_declared_capability_or_record(
-                &self.definition,
-                &mut self.definition_error,
-                ArtifactCapabilityKind::schema(),
-                ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), descriptor.id).map(|claim| vec![claim]),
-            );
+            require_declared_capability_or_record(&self.definition, &mut self.definition_error, ArtifactCapabilityKind::schema(), ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), descriptor.id).map(|claim| vec![claim]));
             ArtifactDeclarationBuilder {
                 kind: self.kind,
                 schemas: vec![descriptor],
@@ -3010,12 +2993,7 @@ pub mod app {
         /// 📖️ Appends this artifact's grammar table (`register_language`, one call per entry).
         pub fn languages(mut self, specs: &'static [dsl::LanguageSpec]) -> Self {
             for spec in specs {
-                require_declared_capability_or_record(
-                    &self.definition,
-                    &mut self.definition_error,
-                    ArtifactCapabilityKind::grammar(),
-                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::grammar(), spec.id).map(|claim| vec![claim]),
-                );
+                require_declared_capability_or_record(&self.definition, &mut self.definition_error, ArtifactCapabilityKind::grammar(), ArtifactIdentityClaim::new(ArtifactIdentityNamespace::grammar(), spec.id).map(|claim| vec![claim]));
             }
             self.languages.extend(specs);
             self
@@ -3030,8 +3008,7 @@ pub mod app {
                 &self.definition,
                 &mut self.definition_error,
                 ArtifactCapabilityKind::codec(),
-                ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), codec.schema.clone())
-                    .and_then(|schema| ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension).map(|extension| vec![schema, extension])),
+                ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), codec.schema.clone()).and_then(|schema| ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension).map(|extension| vec![schema, extension])),
             );
             self.document_codecs.push(codec);
             self
@@ -3054,8 +3031,7 @@ pub mod app {
                 &self.definition,
                 &mut self.definition_error,
                 ArtifactCapabilityKind::codec(),
-                ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), codec.schema.clone())
-                    .and_then(|schema| ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension).map(|extension| vec![schema, extension])),
+                ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), codec.schema.clone()).and_then(|schema| ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension).map(|extension| vec![schema, extension])),
             );
             self.document_codecs.push(codec);
             self
@@ -3212,21 +3188,18 @@ pub mod app {
             rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::representation(), claims));
         }
         for entry in subset_validators {
-            rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::subset_validator(), vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.dialect).to_coordinate())?]));
+            rows.push(ArtifactRuntimeCapabilityRequirement::new(
+                ArtifactCapabilityKind::subset_validator(),
+                vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.dialect).to_coordinate())?],
+            ));
         }
         for spec in languages {
-            rows.push(ArtifactRuntimeCapabilityRequirement::new(
-                ArtifactCapabilityKind::grammar(),
-                vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::grammar(), spec.id)?],
-            ));
+            rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::grammar(), vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::grammar(), spec.id)?]));
         }
         for codec in document_codecs {
             rows.push(ArtifactRuntimeCapabilityRequirement::new(
                 ArtifactCapabilityKind::codec(),
-                vec![
-                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), codec.schema.clone())?,
-                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension)?,
-                ],
+                vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), codec.schema.clone())?, ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension)?],
             ));
         }
         Ok(rows)
@@ -3404,7 +3377,10 @@ pub mod app {
                 return Err(PluginAssemblyError::new("plugin-assembly.host-media-shape", "host-media contributions require non-empty artifact kind and document schema"));
             }
             if self.artifact_kind.schema != self.document_schema {
-                return Err(PluginAssemblyError::new("plugin-assembly.host-media-schema", format!("host-media contribution {:?} schema {:?} does not equal artifact-kind schema {:?}", self.id.as_str(), self.document_schema, self.artifact_kind.schema)));
+                return Err(PluginAssemblyError::new(
+                    "plugin-assembly.host-media-schema",
+                    format!("host-media contribution {:?} schema {:?} does not equal artifact-kind schema {:?}", self.id.as_str(), self.document_schema, self.artifact_kind.schema),
+                ));
             }
             if matches!(self.kind, HostMediaHandlerKind::TwoDSvgExport) && self.file_stem.as_deref().is_none_or(|file_stem| file_stem.trim().is_empty()) {
                 return Err(PluginAssemblyError::new("plugin-assembly.host-media-file-stem", "2D SVG export contributions require a non-empty file stem"));
@@ -3415,7 +3391,9 @@ pub mod app {
         pub(crate) fn preflight(&self, owner: &str, declared_media_kinds: &BTreeMap<String, semio_framework::ArtifactKindSpec>) -> Result<(), PluginAssemblyError> {
             ArtifactIdentity::parse(owner.to_string()).map_err(PluginAssemblyError::definition)?;
             self.validate_shape()?;
-            let declared = declared_media_kinds.get(&self.artifact_kind.id).ok_or_else(|| PluginAssemblyError::new("plugin-assembly.host-media-owner", format!("host-media contribution {:?} targets undeclared artifact kind {:?}", self.id.as_str(), self.artifact_kind.id)))?;
+            let declared = declared_media_kinds
+                .get(&self.artifact_kind.id)
+                .ok_or_else(|| PluginAssemblyError::new("plugin-assembly.host-media-owner", format!("host-media contribution {:?} targets undeclared artifact kind {:?}", self.id.as_str(), self.artifact_kind.id)))?;
             if declared != &self.artifact_kind {
                 return Err(PluginAssemblyError::new("plugin-assembly.host-media-kind", format!("host-media contribution {:?} does not use the plugin-owned descriptor for {:?}", self.id.as_str(), self.artifact_kind.id)));
             }
@@ -3594,12 +3572,7 @@ pub mod app {
     impl FlowExtensionDeclaration {
         /// 🏗️ Declares a `flow.extension` manifest and its immutable native executable identity.
         pub fn new(id: impl Into<String>, manifest: FlowExtensionManifest, executable_identity: FlowExtensionExecutableIdentity) -> Result<Self, PluginAssemblyError> {
-            let declaration = Self {
-                id: ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?,
-                extension_id: ArtifactIdentity::parse(manifest.id.clone()).map_err(PluginAssemblyError::definition)?,
-                manifest,
-                executable_identity,
-            };
+            let declaration = Self { id: ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?, extension_id: ArtifactIdentity::parse(manifest.id.clone()).map_err(PluginAssemblyError::definition)?, manifest, executable_identity };
             declaration.validate_shape()?;
             Ok(declaration)
         }
@@ -3705,10 +3678,14 @@ pub mod app {
         }
 
         fn lookup(&self, kind: HostMediaHandlerKind, artifact_kind: &str, document_schema: &str) -> Result<&RegisteredHostMediaHandler, HostMediaRuntimeError> {
-            let id = self.by_target.get(&(kind, artifact_kind.to_string())).ok_or_else(|| HostMediaRuntimeError { code: "host-media.not-declared".into(), message: format!("no {} declaration for artifact kind {:?}", kind.as_str(), artifact_kind) })?;
+            let id =
+                self.by_target.get(&(kind, artifact_kind.to_string())).ok_or_else(|| HostMediaRuntimeError { code: "host-media.not-declared".into(), message: format!("no {} declaration for artifact kind {:?}", kind.as_str(), artifact_kind) })?;
             let entry = self.by_id.get(id).expect("host-media target index always points to an entry");
             if entry.descriptor.document_schema != document_schema {
-                return Err(HostMediaRuntimeError { code: "host-media.schema-mismatch".into(), message: format!("host-media declaration {:?} expects schema {:?}, request supplied {:?}", entry.descriptor.id, entry.descriptor.document_schema, document_schema) });
+                return Err(HostMediaRuntimeError {
+                    code: "host-media.schema-mismatch".into(),
+                    message: format!("host-media declaration {:?} expects schema {:?}, request supplied {:?}", entry.descriptor.id, entry.descriptor.document_schema, document_schema),
+                });
             }
             Ok(entry)
         }
@@ -3772,8 +3749,29 @@ pub mod app {
     }
 
     impl ArtifactRegistrationPlan {
-        pub(crate) fn from_declarations(declarations: &[ArtifactDeclaration], app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>, foreign_document_codecs: Vec<DocumentCodecSpec>, owner: impl Into<String>, host_media_handlers: Vec<HostMediaHandlerDeclaration>, flow_extensions: Vec<FlowExtensionDeclaration>) -> Self {
-            let mut plan = Self { schemas: Vec::new(), inferences: Vec::new(), inference_services: Vec::new(), formats: Vec::new(), subset_validators: Vec::new(), composers: Vec::new(), languages: Vec::new(), document_codecs: Vec::new(), migrations: Vec::new(), app_schemas, owner: owner.into(), host_media_handlers, flow_extensions };
+        pub(crate) fn from_declarations(
+            declarations: &[ArtifactDeclaration],
+            app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
+            foreign_document_codecs: Vec<DocumentCodecSpec>,
+            owner: impl Into<String>,
+            host_media_handlers: Vec<HostMediaHandlerDeclaration>,
+            flow_extensions: Vec<FlowExtensionDeclaration>,
+        ) -> Self {
+            let mut plan = Self {
+                schemas: Vec::new(),
+                inferences: Vec::new(),
+                inference_services: Vec::new(),
+                formats: Vec::new(),
+                subset_validators: Vec::new(),
+                composers: Vec::new(),
+                languages: Vec::new(),
+                document_codecs: Vec::new(),
+                migrations: Vec::new(),
+                app_schemas,
+                owner: owner.into(),
+                host_media_handlers,
+                flow_extensions,
+            };
             for declaration in declarations {
                 plan.schemas.extend(declaration.schemas.iter().cloned());
                 plan.inferences.extend(declaration.inferences.iter().cloned());
@@ -3799,25 +3797,8 @@ pub mod app {
             let host_media_handlers = HostMediaHandlerRegistry::from_declarations(&owner, &host_media_handlers)?;
             let flow_extensions = FlowExtensionRegistry::from_declarations(&owner, &flow_extensions)?;
             Ok((
-                PluginRuntimeRegistry {
-                    definitions,
-                    schemas,
-                    inferences,
-                    inference_services,
-                    languages,
-                    app_schemas,
-                    host_media_handlers,
-                    flow_extensions,
-                    owner_mutations: BTreeMap::new(),
-                    contributed_mutations: BTreeMap::new(),
-                },
-                semio_framework::io::ArtifactAssemblyRegistryPlan {
-                    composer_entries: composers,
-                    subset_validators,
-                    format_descriptors: formats,
-                    document_codecs,
-                    dialect_migrations: migrations,
-                },
+                PluginRuntimeRegistry { definitions, schemas, inferences, inference_services, languages, app_schemas, host_media_handlers, flow_extensions, owner_mutations: BTreeMap::new(), contributed_mutations: BTreeMap::new() },
+                semio_framework::io::ArtifactAssemblyRegistryPlan { composer_entries: composers, subset_validators, format_descriptors: formats, document_codecs, dialect_migrations: migrations },
             ))
         }
     }
@@ -4107,7 +4088,12 @@ pub mod app {
             }
             for inference in &descriptor.inferences {
                 if inference.owner != plugin_id || inference.contributor != plugin_id {
-                    return Err(ContributionRegistrationError::InferenceOwnerMismatch { plugin_id: plugin_id.to_string(), inference_schema: inference.inference_schema.clone(), owner: inference.owner.clone(), contributor: inference.contributor.clone() });
+                    return Err(ContributionRegistrationError::InferenceOwnerMismatch {
+                        plugin_id: plugin_id.to_string(),
+                        inference_schema: inference.inference_schema.clone(),
+                        owner: inference.owner.clone(),
+                        contributor: inference.contributor.clone(),
+                    });
                 }
                 if inference.artifact_kind != descriptor.artifact_kind {
                     return Err(ContributionRegistrationError::InferenceTargetMismatch { inference_schema: inference.inference_schema.clone(), expected: descriptor.artifact_kind.clone(), actual: inference.artifact_kind.clone() });
@@ -4136,7 +4122,15 @@ pub mod app {
 
     impl WireMutationRosterEntry {
         fn owner(document_schema: &str, descriptor: &::protocol::SemanticDescriptor) -> Self {
-            Self { mutation_id: format!("{document_schema}#{}", descriptor.kind), verb: descriptor.verb.to_string(), entity: descriptor.entity.to_string(), kind: descriptor.kind.to_string(), record: descriptor.record.to_string(), contributor: None, artifact_kind: None }
+            Self {
+                mutation_id: format!("{document_schema}#{}", descriptor.kind),
+                verb: descriptor.verb.to_string(),
+                entity: descriptor.entity.to_string(),
+                kind: descriptor.kind.to_string(),
+                record: descriptor.record.to_string(),
+                contributor: None,
+                artifact_kind: None,
+            }
         }
 
         fn contributed(plugin_id: &str, artifact_kind: &str, mutation_id: String, semantics: &semio_framework::ContributedMutationSemantics) -> Self {
@@ -4304,7 +4298,11 @@ pub mod app {
         }
 
         fn descriptor_with_mutation(artifact_kind: &str, mutation_id: &str, kind: &str) -> semio_framework::ArtifactContributionDescriptor {
-            semio_framework::ArtifactContributionDescriptor { artifact_kind: artifact_kind.into(), mutations: vec![semio_framework::ContributedMutationMetadata { mutation_id: mutation_id.into(), semantics: semantics(kind), schema_version: 1, algorithm_version: 1 }], inferences: Vec::new() }
+            semio_framework::ArtifactContributionDescriptor {
+                artifact_kind: artifact_kind.into(),
+                mutations: vec![semio_framework::ContributedMutationMetadata { mutation_id: mutation_id.into(), semantics: semantics(kind), schema_version: 1, algorithm_version: 1 }],
+                inferences: Vec::new(),
+            }
         }
 
         #[test]
@@ -4421,7 +4419,6 @@ pub mod app {
             assert_eq!(error.code(), "artifact-definition.conflicting-artifact");
             assert_eq!(registry.len(), 1);
         }
-
     }
 
     pub struct AppBuilder {
@@ -6253,10 +6250,10 @@ pub mod app {
             impl Mutation<DummySnapshot> for DummyMutation {
                 type Diff = DummyDiff;
 
-                fn diff(&self, _snapshot: &DummySnapshot) -> DummyDiff {
-                    match self {
+                fn diff(&self, _snapshot: &DummySnapshot) -> ::protocol::MutationOutcome<DummyDiff> {
+                    ::protocol::MutationOutcome::new(match self {
                         DummyMutation::SetCount { value } => DummyDiff { count: Some(*value) },
-                    }
+                    })
                 }
 
                 fn inverse(&self, snapshot: &DummySnapshot) -> Vec<Self> {
@@ -6491,11 +6488,11 @@ pub mod app {
             impl Mutation<TxnSnapshot> for TxnMutation {
                 type Diff = TxnDiff;
 
-                fn diff(&self, _snapshot: &TxnSnapshot) -> TxnDiff {
-                    match self {
+                fn diff(&self, _snapshot: &TxnSnapshot) -> ::protocol::MutationOutcome<TxnDiff> {
+                    ::protocol::MutationOutcome::new(match self {
                         TxnMutation::SetCount { value } => TxnDiff { count: Some(*value) },
                         TxnMutation::SetCountAndNotify { value } => TxnDiff { count: Some(*value) },
-                    }
+                    })
                 }
 
                 fn inverse(&self, snapshot: &TxnSnapshot) -> Vec<Self> {
@@ -6735,6 +6732,325 @@ pub mod app {
             }
         }
         //#endregion 🧪️testkit
+
+        //#region 👁️✏️SurfaceTestkit
+        // 🎫️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.5 — lane 0-F. New
+        // subregion, appended after the peer `🧪️testkit` subregion above without touching it.
+        use super::{ArtifactEditor, ArtifactViewer, ViewerApp};
+
+        /// 👁️ Contract §2.5 helper 1/3 — WITH TEETH: dispatches a real `V::Command` through the full
+        /// `VcsArtifactApp<ViewerApp<V>>` runtime path (the same one `PluginBuilder::viewer::<V>`
+        /// wires up) and asserts neither the document store nor the draft store advanced. `ViewEmit`
+        /// (contract §2.2) already makes an artifact/draft mutation unnameable at the type level; this
+        /// additionally proves the runtime adapter (`ViewerApp<V>::handle`) never smuggles one past
+        /// that guarantee. `V::Command: Default` is the minimal extra bound needed to synthesize a
+        /// representative command with no caller-supplied value — `ArtifactViewer` itself declares
+        /// none, since a viewer's command grammar is author-defined; a no-op-only command (the norm
+        /// for a first-pass viewer, contract §2.2) derives `Default` for free.
+        pub fn assert_viewer_never_mutates<V: ArtifactViewer>()
+        where
+            V::Command: Default,
+        {
+            let mut app = new_viewer::<V>();
+            let store_generation_before = app.store.generation();
+            let store_edits_before = app.store.envelope().vcs.edits.len();
+            let draft_generation_before = app.draft_store.generation();
+            let draft_edits_before = app.draft_store.envelope().vcs.edits.len();
+            app.dispatch_typed(V::Command::default(), &meta("local")).expect("a viewer command must dispatch without error");
+            assert_eq!(app.store.generation(), store_generation_before, "a viewer must never bump the document store's generation");
+            assert_eq!(app.store.envelope().vcs.edits.len(), store_edits_before, "a viewer must never add a document Edit");
+            assert_eq!(app.draft_store.generation(), draft_generation_before, "a viewer must never bump the draft store's generation");
+            assert_eq!(app.draft_store.envelope().vcs.edits.len(), draft_edits_before, "a viewer must never add a draft Edit");
+        }
+
+        /// ✏️👁️ Contract §2.5 helper 2/3 — an editor and its viewer over the same subset must resolve
+        /// to one `Dialect` coordinate, or `surface_app_id` would mint two different canonical ids
+        /// (`…#editor` / `…#viewer`) for what the contract treats as one subset's two surfaces.
+        pub fn assert_editor_and_viewer_share_dialect<E: ArtifactEditor, V: ArtifactViewer>() {
+            assert_eq!(E::DIALECT, V::DIALECT, "an editor and its viewer over the same subset must share one Dialect coordinate");
+        }
+
+        /// 👁️ Contract §2.5 helper 3/3 — the viewer twin of `new_app::<A: ArtifactApp>()`. `ViewerApp<V>`
+        /// already satisfies the runtime `ArtifactApp` bound (the SDK adapter, contract §2.1), so this
+        /// is a thin rename over the existing generic harness rather than new machinery.
+        pub fn new_viewer<V: ArtifactViewer>() -> VcsArtifactApp<ViewerApp<V>> {
+            new_app::<ViewerApp<V>>()
+        }
+
+        #[cfg(test)]
+        mod surface_testkit_tests {
+            //! 🧪️ Proves `assert_viewer_never_mutates`/`assert_editor_and_viewer_share_dialect`/
+            //! `new_viewer` (contract §2.5) against a minimal `ArtifactEditor`/`ArtifactViewer` pair
+            //! sharing one `Dialect`. Self-contained — does not reach into `testkit_tests`'s own
+            //! `DummyApp` (private to that sibling module) or `transaction_testkit_tests`'s `TxnApp`.
+            use super::super::{ConfigView, DraftView, EditorApp, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation};
+            use super::*;
+            use crate::app::{ArtifactView, Emit, ViewEmit};
+            use crate::{ui_text, UiNode};
+            use protocol::{Mutation, MutationDiff};
+            use semio_framework::{Dialect, Fault, StandardId, SubsetId};
+            use serde::{Deserialize, Serialize};
+            use store::EngineHandles;
+            use ui_wgpu::wgpu::Label;
+
+            const SURFACE_TESTKIT_DIALECT: Dialect = Dialect { artifact_kind: "testkit.surface", standard: StandardId("1"), subset: SubsetId::ANY };
+
+            #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+            #[dsl(extension = "testkit-surface")]
+            struct SurfaceSnapshot {
+                count: i32,
+            }
+
+            impl store::ArtifactDsl for SurfaceSnapshot {
+                const EXTENSION: &'static str = "testkit-surface";
+                fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+                    if text.trim().is_empty() {
+                        return Ok(Self::default());
+                    }
+                    serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+                }
+                fn print_dsl(&self) -> String {
+                    serde_json::to_string(self).unwrap_or_default()
+                }
+            }
+
+            impl store::ArtifactPack for SurfaceSnapshot {
+                fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+                    serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
+                }
+                fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+                    if bytes.is_empty() {
+                        return Ok(Self::default());
+                    }
+                    serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
+                }
+            }
+
+            #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+            struct SurfaceDiff {
+                count: Option<i32>,
+            }
+
+            impl MutationDiff<SurfaceSnapshot> for SurfaceDiff {
+                fn apply(&self, snapshot: &SurfaceSnapshot) -> SurfaceSnapshot {
+                    SurfaceSnapshot { count: self.count.unwrap_or(snapshot.count) }
+                }
+                fn absorb(&mut self, other: Self) {
+                    if other.count.is_some() {
+                        self.count = other.count;
+                    }
+                }
+            }
+
+            #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+            #[serde(tag = "operation", rename_all = "camelCase")]
+            enum SurfaceMutation {
+                #[dsl(key = "set-count")]
+                SetCount { value: i32 },
+            }
+
+            impl Mutation<SurfaceSnapshot> for SurfaceMutation {
+                type Diff = SurfaceDiff;
+                fn diff(&self, _snapshot: &SurfaceSnapshot) -> ::protocol::MutationOutcome<SurfaceDiff> {
+                    match self {
+                        SurfaceMutation::SetCount { value } => ::protocol::MutationOutcome::new(SurfaceDiff { count: Some(*value) }),
+                    }
+                }
+                fn inverse(&self, snapshot: &SurfaceSnapshot) -> Vec<Self> {
+                    vec![SurfaceMutation::SetCount { value: snapshot.count }]
+                }
+            }
+
+            impl ::protocol::OpText for SurfaceMutation {
+                fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+                    let variants = <Self as ::dsl::DslVariants>::variants();
+                    for (keyword, spec_fn) in &variants {
+                        let probe = format!("{keyword} ");
+                        if line == keyword.as_str() || line.starts_with(&probe) {
+                            let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
+                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
+                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
+                        }
+                    }
+                    Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+                }
+                fn print_op(&self) -> String {
+                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
+                    let variants = <Self as ::dsl::DslVariants>::variants();
+                    let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+                    if body.is_empty() {
+                        keyword
+                    } else {
+                        format!("{keyword} {body}")
+                    }
+                }
+            }
+
+            impl ::protocol::OpBinary for SurfaceMutation {
+                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                    ::dsl::variants_binary::encode_op(self)
+                }
+                fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                    ::dsl::variants_binary::decode_op(bytes)
+                }
+            }
+
+            #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+            enum SurfaceEditorCommand {
+                #[dsl(key = "increment")]
+                Increment,
+            }
+
+            impl ::protocol::OpText for SurfaceEditorCommand {
+                fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+                    let variants = <Self as ::dsl::DslVariants>::variants();
+                    for (keyword, spec_fn) in &variants {
+                        let probe = format!("{keyword} ");
+                        if line == keyword.as_str() || line.starts_with(&probe) {
+                            let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
+                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
+                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
+                        }
+                    }
+                    Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+                }
+                fn print_op(&self) -> String {
+                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
+                    let variants = <Self as ::dsl::DslVariants>::variants();
+                    let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+                    if body.is_empty() {
+                        keyword
+                    } else {
+                        format!("{keyword} {body}")
+                    }
+                }
+            }
+
+            impl ::protocol::OpBinary for SurfaceEditorCommand {
+                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                    ::dsl::variants_binary::encode_op(self)
+                }
+                fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                    ::dsl::variants_binary::decode_op(bytes)
+                }
+            }
+
+            #[derive(Clone, Copy, Debug, Default, PartialEq)]
+            enum SurfaceViewerCommand {
+                #[default]
+                Noop,
+            }
+
+            impl ::protocol::OpBinary for SurfaceViewerCommand {
+                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                    Ok(Vec::new())
+                }
+                fn decode_op(_bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                    Ok(SurfaceViewerCommand::Noop)
+                }
+            }
+
+            #[derive(Default)]
+            struct SurfaceEditorFixture;
+
+            impl ArtifactEditor for SurfaceEditorFixture {
+                const DIALECT: Dialect = SURFACE_TESTKIT_DIALECT;
+                const DOCUMENT_SCHEMA: &'static str = "semio.testkit-surface/v1";
+                type Snapshot = SurfaceSnapshot;
+                type Mutation = SurfaceMutation;
+                type Config = NoConfig;
+                type ConfigMutation = NoConfigMutation;
+                type Draft = NoDraft;
+                type DraftMutation = NoDraftMutation;
+                type Presence = NoPresence;
+                type PresenceMutation = NoPresenceMutation;
+                type Transient = crate::app::NoTransient;
+                type TransientMutation = crate::app::NoTransientMutation;
+                type Command = SurfaceEditorCommand;
+
+                fn initial_snapshot() -> SurfaceSnapshot {
+                    SurfaceSnapshot::default()
+                }
+
+                fn handle(
+                    command: &SurfaceEditorCommand,
+                    doc: &ArtifactView<'_, SurfaceSnapshot>,
+                    _cfg: &ConfigView<'_, NoConfig>,
+                    _interaction: &crate::app::InteractionView<'_>,
+                    _draft: &DraftView<'_, NoDraft>,
+                    _engines: &EngineHandles,
+                ) -> Result<Emit<SurfaceMutation>, Fault> {
+                    match command {
+                        SurfaceEditorCommand::Increment => Ok(Emit { artifact_mutations: vec![SurfaceMutation::SetCount { value: doc.snapshot.count + 1 }], description: Some("increment".into()), ..Default::default() }),
+                    }
+                }
+
+                fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
+                    ui_text(Label::data(format!("count={}", doc.snapshot.count)))
+                }
+            }
+
+            #[derive(Default)]
+            struct SurfaceViewerFixture;
+
+            impl ArtifactViewer for SurfaceViewerFixture {
+                const DIALECT: Dialect = SURFACE_TESTKIT_DIALECT;
+                const DOCUMENT_SCHEMA: &'static str = "semio.testkit-surface/v1";
+                type Snapshot = SurfaceSnapshot;
+                type Mutation = SurfaceMutation;
+                type Config = NoConfig;
+                type ConfigMutation = NoConfigMutation;
+                type Presence = NoPresence;
+                type PresenceMutation = NoPresenceMutation;
+                type Transient = crate::app::NoTransient;
+                type TransientMutation = crate::app::NoTransientMutation;
+                type Command = SurfaceViewerCommand;
+
+                fn initial_snapshot() -> SurfaceSnapshot {
+                    SurfaceSnapshot::default()
+                }
+
+                fn handle(
+                    _command: &SurfaceViewerCommand,
+                    _doc: &ArtifactView<'_, SurfaceSnapshot>,
+                    _cfg: &ConfigView<'_, NoConfig>,
+                    _interaction: &crate::app::InteractionView<'_>,
+                    _engines: &EngineHandles,
+                ) -> Result<ViewEmit<NoConfigMutation>, Fault> {
+                    Ok(ViewEmit::default())
+                }
+
+                fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
+                    ui_text(Label::data(format!("count={}", doc.snapshot.count)))
+                }
+            }
+
+            #[test]
+            fn viewer_never_mutates_the_document_or_draft_store() {
+                assert_viewer_never_mutates::<SurfaceViewerFixture>();
+            }
+
+            #[test]
+            fn editor_and_viewer_share_one_dialect() {
+                assert_editor_and_viewer_share_dialect::<SurfaceEditorFixture, SurfaceViewerFixture>();
+            }
+
+            #[test]
+            fn new_viewer_constructs_a_registry_less_wrapper() {
+                let app = new_viewer::<SurfaceViewerFixture>();
+                assert_eq!(app.snapshot().unwrap().count, 0);
+            }
+
+            #[test]
+            fn editor_fixture_still_mutates_normally() {
+                let mut app = new_app::<EditorApp<SurfaceEditorFixture>>();
+                app.dispatch_typed(SurfaceEditorCommand::Increment, &meta("local")).expect("increment");
+                assert_eq!(app.snapshot().unwrap().count, 1);
+            }
+        }
+        //#endregion 👁️✏️SurfaceTestkit
     }
     //#endregion 🔖️Testkit
 
@@ -7776,8 +8092,8 @@ pub mod app {
     impl ::protocol::Mutation<NoConfig> for NoConfigMutation {
         type Diff = NoConfig;
 
-        fn diff(&self, _base: &NoConfig) -> NoConfig {
-            NoConfig::default()
+        fn diff(&self, _base: &NoConfig) -> ::protocol::MutationOutcome<NoConfig> {
+            ::protocol::MutationOutcome::new(NoConfig::default())
         }
 
         fn inverse(&self, _base: &NoConfig) -> Vec<Self> {
@@ -7872,8 +8188,8 @@ pub mod app {
     impl ::protocol::Mutation<NoPresence> for NoPresenceMutation {
         type Diff = NoPresence;
 
-        fn diff(&self, _base: &NoPresence) -> NoPresence {
-            NoPresence::default()
+        fn diff(&self, _base: &NoPresence) -> ::protocol::MutationOutcome<NoPresence> {
+            ::protocol::MutationOutcome::new(NoPresence::default())
         }
 
         fn inverse(&self, _base: &NoPresence) -> Vec<Self> {
@@ -7973,8 +8289,8 @@ pub mod app {
     impl ::protocol::Mutation<NoTransient> for NoTransientMutation {
         type Diff = NoTransient;
 
-        fn diff(&self, _base: &NoTransient) -> NoTransient {
-            NoTransient::default()
+        fn diff(&self, _base: &NoTransient) -> ::protocol::MutationOutcome<NoTransient> {
+            ::protocol::MutationOutcome::new(NoTransient::default())
         }
 
         fn inverse(&self, _base: &NoTransient) -> Vec<Self> {
@@ -8062,8 +8378,8 @@ pub mod app {
     impl ::protocol::Mutation<protocol::InteractionState> for InteractionConfigMutation {
         type Diff = InteractionConfigMutation;
 
-        fn diff(&self, _base: &protocol::InteractionState) -> Self::Diff {
-            self.clone()
+        fn diff(&self, _base: &protocol::InteractionState) -> ::protocol::MutationOutcome<Self::Diff> {
+            ::protocol::MutationOutcome::new(self.clone())
         }
 
         fn inverse(&self, base: &protocol::InteractionState) -> Vec<Self> {
@@ -9286,6 +9602,16 @@ pub mod app {
     pub trait PluginApp: Send {
         fn app_id(&self) -> &str;
         fn document_schema(&self) -> &str;
+        /// 📨️ Starts one command-scoped report at the app's live merge policy.
+        fn begin_dispatch_report(&mut self);
+        /// 📨️ Returns the current command's authoritative merge-policy report.
+        fn dispatch_report(&self) -> &protocol::DispatchReport;
+        /// ⚖️ Sets this instance's local merge policy without creating shared document history.
+        fn set_merge_policy(&mut self, policy: protocol::MergePolicy);
+        /// ⚔️ Resolves one current open conflict through the authoritative document store.
+        fn resolve_conflict(&mut self, conflict_id: &str, resolution: protocol::ConflictResolution) -> Result<protocol::MergeReport, Fault>;
+        /// ⚔️ Returns the authoritative projection of currently open document conflicts.
+        fn open_conflicts(&self) -> Vec<protocol::Conflict>;
         /// @emoji 🕰️ FRAMEWORK-reserved action dispatch only (undo/redo/checkpoint/alternative/clipboard/
         /// revert-to-command/history-filter/noteShellCommand) — B1 deleted the generic app-declared-action
         /// fallback this used to carry (`ArtifactApp::handle_action` no longer exists; an app's own
@@ -9824,6 +10150,9 @@ pub mod app {
         pub(crate) transient_store: store::TransientStore<A::Transient, A::TransientMutation>,
         /// 🧾 Last Emit op packs produced by `dispatch_emit` — consumed by `AppCommand::PureCommand`.
         last_emit_wire: Option<(Vec<u8>, Vec<u8>, Vec<u8>)>,
+        /// 📨️ The authoritative outcome of the current app command, reset before dispatch and then
+        /// filled from the store receipt or policy rejection before the runtime frames it.
+        dispatch_report: protocol::DispatchReport,
         /// @emoji 🗂️ Keyed on `(store.generation(), log_generation, history_filter)` — any of the three
         /// changing invalidates the cached snapshot/`HistoryView` pair.
         cache: Option<((u64, u64, u64, HistoryCommandFilter), A::Snapshot, A::Config, HistoryView)>,
@@ -9947,6 +10276,7 @@ pub mod app {
             if !genesis_mutations.is_empty() {
                 store.dispatch(ArtifactCommand::Apply { mutations: genesis_mutations, description: Some("genesis".to_string()) }).expect("ArtifactApp::genesis mutations must apply cleanly onto a freshly constructed store");
             }
+            let dispatch_report = protocol::DispatchReport { policy: store.merge_policy(), worst: None, messages: Vec::new() };
             Self {
                 app,
                 store,
@@ -9955,6 +10285,7 @@ pub mod app {
                 presence_store: store::PresenceStore::new(A::Presence::default()),
                 transient_store: store::TransientStore::new(A::Transient::default()),
                 last_emit_wire: None,
+                dispatch_report,
                 cache: None,
                 registry,
                 invocation_kind: None,
@@ -10099,6 +10430,12 @@ pub mod app {
             &self.store
         }
 
+        /// ⚔️ Test-only mutable store access for conflict lifecycle fixtures.
+        #[cfg(test)]
+        pub(crate) fn test_store_mut(&mut self) -> &mut store::ArtifactStore<A::Snapshot, A::Mutation> {
+            &mut self.store
+        }
+
         /// @emoji 🧪️ The config-store twin of `test_snapshot`.
         #[cfg(test)]
         pub(crate) fn test_config(&self) -> A::Config {
@@ -10125,12 +10462,6 @@ pub mod app {
         /// need direct structural access to document state instead of a rendered node.
         pub fn snapshot(&self) -> Result<A::Snapshot, Fault> {
             self.store.snapshot().map_err(|error| error.into_fault())
-        }
-
-        /// @emoji 🤝️ Fresh replay plus whatever `Mutation::reconcile` reports for the result — the typed
-        /// counterpart to `store::ArtifactStore::snapshot_with_conflicts`.
-        pub fn snapshot_with_conflicts(&self) -> Result<(A::Snapshot, Vec<SpaceConflict>), Fault> {
-            self.store.snapshot_with_conflicts().map_err(|error| error.into_fault())
         }
 
         /// @emoji 🔗️ The store's current backbone descriptor, `None` when unattached (the default).
@@ -10364,6 +10695,35 @@ pub mod app {
             }
         }
 
+        fn reset_dispatch_report(&mut self) {
+            self.dispatch_report = protocol::DispatchReport { policy: self.store.merge_policy(), worst: None, messages: Vec::new() };
+        }
+
+        fn record_dispatch_receipt(&mut self, receipt: store::CommandReceipt) {
+            self.dispatch_report = protocol::DispatchReport { policy: self.store.merge_policy(), worst: receipt.worst, messages: receipt.messages.into_iter().flat_map(|entry| entry.messages).collect() };
+        }
+
+        fn record_rejected_dispatch(&mut self, policy: protocol::MergePolicy, messages: Vec<protocol::MutationMessage>) -> Fault {
+            self.dispatch_report = protocol::DispatchReport { policy, worst: protocol::worst_level(&messages), messages };
+            Fault::new(FaultOrigin::App, FaultCode::new("mutation.rejected"), "mutation rejected by the active merge policy")
+        }
+
+        fn apply_merge_policy(&mut self, policy: protocol::MergePolicy) {
+            self.store.set_merge_policy(policy);
+            self.reset_dispatch_report();
+        }
+
+        fn resolve_store_conflict(&mut self, conflict_id: &str, resolution: protocol::ConflictResolution) -> Result<protocol::MergeReport, Fault> {
+            let report = self.store.resolve_conflict(conflict_id, resolution).map_err(|error| error.into_fault())?;
+            self.dispatch_report = protocol::DispatchReport { policy: report.policy, worst: report.worst, messages: report.replayed.iter().flat_map(|entry| entry.messages.iter().cloned()).collect() };
+            self.cache = None;
+            Ok(report)
+        }
+
+        fn current_open_conflicts(&self) -> Vec<protocol::Conflict> {
+            self.store.open_conflicts().cloned().collect()
+        }
+
         /// @emoji 📇️ An empty `InvocationResult` carrying only host effects/events (view/shell actions,
         /// no-operation commands, and history notifications produce no `KernelMutation`s).
         fn empty_result(verb: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework::kernel::UiDirtyScope) -> InvocationResult {
@@ -10502,7 +10862,11 @@ pub mod app {
                 let mut foreign = Vec::new();
                 for op in &artifact_mutations {
                     foreign.extend(op.foreign_steps(&running));
-                    running = op.diff(&running).apply(&running);
+                    let outcome = op.diff(&running);
+                    if !outcome.is_applicable(protocol::MergePolicy::default()) {
+                        return Err(Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages())));
+                    }
+                    running = outcome.diff().apply(&running);
                 }
                 if !foreign.is_empty() {
                     let local_ops = artifact_mutations.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect();
@@ -10575,7 +10939,11 @@ pub mod app {
                 Some(key) => ArtifactCommand::AmendLast { mutations: artifact_mutations, coalesce_key: Some(key) },
                 None => ArtifactCommand::Apply { mutations: artifact_mutations, description },
             };
-            self.store.dispatch(vcs_command).map_err(|error| error.into_fault())?;
+            match self.store.dispatch(vcs_command) {
+                Ok(receipt) => self.record_dispatch_receipt(receipt),
+                Err(vcs::VcsError::Rejected { policy, messages }) => return Err(self.record_rejected_dispatch(policy, messages)),
+                Err(error) => return Err(error.into_fault()),
+            }
             self.cache = None;
             // 🕹️ Task 4: after EVERY artifact (document) dispatch, re-derive fresh topology and prune
             // any selection/hover id no longer present — a document edit that deleted a node must not
@@ -10792,7 +11160,16 @@ pub mod app {
                 last.child_edit_ids = child_edit_ids;
             }
 
-            Ok(InvocationResult { output: DslValue::Null, mutations, inverse_group: UndoGroup { invocation_id, mutations: mutation_ids, inverse_mutations, member_edits }, diagnostics: Vec::new(), requested_effects: effects, events, ui_scope, history_patch: None })
+            Ok(InvocationResult {
+                output: DslValue::Null,
+                mutations,
+                inverse_group: UndoGroup { invocation_id, mutations: mutation_ids, inverse_mutations, member_edits },
+                diagnostics: Vec::new(),
+                requested_effects: effects,
+                events,
+                ui_scope,
+                history_patch: None,
+            })
         }
 
         /// @emoji 🕸️ Re-syncs `self.composition`'s ownership/link graph from the parent's own live
@@ -11460,6 +11837,26 @@ pub mod app {
             A::DOCUMENT_SCHEMA
         }
 
+        fn begin_dispatch_report(&mut self) {
+            self.reset_dispatch_report();
+        }
+
+        fn dispatch_report(&self) -> &protocol::DispatchReport {
+            &self.dispatch_report
+        }
+
+        fn set_merge_policy(&mut self, policy: protocol::MergePolicy) {
+            self.apply_merge_policy(policy);
+        }
+
+        fn resolve_conflict(&mut self, conflict_id: &str, resolution: protocol::ConflictResolution) -> Result<protocol::MergeReport, Fault> {
+            self.resolve_store_conflict(conflict_id, resolution)
+        }
+
+        fn open_conflicts(&self) -> Vec<protocol::Conflict> {
+            self.current_open_conflicts()
+        }
+
         fn handle_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let log_generation_before = self.log_generation;
             let result = self.dispatch_action(action, args, meta)?;
@@ -11528,7 +11925,12 @@ pub mod app {
                 for op_bytes in prepared_ops {
                     match <A::Mutation as ::protocol::OpBinary>::decode_op(op_bytes) {
                         Ok(op) => decoded.push(op),
-                        Err(error) => return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(Self::transaction_fault(FaultOrigin::Plugin, "transaction.unknown-mutation", format!("prepared op did not decode as a {} mutation: {error:?}", A::DOCUMENT_SCHEMA))) },
+                        Err(error) => {
+                            return TransactionPrepareOutcome {
+                                foreign: Vec::new(),
+                                rejection: Some(Self::transaction_fault(FaultOrigin::Plugin, "transaction.unknown-mutation", format!("prepared op did not decode as a {} mutation: {error:?}", A::DOCUMENT_SCHEMA))),
+                            }
+                        }
                     }
                 }
                 (decoded, label.to_string(), origin.unwrap_or_default())
@@ -11541,7 +11943,12 @@ pub mod app {
                     // as a contract gap for the coordinator/host lanes to close (e.g. by always
                     // preferring the pre-planned form, which does carry `origin`).
                     Ok(op) => (vec![op], mutation_id.to_string(), protocol::MutationOrigin::Transaction { initiator: protocol::ForeignTarget { artifact_id: String::new(), artifact_kind: String::new(), dialect: None } }),
-                    Err(error) => return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(Self::transaction_fault(FaultOrigin::Plugin, "transaction.unknown-mutation", format!("owner-mutation payload did not decode as a {} mutation: {error:?}", A::DOCUMENT_SCHEMA))) },
+                    Err(error) => {
+                        return TransactionPrepareOutcome {
+                            foreign: Vec::new(),
+                            rejection: Some(Self::transaction_fault(FaultOrigin::Plugin, "transaction.unknown-mutation", format!("owner-mutation payload did not decode as a {} mutation: {error:?}", A::DOCUMENT_SCHEMA))),
+                        }
+                    }
                 }
             };
             let mut running = match self.store.snapshot() {
@@ -11550,11 +11957,12 @@ pub mod app {
             };
             let mut foreign = Vec::new();
             for op in &ops {
-                if let Err(message) = op.validate(&running) {
-                    return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", message)) };
-                }
                 foreign.extend(op.foreign_steps(&running));
-                running = op.diff(&running).apply(&running);
+                let outcome = op.diff(&running);
+                if !outcome.is_applicable(protocol::MergePolicy::default()) {
+                    return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages()))) };
+                }
+                running = outcome.diff().apply(&running);
             }
             let base_generation = self.store.generation();
             self.pending_transaction = Some(PendingTransaction { txn_id: txn_id.to_string(), ops, label: resolved_label, origin: resolved_origin, base_generation });
@@ -11973,14 +12381,20 @@ pub mod app {
         }
 
         pub(crate) fn wire_artifact_mutation_plan(&self, request: &[u8]) -> Result<Vec<u8>, Fault> {
-            let request: WireArtifactMutationPlanRequest = store::pack_rt::decode_wire_value(request)
-                .map_err(|error| plugin_sdk_fault(error.to_string()))
-                .and_then(|value| dsl::from_dsl_value(value).map_err(plugin_sdk_fault))?;
+            let request: WireArtifactMutationPlanRequest = store::pack_rt::decode_wire_value(request).map_err(|error| plugin_sdk_fault(error.to_string())).and_then(|value| dsl::from_dsl_value(value).map_err(plugin_sdk_fault))?;
             if request.mutation_id.trim().is_empty() {
                 return Err(plugin_sdk_fault("artifact-mutation-plan requires a non-empty mutation_id"));
             }
             let output = self.runtime.contributed_mutation_plan(&request.mutation_id, &request.artifact_kind, &request.snapshot_pack, &request.payload).map_err(|error| plugin_sdk_fault(error.to_string()))?;
-            let result = WireArtifactMutationPlanResult { artifact_kind: request.artifact_kind, mutation_id: request.mutation_id, revision: request.revision, generation: request.generation, owner_ops: output.owner_ops, label: output.label, foreign: output.foreign };
+            let result = WireArtifactMutationPlanResult {
+                artifact_kind: request.artifact_kind,
+                mutation_id: request.mutation_id,
+                revision: request.revision,
+                generation: request.generation,
+                owner_ops: output.owner_ops,
+                label: output.label,
+                foreign: output.foreign,
+            };
             Ok(store::pack_rt::encode_wire_value(&to_dsl_value(&result).map_err(plugin_sdk_fault)?))
         }
 
@@ -12127,14 +12541,7 @@ pub mod app {
         }
 
         fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(
-                Self::KIND_ID,
-                "Text",
-                "Text",
-                SurfaceKind::TextEditor,
-                "type",
-                vec![ActionDefinition::new_catalog("replace-text", LocalizedLabel::native("Replace Text", "Text ersetzen"), ActionKind::Mutation)],
-            )
+            window_kind_definition(Self::KIND_ID, "Text", "Text", SurfaceKind::TextEditor, "type", vec![ActionDefinition::new_catalog("replace-text", LocalizedLabel::native("Replace Text", "Text ersetzen"), ActionKind::Mutation)])
         }
 
         fn render(view: &TextView) -> UiNode {
@@ -12184,14 +12591,7 @@ pub mod app {
         }
 
         fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(
-                Self::KIND_ID,
-                "Table",
-                "Tabelle",
-                SurfaceKind::Table,
-                "table-2",
-                vec![ActionDefinition::new_catalog("set-cell", LocalizedLabel::native("Set Cell", "Zelle setzen"), ActionKind::Mutation)],
-            )
+            window_kind_definition(Self::KIND_ID, "Table", "Tabelle", SurfaceKind::Table, "table-2", vec![ActionDefinition::new_catalog("set-cell", LocalizedLabel::native("Set Cell", "Zelle setzen"), ActionKind::Mutation)])
         }
 
         fn render(view: &TableView) -> UiNode {
@@ -12227,14 +12627,7 @@ pub mod app {
         }
 
         fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(
-                Self::KIND_ID,
-                "Tree",
-                "Baum",
-                SurfaceKind::BlockList,
-                "list-tree",
-                vec![ActionDefinition::new_catalog("set-node", LocalizedLabel::native("Set Node", "Knoten setzen"), ActionKind::Mutation)],
-            )
+            window_kind_definition(Self::KIND_ID, "Tree", "Baum", SurfaceKind::BlockList, "list-tree", vec![ActionDefinition::new_catalog("set-node", LocalizedLabel::native("Set Node", "Knoten setzen"), ActionKind::Mutation)])
         }
 
         fn render(view: &TreeView) -> UiNode {
@@ -12246,13 +12639,7 @@ pub mod app {
                 item
             }
             UiNode::Tree(UiTreeNode {
-                sections: vec![UiTreeSectionNode {
-                    id: format!("{}-root", Self::KIND_ID),
-                    label: None,
-                    default_open: Some(true),
-                    presence: UiPresence::default(),
-                    items: view.roots.iter().map(to_item).collect(),
-                }],
+                sections: vec![UiTreeSectionNode { id: format!("{}-root", Self::KIND_ID), label: None, default_open: Some(true), presence: UiPresence::default(), items: view.roots.iter().map(to_item).collect() }],
                 presence: UiPresence::default(),
                 drop_action: None,
                 menu: None,
@@ -12284,14 +12671,7 @@ pub mod app {
         }
 
         fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(
-                Self::KIND_ID,
-                "Image",
-                "Bild",
-                SurfaceKind::Canvas2d,
-                "image",
-                vec![ActionDefinition::new_catalog("set-pixel-region", LocalizedLabel::native("Set Pixel Region", "Pixelbereich setzen"), ActionKind::Mutation)],
-            )
+            window_kind_definition(Self::KIND_ID, "Image", "Bild", SurfaceKind::Canvas2d, "image", vec![ActionDefinition::new_catalog("set-pixel-region", LocalizedLabel::native("Set Pixel Region", "Pixelbereich setzen"), ActionKind::Mutation)])
         }
 
         fn render(view: &ImageView) -> UiNode {
@@ -12323,14 +12703,7 @@ pub mod app {
         }
 
         fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(
-                Self::KIND_ID,
-                "Mesh",
-                "Netz",
-                SurfaceKind::World3d,
-                "box",
-                vec![ActionDefinition::new_catalog("set-vertex", LocalizedLabel::native("Set Vertex", "Vertex setzen"), ActionKind::Mutation)],
-            )
+            window_kind_definition(Self::KIND_ID, "Mesh", "Netz", SurfaceKind::World3d, "box", vec![ActionDefinition::new_catalog("set-vertex", LocalizedLabel::native("Set Vertex", "Vertex setzen"), ActionKind::Mutation)])
         }
 
         fn render(view: &MeshView) -> UiNode {
@@ -12363,14 +12736,7 @@ pub mod app {
         }
 
         fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(
-                Self::KIND_ID,
-                "Document",
-                "Dokument",
-                SurfaceKind::TextEditor,
-                "file-text",
-                vec![ActionDefinition::new_catalog("set-page", LocalizedLabel::native("Set Page", "Seite setzen"), ActionKind::Mutation)],
-            )
+            window_kind_definition(Self::KIND_ID, "Document", "Dokument", SurfaceKind::TextEditor, "file-text", vec![ActionDefinition::new_catalog("set-page", LocalizedLabel::native("Set Page", "Seite setzen"), ActionKind::Mutation)])
         }
 
         fn render(view: &DocumentView) -> UiNode {
@@ -12406,14 +12772,7 @@ pub mod app {
         }
 
         fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(
-                Self::KIND_ID,
-                "Media",
-                "Medien",
-                SurfaceKind::Canvas2d,
-                "play",
-                vec![ActionDefinition::new_catalog("seek-media", LocalizedLabel::native("Seek", "Position setzen"), ActionKind::Mutation)],
-            )
+            window_kind_definition(Self::KIND_ID, "Media", "Medien", SurfaceKind::Canvas2d, "play", vec![ActionDefinition::new_catalog("seek-media", LocalizedLabel::native("Seek", "Position setzen"), ActionKind::Mutation)])
         }
 
         fn render(view: &MediaView) -> UiNode {
@@ -12636,7 +12995,13 @@ pub mod app {
         /// `EphemeralEmit<Self>` — that struct is bound to the RUNTIME `ArtifactApp` trait, which
         /// `Self` here does not implement; `EditorApp<E>::ephemeral` wraps this tuple into a real
         /// `EphemeralEmit` at the adapter boundary, where the bound is satisfied.
-        fn ephemeral(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _presence: &PresenceView<'_, Self::Presence>, _transient: &TransientView<'_, Self::Transient>) -> (Vec<Self::PresenceMutation>, Vec<Self::TransientMutation>) {
+        fn ephemeral(
+            _command: &Self::Command,
+            _doc: &ArtifactView<'_, Self::Snapshot>,
+            _cfg: &ConfigView<'_, Self::Config>,
+            _presence: &PresenceView<'_, Self::Presence>,
+            _transient: &TransientView<'_, Self::Transient>,
+        ) -> (Vec<Self::PresenceMutation>, Vec<Self::TransientMutation>) {
             (Vec::new(), Vec::new())
         }
         fn config_schema() -> &'static str {
@@ -12771,7 +13136,13 @@ pub mod app {
         type Command: ::protocol::OpBinary + Send;
 
         /// 👥️🫧️ See `ArtifactEditor::ephemeral` for why this returns a tuple, not `EphemeralEmit<Self>`.
-        fn ephemeral(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _presence: &PresenceView<'_, Self::Presence>, _transient: &TransientView<'_, Self::Transient>) -> (Vec<Self::PresenceMutation>, Vec<Self::TransientMutation>) {
+        fn ephemeral(
+            _command: &Self::Command,
+            _doc: &ArtifactView<'_, Self::Snapshot>,
+            _cfg: &ConfigView<'_, Self::Config>,
+            _presence: &PresenceView<'_, Self::Presence>,
+            _transient: &TransientView<'_, Self::Transient>,
+        ) -> (Vec<Self::PresenceMutation>, Vec<Self::TransientMutation>) {
             (Vec::new(), Vec::new())
         }
         fn config_schema() -> &'static str {
@@ -12784,13 +13155,7 @@ pub mod app {
         /// 👁️ The pure heart of a viewer — same shape as `ArtifactEditor::handle` minus `draft` (a
         /// viewer never has a draft lane), returning `ViewEmit` instead of `Emit`: structurally
         /// incapable of an artifact or draft mutation (contract §2.2).
-        fn handle(
-            command: &Self::Command,
-            doc: &ArtifactView<'_, Self::Snapshot>,
-            cfg: &ConfigView<'_, Self::Config>,
-            interaction: &InteractionView<'_>,
-            engines: &EngineHandles,
-        ) -> Result<ViewEmit<Self::ConfigMutation>, Fault>;
+        fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, interaction: &InteractionView<'_>, engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault>;
         fn command_id(_command: &Self::Command) -> &'static str {
             "typed-command"
         }
@@ -12937,7 +13302,14 @@ pub mod app {
         fn initial_draft() -> Self::Draft {
             E::initial_draft()
         }
-        fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, interaction: &InteractionView<'_>, draft: &DraftView<'_, Self::Draft>, engines: &EngineHandles) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        fn handle(
+            command: &Self::Command,
+            doc: &ArtifactView<'_, Self::Snapshot>,
+            cfg: &ConfigView<'_, Self::Config>,
+            interaction: &InteractionView<'_>,
+            draft: &DraftView<'_, Self::Draft>,
+            engines: &EngineHandles,
+        ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
             E::handle(command, doc, cfg, interaction, draft, engines)
         }
         fn command_id(command: &Self::Command) -> &'static str {
@@ -13067,7 +13439,14 @@ pub mod app {
         fn initial_config() -> Self::Config {
             V::initial_config()
         }
-        fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, engines: &EngineHandles) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        fn handle(
+            command: &Self::Command,
+            doc: &ArtifactView<'_, Self::Snapshot>,
+            cfg: &ConfigView<'_, Self::Config>,
+            interaction: &InteractionView<'_>,
+            _draft: &DraftView<'_, Self::Draft>,
+            engines: &EngineHandles,
+        ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
             let view_emit = V::handle(command, doc, cfg, interaction, engines)?;
             Ok(Emit { config_mutations: view_emit.config_mutations, effects: view_emit.effects, ui_scope: view_emit.ui_dirty, ..Default::default() })
         }
@@ -13284,7 +13663,7 @@ pub mod plugin_runtime {
     // #region plugin_runtime
     //! 📤️ WASM component export glue for plugin bundles.
 
-    use crate::app::{ActionMeta, AppInstance, MediaArtifact, MediaArtifactDescriptor, Plugin, PluginAssemblyError, PluginProgram, TransactionProposalDraft};
+    use crate::app::{ActionMeta, AppInstance, MediaArtifact, MediaArtifactDescriptor, Plugin, PluginApp, PluginAssemblyError, PluginProgram, TransactionProposalDraft};
     use crate::ArtifactApp;
     use dsl::{from_dsl_value, to_dsl_value};
     use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
@@ -13319,7 +13698,11 @@ pub mod plugin_runtime {
     }
 
     fn push_app_fault(frames: &mut Vec<protocol::AppFrame>, in_reply_to: Option<u64>, fault: Fault) {
-        frames.push(protocol::AppFrame::Error { in_reply_to, fault: encode_wire_serialized(&fault) });
+        frames.push(protocol::AppFrame::Error { in_reply_to, fault: encode_wire_serialized(&fault), report: Vec::new() });
+    }
+
+    fn push_dispatch_fault(frames: &mut Vec<protocol::AppFrame>, in_reply_to: u64, fault: Fault, report: &protocol::DispatchReport) {
+        frames.push(protocol::AppFrame::Error { in_reply_to: Some(in_reply_to), fault: encode_wire_serialized(&fault), report: encode_wire_serialized(report) });
     }
 
     fn push_os_fault(frames: &mut Vec<protocol::AppFrame>, in_reply_to: Option<u64>, code: &str, message: String) {
@@ -13330,13 +13713,37 @@ pub mod plugin_runtime {
         Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.internal"), message)
     }
 
-    fn decode_wire_serialized<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, Fault> {
+    pub(crate) fn decode_wire_serialized<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, Fault> {
         let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| plugin_internal_fault(error.to_string()))?;
         from_dsl_value(value).map_err(plugin_internal_fault)
     }
 
     fn decode_wire_serialized_or<T: DeserializeOwned>(bytes: &[u8], default: T) -> T {
         decode_wire_serialized(bytes).unwrap_or(default)
+    }
+
+    /// ⚖️ Executes the channel's local policy command and returns its canonical acknowledgment frame.
+    pub(crate) fn set_merge_policy_frames(app: &mut dyn PluginApp, seq: u64, policy: u8) -> Result<Vec<protocol::AppFrame>, Fault> {
+        let policy = protocol::MergePolicy::from_u8(policy).ok_or_else(|| Fault::new(FaultOrigin::Os, FaultCode::new("merge.invalid-policy"), format!("unknown merge policy ordinal {policy}")))?;
+        app.set_merge_policy(policy);
+        Ok(vec![protocol::AppFrame::Done { in_reply_to: seq }])
+    }
+
+    /// ⚔️ Executes the channel's conflict-resolution command and returns the authoritative report and open projection.
+    pub(crate) fn resolve_conflict_frames(app: &mut dyn PluginApp, seq: u64, conflict_id: String, resolution: u8) -> Result<Vec<protocol::AppFrame>, Fault> {
+        let resolution = match resolution {
+            0 => protocol::ConflictResolution::Accept,
+            1 => protocol::ConflictResolution::Discard,
+            _ => return Err(Fault::new(FaultOrigin::Os, FaultCode::new("merge.invalid-resolution"), format!("unknown conflict resolution ordinal {resolution}"))),
+        };
+        let report = app.resolve_conflict(&conflict_id, resolution)?;
+        let conflicts = app.open_conflicts();
+        Ok(vec![protocol::AppFrame::MergeReport { in_reply_to: Some(seq), report: encode_wire_serialized(&report) }, protocol::AppFrame::Conflicts { in_reply_to: Some(seq), conflicts: encode_wire_serialized(&conflicts) }])
+    }
+
+    /// ⚔️ Executes the channel's open-conflict read command and returns its canonical projection frame.
+    pub(crate) fn read_conflicts_frames(app: &dyn PluginApp, seq: u64) -> Vec<protocol::AppFrame> {
+        vec![protocol::AppFrame::Conflicts { in_reply_to: Some(seq), conflicts: encode_wire_serialized(&app.open_conflicts()) }]
     }
 
     /// 🪪️ Records `actor` as the local actor id for `instance_id` (from `AppCommand::Hello`).
@@ -13547,7 +13954,15 @@ pub mod plugin_runtime {
             return Err(plugin_internal_fault("artifact-mutation-plan requires a non-empty mutation_id"));
         }
         let output = crate::app::contributed_mutation_plan(&request.mutation_id, &request.artifact_kind, &request.snapshot_pack, &request.payload).map_err(|error| plugin_internal_fault(error.to_string()))?;
-        let result = crate::app::WireArtifactMutationPlanResult { artifact_kind: request.artifact_kind, mutation_id: request.mutation_id, revision: request.revision, generation: request.generation, owner_ops: output.owner_ops, label: output.label, foreign: output.foreign };
+        let result = crate::app::WireArtifactMutationPlanResult {
+            artifact_kind: request.artifact_kind,
+            mutation_id: request.mutation_id,
+            revision: request.revision,
+            generation: request.generation,
+            owner_ops: output.owner_ops,
+            label: output.label,
+            foreign: output.foreign,
+        };
         Ok(encode_wire_serialized(&result))
     }
 
@@ -13588,9 +14003,9 @@ pub mod plugin_runtime {
         }
         impl protocol::Mutation<WireTestSnapshot> for WireTestOp {
             type Diff = WireTestDiff;
-            fn diff(&self, _base: &WireTestSnapshot) -> WireTestDiff {
+            fn diff(&self, _base: &WireTestSnapshot) -> protocol::MutationOutcome<WireTestDiff> {
                 let WireTestOp::Add(delta) = self;
-                WireTestDiff { delta: *delta }
+                protocol::MutationOutcome::new(WireTestDiff { delta: *delta })
             }
             fn inverse(&self, _base: &WireTestSnapshot) -> Vec<Self> {
                 let WireTestOp::Add(delta) = self;
@@ -13640,7 +14055,14 @@ pub mod plugin_runtime {
 
         #[test]
         fn artifact_mutation_plan_rejects_an_unregistered_mutation_id() {
-            let request = crate::app::WireArtifactMutationPlanRequest { artifact_kind: "s.wiretest.unregistered".into(), mutation_id: "wiretest.unregistered.document#nobody:add-value".into(), revision: 1, generation: 1, snapshot_pack: WireTestSnapshot { value: 0 }.encode_pack(), payload: Vec::new() };
+            let request = crate::app::WireArtifactMutationPlanRequest {
+                artifact_kind: "s.wiretest.unregistered".into(),
+                mutation_id: "wiretest.unregistered.document#nobody:add-value".into(),
+                revision: 1,
+                generation: 1,
+                snapshot_pack: WireTestSnapshot { value: 0 }.encode_pack(),
+                payload: Vec::new(),
+            };
             let error = wire_artifact_mutation_plan(&encode_wire_serialized(&request)).expect_err("unregistered mutation_id must be rejected");
             assert!(error.message.contains("artifact-mutation.not-registered"), "unexpected message: {}", error.message);
         }
@@ -14318,6 +14740,11 @@ pub mod plugin_runtime {
                 }
                 protocol::AppCommand::Command { seq, command, view_state } => {
                     let meta = ActionMeta { actor: instance_actor(instance_id), instance_id };
+                    with_instances_mut(|list| {
+                        let instance = find_instance(list, instance_id)?;
+                        instance.app.begin_dispatch_report();
+                        Ok(())
+                    })?;
                     let dispatched = match decode_wire_serialized::<ManifestActionInvocation>(&command) {
                         Ok(invocation) => {
                             let active_mode_id = decode_view_state(&view_state).active_mode_id;
@@ -14365,11 +14792,10 @@ pub mod plugin_runtime {
                             // applied nothing (`dispatch_emit` stashed a proposal instead) — frame
                             // `AppFrame::TransactionProposal` in place of the ordinary
                             // `Invocation` frame whenever one is pending.
-                            let proposal = with_instances_mut(|list| {
+                            let (proposal, report) = with_instances_mut(|list| {
                                 let instance = find_instance(list, instance_id)?;
-                                Ok(instance.app.take_pending_transaction_proposal())
-                            })
-                            .unwrap_or(None);
+                                Ok((instance.app.take_pending_transaction_proposal(), instance.app.dispatch_report().clone()))
+                            })?;
                             if let Some(proposal) = proposal {
                                 frames.push(transaction_proposal_frame(instance_id, seq, proposal));
                             } else {
@@ -14382,11 +14808,18 @@ pub mod plugin_runtime {
                                     diagnostics,
                                     ui_scope: encode_wire_serialized(&result.ui_scope),
                                     history_patch: encode_wire_serialized(&result.history_patch),
+                                    messages: encode_wire_serialized(&report),
                                 });
                             }
                             push_invocation_side_frames(&mut frames, seq, &result);
                         }
-                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
+                        Err(fault) => {
+                            let report = with_instances_mut(|list| {
+                                let instance = find_instance(list, instance_id)?;
+                                Ok(instance.app.dispatch_report().clone())
+                            })?;
+                            push_dispatch_fault(&mut frames, seq, fault, &report);
+                        }
                     }
                 }
                 protocol::AppCommand::CommandText { seq, line: _ } => {
@@ -14400,9 +14833,7 @@ pub mod plugin_runtime {
                         let mut section_frames = Vec::new();
                         for probe in &sections {
                             let section = match probe.kind {
-                                SECTION_KIND_WINDOW | SECTION_KIND_PANEL => {
-                                    instance.app.render(&probe.key, None, &view_state).map(|node| channel_refresh_section(&node, probe.hash))
-                                }
+                                SECTION_KIND_WINDOW | SECTION_KIND_PANEL => instance.app.render(&probe.key, None, &view_state).map(|node| channel_refresh_section(&node, probe.hash)),
                                 SECTION_KIND_ENGAGEMENTS => Ok(channel_refresh_section(&instance.app.window_engagements(), probe.hash)),
                                 SECTION_KIND_MEASURES => Ok(channel_refresh_section(&instance.app.window_measures(), probe.hash)),
                                 SECTION_KIND_TOOLS => Ok(channel_refresh_section(&instance.app.tool_measures(), probe.hash)),
@@ -14414,9 +14845,7 @@ pub mod plugin_runtime {
                                 // Keep the host's last-known-good body for this one failed surface.
                                 // Continuing the loop lets unrelated windows and the history projection
                                 // advance even while a generator-owned section is temporarily faulty.
-                                Err(_fault) => {
-                                    (probe.hash.unwrap_or_default(), None)
-                                }
+                                Err(_fault) => (probe.hash.unwrap_or_default(), None),
                             };
                             section_frames.push(protocol::AppFrame::UiSection { in_reply_to: Some(seq), kind: probe.kind, key: probe.key.clone(), hash, body: body.map(|value| encode_wire_serialized(&value)) });
                         }
@@ -14736,6 +15165,36 @@ pub mod plugin_runtime {
                     }
                     Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
                 },
+                protocol::AppCommand::SetMergePolicy { seq, policy } => {
+                    let outcome = with_instances_mut(|list| {
+                        let instance = find_instance(list, instance_id)?;
+                        set_merge_policy_frames(instance.app.as_mut(), seq, policy)
+                    });
+                    match outcome {
+                        Ok(outcome) => frames.extend(outcome),
+                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
+                    }
+                }
+                protocol::AppCommand::ResolveConflict { seq, conflict_id, resolution } => {
+                    let outcome = with_instances_mut(|list| {
+                        let instance = find_instance(list, instance_id)?;
+                        resolve_conflict_frames(instance.app.as_mut(), seq, conflict_id, resolution)
+                    });
+                    match outcome {
+                        Ok(outcome) => frames.extend(outcome),
+                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
+                    }
+                }
+                protocol::AppCommand::ReadConflicts { seq } => {
+                    let outcome = with_instances_mut(|list| {
+                        let instance = find_instance(list, instance_id)?;
+                        Ok(read_conflicts_frames(instance.app.as_ref(), seq))
+                    });
+                    match outcome {
+                        Ok(outcome) => frames.extend(outcome),
+                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
+                    }
+                }
             }
         }
 
@@ -14822,7 +15281,19 @@ pub mod plugin_runtime {
     impl ExtensionBundle {
         /// 🧩️ Starts an extension bundle with identity + version.
         pub fn new(extension_id: impl Into<String>, label: impl Into<String>, version: impl Into<String>) -> Self {
-            Self { manifest: ExtensionManifest { extension_id: extension_id.into(), label: label.into(), version: version.into(), extends: String::new(), capabilities: Vec::new(), topic_contributions: Vec::new(), dependencies: Vec::new(), contributions: Vec::new() }, handlers: HashMap::new() }
+            Self {
+                manifest: ExtensionManifest {
+                    extension_id: extension_id.into(),
+                    label: label.into(),
+                    version: version.into(),
+                    extends: String::new(),
+                    capabilities: Vec::new(),
+                    topic_contributions: Vec::new(),
+                    dependencies: Vec::new(),
+                    contributions: Vec::new(),
+                },
+                handlers: HashMap::new(),
+            }
         }
 
         /// 🔗 Declares the host app/plugin this extension extends.
@@ -15217,11 +15688,11 @@ pub mod plugin_runtime {
         impl Mutation<TestSnapshot> for TestMutation {
             type Diff = TestDiff;
 
-            fn diff(&self, _snapshot: &TestSnapshot) -> TestDiff {
-                match self {
+            fn diff(&self, _snapshot: &TestSnapshot) -> ::protocol::MutationOutcome<TestDiff> {
+                ::protocol::MutationOutcome::new(match self {
                     TestMutation::SetCount { value } => TestDiff { count: Some(*value), label: None },
                     TestMutation::SetLabel { value } => TestDiff { count: None, label: Some(value.clone()) },
-                }
+                })
             }
 
             fn inverse(&self, snapshot: &TestSnapshot) -> Vec<Self> {
@@ -15353,11 +15824,11 @@ pub mod plugin_runtime {
         impl Mutation<TestConfig> for TestConfigMutation {
             type Diff = TestConfig;
 
-            fn diff(&self, _base: &TestConfig) -> TestConfig {
-                match self {
+            fn diff(&self, _base: &TestConfig) -> ::protocol::MutationOutcome<TestConfig> {
+                ::protocol::MutationOutcome::new(match self {
                     TestConfigMutation::SetSelected { value } => TestConfig { selected: value.clone() },
                     TestConfigMutation::Snapshot { selected } => TestConfig { selected: selected.clone() },
-                }
+                })
             }
 
             fn inverse(&self, base: &TestConfig) -> Vec<Self> {
@@ -15753,6 +16224,61 @@ pub mod plugin_runtime {
             let app = bundle.create_app("synthetic-play").expect("registered app");
             assert_eq!(app.app_id(), "synthetic-play");
             assert!(bundle.create_app("unknown-app").is_none());
+        }
+
+        #[test]
+        fn merge_channel_commands_preserve_authoritative_policy_conflicts_and_payloads() {
+            let mut app = VcsArtifactApp::new(TestApp::default());
+            let before_snapshot = app.test_snapshot();
+            let before_edits = app.test_store().applied_edit_ids().len();
+
+            let set = crate::plugin_runtime::set_merge_policy_frames(&mut app, 7, protocol::MergePolicy::Vigilant.as_u8()).expect("known policy accepts");
+            assert_eq!(set, vec![protocol::AppFrame::Done { in_reply_to: 7 }]);
+            assert_eq!(app.dispatch_report().policy, protocol::MergePolicy::Vigilant);
+            assert_eq!(app.test_snapshot(), before_snapshot, "local policy changes no document state");
+            assert_eq!(app.test_store().applied_edit_ids().len(), before_edits, "local policy changes no shared history");
+
+            let invalid_policy = crate::plugin_runtime::set_merge_policy_frames(&mut app, 8, 3).expect_err("unknown policy ordinal rejects");
+            assert_eq!(invalid_policy.code.0, "merge.invalid-policy");
+            assert_eq!(app.dispatch_report().policy, protocol::MergePolicy::Vigilant, "invalid policy never changes the active policy");
+
+            app.dispatch_typed(TestCommand::Increment, &meta()).expect("seed one durable edit");
+            let (mut envelope, applied_edit_ids) = {
+                let store = app.test_store();
+                (store.envelope().clone(), store.applied_edit_ids().to_vec())
+            };
+            let conflict_id = "test-degraded-conflict".to_string();
+            envelope.conflicts.push(protocol::Conflict {
+                id: protocol::ConflictId(conflict_id.clone()),
+                kind: protocol::ConflictKind::Degraded { edit_ids: applied_edit_ids.clone() },
+                status: protocol::ConflictStatus::Open,
+                messages: Vec::new(),
+                actors: Vec::new(),
+                timestamp: protocol::HybridLogicalTimestamp::new(1, 1),
+            });
+            app.test_store_mut().reset(envelope, applied_edit_ids, Vec::new()).expect("seed valid open degraded conflict");
+
+            let read = crate::plugin_runtime::read_conflicts_frames(&app, 9);
+            let [protocol::AppFrame::Conflicts { in_reply_to: Some(9), conflicts }] = read.as_slice() else { panic!("read must yield exactly one correlated conflict projection") };
+            let open: Vec<protocol::Conflict> = crate::plugin_runtime::decode_wire_serialized(conflicts).expect("conflict payload decodes canonically");
+            assert_eq!(open.len(), 1);
+            assert_eq!(open[0].id.0, conflict_id);
+            assert_eq!(open[0].status, protocol::ConflictStatus::Open);
+
+            let invalid_resolution = crate::plugin_runtime::resolve_conflict_frames(&mut app, 10, conflict_id.clone(), 2).expect_err("unknown resolution ordinal rejects");
+            assert_eq!(invalid_resolution.code.0, "merge.invalid-resolution");
+            assert_eq!(app.open_conflicts().len(), 1, "invalid resolution never changes conflict state");
+
+            let resolved = crate::plugin_runtime::resolve_conflict_frames(&mut app, 11, conflict_id.clone(), 0).expect("accept resolves the open degraded conflict");
+            let [protocol::AppFrame::MergeReport { in_reply_to: Some(11), report }, protocol::AppFrame::Conflicts { in_reply_to: Some(11), conflicts }] = resolved.as_slice() else {
+                panic!("resolve must emit correlated merge report then open-conflict projection")
+            };
+            let report: protocol::MergeReport = crate::plugin_runtime::decode_wire_serialized(report).expect("merge report payload decodes canonically");
+            assert!(report.accepted);
+            assert_eq!(report.conflict.as_ref().map(|id| id.0.as_str()), Some(conflict_id.as_str()));
+            let open: Vec<protocol::Conflict> = crate::plugin_runtime::decode_wire_serialized(conflicts).expect("post-resolution conflict payload decodes canonically");
+            assert!(open.is_empty(), "accepted conflict leaves the open projection");
+            assert!(app.open_conflicts().is_empty());
         }
 
         #[test]
@@ -17889,13 +18415,15 @@ pub use app::{
     ArtifactDefinitionError,
     ArtifactDefinitionRegistry,
     ArtifactDeserializer,
+    ArtifactEditor,
+    ArtifactExecutableIdentity,
     ArtifactIdentity,
     ArtifactIdentityClaim,
     ArtifactIdentityNamespace,
-    ArtifactInferenceExecutionError,
-    ArtifactInferenceExecution,
-    ArtifactInferenceExecutionRequest,
     ArtifactInference,
+    ArtifactInferenceExecution,
+    ArtifactInferenceExecutionError,
+    ArtifactInferenceExecutionRequest,
     ArtifactInferenceRegistrationError,
     ArtifactInferenceService,
     ArtifactInferenceServiceKey,
@@ -17907,9 +18435,9 @@ pub use app::{
     ArtifactLocalization,
     ArtifactMime,
     ArtifactRuntimeCapabilityRequirement,
-    ArtifactExecutableIdentity,
     ArtifactSerializer,
     ArtifactView,
+    ArtifactViewer,
     // 🧸️👥️🫧️ Composition child-read seam plus the two ephemeral state lanes.
     ChildContentView,
     Confidence,
@@ -17922,28 +18450,30 @@ pub use app::{
     DerivedArtifactParts,
     DerivedArtifactSpec,
     DraftView,
+    Editor,
+    EditorApp,
     Emit,
     EphemeralEmit,
     ExampleSource,
-    HistoryView,
     FlowExtensionContribution,
     FlowExtensionContributionKind,
     FlowExtensionDeclaration,
     FlowExtensionDescriptor,
     FlowExtensionExecutableIdentity,
     FlowExtensionManifest,
+    HistoryView,
     HostMediaExecutableIdentity,
     HostMediaHandlerDeclaration,
     HostMediaHandlerDescriptor,
     HostMediaHandlerKind,
     HostMediaRuntimeError,
     KeybindingSpec,
-    MeshDwgBridgeRequest,
-    MeshDwgBridgeResult,
-    MeshDwgDocumentImporter,
     MediaClass,
     MediaType,
     Menu,
+    MeshDwgBridgeRequest,
+    MeshDwgBridgeResult,
+    MeshDwgDocumentImporter,
     ModeSpec,
     NoChildren,
     NoConfig,
@@ -17959,8 +18489,8 @@ pub use app::{
     PanelTabSpec,
     PanelTreeBuilder,
     Plugin,
-    PluginAssemblyError,
     PluginApp,
+    PluginAssemblyError,
     PluginBuilder,
     PluginProgram,
     PresenceView,
@@ -17969,10 +18499,13 @@ pub use app::{
     TwoDSvgExportRequest,
     TwoDSvgExportResult,
     VcsArtifactApp,
+    ViewEmit,
+    Viewer,
+    ViewerApp,
     WindowKindSpec,
-    WireArtifactInferenceDiagnostic,
     WireArtifactInferenceBudget,
     WireArtifactInferenceCacheMode,
+    WireArtifactInferenceDiagnostic,
     WireArtifactInferenceMetadata,
     WireArtifactInferenceProvenance,
     WireArtifactInferenceRequest,
@@ -17983,8 +18516,8 @@ pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, select
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 pub use host_port::{host_backbone_poll, host_backbone_send, host_backbone_status, host_now_ms, host_read_asset, register_host_backbone_channel, HostBackboneChannel};
 pub use plugin_runtime::{
-    extension_activate, extension_deactivate, extension_invoke, extension_manifest, install_extension_bundle, install_plugin_bundle, install_plugin_bundle_result, plugin_attach_backbone, plugin_detach_backbone, plugin_document_pack, plugin_ingest_operations,
-    plugin_load_document_pack, ExtensionBundle, ExtensionManifest,
+    extension_activate, extension_deactivate, extension_invoke, extension_manifest, install_extension_bundle, install_plugin_bundle, install_plugin_bundle_result, plugin_attach_backbone, plugin_detach_backbone, plugin_document_pack,
+    plugin_ingest_operations, plugin_load_document_pack, ExtensionBundle, ExtensionManifest,
 };
 pub use semio_framework::*;
 pub use semio_framework::{MediaForm, MediaPortDirection, MediaPortSpec};
@@ -18121,8 +18654,8 @@ mod derived_artifact_children_tests {
 
     impl protocol::Mutation<ChildrenTestSnapshot> for ChildrenTestMutation {
         type Diff = ChildrenTestDiff;
-        fn diff(&self, _snapshot: &ChildrenTestSnapshot) -> ChildrenTestDiff {
-            ChildrenTestDiff
+        fn diff(&self, _snapshot: &ChildrenTestSnapshot) -> protocol::MutationOutcome<ChildrenTestDiff> {
+            protocol::MutationOutcome::new(ChildrenTestDiff)
         }
         fn inverse(&self, _snapshot: &ChildrenTestSnapshot) -> Vec<Self> {
             Vec::new()
@@ -18423,7 +18956,7 @@ mod subset_macro_tests {
         const DIALECT: Dialect = Dialect { artifact_kind: "s.test.subset-macro", standard: StandardId("1"), subset: SubsetId("derived") };
 
         fn validate(_payload: &IoPayload) -> Vec<Diagnostic> {
-            vec![Diagnostic { code: FaultCode::new("test.subset-macro.ok"), severity: Severity::Hint, span: TextSpan::at(1, 1), message: "subset! macro derived validator smoke".into(), expected: None, scope: dsl::FaultScope::default() }]
+            vec![Diagnostic { code: FaultCode::new("test.subset-macro.ok"), severity: Severity::Info, span: TextSpan::at(1, 1), message: "subset! macro derived validator smoke".into(), expected: None, scope: dsl::FaultScope::default() }]
         }
     }
 

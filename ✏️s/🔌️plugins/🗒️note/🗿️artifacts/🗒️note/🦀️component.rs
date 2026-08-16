@@ -2,9 +2,7 @@
 //! (text/image/table/math/ink/group blocks).
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{
-    SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA,
-};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
@@ -21,7 +19,8 @@ use std::collections::{BTreeMap, HashMap};
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.note.standard.v1", "standard", "1", &[], None), ("s.note.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.note.standard.v1", "standard", "1", &[], None),
+        ("s.note.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.note.schema.artifact", "schema", "s.note.note", &[("schema", "s.note.note")], None),
         ("s.note.inference.artifact", "inference", "s.note.note.inference", &[("schema", "s.note.note.inference")], None),
         ("s.note.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
@@ -30,17 +29,24 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.note.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
         ("s.note.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
         ("s.note.composer.dxf", "composer", "s.stdio.dxf@r12/*", &[("dialect", "s.stdio.dxf@r12/*")], None),
-        ("s.note.grammar.document", "grammar", "note.document", &[("grammar", "note.document")], None), ("s.note.grammar.op", "grammar", "note.op", &[("grammar", "note.op")], None),
-        ("s.note.grammar.diff", "grammar", "note.diff", &[("grammar", "note.diff")], None), ("s.note.grammar.pack", "grammar", "note.pack", &[("grammar", "note.pack")], None),
+        ("s.note.grammar.document", "grammar", "note.document", &[("grammar", "note.document")], None),
+        ("s.note.grammar.op", "grammar", "note.op", &[("grammar", "note.op")], None),
+        ("s.note.grammar.diff", "grammar", "note.diff", &[("grammar", "note.diff")], None),
+        ("s.note.grammar.pack", "grammar", "note.pack", &[("grammar", "note.pack")], None),
         ("s.note.grammar.spr", "grammar", "note.spr", &[("grammar", "note.spr")], None),
         ("s.note.codec.document.v1", "codec", "note.document:note", &[("codec", "note.document"), ("extension", "note")], None),
-        ("s.note.localization.en", "localization", "Note", &[], Some(("en", "Note"))), ("s.note.localization.de", "localization", "Notiz", &[], Some(("de", "Notiz"))),
+        ("s.note.localization.en", "localization", "Note", &[], Some(("en", "Note"))),
+        ("s.note.localization.de", "localization", "Notiz", &[], Some(("de", "Notiz"))),
     ];
     let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.note")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
-        for (namespace, value) in *claims { capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?; }
-        if let Some((locale, text)) = localization { capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?; }
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
         definition = definition.capability(capability)?;
     }
     Ok(definition)
@@ -136,7 +142,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "note.document".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: crate::artifacts::note::io::export_stdio_kinds().to_vec(),
+        export_stdio_kinds: crate::artifacts::note::io::export_stdio_kinds().to_vec(),
         import_stdio_kinds: crate::artifacts::note::io::import_stdio_kinds().to_vec(),
     }
 }
@@ -446,9 +452,9 @@ pub struct NoteImageAsset {
     pub height: Option<f64>,
 }
 
-pub use crate::artifacts::note::schema::snapshot::NoteSnapshot;
 pub use crate::artifacts::note::schema::diff::NoteDiff;
 pub use crate::artifacts::note::schema::mutations::NoteMutation;
+pub use crate::artifacts::note::schema::snapshot::NoteSnapshot;
 
 //#endregion 🔖️Domain
 
@@ -471,12 +477,7 @@ mod tests {
     #[test]
     fn text_bridge_round_trips_paragraphs_through_semio_text_snapshot() {
         let paragraphs = vec![
-            NoteTextParagraph {
-                runs: vec![
-                    NoteTextRun { text: "plain ".into(), bold: None, italic: None, underline: None, link: None },
-                    NoteTextRun { text: "bold".into(), bold: Some(true), italic: None, underline: None, link: None },
-                ],
-            },
+            NoteTextParagraph { runs: vec![NoteTextRun { text: "plain ".into(), bold: None, italic: None, underline: None, link: None }, NoteTextRun { text: "bold".into(), bold: Some(true), italic: None, underline: None, link: None }] },
             NoteTextParagraph { runs: vec![NoteTextRun { text: "second para".into(), bold: None, italic: Some(true), underline: None, link: Some("https://semio.tech".into()) }] },
         ];
         let snapshot = text_snapshot_from_paragraphs(&paragraphs);
@@ -554,28 +555,3 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::note::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("NoteComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
-}
-//#endregion 🚪️DerivedIoRegistry

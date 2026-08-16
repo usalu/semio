@@ -19,7 +19,7 @@ pub struct RenameCollaborationRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameCollaborationRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "collaboration-record", kind: "rename-collaboration-record", record: "RenamedCollaborationRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

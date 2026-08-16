@@ -15,31 +15,9 @@
 
 pub mod compute {
     // #region compute
-    //! ⚙️ Offload CPU-heavy drawing kernel work to the rayon thread pool.
+    //! ⏳️ Synchronously wait for async kernel calls.
 
     use std::future::Future;
-
-    /// 🧵️ Run a closure on the rayon pool (or inline when `parallel` is disabled).
-    pub async fn run_blocking<F, R>(f: F) -> R
-    where
-        F: FnOnce() -> R + Send + 'static,
-        R: Send + 'static,
-    {
-        #[cfg(feature = "parallel")]
-        {
-            let (tx, rx) = futures::channel::oneshot::channel();
-            rayon::spawn(move || {
-                let _ = tx.send(f());
-            });
-            // Canceled only if the rayon worker panicked before sending; that panic already
-            // surfaced once, so re-panicking here on the awaiting side is the correct terminal point.
-            rx.await.expect("blocking task dropped")
-        }
-        #[cfg(not(feature = "parallel"))]
-        {
-            f()
-        }
-    }
 
     /// ⏳️ Block the current thread until an async kernel call completes.
     pub fn block_on<F>(future: F) -> F::Output
@@ -51,7 +29,7 @@ pub mod compute {
     // #endregion compute
 }
 
-pub use compute::{block_on, run_blocking};
+pub use compute::block_on;
 
 use serde::{Deserialize, Serialize};
 

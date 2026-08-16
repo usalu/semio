@@ -1,0 +1,16 @@
+# create-accessor typed inverse facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfAccessorValueV1
+input GltfCreateAccessorPayloadV1 {
+  position: Int!
+  componentType: Int!
+  count: Int!
+  type: GltfAccessorKindV1!
+}
+type GltfCreateAccessorInverseOperationV1 {
+  kind: String!
+  position: Int!
+  item: GltfAccessorValueV1!
+}
+type GltfCreateAccessorInverseV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfCreateAccessorPayloadV1!, operation: GltfCreateAccessorInverseOperationV1! }

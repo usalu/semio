@@ -1,0 +1,6 @@
+# change-mesh-morph-weights diff facet.
+input GltfChangeMeshMorphWeightsPayloadV1 {
+  mesh: Int!
+  weights: [Float!]!
+}
+type GltfChangeMeshMorphWeightsDiffV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

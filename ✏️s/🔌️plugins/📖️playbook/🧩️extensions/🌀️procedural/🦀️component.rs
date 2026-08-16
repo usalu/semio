@@ -1,18 +1,19 @@
 //! 🧩️ Playbook procedural block-kind module — flow-backed building component params + live 3D preview.
 
-use flow::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_spec, FlowFixture, FlowHost, Widget};
-use flow::{export_solid_json, import_solid_json, tessellate_geometry};
 use flow::playbook::{visible_blocks, PlaybookBlock};
+use flow::{export_solid_json, import_solid_json, tessellate_geometry};
+use flow::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_spec, FlowFixture, FlowHost, Widget};
 use protocol::{Mutation, MutationDiff};
 use semio_framework::mesh_from_indexed;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppLabels, ConfigView,
-    ArtifactApp, ArtifactView, Emit, ExtensionBundle, Plugin, Fault, Label, Locale, LocalizedLabel, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, ViewModel, WorldSunConfig,
-};
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_plugin::{
+    app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppLabels, ArtifactApp,
+    ArtifactView, ConfigView, DraftView, Emit, ExtensionBundle, Fault, Label, Locale, LocalizedLabel, NoDraft, NoDraftMutation, Plugin, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode,
+    ViewModel, WorldSunConfig,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
+use store::EngineHandles;
 
 //#region 🔖️Constants
 const MODULE_PLUGIN_ID: &str = "playbook-module-procedural";
@@ -122,21 +123,12 @@ impl store::ArtifactDsl for ModuleRenderPayload {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        )
-        .expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -145,22 +137,13 @@ impl store::ArtifactDsl for ModuleRenderPayload {
 impl store::ArtifactPack for ModuleRenderPayload {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        )
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
@@ -171,7 +154,6 @@ impl store::ArtifactPack for ModuleRenderPayload {
 }
 
 //#endregion 🔖️ArtifactCodec
-
 
 fn default_params_field() -> dsl::DslValue {
     dsl::DslValue::Null
@@ -215,11 +197,7 @@ impl protocol::OpText for ModulePayloadMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -239,11 +217,7 @@ impl protocol::OpBinary for ModulePayloadMutation {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 0,
-            detail: format!("keyword {keyword:?} is not a declared variant"),
-        })?;
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
@@ -261,24 +235,15 @@ impl protocol::OpBinary for ModulePayloadMutation {
         }
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 1,
-            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
-        })?;
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed {
-            what: "op record",
-            offset: reader.position() as u64,
-            detail: error.to_string(),
-        })
+        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
 
 //#endregion 🔖️OpCodec
-
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -302,9 +267,9 @@ impl MutationDiff<ModuleRenderPayload> for ModulePayloadDiff {
 impl Mutation<ModuleRenderPayload> for ModulePayloadMutation {
     type Diff = ModulePayloadDiff;
 
-    fn diff(&self, _projection: &ModuleRenderPayload) -> ModulePayloadDiff {
+    fn diff(&self, _projection: &ModuleRenderPayload) -> protocol::MutationOutcome<ModulePayloadDiff> {
         match self {
-            ModulePayloadMutation::SetPayload { payload } => ModulePayloadDiff { payload: Some(payload.clone()) },
+            ModulePayloadMutation::SetPayload { payload } => protocol::MutationOutcome::new(ModulePayloadDiff { payload: Some(payload.clone()) }),
         }
     }
 
@@ -775,7 +740,14 @@ impl ArtifactApp for ModuleApp {
         }
     }
 
-    fn handle(command: &Command, doc: &ArtifactView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ModulePayloadMutation, semio_framework_plugin::NoConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(
+        command: &Command,
+        doc: &ArtifactView<'_, ModuleRenderPayload>,
+        _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<ModulePayloadMutation, semio_framework_plugin::NoConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             Command::ExportSolid { format } => {
                 let mut payload = doc.snapshot.clone();
@@ -829,35 +801,23 @@ fn solid_format_arg() -> ActionArgDef {
     ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), SOLID_MEDIA_FORMATS.iter().map(|format| ActionArgOption::new(*format, LocalizedLabel::data(format.to_uppercase()))).collect()).default_value("obj")
 }
 
-/// 🗂️ Registers `ModuleRenderPayload`'s pack<->dsl codec under its real `document_schema()` string
-/// so `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse
-/// this module's render payload without depending on this crate's concrete `Projection`/`Mutation`
-/// types.
-fn register_module_exports() {
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<ModuleApp>(MODULE_DOCUMENT_SCHEMA);
-}
-
-fn module_plugin_bundle() -> Plugin {
-    register_module_exports();
-    Plugin::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", "0.1.0")
-        .register_document_app::<ModuleApp>(create_module_app())
+fn module_plugin_bundle() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+    Plugin::builder(MODULE_PLUGIN_ID).label("Playbook Module Procedural").version("0.1.0").foreign_document_codec::<ModuleApp>(MODULE_DOCUMENT_SCHEMA).document_app::<ModuleApp>(create_module_app()).try_build()
 }
 
 fn module_extension_bundle() -> ExtensionBundle {
-    ExtensionBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", "0.1.0")
-        .extends("playbook")
-        .contributes_topic(
-            "playbook.blockKind",
-            serde_json::json!({
-                "appId": "playbook-play",
-                "blockKind": "buildingComponent",
-                "label": "Building Component",
-                "iconId": "building",
-                "defaultValueJson": r#"{"height":6,"radius":0.5,"sides":6}"#,
-                "paramsBodyKey": BODY_PARAMS,
-                "previewBodyKey": BODY_PREVIEW,
-            }),
-        )
+    ExtensionBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", "0.1.0").extends("playbook").contributes_topic(
+        "playbook.blockKind",
+        serde_json::json!({
+            "appId": "playbook-play",
+            "blockKind": "buildingComponent",
+            "label": "Building Component",
+            "iconId": "building",
+            "defaultValueJson": r#"{"height":6,"radius":0.5,"sides":6}"#,
+            "paramsBodyKey": BODY_PARAMS,
+            "previewBodyKey": BODY_PREVIEW,
+        }),
+    )
 }
 
 semio_framework_plugin::plugin_exports!(module_plugin_bundle);
@@ -1037,7 +997,8 @@ mod tests {
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let mut store: ArtifactStore<ModuleRenderPayload, ModulePayloadMutation> = ArtifactStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None)).expect("valid artifact store fixture");
+        let mut store: ArtifactStore<ModuleRenderPayload, ModulePayloadMutation> =
+            ArtifactStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None)).expect("valid artifact store fixture");
         let mut payload = default_payload();
         payload.interactive = false;
         store.dispatch(ArtifactCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload { payload }], description: None }).expect("apply");

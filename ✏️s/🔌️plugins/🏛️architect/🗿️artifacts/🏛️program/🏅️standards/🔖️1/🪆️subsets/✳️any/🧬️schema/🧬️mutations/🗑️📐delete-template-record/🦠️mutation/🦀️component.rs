@@ -18,7 +18,7 @@ pub struct DeleteTemplateRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteTemplateRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "template-record", kind: "delete-template-record", record: "DeletedTemplateRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

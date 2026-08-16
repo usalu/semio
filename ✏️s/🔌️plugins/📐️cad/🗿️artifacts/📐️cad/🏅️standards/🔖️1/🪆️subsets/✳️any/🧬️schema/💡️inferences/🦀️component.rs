@@ -955,7 +955,7 @@ mod scene_compute {
 
     /// @emoji 🌲️ `cad_document_pane_bundle`, scoped to the Concrete Forest Left fixture and keyed by
     /// `CadPaneId` rather than a raw fixture index — the real, non-stub object+geometry source
-    /// `crate::apps::cad::forest_working_scene` (the app layer's `CadWorkingScene` test/render
+    /// `crate::editor::cad::forest_working_scene` (the app layer's `CadWorkingScene` test/render
     /// fixture) builds each pane from.
     pub fn forest_pane_bundle(pane: crate::artifacts::cad::CadPaneId) -> (Vec<CadObject>, CadGeometry) {
         let model_index = match pane {

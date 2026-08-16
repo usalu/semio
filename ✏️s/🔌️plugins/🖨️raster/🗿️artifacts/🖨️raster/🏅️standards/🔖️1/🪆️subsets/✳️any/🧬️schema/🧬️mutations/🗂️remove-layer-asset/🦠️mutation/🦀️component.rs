@@ -16,7 +16,7 @@ pub struct RemoveLayerAsset {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for RemoveLayerAsset {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "asset", kind: "remove-layer-asset", record: "RemovedLayerAsset" };
 
-    fn diff(&self, base: &RasterSnapshot) -> RasterDiff {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::remove_layer_asset::diff::diff(self, base)
     }
 

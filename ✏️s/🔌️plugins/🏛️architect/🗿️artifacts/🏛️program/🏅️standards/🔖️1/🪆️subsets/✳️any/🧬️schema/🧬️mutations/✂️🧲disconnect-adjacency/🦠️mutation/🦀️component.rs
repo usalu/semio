@@ -18,7 +18,7 @@ pub struct DisconnectAdjacency {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DisconnectAdjacency {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "disconnect", entity: "adjacency", kind: "disconnect-adjacency", record: "DisconnectedAdjacency" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

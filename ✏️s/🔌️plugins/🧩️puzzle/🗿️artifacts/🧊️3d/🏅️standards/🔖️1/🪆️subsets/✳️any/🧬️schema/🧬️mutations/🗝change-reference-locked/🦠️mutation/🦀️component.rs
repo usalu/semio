@@ -17,7 +17,7 @@ pub struct ChangeReferenceLocked {
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ChangeReferenceLocked {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "reference", kind: "change-reference-locked", record: "ChangedReferenceLocked" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> Puzzle3dDiff {
+    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {

@@ -1,0 +1,2 @@
+# change-asset-extra-data inverse facet.
+type GltfChangeAssetExtraDataInverseV1 { id: ID!, version: Int!, touchedPaths: [String!]!, accepted: Boolean!, rejectionCode: String }

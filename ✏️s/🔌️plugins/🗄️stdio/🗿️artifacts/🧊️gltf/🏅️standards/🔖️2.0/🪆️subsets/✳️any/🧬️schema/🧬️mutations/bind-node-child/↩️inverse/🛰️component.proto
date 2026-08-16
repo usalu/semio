@@ -1,0 +1,1 @@
+syntax = "proto3"; package stdio.gltf.mutation; message GltfBindNodeChildInverseV1 { uint32 parent = 1; uint32 child = 2; uint32 position = 3; repeated uint32 expected_children = 4; repeated string touched_paths = 5; }

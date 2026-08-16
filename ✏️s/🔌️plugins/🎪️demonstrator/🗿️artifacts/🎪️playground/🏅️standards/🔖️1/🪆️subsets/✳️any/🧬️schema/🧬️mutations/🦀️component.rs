@@ -51,14 +51,14 @@ mod tests {
     fn change_schema_inverse_round_trips() {
         let base = PlaygroundSnapshot::default();
         let mutation = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.custom".into() });
-        let after = mutation.diff(&base).apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base);
         assert_eq!(after.schema, "playground.custom");
 
         let undo = mutation.inverse(&base);
         assert_eq!(undo, vec![PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: base.schema.clone() })]);
         let mut state = after;
         for step in &undo {
-            state = step.diff(&base).apply(&state);
+            state = step.diff(&base).diff().apply(&state);
         }
         assert_eq!(state, base);
     }
@@ -80,11 +80,37 @@ mod tests {
         let base = PlaygroundSnapshot { schema: "playground.base".into() };
         let change = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.changed".into() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &change);
-        let d1 = change.diff(&base);
+        let d1 = change.diff(&base).into_parts().0;
         let after = d1.apply(&base);
-        let d2 = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.changed-again".into() }).diff(&after);
+        let d2 = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.changed-again".into() }).diff(&after).into_parts().0;
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion ⚖️SemanticLaws
+
+    //#region 🔖️OutcomeLaws
+    /// ✅️ 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS §C2 laws. This
+    /// facet's one mutation kind (`change-schema`) is a root-scoped `change-<artifact>-<field>` on
+    /// the document's single metadata string — no target can ever be missing and no duplicate-id
+    /// case exists, so `assert_missing_target_is_error`/`assert_fatal_never_applies` do not apply
+    /// here; `assert_outcome_deterministic` (landed) is the applicable law instead.
+    /// `assert_outcome_policy_matrix` is not landed yet (checked at
+    /// `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`); TODO(1-D testkit
+    /// laws pending): add a `MergePolicy` × `Severity` matrix test here once it lands.
+    #[test]
+    fn change_schema_outcome_is_deterministic() {
+        let base = PlaygroundSnapshot { schema: "playground.base".into() };
+        let mutation = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.changed".into() });
+        protocol::os_spr::testkit::assert_outcome_deterministic(&base, &mutation);
+    }
+
+    #[test]
+    fn change_schema_no_op_when_unchanged() {
+        let base = PlaygroundSnapshot { schema: "playground.same".into() };
+        let mutation = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.same".into() });
+        let outcome = mutation.diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Warning));
+        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

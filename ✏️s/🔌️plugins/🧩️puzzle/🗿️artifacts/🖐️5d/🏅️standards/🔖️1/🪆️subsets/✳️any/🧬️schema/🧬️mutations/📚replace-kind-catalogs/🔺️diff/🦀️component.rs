@@ -9,8 +9,8 @@ use crate::artifacts::puzzle5d::split_and_seed_kind_catalogs;
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ReplaceKindCatalogs, _base: &Puzzle5dSnapshot) -> Puzzle5dDiff {
+pub fn diff(payload: &super::mutation::ReplaceKindCatalogs, _base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
     let (kind_catalogs, kind_catalogs_extra) = split_and_seed_kind_catalogs(payload.new_catalogs.clone());
-    Puzzle5dDiff { kind_catalogs: Some(kind_catalogs), kind_catalogs_extra: Some(kind_catalogs_extra), ..Default::default() }
+    protocol::MutationOutcome::new(Puzzle5dDiff { kind_catalogs: Some(kind_catalogs), kind_catalogs_extra: Some(kind_catalogs_extra), ..Default::default() })
 }
 //#endregion 🔖️Diff

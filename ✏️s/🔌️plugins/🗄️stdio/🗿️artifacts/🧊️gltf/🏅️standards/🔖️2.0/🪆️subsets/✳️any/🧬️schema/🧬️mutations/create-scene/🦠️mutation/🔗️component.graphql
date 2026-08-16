@@ -1,0 +1,1 @@
+input GltfCreateScenePayloadV1 { position: Int! }

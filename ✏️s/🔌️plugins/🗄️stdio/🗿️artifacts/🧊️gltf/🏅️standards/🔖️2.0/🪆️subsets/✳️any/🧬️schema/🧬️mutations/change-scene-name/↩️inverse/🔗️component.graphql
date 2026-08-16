@@ -1,0 +1,2 @@
+# change-scene-name inverse typed facet.
+input GltfChangeSceneNameInverseV1 { operation: GltfChangeSceneNamePayloadV1!, before: String, touchedPaths: [String!]! }

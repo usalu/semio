@@ -7,13 +7,14 @@ use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 use protocol::Patchable;
 
-/// 🔁️ `patched = [{id, full patch}]` via `Patchable::diff_patch` — every field of the payload
-/// row becomes the patch, so applying it fully overwrites the target's non-identity content.
-/// Target absent from `base` ⇒ empty diff (nothing to change).
-pub fn diff(payload: &ReplaceProcess, base: &ProgramSnapshot) -> ProgramDiff {
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
+pub fn diff(payload: &ReplaceProcess, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let Some(existing) = base.processes.iter().find(|row| row.header.id == payload.process.header.id) else {
-        return ProgramDiff::default();
+        return protocol::MutationOutcome::error("mutation.target-missing", "No process exists with this id.", [payload.process.header.id.0.clone()]);
     };
+    if existing == &payload.process {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This process already matches the requested value.").at([existing.header.id.0.clone()])]);
+    }
     let patch = existing.diff_patch(&payload.process).expect("diff_patch always produces a full patch");
-    ProgramDiff { processes: Some(ProgramProcessesDelta { patched: vec![ProgramProcessesPatchEntry { id: payload.process.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() }
+    protocol::MutationOutcome::new(ProgramDiff { processes: Some(ProgramProcessesDelta { patched: vec![ProgramProcessesPatchEntry { id: payload.process.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
 }

@@ -5,9 +5,13 @@ use super::mutation::RenameMeta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// ✏️ New `ProgramMeta` with only `title` changed.
-pub fn diff(payload: &RenameMeta, base: &ProgramSnapshot) -> ProgramDiff {
+/// ✏️ New `ProgramMeta` with only `title` changed. Root-scoped singleton — always present, so
+/// Warning `mutation.no-op` (empty diff) covers the only degenerate case: the title is unchanged.
+pub fn diff(payload: &RenameMeta, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    if base.meta.title == payload.new_title {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "Document metadata already has this title.").at([base.meta.document_id.clone()])]);
+    }
     let mut value = base.meta.clone();
     value.title = payload.new_title.clone();
-    ProgramDiff { meta: Some(value), ..Default::default() }
+    protocol::MutationOutcome::new(ProgramDiff { meta: Some(value), ..Default::default() })
 }

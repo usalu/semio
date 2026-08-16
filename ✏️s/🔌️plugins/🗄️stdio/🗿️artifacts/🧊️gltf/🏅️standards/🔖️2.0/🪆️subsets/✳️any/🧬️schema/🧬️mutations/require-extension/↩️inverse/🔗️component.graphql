@@ -1,0 +1,2 @@
+# require-extension inverse facet.
+type GltfRequireExtensionInverseV1 { id: ID!, version: Int!, touchedPaths: [String!]!, accepted: Boolean!, rejectionCode: String }

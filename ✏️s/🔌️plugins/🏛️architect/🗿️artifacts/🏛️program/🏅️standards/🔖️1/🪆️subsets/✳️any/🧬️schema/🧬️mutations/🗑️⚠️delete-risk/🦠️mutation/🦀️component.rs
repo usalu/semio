@@ -18,7 +18,7 @@ pub struct DeleteRisk {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteRisk {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "risk", kind: "delete-risk", record: "DeletedRisk" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

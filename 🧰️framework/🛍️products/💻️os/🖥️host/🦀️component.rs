@@ -333,6 +333,10 @@ pub mod host {
         pub vcs: ArtifactVcs<P, Op>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub applied_edit_ids: Vec<String>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub edit_messages: Vec<protocol::EditMessages>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub conflicts: Vec<protocol::Conflict>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub backbone: Option<ArtifactBackboneRef>,
     }
@@ -357,7 +361,16 @@ pub mod host {
     where
         P: Clone,
     {
-        BackboneDocument { schema: schema.into(), id: id.into(), name: name.into(), vcs: create_document_envelope::<P, Op>(schema, id, initial_snapshot, None).vcs, applied_edit_ids: Vec::new(), backbone: None }
+        BackboneDocument {
+            schema: schema.into(),
+            id: id.into(),
+            name: name.into(),
+            vcs: create_document_envelope::<P, Op>(schema, id, initial_snapshot, None).vcs,
+            applied_edit_ids: Vec::new(),
+            edit_messages: Vec::new(),
+            conflicts: Vec::new(),
+            backbone: None,
+        }
     }
 
     /// @emoji 🌉️ Builds the bare `ArtifactEnvelope` a `BackboneDocument` wraps (dropping the app-level
@@ -367,7 +380,20 @@ pub mod host {
         P: Clone,
         Op: Clone,
     {
-        ArtifactEnvelope { schema: document.schema.clone(), id: document.id.clone(), vcs: document.vcs.clone(), backbone: document.backbone.clone(), active_alternative_id: None, cursor: None, dialect: None, migrated_from: None, owner: None, lanes: std::collections::BTreeMap::new() }
+        ArtifactEnvelope {
+            schema: document.schema.clone(),
+            id: document.id.clone(),
+            vcs: document.vcs.clone(),
+            backbone: document.backbone.clone(),
+            active_alternative_id: None,
+            cursor: None,
+            dialect: None,
+            migrated_from: None,
+            owner: None,
+            lanes: std::collections::BTreeMap::new(),
+            edit_messages: document.edit_messages.clone(),
+            conflicts: document.conflicts.clone(),
+        }
     }
 
     pub fn materialize_backbone_snapshot<P, Op>(document: &BackboneDocument<P, Op>, applied_edit_ids: &[String]) -> Result<P, VcsError>
@@ -428,7 +454,16 @@ pub mod host {
             return Err(VcsError::Deserialize(format!("expected schema {expected_schema}")));
         }
         let applied_edit_ids = parsed.envelope.cursor.as_ref().map(|cursor| cursor.applied_edit_ids.clone()).unwrap_or_default();
-        Ok(BackboneDocument { schema: parsed.envelope.schema, id: parsed.envelope.id, name, vcs: parsed.envelope.vcs, applied_edit_ids, backbone: parsed.envelope.backbone })
+        Ok(BackboneDocument {
+            schema: parsed.envelope.schema,
+            id: parsed.envelope.id,
+            name,
+            vcs: parsed.envelope.vcs,
+            applied_edit_ids,
+            edit_messages: parsed.envelope.edit_messages,
+            conflicts: parsed.envelope.conflicts,
+            backbone: parsed.envelope.backbone,
+        })
     }
     //#endregion 🔖️BackboneDocument
 
@@ -620,7 +655,20 @@ pub mod host {
     impl OsWorkflowStore {
         pub fn new(document: OsWorkflowArtifactDocument) -> Result<Self, VcsError> {
             let applied_edit_ids = document.applied_edit_ids.clone();
-            let envelope = ArtifactEnvelope { schema: document.schema, id: document.id, vcs: document.vcs, backbone: document.backbone, active_alternative_id: None, cursor: None, dialect: None, migrated_from: None, owner: None, lanes: std::collections::BTreeMap::new() };
+            let envelope = ArtifactEnvelope {
+                schema: document.schema,
+                id: document.id,
+                vcs: document.vcs,
+                backbone: document.backbone,
+                active_alternative_id: None,
+                cursor: None,
+                dialect: None,
+                migrated_from: None,
+                owner: None,
+                lanes: std::collections::BTreeMap::new(),
+                edit_messages: document.edit_messages,
+                conflicts: document.conflicts,
+            };
             let mut inner = ArtifactStore::new(envelope)?;
             if !applied_edit_ids.is_empty() {
                 let snapshot = inner.envelope().clone();
@@ -647,7 +695,16 @@ pub mod host {
 
         pub fn document(&self) -> OsWorkflowArtifactDocument {
             let envelope = self.inner.envelope();
-            BackboneDocument { schema: envelope.schema.clone(), id: envelope.id.clone(), name: self.name.clone(), vcs: envelope.vcs.clone(), applied_edit_ids: self.inner.applied_edit_ids().to_vec(), backbone: envelope.backbone.clone() }
+            BackboneDocument {
+                schema: envelope.schema.clone(),
+                id: envelope.id.clone(),
+                name: self.name.clone(),
+                vcs: envelope.vcs.clone(),
+                applied_edit_ids: self.inner.applied_edit_ids().to_vec(),
+                edit_messages: envelope.edit_messages.clone(),
+                conflicts: envelope.conflicts.clone(),
+                backbone: envelope.backbone.clone(),
+            }
         }
 
         pub fn dispatch_text(&mut self, command_text: &str) -> Result<(), VcsError> {
@@ -913,14 +970,35 @@ pub mod host {
     pub fn import_os_space_from_dsl(dsl: &str, port: Arc<dyn OsBackbonePort>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let snapshot = <space::SpaceSnapshot as store::ArtifactDsl>::parse_dsl(dsl).map_err(|error| VcsError::Deserialize(error.message))?;
         let vcs = create_document_envelope::<space::SpaceSnapshot, space::SpaceMutation>(space::S_SPACE_SCHEMA, "", snapshot, None).vcs;
-        admit_os_space_document(BackboneDocument { schema: space::S_SPACE_SCHEMA.into(), id: String::new(), name: String::new(), vcs, applied_edit_ids: Vec::new(), backbone: None }, port)
+        admit_os_space_document(
+            BackboneDocument {
+                schema: space::S_SPACE_SCHEMA.into(),
+                id: String::new(),
+                name: String::new(),
+                vcs,
+                applied_edit_ids: Vec::new(),
+                edit_messages: Vec::new(),
+                conflicts: Vec::new(),
+                backbone: None,
+            },
+            port,
+        )
     }
 
     /// @emoji 📦️ Pack counterpart of `import_os_space_from_dsl`.
     pub fn import_os_space_from_pack(pack: &[u8], spr: &[u8], port: Arc<dyn OsBackbonePort>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = store::parse_document_pack(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         let applied_edit_ids = parsed.envelope.cursor.as_ref().map(|cursor| cursor.applied_edit_ids.clone()).unwrap_or_default();
-        let document = BackboneDocument { schema: parsed.envelope.schema, id: parsed.envelope.id, name: String::new(), vcs: parsed.envelope.vcs, applied_edit_ids, backbone: parsed.envelope.backbone };
+        let document = BackboneDocument {
+            schema: parsed.envelope.schema,
+            id: parsed.envelope.id,
+            name: String::new(),
+            vcs: parsed.envelope.vcs,
+            applied_edit_ids,
+            edit_messages: parsed.envelope.edit_messages,
+            conflicts: parsed.envelope.conflicts,
+            backbone: parsed.envelope.backbone,
+        };
         admit_os_space_document(document, port)
     }
 
@@ -1343,6 +1421,34 @@ pub mod host {
 
         fn test_workflow_store() -> OsWorkflowStore {
             OsWorkflowStore::new(create_backbone_document(workflow::S_WORKFLOW_SCHEMA, "workflow", "Workflow", workflow::empty_workflow_snapshot())).expect("valid workflow store fixture")
+        }
+
+        #[test]
+        fn backbone_and_workflow_store_round_trips_preserve_outcomes_and_conflicts() {
+            let mut store = test_workflow_store();
+            store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Durable").expect("create one edit");
+            let mut document = store.document();
+            let edit_id = document.applied_edit_ids.last().expect("one applied edit").clone();
+            let messages = vec![protocol::MutationMessage::warn("mutation.clamped", "durable host outcome").at(["parameters", "0"]).at_op(0)];
+            document.edit_messages = vec![protocol::EditMessages { edit_id: edit_id.clone(), messages: messages.clone() }];
+            document.conflicts = vec![protocol::Conflict {
+                id: protocol::ConflictId("host-round-trip-conflict".into()),
+                kind: protocol::ConflictKind::Degraded { edit_ids: vec![edit_id] },
+                status: protocol::ConflictStatus::Open,
+                messages,
+                actors: vec![protocol::ActorId("host".into())],
+                timestamp: protocol::HybridLogicalTimestamp::new(1, 9),
+            }];
+
+            let payload = encode_backbone_payload(&document).expect("backbone payload encodes");
+            let decoded: OsWorkflowArtifactDocument = decode_backbone_payload(&payload, workflow::S_WORKFLOW_SCHEMA).expect("backbone payload decodes");
+            assert_eq!(decoded.edit_messages, document.edit_messages);
+            assert_eq!(decoded.conflicts, document.conflicts);
+
+            let rebuilt = OsWorkflowStore::new(decoded).expect("workflow store rebuilds");
+            let rebuilt_document = rebuilt.document();
+            assert_eq!(rebuilt_document.edit_messages, document.edit_messages);
+            assert_eq!(rebuilt_document.conflicts, document.conflicts);
         }
 
         #[test]

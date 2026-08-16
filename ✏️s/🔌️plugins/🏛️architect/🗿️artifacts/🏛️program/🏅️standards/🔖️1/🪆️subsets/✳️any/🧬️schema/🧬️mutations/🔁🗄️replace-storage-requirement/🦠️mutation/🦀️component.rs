@@ -19,7 +19,7 @@ pub struct ReplaceStorageRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceStorageRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "storage-requirement", kind: "replace-storage-requirement", record: "ReplacedStorageRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

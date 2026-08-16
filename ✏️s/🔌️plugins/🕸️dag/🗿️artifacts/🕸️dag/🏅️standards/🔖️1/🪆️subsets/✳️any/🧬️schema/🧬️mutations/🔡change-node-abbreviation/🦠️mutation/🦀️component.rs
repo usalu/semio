@@ -20,7 +20,7 @@ pub fn change_node_abbreviation(id: String, new_abbreviation: String) -> DagMuta
 impl protocol::MutationKind<DagSnapshot, DagMutation> for ChangeNodeAbbreviation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node", kind: "change-node-abbreviation", record: "ChangedNodeAbbreviation" };
 
-    fn diff(&self, base: &DagSnapshot) -> DagDiff {
+    fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {

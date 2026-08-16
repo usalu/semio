@@ -18,7 +18,7 @@ pub struct CreateValidationRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateValidationRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "validation-record", kind: "create-validation-record", record: "CreatedValidationRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

@@ -871,9 +871,22 @@ mod tests {
     mod conformance_laws {
         use super::*;
         use crate::artifacts::gltf::io::mutations as mutation_transport;
+        use crate::artifacts::gltf::schema::modules::mutation_dispatch::{registered_gltf_mutation_command_ids, GltfMutation, GltfMutationRegistryError, GLTF_MUTATION_MAX_PAYLOAD_BYTES};
+        use crate::artifacts::gltf::schema::mutations::change_material_alpha_mode::mutation;
+        use crate::artifacts::gltf::schema::snapshot::GltfAlphaMode;
         use crate::artifacts::gltf::schema::{diff, snapshot};
-        use crate::artifacts::gltf::schema::modules::mutation_dispatch;
-        use protocol::{DiffCodec, OpBinary, OpText};
+        use protocol::{DiffCodec, Mutation, OpBinary, OpText};
+
+        fn alpha_mode_mutation() -> GltfMutation {
+            let payload = serde_json::to_vec(&mutation::GltfChangeMaterialAlphaModePayload { material: 0, alpha_mode: GltfAlphaMode::Mask }).expect("canonical alpha-mode payload");
+            GltfMutation::new(mutation::ID, 1, payload).expect("registered alpha-mode mutation")
+        }
+
+        fn material_snapshot() -> GltfSnapshot {
+            let mut snapshot = GltfSnapshot::default();
+            snapshot.document.materials.push(Default::default());
+            snapshot
+        }
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
         /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
@@ -903,20 +916,35 @@ mod tests {
             assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
         }
 
-        /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op` output
-        /// for every `GltfMutation` variant (`mutations::demo_mutation_cases()`).
+        /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes the canonical generic
+        /// envelope, independently of the registered command payload shape.
         #[test]
         fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutation_transport::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
-            let mutation_primitive = mutation_transport::text::COMPONENT_GRAMMAR_SEMIO.lines().find(|line| line.starts_with("primitive-value =")).expect("mutations primitive grammar");
-            let diff_primitive = diff::text::COMPONENT_GRAMMAR_SEMIO.lines().find(|line| line.starts_with("primitive-value =")).expect("diff primitive grammar");
-            assert_eq!(mutation_primitive, diff_primitive, "mutation and diff primitive tuple shapes diverged");
-            assert!(mutation_primitive.contains("morph-target-list"), "primitive tuple omitted morph targets");
-            for mutation in mutation_dispatch::demo_mutation_cases() {
+            let forward = alpha_mode_mutation();
+            let inverse = forward.inverse(&material_snapshot()).pop().expect("inverse envelope");
+            for mutation in [forward, inverse] {
                 let printed = mutation.print_op();
-                assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?}");
             }
+        }
+
+        #[test]
+        fn generic_envelope_registry_and_transport_laws() {
+            let mutation = alpha_mode_mutation();
+            assert!(registered_gltf_mutation_command_ids().any(|id| id == mutation::ID));
+            assert!(matches!(GltfMutation::new("s.stdio.gltf.mutation.unknown.v1", 1, Vec::new()), Err(GltfMutationRegistryError::UnknownCommand(_))));
+            assert!(matches!(GltfMutation::new(mutation::ID, 2, Vec::new()), Err(GltfMutationRegistryError::StaleVersion { expected: 1, actual: 2, .. })));
+            assert!(matches!(GltfMutation::new(mutation::ID, 1, vec![0; GLTF_MUTATION_MAX_PAYLOAD_BYTES + 1]), Err(GltfMutationRegistryError::BudgetExceeded("payload"))));
+
+            let text = mutation.print_op();
+            assert_eq!(GltfMutation::parse_op(&text).expect("text round trip"), mutation);
+            let binary = mutation.encode_op().expect("binary encode");
+            assert_eq!(GltfMutation::decode_op(&binary).expect("binary round trip"), mutation);
+            let mut trailing = binary;
+            trailing.push(0);
+            assert!(GltfMutation::decode_op(&trailing).is_err(), "binary envelope accepted trailing data");
         }
 
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
@@ -934,8 +962,8 @@ mod tests {
 
         /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets —
         /// snapshot pack (`encode_pack`, envelope-unwrapped first, matching how
-        /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), every demo mutation's
-        /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed == bytes.len()`.
+        /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), a generic mutation
+        /// envelope's `encode_op`, and every demo diff's `encode_diff` — asserting `consumed == bytes.len()`.
         #[test]
         fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
@@ -945,7 +973,9 @@ mod tests {
             assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
 
             let op_spec = dsl::parse_protocol(mutation_transport::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
-            for mutation in mutation_dispatch::demo_mutation_cases() {
+            let forward = alpha_mode_mutation();
+            let inverse = forward.inverse(&material_snapshot()).pop().expect("inverse envelope");
+            for mutation in [forward, inverse] {
                 let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");

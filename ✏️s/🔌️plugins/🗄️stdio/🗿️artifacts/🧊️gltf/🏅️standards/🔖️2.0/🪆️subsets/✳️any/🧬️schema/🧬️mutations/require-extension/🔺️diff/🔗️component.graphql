@@ -1,0 +1,2 @@
+# require-extension diff facet.
+type GltfRequireExtensionDiffV1 { id: ID!, version: Int!, touchedPaths: [String!]!, accepted: Boolean!, rejectionCode: String }

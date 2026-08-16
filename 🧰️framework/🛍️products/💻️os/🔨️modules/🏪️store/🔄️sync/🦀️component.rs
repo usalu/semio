@@ -200,7 +200,7 @@ pub enum ArtifactEvent {
 pub enum CommandAckOutcome {
     Accepted,
     Transformed,
-    Rejected { reason: String },
+    Rejected { reason: String, messages: Vec<u8> },
 }
 //#endregion 🔖️Protocol
 
@@ -342,7 +342,10 @@ fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document_id: &
         let meta = edit.meta.as_ref().and_then(|metas| metas.get(index));
         let dependencies = meta.map(|m| m.dependencies.iter().cloned().map(MutationId).collect()).unwrap_or_default();
         let actor = meta.and_then(|m| m.author_id.clone()).or_else(|| edit.actor.clone()).unwrap_or_else(|| "unknown".to_string());
-        let timestamp = meta.and_then(|m| m.hlt).map(|(actor, physical_ms, logical)| crate::os_spr::HybridLogicalTimestamp { actor, physical_ms: physical_ms as u64, logical }).unwrap_or_else(|| crate::os_spr::HybridLogicalTimestamp::new(0, 0));
+        let timestamp = match meta.and_then(|meta| meta.hlt) {
+            Some((actor, physical_ms, logical)) => crate::os_spr::HybridLogicalTimestamp { actor, physical_ms: u64::try_from(physical_ms).map_err(|_| format!("edit {} op {index} has a negative hybrid-clock physical time", edit.id))?, logical },
+            None => crate::os_spr::HybridLogicalTimestamp::new(0, 0),
+        };
         let inverse_payload = edit.inverse.get(index).and_then(|p| p.binary.clone()).unwrap_or_default();
         envelopes.push(MutationEnvelope {
             mutation_id: MutationId(op_ids[index].clone()),
@@ -390,6 +393,7 @@ fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_spr::His
             // already resolved any contribution or transaction locally and shipped the resulting
             // OWNER ops, so this side records exactly what it receives — an owner edit.
             origin: crate::os_spr::command::MutationOrigin::Owner,
+            messages: Vec::new(),
         }]),
     }
 }
@@ -1284,11 +1288,11 @@ mod native_actor {
                         self.deliver_remote_operations(vec![converted]);
                         self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
                     }
-                    ApplyOutcome::Rejected { reason } => {
+                    ApplyOutcome::Rejected { reason, messages } => {
                         let rollbacks: Vec<MutationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
                         self.persist_operations(&rollbacks);
                         self.deliver_remote_operations(rollbacks);
-                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason } });
+                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason, messages } });
                     }
                 }
             }
@@ -1629,10 +1633,10 @@ mod wasm_actor {
                         self.deliver_remote_operations(vec![converted]);
                         let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
                     }
-                    ApplyOutcome::Rejected { reason } => {
+                    ApplyOutcome::Rejected { reason, messages } => {
                         let rollbacks: Vec<MutationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
                         self.deliver_remote_operations(rollbacks);
-                        let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason } });
+                        let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason, messages } });
                     }
                 }
             }
@@ -2442,7 +2446,7 @@ mod tests {
         write_server(
             &fixtures_dir,
             "📦️server-ack-rejected.bin",
-            &ServerFrame::Ack { batch_id: 3, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "conflict".to_string() }) }], frontier: frontier.clone() },
+            &ServerFrame::Ack { batch_id: 3, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "conflict".to_string(), messages: vec![1, 2, 3] }) }], frontier: frontier.clone() },
             Lane::Command,
         );
         write_server(&fixtures_dir, "📦️server-preview.bin", &ServerFrame::Preview { actor: crate::os_spr::ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview);

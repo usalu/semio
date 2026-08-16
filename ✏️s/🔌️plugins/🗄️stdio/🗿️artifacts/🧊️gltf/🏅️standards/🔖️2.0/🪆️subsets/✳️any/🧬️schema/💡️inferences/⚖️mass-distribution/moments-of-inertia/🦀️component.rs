@@ -1,14 +1,20 @@
 //! 💡️ moments-of-inertia atomic glTF inference leaf.
-use super::super::{geometry_core::GltfGeometryContext, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
-use super::super::super::modules::{inference_measures::{estimate, unavailable}, measurement_contracts::*};
+use super::super::super::modules::{
+    inference_measures::{estimate, unavailable},
+    measurement_contracts::*,
+};
+use super::super::{geometry_core::GltfGeometryContext, GltfEntityIndicators, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
 
 pub struct GltfMomentsOfInertiaInference;
 
 impl GltfInferenceLeaf for GltfMomentsOfInertiaInference {
-    const DESCRIPTOR: GltfInferenceLeafDescriptor = GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.moments-of-inertia.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.moments-of-inertia.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
+    const DESCRIPTOR: GltfInferenceLeafDescriptor =
+        GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.moments-of-inertia.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.moments-of-inertia.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
 
-pub fn descriptor() -> GltfInferenceLeafDescriptor { GltfMomentsOfInertiaInference::DESCRIPTOR }
+pub fn descriptor() -> GltfInferenceLeafDescriptor {
+    GltfMomentsOfInertiaInference::DESCRIPTOR
+}
 
 pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfVec3 {
     let eigenvalues = context.principal_frame.eigenvalues;
@@ -23,7 +29,7 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfVec3> {
 }
 
 pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
-    serde_json::to_value(&indicators.mass.momentsOfInertia)
+    serde_json::to_value(&indicators.mass.moments_of_inertia)
 }
 
 #[cfg(test)]

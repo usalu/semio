@@ -22,7 +22,7 @@ pub fn change_grip_kind_color(id: String, new_color: String) -> Block5dMutation 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ChangeGripKindColor {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "grip-kind", kind: "change-grip-kind-color", record: "ChangedGripKindColor" };
 
-    fn diff(&self, base: &Block5dSnapshot) -> Block5dDiff {
+    fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {

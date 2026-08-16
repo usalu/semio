@@ -18,7 +18,7 @@ pub struct DeleteComplianceRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteComplianceRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "compliance-record", kind: "delete-compliance-record", record: "DeletedComplianceRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

@@ -213,7 +213,7 @@ impl HistoryLogGen {
         };
 
         self.state = rng.0;
-        crate::os_spr::HistoryLog { doc_id, schema, edits, changes, checkpoints, alternatives, active_alternative_id, cursor: None, composition: None }
+        crate::os_spr::HistoryLog { doc_id, schema, edits, changes, checkpoints, alternatives, active_alternative_id, cursor: None, composition: None, conflicts: Vec::new() }
     }
 }
 
@@ -526,11 +526,14 @@ where
     Op: crate::os_spr::Mutation<P>,
 {
     use crate::os_spr::MutationDiff;
-    let mut state = mutation.diff(base).apply(base);
+    let forward = mutation.diff(base);
+    let rejected = forward.messages().iter().any(|message| matches!(message.level, crate::os_dsl::Severity::Error | crate::os_dsl::Severity::Fatal));
+    assert!(!rejected, "a mutation expected to invert cleanly must not have been rejected — forward outcome carries an Error/Fatal message: {:?}", forward.messages());
+    let mut state = forward.diff().apply(base);
     let mut backward = mutation.inverse(base);
     backward.reverse();
     for undo in &backward {
-        state = undo.diff(&state).apply(&state);
+        state = undo.diff(&state).diff().apply(&state);
     }
     assert_eq!(&state, base, "applying mutation.inverse(base) (reversed) after mutation must restore base");
 }
@@ -585,25 +588,6 @@ pub fn assert_op_dag_convergence(envelopes: &[crate::os_spr::MutationEnvelope], 
     }
 }
 
-/// ✅️ LAW: `merge_concurrent_diffs(strategy, a, b, ..) == merge_concurrent_diffs(strategy, b, a, ..)`.
-pub fn assert_crdt_commutative<P, D>(strategy: crate::os_spr::MergeStrategyKind, a: D, b: D, meta_a: &crate::os_spr::MutationMeta, meta_b: &crate::os_spr::MutationMeta)
-where
-    D: crate::os_spr::MutationDiff<P> + PartialEq + std::fmt::Debug,
-{
-    let forward = crate::os_spr::merge_concurrent_diffs(strategy, a.clone(), b.clone(), meta_a, meta_b);
-    let backward = crate::os_spr::merge_concurrent_diffs(strategy, b, a, meta_b, meta_a);
-    assert_eq!(forward, backward, "merge_concurrent_diffs must be commutative for {strategy:?}");
-}
-
-/// ✅️ LAW: `merge_concurrent_diffs(strategy, a, a, ..) == a`.
-pub fn assert_crdt_idempotent<P, D>(strategy: crate::os_spr::MergeStrategyKind, a: &D, meta_a: &crate::os_spr::MutationMeta)
-where
-    D: crate::os_spr::MutationDiff<P> + PartialEq + std::fmt::Debug,
-{
-    let merged = crate::os_spr::merge_concurrent_diffs(strategy, a.clone(), a.clone(), meta_a, meta_a);
-    assert_eq!(&merged, a, "merge_concurrent_diffs must be idempotent for {strategy:?}");
-}
-
 /// 🎞️ Which side of the semio_hub wire protocol an `assert_wire_frame_round_trip` sample represents —
 /// `ClientFrame`/`ServerFrame` are distinct enums with distinct encode/decode fn pairs, so this
 /// crate's own choice (the contract names one law fn, not two) is a single sum type covering both.
@@ -653,6 +637,204 @@ pub fn assert_channel_frame_round_trip(sample: &ChannelFrameSample) {
         }
     }
 }
+
+// 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS §C2/C3/C5 law family — every
+// helper below is generic over the `Mutation`/`MutationKind`/`MutationDiff` traits (or takes the
+// store/history operation it needs as an injected closure) so any artifact/mutation pair a W3 facet
+// owns can plug in without this crate depending on `os_store`/`os_spr::history`'s own concrete
+// surfaces, several of which are still landing concurrently in lanes 1-A/1-B/1-C
+// (`📓️w1-d-report.md` records exactly which closures stand in for a not-yet-landed method today).
+
+//#region 🔖️Outcome
+/// ✅️ LAW (§C2): a mutation whose target is absent must yield an outcome carrying an `Error`
+/// message with code `mutation.target-missing`, and the diff must carry no change (`D::default()`
+/// — the `MutationOutcome::error` constructor's own empty-diff guarantee every missing-target
+/// `diff` leaf is expected to route through).
+pub fn assert_missing_target_is_error<P, Op>(base: &P, mutation: &Op)
+where
+    Op: crate::os_spr::Mutation<P>,
+    Op::Diff: PartialEq + std::fmt::Debug + Default,
+{
+    let outcome = mutation.diff(base);
+    let has_missing_target_error = outcome.messages().iter().any(|message| message.level == crate::os_dsl::Severity::Error && message.code.0 == "mutation.target-missing");
+    assert!(has_missing_target_error, "a mutation targeting an absent element must carry an Error message with code 'mutation.target-missing', got {:?}", outcome.messages());
+    assert_eq!(outcome.diff(), &Op::Diff::default(), "a mutation.target-missing outcome must carry no change (diff == Diff::default())");
+}
+
+/// ✅️ LAW (§C2 law 1): whenever `outcome.worst_level()` is `Fatal`, `outcome.diff() ==
+/// D::default()`.
+pub fn assert_fatal_never_applies<D>(outcome: &crate::os_spr::MutationOutcome<D>)
+where
+    D: PartialEq + std::fmt::Debug + Default,
+{
+    if outcome.worst_level() == Some(crate::os_dsl::Severity::Fatal) {
+        assert_eq!(outcome.diff(), &D::default(), "a Fatal outcome must carry diff == D::default()");
+    }
+}
+
+/// ✅️ LAW (§C2 law 3): equal `(op, base)` produces equal messages and an equal diff, across
+/// repeated invocations.
+pub fn assert_outcome_deterministic<P, Op>(base: &P, mutation: &Op)
+where
+    Op: crate::os_spr::Mutation<P>,
+    Op::Diff: PartialEq + std::fmt::Debug,
+{
+    let a = mutation.diff(base);
+    let b = mutation.diff(base);
+    assert_eq!(a.diff(), b.diff(), "diff(op, base) must be deterministic across repeated invocations");
+    assert_eq!(a.messages(), b.messages(), "messages(op, base) must be deterministic across repeated invocations");
+}
+//#endregion 🔖️Outcome
+
+//#region 🔖️Policy
+const POLICY_MATRIX_POLICIES: [crate::os_spr::MergePolicy; 3] = [crate::os_spr::MergePolicy::LaissezFaire, crate::os_spr::MergePolicy::Normal, crate::os_spr::MergePolicy::Vigilant];
+const POLICY_MATRIX_LEVELS: [crate::os_dsl::Severity; 4] = [crate::os_dsl::Severity::Info, crate::os_dsl::Severity::Warning, crate::os_dsl::Severity::Error, crate::os_dsl::Severity::Fatal];
+
+/// 📐️ The frozen 3×4 table (`📋️contract-freeze.md` "The three merge policies"): `LaissezFaire`
+/// rejects only `Fatal`; `Normal` rejects `Error`+`Fatal`; `Vigilant` rejects
+/// `Warning`+`Error`+`Fatal`.
+fn policy_matrix_expected_reject(policy: crate::os_spr::MergePolicy, level: crate::os_dsl::Severity) -> bool {
+    match policy {
+        crate::os_spr::MergePolicy::LaissezFaire => level == crate::os_dsl::Severity::Fatal,
+        crate::os_spr::MergePolicy::Normal => level >= crate::os_dsl::Severity::Error,
+        crate::os_spr::MergePolicy::Vigilant => level >= crate::os_dsl::Severity::Warning,
+    }
+}
+
+/// ✅️ LAW: `rejects` (typically `MergePolicy::rejects`) and `is_applicable` (typically a
+/// single-message `MutationOutcome::is_applicable` probe at `level`) must both agree with the
+/// frozen 3×4 policy matrix for every `(policy, level)` pair.
+pub fn assert_policy_matrix(rejects: impl Fn(crate::os_spr::MergePolicy, crate::os_dsl::Severity) -> bool, is_applicable: impl Fn(crate::os_spr::MergePolicy, crate::os_dsl::Severity) -> bool) {
+    for policy in POLICY_MATRIX_POLICIES {
+        for level in POLICY_MATRIX_LEVELS {
+            let expected_reject = policy_matrix_expected_reject(policy, level);
+            assert_eq!(rejects(policy, level), expected_reject, "rejects({policy:?}, {level:?}) diverged from the frozen 3x4 policy matrix");
+            assert_eq!(is_applicable(policy, level), !expected_reject, "is_applicable({policy:?}, {level:?}) diverged from the frozen 3x4 policy matrix");
+        }
+    }
+}
+//#endregion 🔖️Policy
+
+//#region 🔖️Merge
+/// ✅️ LAW: two peers that independently insert the same closed `envelopes` set (in independently
+/// shuffled order) into a fresh [`crate::os_spr::MutationDag`] and then fold the drained batch
+/// through `fold` converge on the same state — `fold` is responsible for its own canonicalization
+/// (typically an HLC sort, mirroring `ingest_remote`'s own §C6 step 3) since
+/// `drain_applied_envelopes`'s own order is only causally valid, not canonical.
+pub fn assert_merge_convergence<P: PartialEq + std::fmt::Debug>(seed: u64, peer_count: usize, envelopes: &[crate::os_spr::MutationEnvelope], fold: impl Fn(&[crate::os_spr::MutationEnvelope]) -> P) {
+    let mut rng = SplitMix64(seed);
+    let mut expected: Option<P> = None;
+    for _ in 0..peer_count.max(2) {
+        let mut order: Vec<usize> = (0..envelopes.len()).collect();
+        fisher_yates_shuffle(&mut rng, &mut order);
+        let mut dag = crate::os_spr::MutationDag::new();
+        for index in order {
+            dag.insert(envelopes[index].clone()).expect("assert_merge_convergence requires a closed dependency set with unique ids");
+        }
+        let batch = dag.drain_applied_envelopes();
+        let state = fold(&batch);
+        match &expected {
+            None => expected = Some(state),
+            Some(reference) => assert_eq!(&state, reference, "peers that exchange the same edit set (different arrival/insertion order) must converge on the same state"),
+        }
+    }
+}
+
+/// ✅️ LAW: the headline modify-vs-delete scenario (`📋️contract-freeze.md` "Testkit laws"). Under
+/// `Normal`/`Vigilant`, `report.accepted` must be `false` and `post_state` must equal `pre_state`
+/// (quarantined, nothing applied), and `report.conflict` must resolve (in `conflicts`) to a
+/// `ConflictKind::Quarantined`. Under `LaissezFaire`, `report.accepted` must be `true`,
+/// `report.replayed` must carry an `Error` message, `report.conflict` must resolve to a
+/// `ConflictKind::Degraded`, and `part_present(post_state)` must be `false`.
+pub fn assert_modify_vs_delete<P: PartialEq + std::fmt::Debug>(policy: crate::os_spr::MergePolicy, pre_state: &P, post_state: &P, report: &crate::os_spr::MergeReport, conflicts: &[crate::os_spr::Conflict], part_present: impl Fn(&P) -> bool) {
+    let has_error = report.replayed.iter().flat_map(|edit| &edit.messages).any(|message| message.level == crate::os_dsl::Severity::Error);
+    match policy {
+        crate::os_spr::MergePolicy::Normal | crate::os_spr::MergePolicy::Vigilant => {
+            assert!(!report.accepted, "under {policy:?}, a modify-vs-delete remote merge must be quarantined (MergeReport::accepted == false)");
+            assert_eq!(post_state, pre_state, "under {policy:?}, a quarantined merge must leave the state unchanged");
+            let quarantined = report.conflict.as_ref().and_then(|id| conflicts.iter().find(|conflict| &conflict.id == id)).expect("a quarantined MergeReport must reference an existing Conflict");
+            assert!(matches!(quarantined.kind, crate::os_spr::ConflictKind::Quarantined { .. }), "a rejected modify-vs-delete merge must raise a Quarantined conflict, got {:?}", quarantined.kind);
+        }
+        crate::os_spr::MergePolicy::LaissezFaire => {
+            assert!(report.accepted, "under LaissezFaire, a modify-vs-delete remote merge must be applied (MergeReport::accepted == true)");
+            assert!(has_error, "under LaissezFaire, an applied modify-vs-delete merge must carry an Error message");
+            let degraded = report.conflict.as_ref().and_then(|id| conflicts.iter().find(|conflict| &conflict.id == id)).expect("an applied-but-messy modify-vs-delete merge must raise a Degraded conflict");
+            assert!(matches!(degraded.kind, crate::os_spr::ConflictKind::Degraded { .. }), "an applied modify-vs-delete merge must raise a Degraded conflict, got {:?}", degraded.kind);
+            assert!(!part_present(post_state), "under LaissezFaire, the deleted part must remain absent after the merge");
+        }
+    }
+}
+
+/// ✅️ LAW: any arrival order of the same envelope batch must yield the same final state, the same
+/// `applied_edit_ids` order, and the same set of raised conflicts. `run` builds a fresh authority
+/// from scratch and ingests `order` (a permutation of `0..envelope_count`), returning
+/// `(final_state, applied_edit_ids, conflict_ids)`.
+pub fn assert_chronological_determinism<P: PartialEq + std::fmt::Debug>(envelope_count: usize, seed: u64, permutation_count: usize, mut run: impl FnMut(&[usize]) -> (P, Vec<String>, Vec<crate::os_spr::ConflictId>)) {
+    let mut rng = SplitMix64(seed);
+    let mut expected: Option<(P, Vec<String>, Vec<crate::os_spr::ConflictId>)> = None;
+    for _ in 0..permutation_count.max(1) {
+        let mut order: Vec<usize> = (0..envelope_count).collect();
+        fisher_yates_shuffle(&mut rng, &mut order);
+        let result = run(&order);
+        match &expected {
+            None => expected = Some(result),
+            Some((state, applied, conflicts)) => {
+                assert_eq!(&result.0, state, "arrival order must not change the final state");
+                assert_eq!(&result.1, applied, "arrival order must not change applied_edit_ids order");
+                assert_eq!(&result.2, conflicts, "arrival order must not change which conflicts get raised");
+            }
+        }
+    }
+}
+
+/// ✅️ LAW: resolving a `Quarantined` conflict with `ConflictResolution::Accept` produces exactly
+/// the state a `LaissezFaire` peer ingesting the same envelopes directly would have produced.
+pub fn assert_quarantine_accept_equals_laissez_faire<P: PartialEq + std::fmt::Debug>(state_after_accept: &P, state_under_laissez_faire: &P) {
+    assert_eq!(state_after_accept, state_under_laissez_faire, "resolving a Quarantined conflict with Accept must produce exactly the state LaissezFaire would have produced");
+}
+
+/// ✅️ LAW: resolving a `Quarantined` conflict with `ConflictResolution::Discard` leaves the state
+/// untouched, and none of `discarded_edit_ids` ever appears in `relayed` (the local edit ids a
+/// `flush_outbound`-shaped call would ship).
+pub fn assert_quarantine_discard_preserves_state<P: PartialEq + std::fmt::Debug>(pre_state: &P, post_state: &P, discarded_edit_ids: &[String], relayed: &[String]) {
+    assert_eq!(post_state, pre_state, "discarding a Quarantined conflict must leave the state untouched");
+    for edit_id in discarded_edit_ids {
+        assert!(!relayed.contains(edit_id), "a discarded edit ({edit_id}) must never be relayed");
+    }
+}
+
+/// ✅️ LAW: the persisted `edit_messages` ledger (`edit_id -> Vec<MutationMessage>`, typically
+/// collected via `ArtifactStore::messages_for_edit`) equals what a fresh history replay produces.
+pub fn assert_ledger_matches_replay(ledger: &std::collections::HashMap<String, Vec<crate::os_spr::MutationMessage>>, replayed: &std::collections::HashMap<String, Vec<crate::os_spr::MutationMessage>>) {
+    assert_eq!(ledger, replayed, "the persisted edit_messages ledger must equal a fresh replay's messages");
+}
+//#endregion 🔖️Merge
+
+//#region 🔖️Conflict
+/// ✅️ LAW (§C7): `decode(encode(conflict)) == conflict` through the `.spr` conflict ledger codec
+/// (`REC_CONFLICT`) — `encode`/`decode` are typically `crate::os_spr::history::encode_conflicts`/
+/// `decode_conflicts` sliced to one entry.
+pub fn assert_conflict_spr_round_trip(conflict: &crate::os_spr::Conflict, encode: impl Fn(&crate::os_spr::Conflict) -> Vec<u8>, decode: impl Fn(&[u8]) -> crate::os_spr::Conflict) {
+    let bytes = encode(conflict);
+    let decoded = decode(&bytes);
+    assert_eq!(&decoded, conflict, "decode(encode(conflict)) must equal conflict");
+}
+//#endregion 🔖️Conflict
+
+//#region 🔖️Channel
+/// ✅️ LAW: a corpus round-trip sweep — `decode(encode(sample)) == sample` for every `sample` in
+/// `corpus`. Point `encode`/`decode` at `crate::os_spr::{encode,decode}_app_command` or
+/// `_app_frame` to sweep the C8 new-frame corpus
+/// (`AppCommand::{SetMergePolicy,ResolveConflict,ReadConflicts}`,
+/// `AppFrame::{MergeReport,Conflicts}`) once 1-C lands those variants.
+pub fn assert_channel_frame_corpus<T: PartialEq + std::fmt::Debug>(corpus: &[T], encode: impl Fn(&T) -> Vec<u8>, decode: impl Fn(&[u8]) -> T) {
+    for sample in corpus {
+        let bytes = encode(sample);
+        let decoded = decode(&bytes);
+        assert_eq!(&decoded, sample, "decode(encode(sample)) must equal sample for every entry in the corpus");
+    }
+}
+//#endregion 🔖️Channel
 //#endregion 🔖️Laws
 
 //#region 🔖️Corrupt
@@ -892,8 +1074,8 @@ mod tests {
     }
     impl crate::os_spr::Mutation<i64> for AddOp {
         type Diff = AddDiff;
-        fn diff(&self, _base: &i64) -> AddDiff {
-            AddDiff { delta: self.delta }
+        fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
+            crate::os_spr::MutationOutcome::new(AddDiff { delta: self.delta })
         }
         fn inverse(&self, _base: &i64) -> Vec<Self> {
             vec![AddOp { delta: -self.delta }]
@@ -922,41 +1104,64 @@ mod tests {
         }
     }
 
-    // `RegisterDiff`: two independently-overwritable fields, used to demonstrate LwwRegister's
-    // "discard the loser whole" behavior versus the semio_compose_rs strategies' "merge per field" behavior.
-    #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct RegisterDiff {
-        field_a: Option<i64>,
-        field_b: Option<i64>,
-    }
-    impl crate::os_spr::MutationDiff<(i64, i64)> for RegisterDiff {
-        fn apply(&self, base: &(i64, i64)) -> (i64, i64) {
-            (self.field_a.unwrap_or(base.0), self.field_b.unwrap_or(base.1))
+    // 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS §C2 fixtures: correct and
+    // deliberately-buggy `Mutation<i64>` impls proving each `🔖️Outcome`/`🔖️Laws (continued)`
+    // self-test panics on a genuine violation, not just passes on a good input.
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    struct MissingTargetOp;
+    impl crate::os_spr::Mutation<i64> for MissingTargetOp {
+        type Diff = AddDiff;
+        fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
+            crate::os_spr::MutationOutcome::error("mutation.target-missing", "target absent", ["thing"])
         }
-        fn absorb(&mut self, other: Self) {
-            if other.field_a.is_some() {
-                self.field_a = other.field_a;
-            }
-            if other.field_b.is_some() {
-                self.field_b = other.field_b;
-            }
+        fn inverse(&self, _base: &i64) -> Vec<Self> {
+            Vec::new()
         }
     }
 
-    fn meta_at(actor: u64, physical_ms: u64) -> crate::os_spr::MutationMeta {
-        crate::os_spr::MutationMeta {
-            mutation_id: None,
-            dependencies: Vec::new(),
-            base_version: 0,
-            author_id: None,
-            timestamp: crate::os_spr::HybridLogicalTimestamp::new(actor, physical_ms),
-            undo_policy: crate::os_spr::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: crate::os_spr::command::MutationOrigin::Owner,
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    struct BuggyMissingTargetOp;
+    impl crate::os_spr::Mutation<i64> for BuggyMissingTargetOp {
+        type Diff = AddDiff;
+        fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
+            crate::os_spr::MutationOutcome::new(AddDiff { delta: 1 })
         }
+        fn inverse(&self, _base: &i64) -> Vec<Self> {
+            vec![BuggyMissingTargetOp]
+        }
+    }
+
+    #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
+    struct NondeterministicOp {
+        #[serde(skip)]
+        calls: std::rc::Rc<std::cell::Cell<i64>>,
+    }
+    impl crate::os_spr::Mutation<i64> for NondeterministicOp {
+        type Diff = AddDiff;
+        fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
+            let count = self.calls.get();
+            self.calls.set(count + 1);
+            crate::os_spr::MutationOutcome::new(AddDiff { delta: count })
+        }
+        fn inverse(&self, _base: &i64) -> Vec<Self> {
+            Vec::new()
+        }
+    }
+
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    struct RejectedForwardOp;
+    impl crate::os_spr::Mutation<i64> for RejectedForwardOp {
+        type Diff = AddDiff;
+        fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
+            crate::os_spr::MutationOutcome::fatal("mutation.invariant", "boom", ["x"])
+        }
+        fn inverse(&self, _base: &i64) -> Vec<Self> {
+            Vec::new()
+        }
+    }
+
+    fn sample_conflict(id: &str, kind: crate::os_spr::ConflictKind) -> crate::os_spr::Conflict {
+        crate::os_spr::Conflict { id: crate::os_spr::ConflictId(id.to_string()), kind, status: crate::os_spr::ConflictStatus::Open, messages: Vec::new(), actors: Vec::new(), timestamp: crate::os_spr::HybridLogicalTimestamp::new(1, 100) }
     }
     //#endregion 🧸️Fixtures
 
@@ -972,10 +1177,10 @@ mod tests {
         use crate::os_spr::{Mutation, MutationDiff};
         let base: i64 = 10;
         let op = AddOp { delta: 5 };
-        let forward = op.diff(&base).apply(&base);
+        let forward = op.diff(&base).diff().apply(&base);
         assert_eq!(forward, 15);
         let [undo] = <[AddOp; 1]>::try_from(op.inverse(&base)).unwrap();
-        assert_eq!(undo.diff(&forward).apply(&forward), base);
+        assert_eq!(undo.diff(&forward).diff().apply(&forward), base);
     }
 
     #[test]
@@ -986,6 +1191,12 @@ mod tests {
     #[test]
     fn mutation_inverse_law_holds_for_add() {
         assert_mutation_inverse_law(&10i64, &AddOp { delta: 5 });
+    }
+
+    #[test]
+    #[should_panic(expected = "must not have been rejected")]
+    fn mutation_inverse_law_panics_when_forward_outcome_is_rejected() {
+        assert_mutation_inverse_law(&10i64, &RejectedForwardOp);
     }
 
     #[test]
@@ -1017,20 +1228,6 @@ mod tests {
     }
 
     #[test]
-    fn crdt_commutative_and_idempotent_hold_for_every_strategy() {
-        let a = RegisterDiff { field_a: Some(1), field_b: Some(2) };
-        let b = RegisterDiff { field_a: Some(3), field_b: None };
-        let ma = meta_at(1, 10);
-        let mb = meta_at(2, 20);
-        for strategy in
-            [crate::os_spr::MergeStrategyKind::LwwRegister, crate::os_spr::MergeStrategyKind::OrderedSequence, crate::os_spr::MergeStrategyKind::TextSequence, crate::os_spr::MergeStrategyKind::TombstonedGraphSet, crate::os_spr::MergeStrategyKind::ContentAddressedBlob]
-        {
-            assert_crdt_commutative::<(i64, i64), RegisterDiff>(strategy, a.clone(), b.clone(), &ma, &mb);
-            assert_crdt_idempotent::<(i64, i64), RegisterDiff>(strategy, &a, &ma);
-        }
-    }
-
-    #[test]
     fn wire_frame_round_trip_holds_for_client_and_server_samples() {
         assert_wire_frame_round_trip(&WireFrameSample::Client(crate::os_spr::ClientFrame::Bye, crate::os_spr::Lane::Command));
         assert_wire_frame_round_trip(&WireFrameSample::Client(crate::os_spr::ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, crate::os_spr::Lane::Preview));
@@ -1043,9 +1240,240 @@ mod tests {
         assert_channel_frame_round_trip(&ChannelFrameSample::Command(crate::os_spr::AppCommand::Bye));
         assert_channel_frame_round_trip(&ChannelFrameSample::Command(crate::os_spr::AppCommand::Hello { channel_version: crate::os_spr::CHANNEL_VERSION, app_id: "app-1".to_string(), actor: "actor-1".to_string(), config: vec![1, 2, 3] }));
         assert_channel_frame_round_trip(&ChannelFrameSample::Frame(crate::os_spr::AppFrame::Welcome { channel_version: crate::os_spr::CHANNEL_VERSION, instance: 1, manifest: vec![1, 2] }));
-        assert_channel_frame_round_trip(&ChannelFrameSample::Frame(crate::os_spr::AppFrame::Error { in_reply_to: None, fault: b"e:m".to_vec() }));
+        assert_channel_frame_round_trip(&ChannelFrameSample::Frame(crate::os_spr::AppFrame::Error { in_reply_to: None, fault: b"e:m".to_vec(), report: Vec::new() }));
     }
     //#endregion 🔖️Laws (continued)
+
+    //#region 🔖️Outcome
+    #[test]
+    fn missing_target_is_error_holds_for_a_correct_impl() {
+        assert_missing_target_is_error(&10i64, &MissingTargetOp);
+    }
+
+    #[test]
+    #[should_panic(expected = "mutation.target-missing")]
+    fn missing_target_is_error_panics_on_a_buggy_impl() {
+        assert_missing_target_is_error(&10i64, &BuggyMissingTargetOp);
+    }
+
+    #[test]
+    fn fatal_never_applies_holds_for_a_correct_outcome() {
+        let outcome: crate::os_spr::MutationOutcome<AddDiff> = crate::os_spr::MutationOutcome::fatal("mutation.invariant", "boom", ["x"]);
+        assert_fatal_never_applies(&outcome);
+    }
+
+    #[test]
+    #[should_panic(expected = "Fatal outcome must carry diff == D::default()")]
+    fn fatal_never_applies_panics_on_a_non_empty_diff() {
+        let outcome = crate::os_spr::MutationOutcome::new(AddDiff { delta: 3 }).absorb_messages([crate::os_spr::MutationMessage::fatal("mutation.invariant", "boom")]);
+        assert_fatal_never_applies(&outcome);
+    }
+
+    #[test]
+    fn outcome_deterministic_holds_for_add() {
+        assert_outcome_deterministic(&10i64, &AddOp { delta: 4 });
+    }
+
+    #[test]
+    #[should_panic(expected = "must be deterministic")]
+    fn outcome_deterministic_panics_on_a_nondeterministic_impl() {
+        assert_outcome_deterministic(&10i64, &NondeterministicOp::default());
+    }
+    //#endregion 🔖️Outcome
+
+    //#region 🔖️Policy
+    fn message_at_level(level: crate::os_dsl::Severity) -> crate::os_spr::MutationMessage {
+        match level {
+            crate::os_dsl::Severity::Info => crate::os_spr::MutationMessage::info("mutation.cascade", "probe"),
+            crate::os_dsl::Severity::Warning => crate::os_spr::MutationMessage::warn("mutation.no-op", "probe"),
+            crate::os_dsl::Severity::Error => crate::os_spr::MutationMessage::error("mutation.target-missing", "probe"),
+            crate::os_dsl::Severity::Fatal => crate::os_spr::MutationMessage::fatal("mutation.invariant", "probe"),
+        }
+    }
+
+    #[test]
+    fn policy_matrix_holds_for_the_real_apis() {
+        assert_policy_matrix(
+            |policy, level| policy.rejects(level),
+            |policy, level| {
+                let outcome: crate::os_spr::MutationOutcome<()> = crate::os_spr::MutationOutcome::new(()).absorb_messages([message_at_level(level)]);
+                outcome.is_applicable(policy)
+            },
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "diverged from the frozen 3x4 policy matrix")]
+    fn policy_matrix_panics_on_a_wrong_impl() {
+        assert_policy_matrix(|_, _| false, |_, _| true);
+    }
+    //#endregion 🔖️Policy
+
+    //#region 🔖️Merge
+    #[test]
+    fn merge_convergence_holds_for_a_commutative_fold() {
+        let envelopes = OpDagGen::new(30).generate(10);
+        assert_merge_convergence(300, 5, &envelopes, |batch| {
+            let mut batch = batch.to_vec();
+            batch.sort_by_key(|envelope| envelope.timestamp);
+            batch.iter().fold(0i64, |state, envelope| {
+                let payload = std::str::from_utf8(&envelope.diff.payload).unwrap();
+                let index: i64 = payload.strip_prefix("index:").unwrap().parse().unwrap();
+                state + index
+            })
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "must converge on the same state")]
+    fn merge_convergence_panics_for_an_order_dependent_fold() {
+        let envelopes = OpDagGen::new(31).generate(10);
+        assert_merge_convergence(301, 6, &envelopes, |batch| batch.iter().map(|envelope| envelope.mutation_id.0.clone()).collect::<Vec<_>>().join(","));
+    }
+
+    #[test]
+    fn modify_vs_delete_holds_for_normal_quarantine() {
+        let pre = Some("part".to_string());
+        let post = pre.clone();
+        let conflict = sample_conflict("c1", crate::os_spr::ConflictKind::Quarantined { envelopes: Vec::new() });
+        let report = crate::os_spr::MergeReport { policy: crate::os_spr::MergePolicy::Normal, accepted: false, insertion_index: 0, replayed: Vec::new(), worst: Some(crate::os_dsl::Severity::Error), conflict: Some(conflict.id.clone()) };
+        assert_modify_vs_delete(crate::os_spr::MergePolicy::Normal, &pre, &post, &report, std::slice::from_ref(&conflict), |state| state.is_some());
+    }
+
+    #[test]
+    #[should_panic(expected = "must be quarantined")]
+    fn modify_vs_delete_panics_when_normal_wrongly_accepts() {
+        let pre = Some("part".to_string());
+        let post = pre.clone();
+        let report = crate::os_spr::MergeReport { policy: crate::os_spr::MergePolicy::Normal, accepted: true, insertion_index: 0, replayed: Vec::new(), worst: None, conflict: None };
+        assert_modify_vs_delete(crate::os_spr::MergePolicy::Normal, &pre, &post, &report, &[], |state| state.is_some());
+    }
+
+    #[test]
+    fn modify_vs_delete_holds_for_laissez_faire_apply() {
+        let pre = Some("part".to_string());
+        let post: Option<String> = None;
+        let conflict = sample_conflict("c2", crate::os_spr::ConflictKind::Degraded { edit_ids: vec!["e1".to_string()] });
+        let report = crate::os_spr::MergeReport {
+            policy: crate::os_spr::MergePolicy::LaissezFaire,
+            accepted: true,
+            insertion_index: 0,
+            replayed: vec![crate::os_spr::EditMessages { edit_id: "e1".to_string(), messages: vec![crate::os_spr::MutationMessage::error("mutation.target-missing", "part gone")] }],
+            worst: Some(crate::os_dsl::Severity::Error),
+            conflict: Some(conflict.id.clone()),
+        };
+        assert_modify_vs_delete(crate::os_spr::MergePolicy::LaissezFaire, &pre, &post, &report, std::slice::from_ref(&conflict), |state| state.is_some());
+    }
+
+    #[test]
+    #[should_panic(expected = "must remain absent")]
+    fn modify_vs_delete_panics_when_laissez_faire_part_still_present() {
+        let pre = Some("part".to_string());
+        let post = pre.clone();
+        let conflict = sample_conflict("c3", crate::os_spr::ConflictKind::Degraded { edit_ids: vec!["e1".to_string()] });
+        let report = crate::os_spr::MergeReport {
+            policy: crate::os_spr::MergePolicy::LaissezFaire,
+            accepted: true,
+            insertion_index: 0,
+            replayed: vec![crate::os_spr::EditMessages { edit_id: "e1".to_string(), messages: vec![crate::os_spr::MutationMessage::error("mutation.target-missing", "part gone")] }],
+            worst: Some(crate::os_dsl::Severity::Error),
+            conflict: Some(conflict.id.clone()),
+        };
+        assert_modify_vs_delete(crate::os_spr::MergePolicy::LaissezFaire, &pre, &post, &report, std::slice::from_ref(&conflict), |state| state.is_some());
+    }
+
+    #[test]
+    fn chronological_determinism_holds_for_an_order_independent_run() {
+        assert_chronological_determinism(5, 400, 6, |order| {
+            let mut sorted = order.to_vec();
+            sorted.sort_unstable();
+            (sorted.clone(), sorted.iter().map(|i| format!("edit-{i}")).collect(), Vec::new())
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "must not change the final state")]
+    fn chronological_determinism_panics_for_an_order_dependent_run() {
+        assert_chronological_determinism(5, 401, 6, |order| (order.to_vec(), order.iter().map(|i| format!("edit-{i}")).collect(), Vec::new()));
+    }
+
+    #[test]
+    fn quarantine_accept_equals_laissez_faire_holds_when_equal() {
+        assert_quarantine_accept_equals_laissez_faire(&5i64, &5i64);
+    }
+
+    #[test]
+    #[should_panic(expected = "must produce exactly the state LaissezFaire would have produced")]
+    fn quarantine_accept_equals_laissez_faire_panics_when_unequal() {
+        assert_quarantine_accept_equals_laissez_faire(&5i64, &6i64);
+    }
+
+    #[test]
+    fn quarantine_discard_preserves_state_holds() {
+        assert_quarantine_discard_preserves_state(&5i64, &5i64, &["e1".to_string()], &["e2".to_string()]);
+    }
+
+    #[test]
+    #[should_panic(expected = "must never be relayed")]
+    fn quarantine_discard_preserves_state_panics_when_relayed() {
+        assert_quarantine_discard_preserves_state(&5i64, &5i64, &["e1".to_string()], &["e1".to_string()]);
+    }
+
+    #[test]
+    #[should_panic(expected = "must leave the state untouched")]
+    fn quarantine_discard_preserves_state_panics_when_state_changes() {
+        assert_quarantine_discard_preserves_state(&5i64, &6i64, &["e1".to_string()], &[]);
+    }
+
+    #[test]
+    fn ledger_matches_replay_holds_when_equal() {
+        let mut ledger = std::collections::HashMap::new();
+        ledger.insert("e1".to_string(), vec![crate::os_spr::MutationMessage::info("mutation.cascade", "note")]);
+        let replayed = ledger.clone();
+        assert_ledger_matches_replay(&ledger, &replayed);
+    }
+
+    #[test]
+    #[should_panic(expected = "must equal a fresh replay")]
+    fn ledger_matches_replay_panics_when_unequal() {
+        let mut ledger = std::collections::HashMap::new();
+        ledger.insert("e1".to_string(), vec![crate::os_spr::MutationMessage::info("mutation.cascade", "note")]);
+        let mut replayed = std::collections::HashMap::new();
+        replayed.insert("e1".to_string(), Vec::new());
+        assert_ledger_matches_replay(&ledger, &replayed);
+    }
+    //#endregion 🔖️Merge
+
+    //#region 🔖️Conflict
+    #[test]
+    fn conflict_spr_round_trip_holds_for_an_identity_codec() {
+        let conflict = sample_conflict("c4", crate::os_spr::ConflictKind::Degraded { edit_ids: vec!["e1".to_string()] });
+        let for_decode = conflict.clone();
+        assert_conflict_spr_round_trip(&conflict, |_c| Vec::new(), move |_bytes| for_decode.clone());
+    }
+
+    #[test]
+    #[should_panic(expected = "must equal conflict")]
+    fn conflict_spr_round_trip_panics_for_a_lossy_codec() {
+        let conflict = sample_conflict("c5", crate::os_spr::ConflictKind::Degraded { edit_ids: vec!["e1".to_string()] });
+        assert_conflict_spr_round_trip(&conflict, |_c| Vec::new(), |_bytes| sample_conflict("different", crate::os_spr::ConflictKind::Degraded { edit_ids: Vec::new() }));
+    }
+    //#endregion 🔖️Conflict
+
+    //#region 🔖️Channel
+    #[test]
+    fn frame_corpus_round_trip_holds_for_the_real_app_command_codec() {
+        let corpus = vec![crate::os_spr::AppCommand::Bye, crate::os_spr::AppCommand::Hello { channel_version: crate::os_spr::CHANNEL_VERSION, app_id: "app-1".to_string(), actor: "actor-1".to_string(), config: vec![1, 2, 3] }];
+        assert_channel_frame_corpus(&corpus, |command| crate::os_spr::encode_app_command(command), |bytes| crate::os_spr::decode_app_command(bytes).unwrap());
+    }
+
+    #[test]
+    #[should_panic(expected = "must equal sample")]
+    fn frame_corpus_round_trip_panics_for_a_lossy_codec() {
+        let corpus = vec![crate::os_spr::AppCommand::Bye];
+        assert_channel_frame_corpus(&corpus, |_command| Vec::new(), |_bytes| crate::os_spr::AppCommand::Hello { channel_version: 0, app_id: String::new(), actor: String::new(), config: Vec::new() });
+    }
+    //#endregion 🔖️Channel
 
     //#region 🔖️Corrupt
     #[test]

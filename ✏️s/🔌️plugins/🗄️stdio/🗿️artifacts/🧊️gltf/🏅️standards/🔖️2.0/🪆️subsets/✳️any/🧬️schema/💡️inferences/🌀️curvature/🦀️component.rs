@@ -1,17 +1,17 @@
 //! 🌀 GLTF curvature indicators.
 
-#[path = "mean-curvature/🦀️component.rs"]
-pub mod mean_curvature;
-#[path = "gaussian-curvature/🦀️component.rs"]
-pub mod gaussian_curvature;
 #[path = "curvature-histogram/🦀️component.rs"]
 pub mod curvature_histogram;
+#[path = "gaussian-curvature/🦀️component.rs"]
+pub mod gaussian_curvature;
+#[path = "mean-curvature/🦀️component.rs"]
+pub mod mean_curvature;
 #[path = "sharp-feature-proportion/🦀️component.rs"]
 pub mod sharp_feature_proportion;
 
-use super::geometry_core::{GltfGeometryContext, statistics, triangle_area};
-use super::super::modules::{vector_operations::{cross, dot, norm, normalize, sub}};
 use super::super::modules::measurement_contracts::*;
+use super::super::modules::vector_operations::{cross, dot, norm, normalize, sub};
+use super::geometry_core::{statistics, triangle_area, GltfGeometryContext};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
@@ -45,8 +45,12 @@ pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfCurvatureRaw {
                 normalize(cross(sub(context.points[face[1]], context.points[face[0]]), sub(context.points[face[2]], context.points[face[0]])))
             };
             let angle = dot(normal(adjacent_faces[0].0), normal(adjacent_faces[1].0)).clamp(-1.0, 1.0).acos();
-            if length > 0.0 { edge_curvatures.push(angle / length); }
-            if angle > context.policy.sharp_feature_angle_radians { sharp_length += length; }
+            if length > 0.0 {
+                edge_curvatures.push(angle / length);
+            }
+            if angle > context.policy.sharp_feature_angle_radians {
+                sharp_length += length;
+            }
         }
     }
     let mut vertex_areas = vec![0.0; context.sample_count];
@@ -62,12 +66,14 @@ pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfCurvatureRaw {
         }
     }
     let boundary_vertices = context.edge_faces.iter().filter(|(_, faces)| faces.len() == 1).flat_map(|((first, second), _)| [*first, *second]).collect::<BTreeSet<_>>();
-    let gaussian_values = (0..context.sample_count).filter_map(|index| {
-        (vertex_areas[index] > 0.0).then(|| {
-            let target = if boundary_vertices.contains(&index) { std::f64::consts::PI } else { 2.0 * std::f64::consts::PI };
-            (target - angle_sums[index]) / vertex_areas[index]
+    let gaussian_values = (0..context.sample_count)
+        .filter_map(|index| {
+            (vertex_areas[index] > 0.0).then(|| {
+                let target = if boundary_vertices.contains(&index) { std::f64::consts::PI } else { 2.0 * std::f64::consts::PI };
+                (target - angle_sums[index]) / vertex_areas[index]
+            })
         })
-    }).collect::<Vec<_>>();
+        .collect::<Vec<_>>();
     GltfCurvatureRaw { edge_curvatures, gaussian_values, sharp_feature_proportion: if edge_length > 0.0 { sharp_length / edge_length } else { 0.0 } }
 }
 

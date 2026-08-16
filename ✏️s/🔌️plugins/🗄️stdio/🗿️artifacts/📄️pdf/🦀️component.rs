@@ -29,10 +29,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .schema(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::pdf_artifact_schema_descriptor())
         .formats(formats)
         .schemas([crate::artifacts::pdf::standards::v1_4::subsets::any::schema::pdf_artifact_schema_descriptor()])
-        .inferences([
-            crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::pdf17_artifact_inference_descriptor(),
-            crate::artifacts::pdf::standards::v1_4::subsets::any::schema::inferences::pdf_artifact_inference_descriptor(),
-        ])
+        .inferences([crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::pdf17_artifact_inference_descriptor(), crate::artifacts::pdf::standards::v1_4::subsets::any::schema::inferences::pdf_artifact_inference_descriptor()])
         .composers(crate::artifacts::pdf::standards::v1_7::subsets::any::io::io_registry::entries())
         .composers(crate::artifacts::pdf::standards::v1_4::subsets::any::io::io_registry::entries())
         .subset_validators(pdf_1_7_subset_validators())

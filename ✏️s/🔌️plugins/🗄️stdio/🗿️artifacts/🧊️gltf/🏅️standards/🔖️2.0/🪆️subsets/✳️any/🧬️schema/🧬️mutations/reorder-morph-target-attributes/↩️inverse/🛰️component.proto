@@ -1,0 +1,10 @@
+// reorder-morph-target-attributes inverse facet.
+syntax = "proto3";
+package stdio.gltf.mutation;
+message GltfReorderMorphTargetAttributesPayloadV1 {
+  uint32 mesh = 1;
+  uint32 primitive = 2;
+  uint32 target = 3;
+  repeated string order = 4;
+}
+message GltfReorderMorphTargetAttributesInverseV1 { string id = 1; uint32 version = 2; bool accepted = 3; repeated string touched_paths = 4; string rejection_code = 5; }

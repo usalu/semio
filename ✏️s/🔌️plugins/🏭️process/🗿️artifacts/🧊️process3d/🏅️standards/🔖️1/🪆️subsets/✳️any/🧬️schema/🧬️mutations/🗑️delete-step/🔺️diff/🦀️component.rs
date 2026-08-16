@@ -9,7 +9,8 @@ use crate::artifacts::process3d::mutations::delete_step::mutation::DeleteStep;
 use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(_payload: &DeleteStep, _base: &Process3dSnapshot) -> Process3dDiff {
-    Process3dDiff::default()
+/// 🚧️ Documented no-op — see file doc comment. Surfaced as Warning `mutation.no-op`.
+pub fn diff(_payload: &DeleteStep, _base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+    protocol::MutationOutcome::empty().warn("mutation.no-op", "Step deletion is a documented no-op pending a link resolver for the composed steps child.".to_string())
 }
 //#endregion 🔖️Diff

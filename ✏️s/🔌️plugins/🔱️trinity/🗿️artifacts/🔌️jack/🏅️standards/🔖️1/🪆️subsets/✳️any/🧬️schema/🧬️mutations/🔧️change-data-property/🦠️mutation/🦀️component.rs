@@ -22,7 +22,7 @@ pub fn change_data_property(entity: EntityRef, key: String, new_value: PropertyV
 impl protocol::MutationKind<JackSnapshot, TrinityGraphMutation> for ChangeDataProperty {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "data-property", kind: "change-data-property", record: "ChangedDataProperty" };
 
-    fn diff(&self, base: &JackSnapshot) -> JackDiff {
+    fn diff(&self, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {

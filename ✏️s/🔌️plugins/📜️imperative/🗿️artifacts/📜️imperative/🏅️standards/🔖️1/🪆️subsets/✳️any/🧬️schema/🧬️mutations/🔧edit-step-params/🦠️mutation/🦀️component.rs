@@ -24,7 +24,7 @@ pub fn edit_step_params(path_ref: PathRef, id: String, new_params: Dictionary) -
 impl protocol::MutationKind<ImperativeSnapshot, ImperativeMutation> for EditStepParams {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "step", kind: "edit-step-params", record: "EditedStepParams" };
 
-    fn diff(&self, base: &ImperativeSnapshot) -> ImperativeDiff {
+    fn diff(&self, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ImperativeSnapshot) -> Vec<ImperativeMutation> {

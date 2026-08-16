@@ -19,7 +19,7 @@ pub struct ReplaceGrowthPlan {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceGrowthPlan {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "growth-plan", kind: "replace-growth-plan", record: "ReplacedGrowthPlan" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

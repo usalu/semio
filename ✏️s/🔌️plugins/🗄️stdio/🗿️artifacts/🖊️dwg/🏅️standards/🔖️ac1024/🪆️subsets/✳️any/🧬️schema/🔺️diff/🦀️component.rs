@@ -110,10 +110,18 @@ impl MutationDiff<DwgSnapshot> for DwgDiff {
         if other.template.is_some() {
             self.template = other.template;
         }
-        if other.auxiliary_header.is_some() { self.auxiliary_header = other.auxiliary_header; }
-        if other.revision_history.is_some() { self.revision_history = other.revision_history; }
-        if other.preview.is_some() { self.preview = other.preview; }
-        if other.application_history.is_some() { self.application_history = other.application_history; }
+        if other.auxiliary_header.is_some() {
+            self.auxiliary_header = other.auxiliary_header;
+        }
+        if other.revision_history.is_some() {
+            self.revision_history = other.revision_history;
+        }
+        if other.preview.is_some() {
+            self.preview = other.preview;
+        }
+        if other.application_history.is_some() {
+            self.application_history = other.application_history;
+        }
     }
 }
 

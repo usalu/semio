@@ -21,7 +21,7 @@ pub fn change_manifest_id(new_manifest_id: Option<String>) -> Puzzle2dMutation {
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ChangeManifestId {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "manifest-id", kind: "change-manifest-id", record: "ChangedManifestId" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> Puzzle2dDiff {
+    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {

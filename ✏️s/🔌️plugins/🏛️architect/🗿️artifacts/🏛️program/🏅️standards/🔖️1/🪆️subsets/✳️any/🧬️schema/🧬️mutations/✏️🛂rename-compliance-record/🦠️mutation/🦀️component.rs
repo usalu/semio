@@ -19,7 +19,7 @@ pub struct RenameComplianceRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameComplianceRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "compliance-record", kind: "rename-compliance-record", record: "RenamedComplianceRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

@@ -1,0 +1,8 @@
+# move-mesh typed mutation facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+input GltfMoveMeshPayloadV1 {
+  index: Int!
+  position: Int!
+}
+type GltfMoveMeshMutationV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfMoveMeshPayloadV1! }

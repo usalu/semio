@@ -14,7 +14,7 @@ pub struct RenameObject {
 impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for RenameObject {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "object", kind: "rename-object", record: "RenamedObject" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff {
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

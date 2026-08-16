@@ -18,7 +18,7 @@ pub struct DisconnectTrace {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DisconnectTrace {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "disconnect", entity: "trace", kind: "disconnect-trace", record: "DisconnectedTrace" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

@@ -3,9 +3,9 @@ use crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ReplaceKindCatalogs, base: &Puzzle3dSnapshot) -> Puzzle3dDiff {
+pub fn diff(payload: &super::mutation::ReplaceKindCatalogs, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
     let mut meta = base.meta.clone();
     meta.kind_catalogs = payload.new_catalogs.clone();
-    Puzzle3dDiff { meta: Some(meta), ..Default::default() }
+    protocol::MutationOutcome::new(Puzzle3dDiff { meta: Some(meta), ..Default::default() })
 }
 //#endregion 🔖️Diff

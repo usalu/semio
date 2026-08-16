@@ -4,9 +4,9 @@ use crate::artifacts::puzzle5d::diff::{Puzzle5dDiff, Puzzle5dFastenersDelta};
 use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ConnectGrips, base: &Puzzle5dSnapshot) -> Puzzle5dDiff {
+pub fn diff(payload: &super::mutation::ConnectGrips, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
     if base.fasteners.iter().any(|entry| entry.id == payload.id) {
-        return Puzzle5dDiff::default();
+        return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "already connected").at(vec![payload.id.clone()])]);
     }
     let fastener = Puzzle5dFastener {
         id: payload.id.clone(),
@@ -22,6 +22,6 @@ pub fn diff(payload: &super::mutation::ConnectGrips, base: &Puzzle5dSnapshot) ->
         x: payload.x,
         y: payload.y,
     };
-    Puzzle5dDiff { fasteners: Some(Puzzle5dFastenersDelta { added: vec![fastener], ..Default::default() }), ..Default::default() }
+    protocol::MutationOutcome::new(Puzzle5dDiff { fasteners: Some(Puzzle5dFastenersDelta { added: vec![fastener], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

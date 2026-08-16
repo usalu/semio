@@ -20,7 +20,7 @@ pub fn change_notes(new_notes: String) -> VcsDemoMutation {
 impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for ChangeNotes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vcs", kind: "change-notes", record: "ChangedVcsNotes" };
 
-    fn diff(&self, base: &VcsSnapshot) -> VcsDiff {
+    fn diff(&self, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {

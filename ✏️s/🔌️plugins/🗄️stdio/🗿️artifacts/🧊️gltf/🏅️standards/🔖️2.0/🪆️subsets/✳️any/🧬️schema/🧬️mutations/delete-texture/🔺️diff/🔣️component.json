@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.delete-texture.v1.diff",
+  "title": "GltfDeleteTextureDiffV1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "const": "s.stdio.gltf.mutation.delete-texture.v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "touchedPaths": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^document/textures/[0-9]+$"
+      }
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "index"
+      ]
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "delete"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "removed": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sampler": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "source": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "name": {
+              "type": "string"
+            },
+            "extensions": {},
+            "extras": {}
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "index",
+        "removed"
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "touchedPaths",
+    "payload",
+    "operation"
+  ],
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.delete-texture.v1",
+    "version": 1,
+    "phase": "diff",
+    "touchedPathPattern": "document/textures",
+    "referencePolicy": "typed references remap, repair, or reject"
+  }
+}

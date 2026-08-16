@@ -219,10 +219,13 @@ impl protocol::OpBinary for SourcingCurateConfigMutation {
 impl Mutation<SourcingCurateConfig> for SourcingCurateConfigMutation {
     type Diff = SourcingCurateConfig;
 
-    fn diff(&self, base: &SourcingCurateConfig) -> SourcingCurateConfig {
+    /// 📦️ Whole-config field-setter/snapshot — every variant addresses the single always-present
+    /// `SourcingCurateConfig` by value, so there is no target to be missing; message-free outcome
+    /// per the contract's root-scoped shrink-only allowlist.
+    fn diff(&self, base: &SourcingCurateConfig) -> protocol::MutationOutcome<SourcingCurateConfig> {
         let mut next = base.clone();
         match self {
-            SourcingCurateConfigMutation::Snapshot { config } => return config.clone(),
+            SourcingCurateConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
             SourcingCurateConfigMutation::SetFilterQuery { value } => next.filters.query = value.clone(),
             SourcingCurateConfigMutation::SetFilterModules { module_ids } => next.filters.module_ids = module_ids.clone(),
             SourcingCurateConfigMutation::SetFilterTypology { path } => next.filters.typology_path = path.clone(),
@@ -234,7 +237,7 @@ impl Mutation<SourcingCurateConfig> for SourcingCurateConfigMutation {
                 crate::artifacts::curate::schema::sync_sourcing_module_contributions(json);
             }
         }
-        next
+        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &SourcingCurateConfig) -> Vec<Self> {
@@ -272,11 +275,11 @@ mod tests {
 
     /// 🎞️ Every variant's `backwards()` must exactly restore the pre-operation config.
     fn round_trip(config: &SourcingCurateConfig, operation: &SourcingCurateConfigMutation) -> SourcingCurateConfig {
-        let forward = operation.diff(config);
+        let forward = operation.diff(config).into_parts().0;
         let backwards = operation.inverse(config);
         let mut restored = forward.clone();
         for back in &backwards {
-            restored = back.diff(&restored);
+            restored = back.diff(&restored).into_parts().0;
         }
         assert_eq!(&restored, config, "backwards() must exactly restore the pre-operation config");
         forward

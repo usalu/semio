@@ -1,25 +1,25 @@
 //! 🧱 GLTF area-volume indicators.
 
+#[path = "contact-area/🦀️component.rs"]
+pub mod contact_area;
+#[path = "enclosed-volume/🦀️component.rs"]
+pub mod enclosed_volume;
+#[path = "exposed-area/🦀️component.rs"]
+pub mod exposed_area;
+#[path = "material-volume/🦀️component.rs"]
+pub mod material_volume;
 #[path = "surface-area/🦀️component.rs"]
 pub mod surface_area;
 #[path = "total-area/🦀️component.rs"]
 pub mod total_area;
-#[path = "exposed-area/🦀️component.rs"]
-pub mod exposed_area;
-#[path = "contact-area/🦀️component.rs"]
-pub mod contact_area;
-#[path = "volume/🦀️component.rs"]
-pub mod volume;
-#[path = "enclosed-volume/🦀️component.rs"]
-pub mod enclosed_volume;
-#[path = "material-volume/🦀️component.rs"]
-pub mod material_volume;
 #[path = "void-volume/🦀️component.rs"]
 pub mod void_volume;
+#[path = "volume/🦀️component.rs"]
+pub mod volume;
 
-use super::geometry_core::{GltfGeometryContext, GltfPairGeometry};
-use super::super::modules::{mesh_topology::Topology};
 use super::super::modules::measurement_contracts::*;
+use super::super::modules::mesh_topology::Topology;
+use super::geometry_core::{GltfGeometryContext, GltfPairGeometry};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

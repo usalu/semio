@@ -1,0 +1,5 @@
+PLUGIN="✏️s/🔌️plugins/💠️lowpoly"
+APP="✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly"
+SUBSET="✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any"
+EDITORD="✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"
+VIEWERD="✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer"

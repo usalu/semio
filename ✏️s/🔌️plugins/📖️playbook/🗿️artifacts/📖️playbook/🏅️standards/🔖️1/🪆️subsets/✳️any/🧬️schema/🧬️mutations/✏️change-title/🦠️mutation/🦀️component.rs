@@ -23,7 +23,7 @@ pub fn change_title_operation(new_title: Option<String>) -> PlaybookMutation {
 impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for ChangeTitle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "playbook", kind: "change-title", record: "ChangedPlaybookTitle" };
 
-    fn diff(&self, base: &PlaybookSnapshot) -> crate::artifacts::playbook::PlaybookDiff {
+    fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {

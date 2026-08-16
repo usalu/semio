@@ -5807,607 +5807,22 @@ pub mod artifacts {
 }
 //#endregion 🗿️Artifacts
 
-//#region 🎛️Apps
+//#region ✏️Editor
 #[path = "."]
-pub mod apps {
-    #[path = "."]
-    pub mod din4108 {
-        #[path = "../../🎛️apps/📕️din4108/🦀️component.rs"]
-        mod component;
-        pub use component::*;
-
-        #[path = "."]
-        pub mod commands {
-            #[path = "../../🎛️apps/📕️din4108/🎮️commands/🧮️evaluate/🦀️component.rs"]
-            pub mod evaluate;
-            #[path = "../../🎛️apps/📕️din4108/🎮️commands/☑️selected-check/🦀️component.rs"]
-            pub mod selected_check;
-            #[path = "../../🎛️apps/📕️din4108/🎮️commands/📤️set-snapshot/🦀️component.rs"]
-            pub mod set_snapshot;
-        }
-
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "../../🎛️apps/📕️din4108/🎭️modes/✏️edit/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-
-                #[path = "."]
-                pub mod windows {
-                    #[path = "../../🎛️apps/📕️din4108/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
-                    pub mod inputs;
-                    #[path = "../../🎛️apps/📕️din4108/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
-                    pub mod results;
-                }
-            }
-        }
-
-        #[path = "."]
-        pub mod panels {
-            #[path = "../../🎛️apps/📕️din4108/📌️panels/📚️catalogue/🦀️component.rs"]
-            pub mod catalogue;
-            #[path = "../../🎛️apps/📕️din4108/📌️panels/📄️artifact/🦀️component.rs"]
-            pub mod document;
-            #[path = "../../🎛️apps/📕️din4108/📌️panels/🔍️inspection/🦀️component.rs"]
-            pub mod inspection;
-        }
-    }
-
-    #[path = "."]
-    pub mod din16798 {
-        #[path = "../../🎛️apps/📗️din16798/🦀️component.rs"]
-        mod component;
-        pub use component::*;
-
-        #[path = "."]
-        pub mod commands {
-            #[path = "../../🎛️apps/📗️din16798/🎮️commands/🧮️evaluate/🦀️component.rs"]
-            pub mod evaluate;
-            #[path = "../../🎛️apps/📗️din16798/🎮️commands/☑️selected-check/🦀️component.rs"]
-            pub mod selected_check;
-            #[path = "../../🎛️apps/📗️din16798/🎮️commands/📤️set-snapshot/🦀️component.rs"]
-            pub mod set_snapshot;
-        }
-
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "../../🎛️apps/📗️din16798/🎭️modes/✏️edit/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-
-                #[path = "."]
-                pub mod windows {
-                    #[path = "../../🎛️apps/📗️din16798/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
-                    pub mod inputs;
-                    #[path = "../../🎛️apps/📗️din16798/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
-                    pub mod results;
-                }
-            }
-        }
-
-        #[path = "."]
-        pub mod panels {
-            #[path = "../../🎛️apps/📗️din16798/📌️panels/📚️catalogue/🦀️component.rs"]
-            pub mod catalogue;
-            #[path = "../../🎛️apps/📗️din16798/📌️panels/📄️artifact/🦀️component.rs"]
-            pub mod document;
-            #[path = "../../🎛️apps/📗️din16798/📌️panels/🔍️inspection/🦀️component.rs"]
-            pub mod inspection;
-        }
-    }
-
-    #[path = "."]
-    pub mod din18599 {
-        #[path = "../../🎛️apps/📙️din18599/🦀️component.rs"]
-        mod component;
-        pub use component::*;
-
-        #[path = "."]
-        pub mod commands {
-            #[path = "../../🎛️apps/📙️din18599/🎮️commands/🧮️evaluate/🦀️component.rs"]
-            pub mod evaluate;
-            #[path = "../../🎛️apps/📙️din18599/🎮️commands/☑️selected-check/🦀️component.rs"]
-            pub mod selected_check;
-            #[path = "../../🎛️apps/📙️din18599/🎮️commands/📤️set-snapshot/🦀️component.rs"]
-            pub mod set_snapshot;
-        }
-
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "../../🎛️apps/📙️din18599/🎭️modes/✏️edit/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-
-                #[path = "."]
-                pub mod windows {
-                    #[path = "../../🎛️apps/📙️din18599/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
-                    pub mod inputs;
-                    #[path = "../../🎛️apps/📙️din18599/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
-                    pub mod results;
-                }
-            }
-        }
-
-        #[path = "."]
-        pub mod panels {
-            #[path = "../../🎛️apps/📙️din18599/📌️panels/📚️catalogue/🦀️component.rs"]
-            pub mod catalogue;
-            #[path = "../../🎛️apps/📙️din18599/📌️panels/📄️artifact/🦀️component.rs"]
-            pub mod document;
-            #[path = "../../🎛️apps/📙️din18599/📌️panels/🔍️inspection/🦀️component.rs"]
-            pub mod inspection;
-        }
-    }
-
-    #[path = "."]
-    pub mod en1990 {
-        #[path = "../../🎛️apps/📘️en1990/🦀️component.rs"]
-        mod component;
-        pub use component::*;
-
-        #[path = "."]
-        pub mod commands {
-            #[path = "../../🎛️apps/📘️en1990/🎮️commands/🧮️evaluate/🦀️component.rs"]
-            pub mod evaluate;
-            #[path = "../../🎛️apps/📘️en1990/🎮️commands/☑️selected-check/🦀️component.rs"]
-            pub mod selected_check;
-            #[path = "../../🎛️apps/📘️en1990/🎮️commands/📤️set-snapshot/🦀️component.rs"]
-            pub mod set_snapshot;
-        }
-
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "../../🎛️apps/📘️en1990/🎭️modes/✏️edit/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-
-                #[path = "."]
-                pub mod windows {
-                    #[path = "../../🎛️apps/📘️en1990/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
-                    pub mod inputs;
-                    #[path = "../../🎛️apps/📘️en1990/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
-                    pub mod results;
-                }
-            }
-        }
-
-        #[path = "."]
-        pub mod panels {
-            #[path = "../../🎛️apps/📘️en1990/📌️panels/📚️catalogue/🦀️component.rs"]
-            pub mod catalogue;
-            #[path = "../../🎛️apps/📘️en1990/📌️panels/📄️artifact/🦀️component.rs"]
-            pub mod document;
-            #[path = "../../🎛️apps/📘️en1990/📌️panels/🔍️inspection/🦀️component.rs"]
-            pub mod inspection;
-        }
-    }
-
-    #[path = "."]
-    pub mod en1991 {
-        #[path = "../../🎛️apps/📘️en1991/🦀️component.rs"]
-        mod component;
-        pub use component::*;
-
-        #[path = "."]
-        pub mod commands {
-            #[path = "../../🎛️apps/📘️en1991/🎮️commands/🧮️evaluate/🦀️component.rs"]
-            pub mod evaluate;
-            #[path = "../../🎛️apps/📘️en1991/🎮️commands/☑️selected-check/🦀️component.rs"]
-            pub mod selected_check;
-            #[path = "../../🎛️apps/📘️en1991/🎮️commands/📤️set-snapshot/🦀️component.rs"]
-            pub mod set_snapshot;
-        }
-
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "../../🎛️apps/📘️en1991/🎭️modes/✏️edit/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-
-                #[path = "."]
-                pub mod windows {
-                    #[path = "../../🎛️apps/📘️en1991/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
-                    pub mod inputs;
-                    #[path = "../../🎛️apps/📘️en1991/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
-                    pub mod results;
-                }
-            }
-        }
-
-        #[path = "."]
-        pub mod panels {
-            #[path = "../../🎛️apps/📘️en1991/📌️panels/📚️catalogue/🦀️component.rs"]
-            pub mod catalogue;
-            #[path = "../../🎛️apps/📘️en1991/📌️panels/📄️artifact/🦀️component.rs"]
-            pub mod document;
-            #[path = "../../🎛️apps/📘️en1991/📌️panels/🔍️inspection/🦀️component.rs"]
-            pub mod inspection;
-        }
-    }
-
-    #[path = "."]
-    pub mod en1992 {
-        #[path = "../../🎛️apps/📘️en1992/🦀️component.rs"]
-        mod component;
-        pub use component::*;
-
-        #[path = "."]
-        pub mod commands {
-            #[path = "../../🎛️apps/📘️en1992/🎮️commands/🧮️evaluate/🦀️component.rs"]
-            pub mod evaluate;
-            #[path = "../../🎛️apps/📘️en1992/🎮️commands/☑️selected-check/🦀️component.rs"]
-            pub mod selected_check;
-            #[path = "../../🎛️apps/📘️en1992/🎮️commands/📤️set-snapshot/🦀️component.rs"]
-            pub mod set_snapshot;
-        }
-
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "../../🎛️apps/📘️en1992/🎭️modes/✏️edit/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-
-                #[path = "."]
-                pub mod windows {
-                    #[path = "../../🎛️apps/📘️en1992/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
-                    pub mod inputs;
-                    #[path = "../../🎛️apps/📘️en1992/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
-                    pub mod results;
-                }
-            }
-        }
-
-        #[path = "."]
-        pub mod panels {
-            #[path = "../../🎛️apps/📘️en1992/📌️panels/📚️catalogue/🦀️component.rs"]
-            pub mod catalogue;
-            #[path = "../../🎛️apps/📘️en1992/📌️panels/📄️artifact/🦀️component.rs"]
-            pub mod document;
-            #[path = "../../🎛️apps/📘️en1992/📌️panels/🔍️inspection/🦀️component.rs"]
-            pub mod inspection;
-        }
-    }
-
-    #[path = "."]
-    pub mod en1993 {
-        #[path = "../../🎛️apps/📘️en1993/🦀️component.rs"]
-        mod component;
-        pub use component::*;
-
-        #[path = "."]
-        pub mod commands {
-            #[path = "../../🎛️apps/📘️en1993/🎮️commands/🧮️evaluate/🦀️component.rs"]
-            pub mod evaluate;
-            #[path = "../../🎛️apps/📘️en1993/🎮️commands/☑️selected-check/🦀️component.rs"]
-            pub mod selected_check;
-            #[path = "../../🎛️apps/📘️en1993/🎮️commands/📤️set-snapshot/🦀️component.rs"]
-            pub mod set_snapshot;
-        }
-
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "../../🎛️apps/📘️en1993/🎭️modes/✏️edit/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-
-                #[path = "."]
-                pub mod windows {
-                    #[path = "../../🎛️apps/📘️en1993/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
-                    pub mod inputs;
-                    #[path = "../../🎛️apps/📘️en1993/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
-                    pub mod results;
-                }
-            }
-        }
-
-        #[path = "."]
-        pub mod panels {
-            #[path = "../../🎛️apps/📘️en1993/📌️panels/📚️catalogue/🦀️component.rs"]
-            pub mod catalogue;
-            #[path = "../../🎛️apps/📘️en1993/📌️panels/📄️artifact/🦀️component.rs"]
-            pub mod document;
-            #[path = "../../🎛️apps/📘️en1993/📌️panels/🔍️inspection/🦀️component.rs"]
-            pub mod inspection;
-        }
-    }
-
-    #[path = "."]
-    pub mod en1994 {
-        #[path = "../../🎛️apps/📘️en1994/🦀️component.rs"]
-        mod component;
-        pub use component::*;
-
-        #[path = "."]
-        pub mod commands {
-            #[path = "../../🎛️apps/📘️en1994/🎮️commands/🧮️evaluate/🦀️component.rs"]
-            pub mod evaluate;
-            #[path = "../../🎛️apps/📘️en1994/🎮️commands/☑️selected-check/🦀️component.rs"]
-            pub mod selected_check;
-            #[path = "../../🎛️apps/📘️en1994/🎮️commands/📤️set-snapshot/🦀️component.rs"]
-            pub mod set_snapshot;
-        }
-
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "../../🎛️apps/📘️en1994/🎭️modes/✏️edit/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-
-                #[path = "."]
-                pub mod windows {
-                    #[path = "../../🎛️apps/📘️en1994/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
-                    pub mod inputs;
-                    #[path = "../../🎛️apps/📘️en1994/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
-                    pub mod results;
-                }
-            }
-        }
-
-        #[path = "."]
-        pub mod panels {
-            #[path = "../../🎛️apps/📘️en1994/📌️panels/📚️catalogue/🦀️component.rs"]
-            pub mod catalogue;
-            #[path = "../../🎛️apps/📘️en1994/📌️panels/📄️artifact/🦀️component.rs"]
-            pub mod document;
-            #[path = "../../🎛️apps/📘️en1994/📌️panels/🔍️inspection/🦀️component.rs"]
-            pub mod inspection;
-        }
-    }
-
-    #[path = "."]
-    pub mod en1995 {
-        #[path = "../../🎛️apps/📘️en1995/🦀️component.rs"]
-        mod component;
-        pub use component::*;
-
-        #[path = "."]
-        pub mod commands {
-            #[path = "../../🎛️apps/📘️en1995/🎮️commands/🧮️evaluate/🦀️component.rs"]
-            pub mod evaluate;
-            #[path = "../../🎛️apps/📘️en1995/🎮️commands/☑️selected-check/🦀️component.rs"]
-            pub mod selected_check;
-            #[path = "../../🎛️apps/📘️en1995/🎮️commands/📤️set-snapshot/🦀️component.rs"]
-            pub mod set_snapshot;
-        }
-
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "../../🎛️apps/📘️en1995/🎭️modes/✏️edit/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-
-                #[path = "."]
-                pub mod windows {
-                    #[path = "../../🎛️apps/📘️en1995/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
-                    pub mod inputs;
-                    #[path = "../../🎛️apps/📘️en1995/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
-                    pub mod results;
-                }
-            }
-        }
-
-        #[path = "."]
-        pub mod panels {
-            #[path = "../../🎛️apps/📘️en1995/📌️panels/📚️catalogue/🦀️component.rs"]
-            pub mod catalogue;
-            #[path = "../../🎛️apps/📘️en1995/📌️panels/📄️artifact/🦀️component.rs"]
-            pub mod document;
-            #[path = "../../🎛️apps/📘️en1995/📌️panels/🔍️inspection/🦀️component.rs"]
-            pub mod inspection;
-        }
-    }
-
-    #[path = "."]
-    pub mod en1996 {
-        #[path = "../../🎛️apps/📘️en1996/🦀️component.rs"]
-        mod component;
-        pub use component::*;
-
-        #[path = "."]
-        pub mod commands {
-            #[path = "../../🎛️apps/📘️en1996/🎮️commands/🧮️evaluate/🦀️component.rs"]
-            pub mod evaluate;
-            #[path = "../../🎛️apps/📘️en1996/🎮️commands/☑️selected-check/🦀️component.rs"]
-            pub mod selected_check;
-            #[path = "../../🎛️apps/📘️en1996/🎮️commands/📤️set-snapshot/🦀️component.rs"]
-            pub mod set_snapshot;
-        }
-
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "../../🎛️apps/📘️en1996/🎭️modes/✏️edit/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-
-                #[path = "."]
-                pub mod windows {
-                    #[path = "../../🎛️apps/📘️en1996/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
-                    pub mod inputs;
-                    #[path = "../../🎛️apps/📘️en1996/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
-                    pub mod results;
-                }
-            }
-        }
-
-        #[path = "."]
-        pub mod panels {
-            #[path = "../../🎛️apps/📘️en1996/📌️panels/📚️catalogue/🦀️component.rs"]
-            pub mod catalogue;
-            #[path = "../../🎛️apps/📘️en1996/📌️panels/📄️artifact/🦀️component.rs"]
-            pub mod document;
-            #[path = "../../🎛️apps/📘️en1996/📌️panels/🔍️inspection/🦀️component.rs"]
-            pub mod inspection;
-        }
-    }
-
-    #[path = "."]
-    pub mod en1997 {
-        #[path = "../../🎛️apps/📘️en1997/🦀️component.rs"]
-        mod component;
-        pub use component::*;
-
-        #[path = "."]
-        pub mod commands {
-            #[path = "../../🎛️apps/📘️en1997/🎮️commands/🧮️evaluate/🦀️component.rs"]
-            pub mod evaluate;
-            #[path = "../../🎛️apps/📘️en1997/🎮️commands/☑️selected-check/🦀️component.rs"]
-            pub mod selected_check;
-            #[path = "../../🎛️apps/📘️en1997/🎮️commands/📤️set-snapshot/🦀️component.rs"]
-            pub mod set_snapshot;
-        }
-
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "../../🎛️apps/📘️en1997/🎭️modes/✏️edit/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-
-                #[path = "."]
-                pub mod windows {
-                    #[path = "../../🎛️apps/📘️en1997/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
-                    pub mod inputs;
-                    #[path = "../../🎛️apps/📘️en1997/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
-                    pub mod results;
-                }
-            }
-        }
-
-        #[path = "."]
-        pub mod panels {
-            #[path = "../../🎛️apps/📘️en1997/📌️panels/📚️catalogue/🦀️component.rs"]
-            pub mod catalogue;
-            #[path = "../../🎛️apps/📘️en1997/📌️panels/📄️artifact/🦀️component.rs"]
-            pub mod document;
-            #[path = "../../🎛️apps/📘️en1997/📌️panels/🔍️inspection/🦀️component.rs"]
-            pub mod inspection;
-        }
-    }
-
-    #[path = "."]
-    pub mod en1998 {
-        #[path = "../../🎛️apps/📘️en1998/🦀️component.rs"]
-        mod component;
-        pub use component::*;
-
-        #[path = "."]
-        pub mod commands {
-            #[path = "../../🎛️apps/📘️en1998/🎮️commands/🧮️evaluate/🦀️component.rs"]
-            pub mod evaluate;
-            #[path = "../../🎛️apps/📘️en1998/🎮️commands/☑️selected-check/🦀️component.rs"]
-            pub mod selected_check;
-            #[path = "../../🎛️apps/📘️en1998/🎮️commands/📤️set-snapshot/🦀️component.rs"]
-            pub mod set_snapshot;
-        }
-
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "../../🎛️apps/📘️en1998/🎭️modes/✏️edit/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-
-                #[path = "."]
-                pub mod windows {
-                    #[path = "../../🎛️apps/📘️en1998/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
-                    pub mod inputs;
-                    #[path = "../../🎛️apps/📘️en1998/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
-                    pub mod results;
-                }
-            }
-        }
-
-        #[path = "."]
-        pub mod panels {
-            #[path = "../../🎛️apps/📘️en1998/📌️panels/📚️catalogue/🦀️component.rs"]
-            pub mod catalogue;
-            #[path = "../../🎛️apps/📘️en1998/📌️panels/📄️artifact/🦀️component.rs"]
-            pub mod document;
-            #[path = "../../🎛️apps/📘️en1998/📌️panels/🔍️inspection/🦀️component.rs"]
-            pub mod inspection;
-        }
-    }
-
-    #[path = "."]
-    pub mod en1999 {
-        #[path = "../../🎛️apps/📘️en1999/🦀️component.rs"]
-        mod component;
-        pub use component::*;
-
-        #[path = "."]
-        pub mod commands {
-            #[path = "../../🎛️apps/📘️en1999/🎮️commands/🧮️evaluate/🦀️component.rs"]
-            pub mod evaluate;
-            #[path = "../../🎛️apps/📘️en1999/🎮️commands/☑️selected-check/🦀️component.rs"]
-            pub mod selected_check;
-            #[path = "../../🎛️apps/📘️en1999/🎮️commands/📤️set-snapshot/🦀️component.rs"]
-            pub mod set_snapshot;
-        }
-
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "../../🎛️apps/📘️en1999/🎭️modes/✏️edit/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-
-                #[path = "."]
-                pub mod windows {
-                    #[path = "../../🎛️apps/📘️en1999/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
-                    pub mod inputs;
-                    #[path = "../../🎛️apps/📘️en1999/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
-                    pub mod results;
-                }
-            }
-        }
-
-        #[path = "."]
-        pub mod panels {
-            #[path = "../../🎛️apps/📘️en1999/📌️panels/📚️catalogue/🦀️component.rs"]
-            pub mod catalogue;
-            #[path = "../../🎛️apps/📘️en1999/📌️panels/📄️artifact/🦀️component.rs"]
-            pub mod document;
-            #[path = "../../🎛️apps/📘️en1999/📌️panels/🔍️inspection/🦀️component.rs"]
-            pub mod inspection;
-        }
-    }
-
+pub mod editor {
     #[path = "."]
     pub mod iso16757 {
-        #[path = "../../🎛️apps/📓️iso16757/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/📓️iso16757/🎮️commands/🧮️evaluate/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️component.rs"]
             pub mod evaluate;
-            #[path = "../../🎛️apps/📓️iso16757/🎮️commands/☑️selected-check/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️component.rs"]
             pub mod selected_check;
-            #[path = "../../🎛️apps/📓️iso16757/🎮️commands/📤️set-snapshot/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️component.rs"]
             pub mod set_snapshot;
         }
 
@@ -6415,15 +5830,15 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🎛️apps/📓️iso16757/🎭️modes/✏️edit/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/📓️iso16757/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
                     pub mod inputs;
-                    #[path = "../../🎛️apps/📓️iso16757/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
                     pub mod results;
                 }
             }
@@ -6431,28 +5846,27 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/📓️iso16757/📌️panels/📚️catalogue/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️component.rs"]
             pub mod catalogue;
-            #[path = "../../🎛️apps/📓️iso16757/📌️panels/📄️artifact/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
-            #[path = "../../🎛️apps/📓️iso16757/📌️panels/🔍️inspection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;
         }
     }
-
     #[path = "."]
     pub mod vdi3805 {
-        #[path = "../../🎛️apps/📔️vdi3805/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/📔️vdi3805/🎮️commands/🧮️evaluate/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️component.rs"]
             pub mod evaluate;
-            #[path = "../../🎛️apps/📔️vdi3805/🎮️commands/☑️selected-check/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️component.rs"]
             pub mod selected_check;
-            #[path = "../../🎛️apps/📔️vdi3805/🎮️commands/📤️set-snapshot/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️component.rs"]
             pub mod set_snapshot;
         }
 
@@ -6460,15 +5874,15 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🎛️apps/📔️vdi3805/🎭️modes/✏️edit/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/📔️vdi3805/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
                     pub mod inputs;
-                    #[path = "../../🎛️apps/📔️vdi3805/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
                     pub mod results;
                 }
             }
@@ -6476,16 +5890,924 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/📔️vdi3805/📌️panels/📚️catalogue/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️component.rs"]
             pub mod catalogue;
-            #[path = "../../🎛️apps/📔️vdi3805/📌️panels/📄️artifact/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
-            #[path = "../../🎛️apps/📔️vdi3805/📌️panels/🔍️inspection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
+            pub mod inspection;
+        }
+    }
+    #[path = "."]
+    pub mod din4108 {
+        #[path = "../../🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "../../🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️component.rs"]
+            pub mod evaluate;
+            #[path = "../../🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️component.rs"]
+            pub mod selected_check;
+            #[path = "../../🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️component.rs"]
+            pub mod set_snapshot;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "../../🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
+                    pub mod inputs;
+                    #[path = "../../🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
+                    pub mod results;
+                }
+            }
+        }
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "../../🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️component.rs"]
+            pub mod catalogue;
+            #[path = "../../🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
+            pub mod document;
+            #[path = "../../🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
+            pub mod inspection;
+        }
+    }
+    #[path = "."]
+    pub mod din16798 {
+        #[path = "../../🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "../../🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️component.rs"]
+            pub mod evaluate;
+            #[path = "../../🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️component.rs"]
+            pub mod selected_check;
+            #[path = "../../🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️component.rs"]
+            pub mod set_snapshot;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "../../🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
+                    pub mod inputs;
+                    #[path = "../../🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
+                    pub mod results;
+                }
+            }
+        }
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "../../🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️component.rs"]
+            pub mod catalogue;
+            #[path = "../../🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
+            pub mod document;
+            #[path = "../../🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
+            pub mod inspection;
+        }
+    }
+    #[path = "."]
+    pub mod en1990 {
+        #[path = "../../🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "../../🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️component.rs"]
+            pub mod evaluate;
+            #[path = "../../🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️component.rs"]
+            pub mod selected_check;
+            #[path = "../../🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️component.rs"]
+            pub mod set_snapshot;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "../../🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
+                    pub mod inputs;
+                    #[path = "../../🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
+                    pub mod results;
+                }
+            }
+        }
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "../../🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️component.rs"]
+            pub mod catalogue;
+            #[path = "../../🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
+            pub mod document;
+            #[path = "../../🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
+            pub mod inspection;
+        }
+    }
+    #[path = "."]
+    pub mod en1991 {
+        #[path = "../../🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "../../🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️component.rs"]
+            pub mod evaluate;
+            #[path = "../../🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️component.rs"]
+            pub mod selected_check;
+            #[path = "../../🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️component.rs"]
+            pub mod set_snapshot;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "../../🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
+                    pub mod inputs;
+                    #[path = "../../🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
+                    pub mod results;
+                }
+            }
+        }
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "../../🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️component.rs"]
+            pub mod catalogue;
+            #[path = "../../🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
+            pub mod document;
+            #[path = "../../🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
+            pub mod inspection;
+        }
+    }
+    #[path = "."]
+    pub mod en1992 {
+        #[path = "../../🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "../../🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️component.rs"]
+            pub mod evaluate;
+            #[path = "../../🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️component.rs"]
+            pub mod selected_check;
+            #[path = "../../🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️component.rs"]
+            pub mod set_snapshot;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "../../🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
+                    pub mod inputs;
+                    #[path = "../../🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
+                    pub mod results;
+                }
+            }
+        }
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "../../🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️component.rs"]
+            pub mod catalogue;
+            #[path = "../../🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
+            pub mod document;
+            #[path = "../../🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
+            pub mod inspection;
+        }
+    }
+    #[path = "."]
+    pub mod en1993 {
+        #[path = "../../🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "../../🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️component.rs"]
+            pub mod evaluate;
+            #[path = "../../🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️component.rs"]
+            pub mod selected_check;
+            #[path = "../../🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️component.rs"]
+            pub mod set_snapshot;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "../../🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
+                    pub mod inputs;
+                    #[path = "../../🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
+                    pub mod results;
+                }
+            }
+        }
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "../../🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️component.rs"]
+            pub mod catalogue;
+            #[path = "../../🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
+            pub mod document;
+            #[path = "../../🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
+            pub mod inspection;
+        }
+    }
+    #[path = "."]
+    pub mod en1994 {
+        #[path = "../../🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "../../🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️component.rs"]
+            pub mod evaluate;
+            #[path = "../../🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️component.rs"]
+            pub mod selected_check;
+            #[path = "../../🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️component.rs"]
+            pub mod set_snapshot;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "../../🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
+                    pub mod inputs;
+                    #[path = "../../🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
+                    pub mod results;
+                }
+            }
+        }
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "../../🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️component.rs"]
+            pub mod catalogue;
+            #[path = "../../🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
+            pub mod document;
+            #[path = "../../🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
+            pub mod inspection;
+        }
+    }
+    #[path = "."]
+    pub mod en1995 {
+        #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️component.rs"]
+            pub mod evaluate;
+            #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️component.rs"]
+            pub mod selected_check;
+            #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️component.rs"]
+            pub mod set_snapshot;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
+                    pub mod inputs;
+                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
+                    pub mod results;
+                }
+            }
+        }
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️component.rs"]
+            pub mod catalogue;
+            #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
+            pub mod document;
+            #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
+            pub mod inspection;
+        }
+    }
+    #[path = "."]
+    pub mod en1996 {
+        #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️component.rs"]
+            pub mod evaluate;
+            #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️component.rs"]
+            pub mod selected_check;
+            #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️component.rs"]
+            pub mod set_snapshot;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
+                    pub mod inputs;
+                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
+                    pub mod results;
+                }
+            }
+        }
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️component.rs"]
+            pub mod catalogue;
+            #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
+            pub mod document;
+            #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
+            pub mod inspection;
+        }
+    }
+    #[path = "."]
+    pub mod en1997 {
+        #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️component.rs"]
+            pub mod evaluate;
+            #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️component.rs"]
+            pub mod selected_check;
+            #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️component.rs"]
+            pub mod set_snapshot;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
+                    pub mod inputs;
+                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
+                    pub mod results;
+                }
+            }
+        }
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️component.rs"]
+            pub mod catalogue;
+            #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
+            pub mod document;
+            #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
+            pub mod inspection;
+        }
+    }
+    #[path = "."]
+    pub mod en1998 {
+        #[path = "../../🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "../../🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️component.rs"]
+            pub mod evaluate;
+            #[path = "../../🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️component.rs"]
+            pub mod selected_check;
+            #[path = "../../🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️component.rs"]
+            pub mod set_snapshot;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "../../🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
+                    pub mod inputs;
+                    #[path = "../../🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
+                    pub mod results;
+                }
+            }
+        }
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "../../🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️component.rs"]
+            pub mod catalogue;
+            #[path = "../../🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
+            pub mod document;
+            #[path = "../../🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
+            pub mod inspection;
+        }
+    }
+    #[path = "."]
+    pub mod en1999 {
+        #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️component.rs"]
+            pub mod evaluate;
+            #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️component.rs"]
+            pub mod selected_check;
+            #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️component.rs"]
+            pub mod set_snapshot;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
+                    pub mod inputs;
+                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
+                    pub mod results;
+                }
+            }
+        }
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️component.rs"]
+            pub mod catalogue;
+            #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
+            pub mod document;
+            #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
+            pub mod inspection;
+        }
+    }
+    #[path = "."]
+    pub mod din18599 {
+        #[path = "../../🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "../../🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️component.rs"]
+            pub mod evaluate;
+            #[path = "../../🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️component.rs"]
+            pub mod selected_check;
+            #[path = "../../🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️component.rs"]
+            pub mod set_snapshot;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "../../🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️component.rs"]
+                    pub mod inputs;
+                    #[path = "../../🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
+                    pub mod results;
+                }
+            }
+        }
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "../../🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️component.rs"]
+            pub mod catalogue;
+            #[path = "../../🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
+            pub mod document;
+            #[path = "../../🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;
         }
     }
 }
-//#endregion 🎛️Apps
+//#endregion ✏️Editor
+
+//#region 👁️Viewer
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod iso16757 {
+        #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️component.rs"]
+                    pub mod report;
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod vdi3805 {
+        #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️component.rs"]
+                    pub mod report;
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod din4108 {
+        #[path = "../../🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️component.rs"]
+                    pub mod report;
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod din16798 {
+        #[path = "../../🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️component.rs"]
+                    pub mod report;
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod en1990 {
+        #[path = "../../🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️component.rs"]
+                    pub mod report;
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod en1991 {
+        #[path = "../../🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️component.rs"]
+                    pub mod report;
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod en1992 {
+        #[path = "../../🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️component.rs"]
+                    pub mod report;
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod en1993 {
+        #[path = "../../🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️component.rs"]
+                    pub mod report;
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod en1994 {
+        #[path = "../../🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️component.rs"]
+                    pub mod report;
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod en1995 {
+        #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️component.rs"]
+                    pub mod report;
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod en1996 {
+        #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️component.rs"]
+                    pub mod report;
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod en1997 {
+        #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️component.rs"]
+                    pub mod report;
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod en1998 {
+        #[path = "../../🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️component.rs"]
+                    pub mod report;
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod en1999 {
+        #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️component.rs"]
+                    pub mod report;
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod din18599 {
+        #[path = "../../🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️component.rs"]
+                    pub mod report;
+                }
+            }
+        }
+    }
+}
+//#endregion 👁️Viewer
 
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
@@ -6495,35 +6817,35 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🎛️apps/📗️din16798/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_din16798_demo_session;
-    #[path = "../../🎛️apps/📙️din18599/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_din18599_demo_session;
-    #[path = "../../🎛️apps/📕️din4108/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_din4108_demo_session;
-    #[path = "../../🎛️apps/📘️en1990/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_en1990_demo_session;
-    #[path = "../../🎛️apps/📘️en1991/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_en1991_demo_session;
-    #[path = "../../🎛️apps/📘️en1992/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_en1992_demo_session;
-    #[path = "../../🎛️apps/📘️en1993/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_en1993_demo_session;
-    #[path = "../../🎛️apps/📘️en1994/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_en1994_demo_session;
-    #[path = "../../🎛️apps/📘️en1995/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_en1995_demo_session;
-    #[path = "../../🎛️apps/📘️en1996/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_en1996_demo_session;
-    #[path = "../../🎛️apps/📘️en1997/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_en1997_demo_session;
-    #[path = "../../🎛️apps/📘️en1998/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_en1998_demo_session;
-    #[path = "../../🎛️apps/📘️en1999/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_en1999_demo_session;
-    #[path = "../../🎛️apps/📓️iso16757/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_iso16757_demo_session;
-    #[path = "../../🎛️apps/📔️vdi3805/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_vdi3805_demo_session;
     #[path = "../../🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_din16798_demo;

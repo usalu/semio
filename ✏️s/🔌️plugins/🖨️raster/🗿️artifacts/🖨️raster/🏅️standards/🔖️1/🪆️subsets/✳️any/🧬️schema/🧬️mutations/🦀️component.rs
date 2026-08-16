@@ -93,10 +93,11 @@ mod tests {
     const ABC_ASSET_PNG: &[u8] = &[137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 218, 99, 56, 49, 45, 229, 63, 0, 6, 174, 2, 194, 232, 197, 127, 29, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130];
 
     fn round_trip(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> RasterSnapshot {
-        let forward = vcs::apply_mutation(snapshot, mutation);
+        let (forward, _messages) = vcs::apply_mutation(snapshot, mutation);
         let mut restored = forward.clone();
         for back in mutation.inverse(snapshot) {
-            restored = vcs::apply_mutation(&restored, &back);
+            let (next, _messages) = vcs::apply_mutation(&restored, &back);
+            restored = next;
         }
         assert_eq!(&restored, snapshot, "inverse(base) must restore the pre-mutation snapshot");
         forward
@@ -177,8 +178,9 @@ mod tests {
         let mut snapshot = empty_raster_snapshot();
         snapshot.layers.push(RasterLayerNode::Group { id: "g1".into(), name: "Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() });
         let mutation = RasterMutation::ResizeLayer(resize_layer::mutation::ResizeLayer { layer_id: "g1".into(), new_width: 10, new_height: 10 });
-        let diff = mutation.diff(&snapshot);
-        assert_eq!(diff, RasterDiff::default());
+        let outcome = mutation.diff(&snapshot);
+        assert_eq!(outcome.diff(), &RasterDiff::default());
+        assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Error));
         assert!(mutation.inverse(&snapshot).is_empty());
     }
 
@@ -266,8 +268,8 @@ mod tests {
         let base = empty_raster_snapshot();
         let mutation = RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 1, layer: Box::new(pixel_layer("l2", "Second")) }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 1, layer: Box::new(pixel_layer("l2", "Second")) }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -277,8 +279,8 @@ mod tests {
         base.layers.push(pixel_layer("l1", "Base"));
         let mutation = RasterMutation::ChangeLayerOpacity(change_layer_opacity::mutation::ChangeLayerOpacity { layer_id: "l1".into(), new_opacity: 0.4 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = RasterMutation::ChangeLayerVisible(change_layer_visible::mutation::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = RasterMutation::ChangeLayerVisible(change_layer_visible::mutation::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -289,10 +291,34 @@ mod tests {
         base.layers.push(pixel_layer("l2", "Second"));
         let mutation = RasterMutation::ReorderLayers(reorder_layers::mutation::ReorderLayers { layer_id: "l1".into(), parent_id: None, index: 1 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id: "l2".into() }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id: "l2".into() }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws
+
+    //#region 🧪️OutcomeLaws
+    /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
+    /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
+    #[test]
+    fn delete_missing_layer_is_a_target_missing_error() {
+        let base = empty_raster_snapshot();
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id: "does-not-exist".into() }));
+    }
+
+    #[test]
+    fn rename_missing_layer_is_a_target_missing_error() {
+        let base = empty_raster_snapshot();
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &RasterMutation::RenameLayer(rename_layer::mutation::RenameLayer { layer_id: "does-not-exist".into(), new_name: "New".into() }));
+    }
+
+    #[test]
+    fn create_layer_duplicate_id_never_applies() {
+        let mut base = empty_raster_snapshot();
+        base.layers.push(pixel_layer("l1", "Base"));
+        let duplicate = RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) });
+        protocol::os_spr::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
+    }
+    //#endregion 🧪️OutcomeLaws
 }
 //#endregion 🧪️Tests

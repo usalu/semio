@@ -115,10 +115,12 @@ pub enum SourcingCuratePresenceMutation {
 impl Mutation<SourcingCuratePresence> for SourcingCuratePresenceMutation {
     type Diff = SourcingCuratePresence;
 
-    fn diff(&self, _base: &SourcingCuratePresence) -> SourcingCuratePresence {
-        match self {
+    /// 📦️ Whole-value snapshot replace — no target to be missing, so a message-free outcome per the
+    /// contract's root-scoped shrink-only allowlist.
+    fn diff(&self, _base: &SourcingCuratePresence) -> protocol::MutationOutcome<SourcingCuratePresence> {
+        protocol::MutationOutcome::new(match self {
             Self::Snapshot { presence } => presence.clone(),
-        }
+        })
     }
 
     fn inverse(&self, base: &SourcingCuratePresence) -> Vec<Self> {

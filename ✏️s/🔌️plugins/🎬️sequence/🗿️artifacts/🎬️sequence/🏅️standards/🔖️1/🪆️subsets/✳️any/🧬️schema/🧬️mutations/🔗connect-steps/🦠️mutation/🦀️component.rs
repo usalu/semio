@@ -23,7 +23,7 @@ pub fn connect_steps(id: String, from: String, to: String) -> SequenceMutation {
 impl protocol::MutationKind<SequenceSnapshot, SequenceMutation> for ConnectSteps {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "steps", kind: "connect-steps", record: "ConnectedSteps" };
 
-    fn diff(&self, base: &SequenceSnapshot) -> SequenceDiff {
+    fn diff(&self, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {

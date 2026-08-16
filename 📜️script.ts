@@ -7075,7 +7075,7 @@ export function policyContributedSurfaceTargetBreaches(repoRoot: string): Breach
       }
       if (ownerRoot === pluginRoot) continue;
       const ownerPluginId = policyStripEmoji(ownerRoot.split("/").pop() ?? "");
-      const declared = policyWalkRelFiles(repoRoot, [pluginRoot], (_p, name) => name === POLICY_RS_COMPONENT_LEAF_NAME).some((relPath) =>
+      const declared = policyOwnerOwnComponentFiles(repoRoot, pluginRoot).some((relPath) =>
         new RegExp(`\\.depends_on\\s*\\(\\s*"${ownerPluginId}"`).test(policyReadFileSafe(repoRoot, relPath)),
       );
       if (declared) continue;
@@ -7205,8 +7205,13 @@ function policyHashSpecContent(content: string): string {
   return createHash("sha256").update(content).digest("hex");
 }
 
-/** 🔎️Walks `relRoots` for files matching `pred`, skipping `POLICY_SKIP_DIRS` / dotted dirs. */
-function policyWalkRelFiles(repoRoot: string, relRoots: readonly string[], pred: (relPath: string, name: string) => boolean): string[] {
+/** 🔎️Walks `relRoots` for files matching `pred`, skipping `POLICY_SKIP_DIRS` / dotted dirs and directories matching `skipDir`. */
+function policyWalkRelFiles(
+  repoRoot: string,
+  relRoots: readonly string[],
+  pred: (relPath: string, name: string) => boolean,
+  skipDir?: (relDir: string, name: string) => boolean,
+): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
     const abs = join(repoRoot, relDir);
@@ -7220,6 +7225,7 @@ function policyWalkRelFiles(repoRoot: string, relRoots: readonly string[], pred:
       const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
       if (ent.isDirectory()) {
         if (POLICY_SKIP_DIRS.has(ent.name) || ent.name.startsWith(".")) continue;
+        if (skipDir && skipDir(childRel, ent.name)) continue;
         walk(childRel);
         continue;
       }
@@ -7817,7 +7823,12 @@ function policyDependencyOwnerRoots(repoRoot: string): readonly string[] {
  * plugin that hosts an extension declaring `.depends_on("cad")` is not itself a dependent of `cad`.
  */
 function policyOwnerOwnComponentFiles(repoRoot: string, ownerRel: string): string[] {
-  return policyWalkRelFiles(repoRoot, [ownerRel], (relPath, name) => name === POLICY_RS_COMPONENT_LEAF_NAME && !relPath.slice(ownerRel.length).includes("/🧩️extensions/"));
+  return policyWalkRelFiles(
+    repoRoot,
+    [ownerRel],
+    (_relPath, name) => name === POLICY_RS_COMPONENT_LEAF_NAME,
+    (_relDir, name) => name === "🧩️extensions",
+  );
 }
 
 /** 🔗️Every `semio-s-plugin-<id>` entry in an owner's Cargo manifests, mapped to the plugin id it names. */
@@ -13486,7 +13497,7 @@ export function policySchemaOverhaulPCBreaches(repoRoot: string): BreachRecord[]
  * constructor or an `InferredField::{plan,dep_input,compute}` body, never as durable state. */
 const POLICY_DISSOLVED_EPHEMERAL_REP_TYPES = ["HalfedgeMesh", "BrepEngineHost", "DrawingStore", "DrawingEngine", "EngineCache"] as const;
 
-/** 🧊️ Modules sanctioned to own an `EngineCache`/`EngineHost`: the wasm guest↔host boundary only. */
+/** 🧊️ Modules sanctioned to own an `EngineCache`: the wasm guest↔host boundary only. */
 const POLICY_DISSOLVED_ENGINE_CACHE_ALLOWED_DIRS = ["🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin"] as const;
 
 /** 🧊️ Shrink-only. Every entry is a known tier-(d) escape awaiting its dissolution wave. */
@@ -13541,7 +13552,7 @@ function policyDissolvedRepEscapeBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
-/** 🧊️ `EngineCache`/`EngineHost` reachable outside the wasm guest↔host boundary.
+/** 🧊️ `EngineCache` reachable outside the wasm guest↔host boundary.
  *
  * Its general "kernel cache" role is over: derived values belong in a 💡️inference facet keyed by
  * DepHash, ephemeral representations in an EngineRep. No seed — the narrowed scope is the target
@@ -13553,7 +13564,7 @@ function policyDissolvedEngineCacheScopeBreaches(repoRoot: string): BreachRecord
     const normalized = policyNormalizeRelPath(relPath);
     if (POLICY_DISSOLVED_REP_ESCAPE_ALLOWLIST.has(normalized)) continue;
     const content = policyReadFileSafe(repoRoot, relPath);
-    if (!/\bEngineCache::new\b|\bEngineHost\s+for\b/.test(content)) continue;
+    if (!/\bEngineCache::new\b/.test(content)) continue;
     breaches.push({
       id: `dissolved-engine-cache-scope-${relPath}`,
       summary: `"${relPath}" constructs or implements an engine cache outside the sanctioned wasm-boundary modules`,

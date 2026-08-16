@@ -1,17 +1,17 @@
 //! 🕳 GLTF concavity indicators.
 
+#[path = "concavity-index/🦀️component.rs"]
+pub mod concavity_index;
 #[path = "convex-hull-gap/🦀️component.rs"]
 pub mod convex_hull_gap;
 #[path = "reentrant-area/🦀️component.rs"]
 pub mod reentrant_area;
 #[path = "reentrant-volume/🦀️component.rs"]
 pub mod reentrant_volume;
-#[path = "concavity-index/🦀️component.rs"]
-pub mod concavity_index;
 
-use super::geometry_core::{GltfGeometryContext, convex_hull_metrics, hull_sample, triangle_area};
-use super::super::modules::{vector_operations::{add, dot, mul}};
 use super::super::modules::measurement_contracts::*;
+use super::super::modules::vector_operations::{add, dot, mul};
+use super::geometry_core::{convex_hull_metrics, hull_sample, triangle_area, GltfGeometryContext};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -35,10 +35,15 @@ pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfConcavityRaw {
     let tolerance = (context.diagonal * context.policy.relative_tolerance).max(context.policy.absolute_length_tolerance);
     let hull = convex_hull_metrics(&hull_input, tolerance);
     let reentrant_area = hull.as_ref().map(|(_, _, planes)| {
-        context.faces.iter().filter(|face| {
-            let centroid = mul(add(add(context.points[face[0]], context.points[face[1]]), context.points[face[2]]), 1.0 / 3.0);
-            !planes.iter().any(|(normal, offset)| (dot(*normal, centroid) - *offset).abs() <= tolerance * 4.0)
-        }).map(|face| triangle_area(context.points[face[0]], context.points[face[1]], context.points[face[2]])).sum::<f64>()
+        context
+            .faces
+            .iter()
+            .filter(|face| {
+                let centroid = mul(add(add(context.points[face[0]], context.points[face[1]]), context.points[face[2]]), 1.0 / 3.0);
+                !planes.iter().any(|(normal, offset)| (dot(*normal, centroid) - *offset).abs() <= tolerance * 4.0)
+            })
+            .map(|face| triangle_area(context.points[face[0]], context.points[face[1]], context.points[face[2]]))
+            .sum::<f64>()
     });
     GltfConcavityRaw { hull_volume: hull.map(|(_, volume, _)| volume), reentrant_area }
 }

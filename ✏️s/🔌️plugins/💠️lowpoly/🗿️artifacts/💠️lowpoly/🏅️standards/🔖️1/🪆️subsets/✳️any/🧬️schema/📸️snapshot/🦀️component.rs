@@ -103,7 +103,7 @@ pub(crate) fn dec_paint_layer_list(s: &str) -> Result<Vec<LowpolyPaintLayer>, St
 
 /// 🧊️ One object: `[id,name,transform,smooth-shading,mesh-handle,paint-layers]`. The live half-edge
 /// mesh JSON content is DELIBERATELY absent — it is not a field of `LowpolyObject` at all (moved to
-/// `🎛️apps/💠️lowpoly/🖌️session::LowpolyScratch`'s session-local `mesh_workspace` cache, ticket
+/// `✏️editor/🖌️session::LowpolyScratch`'s session-local `mesh_workspace` cache, ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` round-trip law fix round 2).
 pub(crate) fn enc_object(o: &LowpolyObject) -> String {
     format!(
@@ -325,7 +325,7 @@ impl store::ArtifactPack for LowpolySnapshot {
 /// 🏗️ Builds a single-object snapshot from mesh JSON — only the real persisted `mesh` handle
 /// (content-addressed off `mesh_json` via `mesh_child_handle`, identical geometry always resolving
 /// to the identical handle). The caller is responsible for seeding its OWN session-local
-/// `mesh_workspace` cache (`🎛️apps/💠️lowpoly/🖌️session::LowpolyScratch`) with `mesh_json` under
+/// `mesh_workspace` cache (`✏️editor/🖌️session::LowpolyScratch`) with `mesh_json` under
 /// `object_id` — this function no longer does it implicitly (round 2 of this ticket's round-trip
 /// law fix: `LowpolyObject` carries no live mesh content at all any more, see that struct's own doc
 /// comment).

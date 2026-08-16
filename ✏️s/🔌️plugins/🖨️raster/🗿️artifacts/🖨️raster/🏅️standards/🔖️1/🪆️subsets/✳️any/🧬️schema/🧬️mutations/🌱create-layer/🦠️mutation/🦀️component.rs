@@ -17,7 +17,7 @@ pub struct CreateLayer {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for CreateLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "layer", kind: "create-layer", record: "CreatedLayer" };
 
-    fn diff(&self, base: &RasterSnapshot) -> RasterDiff {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::create_layer::diff::diff(self, base)
     }
 

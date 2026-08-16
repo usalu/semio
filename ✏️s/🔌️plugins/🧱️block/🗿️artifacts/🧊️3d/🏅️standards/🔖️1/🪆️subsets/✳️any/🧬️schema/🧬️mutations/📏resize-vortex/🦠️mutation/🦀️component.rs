@@ -22,7 +22,7 @@ pub fn resize_vortex(id: String, new_radius: f64) -> Block3dMutation {
 impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ResizeVortex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "resize", entity: "vortex", kind: "resize-vortex", record: "ResizedVortex" };
 
-    fn diff(&self, base: &Block3dSnapshot) -> Block3dDiff {
+    fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {

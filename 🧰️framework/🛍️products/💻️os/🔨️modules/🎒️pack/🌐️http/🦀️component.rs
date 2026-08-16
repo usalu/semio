@@ -1,17 +1,16 @@
 //! 📦️ `pack_http` — HTTP range-request access layer for `pack` files: a `RangeTransport`
 //! injection seam so no concrete HTTP client type appears in any public signature, an
 //! `HttpPackSource` implementing `crate::os_pack::async_::AsyncPackSource` with retry+backoff and
-//! etag-based revalidation, and a bounded in-memory `ChunkLruCache`. An optional `ureq`
+//! etag-based revalidation. An optional `ureq`
 //! feature (off by default) provides a native `UreqRangeTransport`.
 
 //#region 🔖️Transport
-use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use crate::os_pack::async_::{AsyncPackSource, CancellationToken, LoadPriority, ReadRequest as SchedulerRead, ReadScheduler};
-use crate::os_pack::{ByteRange, ContentHash, PackError};
+use crate::os_pack::{ByteRange, PackError};
 
 /// @emoji 📨️ One range-request against `url`, optionally revalidated against a previously seen
 /// etag via `if_range_etag`.
@@ -221,171 +220,6 @@ impl<T: RangeTransport> AsyncPackSource for HttpPackSource<T> {
 }
 //#endregion 🔖️Source
 
-//#region 🔖️Cache
-/// @emoji 🧵️ One entry in `ChunkLruCache`'s intrusive doubly-linked recency list, keyed by
-/// `ContentHash`; `prev`/`next` are indices into `LruState::slots`, `NONE` meaning "no link".
-struct LruSlot {
-    key: ContentHash,
-    bytes: Vec<u8>,
-    prev: usize,
-    next: usize,
-}
-
-/// @emoji 🕳️ Sentinel index meaning "no link" in `LruSlot::prev`/`next` and `LruState::head`/`tail`.
-const NONE: usize = usize::MAX;
-
-/// @emoji 🗃️ The mutable guts of `ChunkLruCache`, behind a single `Mutex` for interior
-/// mutability (the public API takes `&self`, matching the contract's `get`/`put` signatures).
-/// `slots` is a Vec-based arena; `free` recycles vacated indices so repeated churn doesn't grow
-/// the arena unbounded.
-struct LruState {
-    slots: Vec<Option<LruSlot>>,
-    index: HashMap<ContentHash, usize>,
-    free: Vec<usize>,
-    head: usize,
-    tail: usize,
-    size_bytes: u64,
-}
-
-impl LruState {
-    fn new() -> Self {
-        Self { slots: Vec::new(), index: HashMap::new(), free: Vec::new(), head: NONE, tail: NONE, size_bytes: 0 }
-    }
-
-    /// @emoji ✂️ Unlinks slot `i` from the recency list without touching `index`/`slots`.
-    fn unlink(&mut self, i: usize) {
-        let (prev, next) = {
-            let slot = self.slots[i].as_ref().unwrap();
-            (slot.prev, slot.next)
-        };
-        if prev != NONE {
-            self.slots[prev].as_mut().unwrap().next = next;
-        } else {
-            self.head = next;
-        }
-        if next != NONE {
-            self.slots[next].as_mut().unwrap().prev = prev;
-        } else {
-            self.tail = prev;
-        }
-    }
-
-    /// @emoji ⬆️ Links slot `i` in as the new most-recently-used head.
-    fn push_front(&mut self, i: usize) {
-        let old_head = self.head;
-        {
-            let slot = self.slots[i].as_mut().unwrap();
-            slot.prev = NONE;
-            slot.next = old_head;
-        }
-        if old_head != NONE {
-            self.slots[old_head].as_mut().unwrap().prev = i;
-        }
-        self.head = i;
-        if self.tail == NONE {
-            self.tail = i;
-        }
-    }
-
-    /// @emoji 🥇️ Moves slot `i` to the front (most-recently-used position).
-    fn touch(&mut self, i: usize) {
-        if self.head == i {
-            return;
-        }
-        self.unlink(i);
-        self.push_front(i);
-    }
-
-    /// @emoji 🚮️ Evicts the least-recently-used slot (the tail), freeing its bytes budget.
-    fn evict_lru(&mut self) {
-        let victim = self.tail;
-        if victim == NONE {
-            return;
-        }
-        self.unlink(victim);
-        let slot = self.slots[victim].take().unwrap();
-        self.index.remove(&slot.key);
-        self.size_bytes -= slot.bytes.len() as u64;
-        self.free.push(victim);
-    }
-}
-
-/// @emoji 📦️ A bounded-size in-memory LRU cache of decoded chunk bytes keyed by
-/// `crate::os_pack::ContentHash`, built on `HashMap` plus a manual Vec-based intrusive doubly-linked
-/// list (no external `lru` crate, no `unsafe`). Eviction runs until the entry fits within
-/// `capacity_bytes`.
-pub struct ChunkLruCache {
-    capacity_bytes: u64,
-    state: Mutex<LruState>,
-}
-
-impl ChunkLruCache {
-    /// @emoji 🆕️ An empty cache holding at most `capacity_bytes` total bytes across entries.
-    pub fn new(capacity_bytes: u64) -> Self {
-        Self { capacity_bytes, state: Mutex::new(LruState::new()) }
-    }
-
-    /// @emoji 📤️ Returns a clone of the cached bytes for `key`, promoting it to
-    /// most-recently-used, or `None` if absent.
-    pub fn get(&self, key: &ContentHash) -> Option<Vec<u8>> {
-        let mut state = self.state.lock().unwrap();
-        let i = *state.index.get(key)?;
-        state.touch(i);
-        Some(state.slots[i].as_ref().unwrap().bytes.clone())
-    }
-
-    /// @emoji 📥️ Inserts (or replaces) `key` -> `bytes`, evicting least-recently-used entries
-    /// until the cache fits within `capacity_bytes`. An entry larger than the entire capacity is
-    /// still stored (as the sole entry) after evicting everything else — `put` never rejects an
-    /// insert, matching the contract's infallible `put(&self, ...)` signature.
-    pub fn put(&self, key: ContentHash, bytes: Vec<u8>) {
-        let mut state = self.state.lock().unwrap();
-
-        if let Some(&i) = state.index.get(&key) {
-            let old_len = state.slots[i].as_ref().unwrap().bytes.len() as u64;
-            state.size_bytes -= old_len;
-            state.size_bytes += bytes.len() as u64;
-            state.slots[i].as_mut().unwrap().bytes = bytes;
-            state.touch(i);
-        } else {
-            let i = match state.free.pop() {
-                Some(i) => i,
-                None => {
-                    state.slots.push(None);
-                    state.slots.len() - 1
-                }
-            };
-            state.slots[i] = Some(LruSlot { key, bytes: bytes.clone(), prev: NONE, next: NONE });
-            state.index.insert(key, i);
-            state.size_bytes += bytes.len() as u64;
-            state.push_front(i);
-        }
-
-        while state.size_bytes > self.capacity_bytes && state.tail != NONE {
-            if state.index.len() == 1 {
-                break;
-            }
-            state.evict_lru();
-        }
-    }
-
-    /// @emoji 📊️ Current total bytes held across all entries.
-    pub fn size_bytes(&self) -> u64 {
-        self.state.lock().unwrap().size_bytes
-    }
-
-    /// @emoji 🔢️ Current number of entries held.
-    pub fn len(&self) -> usize {
-        self.state.lock().unwrap().index.len()
-    }
-
-    /// @emoji ❓️ True iff the cache holds no entries.
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-}
-//#endregion 🔖️Cache
-
 //#region 🔖️Ureq
 #[cfg(feature = "ureq")]
 mod ureq_transport {
@@ -550,66 +384,5 @@ mod tests {
     }
     //#endregion 🔖️Transport
 
-    //#region 🔖️Cache
-    fn hash_of(byte: u8) -> ContentHash {
-        ContentHash([byte; 32])
-    }
-
-    #[test]
-    fn cache_get_put_roundtrip() {
-        let cache = ChunkLruCache::new(1024);
-        let key = hash_of(1);
-        assert!(cache.get(&key).is_none());
-        cache.put(key, vec![1, 2, 3]);
-        assert_eq!(cache.get(&key), Some(vec![1, 2, 3]));
-    }
-
-    #[test]
-    fn cache_evicts_least_recently_used_under_capacity_pressure() {
-        let cache = ChunkLruCache::new(30);
-        cache.put(hash_of(1), vec![0u8; 10]);
-        cache.put(hash_of(2), vec![0u8; 10]);
-        cache.put(hash_of(3), vec![0u8; 10]);
-        assert_eq!(cache.len(), 3);
-        assert_eq!(cache.size_bytes(), 30);
-
-        // Pushes total to 40 bytes; must evict key(1) (the least-recently-used) to fit back
-        // under the 30-byte capacity.
-        cache.put(hash_of(4), vec![0u8; 10]);
-
-        assert_eq!(cache.size_bytes(), 30);
-        assert!(cache.get(&hash_of(1)).is_none(), "least-recently-used entry must have been evicted");
-        assert!(cache.get(&hash_of(2)).is_some());
-        assert!(cache.get(&hash_of(3)).is_some());
-        assert!(cache.get(&hash_of(4)).is_some());
-    }
-
-    #[test]
-    fn cache_get_promotes_entry_to_most_recently_used() {
-        let cache = ChunkLruCache::new(30);
-        cache.put(hash_of(1), vec![0u8; 10]);
-        cache.put(hash_of(2), vec![0u8; 10]);
-        cache.put(hash_of(3), vec![0u8; 10]);
-
-        // Touch key(1) so it becomes most-recently-used; key(2) is now the LRU victim.
-        assert!(cache.get(&hash_of(1)).is_some());
-
-        cache.put(hash_of(4), vec![0u8; 10]);
-
-        assert!(cache.get(&hash_of(2)).is_none(), "key(2) should have been evicted after key(1) was touched");
-        assert!(cache.get(&hash_of(1)).is_some());
-        assert!(cache.get(&hash_of(3)).is_some());
-        assert!(cache.get(&hash_of(4)).is_some());
-    }
-
-    #[test]
-    fn cache_put_overwriting_existing_key_updates_size_accounting() {
-        let cache = ChunkLruCache::new(30);
-        cache.put(hash_of(1), vec![0u8; 10]);
-        cache.put(hash_of(1), vec![0u8; 5]);
-        assert_eq!(cache.len(), 1);
-        assert_eq!(cache.size_bytes(), 5);
-    }
-    //#endregion 🔖️Cache
 }
 //#endregion 🧪️Tests

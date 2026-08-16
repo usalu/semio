@@ -1,0 +1,2 @@
+type GltfDeleteSceneValueV1 { nodes: [Int!]!, name: String, extensions: String, extras: String }
+type GltfDeleteSceneInverseV1 { id: ID!, version: Int!, phase: String!, touchedPaths: [String!]!, index: Int!, deletedScene: GltfDeleteSceneValueV1!, defaultSceneBefore: Int, expectedDefaultSceneAfter: Int }

@@ -581,6 +581,15 @@ pub fn port_key(node_id: &str, port_id: &str) -> String {
 
 pub const TRINITY_GRAPH_SCHEMA: &str = JackSnapshot::SCHEMA;
 
+/// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the one `Dialect` coordinate every
+/// surface (editor AND viewer) of this artifact shares — lives at the ARTIFACT level, not under
+/// `editor`, so a viewer file can read it without ever importing through the sibling `editor` module.
+/// `artifact_kind = "s.trinity.jack"` matches `#[artifact_schema(id = "s.trinity.jack")]` in this
+/// subset's own `🧬️schema/🦀️component.rs`; `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — the canonical surface id is
+/// `s.trinity.jack@1/*#editor` / `s.trinity.jack@1/*#viewer` (contract §1 grammar).
+pub const TRINITY_JACK_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.trinity.jack", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+
 pub fn empty_trinity_graph_fixture() -> JackSnapshot {
     JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "trinity".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), Vec::new(), Vec::new(), None)
 }
@@ -670,7 +679,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
 /// the old side-effecting `register()`, which called four different global registries directly from
-/// a plugin `.setup()` callback. `crate::apps::jack::config::schema::register_app_schema()` is the
+/// a plugin `.setup()` callback. `crate::editor::jack::config::schema::register_app_schema()` is the
 /// one exception, kept alive via the plugin root's own narrowed `.setup()`: it registers the
 /// `TrinityJackPlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration`
 /// deliberately has no field for (see that struct's own doc).
@@ -717,7 +726,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::jack::standards::v1::subsets::any::schema::inferences::jack_artifact_inference_descriptor()])
         .composers(crate::artifacts::jack::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::jack::TrinityJackPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::jack::TrinityJackPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Register

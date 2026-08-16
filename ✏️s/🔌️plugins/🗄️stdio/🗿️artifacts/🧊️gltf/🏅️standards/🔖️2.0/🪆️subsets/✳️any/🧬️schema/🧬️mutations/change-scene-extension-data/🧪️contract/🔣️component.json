@@ -1,0 +1,15 @@
+{
+  "id": "s.stdio.gltf.mutation.change-scene-extension-data.v1",
+  "command": "change-scene-extension-data",
+  "laws": [
+    "typed payload validation and typed rejection",
+    "direct sparse diff only at declared touched paths",
+    "inverse derives from exact base and restores that base when applied",
+    "reference integrity is repaired or rejected at the named typed paths",
+    "apply and replay are deterministic"
+  ],
+  "referencePolicy": "none",
+  "touchedPaths": [
+    "document/scenes/*/extensions"
+  ]
+}

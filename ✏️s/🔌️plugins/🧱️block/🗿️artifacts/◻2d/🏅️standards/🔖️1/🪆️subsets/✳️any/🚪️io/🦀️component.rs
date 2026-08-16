@@ -1,5 +1,5 @@
 //! 🚪️ IO s.block2d (1/✳️any) — registration now flows through 🎹️composer::register
-//! (called once from `crate::apps::block2d::register`), not per-leaf register().
+//! (called once from `crate::artifacts::block2d::declaration`), not per-leaf register().
 pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.txt", "stdio.zip"] }
 pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.txt", "stdio.zip"] }
 //#region 🎹️DerivedComposition

@@ -21,7 +21,7 @@ role = "plugin"
 [package.metadata.semio.storybook]
 id = "cad"
 titlePrefix = "📐️cad"
-sourceRoots = ["🎛️apps/📐️cad/⚙️engine/📺️renderer", "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧫️fixtures"]
+sourceRoots = ["🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer", "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧫️fixtures"]
 
 [[package.metadata.semio.playground]]
 variant = "cad"

@@ -22,20 +22,20 @@ The glTF mutation schema currently has 28 leaves, each with a Rust `🦀️compo
 
 The legacy wire manifest uses unversioned `s.stdio.gltf.mutation.<slug>` IDs and unversioned `gltf.<slug>` command/event names. `🚪️io/🧬️mutations/📝️text` and `💾️binary` manually match the old enum, inspect every legacy payload, and encode the two prohibited variants. The enum/dispatcher lives outside this lease and is intentionally not changed in this wave.
 
-## Canonical semantic vocabulary
+## Legacy-to-semantic replacement map (not the authoritative inventory)
 
-Every resulting command carries a stable `.v1` descriptor and owns its payload validator, sparse direct diff, inverse, touched paths, and reference repair. The command root is limited to descriptor and wire-enum assembly. It does not read payload fields or perform mutations.
+This table exhausts the 28 legacy variants only. It is a removal map, not a claim that the resulting domain has 29 commands. The authoritative inventory is the complete `GltfSnapshot` coverage matrix in [`w1-gltf-authoritative-mutation-matrix.md`](./w1-gltf-authoritative-mutation-matrix.md). Every resulting command carries a stable `.v1` descriptor and owns its payload validator, sparse direct diff, inverse, touched paths, and reference repair. The command root is limited to descriptor and wire-enum assembly. It does not read payload fields or perform mutations.
 
 | Canonical command | Replaces |
 | --- | --- |
-| `change-asset-metadata` | `SetAsset` |
-| `create-scene`, `delete-scene`, `change-scene` | scene insert/remove/set |
-| `create-node`, `delete-node`, `change-node`, `transform-node`, `reparent-node`, `bind-node-mesh`, `unbind-node-mesh` | node insert/remove/set/transform/reparent and optional bind |
-| `create-mesh`, `delete-mesh`, `change-mesh` | mesh insert/remove/set |
-| `create-accessor`, `delete-accessor`, `change-accessor` | accessor insert/remove/set |
-| `create-material`, `delete-material`, `change-material`, `bind-primitive-material`, `unbind-primitive-material` | material insert/remove/set and optional bind |
-| `create-buffer`, `delete-buffer`, `change-buffer-descriptor`, `update-buffer-bytes` | buffer insert/remove/set |
-| `create-animation`, `delete-animation`, `change-animation` | animation insert/remove/set |
+| `change-asset-version`, `change-asset-descriptive-metadata`, `change-asset-extension-data`, `change-asset-extra-data` | `SetAsset` |
+| `create/delete/move/reorder-scene`; `change-scene-name`; `change-scene-extension-data`; `change-scene-extra-data`; scene-root relation commands | `InsertScene`, `RemoveScene`, `SetScene` |
+| `create/delete/move/reorder-node`; `transform-node`; node mesh/camera/skin relation commands; `change-node-morph-weights`; node metadata commands; child-order and `reparent-node` commands | `InsertNode`, `RemoveNode`, `SetNode`, `TransformNode`, `ReparentNode`, `BindNodeMesh` |
+| `create/delete/move/reorder-mesh`; mesh weight/metadata commands; primitive and morph-target commands | `InsertMesh`, `RemoveMesh`, `SetMesh` |
+| `create/delete/move/reorder-accessor`; accessor layout/bounds/sparse/metadata commands | `InsertAccessor`, `RemoveAccessor`, `SetAccessor` |
+| `create/delete/move/reorder-material`; PBR, texture, render-state, and metadata commands; primitive material relation commands | `InsertMaterial`, `RemoveMaterial`, `SetMaterial`, `BindPrimitiveMaterial` |
+| `create/delete/move/reorder-buffer`; buffer descriptor/data commands | `InsertBuffer`, `RemoveBuffer`, `SetBuffer` |
+| `create/delete/move/reorder-animation`; sampler/channel/target and metadata commands | `InsertAnimation`, `RemoveAnimation`, `SetAnimation` |
 
 `NoMutation` and `SetSnapshot` have no replacement: valid commands must produce an observable sparse domain diff. Optional relationship fields are split into bind and unbind commands to make intent and inverse replay deterministic.
 
@@ -43,7 +43,7 @@ Every resulting command carries a stable `.v1` descriptor and owns its payload v
 
 1. Contract manifests and all root transport schemas: canonical `.v1` IDs and enum-only root descriptors.
 2. Asset, scene, and node leaf triplets with Rust/TS/JSON/GraphQL/Proto/text/binary facets.
-3. Mesh, accessor, material, buffer, and animation leaf triplets plus direct fixtures.
+3. Mesh, accessor, material, buffer, animation, skin, image/texture/sampler, camera, extension declaration, and document-data leaf triplets plus direct fixtures.
 4. After the inference freeze, hand off the canonical leaf inventory to the dispatcher/transport owner for enum assembly and executable round-trip gates. No aliases, legacy tags, or compatibility decoding are permitted.
 
 ## Verification boundary

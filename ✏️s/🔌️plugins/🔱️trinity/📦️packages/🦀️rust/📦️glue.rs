@@ -699,44 +699,46 @@ pub mod artifacts {
 }
 //#endregion 🔖️Artifacts
 
-//#region 🔖️Apps
+//#region ✏️Editor
+/// ✏️ The mutation-capable surface (contract §2.1/§2.4) — every leaf `#[path]`-mounted from the real
+/// subset dirs under `🗿️artifacts/<jack|rewrite>/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/…`.
 #[path = "."]
-pub mod apps {
+pub mod editor {
     #[path = "."]
     pub mod jack {
-        #[path = "../../🎛️apps/🔌️jack/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/🔌️jack/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🔌️jack/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/🔌️jack/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🔌️jack/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod terminology {
-            #[path = "../../🎛️apps/🔌️jack/🗣️terminology/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
             mod component;
             pub use component::*;
         }
 
         #[cfg(target_arch = "wasm32")]
-        #[path = "../../🎛️apps/🔌️jack/🌉️wasm/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs"]
         pub mod wasm;
 
         #[path = "."]
@@ -745,7 +747,7 @@ pub mod apps {
             // the catalogue panel both reach into it via `commands::query::{run_jack_query,preset_query}`.
             #[path = "."]
             pub(crate) mod query {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🔎️run-query/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔎️run-query/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -756,7 +758,7 @@ pub mod apps {
             // re-exported here by name, flat, matching how `TrinityJackCommand::handle` calls them.
             #[path = "."]
             mod set_fixture_json_leaf {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🗺️set-fixture-json/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗺️set-fixture-json/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -764,7 +766,7 @@ pub mod apps {
 
             #[path = "."]
             mod delete_selection_leaf {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🗺️delete-selection/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗺️delete-selection/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -772,7 +774,7 @@ pub mod apps {
 
             #[path = "."]
             mod patch_nodes_leaf {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🗺️patch-nodes/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗺️patch-nodes/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -780,7 +782,7 @@ pub mod apps {
 
             #[path = "."]
             mod reorganize_leaf {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🗺️reorganize/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗺️reorganize/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -788,7 +790,7 @@ pub mod apps {
 
             #[path = "."]
             mod load_example_query_leaf {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🔎️load-example-query/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔎️load-example-query/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -796,7 +798,7 @@ pub mod apps {
 
             #[path = "."]
             mod set_active_example_leaf {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🔎️set-active-example/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔎️set-active-example/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -804,7 +806,7 @@ pub mod apps {
 
             #[path = "."]
             mod format_document_leaf {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🔎️format-document/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔎️format-document/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -812,7 +814,7 @@ pub mod apps {
 
             #[path = "."]
             mod request_completions_leaf {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🔎️request-completions/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔎️request-completions/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -820,7 +822,7 @@ pub mod apps {
 
             #[path = "."]
             mod set_viewport_leaf {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️set-viewport/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-viewport/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -828,7 +830,7 @@ pub mod apps {
 
             #[path = "."]
             mod text_edit_leaf {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️text-edit/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️text-edit/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -836,7 +838,7 @@ pub mod apps {
 
             #[path = "."]
             mod text_select_leaf {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️text-select/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️text-select/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -844,7 +846,7 @@ pub mod apps {
 
             #[path = "."]
             mod set_lod_mode_leaf {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️set-lod-mode/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-lod-mode/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -852,7 +854,7 @@ pub mod apps {
 
             #[path = "."]
             mod editor_engagement_input_leaf {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️editor-engagement-input/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️editor-engagement-input/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -860,7 +862,7 @@ pub mod apps {
 
             #[path = "."]
             mod graph_engagement_input_leaf {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️graph-engagement-input/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️graph-engagement-input/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -868,7 +870,7 @@ pub mod apps {
 
             #[path = "."]
             mod results_engagement_input_leaf {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️results-engagement-input/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️results-engagement-input/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -876,7 +878,7 @@ pub mod apps {
 
             #[path = "."]
             mod set_locale_leaf {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️set-locale/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-locale/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -884,26 +886,36 @@ pub mod apps {
         }
 
         #[path = "."]
-        pub mod windows {
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
             #[path = "."]
             pub(crate) mod graph {
-                #[path = "../../🎛️apps/🔌️jack/🪟️windows/🌐️graph/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
 
             #[path = "."]
             pub(crate) mod editor {
-                #[path = "../../🎛️apps/🔌️jack/🪟️windows/📝️editor/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
 
             #[path = "."]
             pub(crate) mod results {
-                #[path = "../../🎛️apps/🔌️jack/🪟️windows/📊️results/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
+            }
+        }
             }
         }
 
@@ -911,21 +923,21 @@ pub mod apps {
         pub mod panels {
             #[path = "."]
             pub(crate) mod document {
-                #[path = "../../🎛️apps/🔌️jack/📌️panels/📄️artifact/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
 
             #[path = "."]
             pub(crate) mod catalogue {
-                #[path = "../../🎛️apps/🔌️jack/📌️panels/📚️catalogue/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
 
             #[path = "."]
             pub(crate) mod inspection {
-                #[path = "../../🎛️apps/🔌️jack/📌️panels/🔍️inspection/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -934,40 +946,40 @@ pub mod apps {
 
     #[path = "."]
     pub mod rewrite {
-        #[path = "../../🎛️apps/♻️rewrite/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/♻️rewrite/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/♻️rewrite/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/♻️rewrite/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/♻️rewrite/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod terminology {
-            #[path = "../../🎛️apps/♻️rewrite/🗣️terminology/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
             mod component;
             pub use component::*;
         }
 
         #[path = "."]
         pub mod world {
-            #[path = "../../🎛️apps/♻️rewrite/🌍️world/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌍️world/🦀️component.rs"]
             mod component;
             pub use component::*;
         }
@@ -979,7 +991,7 @@ pub mod apps {
             // re-exported here by name, flat, matching how `TrinityRewriteCommand::handle` calls them.
             #[path = "."]
             mod node_graph_edit_leaf {
-                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/📜️node-graph-edit/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📜️node-graph-edit/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -987,7 +999,7 @@ pub mod apps {
 
             #[path = "."]
             mod set_lhs_json_leaf {
-                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/📜️set-lhs-json/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📜️set-lhs-json/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -995,7 +1007,7 @@ pub mod apps {
 
             #[path = "."]
             mod set_rhs_json_leaf {
-                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/📜️set-rhs-json/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📜️set-rhs-json/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -1003,7 +1015,7 @@ pub mod apps {
 
             #[path = "."]
             mod set_parameter_leaf {
-                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/📜️set-parameter/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📜️set-parameter/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -1011,7 +1023,7 @@ pub mod apps {
 
             #[path = "."]
             mod add_rule_clause_command_leaf {
-                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/📜️add-rule-clause-command/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📜️add-rule-clause-command/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -1019,7 +1031,7 @@ pub mod apps {
 
             #[path = "."]
             mod reset_rule_leaf {
-                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/📜️reset-rule/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📜️reset-rule/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -1027,7 +1039,7 @@ pub mod apps {
 
             #[path = "."]
             mod patch_nodes_leaf {
-                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/📜️patch-nodes/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📜️patch-nodes/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -1035,7 +1047,7 @@ pub mod apps {
 
             #[path = "."]
             mod set_viewport_leaf {
-                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/👁️set-viewport/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-viewport/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -1043,7 +1055,7 @@ pub mod apps {
 
             #[path = "."]
             mod reorganize_leaf {
-                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/👁️reorganize/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️reorganize/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -1051,7 +1063,7 @@ pub mod apps {
 
             #[path = "."]
             mod set_lod_mode_leaf {
-                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/👁️set-lod-mode/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-lod-mode/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -1059,7 +1071,7 @@ pub mod apps {
 
             #[path = "."]
             mod set_locale_leaf {
-                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/👁️set-locale/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-locale/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -1067,47 +1079,57 @@ pub mod apps {
         }
 
         #[path = "."]
-        pub mod windows {
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
             #[path = "."]
             pub(crate) mod before {
-                #[path = "../../🎛️apps/♻️rewrite/🪟️windows/⬅️before/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/⬅️before/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
 
             #[path = "."]
             pub(crate) mod after {
-                #[path = "../../🎛️apps/♻️rewrite/🪟️windows/⏭️after/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/⏭️after/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
 
             #[path = "."]
             pub(crate) mod lhs {
-                #[path = "../../🎛️apps/♻️rewrite/🪟️windows/👈️lhs/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👈️lhs/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
 
             #[path = "."]
             pub(crate) mod rhs {
-                #[path = "../../🎛️apps/♻️rewrite/🪟️windows/➡️rhs/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/➡️rhs/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
 
             #[path = "."]
             pub(crate) mod jack {
-                #[path = "../../🎛️apps/♻️rewrite/🪟️windows/🔎️jack/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔎️jack/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
 
             #[path = "."]
             pub(crate) mod parameters {
-                #[path = "../../🎛️apps/♻️rewrite/🪟️windows/🎛️parameters/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎛️parameters/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
+            }
+        }
             }
         }
 
@@ -1115,28 +1137,84 @@ pub mod apps {
         pub mod panels {
             #[path = "."]
             pub(crate) mod document {
-                #[path = "../../🎛️apps/♻️rewrite/📌️panels/📄️artifact/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
 
             #[path = "."]
             pub(crate) mod catalogue {
-                #[path = "../../🎛️apps/♻️rewrite/📌️panels/📚️catalogue/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
 
             #[path = "."]
             pub(crate) mod inspection {
-                #[path = "../../🎛️apps/♻️rewrite/📌️panels/🔍️inspection/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
         }
     }
 }
-//#endregion 🔖️Apps
+//#endregion ✏️Editor
+
+//#region 👁️Viewer
+/// 👁️ The read-only surface (contract §2.2/§2.6) — a genuinely independent module tree from
+/// `editor` above, never `#[path]`-mounting anything under `✏️editor/`: that would let
+/// `policyViewerPurityBreaches`' `::editor::` substring check catch a real dependency, but the
+/// deeper reason is architectural — the viewers must stay constructible without ever touching the
+/// editors' mutation-capable types.
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod jack {
+        #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️graph/🦀️component.rs"]
+                    pub mod graph;
+                }
+            }
+        }
+    }
+
+    #[path = "."]
+    pub mod rewrite {
+        #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📜️rule/🦀️component.rs"]
+                    pub mod rule;
+                }
+            }
+        }
+    }
+}
+//#endregion 👁️Viewer
 
 //#region 🔖️Bundle
 //#region 🔖️Plugin
@@ -1158,9 +1236,9 @@ pub mod examples {
     #[cfg(test)]
     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_jack_demo_tests;
-    #[path = "../../🎛️apps/♻️rewrite/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_rewrite_demo_session;
-    #[path = "../../🎛️apps/🔌️jack/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_jack_demo_session;
 }
 //#endregion 📚️Examples

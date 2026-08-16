@@ -2119,8 +2119,8 @@ Supported entity scopes (narrowing order):
 	}
 }
 
+// 🧠️extractLLMFromArgs extracts LLM from command flags and positional arguments.
 func extractLLMFromArgs(cmd *cobra.Command, args []string) (string, []string) {
-
 	if llm, _ := cmd.Flags().GetString("llm"); llm != "" {
 		return llm, args
 	}
@@ -2158,6 +2158,47 @@ func extractLLMFromArgs(cmd *cobra.Command, args []string) (string, []string) {
 		}
 	}
 	return foundLLM, remaining
+}
+
+// 🏋️extractEffortFromArgs extracts reasoning effort from command flags and positional arguments.
+func extractEffortFromArgs(cmd *cobra.Command, args []string) (string, []string) {
+	if effort, _ := cmd.Flags().GetString("effort"); effort != "" {
+		return effort, args
+	}
+
+	for _, allowed := range AllowedEfforts {
+		flagName := allowed
+		if val, _ := cmd.Flags().GetBool(flagName); val {
+			return allowed, args
+		}
+	}
+
+	remaining := []string{}
+	foundEffort := ""
+	for _, arg := range args {
+		if foundEffort != "" {
+			remaining = append(remaining, arg)
+			continue
+		}
+		normalized := NormalizeEffortSlug(arg)
+		matched := false
+		bestMatch := ""
+		for _, allowed := range AllowedEfforts {
+			if normalized == NormalizeEffortSlug(allowed) || strings.Contains(normalized, NormalizeEffortSlug(allowed)) {
+				if len(allowed) > len(bestMatch) {
+					bestMatch = allowed
+					matched = true
+				}
+			}
+		}
+		if matched {
+			foundEffort = bestMatch
+		}
+		if !matched {
+			remaining = append(remaining, arg)
+		}
+	}
+	return foundEffort, remaining
 }
 
 // 🧲️extractClientFromArgs holds the data fields for a extractClientFromArgs record.
@@ -2205,14 +2246,27 @@ func extractClientFromArgs(cmd *cobra.Command, args []string) (string, []string)
 // ➕️addLLMFlags holds the data fields for a addLLMFlags record.
 func addLLMFlags(cmd *cobra.Command) {
 	for _, llm := range AllowedLLMs {
-		cmd.Flags().Bool(llm, false, fmt.Sprintf("Use %s as LLM", llm))
+		if cmd.Flags().Lookup(llm) == nil {
+			cmd.Flags().Bool(llm, false, fmt.Sprintf("Use %s as LLM", llm))
+		}
+	}
+}
+
+// 🏋️addEffortFlags adds boolean flags for all allowed effort values.
+func addEffortFlags(cmd *cobra.Command) {
+	for _, effort := range AllowedEfforts {
+		if cmd.Flags().Lookup(effort) == nil {
+			cmd.Flags().Bool(effort, false, fmt.Sprintf("Use %s as LLM reasoning effort", effort))
+		}
 	}
 }
 
 // 💻️addClientFlags holds the data fields for a addClientFlags record.
 func addClientFlags(cmd *cobra.Command) {
 	for _, client := range AllowedClients {
-		cmd.Flags().Bool(client, false, fmt.Sprintf("Use %s as Client", client))
+		if cmd.Flags().Lookup(client) == nil {
+			cmd.Flags().Bool(client, false, fmt.Sprintf("Use %s as Client", client))
+		}
 	}
 }
 
@@ -2419,7 +2473,8 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			}
 
 			client, remainingArgs := extractClientFromArgs(cmd, remainingArgs)
-			llm, _ := extractLLMFromArgs(cmd, remainingArgs)
+			llm, remainingArgs := extractLLMFromArgs(cmd, remainingArgs)
+			effort, _ := extractEffortFromArgs(cmd, remainingArgs)
 
 			if emoji == "" {
 				return fmt.Errorf("missing emoji")
@@ -2446,6 +2501,9 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			}
 			if llm != "" {
 				input["llm"] = llm
+			}
+			if effort != "" {
+				input["effort"] = effort
 			}
 			if draft != "" {
 				input["draft"] = draft
@@ -2479,6 +2537,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	openCmd.Flags().String("title", "", "Ticket title")
 	openCmd.Flags().String("prompt", "", "Ticket prompt")
 	openCmd.Flags().String("llm", "", "LLM")
+	openCmd.Flags().String("effort", "", "LLM reasoning effort (low, medium, high, max)")
 	openCmd.Flags().String("client", "", "Client")
 	openCmd.Flags().Bool("no-issue", false, "Skip management provider issue")
 	openCmd.Flags().String("draft", "", "Draft ID")
@@ -2488,6 +2547,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	openCmd.Flags().String("parent", "", "Parent ticket slug")
 	openCmd.Flags().String("issue", "", "Link to existing GitHub issue URL instead of creating new one")
 	addLLMFlags(openCmd)
+	addEffortFlags(openCmd)
 	addClientFlags(openCmd)
 	closeCmd := &cobra.Command{
 		Use:   "close [path] [summary] [files...]",
@@ -2614,7 +2674,8 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			}
 
 			client, remainingArgs := extractClientFromArgs(cmd, remainingArgs)
-			llm, _ := extractLLMFromArgs(cmd, remainingArgs)
+			llm, remainingArgs := extractLLMFromArgs(cmd, remainingArgs)
+			effort, _ := extractEffortFromArgs(cmd, remainingArgs)
 
 			if year == 0 || month == 0 || day == 0 || slug == "" {
 				return fmt.Errorf("missing ticket path")
@@ -2636,6 +2697,9 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			}
 			if llm != "" {
 				input["llm"] = llm
+			}
+			if effort != "" {
+				input["effort"] = effort
 			}
 			if title != "" {
 				input["title"] = title
@@ -2668,12 +2732,14 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	reopenCmd.Flags().String("slug", "", "Ticket slug")
 	reopenCmd.Flags().String("prompt", "", "Prompt")
 	reopenCmd.Flags().String("llm", "", "LLM")
+	reopenCmd.Flags().String("effort", "", "LLM reasoning effort (low, medium, high, max)")
 	reopenCmd.Flags().String("client", "", "Client")
 	reopenCmd.Flags().String("title", "", "Title")
 	reopenCmd.Flags().String("draft", "", "Draft ID")
 	reopenCmd.Flags().String("goal", "", "Goal ID")
 	reopenCmd.Flags().String("parent", "", "Parent ticket slug")
 	addLLMFlags(reopenCmd)
+	addEffortFlags(reopenCmd)
 	addClientFlags(reopenCmd)
 
 	changeCmd := &cobra.Command{
@@ -2708,6 +2774,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 			client, _ := extractClientFromArgs(cmd, []string{})
 			llm, _ := extractLLMFromArgs(cmd, []string{})
+			effort, _ := extractEffortFromArgs(cmd, []string{})
 
 			input := map[string]interface{}{
 				"year":         y,
@@ -2734,6 +2801,9 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if llm != "" {
 				input["llm"] = llm
 			}
+			if effort != "" {
+				input["effort"] = effort
+			}
 
 			variables := map[string]interface{}{"input": input}
 			query := `mutation TicketChange($input: TicketChangeInput!) {
@@ -2751,9 +2821,11 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	changeCmd.Flags().String("title", "", "New title")
 	changeCmd.Flags().String("prompt", "", "New prompt")
 	changeCmd.Flags().String("goal", "", "New goal ID")
+	changeCmd.Flags().String("effort", "", "LLM reasoning effort (low, medium, high, max)")
 	changeCmd.Flags().Bool("no-management", false, "Skip management provider sync")
 	changeCmd.Flags().MarkHidden("no-management")
 	addLLMFlags(changeCmd)
+	addEffortFlags(changeCmd)
 	addClientFlags(changeCmd)
 
 	root.AddCommand(changeCmd)
@@ -2779,6 +2851,9 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			parent, _ := cmd.Flags().GetString("parent")
 			noManagement, _ := cmd.Flags().GetBool("no-management")
 
+			llm, _ := extractLLMFromArgs(cmd, []string{})
+			effort, _ := extractEffortFromArgs(cmd, []string{})
+
 			input := map[string]interface{}{
 				"id":           id,
 				"noManagement": noManagement,
@@ -2794,6 +2869,12 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			}
 			if cmd.Flags().Changed("parent") {
 				input["parent"] = parent
+			}
+			if llm != "" {
+				input["llm"] = llm
+			}
+			if effort != "" {
+				input["effort"] = effort
 			}
 
 			variables := map[string]interface{}{"id": id, "input": input}
@@ -2813,8 +2894,12 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 	changeCmd.Flags().String("description", "", "New description")
 	changeCmd.Flags().String("due-date", "", "New due date (YYYY-MM-DD)")
 	changeCmd.Flags().String("parent", "", "New parent goal ID")
+	changeCmd.Flags().String("llm", "", "New LLM")
+	changeCmd.Flags().String("effort", "", "New LLM reasoning effort (low, medium, high, max)")
 	changeCmd.Flags().Bool("no-management", false, "Skip management provider sync")
 	changeCmd.Flags().MarkHidden("no-management")
+	addLLMFlags(changeCmd)
+	addEffortFlags(changeCmd)
 
 	openCmd := &cobra.Command{
 		Use:   "open [title] [description] [prompt] [client] [llm]",
@@ -2841,7 +2926,8 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			}
 
 			client, remainingArgs := extractClientFromArgs(cmd, remainingArgs)
-			llm, _ := extractLLMFromArgs(cmd, remainingArgs)
+			llm, remainingArgs := extractLLMFromArgs(cmd, remainingArgs)
+			effort, _ := extractEffortFromArgs(cmd, remainingArgs)
 
 			if title == "" {
 				return fmt.Errorf("missing title")
@@ -2870,6 +2956,9 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 				"llm":          llm,
 				"client":       client,
 				"noManagement": noManagement,
+			}
+			if effort != "" {
+				input["effort"] = effort
 			}
 			parent, _ := cmd.Flags().GetString("parent")
 			if parent != "" {
@@ -2903,6 +2992,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 	openCmd.Flags().String("prompt", "", "Goal prompt")
 	openCmd.Flags().String("due-date", "", "Goal due date (e.g., 2026-02-15)")
 	openCmd.Flags().String("llm", "", "LLM")
+	openCmd.Flags().String("effort", "", "LLM reasoning effort (low, medium, high, max)")
 	openCmd.Flags().String("client", "", "Client")
 	openCmd.Flags().Bool("no-management", false, "Skip management provider synchronization")
 	openCmd.Flags().MarkHidden("no-management")
@@ -2910,6 +3000,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 	openCmd.Flags().String("bundle", "", "Bundle name associated with this goal")
 	openCmd.Flags().String("milestone", "", "Link to existing GitHub milestone URL instead of creating new one")
 	addLLMFlags(openCmd)
+	addEffortFlags(openCmd)
 	addClientFlags(openCmd)
 
 	closeCmd := &cobra.Command{
@@ -2975,7 +3066,8 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			}
 
 			client, remainingArgs := extractClientFromArgs(cmd, remainingArgs)
-			llm, _ := extractLLMFromArgs(cmd, remainingArgs)
+			llm, remainingArgs := extractLLMFromArgs(cmd, remainingArgs)
+			effort, _ := extractEffortFromArgs(cmd, remainingArgs)
 
 			if id == "" {
 				return fmt.Errorf("missing goal id")
@@ -2996,6 +3088,9 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 				"client":       client,
 				"llm":          llm,
 				"noManagement": noManagement,
+			}
+			if effort != "" {
+				input["effort"] = effort
 			}
 			if title != "" {
 				input["title"] = title
@@ -3027,7 +3122,11 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 	reopenCmd.Flags().String("description", "", "New description")
 	reopenCmd.Flags().String("due-date", "", "New due date")
 	reopenCmd.Flags().String("parent", "", "New parent goal")
+	reopenCmd.Flags().String("llm", "", "LLM")
+	reopenCmd.Flags().String("effort", "", "LLM reasoning effort (low, medium, high, max)")
+	reopenCmd.Flags().String("client", "", "Client")
 	addLLMFlags(reopenCmd)
+	addEffortFlags(reopenCmd)
 	addClientFlags(reopenCmd)
 
 	root.AddCommand(changeCmd)
@@ -9658,27 +9757,93 @@ func (e BreachPriority) String() string {
 	return string(e)
 }
 
-// ⬛️AllowedLLMs holds the allowed l l ms values.
+// ⬛️AllowedLLMs holds the allowed LLM values across providers.
 var AllowedLLMs = []string{
 	"opus-4-7",
 	"opus-4-6",
 	"opus-4-5",
+	"opus-4-1",
 	"opus-4",
+	"opus-3",
 	"sonnet-5",
 	"sonnet-4-6",
 	"sonnet-4-5",
 	"sonnet-4",
+	"sonnet-3-7",
+	"sonnet-3-5",
 	"haiku-4-5",
+	"haiku-4",
+	"haiku-3-5",
+	"claude-3-7-sonnet",
+	"claude-3-5-sonnet",
+	"claude-3-5-haiku",
+	"claude-3-opus",
+	"gemini-3-7-pro",
+	"gemini-3-7-flash",
 	"gemini-3-1-pro",
 	"gemini-3-pro",
 	"gemini-3-flash",
+	"gemini-2-5-pro",
+	"gemini-2-5-flash",
+	"gemini-2-5-flash-lite",
+	"gemini-2-pro",
+	"gemini-2-flash",
+	"gemini-2-flash-lite",
+	"gemini-1-5-pro",
+	"gemini-1-5-flash",
 	"gpt-5-5",
-	"gpt-5-2",
-	"gpt-5-2-codex",
-	"gpt-5-3-codex",
 	"gpt-5-4",
+	"gpt-5-3-codex",
+	"gpt-5-2-codex",
+	"gpt-5-2",
+	"gpt-5-1-codex",
+	"gpt-5-1",
+	"gpt-5-codex",
+	"gpt-5",
 	"gpt-5-mini",
+	"o3-pro",
+	"o3-mini",
+	"o3",
+	"o1-pro",
+	"o1-mini",
+	"o1-preview",
+	"o1",
+	"gpt-4-5",
+	"gpt-4o",
+	"gpt-4o-mini",
+	"gpt-4",
+	"codex",
+	"grok-4-5",
+	"grok-4",
+	"grok-3-mini",
+	"grok-3",
+	"grok-2",
+	"cursor-grok-4-5",
+	"cursor-grok-4",
+	"composer-2-5",
+	"composer-2",
+	"composer-1-5",
+	"composer",
+	"deepseek-r1",
+	"deepseek-v3",
+	"deepseek-coder",
+	"llama-4",
+	"llama-3-3",
+	"llama-3-2",
+	"llama-3-1",
+	"llama-3",
+	"qwen-3",
+	"qwen-2-5",
 	"swe-1-5",
+	"swe-1",
+}
+
+// 🏋️AllowedEfforts holds the allowed reasoning effort values for LLMs.
+var AllowedEfforts = []string{
+	"low",
+	"medium",
+	"high",
+	"max",
 }
 
 // 💻️AllowedClients holds the allowed clients values.
@@ -9703,6 +9868,11 @@ func NormalizeLLMSlug(llm string) string {
 	return strings.ToLower(Slugify(llm))
 }
 
+// 🏋️NormalizeEffortSlug normalizes the reasoning effort slug to its canonical form.
+func NormalizeEffortSlug(effort string) string {
+	return strings.ToLower(Slugify(effort))
+}
+
 // 🟥️NormalizeClientSlug MUST be idempotent for already-normalized values.
 // ❓️NormalizeClientSlug normalizes the client slug to its canonical form.
 func NormalizeClientSlug(client string) string {
@@ -9723,6 +9893,26 @@ func ResolveAllowedLLM(llm string) (string, error) {
 	}
 	if bestMatch == "" {
 		return "", fmt.Errorf("llm '%s' is not allowed. Please use one of: %s", llmSlug, strings.Join(AllowedLLMs, ", "))
+	}
+	return bestMatch, nil
+}
+
+// 🏋️ResolveAllowedEffort resolves and validates the allowed reasoning effort against known values.
+func ResolveAllowedEffort(effort string) (string, error) {
+	if strings.TrimSpace(effort) == "" {
+		return "", nil
+	}
+	effortSlug := NormalizeEffortSlug(effort)
+	bestMatch := ""
+	for _, allowed := range AllowedEfforts {
+		if effortSlug == NormalizeEffortSlug(allowed) || strings.Contains(effortSlug, NormalizeEffortSlug(allowed)) {
+			if len(allowed) > len(bestMatch) {
+				bestMatch = allowed
+			}
+		}
+	}
+	if bestMatch == "" {
+		return "", fmt.Errorf("effort '%s' is not allowed. Please use one of: %s", effortSlug, strings.Join(AllowedEfforts, ", "))
 	}
 	return bestMatch, nil
 }
@@ -10974,6 +11164,18 @@ func (t *Ticket) GetLLM() string {
 	return ""
 }
 
+// 🏋️GetEffort MUST return the reasoning effort from the latest session or interaction.
+// 🏋️GetEffort returns the reasoning effort of the Ticket.
+func (t *Ticket) GetEffort() string {
+	if len(t.Interactions) > 0 {
+		return t.Interactions[len(t.Interactions)-1].Effort
+	}
+	if len(t.Agents) > 0 {
+		return t.Agents[len(t.Agents)-1].Effort
+	}
+	return ""
+}
+
 // 🔖️GetClient MUST return the client from the latest session or interaction.
 // 🪷️GetClient returns the client of the Ticket.
 func (t *Ticket) GetClient() string {
@@ -11740,6 +11942,7 @@ type TicketOpenInput struct {
 	Title        string `json:"title"`
 	Prompt       string `json:"prompt"`
 	LLM          string `json:"llm,omitempty"`
+	Effort       string `json:"effort,omitempty"`
 	Client       string `json:"client"`
 	NoIssue      bool   `json:"noIssue,omitempty"`
 	Draft        string `json:"draft,omitempty"`
@@ -11764,6 +11967,7 @@ type GoalCreateInput struct {
 	Prompt       string `json:"prompt"`
 	DueDate      string `json:"dueDate"`
 	LLM          string `json:"llm"`
+	Effort       string `json:"effort,omitempty"`
 	Client       string `json:"client"`
 	NoManagement bool   `json:"noManagement,omitempty"`
 	Parent       string `json:"parent,omitempty"`
@@ -11776,6 +11980,8 @@ type GoalChangeInput struct {
 	Title        *string `json:"title,omitempty"`
 	Description  *string `json:"description,omitempty"`
 	DueDate      *string `json:"dueDate,omitempty"`
+	LLM          *string `json:"llm,omitempty"`
+	Effort       *string `json:"effort,omitempty"`
 	Parent       *string `json:"parent,omitempty"`
 	NoManagement bool    `json:"noManagement,omitempty"`
 }
@@ -11793,6 +11999,7 @@ type GoalReopenInput struct {
 	Prompt       string  `json:"prompt"`
 	Client       string  `json:"client"`
 	LLM          string  `json:"llm"`
+	Effort       string  `json:"effort,omitempty"`
 	Title        *string `json:"title,omitempty"`
 	Description  *string `json:"description,omitempty"`
 	DueDate      *string `json:"dueDate,omitempty"`
@@ -11836,6 +12043,7 @@ type TicketReopenInput struct {
 	Slug         string  `json:"slug"`
 	Prompt       string  `json:"prompt"`
 	LLM          string  `json:"llm,omitempty"`
+	Effort       string  `json:"effort,omitempty"`
 	Client       string  `json:"client"`
 	Title        *string `json:"title,omitempty"`
 	Draft        string  `json:"draft,omitempty"`
@@ -11855,6 +12063,7 @@ type TicketChangeInput struct {
 	Title        *string `json:"title,omitempty"`
 	Prompt       *string `json:"prompt,omitempty"`
 	LLM          *string `json:"llm,omitempty"`
+	Effort       *string `json:"effort,omitempty"`
 	Client       *string `json:"client,omitempty"`
 	Goal         *string `json:"goal,omitempty"`
 	Parent       *string `json:"parent,omitempty"`
@@ -15026,6 +15235,7 @@ type Interaction struct {
 	Prompt     string            `json:"prompt,omitempty" yaml:"prompt,omitempty"`
 	Summary    string            `json:"summary,omitempty" yaml:"summary,omitempty"`
 	LLM        string            `json:"llm,omitempty" yaml:"llm,omitempty"`
+	Effort     string            `json:"effort,omitempty" yaml:"effort,omitempty"`
 	Files      []InteractionFile `json:"files,omitempty" yaml:"files,omitempty"`
 }
 
@@ -15077,6 +15287,7 @@ type TicketAgent struct {
 	System      string           `json:"system,omitempty" yaml:"system,omitempty"`
 	Client      string           `json:"client,omitempty" yaml:"client,omitempty"`
 	LLM         string           `json:"llm,omitempty" yaml:"llm,omitempty"`
+	Effort      string           `json:"effort,omitempty" yaml:"effort,omitempty"`
 	Transcript  string           `json:"transcript,omitempty" yaml:"transcript,omitempty"`
 	Plan        *TicketAgentPlan `json:"plan,omitempty" yaml:"plan,omitempty"`
 }
@@ -15293,6 +15504,7 @@ type Goal struct {
 	Dates       GoalDates           `json:"dates"`
 	Client      string              `json:"client"`
 	LLM         string              `json:"llm"`
+	Effort      string              `json:"effort,omitempty"`
 	Parent      string              `json:"parent,omitempty"`
 	Management  *GoalManagementData `json:"github,omitempty"`
 
@@ -21951,7 +22163,7 @@ func shouldSkipTicket(prompt string) bool {
 }
 
 // 📬️OpenTicket MUST complete the operation and return consistent results.
-func OpenTicket(emoji, title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string, mcpKind McpClientKind, planID, specID string) (*Ticket, error) {
+func OpenTicket(emoji, title, prompt, llm, effort, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string, mcpKind McpClientKind, planID, specID string) (*Ticket, error) {
 	if prompt == "" {
 		prompt = title
 	}
@@ -21964,15 +22176,15 @@ func OpenTicket(emoji, title, prompt, llm, client, draft string, noIssue bool, g
 			return nil, err
 		}
 		if latest.GetStatus() == TicketStatusClosed {
-			return latest, ReopenTicket(latest, prompt, llm, client, draft, goal, parent, noManagement, mcpKind, planID, specID)
+			return latest, ReopenTicket(latest, prompt, llm, effort, client, draft, goal, parent, noManagement, mcpKind, planID, specID)
 		}
 		return latest, nil
 	}
-	return CreateTicket(emoji, title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue, mcpKind, planID, specID)
+	return CreateTicket(emoji, title, prompt, llm, effort, client, draft, noIssue, goal, parent, noManagement, issue, mcpKind, planID, specID)
 }
 
 // ⛳️OpenGoal MUST complete the operation and return consistent results.
-func OpenGoal(title, description, prompt, dueDate, client, llm string, noManagement bool) (*Goal, error) {
+func OpenGoal(title, description, prompt, dueDate, client, llm, effort string, noManagement bool) (*Goal, error) {
 	ctx := NewRepoContext(rootDir)
 	input := GoalCreateInput{
 		Title:        title,
@@ -21981,6 +22193,7 @@ func OpenGoal(title, description, prompt, dueDate, client, llm string, noManagem
 		DueDate:      dueDate,
 		Client:       client,
 		LLM:          llm,
+		Effort:       effort,
 		NoManagement: noManagement,
 	}
 	return ctx.GoalCreate(input)
@@ -22111,7 +22324,7 @@ func ensureTicketGitHubIssue(ticket *Ticket, title, prompt, goalRef, issue strin
 
 // 🆕️CreateTicket MUST persist the new entity and return a reference to it.
 // 🆕️CreateTicket creates a new ticket and persists it.
-func CreateTicket(emoji, title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string, mcpKind McpClientKind, planID, specID string) (*Ticket, error) {
+func CreateTicket(emoji, title, prompt, llm, effort, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string, mcpKind McpClientKind, planID, specID string) (*Ticket, error) {
 	if goal == "" {
 		return nil, fmt.Errorf("ticket goal is required")
 	}
@@ -22139,6 +22352,13 @@ func CreateTicket(emoji, title, prompt, llm, client, draft string, noIssue bool,
 	var llmSlug string
 	if llm != "" {
 		llmSlug, err = ResolveAllowedLLM(llm)
+		if err != nil {
+			return nil, err
+		}
+	}
+	var effortSlug string
+	if effort != "" {
+		effortSlug, err = ResolveAllowedEffort(effort)
 		if err != nil {
 			return nil, err
 		}
@@ -22196,6 +22416,7 @@ func CreateTicket(emoji, title, prompt, llm, client, draft string, noIssue bool,
 			Kind:   "ticket.open",
 			Prompt: prompt,
 			LLM:    llmSlug,
+			Effort: effortSlug,
 			System: GetSystem(),
 			Client: uiSlug,
 			Date:   now.Format("2006-01-02 15:04:05"),
@@ -22221,7 +22442,7 @@ func CreateTicket(emoji, title, prompt, llm, client, draft string, noIssue bool,
 	ticketID := FormatTicketRelPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 	repopkg.Emit(repopkg.EventTicketOpenEnded, "repo-cli", repopkg.TicketOpenPayload{
 		TicketPayload: repopkg.TicketPayload{ID: ticketID, Year: ticket.Year, Month: ticket.Month, Day: ticket.Day, Slug: ticket.Slug},
-		Title:         ticket.Title, Prompt: ticket.Description, LLM: llmSlug, Client: uiSlug, Author: GetGitAuthorAlias(), Goal: goal, Parent: parent,
+		Title:         ticket.Title, Prompt: ticket.Description, LLM: llmSlug, Effort: effortSlug, Client: uiSlug, Author: GetGitAuthorAlias(), Goal: goal, Parent: parent,
 	})
 	return ticket, nil
 }
@@ -24805,7 +25026,7 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 }
 
 // 🔖️ReopenTicket MUST return a non-nil error when the operation fails.
-func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string, parent string, noManagement bool, mcpKind McpClientKind, planID, specID string) error {
+func ReopenTicket(ticket *Ticket, prompt, llm, effort, client, draft string, goal string, parent string, noManagement bool, mcpKind McpClientKind, planID, specID string) error {
 	if ticket.Status == TicketStatusOpen {
 		return fmt.Errorf("ticket is already open")
 	}
@@ -24816,10 +25037,17 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 		ticket.Parent = parent
 	}
 	var llmSlug string
+	var effortSlug string
 	var uiSlug string
 	var err error
 	if llm != "" {
 		llmSlug, err = ResolveAllowedLLM(llm)
+		if err != nil {
+			return err
+		}
+	}
+	if effort != "" {
+		effortSlug, err = ResolveAllowedEffort(effort)
 		if err != nil {
 			return err
 		}
@@ -24840,6 +25068,7 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 		Kind:   "ticket.reopen",
 		Prompt: prompt,
 		LLM:    llmSlug,
+		Effort: effortSlug,
 		System: GetSystem(),
 		Client: uiSlug,
 		Date:   time.Now().Format("2006-01-02 15:04:05"),
@@ -24898,17 +25127,17 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 	ticketID := FormatTicketRelPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 	repopkg.Emit(repopkg.EventTicketReopenEnded, "repo-cli", repopkg.TicketReopenPayload{
 		TicketPayload: repopkg.TicketPayload{ID: ticketID, Year: ticket.Year, Month: ticket.Month, Day: ticket.Day, Slug: ticket.Slug},
-		Prompt:        prompt, LLM: llmSlug, Client: uiSlug, Author: GetGitAuthorAlias(),
+		Prompt:        prompt, LLM: llmSlug, Effort: effortSlug, Client: uiSlug, Author: GetGitAuthorAlias(),
 	})
 	return nil
 }
 
 // 🔖️ToolTicketOpen MUST complete the operation successfully.
-func ToolTicketOpen(emoji, title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string, mcpKind McpClientKind, planID, specID string) ToolResult {
+func ToolTicketOpen(emoji, title, prompt, llm, effort, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string, mcpKind McpClientKind, planID, specID string) ToolResult {
 	repopkg.Emit(repopkg.EventTicketOpenStarting, "repo-cli", repopkg.TicketOpenPayload{
-		Title: title, Prompt: prompt, LLM: llm, Client: client, Goal: goal, Parent: parent,
+		Title: title, Prompt: prompt, LLM: llm, Effort: effort, Client: client, Goal: goal, Parent: parent,
 	})
-	ticket, err := OpenTicket(emoji, title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue, mcpKind, planID, specID)
+	ticket, err := OpenTicket(emoji, title, prompt, llm, effort, client, draft, noIssue, goal, parent, noManagement, issue, mcpKind, planID, specID)
 	if err != nil {
 		return toolErrorResult(err)
 	}
@@ -25040,10 +25269,10 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string,
 }
 
 // 🔖️ToolTicketReopen MUST complete the operation successfully.
-func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft string, title string, goal string, parent string, noManagement bool, mcpKind McpClientKind, planID, specID string) ToolResult {
+func ToolTicketReopen(year, month, day int, slug, prompt, llm, effort, client, draft string, title string, goal string, parent string, noManagement bool, mcpKind McpClientKind, planID, specID string) ToolResult {
 	repopkg.Emit(repopkg.EventTicketReopenStarting, "repo-cli", repopkg.TicketReopenPayload{
 		TicketPayload: repopkg.TicketPayload{ID: FormatTicketRelPath(year, month, day, slug), Year: year, Month: month, Day: day, Slug: slug},
-		Prompt:        prompt, LLM: llm, Client: client,
+		Prompt:        prompt, LLM: llm, Effort: effort, Client: client,
 	})
 	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
@@ -25060,7 +25289,7 @@ func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft str
 			}
 		}
 	}
-	if err := ReopenTicket(ticket, prompt, llm, client, draft, goal, parent, noManagement, mcpKind, planID, specID); err != nil {
+	if err := ReopenTicket(ticket, prompt, llm, effort, client, draft, goal, parent, noManagement, mcpKind, planID, specID); err != nil {
 		return toolErrorResult(err)
 	}
 	output.Success(fmt.Sprintf("\n🔓️ Ticket reopened: %s", ticket.Slug))
@@ -27487,6 +27716,13 @@ func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 	if err != nil {
 		return nil, err
 	}
+	var effortSlug string
+	if input.Effort != "" {
+		effortSlug, err = ResolveAllowedEffort(input.Effort)
+		if err != nil {
+			return nil, err
+		}
+	}
 	uiSlug, err := ResolveAllowedClient(input.Client)
 	if err != nil {
 		return nil, err
@@ -27514,6 +27750,7 @@ func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 		Dates:       GoalDates{Due: input.DueDate},
 		Client:      uiSlug,
 		LLM:         llmSlug,
+		Effort:      effortSlug,
 	}
 
 	if !input.NoManagement {
@@ -27561,7 +27798,7 @@ func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 	}
 	repopkg.Emit(repopkg.EventGoalOpenEnded, "repo-cli", repopkg.GoalOpenPayload{
 		GoalPayload: repopkg.GoalPayload{ID: goal.ID},
-		Title:       goal.Title, Description: goal.Description, Parent: goal.Parent, Author: GetGitAuthorAlias(),
+		Title:       goal.Title, Description: goal.Description, LLM: llmSlug, Effort: effortSlug, Parent: goal.Parent, Author: GetGitAuthorAlias(),
 	})
 	return &goal, nil
 }
@@ -27653,6 +27890,20 @@ func (c *repoContext) GoalChange(input GoalChangeInput) (*Goal, error) {
 	if input.DueDate != nil {
 		goal.Dates.Due = *input.DueDate
 	}
+	if input.LLM != nil {
+		llmSlug, err := ResolveAllowedLLM(*input.LLM)
+		if err != nil {
+			return nil, err
+		}
+		goal.LLM = llmSlug
+	}
+	if input.Effort != nil {
+		effortSlug, err := ResolveAllowedEffort(*input.Effort)
+		if err != nil {
+			return nil, err
+		}
+		goal.Effort = effortSlug
+	}
 	if input.Parent != nil {
 		goal.Parent = *input.Parent
 
@@ -27707,7 +27958,7 @@ func (c *repoContext) GoalChange(input GoalChangeInput) (*Goal, error) {
 	}
 	repopkg.Emit(repopkg.EventGoalChangeEnded, "repo-cli", repopkg.GoalChangePayload{
 		GoalPayload: repopkg.GoalPayload{ID: goal.ID},
-		Title:       input.Title, Description: input.Description, Parent: input.Parent, Author: GetGitAuthorAlias(),
+		Title:       input.Title, Description: input.Description, LLM: input.LLM, Effort: input.Effort, Parent: input.Parent, Author: GetGitAuthorAlias(),
 	})
 	return &goal, nil
 }
@@ -27797,6 +28048,13 @@ func (c *repoContext) GoalReopen(input GoalReopenInput) (*Goal, error) {
 	goal.Prompt = input.Prompt
 	goal.LLM = input.LLM
 	goal.Client = input.Client
+	if input.Effort != "" {
+		effortSlug, err := ResolveAllowedEffort(input.Effort)
+		if err != nil {
+			return nil, err
+		}
+		goal.Effort = effortSlug
+	}
 
 	if goal.Management != nil && !input.NoManagement {
 		if isRootGoal(&goal) && goal.Management.Milestone != "" {
@@ -27818,7 +28076,7 @@ func (c *repoContext) GoalReopen(input GoalReopenInput) (*Goal, error) {
 	}
 	repopkg.Emit(repopkg.EventGoalReopenEnded, "repo-cli", repopkg.GoalReopenPayload{
 		GoalPayload: repopkg.GoalPayload{ID: goal.ID},
-		Prompt:      input.Prompt, Client: input.Client, LLM: input.LLM, Author: GetGitAuthorAlias(),
+		Prompt:      input.Prompt, Client: input.Client, LLM: input.LLM, Effort: goal.Effort, Author: GetGitAuthorAlias(),
 	})
 	return &goal, nil
 }
@@ -27861,6 +28119,14 @@ func (c *repoContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 			ticket.Interactions[len(ticket.Interactions)-1].LLM = llmSlug
 			changed = true
 		}
+		if input.Effort != nil {
+			effortSlug, err := ResolveAllowedEffort(*input.Effort)
+			if err != nil {
+				return nil, err
+			}
+			ticket.Interactions[len(ticket.Interactions)-1].Effort = effortSlug
+			changed = true
+		}
 		if input.Client != nil {
 			uiSlug, err := ResolveAllowedClient(*input.Client)
 			if err != nil {
@@ -27886,7 +28152,7 @@ func (c *repoContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 		ticketID := FormatTicketRelPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 		repopkg.Emit(repopkg.EventTicketChangeEnded, "repo-cli", repopkg.TicketChangePayload{
 			TicketPayload: repopkg.TicketPayload{ID: ticketID, Year: ticket.Year, Month: ticket.Month, Day: ticket.Day, Slug: ticket.Slug},
-			Title:         input.Title, Prompt: input.Prompt, Goal: input.Goal, Parent: input.Parent, Author: GetGitAuthorAlias(),
+			Title:         input.Title, Prompt: input.Prompt, LLM: input.LLM, Effort: input.Effort, Goal: input.Goal, Parent: input.Parent, Author: GetGitAuthorAlias(),
 		})
 	}
 
@@ -29312,7 +29578,7 @@ func (c *repoContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
 		return nil, err
 	}
 	kind := McpKindFromResolvedClient(resolvedClient)
-	return OpenTicket(input.Emoji, input.Title, input.Prompt, input.LLM, input.Client, input.Draft, input.NoIssue, input.Goal, input.Parent, input.NoManagement, input.Issue, kind, input.PlanID, input.SpecID)
+	return OpenTicket(input.Emoji, input.Title, input.Prompt, input.LLM, input.Effort, input.Client, input.Draft, input.NoIssue, input.Goal, input.Parent, input.NoManagement, input.Issue, kind, input.PlanID, input.SpecID)
 }
 
 // 🟦️TicketClose MUST return a non-nil error when the operation fails.
@@ -29397,7 +29663,7 @@ func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 		return nil, err
 	}
 	kind := McpKindFromResolvedClient(resolvedClient)
-	if err := ReopenTicket(ticket, input.Prompt, input.LLM, input.Client, input.Draft, input.Goal, input.Parent, input.NoManagement, kind, input.PlanID, input.SpecID); err != nil {
+	if err := ReopenTicket(ticket, input.Prompt, input.LLM, input.Effort, input.Client, input.Draft, input.Goal, input.Parent, input.NoManagement, kind, input.PlanID, input.SpecID); err != nil {
 		return nil, err
 	}
 	return ticket, nil
@@ -31082,6 +31348,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"kind":       &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"prompt":     &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"checkpoint": &graphql.Field{Type: graphql.String},
+				"llm":        &graphql.Field{Type: graphql.String},
+				"effort":     &graphql.Field{Type: graphql.String},
 				"date": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.String),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -31120,6 +31388,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"sourceId":   &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"goalId":     &graphql.Field{Type: graphql.String},
 				"ticketId":   &graphql.Field{Type: graphql.String},
+				"llm":        &graphql.Field{Type: graphql.String},
+				"effort":     &graphql.Field{Type: graphql.String},
 				"date": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.String),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -31173,6 +31443,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				},
 			},
 			"llm":    &graphql.Field{Type: graphql.String},
+			"effort": &graphql.Field{Type: graphql.String},
 			"status": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 			"milestone": &graphql.Field{
 				Type: graphql.Int,
@@ -31253,6 +31524,17 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 							return nil, nil
 						}
 						return llm, nil
+					},
+				},
+				"effort": &graphql.Field{
+					Type: graphql.String,
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ticket := p.Source.(*Ticket)
+						effort := ticket.GetEffort()
+						if effort == "" {
+							return nil, nil
+						}
+						return effort, nil
 					},
 				},
 				"client": &graphql.Field{
@@ -32250,6 +32532,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"title":        &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"prompt":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"llm":          &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"effort":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"client":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(ticketClientEnum)},
 			"noIssue":      &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 			"draft":        &graphql.InputObjectFieldConfig{Type: graphql.String},
@@ -32287,6 +32570,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"prompt":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"client":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(ticketClientEnum)},
 			"llm":          &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"effort":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"title":        &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"draft":        &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"goal":         &graphql.InputObjectFieldConfig{Type: graphql.String},
@@ -32307,6 +32591,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"title":        &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"prompt":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"llm":          &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"effort":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"client":       &graphql.InputObjectFieldConfig{Type: ticketClientEnum},
 			"goal":         &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"parent":       &graphql.InputObjectFieldConfig{Type: graphql.String},
@@ -32340,6 +32625,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"prompt":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"dueDate":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"llm":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"effort":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"client":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"parent":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"noManagement": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
@@ -32354,6 +32640,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"title":        &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"description":  &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"dueDate":      &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"llm":          &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"effort":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"parent":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"noManagement": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
@@ -32375,6 +32663,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"prompt":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"client":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"llm":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"effort":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"title":        &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"description":  &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"dueDate":      &graphql.InputObjectFieldConfig{Type: graphql.String},
@@ -32428,6 +32717,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					if s, ok := inputMap["llm"].(string); ok {
 						input.LLM = s
 					}
+					if s, ok := inputMap["effort"].(string); ok {
+						input.Effort = s
+					}
 					if s, ok := inputMap["parent"].(string); ok {
 						input.Parent = s
 					}
@@ -32457,6 +32749,12 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					}
 					if s, ok := inputMap["dueDate"].(string); ok {
 						input.DueDate = &s
+					}
+					if s, ok := inputMap["llm"].(string); ok {
+						input.LLM = &s
+					}
+					if s, ok := inputMap["effort"].(string); ok {
+						input.Effort = &s
 					}
 					if s, ok := inputMap["parent"].(string); ok {
 						input.Parent = &s
@@ -32496,6 +32794,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						Prompt: inputMap["prompt"].(string),
 						Client: inputMap["client"].(string),
 						LLM:    inputMap["llm"].(string),
+					}
+					if s, ok := inputMap["effort"].(string); ok {
+						input.Effort = s
 					}
 					if s, ok := inputMap["title"].(string); ok {
 						input.Title = &s
@@ -32620,6 +32921,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					if inputMap["llm"] != nil {
 						input.LLM = inputMap["llm"].(string)
 					}
+					if inputMap["effort"] != nil {
+						input.Effort = inputMap["effort"].(string)
+					}
 					if inputMap["noIssue"] != nil {
 						input.NoIssue = inputMap["noIssue"].(bool)
 					}
@@ -32708,6 +33012,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					if inputMap["llm"] != nil {
 						input.LLM = inputMap["llm"].(string)
 					}
+					if inputMap["effort"] != nil {
+						input.Effort = inputMap["effort"].(string)
+					}
 					if inputMap["noManagement"] != nil {
 						input.NoManagement = inputMap["noManagement"].(bool)
 					}
@@ -32756,6 +33063,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					}
 					if s, ok := inputMap["llm"].(string); ok {
 						input.LLM = &s
+					}
+					if s, ok := inputMap["effort"].(string); ok {
+						input.Effort = &s
 					}
 					if s, ok := inputMap["client"].(string); ok {
 						input.Client = &s
@@ -34508,6 +34818,7 @@ func ticketOpenWithKind(ctx context.Context, request mcp.CallToolRequest, kind M
 	goal, _, _ := getStringArg(args, "goal")
 	client, _, _ := getStringArg(args, "client")
 	llm, _, _ := getStringArg(args, "llm")
+	effort, _, _ := getStringArg(args, "effort")
 	draft, _, _ := getStringArg(args, "draft")
 	parent, _, _ := getStringArg(args, "parent")
 	issue, _, _ := getStringArg(args, "issue")
@@ -34515,7 +34826,7 @@ func ticketOpenWithKind(ctx context.Context, request mcp.CallToolRequest, kind M
 	specID, _, _ := getStringArg(args, "spec_id")
 	client = resolveMcpTicketClient(kind, client)
 
-	result := ToolTicketOpen(emoji, title, prompt, llm, client, draft, false, goal, parent, false, issue, kind, planID, specID)
+	result := ToolTicketOpen(emoji, title, prompt, llm, effort, client, draft, false, goal, parent, false, issue, kind, planID, specID)
 	return toolResultToMCP(result)
 }
 
@@ -34629,6 +34940,7 @@ func ticketReopenWithKind(ctx context.Context, request mcp.CallToolRequest, kind
 	prompt, _, _ := getStringArg(args, "prompt")
 	client, _, _ := getStringArg(args, "client")
 	llm, _, _ := getStringArg(args, "llm")
+	effort, _, _ := getStringArg(args, "effort")
 	title, _, _ := getStringArg(args, "title")
 	draft, _, _ := getStringArg(args, "draft")
 	noManagement, _, _ := getBoolArg(args, "no_management")
@@ -34641,7 +34953,7 @@ func ticketReopenWithKind(ctx context.Context, request mcp.CallToolRequest, kind
 		return nil, err
 	}
 
-	result := ToolTicketReopen(year, month, day, slug, prompt, llm, client, draft, title, "", "", noManagement, kind, planID, specID)
+	result := ToolTicketReopen(year, month, day, slug, prompt, llm, effort, client, draft, title, "", "", noManagement, kind, planID, specID)
 	return toolResultToMCP(result)
 }
 
@@ -37221,6 +37533,7 @@ type HookResultAgentBase struct {
 	Second     string `json:"second,omitempty"`
 	Client     string `json:"client,omitempty"`
 	LLM        string `json:"llm,omitempty"`
+	Effort     string `json:"effort,omitempty"`
 	Transcript string `json:"transcript,omitempty"`
 	MessageID  string `json:"message,omitempty"`
 	Parent     string `json:"parent"`
@@ -38234,6 +38547,10 @@ func trackHookInOpenTicket(hctx HookContext, result HookResult) {
 	llm := extractLLMFromInput(hctx.Input)
 	if llm != "" && agent.LLM == "" {
 		agent.LLM = llm
+	}
+	effort := extractEffortFromInput(hctx.Input)
+	if effort != "" && agent.Effort == "" {
+		agent.Effort = effort
 	}
 	transcript := extractTranscriptFromInput(hctx.Input)
 	if transcript != "" && agent.Transcript == "" {
@@ -44005,6 +44322,15 @@ func extractLLMFromInput(input json.RawMessage) string {
 	return findNestedStringValue(data, "llm", "model", "model_name", "modelName")
 }
 
+// 🏋️extractEffortFromInput extracts reasoning effort from input.
+func extractEffortFromInput(input json.RawMessage) string {
+	data := decodeHookInputMap(input)
+	if data == nil {
+		return ""
+	}
+	return findNestedStringValue(data, "effort", "reasoning_effort", "reasoningEffort")
+}
+
 // 🔷️extractToolNameFromStdin extracts tool name from stdin.
 func extractToolNameFromStdin(input json.RawMessage) string {
 	data := decodeHookInputMap(input)
@@ -45093,6 +45419,7 @@ func dispatchHook(ctx HookContext) interface{} {
 		Second:         firstNonEmpty(findNestedStringValue(decodeHookInputMap(ctx.Input), "second"), ctx.Second),
 		Client:         ctx.Client,
 		LLM:            extractLLMFromInput(ctx.Input),
+		Effort:         extractEffortFromInput(ctx.Input),
 		Transcript:     extractTranscriptFromInput(ctx.Input),
 		MessageID:      extractMessageIDFromInput(ctx.Input),
 		Parent:         resolveParentSessionID("", ctx.Input),
@@ -46153,6 +46480,7 @@ func CreateMcpServer(kind McpClientKind, toolTimeout time.Duration) *server.MCPS
 		mcp.WithString("goal", mcp.Required(), mcp.Description("Goal id to associate the ticket with (from repo://goals).")),
 		mcp.WithString("client", mcp.Description("Agent client used for this ticket.")),
 		mcp.WithString("llm", mcp.Description("LLM used for this ticket.")),
+		mcp.WithString("effort", mcp.Description("Reasoning effort for the LLM (low, medium, high, max).")),
 		mcp.WithString("draft", mcp.Description("Draft slug to seed the ticket workspace.")),
 		mcp.WithString("parent", mcp.Description("Parent ticket slug for nested tickets.")),
 		mcp.WithString("issue", mcp.Description("Existing GitHub issue URL to link instead of creating a new one.")),
@@ -46180,6 +46508,7 @@ func CreateMcpServer(kind McpClientKind, toolTimeout time.Duration) *server.MCPS
 		mcp.WithString("path", mcp.Description("Ticket path as returned by ticket_open (e.g. '26/03/27/FIX-MCP-DESCRIPTIONS'). Omit to reopen the latest closed ticket.")),
 		mcp.WithString("prompt", mcp.Description("Updated or additional task description.")),
 		mcp.WithString("llm", mcp.Description("LLM to use for the reopened ticket.")),
+		mcp.WithString("effort", mcp.Description("Reasoning effort for the LLM (low, medium, high, max).")),
 		mcp.WithString("client", mcp.Description("Agent client to use for the reopened ticket.")),
 		mcp.WithString("title", mcp.Description("Updated title for the ticket.")),
 		mcp.WithString("draft", mcp.Description("Draft slug to seed the ticket workspace.")),

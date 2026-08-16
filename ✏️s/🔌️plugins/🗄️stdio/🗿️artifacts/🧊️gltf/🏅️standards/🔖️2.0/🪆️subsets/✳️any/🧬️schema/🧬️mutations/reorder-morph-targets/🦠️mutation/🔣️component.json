@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.reorder-morph-targets.v1.mutation",
+  "title": "GltfReorderMorphTargetsMutation",
+  "type": "object",
+  "properties": {
+    "mesh": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "primitive": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "order": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  },
+  "required": [
+    "mesh",
+    "primitive",
+    "order"
+  ],
+  "additionalProperties": false,
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.reorder-morph-targets.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "reorder",
+    "touchedPaths": [
+      "document/meshes/*/primitives/*/targets"
+    ],
+    "referencePolicy": "accepts only a complete target-index permutation"
+  }
+}

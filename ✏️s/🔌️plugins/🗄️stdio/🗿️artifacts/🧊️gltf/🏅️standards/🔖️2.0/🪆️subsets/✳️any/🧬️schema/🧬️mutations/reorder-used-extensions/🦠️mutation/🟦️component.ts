@@ -1,0 +1,7 @@
+/** 🦠️ reorder-used-extensions executable glTF command. */
+import type { GltfJson, GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
+import { clone, reject, run, same, type GltfLeafResult, type GltfMutationRejection } from '../../🔒️top-level-private/🟦️component.ts';
+export const GltfReorderUsedExtensionsDescriptor = { id: 's.stdio.gltf.mutation.reorder-used-extensions.v1', version: 1, touchedPaths: ["document/extensionsUsed"], referencePolicy: 'exact permutation preserves all declaration identities' } as const;
+export interface GltfReorderUsedExtensionsPayload { order: string[] }
+export const validateGltfReorderUsedExtensions = (payload: GltfReorderUsedExtensionsPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { if (payload.order.length !== base.document.extensionsUsed.length || new Set(payload.order).size !== payload.order.length || !payload.order.every(value => base.document.extensionsUsed.includes(value))) return reject('gltf.mutation.invalid-permutation', 'document/extensionsUsed', 'order must contain every declaration exactly once'); if (payload.order.every((value, index) => value === base.document.extensionsUsed[index])) return reject('gltf.mutation.no-observable-change', 'document/extensionsUsed', 'order already matches'); return undefined; };
+export const applyGltfReorderUsedExtensions = (base: GltfSnapshot, payload: GltfReorderUsedExtensionsPayload): GltfLeafResult => run(base, payload, validateGltfReorderUsedExtensions, (next, payload) => { next.document.extensionsUsed = [...payload.order]; });

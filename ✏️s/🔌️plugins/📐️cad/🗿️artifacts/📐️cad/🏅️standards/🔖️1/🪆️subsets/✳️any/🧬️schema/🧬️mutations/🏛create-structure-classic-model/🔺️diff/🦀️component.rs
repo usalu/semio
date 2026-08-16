@@ -14,7 +14,11 @@ pub(crate) fn parse_target(uri: &str) -> store::os_io::ArtifactRef {
     })
 }
 
-pub fn diff(payload: &CreateStructureClassicModel, _base: &CadSnapshot) -> CadDiff {
-    CadDiff { structure_classic_model: Some(Some(store::ArtifactChild::new(payload.child_id.clone(), parse_target(&payload.target)))), ..Default::default() }
+pub fn diff(payload: &CreateStructureClassicModel, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
+    let candidate = store::ArtifactChild::new(payload.child_id.clone(), parse_target(&payload.target));
+    if base.structure_classic_model.as_ref() == Some(&candidate) {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Structure-classic-model child is already {}.", payload.child_id));
+    }
+    protocol::MutationOutcome::new(CadDiff { structure_classic_model: Some(Some(candidate)), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -69,8 +69,8 @@ pub enum VcsDemoPresenceMutation {
 impl Mutation<VcsDemoPresence> for VcsDemoPresenceMutation {
     type Diff = VcsDemoPresence;
 
-    fn diff(&self, _base: &VcsDemoPresence) -> VcsDemoPresence {
-        VcsDemoPresence::default()
+    fn diff(&self, _base: &VcsDemoPresence) -> protocol::MutationOutcome<VcsDemoPresence> {
+        protocol::MutationOutcome::new(VcsDemoPresence::default())
     }
 
     fn inverse(&self, _base: &VcsDemoPresence) -> Vec<Self> {

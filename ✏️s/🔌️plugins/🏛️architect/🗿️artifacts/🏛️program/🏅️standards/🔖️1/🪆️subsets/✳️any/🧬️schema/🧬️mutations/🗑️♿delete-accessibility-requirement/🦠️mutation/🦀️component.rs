@@ -18,7 +18,7 @@ pub struct DeleteAccessibilityRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteAccessibilityRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "accessibility-requirement", kind: "delete-accessibility-requirement", record: "DeletedAccessibilityRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

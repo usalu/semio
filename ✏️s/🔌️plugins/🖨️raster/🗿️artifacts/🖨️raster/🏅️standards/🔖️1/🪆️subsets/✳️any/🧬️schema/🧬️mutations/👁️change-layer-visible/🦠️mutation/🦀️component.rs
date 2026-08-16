@@ -16,7 +16,7 @@ pub struct ChangeLayerVisible {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ChangeLayerVisible {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "layer", kind: "change-layer-visible", record: "ChangedLayerVisible" };
 
-    fn diff(&self, base: &RasterSnapshot) -> RasterDiff {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::change_layer_visible::diff::diff(self, base)
     }
 

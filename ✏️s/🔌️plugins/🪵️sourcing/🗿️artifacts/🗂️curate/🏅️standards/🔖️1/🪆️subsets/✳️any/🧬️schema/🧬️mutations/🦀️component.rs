@@ -79,10 +79,11 @@ mod tests {
     }
 
     fn round_trip(base: &CurateSnapshot, mutation: &SourcingMutation) -> CurateSnapshot {
-        let forward = vcs::apply_mutation(base, mutation);
+        let (forward, _messages) = vcs::apply_mutation(base, mutation);
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            restored = vcs::apply_mutation(&restored, &back);
+            let (next, _messages) = vcs::apply_mutation(&restored, &back);
+            restored = next;
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
         forward
@@ -118,9 +119,9 @@ mod tests {
         let base = sample_snapshot();
         let mutation = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-kvh-c24".into(), count: 2 } });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
+        let d1 = mutation.diff(&base).into_parts().0;
         let mid = protocol::MutationDiff::apply(&d1, &base);
-        let d2 = SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-kvh-c24".into(), new_count: 5 }).diff(&mid);
+        let d2 = SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-kvh-c24".into(), new_count: 5 }).diff(&mid).into_parts().0;
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -130,8 +131,8 @@ mod tests {
         base.curated.push(CuratedItem { object_id: "beam-steel-ipe200".into(), count: 4 });
         let mutation = SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "beam-steel-ipe200".into() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-steel-hea160".into(), count: 1 } }).diff(&base);
+        let d1 = mutation.diff(&base).into_parts().0;
+        let d2 = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-steel-hea160".into(), count: 1 } }).diff(&base).into_parts().0;
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -140,10 +141,41 @@ mod tests {
         let base = sample_snapshot();
         let mutation = SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-glulam-gl24h".into(), new_count: 6 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }).diff(&base);
+        let d1 = mutation.diff(&base).into_parts().0;
+        let d2 = SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }).diff(&base).into_parts().0;
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws
+
+    //#region 🔖️OutcomeLaws
+    /// ✅️ 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS §C2 laws, landed
+    /// testkit helpers only (`assert_missing_target_is_error`/`assert_fatal_never_applies`) — one
+    /// per verb family this facet has (`delete`/`change`, `create`). `assert_outcome_policy_matrix`
+    /// is not landed yet (checked at
+    /// `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`); TODO(1-D testkit
+    /// laws pending): add a `MergePolicy` × `Severity` matrix test per verb family here once it lands.
+    #[test]
+    fn delete_curated_item_missing_target_is_an_error() {
+        let base = sample_snapshot();
+        let mutation = SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "beam-kvh-c24".into() });
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[test]
+    fn change_curated_item_count_missing_target_is_an_error() {
+        let base = sample_snapshot();
+        let mutation = SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-kvh-c24".into(), new_count: 9 });
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[test]
+    fn create_curated_item_duplicate_id_is_fatal_and_never_applies() {
+        let base = sample_snapshot();
+        let mutation = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 1 } });
+        let outcome = mutation.diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Fatal));
+        protocol::os_spr::testkit::assert_fatal_never_applies(&outcome);
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

@@ -3242,7 +3242,7 @@ pub enum DependencyGraphError {
 /// ✅️ Checks every declared dependency resolves to a loaded plugin at a satisfying version —
 /// deterministic: manifests are checked in input order, each manifest's dependencies in declaration
 /// order, so the first violation found is always the same for the same input.
-pub fn validate_dependency_graph(manifests: &[PluginManifest]) -> Result<(), DependencyGraphError> {
+fn validate_dependency_graph(manifests: &[PluginManifest]) -> Result<(), DependencyGraphError> {
     let by_id: BTreeMap<&str, &PluginManifest> = manifests.iter().map(|manifest| (manifest.plugin_id.as_str(), manifest)).collect();
     for manifest in manifests {
         for dependency in &manifest.dependencies {
@@ -5760,6 +5760,7 @@ mod app_label_tests {
         crate::ui::TutorialGestureCue::export().unwrap();
         crate::ui::DialogDefinition::export().unwrap();
         crate::ui::AppRole::export().unwrap();
+        crate::ArtifactDialect::export().unwrap();
         crate::ui::AppRef::export().unwrap();
         crate::ui::AppDefinition::export().unwrap();
         crate::ui::ExampleDefinition::export().unwrap();

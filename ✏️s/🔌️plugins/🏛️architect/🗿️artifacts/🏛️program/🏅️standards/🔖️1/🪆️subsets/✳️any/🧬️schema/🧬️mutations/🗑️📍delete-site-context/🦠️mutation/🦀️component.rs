@@ -18,7 +18,7 @@ pub struct DeleteSiteContext {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteSiteContext {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "site-context", kind: "delete-site-context", record: "DeletedSiteContext" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

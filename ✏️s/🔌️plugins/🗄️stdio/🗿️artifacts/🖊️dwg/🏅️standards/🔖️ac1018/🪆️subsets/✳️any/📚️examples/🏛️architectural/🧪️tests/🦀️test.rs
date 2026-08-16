@@ -1,14 +1,14 @@
 //! 🧪️ Tests for example `🏛️architectural` — real fixture, real D1/D2 decode assertions.
 
 use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
-use crate::artifacts::dwg::examples::architectural::{FIXTURE_BYTES, source};
+use crate::artifacts::dwg::examples::architectural::{source, FIXTURE_BYTES};
 use crate::artifacts::dwg::schema::diff::DwgDiff;
-use crate::artifacts::dwg::schema::mutations::{DwgMutation, apply_dwg_mutation};
-use crate::artifacts::dwg::schema::snapshot::{DwgSnapshot, decode_dwg, encode_dwg};
+use crate::artifacts::dwg::schema::mutations::{apply_dwg_mutation, DwgMutation};
+use crate::artifacts::dwg::schema::snapshot::{decode_dwg, encode_dwg, DwgSnapshot};
 use crate::artifacts::dwg::standards::v_ac1024::engine as dwg_engine;
-use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::DwgAnalyzer;
 use crate::artifacts::dwg::standards::v_ac1024::subsets::any::io::export::serializers::artifacts::binary::v_raw::any as raw_export;
 use crate::artifacts::dwg::standards::v_ac1024::subsets::any::io::import::deserializers::artifacts::binary::v_raw::any as raw_import;
+use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::DwgAnalyzer;
 use protocol::command::DiffAlgebra;
 use protocol::{Mutation, MutationDiff};
 use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeSource, Dialect, StandardId, SubsetId};
@@ -443,10 +443,10 @@ fn real_decode_stays_lossless_on_reencode() {
 
 #[test]
 fn snapshot_pack_preserves_signed_zero_semantics() {
-    let original=decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
-    let restored=DwgSnapshot::decode_pack(&original.encode_pack()).expect("snapshot pack roundtrip");
-    let expected=serde_json::to_string(&original.drawing).expect("original drawing JSON");
-    let actual=serde_json::to_string(&restored.drawing).expect("restored drawing JSON");
+    let original = decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
+    let restored = DwgSnapshot::decode_pack(&original.encode_pack()).expect("snapshot pack roundtrip");
+    let expected = serde_json::to_string(&original.drawing).expect("original drawing JSON");
+    let actual = serde_json::to_string(&restored.drawing).expect("restored drawing JSON");
     assert!(expected.contains("\"value\":-0.0"), "fixture must exercise negative zero");
     assert_eq!(actual, expected, "snapshot pack must preserve signed zero");
 }
@@ -471,16 +471,16 @@ fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
         assert!(!pack_text.contains(forbidden), "snapshot pack retained forbidden DWG shadow term {forbidden}");
     }
     let from_pack = DwgSnapshot::decode_pack(&pack).expect("snapshot unpack");
-    let restored_json=serde_json::to_string(&from_pack.drawing).expect("restored drawing JSON");
-    let expected_json=serde_json::to_string(&original.drawing).expect("original drawing JSON");
+    let restored_json = serde_json::to_string(&from_pack.drawing).expect("restored drawing JSON");
+    let expected_json = serde_json::to_string(&original.drawing).expect("original drawing JSON");
     assert_eq!(restored_json, expected_json, "snapshot pack must preserve signed numeric semantics");
     assert_fixture_bytes(&encode_dwg(&from_pack).expect("pack-restored export"), "pack-restored export");
 
-    let analysis=DwgAnalyzer::analyze(&[AnalyzeSource::Text(&dsl)]);
-    let analyzed=analysis.parts.snapshot.expect("analyzer snapshot");
+    let analysis = DwgAnalyzer::analyze(&[AnalyzeSource::Text(&dsl)]);
+    let analyzed = analysis.parts.snapshot.expect("analyzer snapshot");
     assert_fixture_bytes(&encode_dwg(&analyzed).expect("analyzer export"), "analyzer export");
-    let dialect=Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId("*") };
-    let composition=dwg_engine::DwgComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pack) }]).expect("composer snapshot");
+    let dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId("*") };
+    let composition = dwg_engine::DwgComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pack) }]).expect("composer snapshot");
     assert_fixture_bytes(&encode_dwg(&composition.snapshot).expect("composer export"), "composer export");
 
     let empty = DwgDiff::between(&original, &original);

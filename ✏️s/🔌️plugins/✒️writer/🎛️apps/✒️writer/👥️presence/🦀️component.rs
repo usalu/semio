@@ -117,9 +117,9 @@ pub enum WriterPresenceMutation {
 impl Mutation<WriterPresence> for WriterPresenceMutation {
     type Diff = WriterPresence;
 
-    fn diff(&self, _base: &WriterPresence) -> WriterPresence {
+    fn diff(&self, _base: &WriterPresence) -> protocol::MutationOutcome<WriterPresence> {
         match self {
-            Self::Snapshot { presence } => presence.clone(),
+            Self::Snapshot { presence } => protocol::MutationOutcome::new(presence.clone()),
         }
     }
 

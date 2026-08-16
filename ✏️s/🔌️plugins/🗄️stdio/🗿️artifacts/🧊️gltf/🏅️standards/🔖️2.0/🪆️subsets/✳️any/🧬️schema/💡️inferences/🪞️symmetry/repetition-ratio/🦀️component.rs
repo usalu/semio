@@ -1,16 +1,22 @@
 //! 💡️ repetition-ratio atomic glTF inference leaf.
-use super::super::{geometry_core::GltfGeometryContext, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
-use super::super::super::modules::{inference_measures::{estimate, unavailable}, measurement_contracts::*};
-use super::super::GltfPartInference;
 use super::super::super::modules::mesh_topology::Topology;
+use super::super::super::modules::{
+    inference_measures::{estimate, unavailable},
+    measurement_contracts::*,
+};
+use super::super::GltfPartInference;
+use super::super::{geometry_core::GltfGeometryContext, GltfEntityIndicators, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
 
 pub struct GltfRepetitionRatioInference;
 
 impl GltfInferenceLeaf for GltfRepetitionRatioInference {
-    const DESCRIPTOR: GltfInferenceLeafDescriptor = GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.repetition-ratio.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.repetition-ratio.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
+    const DESCRIPTOR: GltfInferenceLeafDescriptor =
+        GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.repetition-ratio.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.repetition-ratio.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
 
-pub fn descriptor() -> GltfInferenceLeafDescriptor { GltfRepetitionRatioInference::DESCRIPTOR }
+pub fn descriptor() -> GltfInferenceLeafDescriptor {
+    GltfRepetitionRatioInference::DESCRIPTOR
+}
 
 pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology))
@@ -25,7 +31,7 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
 }
 
 pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
-    serde_json::to_value(&indicators.symmetry.repetitionRatio)
+    serde_json::to_value(&indicators.symmetry.repetition_ratio)
 }
 
 #[cfg(test)]

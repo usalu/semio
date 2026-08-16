@@ -1,0 +1,3 @@
+// change-node-morph-weights inverse typed facet.
+syntax = "proto3"; package stdio.gltf.mutation;
+message GltfChangeNodeMorphWeightsInverseV1 { GltfChangeNodeMorphWeightsPayloadV1 operation=1; repeated double before=2; repeated string touched_paths=3; }

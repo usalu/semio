@@ -1,10 +1,23 @@
 syntax = "proto3";
 package semio.s.stdio.gltf.inference.io.text;
-import "../../../🧬️schema/💡️inferences/🧮️geometric-analysis/🛰️component.proto";
+
+message GltfInferenceLeafEnvelope {
+  string id = 1;
+  uint32 algorithm_version = 2;
+  string policy_hash = 3;
+  repeated string dependency_hashes = 4;
+  string cache_key = 5;
+  string validity = 6;
+  string quality = 7;
+  repeated string diagnostic_ids = 8;
+  repeated string provenance = 9;
+  string value_json = 10;
+}
+
 message GltfInferenceTextDocument {
   string schema = 1;
   uint32 version = 2;
   uint64 payload_length = 3;
   string checksum = 4;
-  semio.s.stdio.gltf.inference.GltfInference value = 5;
+  GltfInferenceLeafEnvelope value = 5;
 }

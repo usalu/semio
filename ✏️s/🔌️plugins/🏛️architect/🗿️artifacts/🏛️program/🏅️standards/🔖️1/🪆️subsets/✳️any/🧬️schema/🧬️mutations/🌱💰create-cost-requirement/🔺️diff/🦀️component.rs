@@ -6,7 +6,11 @@ use crate::artifacts::program::diff::ProgramCostsDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🌱️ `added = [payload row]` — the row lands at the end of `program.costs` on apply.
-pub fn diff(payload: &CreateCostRequirement, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { costs: Some(ProgramCostsDelta { added: vec![payload.cost_requirement.clone()], ..Default::default() }), ..Default::default() }
+/// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
+pub fn diff(payload: &CreateCostRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let id = payload.cost_requirement.header.id.clone();
+    if base.costs.iter().any(|row| row.header.id == id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A cost requirement already exists with this id.", [id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { costs: Some(ProgramCostsDelta { added: vec![payload.cost_requirement.clone()], ..Default::default() }), ..Default::default() })
 }

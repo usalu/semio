@@ -10,8 +10,6 @@
 use crate::math::FontContext;
 use crate::svg::{FontSet as SvgFontSet, SvgOptions};
 use crate::text::Font;
-use std::sync::OnceLock;
-
 //#region 🔖️Fonts
 struct Fonts {
     math: Font<'static>,

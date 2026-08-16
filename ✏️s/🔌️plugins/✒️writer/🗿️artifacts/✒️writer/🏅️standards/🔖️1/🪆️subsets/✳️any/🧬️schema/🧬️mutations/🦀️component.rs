@@ -28,7 +28,7 @@ pub enum WriterMutation {
 /// 🧮️ Diff-first apply — matches every other migrated facet (`operation.diff(base).apply(base)`,
 /// per wave 0's confirmation that `vcs::apply_mutation` is already diff-first under the hood).
 pub fn apply_writer_mutation(snapshot: &mut WriterSnapshot, mutation: &WriterMutation) {
-    *snapshot = mutation.diff(snapshot).apply(snapshot);
+    *snapshot = mutation.diff(snapshot).diff().apply(snapshot);
 }
 
 pub fn inverse_writer_mutation(snapshot: &WriterSnapshot, mutation: &WriterMutation) -> Vec<WriterMutation> {
@@ -88,8 +88,8 @@ mod tests {
 
         let uri_mutation = WriterMutation::ChangeUri(ChangeUri { new_uri: "writer://b".into() });
         protocol::testkit::assert_mutation_inverse_law(&base, &uri_mutation);
-        let d1 = uri_mutation.diff(&base);
-        let d2 = WriterMutation::ChangeUri(ChangeUri { new_uri: "writer://c".into() }).diff(&base);
+        let d1 = uri_mutation.diff(&base).diff().clone();
+        let d2 = WriterMutation::ChangeUri(ChangeUri { new_uri: "writer://c".into() }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
 
         let language_mutation = WriterMutation::ChangeLanguage(ChangeLanguage { new_language_id: "jack".into() });
@@ -101,10 +101,24 @@ mod tests {
         let base = WriterSnapshot { document: crate::artifacts::writer::document_child_handle_and_cache("empty", "first", "plaintext"), ..schema::empty_writer_snapshot() };
         let mutation = WriterMutation::EditText(EditText { text: "second".into() });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = WriterMutation::EditText(EditText { text: "third".into() }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = WriterMutation::EditText(EditText { text: "third".into() }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🔖️MutationLaws
+
+    //#region 🧪️OutcomeLaws
+    /// ⚖️ `📋️contract-freeze.md` §C2 laws. Writer's four kinds are whole-document scoped (no
+    /// addressed sub-element), so `assert_missing_target_is_error` doesn't apply here — every kind's
+    /// only checkable law is `mutation.no-op` (exercised in `🔖️MutationLaws` above) plus determinism.
+    /// `assert_outcome_policy_matrix` is not yet landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws
+    /// pending) once it lands.
+    #[test]
+    fn edit_text_outcome_is_deterministic() {
+        let base = WriterSnapshot { document: crate::artifacts::writer::document_child_handle_and_cache("empty", "first", "plaintext"), ..schema::empty_writer_snapshot() };
+        let mutation = WriterMutation::EditText(EditText { text: "second".into() });
+        protocol::testkit::assert_outcome_deterministic(&base, &mutation);
+    }
+    //#endregion 🧪️OutcomeLaws
 }
 //#endregion 🧪️Tests

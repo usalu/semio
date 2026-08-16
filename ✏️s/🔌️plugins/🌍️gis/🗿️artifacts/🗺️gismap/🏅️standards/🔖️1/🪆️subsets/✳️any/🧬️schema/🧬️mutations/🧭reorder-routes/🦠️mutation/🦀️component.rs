@@ -20,7 +20,7 @@ pub struct ReorderRoutes {
 impl MutationKind<GisMapSnapshot, GisMapMutation> for ReorderRoutes {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "routes", kind: "reorder-routes", record: "ReorderedRoutes" };
 
-    fn diff(&self, base: &GisMapSnapshot) -> GisMapDiff {
+    fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
 

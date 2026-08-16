@@ -186,13 +186,23 @@ impl protocol::OpBinary for VcsDemoConfigMutation {
 impl Mutation<VcsDemoConfig> for VcsDemoConfigMutation {
     type Diff = VcsDemoConfig;
 
-    fn diff(&self, base: &VcsDemoConfig) -> VcsDemoConfig {
+    fn diff(&self, base: &VcsDemoConfig) -> protocol::MutationOutcome<VcsDemoConfig> {
         let mut next = base.clone();
         match self {
-            VcsDemoConfigMutation::Snapshot { config } => return config.clone(),
-            VcsDemoConfigMutation::SetLocale { value } => next.locale = value.clone(),
+            VcsDemoConfigMutation::Snapshot { config } => {
+                if base == config {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", "Config snapshot is already identical to the requested replacement.");
+                }
+                return protocol::MutationOutcome::new(config.clone());
+            }
+            VcsDemoConfigMutation::SetLocale { value } => {
+                if &base.locale == value {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Locale is already \"{}\".", value));
+                }
+                next.locale = value.clone();
+            }
         }
-        next
+        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &VcsDemoConfig) -> Vec<Self> {
@@ -234,11 +244,11 @@ mod tests {
     fn vcs_demo_config_operation_backwards_restores_the_base_config() {
         let base = VcsDemoConfig { locale: "en-US".into() };
         let operation = VcsDemoConfigMutation::SetLocale { value: "de-DE".into() };
-        let forward = operation.diff(&base);
+        let forward = operation.diff(&base).diff().clone();
         assert_eq!(forward.locale, "de-DE");
         let backwards = operation.inverse(&base);
         assert_eq!(backwards, vec![VcsDemoConfigMutation::Snapshot { config: base.clone() }]);
-        let restored = backwards[0].diff(&forward);
+        let restored = backwards[0].diff(&forward).diff().clone();
         assert_eq!(restored, base);
     }
 }

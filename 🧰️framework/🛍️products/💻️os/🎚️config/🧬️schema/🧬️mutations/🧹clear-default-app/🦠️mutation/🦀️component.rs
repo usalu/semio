@@ -3,7 +3,7 @@
 
 use super::super::super::OpeningPreferences;
 use super::super::OpeningConfigMutation;
-use protocol::{MutationKind, SemanticDescriptor};
+use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework::{AppRole, ArtifactDialect};
 use serde::{Deserialize, Serialize};
 
@@ -25,8 +25,10 @@ pub fn clear_default_app(dialect: ArtifactDialect, role: AppRole) -> OpeningConf
 impl MutationKind<OpeningPreferences, OpeningConfigMutation> for ClearDefaultApp {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "default-app", kind: "clear-default-app", record: "Cleared" };
 
-    fn diff(&self, base: &OpeningPreferences) -> OpeningPreferences {
-        super::diff::diff(self, base)
+    /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
+    /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet.
+    fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
+        MutationOutcome::new(super::diff::diff(self, base))
     }
 
     fn inverse(&self, base: &OpeningPreferences) -> Vec<OpeningConfigMutation> {

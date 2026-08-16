@@ -1,0 +1,6 @@
+# unbind-node-child mutation facet.
+input GltfUnbindNodeChildPayloadV1 {
+  parent: Int!
+  child: Int!
+}
+type GltfUnbindNodeChildMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

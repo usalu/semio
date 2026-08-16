@@ -1,0 +1,13 @@
+# create-texture typed inverse facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfTextureValueV1
+input GltfCreateTexturePayloadV1 {
+  position: Int!
+}
+type GltfCreateTextureInverseOperationV1 {
+  kind: String!
+  position: Int!
+  item: GltfTextureValueV1!
+}
+type GltfCreateTextureInverseV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfCreateTexturePayloadV1!, operation: GltfCreateTextureInverseOperationV1! }

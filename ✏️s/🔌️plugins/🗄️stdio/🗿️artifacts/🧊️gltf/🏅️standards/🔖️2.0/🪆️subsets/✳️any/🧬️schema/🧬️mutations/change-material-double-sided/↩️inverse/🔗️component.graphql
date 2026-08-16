@@ -1,0 +1,1 @@
+input GltfChangeMaterialDoubleSidedInverseV1Input { material: Int!, expectedDoubleSided: Boolean!, doubleSided: Boolean!, touchedPaths: [String!]! }

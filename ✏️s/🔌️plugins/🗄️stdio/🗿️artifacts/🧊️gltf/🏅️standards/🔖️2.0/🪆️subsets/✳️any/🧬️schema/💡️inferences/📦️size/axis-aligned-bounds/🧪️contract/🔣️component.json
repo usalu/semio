@@ -1,0 +1,1 @@
+{"id":"s.stdio.gltf.inference.axis-aligned-bounds.v1","vectors":[{"context":{"points":[[1,2,3],[4,6,8]],"triangles":[],"sampleCount":2,"valid":true,"diagnostics":[]},"value":{"min":[1,2,3],"max":[4,6,8],"dimensions":[3,4,5]}},{"context":{"points":[],"triangles":[],"sampleCount":0,"valid":false,"diagnostics":["missing-position"]},"value":null}]}

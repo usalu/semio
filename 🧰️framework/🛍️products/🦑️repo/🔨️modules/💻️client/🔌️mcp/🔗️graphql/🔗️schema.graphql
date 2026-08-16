@@ -123,6 +123,7 @@ input GoalCreateInput {
   dueDate: String!
   client: String!
   llm: String!
+  effort: String
   noGithub: Boolean
   parent: String
 }
@@ -131,6 +132,8 @@ input GoalChangeInput {
   title: String
   description: String
   dueDate: String
+  llm: String
+  effort: String
   parent: String
   noGithub: Boolean
 }
@@ -139,6 +142,7 @@ input TicketOpenInput {
   title: String!
   prompt: String!
   llm: String!
+  effort: String
   client: TicketClient!
   noIssue: Boolean
   planPath: String
@@ -150,6 +154,8 @@ input TicketOpenInput {
 input TicketChangeInput {
   goal: String
   parent: String
+  llm: String
+  effort: String
 }
 
 input TicketCloseInput {
@@ -169,6 +175,7 @@ input TicketReopenInput {
   slug: String!
   prompt: String!
   llm: String!
+  effort: String
   title: String
   planPath: String
 }
@@ -465,6 +472,7 @@ type Goal implements Node {
   createdAt: String
   client: String
   llm: String
+  effort: String
   milestone: Int
   issue: String
   status: String!
@@ -487,6 +495,7 @@ type Ticket implements Node {
   status: TicketStatus!
   author: Contributor
   llm: String
+  effort: String
   client: TicketClient
   checkpoint: String
   goal: String
@@ -505,6 +514,8 @@ type Interaction {
   prompt: String!
   author: String!
   checkpoint: String
+  llm: String
+  effort: String
 }
 
 type InteractionResource {
@@ -515,6 +526,8 @@ type InteractionResource {
   prompt: String!
   author: String!
   checkpoint: String
+  llm: String
+  effort: String
   sourceKind: String!
   sourceId: String!
   goalId: String

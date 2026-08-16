@@ -6,7 +6,10 @@ use crate::artifacts::program::diff::ProgramSchedulesDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🗑️ `removed = [id]`.
-pub fn diff(payload: &DeleteScheduleRequirement, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { schedules: Some(ProgramSchedulesDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() }
+/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
+pub fn diff(payload: &DeleteScheduleRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    if !base.schedules.iter().any(|row| row.header.id == payload.id) {
+        return protocol::MutationOutcome::error("mutation.target-missing", "No schedule requirement exists with this id.", [payload.id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { schedules: Some(ProgramSchedulesDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() })
 }

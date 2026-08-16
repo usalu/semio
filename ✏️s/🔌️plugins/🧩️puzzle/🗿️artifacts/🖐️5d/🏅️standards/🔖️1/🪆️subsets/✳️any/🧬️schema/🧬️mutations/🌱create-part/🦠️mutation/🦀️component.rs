@@ -24,7 +24,7 @@ pub fn create_part(part: Puzzle5dPart, index: Option<usize>) -> Puzzle5dMutation
 impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for CreatePart {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "part", kind: "create-part", record: "CreatedPart" };
 
-    fn diff(&self, base: &Puzzle5dSnapshot) -> Puzzle5dDiff {
+    fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {

@@ -6,8 +6,7 @@
       "algorithmVersion": 1,
       "cacheKey": "s.stdio.gltf.inference.minimum-distance-to-neighbors.v1:geometry-v2",
       "inputs": ["schema/snapshot", "buffers"],
-      "target": "geometricAnalysis.overall.minimum-distance-to-neighbors"
+      "target": "geometry.overall.clearance.minimumDistanceToNeighbors"
     }
   }
 }
-

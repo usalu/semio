@@ -474,74 +474,74 @@ pub mod artifacts {
 
 //#endregion 🗿️Artifacts
 
-//#region 🎛️Apps
+//#region ✏️Editor
 #[path = "."]
-pub mod apps {
+pub mod editor {
     #[path = "."]
     pub mod raster {
-        #[path = "../../🎛️apps/🖨️raster/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/🖨️raster/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🖨️raster/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/🖨️raster/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🖨️raster/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
-        #[path = "../../🎛️apps/🖨️raster/🗣️terminology/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
-        #[path = "../../🎛️apps/🖨️raster/🌉️wasm/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs"]
         pub mod wasm;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/📄️document/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️document/🦀️component.rs"]
             pub mod document;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️add-layer/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖼️add-layer/🦀️component.rs"]
             pub mod add_layer;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️drop-layer-kind/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖼️drop-layer-kind/🦀️component.rs"]
             pub mod drop_layer_kind;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️set-layer-visible/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖼️set-layer-visible/🦀️component.rs"]
             pub mod set_layer_visible;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️toggle-layer-visible/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖼️toggle-layer-visible/🦀️component.rs"]
             pub mod toggle_layer_visible;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️delete-layer/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖼️delete-layer/🦀️component.rs"]
             pub mod delete_layer;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️duplicate-layer/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖼️duplicate-layer/🦀️component.rs"]
             pub mod duplicate_layer;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️patch-layer/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖼️patch-layer/🦀️component.rs"]
             pub mod patch_layer;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️patch-layers/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖼️patch-layers/🦀️component.rs"]
             pub mod patch_layers;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️move-layer/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖼️move-layer/🦀️component.rs"]
             pub mod move_layer;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖌️set-brush-size/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️set-brush-size/🦀️component.rs"]
             pub mod set_brush_size;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖌️set-brush-opacity/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️set-brush-opacity/🦀️component.rs"]
             pub mod set_brush_opacity;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🎥️set-composite-viewport/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️set-composite-viewport/🦀️component.rs"]
             pub mod set_composite_viewport;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🎥️set-camera/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️set-camera/🦀️component.rs"]
             pub mod set_camera;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🎥️set-camera-zoom/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️set-camera-zoom/🦀️component.rs"]
             pub mod set_camera_zoom;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🧰️set-active-utility/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧰️set-active-utility/🦀️component.rs"]
             pub mod set_active_utility;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
         }
 
@@ -549,7 +549,7 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🎛️apps/🖨️raster/🎭️modes/✏️edit/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
@@ -557,22 +557,22 @@ pub mod apps {
                 pub mod windows {
                     #[path = "."]
                     pub mod composite {
-                        #[path = "../../🎛️apps/🖨️raster/🎭️modes/✏️edit/🪟️windows/🖼️composite/🦀️component.rs"]
+                        #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️composite/🦀️component.rs"]
                         mod component;
                         pub use component::*;
 
                         #[path = "."]
                         pub mod options {
-                            #[path = "../../🎛️apps/🖨️raster/🎭️modes/✏️edit/🪟️windows/🖼️composite/🎚️options/🖌️brush/🦀️component.rs"]
+                            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️composite/🎚️options/🖌️brush/🦀️component.rs"]
                             pub mod brush;
-                            #[path = "../../🎛️apps/🖨️raster/🎭️modes/✏️edit/🪟️windows/🖼️composite/🎚️options/🧽️eraser/🦀️component.rs"]
+                            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️composite/🎚️options/🧽️eraser/🦀️component.rs"]
                             pub mod eraser;
                         }
                     }
 
                     #[path = "."]
                     pub mod navigator {
-                        #[path = "../../🎛️apps/🖨️raster/🎭️modes/✏️edit/🪟️windows/🧭️navigator/🦀️component.rs"]
+                        #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧭️navigator/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -582,18 +582,57 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/🖨️raster/📌️panels/📄️artifact/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
-            #[path = "../../🎛️apps/🖨️raster/📌️panels/🛍️catalogue/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs"]
             pub mod catalogue;
-            #[path = "../../🎛️apps/🖨️raster/📌️panels/🎭️masks/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🎭️masks/🦀️component.rs"]
             pub mod masks;
-            #[path = "../../🎛️apps/🖨️raster/📌️panels/🔍️inspection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;
         }
     }
 }
-//#endregion 🎛️Apps
+//#endregion ✏️Editor
+
+//#region 👁️Viewer
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod raster {
+        #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod composite {
+                        #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️composite/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+
+                    #[path = "."]
+                    pub mod navigator {
+                        #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧭️navigator/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+//#endregion 👁️Viewer
 
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
@@ -605,7 +644,7 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 pub mod examples {
     #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_raster_demo;
-    #[path = "../../🎛️apps/🖨️raster/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_raster_demo_session;
 }
 //#endregion 📚️Examples

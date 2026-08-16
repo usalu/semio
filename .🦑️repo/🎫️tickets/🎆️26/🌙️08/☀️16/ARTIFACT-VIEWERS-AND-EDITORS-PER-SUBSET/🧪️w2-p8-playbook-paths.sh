@@ -1,0 +1,6 @@
+PLUGIN_ROOT="✏️s/🔌️plugins/📖️playbook"
+APP_ROOT="✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook"
+ARTIFACT_ROOT="✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook"
+SUBSET_ROOT="✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any"
+EDITOR_ROOT="✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"
+VIEWER_ROOT="✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer"

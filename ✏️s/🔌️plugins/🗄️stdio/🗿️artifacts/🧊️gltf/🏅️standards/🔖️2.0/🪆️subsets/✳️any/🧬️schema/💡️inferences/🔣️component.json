@@ -14,7 +14,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.size.overallSize"
+          "target": "geometry.overall.size.overallSize"
         }
       },
       {
@@ -29,7 +29,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.size.axisAlignedBounds"
+          "target": "geometry.overall.size.axisAlignedBounds"
         }
       },
       {
@@ -44,7 +44,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.size.orientedBounds"
+          "target": "geometry.overall.size.orientedBounds"
         }
       },
       {
@@ -59,7 +59,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.size.boundingBoxDimensions"
+          "target": "geometry.overall.size.boundingBoxDimensions"
         }
       },
       {
@@ -74,7 +74,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.size.characteristicLength"
+          "target": "geometry.overall.size.characteristicLength"
         }
       },
       {
@@ -89,7 +89,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.size.footprintArea"
+          "target": "geometry.overall.size.footprintArea"
         }
       },
       {
@@ -104,7 +104,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.size.projectedArea"
+          "target": "geometry.overall.size.projectedArea"
         }
       },
       {
@@ -119,7 +119,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.areaVolume.surfaceArea"
+          "target": "geometry.overall.areaVolume.surfaceArea"
         }
       },
       {
@@ -134,7 +134,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.areaVolume.totalArea"
+          "target": "geometry.overall.areaVolume.totalArea"
         }
       },
       {
@@ -149,7 +149,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.areaVolume.exposedArea"
+          "target": "geometry.overall.areaVolume.exposedArea"
         }
       },
       {
@@ -164,7 +164,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.areaVolume.contactArea"
+          "target": "geometry.overall.areaVolume.contactArea"
         }
       },
       {
@@ -179,7 +179,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.areaVolume.volume"
+          "target": "geometry.overall.areaVolume.volume"
         }
       },
       {
@@ -194,7 +194,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.areaVolume.enclosedVolume"
+          "target": "geometry.overall.areaVolume.enclosedVolume"
         }
       },
       {
@@ -209,7 +209,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.areaVolume.materialVolume"
+          "target": "geometry.overall.areaVolume.materialVolume"
         }
       },
       {
@@ -224,7 +224,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.areaVolume.voidVolume"
+          "target": "geometry.overall.areaVolume.voidVolume"
         }
       },
       {
@@ -239,7 +239,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.compactness.compactness"
+          "target": "geometry.overall.compactness.compactness"
         }
       },
       {
@@ -254,7 +254,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.compactness.surfaceToVolumeRatio"
+          "target": "geometry.overall.compactness.surfaceToVolumeRatio"
         }
       },
       {
@@ -269,7 +269,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.compactness.sphericity"
+          "target": "geometry.overall.compactness.sphericity"
         }
       },
       {
@@ -284,7 +284,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.compactness.compactnessIndex"
+          "target": "geometry.overall.compactness.compactnessIndex"
         }
       },
       {
@@ -299,7 +299,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.compactness.hullFillRatio"
+          "target": "geometry.overall.compactness.hullFillRatio"
         }
       },
       {
@@ -314,7 +314,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.proportion.aspectRatios"
+          "target": "geometry.overall.proportion.aspectRatios"
         }
       },
       {
@@ -329,7 +329,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.proportion.slenderness"
+          "target": "geometry.overall.proportion.slenderness"
         }
       },
       {
@@ -344,7 +344,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.proportion.flatness"
+          "target": "geometry.overall.proportion.flatness"
         }
       },
       {
@@ -359,7 +359,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.proportion.elongation"
+          "target": "geometry.overall.proportion.elongation"
         }
       },
       {
@@ -374,7 +374,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.mass.centroid"
+          "target": "geometry.overall.mass.centroid"
         }
       },
       {
@@ -389,7 +389,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.mass.principalFrame"
+          "target": "geometry.overall.mass.principalFrame"
         }
       },
       {
@@ -404,7 +404,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.mass.principalAxes"
+          "target": "geometry.overall.mass.principalAxes"
         }
       },
       {
@@ -419,7 +419,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.mass.momentsOfInertia"
+          "target": "geometry.overall.mass.momentsOfInertia"
         }
       },
       {
@@ -434,7 +434,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.mass.inertiaTensor"
+          "target": "geometry.overall.mass.inertiaTensor"
         }
       },
       {
@@ -449,7 +449,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.curvature.meanCurvature"
+          "target": "geometry.overall.curvature.meanCurvature"
         }
       },
       {
@@ -464,7 +464,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.curvature.gaussianCurvature"
+          "target": "geometry.overall.curvature.gaussianCurvature"
         }
       },
       {
@@ -479,7 +479,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.curvature.curvatureHistogram"
+          "target": "geometry.overall.curvature.curvatureHistogram"
         }
       },
       {
@@ -494,7 +494,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.curvature.sharpFeatureProportion"
+          "target": "geometry.overall.curvature.sharpFeatureProportion"
         }
       },
       {
@@ -509,7 +509,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.thickness.meanThickness"
+          "target": "geometry.overall.thickness.meanThickness"
         }
       },
       {
@@ -524,7 +524,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.thickness.minimumThickness"
+          "target": "geometry.overall.thickness.minimumThickness"
         }
       },
       {
@@ -539,7 +539,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.thickness.thicknessVariability"
+          "target": "geometry.overall.thickness.thicknessVariability"
         }
       },
       {
@@ -554,7 +554,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.thickness.thicknessDistribution"
+          "target": "geometry.overall.thickness.thicknessDistribution"
         }
       },
       {
@@ -569,7 +569,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.concavity.convexHullGap"
+          "target": "geometry.overall.concavity.convexHullGap"
         }
       },
       {
@@ -584,7 +584,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.concavity.reentrantArea"
+          "target": "geometry.overall.concavity.reentrantArea"
         }
       },
       {
@@ -599,7 +599,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.concavity.reentrantVolume"
+          "target": "geometry.overall.concavity.reentrantVolume"
         }
       },
       {
@@ -614,7 +614,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.concavity.concavityIndex"
+          "target": "geometry.overall.concavity.concavityIndex"
         }
       },
       {
@@ -629,7 +629,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.clearance.minimumDistanceToNeighbors"
+          "target": "geometry.overall.clearance.minimumDistanceToNeighbors"
         }
       },
       {
@@ -644,7 +644,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.clearance.clearanceDistribution"
+          "target": "geometry.overall.clearance.clearanceDistribution"
         }
       },
       {
@@ -659,7 +659,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.clearance.interferenceVolume"
+          "target": "geometry.overall.clearance.interferenceVolume"
         }
       },
       {
@@ -674,7 +674,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.clearance.overlapVolume"
+          "target": "geometry.overall.clearance.overlapVolume"
         }
       },
       {
@@ -689,7 +689,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.adjacency.numberOfContacts"
+          "target": "geometry.overall.adjacency.numberOfContacts"
         }
       },
       {
@@ -704,7 +704,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.adjacency.contactGraphDegree"
+          "target": "geometry.overall.adjacency.contactGraphDegree"
         }
       },
       {
@@ -719,7 +719,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.adjacency.connectedComponents"
+          "target": "geometry.overall.adjacency.connectedComponents"
         }
       },
       {
@@ -734,7 +734,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.orientation.mainAxisDirection"
+          "target": "geometry.overall.orientation.mainAxisDirection"
         }
       },
       {
@@ -749,7 +749,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.orientation.faceNormalDistribution"
+          "target": "geometry.overall.orientation.faceNormalDistribution"
         }
       },
       {
@@ -764,7 +764,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.orientation.orientationConsistency"
+          "target": "geometry.overall.orientation.orientationConsistency"
         }
       },
       {
@@ -779,7 +779,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.symmetry.reflectionSymmetryScore"
+          "target": "geometry.overall.symmetry.reflectionSymmetryScore"
         }
       },
       {
@@ -794,7 +794,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.symmetry.rotationalSymmetryScore"
+          "target": "geometry.overall.symmetry.rotationalSymmetryScore"
         }
       },
       {
@@ -809,7 +809,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.symmetry.reflectionSymmetries"
+          "target": "geometry.overall.symmetry.reflectionSymmetries"
         }
       },
       {
@@ -824,7 +824,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.symmetry.rotationalSymmetries"
+          "target": "geometry.overall.symmetry.rotationalSymmetries"
         }
       },
       {
@@ -839,7 +839,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.symmetry.repetitionRatio"
+          "target": "geometry.overall.symmetry.repetitionRatio"
         }
       },
       {
@@ -854,7 +854,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.symmetry.modularityRatio"
+          "target": "geometry.overall.symmetry.modularityRatio"
         }
       },
       {
@@ -869,7 +869,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.roughness.deviationFromIdeal"
+          "target": "geometry.overall.roughness.deviationFromIdeal"
         }
       },
       {
@@ -884,7 +884,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.roughness.deviationFromSmoothedGeometry"
+          "target": "geometry.overall.roughness.deviationFromSmoothedGeometry"
         }
       },
       {
@@ -899,7 +899,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.roughness.normalVariation"
+          "target": "geometry.overall.roughness.normalVariation"
         }
       },
       {
@@ -914,7 +914,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.roughness.surfaceWaviness"
+          "target": "geometry.overall.roughness.surfaceWaviness"
         }
       },
       {
@@ -929,7 +929,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.roughness.irregularity"
+          "target": "geometry.overall.roughness.irregularity"
         }
       },
       {
@@ -944,7 +944,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.topology.holes"
+          "target": "geometry.overall.topology.holes"
         }
       },
       {
@@ -959,7 +959,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.topology.handles"
+          "target": "geometry.overall.topology.handles"
         }
       },
       {
@@ -974,7 +974,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.topology.boundaryLoops"
+          "target": "geometry.overall.topology.boundaryLoops"
         }
       },
       {
@@ -989,7 +989,7 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.topology.eulerCharacteristic"
+          "target": "geometry.overall.topology.eulerCharacteristic"
         }
       },
       {
@@ -1004,10 +1004,9 @@
             "schema/snapshot",
             "buffers"
           ],
-          "target": "geometricAnalysis.overall.topology.genus"
+          "target": "geometry.overall.topology.genus"
         }
       }
     ]
   }
 }
-

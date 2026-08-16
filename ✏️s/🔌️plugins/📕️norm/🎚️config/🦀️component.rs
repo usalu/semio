@@ -1,6 +1,6 @@
 //! 🧮️ Norm plugin — the ONE view-state config artifact every one of the fifteen norm apps uses.
 //!
-//! 📌️ Deliberately NOT a per-app `🎛️apps/<app>/🦀️config.rs`: all fifteen compliance apps have the
+//! 📌️ Deliberately NOT a per-surface `✏️editor/🎚️config/🦀️component.rs`: all fifteen compliance apps have the
 //! identical config shape (one field — which `CheckReport::checks` row the inspection panel points at),
 //! so unlike `shooting`'s per-app `ShootingConfig` this is ONE type reused by every app rather than
 //! fifteen byte-identical copies. It lives in `🫀️core` (the cross-artifact/cross-app kernel) because

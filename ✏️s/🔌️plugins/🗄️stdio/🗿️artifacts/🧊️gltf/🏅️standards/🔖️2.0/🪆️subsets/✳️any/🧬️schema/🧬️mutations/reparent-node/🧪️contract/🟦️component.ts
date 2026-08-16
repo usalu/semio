@@ -1,0 +1,6 @@
+/** 🧪️ Mutation-law probe for reparent-node. */
+import type { GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
+import { applyGltfReparentNode, type GltfReparentNodePayload } from '../../reparent-node/🦠️mutation/🟦️component.ts';
+import { deriveGltfReparentNodeDiff } from '../../reparent-node/🔺️diff/🟦️component.ts';
+import { deriveGltfReparentNodeInverse } from '../../reparent-node/↩️inverse/🟦️component.ts';
+export const assertGltfReparentNodeLaws = (base: GltfSnapshot, payload: GltfReparentNodePayload) => { const first = applyGltfReparentNode(base, payload); if (!first.accepted) return first; const replay = applyGltfReparentNode(base, payload); if (!replay.accepted || JSON.stringify(first.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(first.diff) !== JSON.stringify(replay.diff)) throw new Error('reparent-node replay is non-deterministic'); const direct = deriveGltfReparentNodeDiff(base, payload); const inverse = deriveGltfReparentNodeInverse(base, payload); if (!direct.accepted || !inverse.accepted || JSON.stringify(direct.touchedPaths) !== JSON.stringify(first.touchedPaths) || JSON.stringify(inverse.touchedPaths) !== JSON.stringify(first.touchedPaths)) throw new Error('reparent-node diff or inverse law failed'); return { first, direct, inverse }; };

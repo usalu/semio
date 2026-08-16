@@ -23,7 +23,7 @@ pub fn change_language(new_language_id: String) -> WriterMutation {
 impl MutationKind<WriterSnapshot, WriterMutation> for ChangeLanguage {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "language", kind: "change-language", record: "ChangedLanguage" };
 
-    fn diff(&self, base: &WriterSnapshot) -> WriterDiff {
+    fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
         super::diff::diff(self, base)
     }
 

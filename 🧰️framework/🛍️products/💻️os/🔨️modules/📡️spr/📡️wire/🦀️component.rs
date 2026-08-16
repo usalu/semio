@@ -73,7 +73,12 @@ pub enum ApplyOutcome {
     // 🔒️ Boxed: MutationEnvelope is far larger than the other variants, and clippy's
     // large_enum_variant lint (a real per-instance cost, not just style) applies at -D warnings.
     Transformed { envelope: Box<crate::os_spr::causal::MutationEnvelope> },
-    Rejected { reason: String },
+    /// 🧾 `messages` (trailing addition, tag unchanged) is one packed `Vec<MutationMessage>` blob —
+    /// opaque here (this crate stays decoupled from `os_spr::command`'s concrete type, matching
+    /// `ArtifactDiff`/`InverseMutation`'s opaque-bytes convention above), packed by the caller with
+    /// `pack::encode_record_body` before construction. See contract-freeze.md §C8 of
+    /// `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/`.
+    Rejected { reason: String, messages: Vec<u8> },
 }
 
 /// @emoji 🪜️ One stage of a submitted batch's lifecycle, from `Received` to `Applied`.
@@ -215,9 +220,10 @@ fn encode_apply_outcome(outcome: &ApplyOutcome, out: &mut Vec<u8>) {
             out.push(1);
             crate::os_spr::causal::encode_envelope(envelope, out);
         }
-        ApplyOutcome::Rejected { reason } => {
+        ApplyOutcome::Rejected { reason, messages } => {
             out.push(2);
             crate::os_spr::write_str(out, reason);
+            crate::os_spr::write_bytes(out, messages);
         }
     }
 }
@@ -228,7 +234,7 @@ fn decode_apply_outcome(bytes: &[u8], pos: &mut usize) -> Result<ApplyOutcome, c
     match tag {
         0 => Ok(ApplyOutcome::Accepted),
         1 => Ok(ApplyOutcome::Transformed { envelope: Box::new(crate::os_spr::causal::decode_envelope(bytes, pos)?) }),
-        2 => Ok(ApplyOutcome::Rejected { reason: crate::os_spr::read_str(bytes, pos)? }),
+        2 => Ok(ApplyOutcome::Rejected { reason: crate::os_spr::read_str(bytes, pos)?, messages: crate::os_spr::read_bytes(bytes, pos)? }),
         other => Err(malformed("wire apply-outcome tag", *pos as u64, &format!("unknown tag {other:#x}"))),
     }
 }
@@ -559,7 +565,7 @@ mod tests {
 
     #[test]
     fn server_frame_ack_round_trips_for_every_stage_and_apply_outcome_variant() {
-        for outcome in [ApplyOutcome::Accepted, ApplyOutcome::Transformed { envelope: Box::new(sample_envelope("op-1")) }, ApplyOutcome::Rejected { reason: "conflict".to_string() }] {
+        for outcome in [ApplyOutcome::Accepted, ApplyOutcome::Transformed { envelope: Box::new(sample_envelope("op-1")) }, ApplyOutcome::Rejected { reason: "conflict".to_string(), messages: vec![1, 2] }] {
             assert_server_round_trips(&ServerFrame::Ack { batch_id: 7, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(outcome) }], frontier: sample_frontier() }, Lane::Command);
         }
     }

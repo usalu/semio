@@ -1746,22 +1746,19 @@ class PluginIndexExportPathLintScript extends BundleScript {
  * **Deliberately report-only, never wired into `verify`/`plugin lint`**, same posture as
  * `PluginIndexExportPathLintScript` above: several sessions are actively running against the gate
  * and this rule will fire on plugins they own. Fixing what it finds is cross-session work (`process`
- * belongs to another session, `cad` to this ticket, and the trait model reaches `💻️os/🖥️host`) and is
+ * belongs to another session, `cad` to this ticket, and the host-handle model reaches `💻️os/🖥️host`) and is
  * deliberately not attempted here. */
 const HOST_ENGINE_HANDLE_TYPES: Readonly<Record<string, string>> = {
-  // 🧠️ Implements `semio_framework_os::engine::EngineHost` (🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️component.rs)
-  // — wraps `Mutex<EngineCache>` (byte-budgeted, host-managed compute cache) plus `Mutex<Brep>` kernel
-  // session (🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🖥️host/🦀️component.rs). Confirmed via
-  // `grep -rl 'impl EngineHost for' 🧰️framework` as the ONLY concrete `EngineHost` impl in the framework
-  // today, so it is the entire current handle-type surface, not one of several — a plugin holding one
+  // 🧠️ Host-owned brep engine wrapper — wraps `Mutex<EngineCache>` (byte-budgeted, host-managed compute cache) plus `Mutex<Brep>` kernel
+  // session (🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🖥️host/🦀️component.rs). It is the current handle-type surface — a plugin holding one
   // reaches directly for host-managed compute-cache/dispatch state instead of going through the WIT
-  // `engine-derive`/`engine-read` guest<->host boundary that trait exists to gate.
-  BrepEngineHost: "host-owned EngineHost impl for brep (byte-budgeted engine-result cache + kernel session) — a process-lifetime handle to host-managed compute state, not a plugin's own data",
-  // 🧠️ The host-owned LRU byte-budgeted engine-result cache every `EngineHost` impl wraps
+  // `engine-derive`/`engine-read` guest<->host boundary.
+  BrepEngineHost: "host-owned brep engine wrapper (byte-budgeted engine-result cache + kernel session) — a process-lifetime handle to host-managed compute state, not a plugin's own data",
+  // 🧠️ The host-owned LRU byte-budgeted engine-result cache `BrepEngineHost` wraps
   // (🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️component.rs, doc comment: "Host-owned LRU engine
   // result cache with a byte budget"). Holding one directly bypasses `BrepEngineHost`'s own wrapper but
   // reaches for the identical host-managed caching/dispatch authority.
-  EngineCache: "host-owned LRU byte-budgeted engine-result cache underlying every EngineHost impl — same ambient reach as holding the EngineHost wrapper itself, just unwrapped",
+  EngineCache: "host-owned LRU byte-budgeted engine-result cache underlying BrepEngineHost — same ambient reach as holding that wrapper directly, just unwrapped",
 };
 // 🕵️ Deliberately excludes plain opaque handle VALUES the framework explicitly documents as safe for a
 // plugin to hold — `EngineHandle`/`EngineKey`/`GeometryHandle` are unforgeable content-addressed tokens

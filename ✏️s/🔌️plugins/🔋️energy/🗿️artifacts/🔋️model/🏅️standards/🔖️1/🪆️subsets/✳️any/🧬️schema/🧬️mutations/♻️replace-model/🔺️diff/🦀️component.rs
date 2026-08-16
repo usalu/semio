@@ -12,8 +12,8 @@ use crate::artifacts::model::EnergyModelSnapshot;
 /// matching this ticket's converter-honesty rule. Unlike the pre-migration behaviour (which stored
 /// arbitrary opaque JSON text verbatim, never validating it), a composed child slot can only ever
 /// hold a real, typed `Model`.
-pub fn diff(payload: &ReplaceModel, _base: &EnergyModelSnapshot) -> EnergyModelDiff {
+pub fn diff(payload: &ReplaceModel, _base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
     let model: crate::model::Model = serde_json::from_str(&payload.new_model_json).unwrap_or_default();
-    crate::artifacts::model::schema::diff::text::diff_from_model(&model)
+    protocol::MutationOutcome::new(crate::artifacts::model::schema::diff::text::diff_from_model(&model))
 }
 //#endregion 🔖️Diff

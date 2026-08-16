@@ -1,18 +1,18 @@
 //! 🕸 GLTF topology indicators.
 
-#[path = "holes/🦀️component.rs"]
-pub mod holes;
-#[path = "handles/🦀️component.rs"]
-pub mod handles;
 #[path = "boundary-loops/🦀️component.rs"]
 pub mod boundary_loops;
 #[path = "euler-characteristic/🦀️component.rs"]
 pub mod euler_characteristic;
 #[path = "genus/🦀️component.rs"]
 pub mod genus;
+#[path = "handles/🦀️component.rs"]
+pub mod handles;
+#[path = "holes/🦀️component.rs"]
+pub mod holes;
 
-use super::geometry_core::GltfGeometryContext;
 use super::super::modules::measurement_contracts::*;
+use super::geometry_core::GltfGeometryContext;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -31,13 +31,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfTopologyInference {
     type Output = GltfTopologyIndicators;
 
     fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
-        Self::Output {
-            holes: holes::infer(context),
-            handles: handles::infer(context),
-            boundary_loops: boundary_loops::infer(context),
-            euler_characteristic: euler_characteristic::infer(context),
-            genus: genus::infer(context),
-        }
+        Self::Output { holes: holes::infer(context), handles: handles::infer(context), boundary_loops: boundary_loops::infer(context), euler_characteristic: euler_characteristic::infer(context), genus: genus::infer(context) }
     }
 
     fn unavailable(diagnostic_ids: &[String]) -> Self::Output {

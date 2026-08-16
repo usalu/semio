@@ -1732,6 +1732,301 @@ pub mod utilities {
     // #endregion utilities
 }
 
+pub mod role_chrome {
+    // #region role_chrome
+    //! 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §5: role-aware wgpu
+    //! shell chrome primitives, parity with the React shell (lane 1-C) against the SAME frozen
+    //! strings/command ids as `📋️contract-freeze.md` §3/§5. Domain-neutral: this crate never depends
+    //! on `semio_framework` (see the `wgpu` feature's `Cargo.toml` deps), so `ChromeRole` is a local
+    //! wire-compatible mirror of `semio_framework::AppRole`/the TS host's own `AppRole` mirror in
+    //! `🎠️kernel/🟦️component.ts` — same boundary this file already draws around `PluginCatalog`-style
+    //! product data. A concrete `AppRouter`/`ConfigStore` never appears here: callers (the renderer
+    //! product) resolve real entries and hand this module only already-resolved data to render.
+
+    use super::layout::{ContextMenuItemSpec, ShellMenuAction};
+    use super::utilities::{UtilityCategory, UtilityNode};
+    use dsl::DslValue;
+    use serde::{Deserialize, Serialize};
+
+    //#region 🔖️ChromeRole
+    /// 👁️✏️ Wire-compatible with Rust `semio_framework::AppRole`/TS `AppRole` — exactly `"viewer"`/
+    /// `"editor"`, contract freeze §1 C1.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+    #[serde(rename_all = "lowercase")]
+    pub enum ChromeRole {
+        Viewer,
+        Editor,
+    }
+
+    impl ChromeRole {
+        pub fn as_str(self) -> &'static str {
+            match self {
+                ChromeRole::Viewer => "viewer",
+                ChromeRole::Editor => "editor",
+            }
+        }
+
+        /// 🌱️ Contract freeze §5: boot role from `SEMIO_APP_ROLE`/`VITE_SEMIO_APP_ROLE`, values
+        /// `"viewer"`/`"editor"`, default `"editor"` — anything else (unset, empty, unrecognized)
+        /// falls back to the frozen default rather than erroring, since a boot-time env var is not a
+        /// place to hard-fail a shell.
+        pub fn from_boot_env(value: Option<&str>) -> Self {
+            match value {
+                Some("viewer") => ChromeRole::Viewer,
+                _ => ChromeRole::Editor,
+            }
+        }
+
+        pub fn is_read_only(self) -> bool {
+            matches!(self, ChromeRole::Viewer)
+        }
+    }
+    //#endregion 🔖️ChromeRole
+
+    //#region 🔖️FrozenStrings
+    /// 🗣️ Window title chip — contract freeze §5: en `"Viewer"`/`"Editor"`, de
+    /// `"Betrachter"`/`"Editor"`. Mirrors `layout::ribbon_parent_label`'s own `(value, is_de) ->
+    /// &'static str` idiom — these are framework-owned, terminology-invariant strings (no app
+    /// terminology axis), same category as that function's own consumers.
+    pub fn role_title_chip_text(role: ChromeRole, is_de: bool) -> &'static str {
+        match (role, is_de) {
+            (ChromeRole::Viewer, false) => "Viewer",
+            (ChromeRole::Viewer, true) => "Betrachter",
+            (ChromeRole::Editor, false) => "Editor",
+            (ChromeRole::Editor, true) => "Editor",
+        }
+    }
+
+    /// 🗣️ Context-menu/palette entry — contract freeze §5: en `"Open with…"` / de `"Öffnen mit…"`.
+    pub fn open_with_label_text(is_de: bool) -> &'static str {
+        if is_de { "Öffnen mit…" } else { "Open with…" }
+    }
+
+    /// 🗣️ "Set as default" toggle — contract freeze §5: en `"Set as default"` / de `"Als Standard
+    /// festlegen"`.
+    pub fn set_as_default_label_text(is_de: bool) -> &'static str {
+        if is_de { "Als Standard festlegen" } else { "Set as default" }
+    }
+    //#endregion 🔖️FrozenStrings
+
+    //#region 🔖️OsCommandIds
+    /// 🎮️ Contract freeze §3's frozen OS command ids — the "Set as default" toggle in
+    /// `open_with_menu_item` dispatches these.
+    pub const OS_OPEN_ARTIFACT_WITH: &str = "os.open-artifact-with";
+    pub const OS_SET_DEFAULT_VIEWER: &str = "os.set-default-viewer";
+    pub const OS_SET_DEFAULT_EDITOR: &str = "os.set-default-editor";
+    pub const OS_CLEAR_DEFAULT_APP: &str = "os.clear-default-app";
+
+    /// 🎮️ Contract freeze §5's frozen palette command ids — dispatched by an "Open with…" leaf.
+    pub const PALETTE_OPEN_ARTIFACT_WITH_VIEWER: &str = "open-artifact-with-viewer";
+    pub const PALETTE_OPEN_ARTIFACT_WITH_EDITOR: &str = "open-artifact-with-editor";
+
+    fn palette_open_with_action(role: ChromeRole) -> &'static str {
+        match role {
+            ChromeRole::Viewer => PALETTE_OPEN_ARTIFACT_WITH_VIEWER,
+            ChromeRole::Editor => PALETTE_OPEN_ARTIFACT_WITH_EDITOR,
+        }
+    }
+
+    fn os_set_default_action(role: ChromeRole) -> &'static str {
+        match role {
+            ChromeRole::Viewer => OS_SET_DEFAULT_VIEWER,
+            ChromeRole::Editor => OS_SET_DEFAULT_EDITOR,
+        }
+    }
+    //#endregion 🔖️OsCommandIds
+
+    //#region 🔖️OpenWithMenu
+    /// 🗂️ One `AppRouter` entry (contract freeze §3) ready for the "Open with…" menu — the host
+    /// resolves the real `AppRouter`/`AppRef`/`OpeningPreferences` state; this crate only renders an
+    /// already-resolved list (domain-neutral boundary, see module doc).
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct OpenWithEntry {
+        pub plugin_id: String,
+        pub app_id: String,
+        pub label: String,
+        pub role: ChromeRole,
+        pub is_default: bool,
+    }
+
+    fn open_with_args(entry: &OpenWithEntry) -> DslValue {
+        DslValue::Object(vec![("pluginId".into(), DslValue::String(entry.plugin_id.clone())), ("appId".into(), DslValue::String(entry.app_id.clone()))])
+    }
+
+    fn open_with_entry_item(entry: &OpenWithEntry, is_de: bool) -> ContextMenuItemSpec {
+        let toggle_action = if entry.is_default { OS_CLEAR_DEFAULT_APP } else { os_set_default_action(entry.role) };
+        let toggle = ContextMenuItemSpec {
+            id: format!("menu.open-with.{}.{}.set-default", entry.plugin_id, entry.app_id),
+            label: Some(set_as_default_label_text(is_de).to_string()),
+            checked: Some(entry.is_default),
+            action: Some(toggle_action.into()),
+            args: Some(open_with_args(entry)),
+            ..Default::default()
+        };
+        ContextMenuItemSpec {
+            id: format!("menu.open-with.{}.{}", entry.plugin_id, entry.app_id),
+            label: Some(entry.label.clone()),
+            action: Some(palette_open_with_action(entry.role).into()),
+            args: Some(open_with_args(entry)),
+            children: Some(vec![toggle]),
+            ..Default::default()
+        }
+    }
+
+    /// 🖱️ Builds the "Open with…" `ContextMenuItemSpec` submenu row — contract freeze §5: entries
+    /// grouped by role, viewer group first then editor (matching `AppRole`'s own declaration order,
+    /// contract §1 C1), each headed by a labeled separator (`layout::context_menu_is_header`'s own
+    /// convention: a separator carrying a `label` is a non-interactive section header). Every entry
+    /// carries a nested "Set as default" toggle child dispatching `OS_SET_DEFAULT_VIEWER`/`_EDITOR`
+    /// when turning default ON, `OS_CLEAR_DEFAULT_APP` when turning it OFF — the toggle direction is
+    /// resolved here (not left to the host) because there is no single OS command that flips a
+    /// boolean; `checked` mirrors `entry.is_default` for a caller to paint a checkmark. Clicking the
+    /// entry itself dispatches `PALETTE_OPEN_ARTIFACT_WITH_VIEWER`/`_EDITOR` with `{pluginId,
+    /// appId}` args. An empty `entries` list still returns the "Open with…" row with zero children —
+    /// the caller decides whether to omit an empty menu.
+    pub fn open_with_menu_item(entries: &[OpenWithEntry], is_de: bool) -> ContextMenuItemSpec {
+        let mut children: Vec<ContextMenuItemSpec> = Vec::new();
+        for role in [ChromeRole::Viewer, ChromeRole::Editor] {
+            let group: Vec<&OpenWithEntry> = entries.iter().filter(|entry| entry.role == role).collect();
+            if group.is_empty() {
+                continue;
+            }
+            children.push(ContextMenuItemSpec { id: format!("menu.open-with.{}.header", role.as_str()), label: Some(role_title_chip_text(role, is_de).to_string()), separator: Some(true), ..Default::default() });
+            children.extend(group.into_iter().map(|entry| open_with_entry_item(entry, is_de)));
+        }
+        ContextMenuItemSpec { id: "menu.open-with".into(), label: Some(open_with_label_text(is_de).to_string()), children: Some(children), ..Default::default() }
+    }
+    //#endregion 🔖️OpenWithMenu
+
+    //#region 🔖️RoleFiltering
+    /// 🚫️ Contract freeze §5: "viewer chrome hides every `Mutation`-kind action/utility" — drops
+    /// every `ShellMenuAction` whose raw `kind` discriminant (`ActionKind`/`CommandKind`, see
+    /// `ShellMenuAction`'s own doc) is `"Mutation"` for `ChromeRole::Viewer`; a no-op for
+    /// `ChromeRole::Editor`.
+    pub fn filter_shell_menu_actions_for_role(actions: &[ShellMenuAction], role: ChromeRole) -> Vec<ShellMenuAction> {
+        if role == ChromeRole::Editor {
+            return actions.to_vec();
+        }
+        actions.iter().filter(|action| action.kind != "Mutation").cloned().collect()
+    }
+
+    fn disable_utility(mut utility: UtilityNode) -> UtilityNode {
+        match &mut utility {
+            UtilityNode::Separator { disabled, .. } => *disabled = Some(true),
+            UtilityNode::Button { disabled, .. } => *disabled = Some(true),
+            UtilityNode::Toggle { disabled, .. } => *disabled = Some(true),
+            UtilityNode::Collection { disabled, .. } => *disabled = Some(true),
+        }
+        utility
+    }
+
+    /// 🚫️ Contract freeze §5: "...and disables undo/redo" — forces `disabled: Some(true)` on every
+    /// `UtilityCategory::History` utility (undo/redo/checkpoint/alternative, `VcsArtifactApp`'s own
+    /// history vocabulary) for `ChromeRole::Viewer`; every other utility passes through unchanged.
+    /// `UtilityNode` has no `Mutation` category to hide here — that vocabulary lives on
+    /// `ShellMenuAction`/context-menu actions, see `filter_shell_menu_actions_for_role`.
+    pub fn apply_role_to_utilities(utilities: Vec<UtilityNode>, role: ChromeRole) -> Vec<UtilityNode> {
+        if role == ChromeRole::Editor {
+            return utilities;
+        }
+        utilities.into_iter().map(|utility| if utility.category() == UtilityCategory::History { disable_utility(utility) } else { utility }).collect()
+    }
+    //#endregion 🔖️RoleFiltering
+
+    #[cfg(test)]
+    mod role_chrome_tests {
+        use super::super::layout::ActionDescriptor;
+        use super::super::utilities::{utility_button, utility_toggle};
+        use super::*;
+        use crate::wgpu::IconName;
+
+        #[test]
+        fn from_boot_env_accepts_viewer_and_falls_back_to_editor() {
+            assert_eq!(ChromeRole::from_boot_env(Some("viewer")), ChromeRole::Viewer);
+            assert_eq!(ChromeRole::from_boot_env(Some("editor")), ChromeRole::Editor);
+            assert_eq!(ChromeRole::from_boot_env(Some("bogus")), ChromeRole::Editor);
+            assert_eq!(ChromeRole::from_boot_env(Some("")), ChromeRole::Editor);
+            assert_eq!(ChromeRole::from_boot_env(None), ChromeRole::Editor);
+        }
+
+        #[test]
+        fn title_chip_text_covers_both_roles_in_both_locales() {
+            assert_eq!(role_title_chip_text(ChromeRole::Viewer, false), "Viewer");
+            assert_eq!(role_title_chip_text(ChromeRole::Viewer, true), "Betrachter");
+            assert_eq!(role_title_chip_text(ChromeRole::Editor, false), "Editor");
+            assert_eq!(role_title_chip_text(ChromeRole::Editor, true), "Editor");
+        }
+
+        fn entry(plugin_id: &str, app_id: &str, role: ChromeRole, is_default: bool) -> OpenWithEntry {
+            OpenWithEntry { plugin_id: plugin_id.into(), app_id: app_id.into(), label: app_id.into(), role, is_default }
+        }
+
+        #[test]
+        fn open_with_menu_item_groups_by_role_viewer_first_then_editor() {
+            let entries = vec![entry("norm", "s.cad.cad@1/*#editor", ChromeRole::Editor, false), entry("cad", "s.cad.cad@1/*#viewer", ChromeRole::Viewer, true)];
+            let menu = open_with_menu_item(&entries, false);
+            assert_eq!(menu.id, "menu.open-with");
+            assert_eq!(menu.label.as_deref(), Some("Open with…"));
+            let children = menu.children.expect("submenu children");
+            assert_eq!(children.len(), 4, "viewer header + viewer entry + editor header + editor entry");
+            assert_eq!(children[0].label.as_deref(), Some("Viewer"));
+            assert_eq!(children[0].separator, Some(true));
+            assert_eq!(children[1].id, "menu.open-with.cad.s.cad.cad@1/*#viewer");
+            assert_eq!(children[2].label.as_deref(), Some("Editor"));
+            assert_eq!(children[3].id, "menu.open-with.norm.s.cad.cad@1/*#editor");
+        }
+
+        #[test]
+        fn open_with_menu_item_toggle_sets_when_not_default_and_clears_when_default() {
+            let entries = vec![entry("cad", "editor", ChromeRole::Editor, false), entry("norm", "editor-alt", ChromeRole::Editor, true)];
+            let menu = open_with_menu_item(&entries, false);
+            let editor_entries: Vec<_> = menu.children.unwrap().into_iter().filter(|item| item.separator != Some(true)).collect();
+            let not_default_toggle = editor_entries[0].children.as_ref().unwrap()[0].clone();
+            assert_eq!(not_default_toggle.action.as_deref(), Some(OS_SET_DEFAULT_EDITOR));
+            assert_eq!(not_default_toggle.checked, Some(false));
+            let already_default_toggle = editor_entries[1].children.as_ref().unwrap()[0].clone();
+            assert_eq!(already_default_toggle.action.as_deref(), Some(OS_CLEAR_DEFAULT_APP));
+            assert_eq!(already_default_toggle.checked, Some(true));
+        }
+
+        #[test]
+        fn open_with_menu_item_localizes_headers_and_label_to_german() {
+            let entries = vec![entry("cad", "viewer", ChromeRole::Viewer, false)];
+            let menu = open_with_menu_item(&entries, true);
+            assert_eq!(menu.label.as_deref(), Some("Öffnen mit…"));
+            assert_eq!(menu.children.unwrap()[1].children.as_ref().unwrap()[0].label.as_deref(), Some("Als Standard festlegen"));
+        }
+
+        fn shell_action(id: &str, kind: &str) -> ShellMenuAction {
+            ShellMenuAction { id: id.into(), label: id.into(), icon: None, keys: None, kind: kind.into(), category: None, in_palette: true, arg_carrying: false }
+        }
+
+        #[test]
+        fn filter_shell_menu_actions_drops_mutation_kind_for_viewer_only() {
+            let actions = vec![shell_action("shell.rename", "Mutation"), shell_action("shell.zoomIn", "View")];
+            let viewer = filter_shell_menu_actions_for_role(&actions, ChromeRole::Viewer);
+            assert_eq!(viewer.iter().map(|action| action.id.as_str()).collect::<Vec<_>>(), vec!["shell.zoomIn"]);
+            let editor = filter_shell_menu_actions_for_role(&actions, ChromeRole::Editor);
+            assert_eq!(editor.len(), 2, "editor chrome keeps every action");
+        }
+
+        #[test]
+        fn apply_role_to_utilities_disables_history_only_for_viewer() {
+            let press = ActionDescriptor { controller_id: "history".into(), action: "undo".into(), args: None };
+            let toggle = ActionDescriptor { controller_id: "select".into(), action: "toggleSelect".into(), args: None };
+            let utilities = vec![utility_button("undo", IconName::RotateCcw, "Undo", press).with_category(UtilityCategory::History), utility_toggle("select", IconName::MousePointer, "Select", false, toggle)];
+            let viewer = apply_role_to_utilities(utilities.clone(), ChromeRole::Viewer);
+            assert_eq!(viewer[0].category(), UtilityCategory::History);
+            assert!(matches!(&viewer[0], UtilityNode::Button { disabled: Some(true), .. }), "undo must be disabled for a viewer");
+            assert!(matches!(&viewer[1], UtilityNode::Toggle { disabled: None, .. }), "non-history utilities are untouched");
+            let editor = apply_role_to_utilities(utilities, ChromeRole::Editor);
+            assert!(matches!(&editor[0], UtilityNode::Button { disabled: None, .. }), "editor chrome never disables history utilities");
+        }
+    }
+    // #endregion role_chrome
+}
+
 pub mod ui {
     // #region ui
     //! 🧩 Declarative UI graph types shared by kernel, plugins, and renderers.

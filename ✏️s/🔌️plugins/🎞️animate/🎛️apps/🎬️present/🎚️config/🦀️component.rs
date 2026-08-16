@@ -187,13 +187,13 @@ impl protocol::OpBinary for PresentConfigMutation {
 impl Mutation<PresentConfig> for PresentConfigMutation {
     type Diff = PresentConfig;
 
-    fn diff(&self, base: &PresentConfig) -> PresentConfig {
+    fn diff(&self, base: &PresentConfig) -> protocol::MutationOutcome<PresentConfig> {
         let mut next = base.clone();
         match self {
             PresentConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
             PresentConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
-        next
+        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &PresentConfig) -> Vec<Self> {
@@ -235,10 +235,10 @@ mod tests {
 
     //#region 🔖️ConfigMutationTests
     fn round_trip_config(config: &PresentConfig, operation: &PresentConfigMutation) -> PresentConfig {
-        let forward = operation.diff(config);
+        let forward = operation.diff(config).diff().clone();
         let backwards = operation.inverse(config);
         assert_eq!(backwards.len(), 1);
-        let restored = backwards[0].diff(&forward);
+        let restored = backwards[0].diff(&forward).diff().clone();
         assert_eq!(&restored, config, "backwards() must exactly restore the pre-operation config");
         forward
     }

@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.gltf.mutation;
+message GltfMoveBufferPayloadV1 { uint32 index = 1; uint32 position = 2; }
+message GltfMoveBufferMutationV1 { string id = 1; uint32 version = 2; repeated string touched_paths = 3; GltfMoveBufferPayloadV1 payload = 4; }

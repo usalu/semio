@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.bind-primitive-material.v1.inverse",
+  "title": "GltfBindPrimitiveMaterialInverse",
+  "type": "object",
+  "properties": {
+    "inverse": {
+      "type": "object"
+    },
+    "touchedPaths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "inverse",
+    "touchedPaths"
+  ],
+  "additionalProperties": false,
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.bind-primitive-material.v1",
+    "version": 1,
+    "phase": "inverse",
+    "kind": "bind",
+    "touchedPaths": [
+      "document/meshes/*/primitives/*/material"
+    ],
+    "referencePolicy": "validates material identity before binding"
+  }
+}

@@ -22,7 +22,7 @@ pub fn change_vortex_kind_color(id: String, new_color: String) -> Block3dMutatio
 impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ChangeVortexKindColor {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vortex-kind", kind: "change-vortex-kind-color", record: "ChangedVortexKindColor" };
 
-    fn diff(&self, base: &Block3dSnapshot) -> Block3dDiff {
+    fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {

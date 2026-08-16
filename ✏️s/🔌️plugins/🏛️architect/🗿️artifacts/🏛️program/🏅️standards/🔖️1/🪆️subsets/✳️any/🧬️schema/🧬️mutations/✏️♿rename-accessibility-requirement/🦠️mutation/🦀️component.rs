@@ -19,7 +19,7 @@ pub struct RenameAccessibilityRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameAccessibilityRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "accessibility-requirement", kind: "rename-accessibility-requirement", record: "RenamedAccessibilityRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

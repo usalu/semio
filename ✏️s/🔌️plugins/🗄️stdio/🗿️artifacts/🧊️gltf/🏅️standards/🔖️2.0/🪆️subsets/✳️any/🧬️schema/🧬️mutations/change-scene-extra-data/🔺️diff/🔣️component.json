@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.change-scene-extra-data.v1.diff",
+  "title": "GltfChangeSceneExtraDataDiff",
+  "type": "object",
+  "properties": {
+    "operation": {
+      "type": "object",
+      "properties": {
+        "scene": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "data": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "state": {
+                  "const": "absent"
+                }
+              },
+              "required": [
+                "state"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "state": {
+                  "const": "present"
+                },
+                "value": {}
+              },
+              "required": [
+                "state",
+                "value"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": [
+        "scene",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "after": {},
+    "touchedPaths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "operation",
+    "after",
+    "touchedPaths"
+  ],
+  "additionalProperties": false,
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.change-scene-extra-data.v1",
+    "version": 1,
+    "phase": "diff",
+    "kind": "change",
+    "touchedPaths": [
+      "document/scenes/*/extras"
+    ],
+    "referencePolicy": "none"
+  }
+}

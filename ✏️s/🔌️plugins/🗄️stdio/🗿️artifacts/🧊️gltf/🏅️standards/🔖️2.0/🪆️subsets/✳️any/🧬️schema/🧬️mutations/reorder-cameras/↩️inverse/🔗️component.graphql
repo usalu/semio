@@ -1,0 +1,12 @@
+# reorder-cameras typed inverse facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfCameraValueV1
+input GltfReorderCamerasPayloadV1 {
+  order: [Int!]!
+}
+type GltfReorderCamerasInverseOperationV1 {
+  kind: String!
+  order: [Int!]!
+}
+type GltfReorderCamerasInverseV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfReorderCamerasPayloadV1!, operation: GltfReorderCamerasInverseOperationV1! }

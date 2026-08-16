@@ -22,7 +22,7 @@ pub fn resize_grip_3d(id: String, new_radius_3d: f64) -> Block5dMutation {
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ResizeGrip3d {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "resize", entity: "grip", kind: "resize-grip3d", record: "ResizedGrip3d" };
 
-    fn diff(&self, base: &Block5dSnapshot) -> Block5dDiff {
+    fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {

@@ -1,17 +1,27 @@
 //! 💡️ minimum-thickness atomic glTF inference leaf.
-use super::super::{geometry_core::GltfGeometryContext, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
-use super::super::super::modules::{inference_measures::{estimate, unavailable}, measurement_contracts::*};
+use super::super::super::modules::{
+    inference_measures::{estimate, unavailable},
+    measurement_contracts::*,
+};
+use super::super::{geometry_core::GltfGeometryContext, GltfEntityIndicators, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
 
 pub struct GltfMinimumThicknessInference;
 
 impl GltfInferenceLeaf for GltfMinimumThicknessInference {
-    const DESCRIPTOR: GltfInferenceLeafDescriptor = GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.minimum-thickness.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.minimum-thickness.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
+    const DESCRIPTOR: GltfInferenceLeafDescriptor =
+        GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.minimum-thickness.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.minimum-thickness.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
 
-pub fn descriptor() -> GltfInferenceLeafDescriptor { GltfMinimumThicknessInference::DESCRIPTOR }
+pub fn descriptor() -> GltfInferenceLeafDescriptor {
+    GltfMinimumThicknessInference::DESCRIPTOR
+}
 
 pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
-    let distribution = super::distribution(context); distribution.minimum.map(|value| estimate(value, GltfUnit::Metre, super::samples(context).len(), Some(context.topology))).unwrap_or_else(|| unavailable(GltfUnit::Metre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)))
+    let distribution = super::distribution(context);
+    distribution
+        .minimum
+        .map(|value| estimate(value, GltfUnit::Metre, super::samples(context).len(), Some(context.topology)))
+        .unwrap_or_else(|| unavailable(GltfUnit::Metre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)))
 }
 
 pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
@@ -19,7 +29,7 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
 }
 
 pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
-    serde_json::to_value(&indicators.thickness.minimumThickness)
+    serde_json::to_value(&indicators.thickness.minimum_thickness)
 }
 
 #[cfg(test)]
@@ -32,4 +42,3 @@ mod tests {
         assert_eq!(descriptor().algorithm_version, 1);
     }
 }
-

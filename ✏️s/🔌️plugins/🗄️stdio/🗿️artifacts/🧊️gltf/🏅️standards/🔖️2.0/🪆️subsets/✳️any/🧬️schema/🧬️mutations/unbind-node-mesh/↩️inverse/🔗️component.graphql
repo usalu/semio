@@ -1,0 +1,2 @@
+# unbind-node-mesh inverse typed facet.
+input GltfUnbindNodeMeshInverseV1 { operation: GltfUnbindNodeMeshPayloadV1!, before: Int, touchedPaths: [String!]! }

@@ -1,0 +1,6 @@
+# unbind-primitive-indices mutation facet.
+input GltfUnbindPrimitiveIndicesPayloadV1 {
+  mesh: Int!
+  primitive: Int!
+}
+type GltfUnbindPrimitiveIndicesMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

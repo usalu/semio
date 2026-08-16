@@ -1,0 +1,6 @@
+# transform-node inverse facet.
+input GltfTransformNodePayloadV1 {
+  node: Int!
+  transform: GltfNodeTransformInput!
+}
+type GltfTransformNodeInverseV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String, inverse: String! }

@@ -21,7 +21,7 @@ pub fn replace_node_properties(id: String, new_properties: PropertyBag) -> DagMu
 impl protocol::MutationKind<DagSnapshot, DagMutation> for ReplaceNodeProperties {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "node", kind: "replace-node-properties", record: "ReplacedNodeProperties" };
 
-    fn diff(&self, base: &DagSnapshot) -> DagDiff {
+    fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {

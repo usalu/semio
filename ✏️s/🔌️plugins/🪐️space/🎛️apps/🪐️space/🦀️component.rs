@@ -97,7 +97,7 @@ pub(crate) fn primary_selected_node_id(selected: &[String], config: &SpaceConfig
 /// store this pure function doesn't own.
 pub(crate) fn apply_config_mutations(config: &SpaceConfig, operations: &[crate::apps::space::config::SpaceConfigMutation]) -> SpaceConfig {
     use protocol::Mutation;
-    operations.iter().fold(config.clone(), |acc, operation| operation.diff(&acc))
+    operations.iter().fold(config.clone(), |acc, operation| operation.diff(&acc).diff().clone())
 }
 
 // 🫀️ The shared `presence:` backbone-URI hack was deleted from os-core — presence now flows through

@@ -1,0 +1,6 @@
+# change-scene-name mutation facet.
+input GltfChangeSceneNamePayloadV1 {
+  scene: Int!
+  value: String!
+}
+type GltfChangeSceneNameMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

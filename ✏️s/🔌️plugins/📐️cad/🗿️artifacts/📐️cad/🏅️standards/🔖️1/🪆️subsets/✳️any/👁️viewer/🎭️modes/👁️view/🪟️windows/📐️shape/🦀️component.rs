@@ -1,8 +1,9 @@
 //! 📐️ CAD viewer — the Shape window: a read-only world-3d render of the `spatial.shape` pane, built
 //! from the same subset `🧬️schema/💡️inferences` pure snapshot→view-model helpers the editor's own
-//! Shape window (`✏️editor/🎭️modes/✏️edit/🪟️windows/📐️shape`) uses — never `crate::…::editor::…`
-//! (`policyViewerPurityBreaches`). No selection, no engagement, no gumball/dislocate: a viewer has no
-//! utilities that edit and emits no mutations by construction (`ViewEmit`).
+//! Shape window (`✏️editor/🎭️modes/✏️edit/🪟️windows/📐️shape`) uses — this file itself imports
+//! nothing from the sibling editor surface (`policyViewerPurityBreaches` forbids it outright). No
+//! selection, no engagement, no gumball/dislocate: a viewer has no utilities that edit and emits no
+//! mutations by construction (`ViewEmit`).
 
 use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_camera_projection_config;
 use crate::artifacts::cad::{CadCamera, CadPaneId, CadSnapshot};
@@ -20,7 +21,7 @@ pub const PANE: CadPaneId = CadPaneId::Shape;
 /// viewer session's world-3d controller can never be mistaken for an editor session's.
 const CAD_VIEW_CONTROLLER_ID: &str = "cad-view";
 /// 👁️ Matches the editor's `CAD_FALLBACK_MESH_KIND` literal ("box") — duplicated on purpose rather
-/// than imported through `crate::…::editor::…`, which `policyViewerPurityBreaches` forbids outright.
+/// than imported through the sibling `✏️editor` module, which `policyViewerPurityBreaches` forbids outright.
 const CAD_VIEW_FALLBACK_MESH_KIND: &str = "box";
 //#endregion 🔖️Constants
 

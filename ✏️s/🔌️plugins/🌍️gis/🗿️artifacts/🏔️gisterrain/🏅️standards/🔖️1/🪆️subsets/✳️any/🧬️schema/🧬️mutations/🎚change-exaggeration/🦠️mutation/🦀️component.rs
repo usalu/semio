@@ -18,7 +18,7 @@ pub struct ChangeExaggeration {
 impl MutationKind<GisTerrainSnapshot, GisTerrainMutation> for ChangeExaggeration {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "exaggeration", kind: "change-exaggeration", record: "ChangedExaggeration" };
 
-    fn diff(&self, base: &GisTerrainSnapshot) -> GisTerrainDiff {
+    fn diff(&self, base: &GisTerrainSnapshot) -> protocol::MutationOutcome<GisTerrainDiff> {
         super::diff::diff(self, base)
     }
 

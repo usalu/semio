@@ -189,13 +189,23 @@ impl protocol::OpBinary for MathematicalConfigMutation {
 impl Mutation<MathematicalConfig> for MathematicalConfigMutation {
     type Diff = MathematicalConfig;
 
-    fn diff(&self, base: &MathematicalConfig) -> MathematicalConfig {
+    fn diff(&self, base: &MathematicalConfig) -> protocol::MutationOutcome<MathematicalConfig> {
         let mut next = base.clone();
         match self {
-            MathematicalConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
-            MathematicalConfigMutation::SetLocale { value } => next.locale = value.clone(),
+            MathematicalConfigMutation::SetCamera { camera } => {
+                if &base.camera == camera {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", "Camera is already at the requested position.");
+                }
+                next.camera = camera.clone();
+            }
+            MathematicalConfigMutation::SetLocale { value } => {
+                if &base.locale == value {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Locale is already \"{}\".", value));
+                }
+                next.locale = value.clone();
+            }
         }
-        next
+        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &MathematicalConfig) -> Vec<Self> {
@@ -231,7 +241,7 @@ mod tests {
         let base = MathematicalConfig::default();
         let camera = MathematicalCamera { x: 5.0, y: 6.0, zoom: 2.0 };
         let operation = MathematicalConfigMutation::SetCamera { camera: camera.clone() };
-        assert_eq!(Mutation::diff(&operation, &base).camera, camera);
+        assert_eq!(Mutation::diff(&operation, &base).diff().camera, camera);
     }
 
     #[test]
@@ -239,11 +249,11 @@ mod tests {
         let base = MathematicalConfig::default();
         let camera = MathematicalCamera { x: 5.0, y: 6.0, zoom: 2.0 };
         let operation = MathematicalConfigMutation::SetCamera { camera: camera.clone() };
-        let next = Mutation::diff(&operation, &base);
+        let next = Mutation::diff(&operation, &base).diff().clone();
         assert_eq!(next.camera, camera);
         let backwards = Mutation::inverse(&operation, &base);
         assert_eq!(backwards, vec![MathematicalConfigMutation::SetCamera { camera: base.camera.clone() }]);
-        assert_eq!(Mutation::diff(&backwards[0], &next), base);
+        assert_eq!(Mutation::diff(&backwards[0], &next).diff().clone(), base);
         store::os_store::test_support::assert_op_line_round_trip(&operation);
     }
 

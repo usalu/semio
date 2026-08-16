@@ -7,13 +7,14 @@ use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 use protocol::Patchable;
 
-/// 🔁️ `patched = [{id, full patch}]` via `Patchable::diff_patch` — every field of the payload
-/// row becomes the patch, so applying it fully overwrites the target's non-identity content.
-/// Target absent from `base` ⇒ empty diff (nothing to change).
-pub fn diff(payload: &ReplaceSearchFilter, base: &ProgramSnapshot) -> ProgramDiff {
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
+pub fn diff(payload: &ReplaceSearchFilter, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let Some(existing) = base.search_filters.iter().find(|row| row.header.id == payload.search_filter.header.id) else {
-        return ProgramDiff::default();
+        return protocol::MutationOutcome::error("mutation.target-missing", "No search filter exists with this id.", [payload.search_filter.header.id.0.clone()]);
     };
+    if existing == &payload.search_filter {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This search filter already matches the requested value.").at([existing.header.id.0.clone()])]);
+    }
     let patch = existing.diff_patch(&payload.search_filter).expect("diff_patch always produces a full patch");
-    ProgramDiff { search_filters: Some(ProgramSearchFiltersDelta { patched: vec![ProgramSearchFiltersPatchEntry { id: payload.search_filter.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() }
+    protocol::MutationOutcome::new(ProgramDiff { search_filters: Some(ProgramSearchFiltersDelta { patched: vec![ProgramSearchFiltersPatchEntry { id: payload.search_filter.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
 }

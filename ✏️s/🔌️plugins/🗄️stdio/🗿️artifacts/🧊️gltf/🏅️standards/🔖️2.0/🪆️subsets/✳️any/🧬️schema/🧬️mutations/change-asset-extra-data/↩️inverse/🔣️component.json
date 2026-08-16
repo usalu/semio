@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.change-asset-extra-data.v1.inverse",
+  "title": "GltfChangeAssetExtraDataInverse",
+  "type": "object",
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.change-asset-extra-data.v1",
+    "version": 1,
+    "phase": "inverse",
+    "touchedPaths": [
+      "document/asset/extras"
+    ],
+    "referencePolicy": "none"
+  }
+}

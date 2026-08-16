@@ -16,7 +16,7 @@ pub struct ChangeStockLabel {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ChangeStockLabel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "stock", kind: "change-stock-label", record: "ChangedStockLabel" };
 
-    fn diff(&self, base: &Process3dSnapshot) -> Process3dDiff {
+    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::change_stock_label::diff::diff(self, base)
     }
 

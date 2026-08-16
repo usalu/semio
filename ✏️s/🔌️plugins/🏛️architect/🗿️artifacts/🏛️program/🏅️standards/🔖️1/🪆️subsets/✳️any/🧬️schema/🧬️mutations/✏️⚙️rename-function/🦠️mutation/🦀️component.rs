@@ -19,7 +19,7 @@ pub struct RenameFunction {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameFunction {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "function", kind: "rename-function", record: "RenamedFunction" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

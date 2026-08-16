@@ -1,0 +1,7 @@
+/** 🦠️ create-sampler executable structural glTF command. */
+import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔒️top-level-collections-private/🟦️component.ts';
+export const GltfCreateSamplerDescriptor = { id: 's.stdio.gltf.mutation.create-sampler.v1', version: 1, touchedPathPattern: 'document/samplers', referencePolicy: 'all typed sampler references are remapped, repaired, or rejected' } as const;
+export interface GltfCreateSamplerPayload { position: number }
+export const validateGltfCreateSampler = (payload: GltfCreateSamplerPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.position, base.document.samplers.length, 'document/samplers', true); if (index) return index;    return undefined; };
+export const applyGltfCreateSampler = (base: GltfSnapshot, payload: GltfCreateSamplerPayload): GltfStructuralResult => { const rejection = validateGltfCreateSampler(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); insert(next, 'samplers', payload.position, { wrapS: 10497, wrapT: 10497 }); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/samplers', String(error)) }; } };

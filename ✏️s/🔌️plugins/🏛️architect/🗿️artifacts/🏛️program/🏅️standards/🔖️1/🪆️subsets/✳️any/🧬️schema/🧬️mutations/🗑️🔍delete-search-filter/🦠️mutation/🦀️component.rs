@@ -18,7 +18,7 @@ pub struct DeleteSearchFilter {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteSearchFilter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "search-filter", kind: "delete-search-filter", record: "DeletedSearchFilter" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

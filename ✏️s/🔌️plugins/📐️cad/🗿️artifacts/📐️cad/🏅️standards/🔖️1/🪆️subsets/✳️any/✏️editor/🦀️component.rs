@@ -36,10 +36,15 @@ use base64::Engine as _;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{BrepKernel, GeometryHandle};
 use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactEditor, ArtifactView,
-    Dialect, Editor, Emit, Fault, IconName, Label, WorldSunConfig, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure,
+    tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactView,
+    Emit, Fault, IconName, Label, WorldSunConfig, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure,
     SET_ACTIVE_UTILITY_ACTION_ID,
 };
+// 🚧️ SDK GAP: `ArtifactEditor`/`Editor`/`Dialect` (ticket 26/08/16 contract §2.1/§2.4) are not yet
+// in `semio_framework_plugin`'s curated crate-root re-export list (`🔌️plugin/🦀️component.rs:17858`)
+// — only reachable through the `app` submodule they're actually declared in. Not fixable here
+// (`🧰️framework/**` is outside this packet's lease); flagged for W1-A in the migration report.
+use semio_framework_plugin::app::{ArtifactEditor, Dialect, Editor};
 use store::EngineHandles;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -1261,14 +1266,25 @@ pub(crate) mod testkit {
     use super::*;
     use protocol::{Mutation, MutationDiff};
     use semio_framework_plugin::{ActionMeta, HistoryView, UiMenuRef, VcsArtifactApp};
+    use semio_framework_plugin::app::EditorApp;
 
 
     pub fn meta(actor: &str) -> ActionMeta {
         semio_framework_plugin::testkit::meta(actor)
     }
 
-    pub fn new_app() -> VcsArtifactApp<CadPlayApp> {
-        semio_framework_plugin::testkit::new_app::<CadPlayApp>()
+    /// ✏️ `CadPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime `ArtifactApp`
+    /// — `EditorApp<CadPlayApp>` (SDK adapter, contract §2.1) is the real `ArtifactApp` implementor
+    /// `VcsArtifactApp` wraps, exactly the way `PluginBuilder::editor::<CadPlayApp>` builds it.
+    pub fn new_app() -> VcsArtifactApp<EditorApp<CadPlayApp>> {
+        semio_framework_plugin::testkit::new_app::<EditorApp<CadPlayApp>>()
+    }
+
+    /// ✏️ Adapts `create_cad_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
+    /// examples }` shape `testkit::assert_declared_actions_bridge_to_commands` still expects —
+    /// framework testkit gap, not modifiable here (`🧰️framework/**` is outside this packet's lease).
+    pub fn cad_app_manifest_for_testkit() -> semio_framework_plugin::App {
+        semio_framework_plugin::App { definition: create_cad_app(), examples: Vec::new() }
     }
 
     pub fn empty_history() -> HistoryView {
@@ -1330,7 +1346,7 @@ pub(crate) mod testkit {
     pub fn apply_mutations(scene: &CadSnapshot, operations: &[CadMutation]) -> CadSnapshot {
         let mut next = scene.clone();
         for operation in operations {
-            next = operation.diff(&next).apply(&next);
+            next = operation.diff(&next).diff().apply(&next);
         }
         next
     }
@@ -1340,7 +1356,7 @@ pub(crate) mod testkit {
     pub fn config_after(emit: &Emit<CadMutation, CadConfigMutation>, base: &CadConfig) -> CadConfig {
         let mut next = base.clone();
         for operation in &emit.config_mutations {
-            next = operation.diff(&next);
+            next = operation.diff(&next).diff().clone();
         }
         next
     }
@@ -1359,7 +1375,6 @@ pub(crate) mod testkit {
 
 #[cfg(test)]
 mod tests {
-    use semio_framework_plugin::ArtifactApp;
     use super::testkit::*;
     use super::*;
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{align_mesh_to_fixture_centroid, default_document, object_mesh_data, primary_primitive_kind, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z, CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO};
@@ -1441,11 +1456,11 @@ mod tests {
     /// that replaces the CAD document instead of falling through to the framework-only action path.
     #[test]
     fn production_action_bridge_loads_the_declared_example() {
-        let command = <CadPlayApp as ArtifactApp>::command_from_action("setActiveExample", Some(&json!({ "exampleId": CAD_EXAMPLE_FOREST_LEFT }))).expect("declared example action");
+        let command = <CadPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&json!({ "exampleId": CAD_EXAMPLE_FOREST_LEFT }))).expect("declared example action");
         assert!(matches!(command, CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id }) if example_id == CAD_EXAMPLE_FOREST_LEFT));
-        let contributions = <CadPlayApp as ArtifactApp>::command_from_action("setContributions", Some(&json!({ "json": "[{\"id\":\"cad\"}]" }))).expect("declared host command");
+        let contributions = <CadPlayApp as ArtifactEditor>::command_from_action("setContributions", Some(&json!({ "json": "[{\"id\":\"cad\"}]" }))).expect("declared host command");
         assert!(matches!(contributions, CadCommand::SetContributions(set_contributions::SetContributions { json }) if json == "[{\"id\":\"cad\"}]"));
-        assert!(<CadPlayApp as ArtifactApp>::command_from_action("notACadAction", None).is_err());
+        assert!(<CadPlayApp as ArtifactEditor>::command_from_action("notACadAction", None).is_err());
     }
 
     /// ⚖️ LAW: the one-action spot check above is not enough — this is the framework's own harness,
@@ -1454,7 +1469,7 @@ mod tests {
     /// `setActiveExample`: chrome that declares an action no command row backs.
     #[test]
     fn every_rendered_action_bridges_through_the_framework_harness() {
-        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<CadPlayApp>(create_cad_app);
+        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<CadPlayApp>>(cad_app_manifest_for_testkit);
     }
 
     /// ⚖️ Text and binary are two projections of the same command, and every printed line starts with

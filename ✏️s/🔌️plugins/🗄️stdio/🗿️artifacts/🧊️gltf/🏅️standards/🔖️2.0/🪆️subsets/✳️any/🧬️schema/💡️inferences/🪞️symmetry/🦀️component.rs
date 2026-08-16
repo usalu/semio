@@ -1,21 +1,21 @@
 //! 🪞 GLTF symmetry indicators.
 
-#[path = "reflection-symmetry-score/🦀️component.rs"]
-pub mod reflection_symmetry_score;
-#[path = "rotational-symmetry-score/🦀️component.rs"]
-pub mod rotational_symmetry_score;
-#[path = "reflection-symmetries/🦀️component.rs"]
-pub mod reflection_symmetries;
-#[path = "rotational-symmetries/🦀️component.rs"]
-pub mod rotational_symmetries;
-#[path = "repetition-ratio/🦀️component.rs"]
-pub mod repetition_ratio;
 #[path = "modularity-ratio/🦀️component.rs"]
 pub mod modularity_ratio;
+#[path = "reflection-symmetries/🦀️component.rs"]
+pub mod reflection_symmetries;
+#[path = "reflection-symmetry-score/🦀️component.rs"]
+pub mod reflection_symmetry_score;
+#[path = "repetition-ratio/🦀️component.rs"]
+pub mod repetition_ratio;
+#[path = "rotational-symmetries/🦀️component.rs"]
+pub mod rotational_symmetries;
+#[path = "rotational-symmetry-score/🦀️component.rs"]
+pub mod rotational_symmetry_score;
 
-use super::{geometry_core::GltfGeometryContext, GltfPartInference};
-use super::super::modules::{mesh_topology::Topology};
 use super::super::modules::measurement_contracts::*;
+use super::super::modules::mesh_topology::Topology;
+use super::{geometry_core::GltfGeometryContext, GltfPartInference};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -79,7 +79,9 @@ pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfSymmetryRaw {
 }
 
 pub(crate) fn assembly_ratios(parts: &[GltfPartInference], policy: &GltfAnalysisPolicy) -> Option<(f64, f64)> {
-    if parts.is_empty() { return None; }
+    if parts.is_empty() {
+        return None;
+    }
     let signature = |part: &GltfPartInference| {
         let mut dimensions = part.indicators.size.oriented_bounds.value.as_ref().map(|bounds| bounds.dimensions.array()).unwrap_or([0.0; 3]);
         dimensions.sort_by(f64::total_cmp);
@@ -96,7 +98,9 @@ pub(crate) fn assembly_ratios(parts: &[GltfPartInference], policy: &GltfAnalysis
         )
     };
     let mut signatures = std::collections::BTreeMap::<String, usize>::new();
-    for part in parts { *signatures.entry(signature(part)).or_default() += 1; }
+    for part in parts {
+        *signatures.entry(signature(part)).or_default() += 1;
+    }
     let repeated_members = signatures.values().filter(|count| **count > 1).sum::<usize>();
     let repeated_excess = signatures.values().map(|count| count.saturating_sub(1)).sum::<usize>();
     Some((repeated_excess as f64 / parts.len() as f64, repeated_members as f64 / parts.len() as f64))
@@ -104,8 +108,12 @@ pub(crate) fn assembly_ratios(parts: &[GltfPartInference], policy: &GltfAnalysis
 
 impl GltfSymmetryInference {
     pub(crate) fn infer_assembly(indicators: &mut GltfSymmetryIndicators, parts: &[GltfPartInference], policy: &GltfAnalysisPolicy, topology: Topology) {
-        if let Some(measure) = repetition_ratio::from_assembly(parts, policy, topology) { indicators.repetition_ratio = measure; }
-        if let Some(measure) = modularity_ratio::from_assembly(parts, policy, topology) { indicators.modularity_ratio = measure; }
+        if let Some(measure) = repetition_ratio::from_assembly(parts, policy, topology) {
+            indicators.repetition_ratio = measure;
+        }
+        if let Some(measure) = modularity_ratio::from_assembly(parts, policy, topology) {
+            indicators.modularity_ratio = measure;
+        }
     }
 }
 

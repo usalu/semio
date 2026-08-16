@@ -517,70 +517,70 @@ pub mod artifacts {
 }
 //#endregion 🗿️Artifacts
 
-//#region 🎛️Apps
+//#region ✏️Editor
 #[path = "."]
-pub mod apps {
+pub mod editor {
     #[path = "."]
     pub mod lowpoly {
-        #[path = "../../🎛️apps/💠️lowpoly/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/💠️lowpoly/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/💠️lowpoly/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/💠️lowpoly/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/💠️lowpoly/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
-        #[path = "../../🎛️apps/💠️lowpoly/🗣️terminology/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
-        #[path = "../../🎛️apps/💠️lowpoly/🧭️view/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧭️view/🦀️component.rs"]
         pub mod view;
-        #[path = "../../🎛️apps/💠️lowpoly/🖌️session/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️component.rs"]
         pub mod session;
-        #[path = "../../🎛️apps/💠️lowpoly/⚙️engine/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🦀️component.rs"]
         pub mod engine;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/💠️lowpoly/🎮️commands/➕️add-primitive/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-primitive/🦀️component.rs"]
             pub mod add_primitive;
-            #[path = "../../🎛️apps/💠️lowpoly/🎮️commands/✏️patch-object/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️patch-object/🦀️component.rs"]
             pub mod patch_object;
-            #[path = "../../🎛️apps/💠️lowpoly/🎮️commands/🔷️mesh-edit/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔷️mesh-edit/🦀️component.rs"]
             pub mod mesh_edit;
-            #[path = "../../🎛️apps/💠️lowpoly/🎮️commands/🧵️uv/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧵️uv/🦀️component.rs"]
             pub mod uv;
-            #[path = "../../🎛️apps/💠️lowpoly/🎮️commands/🧲️transform/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧲️transform/🦀️component.rs"]
             pub mod transform;
-            #[path = "../../🎛️apps/💠️lowpoly/🎮️commands/🖌️paint/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️paint/🦀️component.rs"]
             pub mod paint;
-            #[path = "../../🎛️apps/💠️lowpoly/🎮️commands/🗂️selection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️selection/🦀️component.rs"]
             pub mod selection;
-            #[path = "../../🎛️apps/💠️lowpoly/🎮️commands/🎥️camera/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️camera/🦀️component.rs"]
             pub mod camera;
-            #[path = "../../🎛️apps/💠️lowpoly/🎮️commands/🌞️sun/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️sun/🦀️component.rs"]
             pub mod sun;
-            #[path = "../../🎛️apps/💠️lowpoly/🎮️commands/🧰️utility/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧰️utility/🦀️component.rs"]
             pub mod utility;
-            #[path = "../../🎛️apps/💠️lowpoly/🎮️commands/💬️engagement/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💬️engagement/🦀️component.rs"]
             pub mod engagement;
-            #[path = "../../🎛️apps/💠️lowpoly/🎮️commands/📄️fixture/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️fixture/🦀️component.rs"]
             pub mod fixture;
-            #[path = "../../🎛️apps/💠️lowpoly/🎮️commands/👁️chrome/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️chrome/🦀️component.rs"]
             pub mod chrome;
         }
 
@@ -588,26 +588,26 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🎛️apps/💠️lowpoly/🎭️modes/✏️edit/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/💠️lowpoly/🎭️modes/✏️edit/🪟️windows/🌐️model/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️model/🦀️component.rs"]
                     pub mod model;
                 }
             }
 
             #[path = "."]
             pub mod paint {
-                #[path = "../../🎛️apps/💠️lowpoly/🎭️modes/🎨️paint/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/💠️lowpoly/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🦀️component.rs"]
                     pub mod uv;
                 }
             }
@@ -615,34 +615,62 @@ pub mod apps {
 
         #[path = "."]
         pub mod options {
-            #[path = "../../🎛️apps/💠️lowpoly/🛠️options/👁️show-edges/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/👁️show-edges/🦀️component.rs"]
             pub mod show_edges;
-            #[path = "../../🎛️apps/💠️lowpoly/🛠️options/🌞️sun/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🌞️sun/🦀️component.rs"]
             pub mod sun;
-            #[path = "../../🎛️apps/💠️lowpoly/🛠️options/🧲️snap/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🧲️snap/🦀️component.rs"]
             pub mod snap;
-            #[path = "../../🎛️apps/💠️lowpoly/🛠️options/🗂️select/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🗂️select/🦀️component.rs"]
             pub mod select;
-            #[path = "../../🎛️apps/💠️lowpoly/🛠️options/🖌️paint-params-brush/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🖌️paint-params-brush/🦀️component.rs"]
             pub mod paint_params_brush;
-            #[path = "../../🎛️apps/💠️lowpoly/🛠️options/🧽️paint-params-eraser/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🧽️paint-params-eraser/🦀️component.rs"]
             pub mod paint_params_eraser;
         }
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/💠️lowpoly/📌️panels/📄️artifact/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
-            #[path = "../../🎛️apps/💠️lowpoly/📌️panels/🛍️catalogue/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs"]
             pub mod catalogue;
-            #[path = "../../🎛️apps/💠️lowpoly/📌️panels/🔍️inspection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;
-            #[path = "../../🎛️apps/💠️lowpoly/📌️panels/🗂️layers/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️layers/🦀️component.rs"]
             pub mod layers;
         }
     }
 }
-//#endregion 🎛️Apps
+//#endregion ✏️Editor
+
+//#region 👁️Viewer
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod lowpoly {
+        #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️model/🦀️component.rs"]
+                    pub mod model;
+                }
+            }
+        }
+    }
+}
+//#endregion 👁️Viewer
 
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
@@ -657,7 +685,7 @@ pub mod examples {
     #[cfg(test)]
     #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_lowpoly_demo_tests;
-    #[path = "../../🎛️apps/💠️lowpoly/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_lowpoly_demo_session;
 }
 //#endregion 📚️Examples

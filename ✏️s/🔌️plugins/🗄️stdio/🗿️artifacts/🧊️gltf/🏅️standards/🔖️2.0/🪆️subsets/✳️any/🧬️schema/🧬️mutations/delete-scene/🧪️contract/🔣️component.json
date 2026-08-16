@@ -1,0 +1,123 @@
+{
+  "id": "s.stdio.gltf.mutation.delete-scene.v1",
+  "vectors": [
+    {
+      "name": "deletesFirstSceneAndRemapsDefaultScene",
+      "base": {
+        "scene": 1,
+        "scenes": [
+          {
+            "nodes": [
+              0
+            ]
+          },
+          {
+            "nodes": []
+          }
+        ]
+      },
+      "payload": {
+        "index": 0
+      },
+      "after": {
+        "scene": 0,
+        "scenes": [
+          {
+            "nodes": []
+          }
+        ]
+      },
+      "undo": {
+        "scene": 1,
+        "scenes": [
+          {
+            "nodes": [
+              0
+            ]
+          },
+          {
+            "nodes": []
+          }
+        ]
+      },
+      "diff": {
+        "id": "s.stdio.gltf.mutation.delete-scene.v1",
+        "version": 1,
+        "phase": "diff",
+        "touchedPaths": [
+          "document/scenes/0",
+          "document/scene"
+        ],
+        "index": 0,
+        "deletedScene": {
+          "nodes": [
+            0
+          ]
+        },
+        "defaultSceneAfter": 0
+      },
+      "inverse": {
+        "id": "s.stdio.gltf.mutation.delete-scene.v1",
+        "version": 1,
+        "phase": "inverse",
+        "touchedPaths": [
+          "document/scenes/0",
+          "document/scene"
+        ],
+        "index": 0,
+        "deletedScene": {
+          "nodes": [
+            0
+          ]
+        },
+        "defaultSceneBefore": 1,
+        "expectedDefaultSceneAfter": 0
+      },
+      "rejections": [
+        {
+          "name": "outOfRangeIndex",
+          "payload": {
+            "index": 2
+          },
+          "code": "gltf.mutation.index-out-of-range"
+        },
+        {
+          "name": "danglingDefaultScene",
+          "base": {
+            "scene": 2,
+            "scenes": [
+              {
+                "nodes": [
+                  0
+                ]
+              },
+              {
+                "nodes": []
+              }
+            ]
+          },
+          "payload": {
+            "index": 0
+          },
+          "code": "gltf.reference.invalid-default-scene"
+        },
+        {
+          "name": "staleInverseDefaultScene",
+          "defaultSceneAfter": null,
+          "code": "gltf.mutation.stale-inverse"
+        }
+      ]
+    }
+  ],
+  "laws": [
+    "acceptance",
+    "typed-range-rejection",
+    "default-scene-integrity-rejection",
+    "concrete-touched-paths",
+    "diff-plan-apply",
+    "inverse-base-reconstruction",
+    "stale-inverse-rejection",
+    "json-serialization",
+    "canonical-id-across-phases"
+  ]
+}

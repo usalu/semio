@@ -6,7 +6,11 @@ use crate::artifacts::program::diff::ProgramFunctionsDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🌱️ `added = [payload row]` — the row lands at the end of `program.functions` on apply.
-pub fn diff(payload: &CreateFunction, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { functions: Some(ProgramFunctionsDelta { added: vec![payload.function.clone()], ..Default::default() }), ..Default::default() }
+/// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
+pub fn diff(payload: &CreateFunction, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let id = payload.function.header.id.clone();
+    if base.functions.iter().any(|row| row.header.id == id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A function already exists with this id.", [id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { functions: Some(ProgramFunctionsDelta { added: vec![payload.function.clone()], ..Default::default() }), ..Default::default() })
 }

@@ -25,26 +25,26 @@ sourceRoots = ["."]
 
 [[package.metadata.semio.playground]]
 variant = "block2d"
-app = "block2d-play"
+app = "s.block.block2d@1/*#editor"
 aliases = ["block 2d"]
 ports = { react = 6024, wgpu = 6124 }
 
 [[package.metadata.semio.playground]]
 variant = "block3d"
-app = "block3d-play"
+app = "s.block.block3d@1/*#editor"
 aliases = ["block 3d"]
 ports = { react = 6025, wgpu = 6125 }
 
 [[package.metadata.semio.playground]]
 variant = "block5d"
-app = "block5d-play"
+app = "s.block.block5d@1/*#editor"
 aliases = ["block 5d"]
 ports = { react = 6026, wgpu = 6126 }
 
 [[package.metadata.semio.assets]]
 kind = "mesh-collection"
 route = "/mesh"
-app = "block3d-play"
+app = "s.block.block3d@1/*#editor"
 roots = ["🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation", "♻️mit-bestand/🖼️asset/🏚️abbau-aufbau"]
 placeholder = "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧊️placeholder.glb"
 filter_from_examples = true

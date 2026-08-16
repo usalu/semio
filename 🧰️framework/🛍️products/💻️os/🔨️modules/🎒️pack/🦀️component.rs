@@ -48,12 +48,8 @@ pub use crate::os_pack::async_::{AsyncPackSource, BoundedDemand, CancellationTok
 /// facade stay lean; enable via `pack`'s own `ureq` feature (forwards to `pack_http/ureq`).
 #[cfg(feature = "ureq")]
 pub use crate::os_pack::http::UreqRangeTransport;
-pub use crate::os_pack::http::{ChunkLruCache, HttpPackSource, RangeRequest, RangeResponse, RangeTransport, RetryPolicy};
+pub use crate::os_pack::http::{HttpPackSource, RangeRequest, RangeResponse, RangeTransport, RetryPolicy};
 //#endregion 🔖️Http
-
-//#region 🔖️Index
-pub use crate::os_pack::index::{FieldIndexBuilder, FieldIndexEntry, FieldIndexReader, FieldPath};
-//#endregion 🔖️Index
 
 //#endregion 🔖️Reexports
 

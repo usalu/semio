@@ -7,13 +7,14 @@ use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 use protocol::Patchable;
 
-/// 🔁️ `patched = [{id, full patch}]` via `Patchable::diff_patch` — every field of the payload
-/// row becomes the patch, so applying it fully overwrites the target's non-identity content.
-/// Target absent from `base` ⇒ empty diff (nothing to change).
-pub fn diff(payload: &ReplaceFlowRequirement, base: &ProgramSnapshot) -> ProgramDiff {
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
+pub fn diff(payload: &ReplaceFlowRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let Some(existing) = base.flows.iter().find(|row| row.header.id == payload.flow_requirement.header.id) else {
-        return ProgramDiff::default();
+        return protocol::MutationOutcome::error("mutation.target-missing", "No flow requirement exists with this id.", [payload.flow_requirement.header.id.0.clone()]);
     };
+    if existing == &payload.flow_requirement {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This flow requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
+    }
     let patch = existing.diff_patch(&payload.flow_requirement).expect("diff_patch always produces a full patch");
-    ProgramDiff { flows: Some(ProgramFlowsDelta { patched: vec![ProgramFlowsPatchEntry { id: payload.flow_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() }
+    protocol::MutationOutcome::new(ProgramDiff { flows: Some(ProgramFlowsDelta { patched: vec![ProgramFlowsPatchEntry { id: payload.flow_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
 }

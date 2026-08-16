@@ -19,7 +19,7 @@ pub struct ReplaceValidationRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceValidationRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "validation-record", kind: "replace-validation-record", record: "ReplacedValidationRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

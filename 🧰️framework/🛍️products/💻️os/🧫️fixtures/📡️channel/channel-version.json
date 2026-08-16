@@ -1,4 +1,4 @@
 {
   "_comment": "📡️ The app-channel wire version, owned here so Rust and TypeScript cannot drift apart silently. Rust asserts protocol_channel::CHANNEL_VERSION against it; TypeScript asserts APP_CHANNEL_VERSION against it. Bumping the wire format means editing this one number and both sides' constants together — any half-done bump fails a test on the half that was forgotten, which is exactly how a live 8-vs-10 drift between the two hosts was caught.",
-  "channelVersion": 10
+  "channelVersion": 11
 }

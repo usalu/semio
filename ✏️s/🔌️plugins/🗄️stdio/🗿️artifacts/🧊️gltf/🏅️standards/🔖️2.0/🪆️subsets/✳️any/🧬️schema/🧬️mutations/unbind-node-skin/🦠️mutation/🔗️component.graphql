@@ -1,0 +1,5 @@
+# unbind-node-skin mutation facet.
+input GltfUnbindNodeSkinPayloadV1 {
+  node: Int!
+}
+type GltfUnbindNodeSkinMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

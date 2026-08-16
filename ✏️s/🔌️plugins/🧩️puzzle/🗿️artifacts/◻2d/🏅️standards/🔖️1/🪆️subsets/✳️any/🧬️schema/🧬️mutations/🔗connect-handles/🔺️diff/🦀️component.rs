@@ -4,9 +4,9 @@ use crate::artifacts::puzzle2d::diff::{Puzzle2dDiff, Puzzle2dEdgesDelta};
 use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ConnectHandles, base: &Puzzle2dSnapshot) -> Puzzle2dDiff {
+pub fn diff(payload: &super::mutation::ConnectHandles, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
     if base.edges.iter().any(|entry| entry.id == payload.id) {
-        return Puzzle2dDiff::default();
+        return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "already connected").at(vec![payload.id.clone()])]);
     }
     let edge = Puzzle2dEdge {
         id: payload.id.clone(),
@@ -26,6 +26,6 @@ pub fn diff(payload: &super::mutation::ConnectHandles, base: &Puzzle2dSnapshot) 
         visible: None,
         locked: None,
     };
-    Puzzle2dDiff { edges: Some(Puzzle2dEdgesDelta { added: vec![edge], ..Default::default() }), ..Default::default() }
+    protocol::MutationOutcome::new(Puzzle2dDiff { edges: Some(Puzzle2dEdgesDelta { added: vec![edge], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

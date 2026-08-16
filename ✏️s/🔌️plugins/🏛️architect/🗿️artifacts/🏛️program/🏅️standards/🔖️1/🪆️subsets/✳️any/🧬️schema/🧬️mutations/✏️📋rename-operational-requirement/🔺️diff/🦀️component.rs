@@ -7,8 +7,14 @@ use crate::artifacts::program::registers::OperationalRequirementPatch;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// ✏️ `patched = [{id, name: Some(new_name)}]`.
-pub fn diff(payload: &RenameOperationalRequirement, _base: &ProgramSnapshot) -> ProgramDiff {
+/// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
+pub fn diff(payload: &RenameOperationalRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let Some(existing) = base.operations.iter().find(|row| row.header.id == payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "No operational requirement exists with this id.", [payload.id.0.clone()]);
+    };
+    if existing.header.name == payload.new_name {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This operational requirement already has this name.").at([payload.id.0.clone()])]);
+    }
     let patch = OperationalRequirementPatch { name: Some(payload.new_name.clone()), ..Default::default() };
-    ProgramDiff { operations: Some(ProgramOperationsDelta { patched: vec![ProgramOperationsPatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() }
+    protocol::MutationOutcome::new(ProgramDiff { operations: Some(ProgramOperationsDelta { patched: vec![ProgramOperationsPatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
 }

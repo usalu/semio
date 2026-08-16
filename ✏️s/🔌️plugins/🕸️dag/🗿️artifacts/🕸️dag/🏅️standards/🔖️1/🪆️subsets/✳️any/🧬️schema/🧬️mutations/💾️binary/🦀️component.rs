@@ -3,7 +3,7 @@
 //! This component only carries the artifact-facing `encode_op`/`decode_op` wrappers plus the op
 //! text↔binary equivalence law. The app's typed `DagCommand` enum — which used to share the old
 //! `📡️protocol` crate with this codec — is an APP concern, not an artifact one: it now lives in
-//! `🎛️apps/🕸️dag/🦀️component.rs`, assembled from the `🎮️commands/*` payload modules by
+//! `✏️editor/🦀️component.rs`, assembled from the `🎮️commands/*` payload modules by
 //! `semio_framework_plugin::app_commands!`. `DagNodeGraphEditOp` (the old protocol crate's batched
 //! sub-operation enum for `nodeGraphEdit`) moved with it, into `🎮️commands/🕸️set-algorithm/🦀️component.rs`
 //! alongside the command it's a field of.

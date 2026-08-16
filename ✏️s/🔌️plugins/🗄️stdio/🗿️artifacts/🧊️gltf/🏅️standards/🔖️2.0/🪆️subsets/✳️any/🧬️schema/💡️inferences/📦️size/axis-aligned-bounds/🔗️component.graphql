@@ -7,5 +7,7 @@ type GltfAxisAlignedBoundsInferenceV1 {
   quality: String!
   diagnostics: [String!]!
   provenance: [String!]!
-  valueJson: String!
+  value: GltfSizeBounds3
 }
+type GltfSizeVec3 { x: Float!, y: Float!, z: Float! }
+type GltfSizeBounds3 { min: GltfSizeVec3!, max: GltfSizeVec3!, dimensions: GltfSizeVec3! }

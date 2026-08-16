@@ -18,7 +18,7 @@ pub struct DeleteStakeholder {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteStakeholder {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "stakeholder", kind: "delete-stakeholder", record: "DeletedStakeholder" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

@@ -18,7 +18,7 @@ pub struct CreateOptionEvaluation {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateOptionEvaluation {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "option-evaluation", kind: "create-option-evaluation", record: "CreatedOptionEvaluation" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

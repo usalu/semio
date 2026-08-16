@@ -18,7 +18,7 @@ pub struct MoveLayer {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for MoveLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "layer", kind: "move-layer", record: "MovedLayer" };
 
-    fn diff(&self, base: &RasterSnapshot) -> RasterDiff {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::move_layer::diff::diff(self, base)
     }
 

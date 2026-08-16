@@ -23,7 +23,7 @@ pub fn move_handle(id: String, new_angle: f64, new_radius: f64) -> Block2dMutati
 impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for MoveHandle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "handle", kind: "move-handle", record: "MovedHandle" };
 
-    fn diff(&self, base: &Block2dSnapshot) -> Block2dDiff {
+    fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {

@@ -18,7 +18,7 @@ pub struct CreatePriorityRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreatePriorityRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "priority-record", kind: "create-priority-record", record: "CreatedPriorityRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

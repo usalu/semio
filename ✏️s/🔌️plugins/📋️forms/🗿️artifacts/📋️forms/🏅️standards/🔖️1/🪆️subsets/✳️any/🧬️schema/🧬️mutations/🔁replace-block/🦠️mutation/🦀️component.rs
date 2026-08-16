@@ -19,7 +19,7 @@ pub struct ReplaceBlock {
 impl MutationKind<FormsSnapshot, FormMutation> for ReplaceBlock {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "block", kind: "replace-block", record: "ReplacedBlock" };
 
-    fn diff(&self, base: &FormsSnapshot) -> FormsDiff {
+    fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff_replace_block(self, base)
     }
     fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {

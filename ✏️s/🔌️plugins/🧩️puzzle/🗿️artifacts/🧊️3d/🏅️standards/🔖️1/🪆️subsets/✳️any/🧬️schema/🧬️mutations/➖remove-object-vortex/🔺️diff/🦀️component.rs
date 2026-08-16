@@ -4,9 +4,9 @@ use crate::artifacts::puzzle3d::diff::{Puzzle3dAttractionsDelta, Puzzle3dDiff, P
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::RemoveObjectVortex, base: &Puzzle3dSnapshot) -> Puzzle3dDiff {
+pub fn diff(payload: &super::mutation::RemoveObjectVortex, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
     let Some(object) = base.objects.iter().find(|entry| entry.id == payload.object_id) else {
-        return Puzzle3dDiff::default();
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "object-vortex", payload.object_id), vec![payload.object_id.clone()]);
     };
     if !object.vortices.iter().any(|vortex| vortex.id == payload.vortex_id) {
         return Puzzle3dDiff::default();
@@ -20,10 +20,10 @@ pub fn diff(payload: &super::mutation::RemoveObjectVortex, base: &Puzzle3dSnapsh
         .filter(|attraction| attraction.attracting == full_id || attraction.attracted == full_id)
         .map(|attraction| attraction.id.clone())
         .collect();
-    Puzzle3dDiff {
+    protocol::MutationOutcome::new(Puzzle3dDiff {
         objects: Some(Puzzle3dObjectsDelta { patched: vec![Puzzle3dObjectPatchEntry { id: payload.object_id.clone(), patch: Puzzle3dObjectPatch { replacement: Some(next) } }], ..Default::default() }),
         attractions: if severed.is_empty() { None } else { Some(Puzzle3dAttractionsDelta { removed: severed, ..Default::default() }) },
         ..Default::default()
-    }
+    })
 }
 //#endregion 🔖️Diff

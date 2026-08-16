@@ -17,7 +17,7 @@
 /// @emoji 🔢️ The channel wire format's own version, advertised by `AppCommand::Hello` and echoed
 /// back by `AppFrame::Welcome` so either side can detect a mismatched build before exchanging any
 /// other frame.
-pub const CHANNEL_VERSION: u32 = 10;
+pub const CHANNEL_VERSION: u32 = 11;
 //#endregion 🔖️Version
 
 //#region 🔖️ChildPackEntry
@@ -223,6 +223,25 @@ pub enum AppCommand {
         subset: String,
         role: u8,
     },
+    /// ⚖️ Pins this connection's local/authority `MergePolicy` (`0`=`LaissezFaire`, `1`=`Normal`,
+    /// `2`=`Vigilant`) — never carried on a `MutationEnvelope`/`BackboneMessage`, see
+    /// contract-freeze.md §C3/C8 of `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/`.
+    /// CHANNEL_VERSION 11 wire addition.
+    SetMergePolicy {
+        seq: u64,
+        policy: u8,
+    },
+    /// ⚔️ Resolves one open `Conflict` (`0`=`Accept`, `1`=`Discard`) — see contract-freeze.md §C5/C6.
+    /// CHANNEL_VERSION 11 wire addition.
+    ResolveConflict {
+        seq: u64,
+        conflict_id: String,
+        resolution: u8,
+    },
+    /// ⚔️ Reads every open `Conflict` for the current artifact. CHANNEL_VERSION 11 wire addition.
+    ReadConflicts {
+        seq: u64,
+    },
 }
 //#endregion 🔖️AppCommand
 
@@ -232,7 +251,9 @@ pub enum AppCommand {
 pub enum AppFrame {
     Welcome { channel_version: u32, instance: u32, manifest: Vec<u8> },
     Done { in_reply_to: u64 },
-    Invocation { in_reply_to: u64, output: Vec<u8>, diagnostics: Vec<u8>, ui_scope: Vec<u8>, history_patch: Vec<u8> },
+    /// 🧾 `messages` (CHANNEL_VERSION 11 trailing addition) is one packed `DispatchReport` for this
+    /// dispatch — see contract-freeze.md §C8.
+    Invocation { in_reply_to: u64, output: Vec<u8>, diagnostics: Vec<u8>, ui_scope: Vec<u8>, history_patch: Vec<u8>, messages: Vec<u8> },
     UiSection { in_reply_to: Option<u64>, kind: u8, key: String, hash: u64, body: Option<Vec<u8>> },
     Effects { in_reply_to: Option<u64>, effects: Vec<Vec<u8>> },
     Events { in_reply_to: Option<u64>, events: Vec<Vec<u8>> },
@@ -243,7 +264,10 @@ pub enum AppFrame {
     ContextMenu { in_reply_to: u64, items: Vec<u8> },
     Media { in_reply_to: u64, port: String, descriptor: Vec<u8>, data: Vec<u8> },
     MediaFingerprint { in_reply_to: u64, port: String, fingerprint: Vec<u8> },
-    Error { in_reply_to: Option<u64>, fault: Vec<u8> },
+    /// 🧾 `report` (CHANNEL_VERSION 11 trailing addition) is one packed `DispatchReport` of the
+    /// rejected dispatch, accompanying a `Fault.code == "mutation.rejected"` — see
+    /// contract-freeze.md §C8/C9.
+    Error { in_reply_to: Option<u64>, fault: Vec<u8>, report: Vec<u8> },
     /// 📤️ Guest Emit bytes for host-applied store authority (document/config/draft op packs).
     Emit {
         in_reply_to: u64,
@@ -303,6 +327,18 @@ pub enum AppFrame {
     /// ↩️ A member rolled back its not-yet-committed transaction. CHANNEL_VERSION 9 wire addition.
     TransactionRolledBack {
         txn_id: String,
+    },
+    /// ⚔️ Pushed unsolicited (next to `DocumentChanged`) after every ingest: one packed `MergeReport`
+    /// describing how the batch was resolved. CHANNEL_VERSION 11 wire addition.
+    MergeReport {
+        in_reply_to: Option<u64>,
+        report: Vec<u8>,
+    },
+    /// ⚔️ Pushed unsolicited (next to `DocumentChanged`) after every ingest, and the reply to
+    /// `AppCommand::ReadConflicts`: one packed `Vec<Conflict>`. CHANNEL_VERSION 11 wire addition.
+    Conflicts {
+        in_reply_to: Option<u64>,
+        conflicts: Vec<u8>,
     },
 }
 //#endregion 🔖️AppFrame
@@ -574,6 +610,21 @@ pub fn encode_app_command(command: &AppCommand) -> Vec<u8> {
             crate::os_spr::write_str(&mut out, subset);
             out.push(*role);
         }
+        AppCommand::SetMergePolicy { seq, policy } => {
+            out.push(30);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            out.push(*policy);
+        }
+        AppCommand::ResolveConflict { seq, conflict_id, resolution } => {
+            out.push(31);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, conflict_id);
+            out.push(*resolution);
+        }
+        AppCommand::ReadConflicts { seq } => {
+            out.push(32);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+        }
     }
     out
 }
@@ -687,6 +738,18 @@ pub fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate::os_spr::Pro
             let role = *bytes.get(pos).ok_or_else(|| malformed("channel app-command ClearDefaultApp.role", pos as u64, "truncated"))?;
             AppCommand::ClearDefaultApp { seq, artifact_kind, standard, subset, role }
         }
+        30 => {
+            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let policy = *bytes.get(pos).ok_or_else(|| malformed("channel app-command SetMergePolicy.policy", pos as u64, "truncated"))?;
+            AppCommand::SetMergePolicy { seq, policy }
+        }
+        31 => {
+            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let conflict_id = crate::os_spr::read_str(bytes, &mut pos)?;
+            let resolution = *bytes.get(pos).ok_or_else(|| malformed("channel app-command ResolveConflict.resolution", pos as u64, "truncated"))?;
+            AppCommand::ResolveConflict { seq, conflict_id, resolution }
+        }
+        32 => AppCommand::ReadConflicts { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(command)
@@ -706,13 +769,14 @@ pub fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             out.push(1);
             crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
         }
-        AppFrame::Invocation { in_reply_to, output, diagnostics, ui_scope, history_patch } => {
+        AppFrame::Invocation { in_reply_to, output, diagnostics, ui_scope, history_patch, messages } => {
             out.push(2);
             crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
             crate::os_spr::write_bytes(&mut out, output);
             crate::os_spr::write_bytes(&mut out, diagnostics);
             crate::os_spr::write_bytes(&mut out, ui_scope);
             crate::os_spr::write_bytes(&mut out, history_patch);
+            crate::os_spr::write_bytes(&mut out, messages);
         }
         AppFrame::UiSection { in_reply_to, kind, key, hash, body } => {
             out.push(3);
@@ -774,10 +838,11 @@ pub fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             crate::os_spr::write_str(&mut out, port);
             crate::os_spr::write_bytes(&mut out, fingerprint);
         }
-        AppFrame::Error { in_reply_to, fault } => {
+        AppFrame::Error { in_reply_to, fault, report } => {
             out.push(13);
             write_opt_u64(&mut out, in_reply_to);
             crate::os_spr::write_bytes(&mut out, fault);
+            crate::os_spr::write_bytes(&mut out, report);
         }
         AppFrame::Emit { in_reply_to, document_ops, config_ops, draft_ops, output, diagnostics } => {
             out.push(14);
@@ -835,6 +900,16 @@ pub fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             out.push(22);
             crate::os_spr::write_str(&mut out, txn_id);
         }
+        AppFrame::MergeReport { in_reply_to, report } => {
+            out.push(23);
+            write_opt_u64(&mut out, in_reply_to);
+            crate::os_spr::write_bytes(&mut out, report);
+        }
+        AppFrame::Conflicts { in_reply_to, conflicts } => {
+            out.push(24);
+            write_opt_u64(&mut out, in_reply_to);
+            crate::os_spr::write_bytes(&mut out, conflicts);
+        }
     }
     out
 }
@@ -846,7 +921,14 @@ pub fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::Protoco
     let frame = match tag {
         0 => AppFrame::Welcome { channel_version: crate::os_spr::read_varint_u64(bytes, &mut pos)? as u32, instance: crate::os_spr::read_varint_u64(bytes, &mut pos)? as u32, manifest: crate::os_spr::read_bytes(bytes, &mut pos)? },
         1 => AppFrame::Done { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
-        2 => AppFrame::Invocation { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, output: crate::os_spr::read_bytes(bytes, &mut pos)?, diagnostics: crate::os_spr::read_bytes(bytes, &mut pos)?, ui_scope: crate::os_spr::read_bytes(bytes, &mut pos)?, history_patch: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        2 => AppFrame::Invocation {
+            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            output: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            diagnostics: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            ui_scope: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            history_patch: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            messages: crate::os_spr::read_bytes(bytes, &mut pos)?,
+        },
         3 => {
             let in_reply_to = read_opt_u64(bytes, &mut pos)?;
             let kind = *bytes.get(pos).ok_or_else(|| malformed("channel ui-section kind", pos as u64, "truncated"))?;
@@ -867,7 +949,7 @@ pub fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::Protoco
             AppFrame::Media { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)?, descriptor: crate::os_spr::read_bytes(bytes, &mut pos)?, data: crate::os_spr::read_bytes(bytes, &mut pos)? }
         }
         12 => AppFrame::MediaFingerprint { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)?, fingerprint: crate::os_spr::read_bytes(bytes, &mut pos)? },
-        13 => AppFrame::Error { in_reply_to: read_opt_u64(bytes, &mut pos)?, fault: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        13 => AppFrame::Error { in_reply_to: read_opt_u64(bytes, &mut pos)?, fault: crate::os_spr::read_bytes(bytes, &mut pos)?, report: crate::os_spr::read_bytes(bytes, &mut pos)? },
         14 => AppFrame::Emit {
             in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
             document_ops: crate::os_spr::read_bytes(bytes, &mut pos)?,
@@ -904,6 +986,8 @@ pub fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::Protoco
         },
         21 => AppFrame::TransactionCommitted { txn_id: crate::os_spr::read_str(bytes, &mut pos)?, edit_id: crate::os_spr::read_str(bytes, &mut pos)? },
         22 => AppFrame::TransactionRolledBack { txn_id: crate::os_spr::read_str(bytes, &mut pos)? },
+        23 => AppFrame::MergeReport { in_reply_to: read_opt_u64(bytes, &mut pos)?, report: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        24 => AppFrame::Conflicts { in_reply_to: read_opt_u64(bytes, &mut pos)?, conflicts: crate::os_spr::read_bytes(bytes, &mut pos)? },
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(frame)
@@ -1113,6 +1197,25 @@ mod tests {
         assert_command_round_trips(&AppCommand::ClearDefaultApp { seq: 4, artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string(), role: 0 });
     }
     //#endregion 🔖️Opening
+
+    //#region 🔖️Merge
+    #[test]
+    fn app_command_set_merge_policy_round_trips() {
+        assert_command_round_trips(&AppCommand::SetMergePolicy { seq: 5, policy: 0 });
+        assert_command_round_trips(&AppCommand::SetMergePolicy { seq: 6, policy: 2 });
+    }
+
+    #[test]
+    fn app_command_resolve_conflict_round_trips() {
+        assert_command_round_trips(&AppCommand::ResolveConflict { seq: 7, conflict_id: "c-1".to_string(), resolution: 0 });
+        assert_command_round_trips(&AppCommand::ResolveConflict { seq: 8, conflict_id: "c-1".to_string(), resolution: 1 });
+    }
+
+    #[test]
+    fn app_command_read_conflicts_round_trips() {
+        assert_command_round_trips(&AppCommand::ReadConflicts { seq: 9 });
+    }
+    //#endregion 🔖️Merge
     //#endregion 🔖️AppCommand
 
     //#region 🔖️AppFrame
@@ -1134,7 +1237,8 @@ mod tests {
 
     #[test]
     fn app_frame_invocation_round_trips() {
-        assert_frame_round_trips(&AppFrame::Invocation { in_reply_to: 2, output: vec![1], diagnostics: vec![2], ui_scope: vec![3], history_patch: vec![4] });
+        assert_frame_round_trips(&AppFrame::Invocation { in_reply_to: 2, output: vec![1], diagnostics: vec![2], ui_scope: vec![3], history_patch: vec![4], messages: vec![5] });
+        assert_frame_round_trips(&AppFrame::Invocation { in_reply_to: 2, output: vec![1], diagnostics: vec![2], ui_scope: vec![3], history_patch: vec![4], messages: Vec::new() });
     }
 
     #[test]
@@ -1190,8 +1294,8 @@ mod tests {
 
     #[test]
     fn app_frame_error_round_trips() {
-        assert_frame_round_trips(&AppFrame::Error { in_reply_to: Some(9), fault: b"rejected:bad command".to_vec() });
-        assert_frame_round_trips(&AppFrame::Error { in_reply_to: None, fault: b"rejected:bad command".to_vec() });
+        assert_frame_round_trips(&AppFrame::Error { in_reply_to: Some(9), fault: b"rejected:bad command".to_vec(), report: vec![1, 2] });
+        assert_frame_round_trips(&AppFrame::Error { in_reply_to: None, fault: b"rejected:bad command".to_vec(), report: Vec::new() });
     }
 
     #[test]
@@ -1262,6 +1366,20 @@ mod tests {
         assert_frame_round_trips(&AppFrame::TransactionRolledBack { txn_id: "t".to_string() });
     }
     //#endregion 🔖️Transaction
+
+    //#region 🔖️Merge
+    #[test]
+    fn app_frame_merge_report_round_trips() {
+        assert_frame_round_trips(&AppFrame::MergeReport { in_reply_to: Some(1), report: vec![1, 2, 3] });
+        assert_frame_round_trips(&AppFrame::MergeReport { in_reply_to: None, report: Vec::new() });
+    }
+
+    #[test]
+    fn app_frame_conflicts_round_trips() {
+        assert_frame_round_trips(&AppFrame::Conflicts { in_reply_to: Some(2), conflicts: vec![4, 5] });
+        assert_frame_round_trips(&AppFrame::Conflicts { in_reply_to: None, conflicts: Vec::new() });
+    }
+    //#endregion 🔖️Merge
     //#endregion 🔖️AppFrame
 
     //#region 🔖️SectionProbe
@@ -1283,7 +1401,7 @@ mod tests {
         let command = AppCommand::RefreshUi { seq: 1, sections: vec![SectionProbe { kind: 1, key: "a".to_string(), hash: Some(1) }], view_state: vec![] };
         assert_eq!(encode_app_command(&command), encode_app_command(&command));
 
-        let frame = AppFrame::Error { in_reply_to: Some(1), fault: b"e:m".to_vec() };
+        let frame = AppFrame::Error { in_reply_to: Some(1), fault: b"e:m".to_vec(), report: vec![9] };
         assert_eq!(encode_app_frame(&frame), encode_app_frame(&frame));
     }
 
@@ -1320,7 +1438,7 @@ mod tests {
 
     #[test]
     fn decode_app_frame_rejects_truncated_field() {
-        let bytes = encode_app_frame(&AppFrame::Error { in_reply_to: Some(1), fault: b"e:message".to_vec() });
+        let bytes = encode_app_frame(&AppFrame::Error { in_reply_to: Some(1), fault: b"e:message".to_vec(), report: Vec::new() });
         let truncated = &bytes[..bytes.len() - 2];
         assert!(decode_app_frame(truncated).is_err());
     }
@@ -1413,6 +1531,9 @@ mod tests {
             ("OpenArtifactExplicit", AppCommand::OpenArtifact { seq: 2, artifact_ref: "s.cad.cad@1/*#editor".to_string(), role: 1, plugin_id: "cad".to_string(), app_id: "s.cad.cad@1/*#editor".to_string() }),
             ("SetDefaultApp", AppCommand::SetDefaultApp { seq: 3, artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string(), role: 1, plugin_id: "cad".to_string(), app_id: "s.cad.cad@1/*#editor".to_string() }),
             ("ClearDefaultApp", AppCommand::ClearDefaultApp { seq: 4, artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string(), role: 0 }),
+            ("SetMergePolicy", AppCommand::SetMergePolicy { seq: 5, policy: 1 }),
+            ("ResolveConflict", AppCommand::ResolveConflict { seq: 6, conflict_id: "conflict-1".to_string(), resolution: 0 }),
+            ("ReadConflicts", AppCommand::ReadConflicts { seq: 7 }),
         ]
     }
 
@@ -1422,7 +1543,7 @@ mod tests {
             // 📌️ Literal version — see the sibling note on `AppCommand::Hello`'s corpus entry.
             ("Welcome", AppFrame::Welcome { channel_version: 1, instance: 1, manifest: vec![1] }),
             ("Done", AppFrame::Done { in_reply_to: 1 }),
-            ("Invocation", AppFrame::Invocation { in_reply_to: 1, output: vec![1], diagnostics: vec![], ui_scope: vec![], history_patch: vec![] }),
+            ("Invocation", AppFrame::Invocation { in_reply_to: 1, output: vec![1], diagnostics: vec![], ui_scope: vec![], history_patch: vec![], messages: vec![9] }),
             ("UiSection", AppFrame::UiSection { in_reply_to: Some(1), kind: 1, key: "k".to_string(), hash: 1, body: None }),
             ("Effects", AppFrame::Effects { in_reply_to: None, effects: vec![vec![1]] }),
             ("Events", AppFrame::Events { in_reply_to: None, events: vec![] }),
@@ -1433,7 +1554,7 @@ mod tests {
             ("ContextMenu", AppFrame::ContextMenu { in_reply_to: 1, items: vec![1] }),
             ("Media", AppFrame::Media { in_reply_to: 1, port: "p".to_string(), descriptor: vec![1], data: vec![2] }),
             ("MediaFingerprint", AppFrame::MediaFingerprint { in_reply_to: 1, port: "p".to_string(), fingerprint: vec![1] }),
-            ("Error", AppFrame::Error { in_reply_to: None, fault: vec![99] }),
+            ("Error", AppFrame::Error { in_reply_to: None, fault: vec![99], report: vec![7] }),
             ("Emit", AppFrame::Emit {
                 in_reply_to: 1,
                 document_ops: vec![1],
@@ -1457,6 +1578,8 @@ mod tests {
             ("TransactionPrepared", AppFrame::TransactionPrepared { txn_id: "t".to_string(), foreign: vec![vec![1]], rejection: Vec::new() }),
             ("TransactionCommitted", AppFrame::TransactionCommitted { txn_id: "t".to_string(), edit_id: "e".to_string() }),
             ("TransactionRolledBack", AppFrame::TransactionRolledBack { txn_id: "t".to_string() }),
+            ("MergeReport", AppFrame::MergeReport { in_reply_to: Some(1), report: vec![1] }),
+            ("Conflicts", AppFrame::Conflicts { in_reply_to: None, conflicts: vec![2] }),
         ]
     }
 
@@ -1498,6 +1621,9 @@ mod tests {
             "OpenArtifactExplicit" => "1b0214732e6361642e63616440312f2a23656469746f72010363616414732e6361642e63616440312f2a23656469746f72",
             "SetDefaultApp" => "1c0309732e6361642e6361640131012a010363616414732e6361642e63616440312f2a23656469746f72",
             "ClearDefaultApp" => "1d0409732e6361642e6361640131012a00",
+            "SetMergePolicy" => "1e0501",
+            "ResolveConflict" => "1f060a636f6e666c6963742d3100",
+            "ReadConflicts" => "2007",
             other => panic!("channel_command_fixture_hex: no golden hex registered for label {other:?}"),
         }
     }
@@ -1508,7 +1634,7 @@ mod tests {
         match label {
             "Welcome" => "0001010101",
             "Done" => "0101",
-            "Invocation" => "02010101000000",
+            "Invocation" => "020101010000000109",
             "UiSection" => "03010101016b0100",
             "Effects" => "0400010101",
             "Events" => "050000",
@@ -1519,7 +1645,7 @@ mod tests {
             "ContextMenu" => "0a010101",
             "Media" => "0b01017001010102",
             "MediaFingerprint" => "0c0101700101",
-            "Error" => "0d000163",
+            "Error" => "0d0001630107",
             "Emit" => "0e0101010000010200",
             "Draft" => "0f01010101020164",
             "Children" => "1001010173016301640101",
@@ -1529,6 +1655,8 @@ mod tests {
             "TransactionPrepared" => "14017401010100",
             "TransactionCommitted" => "1501740165",
             "TransactionRolledBack" => "160174",
+            "MergeReport" => "1701010101",
+            "Conflicts" => "18000102",
             other => panic!("channel_frame_fixture_hex: no golden hex registered for label {other:?}"),
         }
     }
@@ -1606,6 +1734,35 @@ mod tests {
             if let Some(expected) = command_vectors.get(label) {
                 let actual = hex_encode(&encode_app_command(&value));
                 assert_eq!(&actual, expected, "AppCommand::{label} drifted from the shared cross-language fixture");
+            }
+        }
+    }
+
+    /// @emoji 🔗️ Cross-language drift guard for the C8 merge-policy/conflict variants (tags 30-32,
+    /// 23-24) plus the extended `Invocation`/`Error` frames: the two JSON files under
+    /// `🧫️fixtures/📡️channel/` are the single source of truth this codec's TS twin
+    /// (`🟦️component.ts`'s `AppChannelCodec` `🧪️Tests` region) loads and asserts against too — see
+    /// contract-freeze.md §C8 of
+    /// `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/`.
+    #[test]
+    fn channel_merge_fixtures_match_shared_cross_language_json_vectors() {
+        let command_json = include_str!("../../../🧫️fixtures/📡️channel/app-command-merge.json");
+        let frame_json = include_str!("../../../🧫️fixtures/📡️channel/app-frame-merge.json");
+        let command_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(command_json).expect("app-command-merge.json must parse");
+        let frame_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(frame_json).expect("app-frame-merge.json must parse");
+        assert_eq!(command_vectors.len(), 3, "app-command-merge.json vector count changed");
+        assert_eq!(frame_vectors.len(), 4, "app-frame-merge.json vector count changed");
+
+        for (label, value) in channel_command_fixture_corpus() {
+            if let Some(expected) = command_vectors.get(label) {
+                let actual = hex_encode(&encode_app_command(&value));
+                assert_eq!(&actual, expected, "AppCommand::{label} drifted from the shared cross-language fixture");
+            }
+        }
+        for (label, value) in channel_frame_fixture_corpus() {
+            if let Some(expected) = frame_vectors.get(label) {
+                let actual = hex_encode(&encode_app_frame(&value));
+                assert_eq!(&actual, expected, "AppFrame::{label} drifted from the shared cross-language fixture");
             }
         }
     }

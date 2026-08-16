@@ -145,7 +145,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<SequenceSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
-            let d = <SequenceMutation as protocol::Mutation<SequenceSnapshot>>::diff(&mutation, &self.snapshot);
+            let d = <SequenceMutation as protocol::Mutation<SequenceSnapshot>>::diff(&mutation, &self.snapshot).into_parts().0;
             self.snapshot = protocol::MutationDiff::apply(&d, &self.snapshot);
             (self, d)
         }

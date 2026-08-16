@@ -6,7 +6,11 @@ use crate::artifacts::program::diff::ProgramSiteContextDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🌱️ `added = [payload row]` — the row lands at the end of `program.site_context` on apply.
-pub fn diff(payload: &CreateSiteContext, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { site_context: Some(ProgramSiteContextDelta { added: vec![payload.site_context.clone()], ..Default::default() }), ..Default::default() }
+/// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
+pub fn diff(payload: &CreateSiteContext, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let id = payload.site_context.header.id.clone();
+    if base.site_context.iter().any(|row| row.header.id == id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A site context already exists with this id.", [id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { site_context: Some(ProgramSiteContextDelta { added: vec![payload.site_context.clone()], ..Default::default() }), ..Default::default() })
 }

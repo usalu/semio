@@ -6,7 +6,11 @@ use crate::artifacts::program::diff::ProgramQualityDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
-/// 🌱️ `added = [payload row]` — the row lands at the end of `program.quality` on apply.
-pub fn diff(payload: &CreateQualityRecord, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { quality: Some(ProgramQualityDelta { added: vec![payload.quality_record.clone()], ..Default::default() }), ..Default::default() }
+/// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
+pub fn diff(payload: &CreateQualityRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    let id = payload.quality_record.header.id.clone();
+    if base.quality.iter().any(|row| row.header.id == id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A quality record already exists with this id.", [id.0.clone()]);
+    }
+    protocol::MutationOutcome::new(ProgramDiff { quality: Some(ProgramQualityDelta { added: vec![payload.quality_record.clone()], ..Default::default() }), ..Default::default() })
 }

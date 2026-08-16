@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.gltf.mutation;
+message GltfReorderBufferViewsPayloadV1 { repeated uint32 order = 1; }
+message GltfReorderBufferViewsMutationV1 { string id = 1; uint32 version = 2; repeated string touched_paths = 3; GltfReorderBufferViewsPayloadV1 payload = 4; }

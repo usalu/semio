@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.unbind-node-mesh.v1.mutation",
+  "title": "GltfUnbindNodeMeshMutation",
+  "type": "object",
+  "properties": {
+    "node": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "node"
+  ],
+  "additionalProperties": false,
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.unbind-node-mesh.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "unbind",
+    "touchedPaths": [
+      "document/nodes/*/mesh"
+    ],
+    "referencePolicy": "clears only the optional node mesh reference"
+  }
+}

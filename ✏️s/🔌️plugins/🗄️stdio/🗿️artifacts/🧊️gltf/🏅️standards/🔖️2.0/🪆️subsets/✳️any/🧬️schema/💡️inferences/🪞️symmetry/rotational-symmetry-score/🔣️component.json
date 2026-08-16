@@ -6,8 +6,7 @@
       "algorithmVersion": 1,
       "cacheKey": "s.stdio.gltf.inference.rotational-symmetry-score.v1:geometry-v2",
       "inputs": ["schema/snapshot", "buffers"],
-      "target": "geometricAnalysis.overall.rotational-symmetry-score"
+      "target": "geometry.overall.symmetry.rotationalSymmetryScore"
     }
   }
 }
-

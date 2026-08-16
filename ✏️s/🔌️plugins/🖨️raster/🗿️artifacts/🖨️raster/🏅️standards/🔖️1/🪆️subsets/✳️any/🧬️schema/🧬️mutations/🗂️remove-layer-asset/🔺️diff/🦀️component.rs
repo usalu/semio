@@ -5,7 +5,10 @@ use crate::artifacts::raster::mutations::remove_layer_asset::mutation::RemoveLay
 use crate::artifacts::raster::RasterSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &RemoveLayerAsset, _base: &RasterSnapshot) -> RasterDiff {
-    diff_remove_asset(&payload.asset_id)
+pub fn diff(payload: &RemoveLayerAsset, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+    if !base.assets.contains_key(&payload.asset_id) {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Asset \"{}\" does not exist.", payload.asset_id), [payload.asset_id.clone()]);
+    }
+    protocol::MutationOutcome::new(diff_remove_asset(&payload.asset_id))
 }
 //#endregion 🔖️Diff

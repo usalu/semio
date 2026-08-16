@@ -18,7 +18,7 @@ pub struct DeleteBenchmarkRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteBenchmarkRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "benchmark-record", kind: "delete-benchmark-record", record: "DeletedBenchmarkRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

@@ -19,7 +19,7 @@ pub struct ReplaceWayfindingRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceWayfindingRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "wayfinding-requirement", kind: "replace-wayfinding-requirement", record: "ReplacedWayfindingRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

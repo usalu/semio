@@ -29,7 +29,8 @@
 
 /// @emoji ✉️ A causally-ordered operation crossing the wire: identity, actor, dependency set, the
 /// forward diff, its precomputed inverse, and the HLC tick it was authored at.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MutationEnvelope {
     pub mutation_id: crate::os_spr::ids::MutationId,
     pub document_id: crate::os_spr::ids::ArtifactId,
@@ -457,8 +458,8 @@ mod tests {
     }
     impl crate::os_spr::command::Mutation<i64> for CausalAddOp {
         type Diff = CausalAddDiff;
-        fn diff(&self, _base: &i64) -> CausalAddDiff {
-            CausalAddDiff { delta: self.delta }
+        fn diff(&self, _base: &i64) -> crate::os_spr::command::MutationOutcome<CausalAddDiff> {
+            crate::os_spr::command::MutationOutcome::new(CausalAddDiff { delta: self.delta })
         }
         fn inverse(&self, _base: &i64) -> Vec<Self> {
             vec![CausalAddOp { delta: -self.delta }]

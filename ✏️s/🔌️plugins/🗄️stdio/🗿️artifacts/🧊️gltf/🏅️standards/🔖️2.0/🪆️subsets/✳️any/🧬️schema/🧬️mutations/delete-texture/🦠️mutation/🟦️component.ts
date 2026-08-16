@@ -1,0 +1,7 @@
+/** 🦠️ delete-texture executable structural glTF command. */
+import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔒️top-level-collections-private/🟦️component.ts';
+export const GltfDeleteTextureDescriptor = { id: 's.stdio.gltf.mutation.delete-texture.v1', version: 1, touchedPathPattern: 'document/textures', referencePolicy: 'all typed texture references are remapped, repaired, or rejected' } as const;
+export interface GltfDeleteTexturePayload { index: number }
+export const validateGltfDeleteTexture = (payload: GltfDeleteTexturePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.textures.length, 'document/textures'); if (index) return index;  return undefined; };
+export const applyGltfDeleteTexture = (base: GltfSnapshot, payload: GltfDeleteTexturePayload): GltfStructuralResult => { const rejection = validateGltfDeleteTexture(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); remove(next, 'textures', payload.index); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/textures', String(error)) }; } };

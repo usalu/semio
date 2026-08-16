@@ -514,11 +514,11 @@ pub mod wire {
         #[test]
         fn dag_from_wire_literal_rejects_unexpected_char() {
             // 🩹️ `#` is now a legitimate comment starter (unified with the rest of the DSL engine),
-            // so the "genuinely unrecognized character" trigger moved to `$`, which is outside
+            // so the "genuinely unrecognized character" trigger moved to `?`, which is outside
             // `dsl_core`'s alphabet in every mode.
-            let err = dag_from_wire_literal("n:kind$bad").unwrap_err();
+            let err = dag_from_wire_literal("n:kind?bad").unwrap_err();
             assert!(matches!(err, GraphDslError::Lex(_)));
-            assert!(err.to_string().contains("unexpected character '$'"), "got: {err}");
+            assert!(err.to_string().contains("unexpected character '?'"), "got: {err}");
         }
 
         #[test]
@@ -1223,7 +1223,7 @@ pub enum DiagnosticSeverity {
     Error,
     Warning,
     Information,
-    Hint,
+    Info,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2595,11 +2595,11 @@ mod tests {
 
     #[test]
     fn parse_error_on_char_outside_dsl_core_alphabet_reports_lex_error() {
-        // `$` isn't lexable by `dsl_core` at all (unlike `{`/`}` above, which lex fine but aren't
+        // `?` isn't lexable by `dsl_core` at all (unlike `{`/`}` above, which lex fine but aren't
         // valid Jack syntax) — `os_dsl::lex` itself fails, surfaced verbatim as `Lex`.
-        let err = parse("MATCH (a:x) $ WHERE").unwrap_err();
+        let err = parse("MATCH (a:x) ? WHERE").unwrap_err();
         assert!(matches!(err, GraphDslError::Lex(_)));
-        assert!(err.to_string().contains("unexpected character '$'"), "got: {err}");
+        assert!(err.to_string().contains("unexpected character '?'"), "got: {err}");
     }
 
     #[test]

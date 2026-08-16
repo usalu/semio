@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.create-sampler.v1.inverse",
+  "title": "GltfCreateSamplerInverseV1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "const": "s.stdio.gltf.mutation.create-sampler.v1.inverse"
+    },
+    "version": {
+      "const": 1
+    },
+    "touchedPaths": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^document/samplers/[0-9]+$"
+      }
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "position": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "position"
+      ]
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "insert"
+        },
+        "position": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "item": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "magFilter": {
+              "type": "integer"
+            },
+            "minFilter": {
+              "type": "integer"
+            },
+            "wrapS": {
+              "type": "integer"
+            },
+            "wrapT": {
+              "type": "integer"
+            },
+            "name": {
+              "type": "string"
+            },
+            "extensions": {},
+            "extras": {}
+          },
+          "required": [
+            "wrapS",
+            "wrapT"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "position",
+        "item"
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "touchedPaths",
+    "payload",
+    "operation"
+  ],
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.create-sampler.v1.inverse",
+    "version": 1,
+    "phase": "inverse",
+    "touchedPathPattern": "document/samplers",
+    "referencePolicy": "typed references remap, repair, or reject"
+  }
+}

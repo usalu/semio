@@ -126,9 +126,14 @@ pub enum CadPresenceMutation {
 impl Mutation<CadPresence> for CadPresenceMutation {
     type Diff = CadPresence;
 
-    fn diff(&self, _base: &CadPresence) -> CadPresence {
+    fn diff(&self, base: &CadPresence) -> protocol::MutationOutcome<CadPresence> {
         match self {
-            Self::Snapshot { presence } => presence.clone(),
+            Self::Snapshot { presence } => {
+                if presence == base {
+                    return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "Presence snapshot is already up to date.");
+                }
+                protocol::MutationOutcome::new(presence.clone())
+            }
         }
     }
 

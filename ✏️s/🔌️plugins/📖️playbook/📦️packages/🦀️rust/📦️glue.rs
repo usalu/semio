@@ -361,59 +361,59 @@ pub mod artifacts {
 
 //#endregion 🗿️Artifacts
 
-//#region 🎛️Apps
+//#region ✏️Editor
 #[path = "."]
-pub mod apps {
+pub mod editor {
     #[path = "."]
     pub mod playbook {
-        #[path = "../../🎛️apps/📖️playbook/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
-        #[path = "../../🎛️apps/📖️playbook/⚙️engine/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🦀️component.rs"]
         pub mod engine;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/📖️playbook/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/📖️playbook/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/📖️playbook/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/📖️playbook/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
-        #[path = "../../🎛️apps/📖️playbook/🗣️terminology/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🪜️add-step/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪜️add-step/🦀️component.rs"]
             pub mod add_step;
-            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🪜️remove-step/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪜️remove-step/🦀️component.rs"]
             pub mod remove_step;
-            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🪜️move-step/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪜️move-step/🦀️component.rs"]
             pub mod move_step;
-            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🪜️update-playbook/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪜️update-playbook/🦀️component.rs"]
             pub mod update_playbook;
-            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🧱️add-block/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-block/🦀️component.rs"]
             pub mod add_block;
-            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🧱️remove-block/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️remove-block/🦀️component.rs"]
             pub mod remove_block;
-            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🧱️move-block/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️move-block/🦀️component.rs"]
             pub mod move_block;
-            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
-            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🧩️set-contributions/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️component.rs"]
             pub mod set_contributions;
         }
 
@@ -421,7 +421,7 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod builder {
-                #[path = "../../🎛️apps/📖️playbook/🎭️modes/🏗️builder/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🏗️builder/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
@@ -429,7 +429,7 @@ pub mod apps {
                 pub mod windows {
                     #[path = "."]
                     pub mod builder {
-                        #[path = "../../🎛️apps/📖️playbook/🎭️modes/🏗️builder/🪟️windows/🏗️builder/🦀️component.rs"]
+                        #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🏗️builder/🪟️windows/🏗️builder/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -438,7 +438,39 @@ pub mod apps {
         }
     }
 }
-//#endregion 🎛️Apps
+//#endregion ✏️Editor
+
+//#region 👁️Viewer
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod playbook {
+        #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod steps {
+                        #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌳️steps/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+//#endregion 👁️Viewer
 
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
@@ -453,7 +485,7 @@ pub mod examples {
     #[cfg(test)]
     #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_playbook_demo_tests;
-    #[path = "../../🎛️apps/📖️playbook/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_playbook_demo_session;
 }
 //#endregion 📚️Examples

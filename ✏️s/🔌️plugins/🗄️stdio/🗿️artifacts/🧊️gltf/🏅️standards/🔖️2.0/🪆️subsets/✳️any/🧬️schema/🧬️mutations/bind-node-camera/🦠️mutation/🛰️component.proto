@@ -1,0 +1,8 @@
+// bind-node-camera mutation facet.
+syntax = "proto3";
+package stdio.gltf.mutation;
+message GltfBindNodeCameraPayloadV1 {
+  uint32 node = 1;
+  uint32 camera = 2;
+}
+message GltfBindNodeCameraMutationV1 { string id = 1; uint32 version = 2; bool accepted = 3; repeated string touched_paths = 4; string rejection_code = 5; }

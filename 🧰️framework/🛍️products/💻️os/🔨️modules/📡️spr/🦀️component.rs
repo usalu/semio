@@ -1,7 +1,10 @@
 //! 🎞️ Protocol facade: the single public entry point to the whole `protocol_*` crate family — the
 //! binary op-log format layer (`protocol_core/format/history/materialize/io`) plus the command and
 //! collaboration semantics layer added by the `INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING`
-//! amendment (`protocol_command/causal/crdt/wire`). Every downstream crate (`db`, `vcs`, app-layer
+//! amendment (`protocol_command/causal/conflict/wire`) — `protocol_crdt` was deleted in favor of
+//! `protocol_conflict`'s first-class quarantine/degrade model
+//! (`.🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`).
+//! Every downstream crate (`db`, `vcs`, app-layer
 //! `#[derive(crate::os_dsl::DslOps)]` consumers) depends on `protocol`, never on the individual sub-crates
 //! directly, so this file's re-export surface IS the family's frozen public API. Frozen contracts:
 //! `.🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol (facade)` +
@@ -24,14 +27,14 @@ pub use crate::os_spr::causal::{
 };
 pub use crate::os_spr::channel::{decode_app_command, decode_app_frame, encode_app_command, encode_app_frame, AppCommand, AppFrame, ChildPackEntry, SectionProbe, CHANNEL_VERSION};
 pub use crate::os_spr::command::{
-    apply_collection_mutation, collection_diff_from_mutation, indexed_apply, inverse_collection_mutation, is_approved_verb, mutation_descriptor, named_apply, register_mutation_descriptor, str_eq, CollectionDiff, CollectionMutation, CommandOutcome, DiffAlgebra,
-    DiffCodec, Edit, Identified, IndexedTripleDiff, ItemPatch, MutationKind, NamedTripleDiff, OpBinary, OpText, Mutation, MutationDescriptor, MutationDiff, MutationEvent, MutationMeta, MutationUpcaster, Patchable, ReconcileReport, ReconcileSeverity,
+    apply_collection_mutation, collection_diff_from_mutation, indexed_apply, inverse_collection_mutation, is_approved_verb, mutation_descriptor, named_apply, register_mutation_descriptor, str_eq, worst_level, CollectionDiff, CollectionMutation, CommandOutcome, DiffAlgebra,
+    DiffCodec, Edit, Identified, IndexedTripleDiff, ItemPatch, MutationKind, NamedTripleDiff, OpBinary, OpText, Mutation, MutationDescriptor, MutationDiff, MutationEvent, MutationMeta, MutationMessage, MutationOutcome, MutationUpcaster, Patchable,
     SemanticDescriptor, SemanticMutation, APPROVED_VERBS,
     DiffRegions, Inference, InferenceFieldSpec, InferenceSpec, TouchedPaths,
     fold_plan_diff, fold_plan_inverse, plan_foreign_steps, plan_of, CompositeMutationKind, ForeignStep, ForeignTarget, MutationOrigin, PlanError, PlanStep, Planner, MAX_PLAN_DEPTH,
 };
-pub use crate::os_spr::wire::{ActorId, ConflictRule, ArtifactId, ArtifactVersion, HybridLogicalTimestamp, MergeStrategyKind, MutationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64};
-pub use crate::os_spr::crdt::merge_concurrent_diffs;
+pub use crate::os_spr::wire::{ActorId, ArtifactId, ArtifactVersion, HybridLogicalTimestamp, MergePolicy, MutationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64};
+pub use crate::os_spr::conflict::{Conflict, ConflictId, ConflictKind, ConflictResolution, ConflictStatus, DispatchReport, EditMessages, MergeReport};
 pub use crate::os_spr::wire::{decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame, decode_presence_peer, encode_presence_peer, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresencePoint, PresenceViewport, ServerFrame};
 //#endregion 🔖️Reexports
 
@@ -242,6 +245,7 @@ mod tests {
             // it byte-for-byte, same as every other structural line.
             cursor: Some(HistoryCursor { applied_edit_ids: vec!["e0".to_string()], redo_edit_ids: Vec::new(), checkpoint_id: None }),
             composition: None,
+            conflicts: Vec::new(),
         };
         let ops_text = crate::os_spr::history::print_ops_text(&log).unwrap();
 

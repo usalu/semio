@@ -1,0 +1,12 @@
+# reorder-materials typed diff facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfMaterialValueV1
+input GltfReorderMaterialsPayloadV1 {
+  order: [Int!]!
+}
+type GltfReorderMaterialsDiffOperationV1 {
+  kind: String!
+  order: [Int!]!
+}
+type GltfReorderMaterialsDiffV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfReorderMaterialsPayloadV1!, operation: GltfReorderMaterialsDiffOperationV1! }

@@ -8,7 +8,8 @@ use serde::{Deserialize, Serialize};
 
 //#region 🧩️CreateBlock
 /// 🧩️ Brings a new [`FormQuestion`] into existence inside `step_id`'s `blocks`, at an optional
-/// FINAL-state `index` (`None` appends). A duplicate `block.id` within that step is a no-op.
+/// FINAL-state `index` (`None` appends). An unknown `step_id` is Fatal `mutation.invariant`; a
+/// duplicate `block.id` within that step is Fatal `mutation.duplicate-id`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CreateBlock {
     pub step_id: String,
@@ -19,7 +20,7 @@ pub struct CreateBlock {
 impl MutationKind<FormsSnapshot, FormMutation> for CreateBlock {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "block", kind: "create-block", record: "CreatedBlock" };
 
-    fn diff(&self, base: &FormsSnapshot) -> FormsDiff {
+    fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff_create_block(self, base)
     }
     fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {

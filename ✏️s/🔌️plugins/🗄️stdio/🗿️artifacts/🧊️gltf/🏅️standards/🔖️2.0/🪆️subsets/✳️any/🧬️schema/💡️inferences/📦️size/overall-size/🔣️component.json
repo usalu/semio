@@ -1,13 +1,1 @@
-{
-  "x-semio": {
-    "id": "s.stdio.gltf.inference.overall-size.v1",
-    "kind": "inference",
-    "inference": {
-      "algorithmVersion": 1,
-      "cacheKey": "s.stdio.gltf.inference.overall-size.v1:geometry-v2",
-      "inputs": ["schema/snapshot", "buffers"],
-      "target": "geometricAnalysis.overall.overall-size"
-    }
-  }
-}
-
+{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"s.stdio.gltf.inference.overall-size.v1","type":"object","required":["value","unit","availability","validity","diagnosticIds","quality","provenance"],"properties":{"value":{"type":["number","null"]},"unit":{"const":"metre"},"availability":{"enum":["available","unavailable"]},"validity":{"type":"string"},"diagnosticIds":{"type":"array","items":{"type":"string"}},"quality":{"type":"object","required":["method","coverage","sampleCount"],"properties":{"method":{"enum":["exact","estimate"]},"coverage":{"type":"number","minimum":0,"maximum":1},"sampleCount":{"type":"integer","minimum":0},"watertight":{"type":"boolean"},"manifold":{"type":"boolean"},"consistentlyOriented":{"type":"boolean"}}},"provenance":{"type":"object","required":["algorithm","algorithmVersion","toleranceFingerprint"],"properties":{"algorithm":{"const":"s.stdio.gltf.geometry"},"algorithmVersion":{"const":2},"toleranceFingerprint":{"type":"string"},"samplingSeed":{"type":["string","null"]}}}},"x-semio":{"id":"s.stdio.gltf.inference.overall-size.v1","kind":"inference","inference":{"algorithmVersion":1,"cacheKey":"s.stdio.gltf.inference.overall-size.v1:geometry-v2","inputs":["schema/snapshot","buffers"],"target":"geometry.overall.size.overallSize"}}}

@@ -113,9 +113,9 @@ pub enum SequencePresenceMutation {
 impl Mutation<SequencePresence> for SequencePresenceMutation {
     type Diff = SequencePresence;
 
-    fn diff(&self, _base: &SequencePresence) -> SequencePresence {
+    fn diff(&self, _base: &SequencePresence) -> protocol::MutationOutcome<SequencePresence> {
         match self {
-            Self::Snapshot { presence } => presence.clone(),
+            Self::Snapshot { presence } => protocol::MutationOutcome::new(presence.clone()),
         }
     }
 

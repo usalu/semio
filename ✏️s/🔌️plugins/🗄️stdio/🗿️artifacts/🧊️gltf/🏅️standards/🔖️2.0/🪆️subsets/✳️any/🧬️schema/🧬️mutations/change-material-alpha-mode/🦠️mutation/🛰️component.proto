@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.gltf.mutation;
+enum GltfChangeMaterialAlphaModeValue { GLTF_CHANGE_MATERIAL_ALPHA_MODE_VALUE_OPAQUE = 0; GLTF_CHANGE_MATERIAL_ALPHA_MODE_VALUE_MASK = 1; GLTF_CHANGE_MATERIAL_ALPHA_MODE_VALUE_BLEND = 2; }
+message GltfChangeMaterialAlphaModeMutationV1 { uint64 material = 1; GltfChangeMaterialAlphaModeValue alpha_mode = 2; }

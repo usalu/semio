@@ -5,7 +5,9 @@
 //! 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1e): an artifact is a `🧬️schema` plus a `🚪️io`
 //! system, never an engine — the old `⚙️engine`'s pure/document-only pieces moved into `🧬️schema`
 //! and `🚪️io` (this file's own `declaration()` and `io_registry` shim below), and its genuinely
-//! stateful `BoardHost` facade moved to `🎛️apps/◻2d/⚙️engine`.
+//! stateful `BoardHost` facade moved to `🎛️apps/◻2d/⚙️engine` (since relocated again, ticket
+//! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET, to `✏️editor/⚙️engine` under this artifact's own
+//! `✏️editor` surface).
 
 pub use crate::artifacts::puzzle2d::schema::diff::Puzzle2dDiff;
 pub use crate::artifacts::puzzle2d::schema::mutations::Puzzle2dMutation;
@@ -375,6 +377,17 @@ pub struct Puzzle2dMeta {
 //#region 🔖️Snapshot
 //#endregion 🔖️Snapshot
 
+//#region 🔖️Dialect
+/// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the one `Dialect` coordinate every
+/// surface (`✏️editor`, `👁️viewer`) of the `✳️any` subset binds `ArtifactEditor::DIALECT`/
+/// `ArtifactViewer::DIALECT` to — `"s.puzzle.puzzle2d"` matches the artifact-kind id this subset's own
+/// capability rows already key off (see `definition()`'s `"s.puzzle2d.schema.artifact"` row above),
+/// standard `"1"` and subset `"*"` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
+/// Lives at the artifact level (not under `editor`/`viewer`) so `policyViewerPurityBreaches` never sees
+/// a viewer file importing through the sibling editor module just to read this constant.
+pub const PUZZLE2D_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.puzzle.puzzle2d", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+//#endregion 🔖️Dialect
+
 //#region 🔖️ArtifactKind
 /// 🗿️ The `2d.puzzle` artifact kind — lifted out of the pre-consolidation manifest builder chain so
 /// the artifact, not the app, owns its own identity.
@@ -404,9 +417,12 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 ///
 /// **W1d update.** `register_app_schemas()` is GONE — it was never a genuine coverage gap, just
 /// category-1 app-scope schema under a different name; `Puzzle2dPlayApp::app_schema()` (see that
-/// impl's own doc) now covers it, declared by `.document_app()` on the plugin root.
+/// impl's own doc) now covers it, declared automatically the moment `Puzzle2dPlayApp` is bound to the
+/// plugin root via `.editor::<crate::editor::puzzle2d::Puzzle2dPlayApp>(…)` (ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: `.document_app()` is retired in favor of the
+/// role-split `.editor()`/`.viewer()` builder methods).
 /// `register_media_io()` (`register_2d_export_handlers`/`register_dwg_import_handler`, now on
-/// `crate::apps::puzzle2d::register_media_io` — ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+/// `crate::editor::puzzle2d::register_media_io` — ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
 /// W1e moved it off the deleted `⚙️engine` to the app that owns its callback bodies) is a genuinely
 /// DIFFERENT case and is still kept on `🧩️puzzle/🦀️component.rs`'s own `.setup()` — it is the OS
 /// media-host registry, an entirely separate 14-function family
@@ -457,7 +473,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::puzzle2d::standards::v1::subsets::any::schema::inferences::puzzle2d_artifact_inference_descriptor()])
         .composers(crate::artifacts::puzzle2d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::puzzle2d::Puzzle2dPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::puzzle2d::Puzzle2dPlayApp>>()
         .try_build()
 }
 

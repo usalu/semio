@@ -1,0 +1,9 @@
+// delete-morph-target mutation facet.
+syntax = "proto3";
+package stdio.gltf.mutation;
+message GltfDeleteMorphTargetPayloadV1 {
+  uint32 mesh = 1;
+  uint32 primitive = 2;
+  uint32 target = 3;
+}
+message GltfDeleteMorphTargetMutationV1 { string id = 1; uint32 version = 2; bool accepted = 3; repeated string touched_paths = 4; string rejection_code = 5; }

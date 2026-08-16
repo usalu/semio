@@ -1,0 +1,14 @@
+# delete-buffer typed inverse facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfBufferValueV1
+input GltfDeleteBufferPayloadV1 {
+  index: Int!
+}
+type GltfDeleteBufferInverseOperationV1 {
+  kind: String!
+  index: Int!
+  removed: GltfBufferValueV1!
+  bytes: [Int!]!
+}
+type GltfDeleteBufferInverseV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfDeleteBufferPayloadV1!, operation: GltfDeleteBufferInverseOperationV1! }

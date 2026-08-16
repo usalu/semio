@@ -24,7 +24,7 @@ pub type Block2dStore = store::ArtifactStore<Block2dSnapshot, Block2dMutation>;
 /// create/delete/rename/change/move, set-like compatibility-rule/attribute/author add/remove, the
 /// board camera's pan/zoom, and the session meta description. The old whole-document-replace and
 /// no-op sentinel variants are gone — whole-document loads (examples, DSL text edit) now decompose
-/// into this vocabulary (see `🎛️apps/◻2d/🎮️commands/🎨️set-active-example/🦀️component.rs`'s
+/// into this vocabulary (see the editor's `🎮️commands/🎨️set-active-example/🦀️component.rs`'s
 /// `replace_document_operations`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
@@ -106,12 +106,12 @@ mod tests {
     use protocol::MutationDiff;
 
     fn round_trip(base: &Block2dSnapshot, mutation: &Block2dMutation) -> Block2dSnapshot {
-        let forward = mutation.diff(base).apply(base);
+        let forward = mutation.diff(base).diff().apply(base);
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(base);
         backward.reverse();
         for undo in &backward {
-            restored = undo.diff(&restored).apply(&restored);
+            restored = undo.diff(&restored).diff().apply(&restored);
         }
         assert_eq!(&restored, base, "inverse must restore the pre-mutation snapshot");
         forward
@@ -247,9 +247,9 @@ mod tests {
     #[test]
     fn change_node_kind_label_diff_absorb_law() {
         let base = empty_block2d_snapshot();
-        let d1 = change_node_kind_label("first".into()).diff(&base);
+        let d1 = change_node_kind_label("first".into()).diff(&base).into_parts().0;
         let mid = d1.apply(&base);
-        let d2 = change_node_kind_label("second".into()).diff(&mid);
+        let d2 = change_node_kind_label("second".into()).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -258,9 +258,9 @@ mod tests {
         let mut base = empty_block2d_snapshot();
         base.handle_kinds.push(crate::artifacts::block2d::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() });
         base.handles.push(crate::artifacts::block2d::Block2dHandleTemplate { id: "h0".into(), handle_kind: "hk0".into(), angle: 0.0, radius: 0.2 });
-        let d1 = move_handle("h0".into(), 0.5, 0.3).diff(&base);
+        let d1 = move_handle("h0".into(), 0.5, 0.3).diff(&base).into_parts().0;
         let mid = d1.apply(&base);
-        let d2 = move_handle("h0".into(), 1.1, 0.6).diff(&mid);
+        let d2 = move_handle("h0".into(), 1.1, 0.6).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -273,5 +273,41 @@ mod tests {
         assert_eq!(Block2dMutation::kinds().len(), 26);
     }
     //#endregion 🔖️MutationLaws
+
+    //#region 🔖️OutcomeLaws
+    // 🎫️ 26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — one
+    // `assert_missing_target_is_error` per verb family present in this facet, plus one
+    // `assert_fatal_never_applies` for the `create` family's duplicate-id path.
+    // `assert_outcome_policy_matrix` (one per verb family) is NOT YET landed in
+    // `📡️spr/🧪️testkit`'s `🔖️Laws` region (only `assert_missing_target_is_error`,
+    // `assert_fatal_never_applies`, `assert_outcome_deterministic`, `assert_policy_matrix` exist as
+    // of this lane's pass) — pending lane 1-D, tracked in `📓️w3-f-block-puzzle-report.md`.
+    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
+
+    #[test]
+    fn missing_target_is_error_per_verb_family() {
+        let base = empty_block2d_snapshot();
+        assert_missing_target_is_error(&base, &delete_handle("missing".into())); // delete
+        assert_missing_target_is_error(&base, &delete_handle_kind("missing".into())); // delete
+        assert_missing_target_is_error(&base, &remove_author("missing".into())); // remove
+        assert_missing_target_is_error(&base, &remove_attribute("missing".into())); // remove
+        assert_missing_target_is_error(&base, &remove_compatibility_rule("missing".into())); // remove
+        assert_missing_target_is_error(&base, &rename_handle_kind("missing".into(), "x".into())); // rename
+        assert_missing_target_is_error(&base, &change_handle_kind_color("missing".into(), "#fff".into())); // change/set/update
+        assert_missing_target_is_error(&base, &change_handle_handle_kind("missing".into(), "hk0".into())); // change/set/update
+        assert_missing_target_is_error(&base, &move_handle("missing".into(), 1.0, 1.0)); // move/drag/rotate/scale/resize
+    }
+
+    #[test]
+    fn create_duplicate_id_is_fatal_and_never_applies() {
+        let mut base = empty_block2d_snapshot();
+        let handle_kind = crate::artifacts::block2d::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() };
+        base.handle_kinds.push(handle_kind.clone());
+        let outcome = create_handle_kind(handle_kind).diff(&base);
+        assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal));
+        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

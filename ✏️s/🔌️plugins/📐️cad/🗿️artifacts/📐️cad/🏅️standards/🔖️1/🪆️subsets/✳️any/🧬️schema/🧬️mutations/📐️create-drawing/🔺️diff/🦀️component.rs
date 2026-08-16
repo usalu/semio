@@ -12,9 +12,12 @@ pub(crate) fn parse_target(uri: &str) -> store::os_io::ArtifactRef {
     })
 }
 
-pub fn diff(payload: &CreateDrawing, base: &CadSnapshot) -> CadDiff {
+pub fn diff(payload: &CreateDrawing, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
+    if base.drawings.iter().any(|drawing| drawing.child_id == payload.child_id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A drawing with id \"{}\" already exists.", payload.child_id), [payload.child_id.clone()]);
+    }
     let mut drawings = base.drawings.clone();
     drawings.push(store::ArtifactChild::new(payload.child_id.clone(), parse_target(&payload.target)));
-    CadDiff { drawings: Some(CadDrawingChildList { values: drawings }), ..Default::default() }
+    protocol::MutationOutcome::new(CadDiff { drawings: Some(CadDrawingChildList { values: drawings }), ..Default::default() })
 }
 //#endregion 🔖️Diff

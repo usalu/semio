@@ -22,7 +22,7 @@ pub fn disconnect_nodes(edge_id: String) -> WiresMutation {
 impl protocol::MutationKind<WiresSnapshot, WiresMutation> for DisconnectNodes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "disconnect", entity: "relationship", kind: "disconnect-nodes", record: "DisconnectedNodes" };
 
-    fn diff(&self, base: &WiresSnapshot) -> WiresDiff {
+    fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {

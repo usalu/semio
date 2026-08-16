@@ -5,7 +5,8 @@
 //! `encode_op`/`decode_op` wrappers plus the op text↔binary equivalence law.
 //!
 //! The app's typed `FormsCommand` enum — which used to share the old `📡️protocol` crate with this codec —
-//! is an APP concern, not an artifact one: it now lives in `🎛️apps/📋️forms/🦀️component.rs`, assembled from
+//! is an APP concern, not an artifact one: it now lives in the `✏️editor` surface's own root
+//! `🦀️component.rs`, assembled from
 //! the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
 
 

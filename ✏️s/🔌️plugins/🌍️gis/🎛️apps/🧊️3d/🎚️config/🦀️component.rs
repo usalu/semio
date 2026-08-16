@@ -190,13 +190,23 @@ impl protocol::OpBinary for Gis3dConfigMutation {
 impl Mutation<Gis3dConfig> for Gis3dConfigMutation {
     type Diff = Gis3dConfig;
 
-    fn diff(&self, base: &Gis3dConfig) -> Gis3dConfig {
+    fn diff(&self, base: &Gis3dConfig) -> protocol::MutationOutcome<Gis3dConfig> {
         let mut next = base.clone();
         match self {
-            Gis3dConfigMutation::SetCamera { camera_json } => next.camera_json = camera_json.clone(),
-            Gis3dConfigMutation::SetLocale { value } => next.locale = value.clone(),
+            Gis3dConfigMutation::SetCamera { camera_json } => {
+                if &base.camera_json == camera_json {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", "Camera is already at the requested position.");
+                }
+                next.camera_json = camera_json.clone();
+            }
+            Gis3dConfigMutation::SetLocale { value } => {
+                if &base.locale == value {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Locale is already \"{}\".", value));
+                }
+                next.locale = value.clone();
+            }
         }
-        next
+        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &Gis3dConfig) -> Vec<Self> {
@@ -232,11 +242,11 @@ mod tests {
     fn gis3d_config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = Gis3dConfig::default();
         let operation = Gis3dConfigMutation::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() };
-        let next = operation.diff(&base);
+        let next = operation.diff(&base).diff().clone();
         assert_eq!(next.camera_json, r#"{"position":[1.0,2.0,3.0]}"#);
         let backwards = operation.inverse(&base);
         assert_eq!(backwards, vec![Gis3dConfigMutation::SetCamera { camera_json: base.camera_json.clone() }]);
-        assert_eq!(backwards[0].diff(&next), base);
+        assert_eq!(backwards[0].diff(&next).diff().clone(), base);
     }
 
     #[test]

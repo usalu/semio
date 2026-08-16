@@ -1,0 +1,7 @@
+# unbind-primitive-attribute mutation facet.
+input GltfUnbindPrimitiveAttributePayloadV1 {
+  mesh: Int!
+  primitive: Int!
+  semantic: String!
+}
+type GltfUnbindPrimitiveAttributeMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

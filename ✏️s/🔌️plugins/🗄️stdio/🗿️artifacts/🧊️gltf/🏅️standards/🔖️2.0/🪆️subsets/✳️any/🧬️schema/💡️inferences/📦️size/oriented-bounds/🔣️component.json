@@ -6,8 +6,7 @@
       "algorithmVersion": 1,
       "cacheKey": "s.stdio.gltf.inference.oriented-bounds.v1:geometry-v2",
       "inputs": ["schema/snapshot", "buffers"],
-      "target": "geometricAnalysis.overall.oriented-bounds"
+      "target": "geometry.overall.size.orientedBounds"
     }
   }
 }
-

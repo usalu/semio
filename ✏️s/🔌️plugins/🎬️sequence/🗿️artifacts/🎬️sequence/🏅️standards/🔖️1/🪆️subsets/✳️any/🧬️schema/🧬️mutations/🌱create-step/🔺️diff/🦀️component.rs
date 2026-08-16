@@ -6,10 +6,13 @@ use crate::artifacts::sequence::diff::SequenceDiff;
 use crate::artifacts::sequence::{diff_replace_content, sequence_working_scene, SequenceSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::CreateStep, base: &SequenceSnapshot) -> SequenceDiff {
+pub fn diff(payload: &super::mutation::CreateStep, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
     let scene = sequence_working_scene(base);
+    if scene.steps.iter().any(|step| step.id == payload.step.id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A step with id \"{}\" already exists.", payload.step.id), [payload.step.id.clone()]);
+    }
     let mut steps = scene.steps;
     steps.push(payload.step.clone());
-    diff_replace_content(steps, scene.edges)
+    protocol::MutationOutcome::new(diff_replace_content(steps, scene.edges))
 }
 //#endregion 🔖️Diff

@@ -16,7 +16,7 @@ pub struct ChangeLayerOpacity {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ChangeLayerOpacity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "layer", kind: "change-layer-opacity", record: "ChangedLayerOpacity" };
 
-    fn diff(&self, base: &RasterSnapshot) -> RasterDiff {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::change_layer_opacity::diff::diff(self, base)
     }
 

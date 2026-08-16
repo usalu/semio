@@ -100,8 +100,8 @@ mod tests {
         let base = default_snapshot();
         let id = base.nodes().first().expect("fixture has a node").id.clone();
         let mutation = delete_node(id.clone());
-        let diff = mutation.diff(&base);
-        assert!(diff.apply(&base).nodes().iter().all(|node| node.id != id));
+        let outcome = mutation.diff(&base);
+        assert!(outcome.diff().apply(&base).nodes().iter().all(|node| node.id != id));
     }
 }
 //#endregion 🧪️Tests

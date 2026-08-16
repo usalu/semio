@@ -1,0 +1,128 @@
+Lane 3-H group G5 — inventory + report
+Plugins: semio-s-plugin-forms, semio-s-plugin-playbook, semio-s-plugin-animate, semio-s-plugin-sequence
+
+## Inventory (leaf directories, `find <plugin> -type d -name '🔺️diff'`)
+
+FORMS (10 mutation-kind triads + 1 root FormsDiff type dir, not a leaf):
+  🌱create-step, 🗑️delete-step, ✏️rename-step, 🔀reorder-step, 📝change-step-description,
+  ➕create-block, ➖delete-block, 📦move-block-to-step, 🔁replace-block, 🏷️change-form-title
+
+PLAYBOOK (9 mutation-kind triads + 1 root PlaybookDiff type dir):
+  ➕add-step, ➖remove-step, ↔️move-step, ✏️change-title, 🔀move-block, 🔄replace-block,
+  🗑️remove-block, 🧱add-block, 🩹update-step
+
+ANIMATE (9 mutation-kind triads + 1 root PresentDiff type dir):
+  🆕create-tile, 🗑delete-tile, 🧹delete-tiles, ✏rename-tile, ✂resize-tile-crop,
+  🔀reorder-tiles, 🔁replace-tiles, 🔲resize-source-frame, 🖼replace-source
+
+SEQUENCE (8 mutation-kind triads + 1 root SequenceDiff type dir):
+  🌱create-step, 🗑️delete-step, 📍move-step, 🔧edit-step-params, 🗂️change-step-collapsed,
+  🔗connect-steps, ✂️disconnect-steps, 🧬duplicate-step
+
+Total mutation-kind triads: 10 + 9 + 9 + 8 = 36 (all converted, all with real verb-family logic
+except the two root-scoped scalar-field exemptions noted below).
+
+## Hand-written impl Mutation<P>/MutationKind<P,Op> blocks (outside triad folders)
+
+forms:    ✏️editor/👥️presence (FormsPresenceMutation), ✏️editor/🎚️config (FormsConfigMutation)
+playbook: ✏️editor/🎚️config (PlaybookConfigMutation), ✏️editor/👥️presence (PlaybookPresenceMutation),
+          🧩️extensions/🌀️procedural (ModulePayloadMutation)
+animate:  🎛️apps/🎬️present/🎚️config (PresentConfigMutation), 🎛️apps/🎬️present/👥️presence (PresentPresenceMutation)
+sequence: 🎛️apps/🎬️sequence/🎚️config (SequenceConfigMutation), 🎛️apps/🎬️sequence/👥️presence (SequencePresenceMutation)
+All 9 converted (all legitimately message-free bare `MutationOutcome::new(..)` wraps — app-level
+config/presence structs with no addressable target, matching the `🕸️dag` exemplar's own
+`DagConfigMutation`/`DagPresenceMutation` pattern).
+
+`fn validate` grep across all 4 plugin trees: 0 occurrences (confirms scout census: none of these
+4 facets carried a real `validate` override).
+
+## Verb-family mapping chosen per domain kind (verb -> family -> why)
+
+FORMS
+  create-step     -> create   -> Fatal duplicate-id on existing step id (root id-keyed collection,
+                                  no container to be "unknown", so only the duplicate-id half of
+                                  the `create` rule applies).
+  delete-step     -> delete   -> Error target-missing.
+  rename-step     -> rename   -> Error target-missing / Warning no-op when new_title == existing
+                                  title (title is not a key, so no duplicate-id case).
+  reorder-step    -> reorder  -> Error target-missing for unknown id / Warning no-op when the
+                                  clamped target index equals the current index (single-item
+                                  reorder, so "non-permutation" Fatal never applies).
+  change-step-description -> change -> Error target-missing / Warning no-op when unchanged.
+  create-block    -> create   -> Fatal `invariant` on unknown step_id (container) / Fatal
+                                  duplicate-id on existing block id within that step.
+  delete-block    -> delete   -> Error target-missing (step_id, then block_id).
+  move-block-to-step -> move  -> Error target-missing (source step / block / dest step) / Warning
+                                  no-op when the same-step target index is unchanged. No
+                                  non-finite/non-positive values in this domain (integer indices),
+                                  so the Fatal half of `move` never triggers.
+  replace-block   -> replace  -> Error target-missing (step, then block) / Warning no-op when the
+                                  replacement equals the existing block.
+  change-form-title -> change -> ROOT-SCOPED `change-<artifact>-<field>` exemption (allowlisted):
+                                  no target to be missing, bare `MutationOutcome::new(diff)`.
+
+PLAYBOOK
+  add-step   -> add     -> Warning no-op when the step id already exists (root id-keyed collection
+                            has no "owner", so only the no-op half of `add` applies; the `create`
+                            family's Fatal duplicate-id would be wrong here — playbook's own verb
+                            is explicitly `add`, not `create`, so it gets the softer `add` treatment
+                            per the frozen table).
+  remove-step -> remove -> Error target-missing.
+  move-step   -> move   -> Error target-missing / Warning no-op when the clamped target index
+                            equals the current index.
+  change-title -> change -> ROOT-SCOPED exemption, same as forms' change-form-title.
+  add-block   -> add     -> Error target-missing when the owning step is absent / Warning no-op
+                            when the block id already exists in that step.
+  remove-block -> remove -> Error target-missing (step, then block).
+  move-block  -> move    -> Error target-missing (from-step / block / to-step) / Warning no-op
+                            when the same-step target index is unchanged.
+  replace-block -> replace -> Error target-missing (step, then block) / Warning no-op when
+                            unchanged.
+  update-step -> update  -> Error target-missing / Warning no-op when both title and description
+                            are already unchanged (no domain-violation Fatal condition exists for
+                            a free-text title+description pair).
+
+ANIMATE
+  create-tile -> create  -> Fatal duplicate-id on existing tile id (flat id-keyed collection, no
+                            container).
+  delete-tile -> delete  -> Error target-missing.
+  delete-tiles -> delete (plural) -> Error target-missing when NONE of the addressed ids exist /
+                            Warning `mutation.partial` (survivors-only removal) when SOME are
+                            missing.
+  rename-tile -> rename  -> Error target-missing / Warning no-op when new_name == existing name.
+  resize-tile-crop -> resize -> Error target-missing / Fatal invariant on non-finite or
+                            non-positive width/height / Warning no-op when the crop is unchanged.
+  reorder-tiles -> reorder -> Error target-missing / Warning no-op when the clamped target index
+                            equals the current index.
+  replace-tiles -> replace (whole-collection) -> Warning no-op when the new tiles vec equals the
+                            current one (treated like the root-scoped exemption's sibling: the
+                            whole `tiles` collection is itself the addressed entity, so no
+                            target-missing case exists — an empty vec is the documented "clear"
+                            case, not an error).
+  resize-source-frame -> resize -> Fatal invariant on non-finite or non-positive width/height /
+                            Warning no-op when unchanged (singleton `source`, no target-missing).
+  replace-source -> replace (singleton) -> Warning no-op when the new source equals the current
+                            one (singleton, no target-missing case).
+
+SEQUENCE
+  create-step -> create  -> Fatal duplicate-id on existing step id.
+  delete-step -> delete  -> Error target-missing / Info `mutation.cascade` listing every edge
+                            severed by the deletion (mirrors the 🕸️dag exemplar's delete-node
+                            cascade pattern exactly).
+  move-step   -> move    -> Error target-missing / Fatal invariant on non-finite (x, y) / Warning
+                            no-op when the position is unchanged (mirrors the 🕸️dag exemplar's
+                            move-node pattern exactly).
+  edit-step-params -> edit -> Error target-missing / Warning no-op when params are unchanged.
+  change-step-collapsed -> change -> Error target-missing / Warning no-op when collapsed is
+                            unchanged.
+  connect-steps -> connect -> Error target-missing on either missing endpoint / Fatal duplicate-id
+                            on an existing edge id / Fatal invariant on a self-loop (from == to,
+                            this facet's cycle case) / Warning no-op when an edge with the same
+                            (from, to) direction already exists (parallel edges forbidden).
+  disconnect-steps -> disconnect -> Error target-missing.
+  duplicate-step -> duplicate -> Error target-missing on missing source id / Fatal duplicate-id
+                            when new_id already exists.
+
+## Cargo check / test results
+
+See 🧪️w3-h-g5-cargo.txt for full raw output.

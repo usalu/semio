@@ -16,7 +16,7 @@ pub struct DeleteLayer {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for DeleteLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "layer", kind: "delete-layer", record: "DeletedLayer" };
 
-    fn diff(&self, base: &RasterSnapshot) -> RasterDiff {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::delete_layer::diff::diff(self, base)
     }
 

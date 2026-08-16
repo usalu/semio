@@ -407,7 +407,6 @@ impl ArtifactApp for Procedural3dPlayApp {
 pub fn create_procedural3d_app() -> App {
     App::from_builder(
         App::builder(PROCEDURAL_3D_PLAY_APP_ID, LocalizedLabel::native("Procedural 3D", "Procedural 3D")).document(["semio", "procedural", "3d"])
-            .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
             .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) })
             .artifact_kind(artifact_kind())
             .icon_id("workflow")
@@ -1023,7 +1022,6 @@ mod tests {
             "select-generation",
             "active-utility",
             "locale",
-            "contributions",
             "flow-eval-tick",
             "flow-eval-resolve",
         ];
@@ -1190,7 +1188,7 @@ mod tests {
     //#region 🔖️EngineComputeTests
     /// 🧬️ Rehomed verbatim from the deleted `⚙️engine` (ticket
     /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — these tests exercise
-    /// `PreviewPipeline`/`MeshBridge`/`ExtensionContributions` functions above, all of which are app
+    /// `PreviewPipeline`/`MeshBridge` functions above, all of which are app
     /// behavior (they construct or take a [`Procedural3dConfig`]), so the tests travel with them.
     use ui_wgpu::wgpu::kernel_3d_scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Mesh3d, Vec3};
     use std::sync::MutexGuard;

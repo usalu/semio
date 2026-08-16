@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.transform-node.v1.mutation",
+  "title": "GltfTransformNodeMutation",
+  "type": "object",
+  "properties": {
+    "node": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "transform": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "matrix"
+            },
+            "matrix": {
+              "type": "array",
+              "minItems": 16,
+              "maxItems": 16,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "matrix"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "trs"
+            },
+            "translation": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            },
+            "rotation": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "number"
+              }
+            },
+            "scale": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "required": [
+    "node",
+    "transform"
+  ],
+  "additionalProperties": false,
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.transform-node.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "change",
+    "touchedPaths": [
+      "document/nodes/*/matrix",
+      "document/nodes/*/translation",
+      "document/nodes/*/rotation",
+      "document/nodes/*/scale"
+    ],
+    "referencePolicy": "matrix and TRS are mutually exclusive; every scalar must be finite"
+  }
+}

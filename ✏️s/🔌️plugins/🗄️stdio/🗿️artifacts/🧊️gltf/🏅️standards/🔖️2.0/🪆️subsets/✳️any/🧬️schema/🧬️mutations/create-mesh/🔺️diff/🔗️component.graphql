@@ -1,0 +1,13 @@
+# create-mesh typed diff facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+scalar GltfMeshValueV1
+input GltfCreateMeshPayloadV1 {
+  position: Int!
+}
+type GltfCreateMeshDiffOperationV1 {
+  kind: String!
+  position: Int!
+  item: GltfMeshValueV1!
+}
+type GltfCreateMeshDiffV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfCreateMeshPayloadV1!, operation: GltfCreateMeshDiffOperationV1! }

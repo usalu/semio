@@ -283,65 +283,65 @@ pub mod artifacts {
 }
 //#endregion 🗿️Artifacts
 
-//#region 🎛️Apps
+//#region ✏️Editor
 #[path = "."]
-pub mod apps {
+pub mod editor {
     #[path = "."]
     pub mod imperative {
-        #[path = "../../🎛️apps/📜️imperative/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
-        #[path = "../../🎛️apps/📜️imperative/⚙️engine/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🦀️component.rs"]
         pub mod engine;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/📜️imperative/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/📜️imperative/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/📜️imperative/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/📜️imperative/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
-        #[path = "../../🎛️apps/📜️imperative/🗣️terminology/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
-        #[path = "../../🎛️apps/📜️imperative/🌉️wasm/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs"]
         pub mod wasm;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🔧️add-step/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️add-step/🦀️component.rs"]
             pub mod add_step;
-            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🔧️add-step-at/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️add-step-at/🦀️component.rs"]
             pub mod add_step_at;
-            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🔧️remove-step/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️remove-step/🦀️component.rs"]
             pub mod remove_step;
-            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🔧️remove-step-at/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️remove-step-at/🦀️component.rs"]
             pub mod remove_step_at;
-            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🔧️move-step/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️move-step/🦀️component.rs"]
             pub mod move_step;
-            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🔧️move-step-at/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️move-step-at/🦀️component.rs"]
             pub mod move_step_at;
-            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🔧️set-step-params/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️set-step-params/🦀️component.rs"]
             pub mod set_step_params;
-            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🔧️set-step-params-at/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️set-step-params-at/🦀️component.rs"]
             pub mod set_step_params_at;
-            #[path = "../../🎛️apps/📜️imperative/🎮️commands/👁️run/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️run/🦀️component.rs"]
             pub mod run;
-            #[path = "../../🎛️apps/📜️imperative/🎮️commands/👁️set-locale/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-locale/🦀️component.rs"]
             pub mod set_locale;
-            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🧩️set-contributions/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️component.rs"]
             pub mod set_contributions;
         }
 
@@ -349,15 +349,15 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🎛️apps/📜️imperative/🎭️modes/✏️edit/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/📜️imperative/🎭️modes/✏️edit/🪟️windows/📋️main/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📋️main/🦀️component.rs"]
                     pub mod main;
-                    #[path = "../../🎛️apps/📜️imperative/🎭️modes/✏️edit/🪟️windows/📝️script/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📝️script/🦀️component.rs"]
                     pub mod script;
                 }
             }
@@ -365,16 +365,46 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/📜️imperative/📌️panels/📄️artifact/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
-            #[path = "../../🎛️apps/📜️imperative/📌️panels/🛍️catalogue/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs"]
             pub mod catalogue;
-            #[path = "../../🎛️apps/📜️imperative/📌️panels/🔍️inspection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;
         }
     }
 }
-//#endregion 🎛️Apps
+//#endregion ✏️Editor
+
+//#region 👁️Viewer
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod imperative {
+        #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📋️main/🦀️component.rs"]
+                    pub mod main;
+                    #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📝️script/🦀️component.rs"]
+                    pub mod script;
+                }
+            }
+        }
+    }
+}
+//#endregion 👁️Viewer
 
 //#region 🧩️Extensions
 #[path = "."]
@@ -394,7 +424,7 @@ pub mod extensions {
 
 //#region 🕸️Wasm
 #[cfg(target_arch = "wasm32")]
-pub use apps::imperative::wasm::ImperativeSession;
+pub use editor::imperative::wasm::ImperativeSession;
 //#endregion 🕸️Wasm
 
 //#region 🔖️Plugin
@@ -410,7 +440,7 @@ pub mod examples {
     #[cfg(test)]
     #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_imperative_demo_tests;
-    #[path = "../../🎛️apps/📜️imperative/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_imperative_demo_session;
 }
 //#endregion 📚️Examples

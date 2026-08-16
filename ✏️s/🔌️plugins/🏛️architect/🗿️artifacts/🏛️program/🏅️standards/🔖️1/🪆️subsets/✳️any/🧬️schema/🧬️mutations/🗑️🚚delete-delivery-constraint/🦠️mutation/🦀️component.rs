@@ -18,7 +18,7 @@ pub struct DeleteDeliveryConstraint {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteDeliveryConstraint {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "delivery-constraint", kind: "delete-delivery-constraint", record: "DeletedDeliveryConstraint" };
-    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

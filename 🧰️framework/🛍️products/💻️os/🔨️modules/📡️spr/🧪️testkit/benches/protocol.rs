@@ -1,8 +1,9 @@
 //! ⏱️ Criterion benchmarks for the `protocol_*` crate family's hot paths: `HistoryLogGen`
 //! generation cost, whole-file `encode_history`/`decode_history`, `HistoryAppender` streaming
-//! append, `protocol_format::recover`, `protocol_wire` frame codec, `protocol_crdt::
-//! merge_concurrent_diffs`, and `MutationDag` insertion — each group parameterized over a scaling value
-//! to reveal where a cost curve goes superlinear, not just a single-point timing. Run via
+//! append, `protocol_format::recover`, `protocol_wire` frame codec, and `MutationDag` insertion —
+//! each group parameterized over a scaling value to reveal where a cost curve goes superlinear, not
+//! just a single-point timing. The blind-merge benchmark group is gone (CRDT layer deleted,
+//! `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`). Run via
 //! `nx run @protocol/testkit-rs:bench` (`bun ./📜️script.ts bench`).
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
@@ -107,56 +108,6 @@ fn bench_wire_frame_codec(c: &mut Criterion) {
 }
 //#endregion 🔖️Wire
 
-//#region 🔖️Crdt
-fn bench_crdt_merge(c: &mut Criterion) {
-    #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct BenchDiff {
-        field_a: Option<i64>,
-        field_b: Option<i64>,
-    }
-    impl protocol::MutationDiff<(i64, i64)> for BenchDiff {
-        fn apply(&self, base: &(i64, i64)) -> (i64, i64) {
-            (self.field_a.unwrap_or(base.0), self.field_b.unwrap_or(base.1))
-        }
-        fn absorb(&mut self, other: Self) {
-            if other.field_a.is_some() {
-                self.field_a = other.field_a;
-            }
-            if other.field_b.is_some() {
-                self.field_b = other.field_b;
-            }
-        }
-    }
-    fn meta_at(actor: u64, physical_ms: u64) -> protocol::MutationMeta {
-        protocol::MutationMeta {
-            mutation_id: None,
-            dependencies: Vec::new(),
-            base_version: 0,
-            author_id: None,
-            timestamp: protocol::HybridLogicalTimestamp::new(actor, physical_ms),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-        }
-    }
-
-    let mut group = c.benchmark_group("crdt_merge");
-    let a = BenchDiff { field_a: Some(1), field_b: Some(2) };
-    let b = BenchDiff { field_a: Some(3), field_b: None };
-    let ma = meta_at(1, 10);
-    let mb = meta_at(2, 20);
-    for strategy in
-        [protocol::MergeStrategyKind::LwwRegister, protocol::MergeStrategyKind::OrderedSequence, protocol::MergeStrategyKind::TextSequence, protocol::MergeStrategyKind::TombstonedGraphSet, protocol::MergeStrategyKind::ContentAddressedBlob]
-    {
-        group.bench_with_input(BenchmarkId::new("merge_concurrent_diffs", format!("{strategy:?}")), &strategy, |bencher, &strategy| {
-            bencher.iter(|| black_box(protocol::merge_concurrent_diffs(strategy, a.clone(), b.clone(), &ma, &mb)));
-        });
-    }
-    group.finish();
-}
-//#endregion 🔖️Crdt
-
 //#region 🔖️MutationDag
 fn bench_op_dag_insert(c: &mut Criterion) {
     let mut group = c.benchmark_group("op_dag_insert");
@@ -176,5 +127,5 @@ fn bench_op_dag_insert(c: &mut Criterion) {
 }
 //#endregion 🔖️MutationDag
 
-criterion_group!(protocol_benches, bench_history_log_gen, bench_encode_decode_history, bench_history_appender, bench_recover, bench_wire_frame_codec, bench_crdt_merge, bench_op_dag_insert);
+criterion_group!(protocol_benches, bench_history_log_gen, bench_encode_decode_history, bench_history_appender, bench_recover, bench_wire_frame_codec, bench_op_dag_insert);
 criterion_main!(protocol_benches);
