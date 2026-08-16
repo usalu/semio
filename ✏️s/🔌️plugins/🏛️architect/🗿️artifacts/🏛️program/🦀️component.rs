@@ -46,20 +46,10 @@ pub fn benchmark_table_from_records(records: &[BenchmarkRecord]) -> semio_s_plug
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
-        columns: vec![
-            SemioTableColumn { name: "id".into(), kind: SemioTableCellKind::Str },
-            SemioTableColumn { name: "name".into(), kind: SemioTableCellKind::Str },
-            SemioTableColumn { name: "json".into(), kind: SemioTableCellKind::Str },
-        ],
+        columns: vec![SemioTableColumn { name: "id".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "name".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "json".into(), kind: SemioTableCellKind::Str }],
         rows: records
             .iter()
-            .map(|record| SemioTableRow {
-                cells: vec![
-                    SemioValue::Str { value: record.header.id.0.clone() },
-                    SemioValue::Str { value: record.header.name.clone() },
-                    SemioValue::Str { value: serde_json::to_string(record).unwrap_or_default() },
-                ],
-            })
+            .map(|record| SemioTableRow { cells: vec![SemioValue::Str { value: record.header.id.0.clone() }, SemioValue::Str { value: record.header.name.clone() }, SemioValue::Str { value: serde_json::to_string(record).unwrap_or_default() }] })
             .collect(),
     }
 }
@@ -108,10 +98,7 @@ fn program_benchmarks_scene_id(records: &[BenchmarkRecord]) -> String {
 }
 
 fn program_benchmarks_target() -> store::os_io::ArtifactRef {
-    store::os_io::ArtifactRef {
-        artifact_id: "architect-program-benchmarks".into(),
-        dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() },
-    }
+    store::os_io::ArtifactRef { artifact_id: "architect-program-benchmarks".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
 }
 
 /// 🏗️ Mints the composed-child handle for a `benchmarks` row list AND seeds the scratch cache in
@@ -150,20 +137,10 @@ pub fn knowledge_table_from_records(records: &[KnowledgeRecord]) -> semio_s_plug
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
-        columns: vec![
-            SemioTableColumn { name: "id".into(), kind: SemioTableCellKind::Str },
-            SemioTableColumn { name: "name".into(), kind: SemioTableCellKind::Str },
-            SemioTableColumn { name: "json".into(), kind: SemioTableCellKind::Str },
-        ],
+        columns: vec![SemioTableColumn { name: "id".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "name".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "json".into(), kind: SemioTableCellKind::Str }],
         rows: records
             .iter()
-            .map(|record| SemioTableRow {
-                cells: vec![
-                    SemioValue::Str { value: record.header.id.0.clone() },
-                    SemioValue::Str { value: record.header.name.clone() },
-                    SemioValue::Str { value: serde_json::to_string(record).unwrap_or_default() },
-                ],
-            })
+            .map(|record| SemioTableRow { cells: vec![SemioValue::Str { value: record.header.id.0.clone() }, SemioValue::Str { value: record.header.name.clone() }, SemioValue::Str { value: serde_json::to_string(record).unwrap_or_default() }] })
             .collect(),
     }
 }
@@ -195,10 +172,7 @@ fn program_knowledge_scene_id(records: &[KnowledgeRecord]) -> String {
 }
 
 fn program_knowledge_target() -> store::os_io::ArtifactRef {
-    store::os_io::ArtifactRef {
-        artifact_id: "architect-program-knowledge".into(),
-        dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() },
-    }
+    store::os_io::ArtifactRef { artifact_id: "architect-program-knowledge".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
 }
 
 pub fn knowledge_child_from_records(records: &[KnowledgeRecord]) -> ProgramKnowledgeChild {
@@ -236,14 +210,11 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         component_kind: "architect".into(),
         dimension: "data".into(),
         media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
-        media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::Data,
-            form: semio_framework_plugin::MediaForm::Value,
-        },
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
         schema: ARCHITECT_PROGRAM_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
+        export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
         import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
     }
 }
@@ -595,28 +566,61 @@ mod tests {
     }
     // #endregion 🔖️DslArtifact
 }
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::program::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("ProgramComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
+//#region 🔖️Declaration
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.program")?)
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.program.schema.artifact")?, ArtifactCapabilityKind::schema())
+                .descriptor(b"s.architect.program")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.architect.program")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.program.inference.artifact")?, ArtifactCapabilityKind::inference())
+                .descriptor(b"s.architect.program.inference")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.architect.program.inference")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.program.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.program@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.program@1/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.program.composer.zip")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.zip@2.0/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.zip@2.0/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.program.composer.csv")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.csv@rfc4180/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.csv@rfc4180/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.program.composer.xlsx")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.xlsx@ecma-376/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.xlsx@ecma-376/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.program.composer.json")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.json@rfc8259/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.program.codec.document")?, ArtifactCapabilityKind::codec())
+                .descriptor(b"architect.program:architect")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "architect.program")?)?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "architect")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.program.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Architect")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Architect")?)?,
+        )?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.program.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Architekt")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Architekt")?)?)
 }
-//#endregion 🚪️DerivedIoRegistry
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+        .schema(crate::artifacts::program::schema::program_artifact_schema_descriptor())
+        .inferences([crate::artifacts::program::standards::v1::subsets::any::schema::inferences::program_artifact_inference_descriptor()])
+        .composers(crate::artifacts::program::standards::v1::subsets::any::io::io_registry::entries())
+        .document_codec::<crate::apps::architect::ArchitectPlayApp>()
+        .try_build()
+}
+//#endregion 🔖️Declaration

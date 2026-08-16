@@ -12,21 +12,37 @@ use trinity::lexer::{lex_spanned, SpannedToken, Token};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.writer.writer")]
 pub struct WriterArtifact {
-    #[state(artifact)] pub schema: String,
-    #[state(artifact)] pub id: String,
-    #[state(artifact)] pub language_id: String,
-    #[state(artifact)] pub uri: String,
-    #[state(artifact)] #[child(kind = "s.stdio.semio.document")] pub document: WriterDocumentChild,
-    #[state(presence)] pub editor_selection: Option<WriterEditorSelection>,
-    #[state(presence)] pub editor_settings: WriterEditorSettings,
-    #[state(config)] pub format_signal: u32,
-    #[state(config)] pub lint_signal: u32,
-    #[state(config)] pub revision: u32,
-    #[state(config)] pub engagement_input: String,
-    #[state(config)] pub camera_x: f64,
-    #[state(config)] pub camera_y: f64,
-    #[state(config)] pub camera_zoom: f64,
-    #[state(config)] pub locale: String,
+    #[state(artifact)]
+    pub schema: String,
+    #[state(artifact)]
+    pub id: String,
+    #[state(artifact)]
+    pub language_id: String,
+    #[state(artifact)]
+    pub uri: String,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.document")]
+    pub document: WriterDocumentChild,
+    #[state(presence)]
+    pub editor_selection: Option<WriterEditorSelection>,
+    #[state(presence)]
+    pub editor_settings: WriterEditorSettings,
+    #[state(config)]
+    pub format_signal: u32,
+    #[state(config)]
+    pub lint_signal: u32,
+    #[state(config)]
+    pub revision: u32,
+    #[state(config)]
+    pub engagement_input: String,
+    #[state(config)]
+    pub camera_x: f64,
+    #[state(config)]
+    pub camera_y: f64,
+    #[state(config)]
+    pub camera_zoom: f64,
+    #[state(config)]
+    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -40,25 +56,12 @@ impl Default for WriterArtifact {
 impl WriterArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> crate::artifacts::writer::WriterSnapshot {
-        crate::artifacts::writer::WriterSnapshot {
-            schema: self.schema.clone(),
-            id: self.id.clone(),
-            language_id: self.language_id.clone(),
-            uri: self.uri.clone(),
-            document: self.document.clone(),
-        }
+        crate::artifacts::writer::WriterSnapshot { schema: self.schema.clone(), id: self.id.clone(), language_id: self.language_id.clone(), uri: self.uri.clone(), document: self.document.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot with UI defaults.
     pub fn from_snapshot(snapshot: crate::artifacts::writer::WriterSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            id: snapshot.id,
-            language_id: snapshot.language_id,
-            uri: snapshot.uri,
-            document: snapshot.document,
-            ..Self::default_ui()
-        }
+        Self { schema: snapshot.schema, id: snapshot.id, language_id: snapshot.language_id, uri: snapshot.uri, document: snapshot.document, ..Self::default_ui() }
     }
 
     fn default_ui() -> Self {
@@ -130,8 +133,8 @@ pub fn writer_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::writer::{WriterDiff, WriterMutation, WriterSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct WriterBuilderConstruction {
@@ -143,8 +146,12 @@ pub mod derived_construction {
         type Snapshot = WriterSnapshot;
         type Mutation = WriterMutation;
         type Diff = WriterDiff;
-        fn empty() -> Self { Self { snapshot: WriterSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn empty() -> Self {
+            Self { snapshot: WriterSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<WriterSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -161,7 +168,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -170,8 +181,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::writer::WriterSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct WriterParts {
@@ -270,8 +281,7 @@ fn token_class_from_name(name: &str) -> dsl::TokenClass {
     }
 }
 
-/// 🎼️ The `jack` query-language `dsl::DslIdiom` — registered from `crate::apps::writer::register_writer_languages`
-/// (an artifact must never depend on an app, so the idiom lives here, not there).
+/// 🎼️ The `jack` query-language `dsl::DslIdiom`, used directly by writer's jack completion surface.
 pub(crate) struct JackWriterIdiom;
 
 impl dsl::DslIdiom for JackWriterIdiom {
@@ -287,18 +297,12 @@ impl dsl::DslIdiom for JackWriterIdiom {
     }
 
     fn classify(text: &str) -> Vec<(dsl::TokenClass, dsl::TextSpan)> {
-        trinity::core::semantic_tokens(text)
-            .into_iter()
-            .map(|t| (token_class_from_name(&t.class), byte_span_to_text_span(text, t.start, t.end)))
-            .collect()
+        trinity::core::semantic_tokens(text).into_iter().map(|t| (token_class_from_name(&t.class), byte_span_to_text_span(text, t.start, t.end))).collect()
     }
 
     fn complete(text: &str, offset: usize) -> Vec<dsl::CompletionItem> {
         let graph = trinity::core::example_graph();
-        trinity::core::complete(&graph, text, offset)
-            .into_iter()
-            .map(|item| dsl::CompletionItem { label: item.label, detail: item.detail })
-            .collect()
+        trinity::core::complete(&graph, text, offset).into_iter().map(|item| dsl::CompletionItem { label: item.label, detail: item.detail }).collect()
     }
 }
 
@@ -345,10 +349,7 @@ impl dsl::DslIdiom for WireWriterIdiom {
 /// @emoji 🎨️ Classifies `text` through the language registry (`idiom` / `LanguageSpec` hooks).
 pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
     if language_id == "jack" {
-        return trinity::core::semantic_tokens(text)
-            .into_iter()
-            .map(|t| GrammarToken { class: t.class, start: t.start, end: t.end })
-            .collect();
+        return trinity::core::semantic_tokens(text).into_iter().map(|t| GrammarToken { class: t.class, start: t.start, end: t.end }).collect();
     }
     if language_id == "wire" {
         let limits = dsl::Limits::default();
@@ -373,11 +374,7 @@ pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
         return (hooks.classify)(text)
             .into_iter()
             .enumerate()
-            .map(|(i, (class, _span))| GrammarToken {
-                class: format!("{class:?}").trim_start_matches("TokenClass::").to_ascii_lowercase(),
-                start: i,
-                end: i.saturating_add(1).min(text.len()),
-            })
+            .map(|(i, (class, _span))| GrammarToken { class: format!("{class:?}").trim_start_matches("TokenClass::").to_ascii_lowercase(), start: i, end: i.saturating_add(1).min(text.len()) })
             .collect();
     }
     Vec::new()
@@ -386,11 +383,7 @@ pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
 pub fn language_completions_json(text: &str, language_id: &str, cursor: usize) -> Option<String> {
     if let Some(spec) = dsl::language(language_id) {
         let session = dsl::lsp::LanguageSession::open(spec, text.to_string());
-        let items: Vec<Value> = session
-            .completions_at(cursor)
-            .into_iter()
-            .map(|item| json!({ "label": item.label, "detail": item.detail }))
-            .collect();
+        let items: Vec<Value> = session.completions_at(cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
         return serde_json::to_string(&items).ok();
     }
     if let Some(hooks) = dsl::idiom(language_id) {
@@ -401,7 +394,8 @@ pub fn language_completions_json(text: &str, language_id: &str, cursor: usize) -
 }
 
 pub fn jack_completions_json(text: &str, cursor: usize) -> Option<String> {
-    language_completions_json(text, "jack", cursor)
+    let items: Vec<Value> = <JackWriterIdiom as dsl::DslIdiom>::complete(text, cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
+    serde_json::to_string(&items).ok()
 }
 
 /// 🪞️ Canonical jack format when possible, else a whitespace-only normalization for other languages.
@@ -682,17 +676,7 @@ pub fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlace
     out
 }
 
-const JACK_NEWLINE_AFTER_KEYWORDS: &[Token] = &[
-    Token::KwMatch,
-    Token::KwWhere,
-    Token::KwReturn,
-    Token::KwCreate,
-    Token::KwDelete,
-    Token::KwSet,
-    Token::KwMerge,
-    Token::And,
-    Token::Or,
-];
+const JACK_NEWLINE_AFTER_KEYWORDS: &[Token] = &[Token::KwMatch, Token::KwWhere, Token::KwReturn, Token::KwCreate, Token::KwDelete, Token::KwSet, Token::KwMerge, Token::And, Token::Or];
 
 fn jack_lex_token_at_offset(tokens: &[SpannedToken], offset: usize) -> Option<&SpannedToken> {
     for token in tokens {
@@ -970,6 +954,5 @@ mod tests {
         let before_dot = text.find('.').unwrap();
         assert!(!jack_newline_allowed_at(text, before_dot));
     }
-
 }
 //#endregion 🧪️Tests

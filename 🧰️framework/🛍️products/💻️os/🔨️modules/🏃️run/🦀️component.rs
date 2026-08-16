@@ -80,7 +80,10 @@ pub enum RunError {
 /// handle the runner threads back on every later `exchange` call; `exchange` is a single batched,
 /// synchronous duplex round trip (`WasmPluginRuntime::exchange`'s native counterpart).
 pub trait AppChannelHost {
-    fn open(&mut self, plugin_id: &str, app_id: &str) -> Result<u32, RunError>;
+    /// 🗺️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (W2-A): `artifact_ref`
+    /// (the node's own `WorkflowNode.artifact_ref`) is threaded through so a real host can populate
+    /// its `InstanceDirectory` at instantiate-app time — a fake/test host is free to ignore it.
+    fn open(&mut self, plugin_id: &str, app_id: &str, artifact_ref: &str) -> Result<u32, RunError>;
     fn exchange(&mut self, node: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, RunError>;
 }
 //#endregion 🔖️AppChannelHost
@@ -921,7 +924,7 @@ impl<H: AppChannelHost> SpaceRunner<H> {
         if let Some(handle) = live.get(&node.id) {
             return Ok(*handle);
         }
-        let handle = self.host.open(&node.plugin_id, &node.app_id)?;
+        let handle = self.host.open(&node.plugin_id, &node.app_id, &node.artifact_ref)?;
         live.insert(node.id.clone(), handle);
         Ok(handle)
     }
@@ -1185,6 +1188,32 @@ pub struct WasmtimeNodeHost {
     /// across every runtime this host lazily loads, so any loaded plugin's `host.io-compose` can
     /// reach any OTHER loaded plugin's composer roster — see `IoRouter`'s own doc comment.
     io_router: Arc<semio_framework_plugin_host::IoRouter>,
+    /// 🕸️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (W2-A): every loaded
+    /// plugin's manifest, dependency-validated — `runtime_for` registers into this BEFORE a
+    /// plugin's own routers, and only after every declared dependency has itself been loaded (see
+    /// `load_runtime_recursive`). Scout-2 §3: neither this nor the next three fields existed before
+    /// this ticket.
+    plugin_graph: Arc<semio_framework_plugin_host::PluginGraph>,
+    /// 🎯️ Every loaded plugin's `contributor.list-artifact-mutations` roster, merged.
+    mutation_router: Arc<semio_framework_plugin_host::ArtifactMutationRouter>,
+    /// 💡️ Upgraded (this ticket) contributor-aware artifact inference router — wired here for the
+    /// first time (scout-2 §3: "`ArtifactInferenceRouter` is NOT wired in `🏃️run` today").
+    inference_router: Arc<semio_framework_plugin_host::ArtifactInferenceRouter>,
+    /// 🗺️ `ArtifactRef -> (plugin_id, instance_id, artifact_kind)`, populated by `open` at
+    /// instantiate-app time.
+    instance_directory: Arc<semio_framework_plugin_host::InstanceDirectory>,
+    /// 🎯️ Drives contract §5 transactions over this host's own loaded runtimes — see
+    /// `run_transaction`.
+    transaction_coordinator: Arc<semio_framework_plugin_host::HostTransactionCoordinator>,
+    /// 🚪️👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET (W1-A): every loaded plugin's
+    /// viewer/editor surfaces — see `resolve_open_artifact`/`set_default_app`/`clear_default_app`.
+    app_router: Arc<semio_framework_plugin_host::AppRouter>,
+    /// 🎚️ Folded `OpeningPreferences` snapshot — event-sourced (contract §4): every write goes
+    /// through `apply_opening_config_mutation` on a typed `OpeningConfigMutation`, never a direct
+    /// field mutation. Persisted local-only for now (no `ConfigStore`/disk binding wired yet — see
+    /// `set_default_app`'s doc); a real multi-session deployment would fold this from a durable op
+    /// log at boot instead of starting empty every run.
+    opening_preferences: semio_framework_plugin_host::opening_config::OpeningPreferences,
     next_handle: u32,
     instances: HashMap<u32, (String, u32)>,
 }
@@ -1200,6 +1229,13 @@ impl WasmtimeNodeHost {
             plugin_path_for_plugin,
             blob_store,
             io_router: Arc::new(semio_framework_plugin_host::IoRouter::new()),
+            plugin_graph: Arc::new(semio_framework_plugin_host::PluginGraph::new()),
+            mutation_router: Arc::new(semio_framework_plugin_host::ArtifactMutationRouter::new()),
+            inference_router: Arc::new(semio_framework_plugin_host::ArtifactInferenceRouter::new()),
+            instance_directory: Arc::new(semio_framework_plugin_host::InstanceDirectory::new()),
+            transaction_coordinator: Arc::new(semio_framework_plugin_host::HostTransactionCoordinator::new()),
+            app_router: Arc::new(semio_framework_plugin_host::AppRouter::new()),
+            opening_preferences: semio_framework_plugin_host::opening_config::OpeningPreferences::default(),
             next_handle: 1,
             instances: HashMap::new(),
         }
@@ -1212,35 +1248,336 @@ impl WasmtimeNodeHost {
         self.io_router.stats()
     }
 
+    pub fn plugin_graph(&self) -> &semio_framework_plugin_host::PluginGraph {
+        &self.plugin_graph
+    }
+
+    pub fn mutation_router(&self) -> &semio_framework_plugin_host::ArtifactMutationRouter {
+        &self.mutation_router
+    }
+
+    pub fn inference_router(&self) -> &semio_framework_plugin_host::ArtifactInferenceRouter {
+        &self.inference_router
+    }
+
+    pub fn instance_directory(&self) -> &semio_framework_plugin_host::InstanceDirectory {
+        &self.instance_directory
+    }
+
     fn runtime_for(&mut self, plugin_id: &str) -> Result<&Arc<semio_framework_plugin_host::WasmPluginRuntime>, RunError> {
-        if !self.runtimes.contains_key(plugin_id) {
-            let path = self.plugin_path_for_plugin.get(plugin_id).ok_or_else(|| RunError::Host(format!("no compiled program registered for plugin `{plugin_id}`")))?;
-            let runtime = Arc::new(semio_framework_plugin_host::WasmPluginRuntime::load(path).map_err(|error| RunError::Host(error.to_string()))?);
-            runtime.register_host_blob_store(Arc::clone(&self.blob_store)).map_err(|error| RunError::Host(error.to_string()))?;
-            runtime.register_host_io_router(Arc::clone(&self.io_router)).map_err(|error| RunError::Host(error.to_string()))?;
-            self.io_router.register_plugin(plugin_id, Arc::clone(&runtime)).map_err(|error| RunError::Host(error.to_string()))?;
-            self.runtimes.insert(plugin_id.to_string(), runtime);
+        let mut loading = Vec::new();
+        self.load_runtime_recursive(plugin_id, &mut loading)?;
+        Ok(self.runtimes.get(plugin_id).expect("just loaded or already present"))
+    }
+
+    /// 🕸️ Scout-2 §3's binding requirement: a dependency is loaded (recursively) before its
+    /// dependent, and `PluginGraph::register` validates the whole graph (missing dependency,
+    /// version mismatch, cycle — contract §4 rule 5) before this plugin's own routers see it.
+    /// `loading` guards against a cycle that only becomes visible once a manifest is actually read
+    /// (unlike `PluginGraph`'s own cycle check, which only fires once every member is registered).
+    fn load_runtime_recursive(&mut self, plugin_id: &str, loading: &mut Vec<String>) -> Result<(), RunError> {
+        if self.runtimes.contains_key(plugin_id) {
+            return Ok(());
         }
-        Ok(self.runtimes.get(plugin_id).expect("just inserted"))
+        if loading.contains(&plugin_id.to_string()) {
+            loading.push(plugin_id.to_string());
+            return Err(RunError::Host(format!("plugin dependency cycle while loading: {}", loading.join(" -> "))));
+        }
+        loading.push(plugin_id.to_string());
+        let path = self.plugin_path_for_plugin.get(plugin_id).cloned().ok_or_else(|| RunError::Host(format!("no compiled program registered for plugin `{plugin_id}`")))?;
+        let runtime = Arc::new(semio_framework_plugin_host::WasmPluginRuntime::load(&path).map_err(|error| RunError::Host(error.to_string()))?);
+
+        for dependency in &runtime.manifest.dependencies {
+            self.load_runtime_recursive(&dependency.plugin_id, loading)?;
+        }
+
+        runtime.register_host_blob_store(Arc::clone(&self.blob_store)).map_err(|error| RunError::Host(error.to_string()))?;
+        runtime.register_host_io_router(Arc::clone(&self.io_router)).map_err(|error| RunError::Host(error.to_string()))?;
+        self.io_router.register_plugin(plugin_id, Arc::clone(&runtime)).map_err(|error| RunError::Host(error.to_string()))?;
+
+        self.plugin_graph.register(runtime.manifest.clone()).map_err(|error| RunError::Host(error.to_string()))?;
+
+        let mutation_roster = runtime.list_artifact_mutations().map_err(|error| RunError::Host(error.to_string()))?;
+        self.mutation_router.register_plugin(plugin_id, &runtime.manifest.dependencies, &mutation_roster).map_err(|error| RunError::Host(error.to_string()))?;
+
+        self.inference_router.register_plugin(plugin_id, &runtime.manifest.dependencies, Arc::clone(&runtime)).map_err(|error| RunError::Host(error.to_string()))?;
+
+        self.app_router.register_plugin(plugin_id, &runtime).map_err(|fault| RunError::Host(fault.message))?;
+        // 🩺️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §3 item 3 (W1 soft
+        // gate — see `AppRouter::owned_surface_gaps`'s own doc for why this cannot be a hard `assert!`
+        // yet): reported, never panics, so the host boots even though every plugin today has zero
+        // surfaces. Logged once per plugin load rather than once per gap to keep boot output bounded.
+        let gaps = self.app_router.owned_surface_gaps();
+        if !gaps.is_empty() {
+            eprintln!("[app-router] plugin `{plugin_id}` load left {} owned-surface gap(s), e.g. {}", gaps.len(), gaps[0].message);
+        }
+
+        self.runtimes.insert(plugin_id.to_string(), runtime);
+        loading.pop();
+        Ok(())
+    }
+
+    /// ✂️ Contract §4.5: refused while any OTHER loaded plugin still depends on `plugin_id`.
+    pub fn unload_plugin(&mut self, plugin_id: &str) -> Result<(), RunError> {
+        self.plugin_graph.guard_unload(plugin_id).map_err(|error| RunError::Host(error.to_string()))?;
+        self.io_router.unregister_plugin(plugin_id).map_err(|error| RunError::Host(error.to_string()))?;
+        self.mutation_router.unregister_plugin(plugin_id).map_err(|error| RunError::Host(error.to_string()))?;
+        self.inference_router.unregister_plugin(plugin_id).map_err(|error| RunError::Host(error.to_string()))?;
+        self.app_router.unregister_plugin(plugin_id);
+        self.plugin_graph.unregister(plugin_id).map_err(|error| RunError::Host(error.to_string()))?;
+        self.runtimes.remove(plugin_id);
+        Ok(())
+    }
+
+    /// 🩹️ Contract §4.5: builds a fresh `WasmPluginRuntime` from the SAME compiled path, re-validates
+    /// the WHOLE graph with `plugin_id` replaced (so a version bump that would break a live
+    /// dependent is rejected before anything swaps — scout-2 §5's "nothing considers dependents on
+    /// reload"), then atomically replaces the registered runtime and every router entry for it. A
+    /// fresh top-level `Arc` (not an in-place mutation of the existing one) is used deliberately:
+    /// nothing in this host caches a `WasmPluginRuntime` handle across calls (`exchange`/`open`
+    /// always re-look-up via `self.runtimes.get(plugin_id)`), so swapping the map entry is
+    /// observationally identical to, and simpler than, requiring exclusive ownership of the old
+    /// `Arc` (which every router's own registration also holds a clone of).
+    pub fn hot_reload_plugin(&mut self, plugin_id: &str) -> Result<(), RunError> {
+        let path = self.plugin_path_for_plugin.get(plugin_id).cloned().ok_or_else(|| RunError::Host(format!("no compiled program registered for plugin `{plugin_id}`")))?;
+        let fresh = semio_framework_plugin_host::WasmPluginRuntime::load(&path).map_err(|error| RunError::Host(error.to_string()))?;
+        self.plugin_graph.prepare_hot_reload(&fresh.manifest).map_err(|error| RunError::Host(error.to_string()))?;
+
+        let fresh = Arc::new(fresh);
+        fresh.register_host_blob_store(Arc::clone(&self.blob_store)).map_err(|error| RunError::Host(error.to_string()))?;
+        fresh.register_host_io_router(Arc::clone(&self.io_router)).map_err(|error| RunError::Host(error.to_string()))?;
+        self.io_router.unregister_plugin(plugin_id).map_err(|error| RunError::Host(error.to_string()))?;
+        self.io_router.register_plugin(plugin_id, Arc::clone(&fresh)).map_err(|error| RunError::Host(error.to_string()))?;
+
+        self.mutation_router.unregister_plugin(plugin_id).map_err(|error| RunError::Host(error.to_string()))?;
+        let mutation_roster = fresh.list_artifact_mutations().map_err(|error| RunError::Host(error.to_string()))?;
+        self.mutation_router.register_plugin(plugin_id, &fresh.manifest.dependencies, &mutation_roster).map_err(|error| RunError::Host(error.to_string()))?;
+
+        self.inference_router.unregister_plugin(plugin_id).map_err(|error| RunError::Host(error.to_string()))?;
+        self.inference_router.register_plugin(plugin_id, &fresh.manifest.dependencies, Arc::clone(&fresh)).map_err(|error| RunError::Host(error.to_string()))?;
+
+        self.app_router.unregister_plugin(plugin_id);
+        self.app_router.register_plugin(plugin_id, &fresh).map_err(|fault| RunError::Host(fault.message))?;
+
+        self.plugin_graph.commit_hot_reload(fresh.manifest.clone()).map_err(|error| RunError::Host(error.to_string()))?;
+        self.runtimes.insert(plugin_id.to_string(), fresh);
+        Ok(())
+    }
+
+    /// 🎯️ Contract §5 end to end: `initiator_handle` must already have proposed (its own
+    /// `dispatch_emit` stashed a `TransactionProposalDraft` instead of applying — the caller drains
+    /// it via `exchange` and passes `local_ops`/`description`/`foreign` straight through here).
+    /// Resolves every foreign step through this host's own `InstanceDirectory`/`ArtifactMutationRouter`,
+    /// planning a CONTRIBUTED step by calling the contributor's real `artifact-mutation-plan` with
+    /// the target's live `SessionLanePack` snapshot, and drives every `TransactionPrepare`/`Commit`/
+    /// `Rollback`/`Undo` over the SAME `WasmPluginRuntime::exchange` a live UI's frames go through.
+    pub fn run_transaction(&self, initiator_handle: u32, local_ops: Vec<Vec<u8>>, description: String, foreign: Vec<protocol::ForeignStep>) -> Result<semio_framework_plugin_host::TransactionOutcome, semio_framework_plugin_host::TransactionError> {
+        let (plugin_id, instance_id) = self.instances.get(&initiator_handle).cloned().ok_or_else(|| semio_framework_plugin_host::TransactionError::rejected("transaction.unknown-target", format!("unknown node handle {initiator_handle}")))?;
+        let initiator = semio_framework_plugin_host::TransactionMember { plugin_id, instance_id };
+        let runtimes = &self.runtimes;
+        let graph = &self.plugin_graph;
+        self.transaction_coordinator.run_transaction(
+            &self.instance_directory,
+            &self.mutation_router,
+            |plugin_id, instance_id, command| {
+                let runtime = runtimes.get(plugin_id).ok_or_else(|| semio_framework_plugin_host::TransactionError::rejected("transaction.unknown-target", format!("plugin `{plugin_id}` not loaded")))?;
+                let encoded = protocol::encode_app_command(&command);
+                let frames = runtime.exchange(instance_id, vec![encoded]).map_err(semio_framework_plugin_host::TransactionError::Host)?;
+                frames.iter().map(|bytes| protocol::decode_app_frame(bytes).map_err(|error| semio_framework_plugin_host::TransactionError::rejected("transaction.commit-failed", error.to_string()))).collect()
+            },
+            |contributor, artifact_kind, mutation_id, member, payload| {
+                // 🔗️ Re-check the dependency at dispatch time, not just at load: an owner can be
+                // unloaded, or replaced by a build the contributor's requirement no longer matches,
+                // long after both registered. `contribution_block` distinguishes the three cases so
+                // the caller sees `dependency-missing` / `version-mismatch` / `contribution-not-permitted`
+                // rather than one undifferentiated refusal.
+                if let Some((code, detail)) = graph.contribution_block(contributor, &member.plugin_id).map_err(|error| semio_framework_plugin_host::TransactionError::rejected("transaction.contribution-not-permitted", error.to_string()))? {
+                    return Err(semio_framework_plugin_host::TransactionError::rejected(code, detail));
+                }
+                let contributor_runtime = runtimes.get(contributor).ok_or_else(|| semio_framework_plugin_host::TransactionError::rejected("transaction.dependency-missing", format!("contributor `{contributor}` not loaded")))?;
+                let target_runtime = runtimes.get(&member.plugin_id).ok_or_else(|| semio_framework_plugin_host::TransactionError::rejected("transaction.unknown-target", format!("plugin `{}` not loaded", member.plugin_id)))?;
+                let session = target_runtime.document_session(member.instance_id).map_err(semio_framework_plugin_host::TransactionError::Host)?.unwrap_or_default();
+                let request = semio_framework_plugin_host::HostArtifactMutationPlanRequest { artifact_kind: artifact_kind.to_string(), mutation_id: mutation_id.to_string(), revision: session.command_log_len, generation: session.generation, snapshot_pack: session.document.pack.clone(), payload: payload.to_vec() };
+                let request_value = to_dsl_value(&request).map_err(|error| semio_framework_plugin_host::TransactionError::rejected("transaction.commit-failed", error))?;
+                let request_bytes = store::pack_rt::encode_wire_value(&request_value);
+                let result_bytes = contributor_runtime.artifact_mutation_plan(&request_bytes).map_err(semio_framework_plugin_host::TransactionError::Host)?;
+                let result_value = store::pack_rt::decode_wire_value(&result_bytes).map_err(|error| semio_framework_plugin_host::TransactionError::rejected("transaction.commit-failed", error.to_string()))?;
+                from_dsl_value(result_value).map_err(|error| semio_framework_plugin_host::TransactionError::rejected("transaction.commit-failed", error))
+            },
+            initiator,
+            local_ops,
+            description,
+            foreign,
+        )
+    }
+
+    pub fn undo_transaction_group(&self, members: &[semio_framework_plugin_host::TransactionMember], group_id: &str) {
+        let runtimes = &self.runtimes;
+        self.transaction_coordinator.undo_group(
+            |plugin_id, instance_id, command| {
+                let runtime = runtimes.get(plugin_id).ok_or_else(|| semio_framework_plugin_host::TransactionError::rejected("transaction.unknown-target", format!("plugin `{plugin_id}` not loaded")))?;
+                let encoded = protocol::encode_app_command(&command);
+                let frames = runtime.exchange(instance_id, vec![encoded]).map_err(semio_framework_plugin_host::TransactionError::Host)?;
+                frames.iter().map(|bytes| protocol::decode_app_frame(bytes).map_err(|error| semio_framework_plugin_host::TransactionError::rejected("transaction.commit-failed", error.to_string()))).collect()
+            },
+            members,
+            group_id,
+        )
+    }
+
+    //#region 🔖️OpeningCommands
+    /// 🚪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET (W1-A), contract §3: the host-level
+    /// implementation of `os.open-artifact`. Empty `plugin_id`/`app_id` means "ask `OpeningResolver`";
+    /// both set means the caller already knows which surface it wants (validated, echoed back
+    /// unchanged — the SDK-side `relay_open_artifact` in `semio-framework-plugin`'s
+    /// `OpeningCommandRelay` region runs the SAME shape of validation before the shell relay; this is
+    /// the host's own independent check, reusing its exact `opening.*` fault-code vocabulary so a
+    /// caller sees one consistent error grammar on either side of the wire). Returns
+    /// `semio_framework::Fault` directly (not `RunError`) so the frozen fault codes (`surface.*` from
+    /// `OpeningResolver`, `opening.*` here) reach the caller verbatim instead of being flattened into
+    /// an opaque string — `exchange` below re-encodes it onto the wire unchanged. This is a HOST-LEVEL
+    /// operation (which plugin/app to instantiate) rather than an already-open-instance operation, so
+    /// — like `run_transaction` above — it is a direct method rather than only reachable through
+    /// `exchange`'s per-`node` interface; `exchange` also intercepts the wire `AppCommand::OpenArtifact`
+    /// and delegates here.
+    pub fn resolve_open_artifact(&self, artifact_ref: &str, role_wire: u8, plugin_id: &str, app_id: &str) -> Result<semio_framework::AppRef, semio_framework::Fault> {
+        let role = opening_role_from_wire(role_wire)?;
+        let (dialect, artifact_role) = semio_framework::parse_surface_app_id(artifact_ref)
+            .map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("opening.invalid-artifact-ref"), error))?;
+        if role != artifact_role {
+            return Err(semio_framework::Fault::new(
+                semio_framework::FaultOrigin::Os,
+                semio_framework::FaultCode::new("opening.role-mismatch"),
+                format!("artifact ref {artifact_ref} declares {} but the command declares {}", artifact_role.as_str(), role.as_str()),
+            ));
+        }
+        match (plugin_id.is_empty(), app_id.is_empty()) {
+            (true, true) => {
+                let user_default = self.opening_preferences.defaults.iter().find(|entry| entry.dialect == dialect && entry.role == role).map(|entry| &entry.app);
+                semio_framework_plugin_host::OpeningResolver::resolve(&self.app_router, &dialect, role, user_default)
+            }
+            (false, false) => Ok(semio_framework::AppRef { plugin_id: plugin_id.to_string(), app_id: app_id.to_string() }),
+            _ => Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("opening.partial-app-ref"), "plugin_id and app_id must either both be empty or both be set")),
+        }
+    }
+
+    /// ✏️ Contract §3's `os.set-default-viewer`/`os.set-default-editor`: pins `app` as the default
+    /// `role` surface for `(artifact_kind, standard, subset)` — refuses to pin a surface the
+    /// `AppRouter` does not actually know about (a stale/typo'd `AppRef` would otherwise silently
+    /// pin to nothing, since `OpeningResolver` already falls through past any default not present in
+    /// the router; refusing up front is a better failure than a default that quietly never applies).
+    /// Applies through the SAME event-sourced `OpeningConfigMutation`/`apply_opening_config_mutation`
+    /// the schema facet's own `MutationDiff` impl defines (contract §4: "never a mutable map") — never
+    /// a direct field write onto `self.opening_preferences`.
+    pub fn set_default_app(&mut self, artifact_kind: &str, standard: &str, subset: &str, role_wire: u8, plugin_id: &str, app_id: &str) -> Result<(), semio_framework::Fault> {
+        let role = opening_role_from_wire(role_wire)?;
+        let dialect = semio_framework::ArtifactDialect { artifact_kind: artifact_kind.to_string(), standard: standard.to_string(), subset: subset.to_string() };
+        let app = semio_framework::AppRef { plugin_id: plugin_id.to_string(), app_id: app_id.to_string() };
+        if !self.app_router.surfaces_for(&dialect, role).contains(&app) {
+            return Err(semio_framework::Fault::new(
+                semio_framework::FaultOrigin::Os,
+                semio_framework::FaultCode::new("opening.invalid-app-ref"),
+                format!("`{}` is not a registered {} surface for `{}`", app.app_id, role.as_str(), dialect.to_coordinate()),
+            ));
+        }
+        let mutation = semio_framework_plugin_host::opening_config::mutations::set_default_app::mutation::set_default_app(dialect, role, app);
+        semio_framework_plugin_host::opening_config::mutations::apply_opening_config_mutation(&mut self.opening_preferences, &mutation);
+        Ok(())
+    }
+
+    /// 🧹 Contract §3's `os.clear-default-app`: unpins whatever default is set for
+    /// `(artifact_kind, standard, subset, role)`, if any — infallible past role validation (clearing
+    /// an already-absent default is a no-op, matching `ClearDefaultApp`'s own diff), same
+    /// event-sourced apply path as `set_default_app`.
+    pub fn clear_default_app(&mut self, artifact_kind: &str, standard: &str, subset: &str, role_wire: u8) -> Result<(), semio_framework::Fault> {
+        let role = opening_role_from_wire(role_wire)?;
+        let dialect = semio_framework::ArtifactDialect { artifact_kind: artifact_kind.to_string(), standard: standard.to_string(), subset: subset.to_string() };
+        let mutation = semio_framework_plugin_host::opening_config::mutations::clear_default_app::mutation::clear_default_app(dialect, role);
+        semio_framework_plugin_host::opening_config::mutations::apply_opening_config_mutation(&mut self.opening_preferences, &mutation);
+        Ok(())
+    }
+    //#endregion 🔖️OpeningCommands
+}
+
+/// 🔤️ Wire `role: u8` -> `AppRole` (`0` Viewer, `1` Editor, contract §3) — the host-side twin of the
+/// SDK guest's `opening_role` in `semio-framework-plugin`'s `OpeningCommandRelay` region; same fault
+/// code (`opening.invalid-role`) on both sides of the wire.
+fn opening_role_from_wire(role_wire: u8) -> Result<semio_framework::AppRole, semio_framework::Fault> {
+    match role_wire {
+        0 => Ok(semio_framework::AppRole::Viewer),
+        1 => Ok(semio_framework::AppRole::Editor),
+        other => Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("opening.invalid-role"), format!("opening role {other} must be 0 (viewer) or 1 (editor)"))),
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl AppChannelHost for WasmtimeNodeHost {
-    fn open(&mut self, plugin_id: &str, app_id: &str) -> Result<u32, RunError> {
+    fn open(&mut self, plugin_id: &str, app_id: &str, artifact_ref: &str) -> Result<u32, RunError> {
         let instance_id = self.runtime_for(plugin_id)?.create_app(app_id).map_err(|error| RunError::Host(error.to_string()))?;
+        if !artifact_ref.is_empty() {
+            let artifact_kind = self
+                .runtimes
+                .get(plugin_id)
+                .and_then(|runtime| runtime.manifest.apps.iter().find(|app| app.id == app_id))
+                .map(|app| app.io.document_schema.clone())
+                .filter(|schema| !schema.is_empty())
+                .unwrap_or_else(|| app_id.to_string());
+            self.instance_directory.bind(artifact_ref, plugin_id, instance_id, &artifact_kind).map_err(|error| RunError::Host(error.to_string()))?;
+        }
         let handle = self.next_handle;
         self.next_handle += 1;
         self.instances.insert(handle, (plugin_id.to_string(), instance_id));
         Ok(handle)
     }
 
+    /// 🚪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET (W1-A) contract §3: intercepts the
+    /// three OS-level `AppCommand`s (`OpenArtifact`/`SetDefaultApp`/`ClearDefaultApp`) BEFORE the
+    /// generic per-instance forward below — they are host-level (which plugin/app to resolve, or how
+    /// to fold `OpeningPreferences`), never something a guest's `VcsArtifactApp` could handle, and a
+    /// guest given one of these bytes would just fail to decode it as any of ITS OWN typed commands.
+    /// `node` still selects which loaded runtime the REMAINING (non-opening) commands in the same
+    /// batch forward to — resolved once opening frames are peeled off, so a batch of pure opening
+    /// commands never needs a live instance at all. Simplification, documented: opening-command
+    /// frames are appended BEFORE any passthrough guest frames rather than interleaved at their
+    /// original position — fine while a real caller sends either an opening batch or a document batch,
+    /// never both mixed in one call (today's only caller, the SDK's `OpeningCommandRelay`, never mixes
+    /// them).
     fn exchange(&mut self, node: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, RunError> {
-        let (plugin_id, instance_id) = self.instances.get(&node).ok_or_else(|| RunError::Host(format!("unknown node handle {node}")))?;
-        let encoded: Vec<Vec<u8>> = commands.iter().map(protocol::encode_app_command).collect();
-        let runtime = self.runtimes.get(plugin_id).ok_or_else(|| RunError::Host(format!("no runtime for plugin `{plugin_id}`")))?;
-        let response = runtime.exchange(*instance_id, encoded).map_err(|error| RunError::Host(error.to_string()))?;
-        response.iter().map(|bytes| protocol::decode_app_frame(bytes).map_err(|error| RunError::Host(error.to_string()))).collect()
+        let mut frames = Vec::new();
+        let mut passthrough = Vec::new();
+        for command in commands {
+            match command {
+                AppCommand::OpenArtifact { seq, artifact_ref, role, plugin_id, app_id } => {
+                    frames.push(match self.resolve_open_artifact(&artifact_ref, role, &plugin_id, &app_id) {
+                        Ok(_resolved) => AppFrame::Done { in_reply_to: seq },
+                        Err(fault) => AppFrame::Error { in_reply_to: Some(seq), fault: dsl::encode_fault_bytes(&fault) },
+                    });
+                }
+                AppCommand::SetDefaultApp { seq, artifact_kind, standard, subset, role, plugin_id, app_id } => {
+                    frames.push(match self.set_default_app(&artifact_kind, &standard, &subset, role, &plugin_id, &app_id) {
+                        Ok(()) => AppFrame::Done { in_reply_to: seq },
+                        Err(fault) => AppFrame::Error { in_reply_to: Some(seq), fault: dsl::encode_fault_bytes(&fault) },
+                    });
+                }
+                AppCommand::ClearDefaultApp { seq, artifact_kind, standard, subset, role } => {
+                    frames.push(match self.clear_default_app(&artifact_kind, &standard, &subset, role) {
+                        Ok(()) => AppFrame::Done { in_reply_to: seq },
+                        Err(fault) => AppFrame::Error { in_reply_to: Some(seq), fault: dsl::encode_fault_bytes(&fault) },
+                    });
+                }
+                other => passthrough.push(other),
+            }
+        }
+        if !passthrough.is_empty() {
+            let (plugin_id, instance_id) = self.instances.get(&node).ok_or_else(|| RunError::Host(format!("unknown node handle {node}")))?;
+            let encoded: Vec<Vec<u8>> = passthrough.iter().map(protocol::encode_app_command).collect();
+            let runtime = self.runtimes.get(plugin_id).ok_or_else(|| RunError::Host(format!("no runtime for plugin `{plugin_id}`")))?;
+            let response = runtime.exchange(*instance_id, encoded).map_err(|error| RunError::Host(error.to_string()))?;
+            for bytes in &response {
+                frames.push(protocol::decode_app_frame(bytes).map_err(|error| RunError::Host(error.to_string()))?);
+            }
+        }
+        Ok(frames)
     }
 }
 //#endregion 🔖️WasmtimeNodeHost
@@ -1281,7 +1618,7 @@ mod tests {
     }
 
     impl AppChannelHost for FakeHost {
-        fn open(&mut self, _plugin_id: &str, app_id: &str) -> Result<u32, RunError> {
+        fn open(&mut self, _plugin_id: &str, app_id: &str, _artifact_ref: &str) -> Result<u32, RunError> {
             self.next += 1;
             self.handle_app.insert(self.next, app_id.to_string());
             Ok(self.next)

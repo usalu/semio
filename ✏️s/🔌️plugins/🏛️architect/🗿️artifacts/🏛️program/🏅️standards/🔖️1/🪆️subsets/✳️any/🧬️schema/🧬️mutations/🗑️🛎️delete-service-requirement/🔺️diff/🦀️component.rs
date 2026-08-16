@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🛎️services` per Wave C.
 
 use super::mutation::DeleteServiceRequirement;
+use crate::artifacts::program::diff::ProgramServicesDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramServicesDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteServiceRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

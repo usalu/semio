@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🗳️surveys` per Wave C.
 
 use super::mutation::ReplaceSurvey;
-use protocol::Patchable;
+use crate::artifacts::program::diff::{ProgramSurveysDelta, ProgramSurveysPatchEntry};
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramSurveysDelta, ProgramSurveysPatchEntry};
+use protocol::Patchable;
 
 /// 🔁️ `patched = [{id, full patch}]` via `Patchable::diff_patch` — every field of the payload
 /// row becomes the patch, so applying it fully overwrites the target's non-identity content.

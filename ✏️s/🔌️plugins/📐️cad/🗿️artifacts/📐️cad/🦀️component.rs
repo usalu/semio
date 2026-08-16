@@ -13,6 +13,15 @@ pub const CAD_DOCUMENT_SCHEMA: &str = "cad.scene";
 
 pub const CAD_PLAY_DOCUMENT_SCHEMA: &str = "cad.document";
 
+/// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the one `Dialect` coordinate every
+/// surface (`✏️editor`, `👁️viewer`) of the `✳️any` subset binds `ArtifactEditor::DIALECT`/
+/// `ArtifactViewer::DIALECT` to — `"s.cad.cad"` matches the artifact-kind id this subset's own
+/// mutation/inference descriptors already key off (see `definition()`'s `"s.cad.schema.artifact"`
+/// row), standard `"1"` and subset `"*"` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any`
+/// location. Lives at the artifact level (not under `editor`/`viewer`) so `policyViewerPurityBreaches`
+/// never sees a viewer file importing through an `::editor::` path just to read this constant.
+pub const CAD_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.cad.cad", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "kebab-case")]
 pub enum CadPaneId {

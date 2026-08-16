@@ -142,6 +142,11 @@ pub enum FaultOrigin {
     Plugin,
     App,
     Extension,
+    /// 🚪️👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.3: origin for the
+    /// five frozen `surface.*`/`viewer.*` fault codes (`AppRouter`/`OpeningResolver`/`VcsArtifactApp`
+    /// role guard) — additive variant, no existing variant touched, no match site in this crate is
+    /// exhaustive over it (verified with a repo-wide grep before adding).
+    Framework,
 }
 
 /// @emoji 🎯️ Optional ids locating a fault/diagnostic to a plugin app surface.

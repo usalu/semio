@@ -131,6 +131,10 @@ impl ArtifactApp for Procedural2dPlayApp {
     const APP_ID: &'static str = PROCEDURAL2D_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = PROCEDURAL_2D_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::procedural2d::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> Procedural2dSnapshot {
         crate::artifacts::procedural2d::schema::default_snapshot()
     }
@@ -445,12 +449,10 @@ pub(crate) mod testkit {
     pub type Procedural2dApp = VcsArtifactApp<Procedural2dPlayApp>;
 
     pub fn app() -> Procedural2dApp {
-        crate::apps::procedural3d::ensure_linked_flow_extensions();
         new_app::<Procedural2dPlayApp>()
     }
 
     pub fn app_with_registry() -> Procedural2dApp {
-        crate::apps::procedural3d::ensure_linked_flow_extensions();
         new_app_with_registry::<Procedural2dPlayApp>(create_procedural2d_app)
     }
 

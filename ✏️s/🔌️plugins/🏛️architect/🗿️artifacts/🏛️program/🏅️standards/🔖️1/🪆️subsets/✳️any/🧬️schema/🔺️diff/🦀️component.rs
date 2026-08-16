@@ -2,9 +2,9 @@
 
 use crate::artifacts::program::kernel::*;
 use crate::artifacts::program::registers::*;
+use crate::artifacts::program::ProgramSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
-use crate::artifacts::program::ProgramSnapshot;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the program artifact.
@@ -12,88 +12,170 @@ use crate::artifacts::program::ProgramSnapshot;
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.architect.program")]
 pub struct ProgramDiff {
-    #[state(artifact)] pub artifact: Option<Box<crate::artifacts::program::schema::ProgramArtifact>>,
-    #[state(artifact)] pub schema: Option<String>,
-    #[state(artifact)] pub meta: Option<ProgramMeta>,
-    #[state(artifact)] pub project: Option<ProjectDefinition>,
-    #[state(artifact)] pub stakeholders: Option<ProgramStakeholdersDelta>,
-    #[state(artifact)] pub users: Option<ProgramUsersDelta>,
-    #[state(artifact)] pub activities: Option<ProgramActivitiesDelta>,
-    #[state(artifact)] pub functions: Option<ProgramFunctionsDelta>,
-    #[state(artifact)] pub elements: Option<ProgramElementsDelta>,
-    #[state(artifact)] pub quantities: Option<ProgramQuantitiesDelta>,
-    #[state(artifact)] pub relationships: Option<ProgramRelationshipsDelta>,
-    #[state(artifact)] pub adjacencies: Option<ProgramAdjacenciesDelta>,
-    #[state(artifact)] pub processes: Option<ProgramProcessesDelta>,
-    #[state(artifact)] pub flows: Option<ProgramFlowsDelta>,
-    #[state(artifact)] pub access_rules: Option<ProgramAccessRulesDelta>,
-    #[state(artifact)] pub operations: Option<ProgramOperationsDelta>,
-    #[state(artifact)] pub equipment: Option<ProgramEquipmentDelta>,
-    #[state(artifact)] pub resources: Option<ProgramResourcesDelta>,
-    #[state(artifact)] pub storage: Option<ProgramStorageDelta>,
-    #[state(artifact)] pub environmental: Option<ProgramEnvironmentalDelta>,
-    #[state(artifact)] pub human_factors: Option<ProgramHumanFactorsDelta>,
-    #[state(artifact)] pub accessibility: Option<ProgramAccessibilityDelta>,
-    #[state(artifact)] pub privacy: Option<ProgramPrivacyDelta>,
-    #[state(artifact)] pub safety: Option<ProgramSafetyDelta>,
-    #[state(artifact)] pub security: Option<ProgramSecurityDelta>,
-    #[state(artifact)] pub regulatory: Option<ProgramRegulatoryDelta>,
-    #[state(artifact)] pub site_context: Option<ProgramSiteContextDelta>,
-    #[state(artifact)] pub organizational: Option<ProgramOrganizationalDelta>,
-    #[state(artifact)] pub services: Option<ProgramServicesDelta>,
-    #[state(artifact)] pub infrastructure: Option<ProgramInfrastructureDelta>,
-    #[state(artifact)] pub information: Option<ProgramInformationDelta>,
-    #[state(artifact)] pub communication: Option<ProgramCommunicationDelta>,
-    #[state(artifact)] pub wayfinding: Option<ProgramWayfindingDelta>,
-    #[state(artifact)] pub schedules: Option<ProgramSchedulesDelta>,
-    #[state(artifact)] pub flexibility: Option<ProgramFlexibilityDelta>,
-    #[state(artifact)] pub growth: Option<ProgramGrowthDelta>,
-    #[state(artifact)] pub sustainability: Option<ProgramSustainabilityDelta>,
-    #[state(artifact)] pub resilience: Option<ProgramResilienceDelta>,
-    #[state(artifact)] pub costs: Option<ProgramCostsDelta>,
-    #[state(artifact)] pub delivery: Option<ProgramDeliveryDelta>,
-    #[state(artifact)] pub risks: Option<ProgramRisksDelta>,
-    #[state(artifact)] pub conflicts: Option<ProgramConflictsDelta>,
-    #[state(artifact)] pub requirements: Option<ProgramRequirementsDelta>,
-    #[state(artifact)] pub priorities: Option<ProgramPrioritiesDelta>,
-    #[state(artifact)] pub scenarios: Option<ProgramScenariosDelta>,
-    #[state(artifact)] pub options: Option<ProgramOptionsDelta>,
-    #[state(artifact)] pub decisions: Option<ProgramDecisionsDelta>,
-    #[state(artifact)] pub validations: Option<ProgramValidationsDelta>,
-    #[state(artifact)] pub performance: Option<ProgramPerformanceDelta>,
-    #[state(artifact)] pub quality: Option<ProgramQualityDelta>,
-    #[state(artifact)] pub documents: Option<ProgramArtifactsDelta>,
-    #[state(artifact)] pub assumptions: Option<ProgramAssumptionsDelta>,
-    #[state(artifact)] pub constraints: Option<ProgramConstraintsDelta>,
-    #[state(artifact)] pub compliance_records: Option<ProgramComplianceRecordsDelta>,
-    #[state(artifact)] pub approvals: Option<ProgramApprovalsDelta>,
-    #[state(artifact)] pub meetings: Option<ProgramMeetingsDelta>,
-    #[state(artifact)] pub changes: Option<ProgramChangesDelta>,
-    #[state(artifact)] pub collaboration: Option<ProgramCollaborationDelta>,
-    #[state(artifact)] pub analyses: Option<ProgramAnalysesDelta>,
-    #[state(artifact)] pub reports: Option<ProgramReportsDelta>,
-    #[state(artifact)] pub search_filters: Option<ProgramSearchFiltersDelta>,
-    #[state(artifact)] pub status_records: Option<ProgramStatusRecordsDelta>,
-    #[state(artifact)] pub workshops: Option<ProgramWorkshopsDelta>,
-    #[state(artifact)] pub surveys: Option<ProgramSurveysDelta>,
-    #[state(artifact)] pub issues: Option<ProgramIssuesDelta>,
-    #[state(artifact)] pub audit_events: Option<ProgramAuditEventsDelta>,
-    #[state(artifact)] pub templates: Option<ProgramTemplatesDelta>,
-    #[state(artifact)] pub knowledge: Option<crate::artifacts::program::ProgramKnowledgeChild>,
-    #[state(artifact)] pub benchmarks: Option<crate::artifacts::program::ProgramBenchmarksChild>,
-    #[state(artifact)] pub traces: Option<ProgramTracesDelta>,
-    #[state(artifact)] pub governance: Option<Governance>,
-    #[state(presence)] pub selected_ids: Option<ProgramStringList>,
-    #[state(presence)] pub active_register: Option<String>,
-    #[state(presence)] pub adjacency_kind_filter: Option<Option<AdjacencyKind>>,
-    #[state(presence)] pub active_report_json: Option<String>,
-    #[state(config)] pub search_query: Option<String>,
-    #[state(config)] pub search_history_json: Option<String>,
-    #[state(config)] pub last_result_json: Option<String>,
-    #[state(config)] pub last_analysis_json: Option<String>,
-    #[state(config)] pub graph_camera_x: Option<f64>,
-    #[state(config)] pub graph_camera_y: Option<f64>,
-    #[state(config)] pub graph_camera_zoom: Option<f64>,
+    #[state(artifact)]
+    pub artifact: Option<Box<crate::artifacts::program::schema::ProgramArtifact>>,
+    #[state(artifact)]
+    pub schema: Option<String>,
+    #[state(artifact)]
+    pub meta: Option<ProgramMeta>,
+    #[state(artifact)]
+    pub project: Option<ProjectDefinition>,
+    #[state(artifact)]
+    pub stakeholders: Option<ProgramStakeholdersDelta>,
+    #[state(artifact)]
+    pub users: Option<ProgramUsersDelta>,
+    #[state(artifact)]
+    pub activities: Option<ProgramActivitiesDelta>,
+    #[state(artifact)]
+    pub functions: Option<ProgramFunctionsDelta>,
+    #[state(artifact)]
+    pub elements: Option<ProgramElementsDelta>,
+    #[state(artifact)]
+    pub quantities: Option<ProgramQuantitiesDelta>,
+    #[state(artifact)]
+    pub relationships: Option<ProgramRelationshipsDelta>,
+    #[state(artifact)]
+    pub adjacencies: Option<ProgramAdjacenciesDelta>,
+    #[state(artifact)]
+    pub processes: Option<ProgramProcessesDelta>,
+    #[state(artifact)]
+    pub flows: Option<ProgramFlowsDelta>,
+    #[state(artifact)]
+    pub access_rules: Option<ProgramAccessRulesDelta>,
+    #[state(artifact)]
+    pub operations: Option<ProgramOperationsDelta>,
+    #[state(artifact)]
+    pub equipment: Option<ProgramEquipmentDelta>,
+    #[state(artifact)]
+    pub resources: Option<ProgramResourcesDelta>,
+    #[state(artifact)]
+    pub storage: Option<ProgramStorageDelta>,
+    #[state(artifact)]
+    pub environmental: Option<ProgramEnvironmentalDelta>,
+    #[state(artifact)]
+    pub human_factors: Option<ProgramHumanFactorsDelta>,
+    #[state(artifact)]
+    pub accessibility: Option<ProgramAccessibilityDelta>,
+    #[state(artifact)]
+    pub privacy: Option<ProgramPrivacyDelta>,
+    #[state(artifact)]
+    pub safety: Option<ProgramSafetyDelta>,
+    #[state(artifact)]
+    pub security: Option<ProgramSecurityDelta>,
+    #[state(artifact)]
+    pub regulatory: Option<ProgramRegulatoryDelta>,
+    #[state(artifact)]
+    pub site_context: Option<ProgramSiteContextDelta>,
+    #[state(artifact)]
+    pub organizational: Option<ProgramOrganizationalDelta>,
+    #[state(artifact)]
+    pub services: Option<ProgramServicesDelta>,
+    #[state(artifact)]
+    pub infrastructure: Option<ProgramInfrastructureDelta>,
+    #[state(artifact)]
+    pub information: Option<ProgramInformationDelta>,
+    #[state(artifact)]
+    pub communication: Option<ProgramCommunicationDelta>,
+    #[state(artifact)]
+    pub wayfinding: Option<ProgramWayfindingDelta>,
+    #[state(artifact)]
+    pub schedules: Option<ProgramSchedulesDelta>,
+    #[state(artifact)]
+    pub flexibility: Option<ProgramFlexibilityDelta>,
+    #[state(artifact)]
+    pub growth: Option<ProgramGrowthDelta>,
+    #[state(artifact)]
+    pub sustainability: Option<ProgramSustainabilityDelta>,
+    #[state(artifact)]
+    pub resilience: Option<ProgramResilienceDelta>,
+    #[state(artifact)]
+    pub costs: Option<ProgramCostsDelta>,
+    #[state(artifact)]
+    pub delivery: Option<ProgramDeliveryDelta>,
+    #[state(artifact)]
+    pub risks: Option<ProgramRisksDelta>,
+    #[state(artifact)]
+    pub conflicts: Option<ProgramConflictsDelta>,
+    #[state(artifact)]
+    pub requirements: Option<ProgramRequirementsDelta>,
+    #[state(artifact)]
+    pub priorities: Option<ProgramPrioritiesDelta>,
+    #[state(artifact)]
+    pub scenarios: Option<ProgramScenariosDelta>,
+    #[state(artifact)]
+    pub options: Option<ProgramOptionsDelta>,
+    #[state(artifact)]
+    pub decisions: Option<ProgramDecisionsDelta>,
+    #[state(artifact)]
+    pub validations: Option<ProgramValidationsDelta>,
+    #[state(artifact)]
+    pub performance: Option<ProgramPerformanceDelta>,
+    #[state(artifact)]
+    pub quality: Option<ProgramQualityDelta>,
+    #[state(artifact)]
+    pub documents: Option<ProgramArtifactsDelta>,
+    #[state(artifact)]
+    pub assumptions: Option<ProgramAssumptionsDelta>,
+    #[state(artifact)]
+    pub constraints: Option<ProgramConstraintsDelta>,
+    #[state(artifact)]
+    pub compliance_records: Option<ProgramComplianceRecordsDelta>,
+    #[state(artifact)]
+    pub approvals: Option<ProgramApprovalsDelta>,
+    #[state(artifact)]
+    pub meetings: Option<ProgramMeetingsDelta>,
+    #[state(artifact)]
+    pub changes: Option<ProgramChangesDelta>,
+    #[state(artifact)]
+    pub collaboration: Option<ProgramCollaborationDelta>,
+    #[state(artifact)]
+    pub analyses: Option<ProgramAnalysesDelta>,
+    #[state(artifact)]
+    pub reports: Option<ProgramReportsDelta>,
+    #[state(artifact)]
+    pub search_filters: Option<ProgramSearchFiltersDelta>,
+    #[state(artifact)]
+    pub status_records: Option<ProgramStatusRecordsDelta>,
+    #[state(artifact)]
+    pub workshops: Option<ProgramWorkshopsDelta>,
+    #[state(artifact)]
+    pub surveys: Option<ProgramSurveysDelta>,
+    #[state(artifact)]
+    pub issues: Option<ProgramIssuesDelta>,
+    #[state(artifact)]
+    pub audit_events: Option<ProgramAuditEventsDelta>,
+    #[state(artifact)]
+    pub templates: Option<ProgramTemplatesDelta>,
+    #[state(artifact)]
+    pub knowledge: Option<crate::artifacts::program::ProgramKnowledgeChild>,
+    #[state(artifact)]
+    pub benchmarks: Option<crate::artifacts::program::ProgramBenchmarksChild>,
+    #[state(artifact)]
+    pub traces: Option<ProgramTracesDelta>,
+    #[state(artifact)]
+    pub governance: Option<Governance>,
+    #[state(presence)]
+    pub selected_ids: Option<ProgramStringList>,
+    #[state(presence)]
+    pub active_register: Option<String>,
+    #[state(presence)]
+    pub adjacency_kind_filter: Option<Option<AdjacencyKind>>,
+    #[state(presence)]
+    pub active_report_json: Option<String>,
+    #[state(config)]
+    pub search_query: Option<String>,
+    #[state(config)]
+    pub search_history_json: Option<String>,
+    #[state(config)]
+    pub last_result_json: Option<String>,
+    #[state(config)]
+    pub last_analysis_json: Option<String>,
+    #[state(config)]
+    pub graph_camera_x: Option<f64>,
+    #[state(config)]
+    pub graph_camera_y: Option<f64>,
+    #[state(config)]
+    pub graph_camera_zoom: Option<f64>,
 }
 //#endregion 🔖️Diff
 
@@ -101,7 +183,9 @@ pub struct ProgramDiff {
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-pub struct ProgramStringList { pub values: Vec<String>, }
+pub struct ProgramStringList {
+    pub values: Vec<String>,
+}
 
 /// 🧩 Identified-collection delta for `stakeholders`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

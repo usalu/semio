@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🗳️surveys` per Wave C.
 
 use super::mutation::RenameSurvey;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramSurveysDelta, ProgramSurveysPatchEntry};
 use crate::artifacts::program::registers::SurveyPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameSurvey, _base: &ProgramSnapshot) -> ProgramDiff {

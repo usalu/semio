@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `♻️sustainability` per Wave C.
 
 use super::mutation::DeleteSustainabilityRequirement;
+use crate::artifacts::program::diff::ProgramSustainabilityDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramSustainabilityDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteSustainabilityRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

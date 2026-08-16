@@ -73,4 +73,31 @@ mod tests {
         assert_eq!(first, second);
         assert_ne!(first, hash_bytes(b"world"));
     }
+
+    #[test]
+    fn normalizes_hash_numbers() {
+        assert_eq!(format_number_for_hash(-0.0), "0");
+        assert_eq!(format_number_for_hash(42.0), "42");
+        assert_eq!(format_number_for_hash(1.25), "1.25");
+    }
+
+    #[test]
+    fn separates_hash_parts_with_a_delimiter() {
+        assert_ne!(hash_parts(&["ab", "c"]), hash_parts(&["a", "bc"]));
+    }
+
+    #[test]
+    fn orders_merkle_children_deterministically() {
+        assert_eq!(
+            merkle_node(&["root"], vec!["child-b".into(), "child-a".into()]),
+            merkle_node(&["root"], vec!["child-a".into(), "child-b".into()]),
+        );
+    }
+
+    #[test]
+    fn normalizes_special_hash_numbers() {
+        assert_eq!(format_number_for_hash(f64::NAN), "nan");
+        assert_eq!(format_number_for_hash(f64::INFINITY), "inf");
+        assert_eq!(format_number_for_hash(f64::NEG_INFINITY), "-inf");
+    }
 }

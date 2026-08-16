@@ -13,11 +13,11 @@
 //! `from_fixture`, which now bridge through the composed child + `🔖️WorkingScene` cache rather than
 //! plain struct fields.
 
+use flow::{SynapseSpec, Widget, WidgetLayout};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{
     FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,
 };
-use flow::{SynapseSpec, Widget, WidgetLayout};
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 
@@ -83,12 +83,7 @@ fn widget_from_node(node: &SemioFlowNode) -> Widget {
         "outputPreview" => Widget::OutputPreview { id, preview: serde_json::from_str(&get("preview")).unwrap_or_default(), expanded: serde_json::from_str(&get("expanded")).unwrap_or_default() },
         "outputAction" => Widget::OutputAction { id, action: get("action") },
         "outputExport" => Widget::OutputExport { id, format: get("format") },
-        "cluster" => Widget::Cluster {
-            id,
-            name: get("name"),
-            tree: serde_json::from_str(&get("tree")).unwrap_or_default(),
-            flow: serde_json::from_str(&get("flow")).unwrap_or_default(),
-        },
+        "cluster" => Widget::Cluster { id, name: get("name"), tree: serde_json::from_str(&get("tree")).unwrap_or_default(), flow: serde_json::from_str(&get("flow")).unwrap_or_default() },
         other => Widget::InputNote { id, text: format!("[unknown widget kind {other:?}]") },
     }
 }
@@ -112,12 +107,7 @@ pub fn flow_content_snapshot_from_working(widgets: &[Widget], synapses: &[Synaps
         .collect();
     let edges = synapses
         .iter()
-        .map(|synapse| SemioFlowEdge {
-            id: synapse.id.clone(),
-            from: SemioPortRef { node: synapse.from.clone(), port: synapse.from_port.clone() },
-            to: SemioPortRef { node: synapse.to.clone(), port: synapse.to_port.clone() },
-            kind: "data".into(),
-        })
+        .map(|synapse| SemioFlowEdge { id: synapse.id.clone(), from: SemioPortRef { node: synapse.from.clone(), port: synapse.from_port.clone() }, to: SemioPortRef { node: synapse.to.clone(), port: synapse.to_port.clone() }, kind: "data".into() })
         .collect();
     SemioFlowSnapshot { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes, edges }
 }
@@ -220,14 +210,11 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         component_kind: "flow".into(),
         dimension: "graph".into(),
         media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType {
-            class: MediaClass::Computation,
-            form: MediaForm::Flow,
-        },
+        media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Flow },
         schema: "flow.artifact".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
@@ -265,28 +252,43 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::flow::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("FlowComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
+//#region 🔖️Declaration
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.flow")?)
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.flow.flow")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.flow.flow")?)?)?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.flow.inference.artifact")?, ArtifactCapabilityKind::inference())
+                .descriptor(b"s.flow.flow.inference")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.flow.flow.inference")?)?,
+        )?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.flow@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.flow@1/*")?)?)?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.flow.composer.md")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.md@commonmark/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.md@commonmark/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.flow.composer.json")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.json@rfc8259/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.flow.codec.document")?, ArtifactCapabilityKind::codec())
+                .descriptor(b"flow.fixture:flow")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "flow.fixture")?)?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "flow")?)?,
+        )?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Flow")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Flow")?)?)?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Flow")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Flow")?)?)
 }
-//#endregion 🚪️DerivedIoRegistry
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+        .schema(crate::artifacts::flow::schema::flow_artifact_schema_descriptor())
+        .inferences([crate::artifacts::flow::standards::v1::subsets::any::schema::inferences::flow_artifact_inference_descriptor()])
+        .composers(crate::artifacts::flow::standards::v1::subsets::any::io::io_registry::entries())
+        .document_codec::<crate::apps::flow::FlowPlayApp>()
+        .try_build()
+}
+//#endregion 🔖️Declaration

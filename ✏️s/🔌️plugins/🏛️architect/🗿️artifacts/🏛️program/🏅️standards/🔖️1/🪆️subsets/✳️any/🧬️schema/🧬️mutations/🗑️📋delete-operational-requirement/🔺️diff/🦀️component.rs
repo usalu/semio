@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📋operations` per Wave C.
 
 use super::mutation::DeleteOperationalRequirement;
+use crate::artifacts::program::diff::ProgramOperationsDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramOperationsDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteOperationalRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

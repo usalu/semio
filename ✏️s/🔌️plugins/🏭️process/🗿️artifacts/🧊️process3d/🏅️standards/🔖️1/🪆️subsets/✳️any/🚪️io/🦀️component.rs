@@ -1,13 +1,16 @@
-//! 🚪️ IO s.process3d (1/✳️any) — registration now flows through 🎹️composer::register
-//! (called once from `crate::apps::process3d::register`), not per-leaf register().
-pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl", "stdio.txt"] }
-pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl", "stdio.txt"] }
+//! 🚪️ IO s.process3d (1/✳️any) — the artifact declaration owns this composer table.
+pub fn import_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl", "stdio.txt"]
+}
+pub fn export_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl", "stdio.txt"]
+}
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::process3d::Process3dSnapshot;
     use crate::artifacts::process3d::standards::v1::subsets::any::schema::Process3dAnalyzer;
+    use crate::artifacts::process3d::Process3dSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.process3d", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_DWG: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
@@ -19,7 +22,6 @@ pub mod derived_composition {
     const DEP_STEP: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("*") };
     const DEP_STL: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
-
 
     pub struct Process3dComposerComposition;
 
@@ -124,7 +126,6 @@ pub mod derived_composition {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
-
             }
             Err(ComposeError { message: "Process3dComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
         }
@@ -134,10 +135,10 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🔖️MediaImportExport
-use base64::Engine as _;
 use crate::artifacts::process3d::{Pose, Process3dSnapshot, ProcessWorkingScene, Stock, WorkingSolid};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
+use base64::Engine as _;
 use semio_framework_plugin::{MeshExporter, MeshImporter};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
 use serde_json::Value;
 
 /// 📤️ A pending native-geometry export ready to become a `HostEffect::DownloadMediaExport`.
@@ -169,17 +170,10 @@ pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Optio
             return Ok(None);
         };
         let bytes = semio_framework_plugin::GlbExporter.export(&mesh)?;
-        let descriptor = semio_framework::format_descriptor("glb")
-            .map_err(|error| error.to_string())?
-            .ok_or_else(|| "unknown process export format kind `glb`".to_string())?;
+        let descriptor = semio_framework::format_descriptor("glb").map_err(|error| error.to_string())?.ok_or_else(|| "unknown process export format kind `glb`".to_string())?;
         let extension = descriptor.extensions.first().ok_or_else(|| "process export format kind `glb` has no extension claim".to_string())?;
         let mime_type = descriptor.mimes.first().cloned().ok_or_else(|| "process export format kind `glb` has no MIME claim".to_string())?;
-        return Ok(Some(Process3dModelExport {
-            filename: format!("process3d{extension}"),
-            data: Value::String(base64::engine::general_purpose::STANDARD.encode(bytes)),
-            mime_type,
-            encoding: descriptor.is_binary.then(|| "base64".into()),
-        }));
+        return Ok(Some(Process3dModelExport { filename: format!("process3d{extension}"), data: Value::String(base64::engine::general_purpose::STANDARD.encode(bytes)), mime_type, encoding: descriptor.is_binary.then(|| "base64".into()) }));
     }
     let exporter: Box<dyn SolidExporter> = match format {
         "obj" => Box::new(ObjSolidExporter),
@@ -192,9 +186,7 @@ pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Optio
     };
     let bytes = exporter.export(session.kernel(), &[handle], PROCESS3D_TESSELLATION_TOLERANCE).map_err(|error| error.to_string())?;
     let format_kind = exporter.format_kind();
-    let descriptor = semio_framework::format_descriptor(format_kind)
-        .map_err(|error| error.to_string())?
-        .ok_or_else(|| format!("unknown process export format kind `{format_kind}`"))?;
+    let descriptor = semio_framework::format_descriptor(format_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown process export format kind `{format_kind}`"))?;
     let extension = descriptor.extensions.first().ok_or_else(|| format!("process export format kind `{format_kind}` has no extension claim"))?;
     let mime_type = descriptor.mimes.first().cloned().ok_or_else(|| format!("process export format kind `{format_kind}` has no MIME claim"))?;
     let data = if descriptor.is_binary { Value::String(base64::engine::general_purpose::STANDARD.encode(&bytes)) } else { Value::String(String::from_utf8(bytes).map_err(|error| error.to_string())?) };
@@ -244,10 +236,10 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dSna
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ArtifactBuilder, ComposerEntry, ComposedArtifact, ComposeError, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload, IoConfidence, composer_entry_of};
-    use crate::artifacts::process3d::standards::v1::subsets::any::schema::Process3dComposer as Process3dAnyComposer;
     use crate::artifacts::process3d::standards::v1::subsets::any::schema::Process3dBuilder as Process3dAnyBuilder;
+    use crate::artifacts::process3d::standards::v1::subsets::any::schema::Process3dComposer as Process3dAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
@@ -336,19 +328,22 @@ pub mod io_registry {
     }
     //#endregion 🔖️ExportEntries
 
-
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![
-            composer_entry_of::<Process3dAnyComposer>(),
-            ComposerEntry { writes: EXPORT_IFC_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_ifc },
-            ComposerEntry { writes: EXPORT_STEP_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_step },
-            ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_png },
-            ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_json },
-            ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_dwg },
-            ComposerEntry { writes: EXPORT_STL_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_stl },
-            ComposerEntry { writes: EXPORT_GLTF_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_gltf },
-            ComposerEntry { writes: EXPORT_OBJ_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_obj },
-        ]).as_slice()
+        ENTRIES
+            .get_or_init(|| {
+                vec![
+                    composer_entry_of::<Process3dAnyComposer>(),
+                    ComposerEntry { writes: EXPORT_IFC_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_ifc },
+                    ComposerEntry { writes: EXPORT_STEP_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_step },
+                    ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_png },
+                    ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_json },
+                    ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_dwg },
+                    ComposerEntry { writes: EXPORT_STL_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_stl },
+                    ComposerEntry { writes: EXPORT_GLTF_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_gltf },
+                    ComposerEntry { writes: EXPORT_OBJ_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_obj },
+                ]
+            })
+            .as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry

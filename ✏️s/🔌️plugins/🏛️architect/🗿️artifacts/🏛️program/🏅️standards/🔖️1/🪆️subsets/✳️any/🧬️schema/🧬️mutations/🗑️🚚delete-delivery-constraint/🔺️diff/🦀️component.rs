@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🚚delivery` per Wave C.
 
 use super::mutation::DeleteDeliveryConstraint;
+use crate::artifacts::program::diff::ProgramDeliveryDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramDeliveryDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteDeliveryConstraint, _base: &ProgramSnapshot) -> ProgramDiff {

@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📈growth` per Wave C.
 
 use super::mutation::DeleteGrowthPlan;
+use crate::artifacts::program::diff::ProgramGrowthDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramGrowthDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteGrowthPlan, _base: &ProgramSnapshot) -> ProgramDiff {

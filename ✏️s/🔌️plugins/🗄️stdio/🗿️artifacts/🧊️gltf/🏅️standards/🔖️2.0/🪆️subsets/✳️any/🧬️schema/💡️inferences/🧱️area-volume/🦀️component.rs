@@ -1,7 +1,24 @@
 //! 🧱 GLTF area-volume indicators.
 
-use super::geometric_analysis::{GltfGeometryContext, GltfPairGeometry};
-use super::super::modules::{inference_measures::{estimate, exact, unavailable}, mesh_topology::Topology};
+#[path = "surface-area/🦀️component.rs"]
+pub mod surface_area;
+#[path = "total-area/🦀️component.rs"]
+pub mod total_area;
+#[path = "exposed-area/🦀️component.rs"]
+pub mod exposed_area;
+#[path = "contact-area/🦀️component.rs"]
+pub mod contact_area;
+#[path = "volume/🦀️component.rs"]
+pub mod volume;
+#[path = "enclosed-volume/🦀️component.rs"]
+pub mod enclosed_volume;
+#[path = "material-volume/🦀️component.rs"]
+pub mod material_volume;
+#[path = "void-volume/🦀️component.rs"]
+pub mod void_volume;
+
+use super::geometry_core::{GltfGeometryContext, GltfPairGeometry};
+use super::super::modules::{mesh_topology::Topology};
 use super::super::modules::measurement_contracts::*;
 use serde::{Deserialize, Serialize};
 
@@ -22,22 +39,12 @@ pub struct GltfAreaVolumeInference;
 
 impl GltfAreaVolumeInference {
     pub(crate) fn infer_pair_contact(pair: &GltfPairGeometry) -> GltfMeasure<f64> {
-        pair.contact_area
-            .map(|area| if area == 0.0 { exact(area, GltfUnit::SquareMetre, pair.sample_count, None) } else { estimate(area, GltfUnit::SquareMetre, pair.sample_count, None) })
-            .unwrap_or_else(|| unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), pair.sample_count, None))
+        contact_area::infer_pair(pair)
     }
 
     pub(crate) fn infer_assembly(indicators: &mut GltfAreaVolumeIndicators, part_count: usize, contact_area: f64, contact_area_complete: bool, sample_count: usize, topology: Topology) {
-        if part_count <= 1 {
-            indicators.exposed_area = indicators.surface_area.clone();
-            indicators.contact_area = exact(0.0, GltfUnit::SquareMetre, sample_count, Some(topology));
-        } else if contact_area_complete {
-            indicators.contact_area = estimate(contact_area, GltfUnit::SquareMetre, sample_count, Some(topology));
-            indicators.exposed_area = estimate((indicators.surface_area.value.unwrap_or(0.0) - 2.0 * contact_area).max(0.0), GltfUnit::SquareMetre, sample_count, Some(topology));
-        } else {
-            indicators.contact_area = unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), sample_count, Some(topology));
-            indicators.exposed_area = unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), sample_count, Some(topology));
-        }
+        indicators.contact_area = contact_area::from_assembly(part_count, contact_area, contact_area_complete, sample_count, topology);
+        indicators.exposed_area = exposed_area::from_assembly(&indicators.surface_area, part_count, contact_area, contact_area_complete, sample_count, topology);
     }
 }
 
@@ -45,33 +52,28 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfAreaVolumeInference {
     type Output = GltfAreaVolumeIndicators;
 
     fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
-        let volume = context
-            .solid
-            .map(|metrics| exact(metrics.0, GltfUnit::CubicMetre, context.sample_count, Some(context.topology)))
-            .unwrap_or_else(|| unavailable(GltfUnit::CubicMetre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)));
-        let enclosed_volume = context
-            .solid
-            .map(|metrics| exact(metrics.1, GltfUnit::CubicMetre, context.sample_count, Some(context.topology)))
-            .unwrap_or_else(|| unavailable(GltfUnit::CubicMetre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)));
-        let void_volume = context
-            .solid
-            .map(|metrics| exact(metrics.2, GltfUnit::CubicMetre, context.sample_count, Some(context.topology)))
-            .unwrap_or_else(|| unavailable(GltfUnit::CubicMetre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)));
         Self::Output {
-            surface_area: exact(context.surface_area, GltfUnit::SquareMetre, context.sample_count, Some(context.topology)),
-            total_area: exact(context.surface_area, GltfUnit::SquareMetre, context.sample_count, Some(context.topology)),
-            exposed_area: unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology)),
-            contact_area: unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology)),
-            volume: volume.clone(),
-            enclosed_volume,
-            material_volume: volume,
-            void_volume,
+            surface_area: surface_area::infer(context),
+            total_area: total_area::infer(context),
+            exposed_area: exposed_area::infer(context),
+            contact_area: contact_area::infer(context),
+            volume: volume::infer(context),
+            enclosed_volume: enclosed_volume::infer(context),
+            material_volume: material_volume::infer(context),
+            void_volume: void_volume::infer(context),
         }
     }
 
     fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
-        let area = || unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None);
-        let volume = || unavailable(GltfUnit::CubicMetre, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None);
-        Self::Output { surface_area: area(), total_area: area(), exposed_area: area(), contact_area: area(), volume: volume(), enclosed_volume: volume(), material_volume: volume(), void_volume: volume() }
+        Self::Output {
+            surface_area: surface_area::unavailable_measure(diagnostic_ids),
+            total_area: total_area::unavailable_measure(diagnostic_ids),
+            exposed_area: exposed_area::unavailable_measure(diagnostic_ids),
+            contact_area: contact_area::unavailable_measure(diagnostic_ids),
+            volume: volume::unavailable_measure(diagnostic_ids),
+            enclosed_volume: enclosed_volume::unavailable_measure(diagnostic_ids),
+            material_volume: material_volume::unavailable_measure(diagnostic_ids),
+            void_volume: void_volume::unavailable_measure(diagnostic_ids),
+        }
     }
 }

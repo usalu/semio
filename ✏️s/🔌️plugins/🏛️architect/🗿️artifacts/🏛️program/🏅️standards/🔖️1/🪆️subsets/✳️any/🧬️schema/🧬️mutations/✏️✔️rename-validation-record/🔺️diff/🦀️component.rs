@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `✔️validations` per Wave C.
 
 use super::mutation::RenameValidationRecord;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramValidationsDelta, ProgramValidationsPatchEntry};
 use crate::artifacts::program::registers::ValidationRecordPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameValidationRecord, _base: &ProgramSnapshot) -> ProgramDiff {

@@ -32,8 +32,6 @@ message Procedural3dArtifact {
   string active_utility_id = 13;
   // @state config
   string locale = 14;
-  // @state config
-  string contributions_json = 15;
 }
 
 message CameraJson {

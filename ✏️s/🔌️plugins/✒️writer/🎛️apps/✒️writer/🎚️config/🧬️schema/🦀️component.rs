@@ -7,20 +7,28 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.writer.writer.config")]
 pub struct WriterConfig {
-    #[state(config)] pub editor_selection: Option<WriterEditorSelection>,
-    #[state(config)] pub format_signal: u32,
-    #[state(config)] pub lint_signal: u32,
-    #[state(config)] pub revision: u32,
-    #[state(config)] pub editor_settings: WriterEditorSettings,
-    #[state(config)] pub engagement_input: String,
-    #[state(config)] pub camera: WriterCamera,
-    #[state(config)] pub locale: String,
+    #[state(config)]
+    pub editor_selection: Option<WriterEditorSelection>,
+    #[state(config)]
+    pub format_signal: u32,
+    #[state(config)]
+    pub lint_signal: u32,
+    #[state(config)]
+    pub revision: u32,
+    #[state(config)]
+    pub editor_settings: WriterEditorSettings,
+    #[state(config)]
+    pub engagement_input: String,
+    #[state(config)]
+    pub camera: WriterCamera,
+    #[state(config)]
+    pub locale: String,
 }
 
-//region 📎 App-schema self-registration
-/// 📎 Registers `s.writer.writer`'s config+presence schema descriptor into the process-local registry.
-pub fn register_app_schema() {
-    ::schema::register_app_schema_descriptor(::schema::AppSchemaDescriptor {
+//region 📎 App-schema descriptor
+/// 📎 `s.writer.writer`'s config and presence schema, owned by this leaf.
+pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+    ::schema::AppSchemaDescriptor {
         id: "s.writer.writer",
         config: ::schema::FacetLeaves {
             rust: include_str!("🦀️component.rs"),
@@ -36,7 +44,6 @@ pub fn register_app_schema() {
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️component.json"),
             proto: include_str!("../../👥️presence/🧬️schema/🛰️component.proto"),
         },
-    });
+    }
 }
-//endregion 📎 App-schema self-registration
-
+//endregion 📎 App-schema descriptor

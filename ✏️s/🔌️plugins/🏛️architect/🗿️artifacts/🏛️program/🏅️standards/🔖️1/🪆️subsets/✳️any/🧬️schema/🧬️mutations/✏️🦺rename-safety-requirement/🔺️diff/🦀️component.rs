@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🦺safety` per Wave C.
 
 use super::mutation::RenameSafetyRequirement;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramSafetyDelta, ProgramSafetyPatchEntry};
 use crate::artifacts::program::registers::SafetyRequirementPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameSafetyRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

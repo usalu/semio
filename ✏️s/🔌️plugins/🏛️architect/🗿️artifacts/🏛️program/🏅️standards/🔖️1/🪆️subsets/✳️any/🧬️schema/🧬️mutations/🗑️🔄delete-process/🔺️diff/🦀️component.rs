@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🔄processes` per Wave C.
 
 use super::mutation::DeleteProcess;
+use crate::artifacts::program::diff::ProgramProcessesDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramProcessesDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteProcess, _base: &ProgramSnapshot) -> ProgramDiff {

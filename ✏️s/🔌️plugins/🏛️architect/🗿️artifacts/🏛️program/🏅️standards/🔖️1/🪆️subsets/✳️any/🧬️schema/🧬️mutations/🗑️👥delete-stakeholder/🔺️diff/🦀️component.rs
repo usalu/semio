@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `👥stakeholders` per Wave C.
 
 use super::mutation::DeleteStakeholder;
+use crate::artifacts::program::diff::ProgramStakeholdersDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramStakeholdersDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteStakeholder, _base: &ProgramSnapshot) -> ProgramDiff {

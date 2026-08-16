@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🛂compliance-records` per Wave C.
 
 use super::mutation::RenameComplianceRecord;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramComplianceRecordsDelta, ProgramComplianceRecordsPatchEntry};
 use crate::artifacts::program::registers::ComplianceRecordPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameComplianceRecord, _base: &ProgramSnapshot) -> ProgramDiff {

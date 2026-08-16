@@ -172,6 +172,14 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widgets/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
                                 }
+                                // 🌉️ COMPOSITE — owns 🦠️mutation + 🧩️plan only (no 🔺️diff/↩️inverse: both fold from the plan).
+                                #[path = "."]
+                                pub mod duplicate_widget {
+                                    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️duplicate-widget/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️duplicate-widget/🧩️plan/🦀️component.rs"]
+                                    pub mod plan;
+                                }
                             }
                         }
                         #[path = "."]
@@ -428,6 +436,8 @@ pub mod apps {
             pub mod set_catalogue_sections;
             #[path = "../../🎛️apps/🌊️flow/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
+            #[path = "../../🎛️apps/🌊️flow/🎮️commands/📋️duplicate-widget/🦀️component.rs"]
+            pub mod duplicate_widget;
         }
 
         #[path = "."]

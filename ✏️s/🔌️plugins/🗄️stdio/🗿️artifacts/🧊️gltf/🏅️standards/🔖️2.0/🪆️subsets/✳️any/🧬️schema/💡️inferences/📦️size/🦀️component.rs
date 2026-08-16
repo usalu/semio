@@ -1,7 +1,21 @@
 //! 📦 GLTF size indicators.
 
-use super::geometric_analysis::{GltfGeometryContext};
-use super::super::modules::{inference_measures::{estimate, exact, unavailable}, vector_operations::{cross, sub}};
+#[path = "overall-size/🦀️component.rs"]
+pub mod overall_size;
+#[path = "axis-aligned-bounds/🦀️component.rs"]
+pub mod axis_aligned_bounds;
+#[path = "oriented-bounds/🦀️component.rs"]
+pub mod oriented_bounds;
+#[path = "bounding-box-dimensions/🦀️component.rs"]
+pub mod bounding_box_dimensions;
+#[path = "characteristic-length/🦀️component.rs"]
+pub mod characteristic_length;
+#[path = "footprint-area/🦀️component.rs"]
+pub mod footprint_area;
+#[path = "projected-area/🦀️component.rs"]
+pub mod projected_area;
+
+use super::geometry_core::GltfGeometryContext;
 use super::super::modules::measurement_contracts::*;
 use serde::{Deserialize, Serialize};
 
@@ -23,27 +37,26 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfSizeInference {
     type Output = GltfSizeIndicators;
 
     fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
-        let projected = [0, 1, 2].map(|axis| context.faces.iter().map(|face| 0.5 * cross(sub(context.points[face[1]], context.points[face[0]]), sub(context.points[face[2]], context.points[face[0]]))[axis].abs()).sum::<f64>());
         Self::Output {
-            overall_size: exact(context.diagonal, GltfUnit::Metre, context.sample_count, Some(context.topology)),
-            axis_aligned_bounds: exact(context.bounds.clone(), GltfUnit::Metre, context.sample_count, Some(context.topology)),
-            oriented_bounds: exact(context.oriented_bounds.clone(), GltfUnit::Metre, context.sample_count, Some(context.topology)),
-            bounding_box_dimensions: exact(GltfVec3::new(context.dimensions), GltfUnit::Metre, context.sample_count, Some(context.topology)),
-            characteristic_length: exact(if context.surface_area > 0.0 { context.surface_area.sqrt() } else { context.diagonal }, GltfUnit::Metre, context.sample_count, Some(context.topology)),
-            footprint_area: estimate(projected[2], GltfUnit::SquareMetre, context.sample_count, Some(context.topology)),
-            projected_area: estimate(super::geometric_analysis::statistics(&projected, &context.policy.histogram_edges), GltfUnit::SquareMetre, context.sample_count, Some(context.topology)),
+            overall_size: overall_size::infer(context),
+            axis_aligned_bounds: axis_aligned_bounds::infer(context),
+            oriented_bounds: oriented_bounds::infer(context),
+            bounding_box_dimensions: bounding_box_dimensions::infer(context),
+            characteristic_length: characteristic_length::infer(context),
+            footprint_area: footprint_area::infer(context),
+            projected_area: projected_area::infer(context),
         }
     }
 
     fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            overall_size: unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            axis_aligned_bounds: unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            oriented_bounds: unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            bounding_box_dimensions: unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            characteristic_length: unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            footprint_area: unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            projected_area: unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
+            overall_size: overall_size::unavailable_measure(diagnostic_ids),
+            axis_aligned_bounds: axis_aligned_bounds::unavailable_measure(diagnostic_ids),
+            oriented_bounds: oriented_bounds::unavailable_measure(diagnostic_ids),
+            bounding_box_dimensions: bounding_box_dimensions::unavailable_measure(diagnostic_ids),
+            characteristic_length: characteristic_length::unavailable_measure(diagnostic_ids),
+            footprint_area: footprint_area::unavailable_measure(diagnostic_ids),
+            projected_area: projected_area::unavailable_measure(diagnostic_ids),
         }
     }
 }

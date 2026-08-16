@@ -29,8 +29,6 @@ export interface Procedural3dArtifact {
   activeUtilityId: string;
   /** @state config */
   locale: string;
-  /** @state config */
-  contributionsJson: string;
 }
 
 export type CameraJson = { x: number; y: number; zoom: number };

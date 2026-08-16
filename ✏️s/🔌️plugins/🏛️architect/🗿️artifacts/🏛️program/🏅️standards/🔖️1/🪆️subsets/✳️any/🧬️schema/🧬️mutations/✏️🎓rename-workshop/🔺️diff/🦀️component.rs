@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🎓workshops` per Wave C.
 
 use super::mutation::RenameWorkshop;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramWorkshopsDelta, ProgramWorkshopsPatchEntry};
 use crate::artifacts::program::registers::WorkshopPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameWorkshop, _base: &ProgramSnapshot) -> ProgramDiff {

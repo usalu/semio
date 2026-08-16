@@ -530,33 +530,6 @@ pub mod apps {
 }
 //#endregion 🎛️Apps
 
-//#region 🔖️ArtifactCodecs
-/// 🗂️ `.setup()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d) — narrowed to the ONE thing
-/// left that no `ArtifactDeclaration` field can express: `SpaceApp`'s document codec. Both apps'
-/// config/presence schema moved to `ArtifactApp::app_schema()` overrides (`HomeApp`/`SpaceApp` in
-/// their own `🦀️component.rs`), auto-registered by `.register_document_app::<A>()` — see that
-/// method's own doc. `HomeApp`'s own document codec (`s.home`) and its 5 pilot languages already live
-/// on `crate::artifacts::home::declaration()`, wired via `.artifact(...)` in `🦀️component.rs`.
-///
-/// This residue is genuinely category-4 (see the master ticket's gap taxonomy), not merely
-/// unattempted: `.document_codec_bare::<Snapshot, Mutation>(schema)` (added in W1d gap A for exactly
-/// this "no `ArtifactApp`/no local declaration" shape) still requires a mandatory `.schema(...)` call
-/// first — `ArtifactDeclarationBuilder<NeedsSchema>` only unlocks `.document_codec_bare()` once a real
-/// `ArtifactSchemaDescriptor` is supplied. The schema this call would need to supply belongs to
-/// `OS_SPACE_SCHEMA` ("os.space" = `SpaceSnapshot`, a type this plugin does not own — it is declared in
-/// `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🦀️component.rs`), yet the codec being registered is
-/// for `WorkflowSnapshot`/`WorkflowMutation` (`SpaceApp`'s own types, `os.workflow`) — the two types
-/// don't match, so this plugin has no schema it could honestly hand over. This is `framework/sync`'s
-/// `FolderEndpoint::Pack` reusing "os.space" as a legacy folder-format tag, decoupled from any
-/// artifact this plugin declares; it needs either (a) a schema-less `document_codec`-only builder
-/// entrypoint, or (b) for "os.space"'s pack codec to be registered by whoever truly owns that kind
-/// (framework/os), not borrowed here. Reported, not forced — see
-/// `📓️w1d-semio-s-plugin-space-report.md`.
-fn register_s_exports() {
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::space::SpaceApp>(semio_framework_os::OS_SPACE_SCHEMA);
-}
-//#endregion 🔖️ArtifactCodecs
-
 //#region 🔖️Manifest
 
 #[path = "../../🦀️component.rs"]

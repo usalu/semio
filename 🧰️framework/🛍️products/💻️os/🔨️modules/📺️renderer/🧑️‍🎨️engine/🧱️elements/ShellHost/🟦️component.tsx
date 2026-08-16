@@ -26,6 +26,21 @@ import {
   type ActionDescriptor,
   type ActionInvocation,
   type AppDefinition,
+  type AppRef,
+  type AppRole,
+  AppRouter,
+  type AppRouterManifest,
+  type ArtifactDialect,
+  dialectCoordinate,
+  type DefaultApp,
+  decodeOpeningConfigMutation,
+  EMPTY_OPENING_PREFERENCES,
+  foldOpeningPreferences,
+  type OpeningConfigMutation,
+  type OpeningPreferences,
+  resolveOpeningApp,
+  SemioFaultError,
+  SURFACE_FAULT_CODES,
   type CommandAddress,
   type CommandInvocation,
   buildContributionsJson,
@@ -99,6 +114,7 @@ import {
   type WindowMeasure,
 } from "@semio-tech/framework";
 import {
+  AppChannelClient,
   type BackboneWorkerRequest,
   type BackboneWorkerResponse,
   buildFileBackboneUri,
@@ -647,6 +663,11 @@ export interface FrameworkOsShellProps {
   readonly pluginFilter?: string;
   readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
   readonly appId?: string;
+  /** 👁️✏️ Boot-time surface role preference (contract freeze §5) — resolved by
+   * `resolveBootAppRole`/`VITE_SEMIO_APP_ROLE` at the `bootFrameworkOs` call site, default `"editor"`.
+   * Used only to prefer a same-role app when `appId` doesn't pin one explicitly; the actual role of an
+   * open session always comes from `session.app.role`, never this prop. */
+  readonly appRole?: AppRole;
   readonly locks?: ResolvedShellLocks;
   readonly defaults?: FrameworkOsDefaults;
   readonly brand?: ShellBrand;
@@ -719,6 +740,7 @@ function FrameworkOsShellInner({
   pluginFilter,
   plugins,
   appId,
+  appRole,
   locks: locksProp,
   defaults: defaultsProp,
   brand,
@@ -727,6 +749,7 @@ function FrameworkOsShellInner({
   readonly pluginFilter?: string;
   readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
   readonly appId?: string;
+  readonly appRole?: AppRole;
   readonly locks?: ResolvedShellLocks;
   readonly defaults?: FrameworkOsDefaults;
   readonly brand?: ShellBrand;

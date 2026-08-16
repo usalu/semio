@@ -327,7 +327,7 @@ pub mod app {
     use serde::de::DeserializeOwned;
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
-    use std::collections::{BTreeMap, HashMap, HashSet};
+    use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
     /// 🚪️ `os_io`'s `ArtifactRef`/`ArtifactKindId` vocabulary is not glob-re-exported at the
     /// `semio-framework-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on
     /// the `os_io` mount), so it is named through the `store::os_io::` path everywhere in this file,
@@ -2782,10 +2782,9 @@ pub mod app {
     /// 🔖️ Everything an artifact declares as data for `PluginBuilder::try_build()` — see
     /// `.🦑️repo/🎫️tickets/26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE/📓️w1-mechanism-design.md`. Every
     /// field mirrors exactly one global registration function reachable from plugin code (census:
-    /// `📓️w0-d-sdk-surface.md` §6); the two §6 functions that are NOT artifact-scoped
-    /// (`register_app_schema_descriptor` — app config/presence schema, not an artifact concern;
-    /// `register_linked_flow_extension_installer` — flow's own extension registry) have no field
-    /// here on purpose, called out loudly rather than silently dropped — see the W1 report. Built
+    /// `📓️w0-d-sdk-surface.md` §6); the app-scoped `register_app_schema_descriptor` has no field
+    /// here because it belongs to `.document_app`, while flow extensions use plugin-level
+    /// `FlowExtensionDeclaration` rather than a setup registrar. Built
     /// only through `ArtifactDeclaration::builder(definition)`, a consuming typestate builder mirroring
     /// `PluginBuilder`'s own shape, so a declaration missing its mandatory `schema` is a compile
     /// error rather than a runtime panic. Every field is module-private — a plugin crate can
@@ -3125,6 +3124,8 @@ pub mod app {
         schema: String,
         extension: &'static str,
         codec: fn(String) -> store::ArtifactCodec,
+        app_id: &'static str,
+        foreign: bool,
     }
 
     impl DocumentCodecSpec {
@@ -3132,7 +3133,14 @@ pub mod app {
             fn codec<A: ArtifactApp>(schema: String) -> store::ArtifactCodec {
                 store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema)
             }
-            DocumentCodecSpec { schema: A::DOCUMENT_SCHEMA.to_string(), extension: <A::Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<A> }
+            DocumentCodecSpec { schema: A::DOCUMENT_SCHEMA.to_string(), extension: <A::Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<A>, app_id: A::APP_ID, foreign: false }
+        }
+
+        pub(crate) fn foreign<A: ArtifactApp>(schema: impl Into<String>) -> Self {
+            fn codec<A: ArtifactApp>(schema: String) -> store::ArtifactCodec {
+                store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema)
+            }
+            DocumentCodecSpec { schema: schema.into(), extension: <A::Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<A>, app_id: A::APP_ID, foreign: true }
         }
 
         /// 🗂️ `of::<A>()`'s app-less sibling — see `.document_codec_bare()`'s own doc for why this
@@ -3150,11 +3158,24 @@ pub mod app {
             {
                 store::ArtifactCodec::of::<Snapshot, Mutation>(schema)
             }
-            DocumentCodecSpec { schema: schema.into(), extension: <Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<Snapshot, Mutation> }
+            DocumentCodecSpec { schema: schema.into(), extension: <Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<Snapshot, Mutation>, app_id: "", foreign: false }
         }
 
         fn codec(&self) -> store::ArtifactCodec {
             (self.codec)(self.schema.clone())
+        }
+
+        pub(crate) fn preflight_foreign(&self, document_app_ids: &BTreeSet<&'static str>) -> Result<(), PluginAssemblyError> {
+            if !self.foreign {
+                return Ok(());
+            }
+            if self.schema.trim().is_empty() || self.extension.trim().is_empty() {
+                return Err(PluginAssemblyError::new("plugin-assembly.foreign-document-codec-schema", "foreign document codecs require non-empty schema and extension"));
+            }
+            if !document_app_ids.contains(self.app_id) {
+                return Err(PluginAssemblyError::new("plugin-assembly.foreign-document-codec-owner", format!("foreign document codec for app {:?} requires that app to be declared by this plugin", self.app_id)));
+            }
+            Ok(())
         }
     }
 
@@ -3277,6 +3298,462 @@ pub mod app {
         }
     }
 
+    //#region 🧭️RuntimeContributions
+    /// 🧷️ Typed mesh-to-document executable retained by the plugin runtime for a DWG bridge.
+    pub type MeshDwgDocumentImporter = fn(&semio_framework::MeshData) -> Result<Value, String>;
+
+    /// 🧷️ Typed document-to-SVG executable retained by the plugin runtime for 2D export.
+    pub type TwoDSvgDocumentRenderer = fn(&Value) -> Result<(String, u32, u32), String>;
+
+    /// 🧭️ The closed set of host-media contribution roles.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    pub enum HostMediaHandlerKind {
+        MeshDwgBridge,
+        TwoDSvgExport,
+    }
+
+    impl HostMediaHandlerKind {
+        fn as_str(self) -> &'static str {
+            match self {
+                Self::MeshDwgBridge => "mesh-dwg-bridge",
+                Self::TwoDSvgExport => "2d-svg-export",
+            }
+        }
+    }
+
+    /// ⚙️ Complete process-local identity of a typed host-media executable.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    pub enum HostMediaExecutableIdentity {
+        MeshDwgBridge(usize),
+        TwoDSvgExport(usize),
+    }
+
+    /// 📋️ Immutable host-media descriptor visible to a runtime host.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct HostMediaHandlerDescriptor {
+        pub id: String,
+        pub owner: String,
+        pub kind: HostMediaHandlerKind,
+        pub artifact_kind: semio_framework::ArtifactKindSpec,
+        pub document_schema: String,
+        pub file_stem: Option<String>,
+        pub executable_identity: HostMediaExecutableIdentity,
+    }
+
+    /// 🧾️ Descriptor-owned typed host-media contribution, frozen before any aggregate commit.
+    #[derive(Clone, Debug)]
+    pub struct HostMediaHandlerDeclaration {
+        id: ArtifactIdentity,
+        kind: HostMediaHandlerKind,
+        artifact_kind: semio_framework::ArtifactKindSpec,
+        document_schema: String,
+        file_stem: Option<String>,
+        executable: HostMediaExecutable,
+    }
+
+    #[derive(Clone, Copy, Debug)]
+    enum HostMediaExecutable {
+        MeshDwgBridge(MeshDwgDocumentImporter),
+        TwoDSvgExport(TwoDSvgDocumentRenderer),
+    }
+
+    impl HostMediaHandlerDeclaration {
+        /// 🏗️ Describes one mesh-DWG bridge without invoking its converter during assembly.
+        pub fn mesh_dwg_bridge(id: impl Into<String>, artifact_kind: semio_framework::ArtifactKindSpec, document_schema: impl Into<String>, importer: MeshDwgDocumentImporter) -> Result<Self, PluginAssemblyError> {
+            let declaration = Self {
+                id: ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?,
+                kind: HostMediaHandlerKind::MeshDwgBridge,
+                artifact_kind,
+                document_schema: document_schema.into(),
+                file_stem: None,
+                executable: HostMediaExecutable::MeshDwgBridge(importer),
+            };
+            declaration.validate_shape()?;
+            Ok(declaration)
+        }
+
+        /// 🏗️ Describes one 2D SVG renderer without invoking it during assembly.
+        pub fn two_d_svg_export(id: impl Into<String>, artifact_kind: semio_framework::ArtifactKindSpec, document_schema: impl Into<String>, file_stem: impl Into<String>, renderer: TwoDSvgDocumentRenderer) -> Result<Self, PluginAssemblyError> {
+            let declaration = Self {
+                id: ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?,
+                kind: HostMediaHandlerKind::TwoDSvgExport,
+                artifact_kind,
+                document_schema: document_schema.into(),
+                file_stem: Some(file_stem.into()),
+                executable: HostMediaExecutable::TwoDSvgExport(renderer),
+            };
+            declaration.validate_shape()?;
+            Ok(declaration)
+        }
+
+        /// 🪪️ Returns the stable contribution id.
+        pub fn id(&self) -> &str {
+            self.id.as_str()
+        }
+
+        /// ⚙️ Returns the complete executable identity used for idempotence and conflict rejection.
+        pub fn executable_identity(&self) -> HostMediaExecutableIdentity {
+            match self.executable {
+                HostMediaExecutable::MeshDwgBridge(importer) => HostMediaExecutableIdentity::MeshDwgBridge(importer as usize),
+                HostMediaExecutable::TwoDSvgExport(renderer) => HostMediaExecutableIdentity::TwoDSvgExport(renderer as usize),
+            }
+        }
+
+        fn validate_shape(&self) -> Result<(), PluginAssemblyError> {
+            if self.artifact_kind.id.trim().is_empty() || self.artifact_kind.schema.trim().is_empty() || self.document_schema.trim().is_empty() {
+                return Err(PluginAssemblyError::new("plugin-assembly.host-media-shape", "host-media contributions require non-empty artifact kind and document schema"));
+            }
+            if self.artifact_kind.schema != self.document_schema {
+                return Err(PluginAssemblyError::new("plugin-assembly.host-media-schema", format!("host-media contribution {:?} schema {:?} does not equal artifact-kind schema {:?}", self.id.as_str(), self.document_schema, self.artifact_kind.schema)));
+            }
+            if matches!(self.kind, HostMediaHandlerKind::TwoDSvgExport) && self.file_stem.as_deref().is_none_or(|file_stem| file_stem.trim().is_empty()) {
+                return Err(PluginAssemblyError::new("plugin-assembly.host-media-file-stem", "2D SVG export contributions require a non-empty file stem"));
+            }
+            Ok(())
+        }
+
+        pub(crate) fn preflight(&self, owner: &str, declared_media_kinds: &BTreeMap<String, semio_framework::ArtifactKindSpec>) -> Result<(), PluginAssemblyError> {
+            ArtifactIdentity::parse(owner.to_string()).map_err(PluginAssemblyError::definition)?;
+            self.validate_shape()?;
+            let declared = declared_media_kinds.get(&self.artifact_kind.id).ok_or_else(|| PluginAssemblyError::new("plugin-assembly.host-media-owner", format!("host-media contribution {:?} targets undeclared artifact kind {:?}", self.id.as_str(), self.artifact_kind.id)))?;
+            if declared != &self.artifact_kind {
+                return Err(PluginAssemblyError::new("plugin-assembly.host-media-kind", format!("host-media contribution {:?} does not use the plugin-owned descriptor for {:?}", self.id.as_str(), self.artifact_kind.id)));
+            }
+            Ok(())
+        }
+
+        fn descriptor(&self, owner: &str) -> HostMediaHandlerDescriptor {
+            HostMediaHandlerDescriptor {
+                id: self.id.as_str().to_string(),
+                owner: owner.to_string(),
+                kind: self.kind,
+                artifact_kind: self.artifact_kind.clone(),
+                document_schema: self.document_schema.clone(),
+                file_stem: self.file_stem.clone(),
+                executable_identity: self.executable_identity(),
+            }
+        }
+    }
+
+    /// 📥️ Typed mesh-DWG bridge runtime request.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct MeshDwgBridgeRequest {
+        pub artifact_kind: String,
+        pub document_schema: String,
+        pub mesh: semio_framework::MeshData,
+    }
+
+    /// 📤️ Typed mesh-DWG bridge runtime result.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct MeshDwgBridgeResult {
+        pub document: Value,
+    }
+
+    /// 📥️ Typed 2D SVG export runtime request.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct TwoDSvgExportRequest {
+        pub artifact_kind: String,
+        pub document_schema: String,
+        pub document: Value,
+    }
+
+    /// 📤️ Typed 2D SVG export runtime result.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct TwoDSvgExportResult {
+        pub file_stem: String,
+        pub svg: String,
+        pub width: u32,
+        pub height: u32,
+    }
+
+    /// 🚧️ Typed host-media runtime rejection.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct HostMediaRuntimeError {
+        pub code: String,
+        pub message: String,
+    }
+
+    impl std::fmt::Display for HostMediaRuntimeError {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(formatter, "{}: {}", self.code, self.message)
+        }
+    }
+
+    impl std::error::Error for HostMediaRuntimeError {}
+
+    /// ⚙️ Immutable executable identity for a flow-extension contribution.
+    #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    pub struct FlowExtensionExecutableIdentity {
+        pub package_id: String,
+        pub module_id: String,
+        pub entrypoint: String,
+        pub abi: String,
+    }
+
+    impl FlowExtensionExecutableIdentity {
+        /// 🏗️ Names a native executable entry without accepting an installer callback.
+        pub fn native(package_id: impl Into<String>, module_id: impl Into<String>, entrypoint: impl Into<String>) -> Result<Self, PluginAssemblyError> {
+            let identity = Self { package_id: package_id.into(), module_id: module_id.into(), entrypoint: entrypoint.into(), abi: "semio.flow.extension.native.v1".into() };
+            for value in [&identity.package_id, &identity.module_id, &identity.entrypoint, &identity.abi] {
+                ArtifactIdentity::parse(value.clone()).map_err(PluginAssemblyError::definition)?;
+            }
+            Ok(identity)
+        }
+    }
+
+    /// 🧾️ One closed contribution category inside a `flow.extension` manifest.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    pub enum FlowExtensionContributionKind {
+        Schema,
+        Operator,
+        Widget,
+        Command,
+        Setting,
+    }
+
+    /// 🧾️ One externally addressable contribution declared by a flow extension.
+    #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    pub struct FlowExtensionContribution {
+        pub kind: FlowExtensionContributionKind,
+        pub id: String,
+    }
+
+    impl FlowExtensionContribution {
+        /// 🏗️ Creates one non-empty typed flow-extension contribution identity.
+        pub fn new(kind: FlowExtensionContributionKind, id: impl Into<String>) -> Result<Self, PluginAssemblyError> {
+            let id = id.into();
+            ArtifactIdentity::parse(id.clone()).map_err(PluginAssemblyError::definition)?;
+            Ok(Self { kind, id })
+        }
+    }
+
+    /// 📋️ Schema-owned, immutable `flow.extension` manifest descriptor.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct FlowExtensionManifest {
+        pub id: String,
+        pub name: String,
+        pub version: String,
+        pub activation_events: Vec<String>,
+        pub contributions: Vec<FlowExtensionContribution>,
+    }
+
+    impl FlowExtensionManifest {
+        /// 🏗️ Creates a typed flow-extension manifest with an explicit startup activation.
+        pub fn new(id: impl Into<String>, name: impl Into<String>, version: impl Into<String>) -> Result<Self, PluginAssemblyError> {
+            let manifest = Self { id: id.into(), name: name.into(), version: version.into(), activation_events: vec!["onStartup".into()], contributions: Vec::new() };
+            manifest.validate()?;
+            Ok(manifest)
+        }
+
+        /// 🧩️ Adds one typed contribution to this immutable descriptor.
+        pub fn contribution(mut self, contribution: FlowExtensionContribution) -> Result<Self, PluginAssemblyError> {
+            if self.contributions.iter().any(|candidate| candidate.kind == contribution.kind && candidate.id == contribution.id) {
+                return Ok(self);
+            }
+            self.contributions.push(contribution);
+            Ok(self)
+        }
+
+        fn validate(&self) -> Result<(), PluginAssemblyError> {
+            ArtifactIdentity::parse(self.id.clone()).map_err(PluginAssemblyError::definition)?;
+            if self.name.trim().is_empty() || self.version.trim().is_empty() || self.activation_events.iter().any(|event| event.trim().is_empty()) {
+                return Err(PluginAssemblyError::new("plugin-assembly.flow-extension-manifest", "flow extension manifests require non-empty name, version, and activation events"));
+            }
+            let mut contributions = BTreeSet::new();
+            for contribution in &self.contributions {
+                ArtifactIdentity::parse(contribution.id.clone()).map_err(PluginAssemblyError::definition)?;
+                if !contributions.insert((contribution.kind, contribution.id.clone())) {
+                    return Err(PluginAssemblyError::new("plugin-assembly.flow-extension-contribution", format!("duplicate flow extension contribution {:?}", contribution.id)));
+                }
+            }
+            Ok(())
+        }
+    }
+
+    /// 📋️ Immutable runtime descriptor for one linked flow extension.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct FlowExtensionDescriptor {
+        pub id: String,
+        pub owner: String,
+        pub domain: String,
+        pub schema: String,
+        pub extension_id: String,
+        pub manifest: FlowExtensionManifest,
+        pub executable_identity: FlowExtensionExecutableIdentity,
+    }
+
+    /// 🌊️ Immutable `flow.extension` contribution; it carries no mutating installer function.
+    #[derive(Clone, Debug)]
+    pub struct FlowExtensionDeclaration {
+        id: ArtifactIdentity,
+        extension_id: ArtifactIdentity,
+        manifest: FlowExtensionManifest,
+        executable_identity: FlowExtensionExecutableIdentity,
+    }
+
+    impl FlowExtensionDeclaration {
+        /// 🏗️ Declares a `flow.extension` manifest and its immutable native executable identity.
+        pub fn new(id: impl Into<String>, manifest: FlowExtensionManifest, executable_identity: FlowExtensionExecutableIdentity) -> Result<Self, PluginAssemblyError> {
+            let declaration = Self {
+                id: ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?,
+                extension_id: ArtifactIdentity::parse(manifest.id.clone()).map_err(PluginAssemblyError::definition)?,
+                manifest,
+                executable_identity,
+            };
+            declaration.validate_shape()?;
+            Ok(declaration)
+        }
+
+        /// 🪪️ Returns the stable contribution id.
+        pub fn id(&self) -> &str {
+            self.id.as_str()
+        }
+
+        fn validate_shape(&self) -> Result<(), PluginAssemblyError> {
+            self.manifest.validate()
+        }
+
+        pub(crate) fn preflight(&self, owner: &str) -> Result<(), PluginAssemblyError> {
+            ArtifactIdentity::parse(owner.to_string()).map_err(PluginAssemblyError::definition)?;
+            self.validate_shape()
+        }
+
+        fn descriptor(&self, owner: &str) -> FlowExtensionDescriptor {
+            FlowExtensionDescriptor {
+                id: self.id.as_str().to_string(),
+                owner: owner.to_string(),
+                domain: "flow.extension".into(),
+                schema: "flow.extension".into(),
+                extension_id: self.extension_id.as_str().to_string(),
+                manifest: self.manifest.clone(),
+                executable_identity: self.executable_identity.clone(),
+            }
+        }
+    }
+
+    struct RegisteredHostMediaHandler {
+        descriptor: HostMediaHandlerDescriptor,
+        executable: HostMediaExecutable,
+    }
+
+    impl RegisteredHostMediaHandler {
+        fn identical_to(&self, other: &Self) -> bool {
+            self.descriptor == other.descriptor
+                && match (self.executable, other.executable) {
+                    (HostMediaExecutable::MeshDwgBridge(left), HostMediaExecutable::MeshDwgBridge(right)) => std::ptr::fn_addr_eq(left, right),
+                    (HostMediaExecutable::TwoDSvgExport(left), HostMediaExecutable::TwoDSvgExport(right)) => std::ptr::fn_addr_eq(left, right),
+                    _ => false,
+                }
+        }
+    }
+
+    struct HostMediaHandlerRegistry {
+        by_id: BTreeMap<String, RegisteredHostMediaHandler>,
+        by_target: BTreeMap<(HostMediaHandlerKind, String), String>,
+    }
+
+    impl HostMediaHandlerRegistry {
+        fn new() -> Self {
+            Self { by_id: BTreeMap::new(), by_target: BTreeMap::new() }
+        }
+
+        fn from_declarations(owner: &str, declarations: &[HostMediaHandlerDeclaration]) -> Result<Self, PluginAssemblyError> {
+            let mut registry = Self::new();
+            for declaration in declarations {
+                registry.register(owner, declaration)?;
+            }
+            Ok(registry)
+        }
+
+        fn register(&mut self, owner: &str, declaration: &HostMediaHandlerDeclaration) -> Result<(), PluginAssemblyError> {
+            let descriptor = declaration.descriptor(owner);
+            let entry = RegisteredHostMediaHandler { descriptor: descriptor.clone(), executable: declaration.executable };
+            if let Some(existing) = self.by_id.get(&descriptor.id) {
+                if existing.identical_to(&entry) {
+                    return Ok(());
+                }
+                return Err(PluginAssemblyError::new("plugin-assembly.host-media-id", format!("host-media contribution {:?} has a conflicting descriptor or executable identity", descriptor.id)));
+            }
+            let target = (descriptor.kind, descriptor.artifact_kind.id.clone());
+            if let Some(existing) = self.by_target.get(&target) {
+                return Err(PluginAssemblyError::new("plugin-assembly.host-media-target", format!("host-media target {}:{} is already owned by {:?}", descriptor.kind.as_str(), descriptor.artifact_kind.id, existing)));
+            }
+            self.by_target.insert(target, descriptor.id.clone());
+            self.by_id.insert(descriptor.id.clone(), entry);
+            Ok(())
+        }
+
+        fn descriptors(&self) -> Vec<HostMediaHandlerDescriptor> {
+            self.by_id.values().map(|entry| entry.descriptor.clone()).collect()
+        }
+
+        fn mesh_dwg_bridge(&self, request: MeshDwgBridgeRequest) -> Result<MeshDwgBridgeResult, HostMediaRuntimeError> {
+            let entry = self.lookup(HostMediaHandlerKind::MeshDwgBridge, &request.artifact_kind, &request.document_schema)?;
+            let HostMediaExecutable::MeshDwgBridge(importer) = entry.executable else {
+                return Err(HostMediaRuntimeError { code: "host-media.executable-kind".into(), message: format!("host-media target {:?} has no mesh-DWG executable", request.artifact_kind) });
+            };
+            importer(&request.mesh).map(|document| MeshDwgBridgeResult { document }).map_err(|message| HostMediaRuntimeError { code: "host-media.mesh-dwg".into(), message })
+        }
+
+        fn two_d_svg_export(&self, request: TwoDSvgExportRequest) -> Result<TwoDSvgExportResult, HostMediaRuntimeError> {
+            let entry = self.lookup(HostMediaHandlerKind::TwoDSvgExport, &request.artifact_kind, &request.document_schema)?;
+            let HostMediaExecutable::TwoDSvgExport(renderer) = entry.executable else {
+                return Err(HostMediaRuntimeError { code: "host-media.executable-kind".into(), message: format!("host-media target {:?} has no 2D SVG executable", request.artifact_kind) });
+            };
+            let (svg, width, height) = renderer(&request.document).map_err(|message| HostMediaRuntimeError { code: "host-media.2d-svg".into(), message })?;
+            Ok(TwoDSvgExportResult { file_stem: entry.descriptor.file_stem.clone().expect("2D SVG declaration requires a file stem"), svg, width, height })
+        }
+
+        fn lookup(&self, kind: HostMediaHandlerKind, artifact_kind: &str, document_schema: &str) -> Result<&RegisteredHostMediaHandler, HostMediaRuntimeError> {
+            let id = self.by_target.get(&(kind, artifact_kind.to_string())).ok_or_else(|| HostMediaRuntimeError { code: "host-media.not-declared".into(), message: format!("no {} declaration for artifact kind {:?}", kind.as_str(), artifact_kind) })?;
+            let entry = self.by_id.get(id).expect("host-media target index always points to an entry");
+            if entry.descriptor.document_schema != document_schema {
+                return Err(HostMediaRuntimeError { code: "host-media.schema-mismatch".into(), message: format!("host-media declaration {:?} expects schema {:?}, request supplied {:?}", entry.descriptor.id, entry.descriptor.document_schema, document_schema) });
+            }
+            Ok(entry)
+        }
+    }
+
+    struct FlowExtensionRegistry {
+        by_id: BTreeMap<String, FlowExtensionDescriptor>,
+        by_extension_id: BTreeMap<String, String>,
+    }
+
+    impl FlowExtensionRegistry {
+        fn new() -> Self {
+            Self { by_id: BTreeMap::new(), by_extension_id: BTreeMap::new() }
+        }
+
+        fn from_declarations(owner: &str, declarations: &[FlowExtensionDeclaration]) -> Result<Self, PluginAssemblyError> {
+            let mut registry = Self::new();
+            for declaration in declarations {
+                registry.register(owner, declaration)?;
+            }
+            Ok(registry)
+        }
+
+        fn register(&mut self, owner: &str, declaration: &FlowExtensionDeclaration) -> Result<(), PluginAssemblyError> {
+            let descriptor = declaration.descriptor(owner);
+            if let Some(existing) = self.by_id.get(&descriptor.id) {
+                if existing == &descriptor {
+                    return Ok(());
+                }
+                return Err(PluginAssemblyError::new("plugin-assembly.flow-extension-id", format!("flow extension contribution {:?} has a conflicting descriptor or executable identity", descriptor.id)));
+            }
+            if let Some(existing) = self.by_extension_id.get(&descriptor.extension_id) {
+                return Err(PluginAssemblyError::new("plugin-assembly.flow-extension-target", format!("flow extension {:?} is already owned by {:?}", descriptor.extension_id, existing)));
+            }
+            self.by_extension_id.insert(descriptor.extension_id.clone(), descriptor.id.clone());
+            self.by_id.insert(descriptor.id.clone(), descriptor);
+            Ok(())
+        }
+
+        fn descriptors(&self) -> Vec<FlowExtensionDescriptor> {
+            self.by_id.values().cloned().collect()
+        }
+    }
+    //#endregion 🧭️RuntimeContributions
+
     /// 🧭️ One immutable plugin runtime catalogue assembled before any shared registry commit.
     pub(crate) struct ArtifactRegistrationPlan {
         schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
@@ -3289,11 +3766,14 @@ pub mod app {
         document_codecs: Vec<store::ArtifactCodec>,
         migrations: Vec<store::DialectMigration>,
         app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
+        owner: String,
+        host_media_handlers: Vec<HostMediaHandlerDeclaration>,
+        flow_extensions: Vec<FlowExtensionDeclaration>,
     }
 
     impl ArtifactRegistrationPlan {
-        pub(crate) fn from_declarations(declarations: &[ArtifactDeclaration], app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>) -> Self {
-            let mut plan = Self { schemas: Vec::new(), inferences: Vec::new(), inference_services: Vec::new(), formats: Vec::new(), subset_validators: Vec::new(), composers: Vec::new(), languages: Vec::new(), document_codecs: Vec::new(), migrations: Vec::new(), app_schemas };
+        pub(crate) fn from_declarations(declarations: &[ArtifactDeclaration], app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>, foreign_document_codecs: Vec<DocumentCodecSpec>, owner: impl Into<String>, host_media_handlers: Vec<HostMediaHandlerDeclaration>, flow_extensions: Vec<FlowExtensionDeclaration>) -> Self {
+            let mut plan = Self { schemas: Vec::new(), inferences: Vec::new(), inference_services: Vec::new(), formats: Vec::new(), subset_validators: Vec::new(), composers: Vec::new(), languages: Vec::new(), document_codecs: Vec::new(), migrations: Vec::new(), app_schemas, owner: owner.into(), host_media_handlers, flow_extensions };
             for declaration in declarations {
                 plan.schemas.extend(declaration.schemas.iter().cloned());
                 plan.inferences.extend(declaration.inferences.iter().cloned());
@@ -3305,16 +3785,19 @@ pub mod app {
                 plan.document_codecs.extend(declaration.document_codecs.iter().map(DocumentCodecSpec::codec));
                 plan.migrations.extend(declaration.migrations.iter().cloned());
             }
+            plan.document_codecs.extend(foreign_document_codecs.iter().map(DocumentCodecSpec::codec));
             plan
         }
 
         /// 🧬️ Freezes every definition, schema, app, language, and inference before external state changes.
         pub(crate) fn into_runtime(self, definitions: ArtifactDefinitionRegistry) -> Result<(PluginRuntimeRegistry, semio_framework::io::ArtifactAssemblyRegistryPlan), PluginAssemblyError> {
-            let Self { schemas, inferences, inference_services: declared_inference_services, formats, subset_validators, composers, languages, document_codecs, migrations, app_schemas } = self;
+            let Self { schemas, inferences, inference_services: declared_inference_services, formats, subset_validators, composers, languages, document_codecs, migrations, app_schemas, owner, host_media_handlers, flow_extensions } = self;
             let mut inference_services = ArtifactInferenceServiceRegistry::new();
             for service in &declared_inference_services {
                 inference_services.register(*service).map_err(|error| PluginAssemblyError::new("plugin-assembly.inference", error.to_string()))?;
             }
+            let host_media_handlers = HostMediaHandlerRegistry::from_declarations(&owner, &host_media_handlers)?;
+            let flow_extensions = FlowExtensionRegistry::from_declarations(&owner, &flow_extensions)?;
             Ok((
                 PluginRuntimeRegistry {
                     definitions,
@@ -3323,6 +3806,8 @@ pub mod app {
                     inference_services,
                     languages,
                     app_schemas,
+                    host_media_handlers,
+                    flow_extensions,
                     owner_mutations: BTreeMap::new(),
                     contributed_mutations: BTreeMap::new(),
                 },
@@ -3345,6 +3830,8 @@ pub mod app {
         inference_services: ArtifactInferenceServiceRegistry,
         languages: Vec<dsl::LanguageSpec>,
         app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
+        host_media_handlers: HostMediaHandlerRegistry,
+        flow_extensions: FlowExtensionRegistry,
         owner_mutations: BTreeMap<String, WireMutationRosterEntry>,
         contributed_mutations: BTreeMap<String, ContributedMutationRuntimeEntry>,
     }
@@ -3358,6 +3845,8 @@ pub mod app {
                 inference_services: ArtifactInferenceServiceRegistry::new(),
                 languages: Vec::new(),
                 app_schemas: Vec::new(),
+                host_media_handlers: HostMediaHandlerRegistry::new(),
+                flow_extensions: FlowExtensionRegistry::new(),
                 owner_mutations: BTreeMap::new(),
                 contributed_mutations: BTreeMap::new(),
             }
@@ -11451,6 +11940,26 @@ pub mod app {
             self.runtime.definitions()
         }
 
+        /// 🧭️ Lists frozen host-media declarations in stable contribution-id order.
+        pub fn host_media_handlers(&self) -> Vec<HostMediaHandlerDescriptor> {
+            self.runtime.host_media_handlers.descriptors()
+        }
+
+        /// 🌊️ Lists frozen flow-extension descriptors in stable contribution-id order.
+        pub fn flow_extensions(&self) -> Vec<FlowExtensionDescriptor> {
+            self.runtime.flow_extensions.descriptors()
+        }
+
+        /// 📥️ Executes only the declared typed mesh-DWG bridge selected by the request.
+        pub fn import_mesh_dwg(&self, request: MeshDwgBridgeRequest) -> Result<MeshDwgBridgeResult, HostMediaRuntimeError> {
+            self.runtime.host_media_handlers.mesh_dwg_bridge(request)
+        }
+
+        /// 📤️ Executes only the declared typed 2D SVG renderer selected by the request.
+        pub fn export_two_d_svg(&self, request: TwoDSvgExportRequest) -> Result<TwoDSvgExportResult, HostMediaRuntimeError> {
+            self.runtime.host_media_handlers.two_d_svg_export(request)
+        }
+
         pub(crate) fn wire_list_artifact_inference_services(&self) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
             wire_list_artifact_inference_services_from(self.runtime.inference_services())
         }
@@ -17417,7 +17926,21 @@ pub use app::{
     EphemeralEmit,
     ExampleSource,
     HistoryView,
+    FlowExtensionContribution,
+    FlowExtensionContributionKind,
+    FlowExtensionDeclaration,
+    FlowExtensionDescriptor,
+    FlowExtensionExecutableIdentity,
+    FlowExtensionManifest,
+    HostMediaExecutableIdentity,
+    HostMediaHandlerDeclaration,
+    HostMediaHandlerDescriptor,
+    HostMediaHandlerKind,
+    HostMediaRuntimeError,
     KeybindingSpec,
+    MeshDwgBridgeRequest,
+    MeshDwgBridgeResult,
+    MeshDwgDocumentImporter,
     MediaClass,
     MediaType,
     Menu,
@@ -17442,6 +17965,9 @@ pub use app::{
     PluginProgram,
     PresenceView,
     TransientView,
+    TwoDSvgDocumentRenderer,
+    TwoDSvgExportRequest,
+    TwoDSvgExportResult,
     VcsArtifactApp,
     WindowKindSpec,
     WireArtifactInferenceDiagnostic,

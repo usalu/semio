@@ -3,10 +3,10 @@
 //! restructuring (`.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️fanout-brief.md`
 //! Phase 2). Behavior unchanged from the wave-2 pass — pure directory/module restructuring.
 
+use crate::artifacts::program::registers::WayfindingRequirement;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramMutation;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::registers::WayfindingRequirement;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 

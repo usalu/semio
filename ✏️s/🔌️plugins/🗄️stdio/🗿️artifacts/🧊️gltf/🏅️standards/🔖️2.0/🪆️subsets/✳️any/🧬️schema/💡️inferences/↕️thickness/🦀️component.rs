@@ -1,7 +1,15 @@
 //! ↕️ GLTF thickness indicators.
 
-use super::geometric_analysis::{GltfGeometryContext, statistics, thickness_samples};
-use super::super::modules::{inference_measures::{estimate, unavailable}};
+#[path = "mean-thickness/🦀️component.rs"]
+pub mod mean_thickness;
+#[path = "minimum-thickness/🦀️component.rs"]
+pub mod minimum_thickness;
+#[path = "thickness-variability/🦀️component.rs"]
+pub mod thickness_variability;
+#[path = "thickness-distribution/🦀️component.rs"]
+pub mod thickness_distribution;
+
+use super::geometry_core::{GltfGeometryContext, statistics, thickness_samples};
 use super::super::modules::measurement_contracts::*;
 use serde::{Deserialize, Serialize};
 
@@ -16,33 +24,36 @@ pub struct GltfThicknessIndicators {
 
 pub struct GltfThicknessInference;
 
+pub(crate) fn samples(context: &GltfGeometryContext<'_>) -> Vec<f64> {
+    if context.topology.watertight && context.topology.manifold {
+        thickness_samples(&context.points, &context.faces, context.policy.sampling_budget as usize, context.policy.absolute_length_tolerance)
+    } else {
+        Vec::new()
+    }
+}
+
+pub(crate) fn distribution(context: &GltfGeometryContext<'_>) -> GltfStatistics {
+    statistics(&samples(context), &context.policy.histogram_edges)
+}
+
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfThicknessInference {
     type Output = GltfThicknessIndicators;
 
     fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
-        let samples = if context.topology.watertight && context.topology.manifold { thickness_samples(&context.points, &context.faces, context.policy.sampling_budget as usize, context.policy.absolute_length_tolerance) } else { Vec::new() };
-        let distribution = statistics(&samples, &context.policy.histogram_edges);
-        let measure = |value: Option<f64>| {
-            value.map(|value| estimate::<f64>(value, GltfUnit::Metre, samples.len(), Some(context.topology))).unwrap_or_else(|| unavailable::<f64>(GltfUnit::Metre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)))
-        };
         Self::Output {
-            mean_thickness: measure(distribution.mean),
-            minimum_thickness: measure(distribution.minimum),
-            thickness_variability: measure(distribution.standard_deviation),
-            thickness_distribution: if samples.is_empty() {
-                unavailable(GltfUnit::Metre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology))
-            } else {
-                estimate(distribution, GltfUnit::Metre, samples.len(), Some(context.topology))
-            },
+            mean_thickness: mean_thickness::infer(context),
+            minimum_thickness: minimum_thickness::infer(context),
+            thickness_variability: thickness_variability::infer(context),
+            thickness_distribution: thickness_distribution::infer(context),
         }
     }
 
     fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            mean_thickness: unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            minimum_thickness: unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            thickness_variability: unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            thickness_distribution: unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
+            mean_thickness: mean_thickness::unavailable_measure(diagnostic_ids),
+            minimum_thickness: minimum_thickness::unavailable_measure(diagnostic_ids),
+            thickness_variability: thickness_variability::unavailable_measure(diagnostic_ids),
+            thickness_distribution: thickness_distribution::unavailable_measure(diagnostic_ids),
         }
     }
 }

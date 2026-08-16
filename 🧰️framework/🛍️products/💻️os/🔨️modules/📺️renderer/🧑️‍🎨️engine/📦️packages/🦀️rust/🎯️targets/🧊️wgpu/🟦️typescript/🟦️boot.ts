@@ -2,7 +2,7 @@
 /** @emoji 🧊️ Trunk boot glue — loads wasm programs and starts the wgpu renderer. */
 // #endregion 🧲️Header
 
-import { parseInvocationResponse, type PluginRegistryEntry } from "@semio-tech/framework";
+import { parseInvocationResponse, pluginGraphErrorMessage, type PluginRegistryEntry, type ShellLocale } from "@semio-tech/framework";
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { PLUGIN_CATALOG } from "../../../../../../../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🟦️catalog.ts";
 
@@ -285,6 +285,33 @@ function renderBootErrorBanner(message: string): void {
   root.appendChild(banner);
 }
 
+/** 🌐️ No shell locale selector exists this early in boot (before any app/config has loaded) —
+ * `navigator.language` is the best signal available, English/German only per the repo's
+ * `ShellLocale` axis. */
+function resolveBootLocale(): ShellLocale {
+  return typeof navigator !== "undefined" && navigator.language.toLowerCase().startsWith("de") ? "de" : "en";
+}
+
+/** 🌐️ Surfaces a missing/incompatible plugin dependency (ticket
+ * 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS) as a real, localized
+ * banner instead of only a console error — non-fatal, since `boot.plugins` already excludes the
+ * blocked entries and every OTHER plugin still boots (contract freeze §4 rule 5's fail-soft posture). */
+function renderDependencyFaultBanner(messages: readonly string[]): void {
+  const root = document.getElementById("root");
+  if (!root) return;
+  const banner = document.createElement("div");
+  banner.style.cssText = "position:fixed;top:0;left:0;right:0;padding:12px 24px;background:#4a2a00;color:#ffd8a8;font-family:monospace;font-size:13px;white-space:pre-wrap;z-index:9998;";
+  banner.textContent = messages.join("\n");
+  root.appendChild(banner);
+}
+
+if (boot.dependencyErrors.length > 0) {
+  const locale = resolveBootLocale();
+  const messages = boot.dependencyErrors.map((error) => pluginGraphErrorMessage(error, locale));
+  for (const message of messages) console.error(`[DEBUG] plugin dependency fault: ${message}`);
+  renderDependencyFaultBanner(messages);
+}
+
 try {
   const availableTargets: PluginRegistryEntry[] = [];
   for (const entry of pluginTargets) {
@@ -296,12 +323,13 @@ try {
     throw new Error(`[DEBUG] no wasm plugin modules found for filter ${pluginFilter}`);
   }
 
-  const handles = await Promise.all(
-    availableTargets.map(async (entry) => ({
-      pluginId: entry.pluginId,
-      handle: pluginHandleForBridge(await loadPluginModule(entry.pluginId, entry.moduleUrl)),
-    })),
-  );
+  // 🎯️ Loaded SEQUENTIALLY, in `boot.plugins`'s already dependency-ordered sequence (scout-2 §4:
+  // "boot must walk the dependency order... instead of relying on array order") — a concurrent
+  // `Promise.all` gives no guarantee a dependency finishes loading before its dependent starts.
+  const handles: { readonly pluginId: string; readonly handle: ReturnType<typeof pluginHandleForBridge> }[] = [];
+  for (const entry of availableTargets) {
+    handles.push({ pluginId: entry.pluginId, handle: pluginHandleForBridge(await loadPluginModule(entry.pluginId, entry.moduleUrl)) });
+  }
 
   const bindings = await new Promise<Record<string, unknown>>((resolve, reject) => {
     const host = window as { wasmBindings?: Record<string, unknown> };

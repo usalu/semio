@@ -1,0 +1,11 @@
+# 💡️ principal-frame glTF inference leaf GraphQL facet.
+type GltfPrincipalFrameInferenceV1 {
+  id: ID!
+  algorithmVersion: Int!
+  cacheKey: String!
+  validity: String!
+  quality: String!
+  diagnostics: [String!]!
+  provenance: [String!]!
+  valueJson: String!
+}

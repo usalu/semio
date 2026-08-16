@@ -1,7 +1,17 @@
 //! ⚪️ GLTF compactness indicators.
 
-use super::geometric_analysis::{GltfGeometryContext, convex_hull_metrics, hull_sample};
-use super::super::modules::{inference_measures::{estimate, exact, unavailable}};
+#[path = "compactness/🦀️component.rs"]
+pub mod compactness;
+#[path = "surface-to-volume-ratio/🦀️component.rs"]
+pub mod surface_to_volume_ratio;
+#[path = "sphericity/🦀️component.rs"]
+pub mod sphericity;
+#[path = "compactness-index/🦀️component.rs"]
+pub mod compactness_index;
+#[path = "hull-fill-ratio/🦀️component.rs"]
+pub mod hull_fill_ratio;
+
+use super::geometry_core::{GltfGeometryContext, convex_hull_metrics, hull_sample};
 use super::super::modules::measurement_contracts::*;
 use serde::{Deserialize, Serialize};
 
@@ -17,49 +27,44 @@ pub struct GltfCompactnessIndicators {
 
 pub struct GltfCompactnessInference;
 
+pub(crate) struct GltfCompactnessRaw {
+    pub(crate) ratio: Option<f64>,
+    pub(crate) sphericity: Option<f64>,
+    pub(crate) hull_volume: Option<f64>,
+}
+
+pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfCompactnessRaw {
+    let hull_input = hull_sample(&context.points, context.policy.sampling_budget as usize);
+    let tolerance = (context.diagonal * context.policy.relative_tolerance).max(context.policy.absolute_length_tolerance);
+    let hull_volume = convex_hull_metrics(&hull_input, tolerance).map(|(_, volume, _)| volume);
+    GltfCompactnessRaw {
+        ratio: (context.volume > 1e-15 && context.topology.watertight && context.topology.manifold && context.topology.oriented).then_some(context.surface_area / context.volume),
+        sphericity: (context.volume > 1e-15 && context.surface_area > 0.0 && context.topology.watertight).then_some(std::f64::consts::PI.powf(1.0 / 3.0) * (6.0 * context.volume).powf(2.0 / 3.0) / context.surface_area),
+        hull_volume,
+    }
+}
+
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfCompactnessInference {
     type Output = GltfCompactnessIndicators;
 
     fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
-        let ratio = (context.volume > 1e-15 && context.topology.watertight && context.topology.manifold && context.topology.oriented).then_some(context.surface_area / context.volume);
-        let sphericity = (context.volume > 1e-15 && context.surface_area > 0.0 && context.topology.watertight).then_some(std::f64::consts::PI.powf(1.0 / 3.0) * (6.0 * context.volume).powf(2.0 / 3.0) / context.surface_area);
-        let hull_input = hull_sample(&context.points, context.policy.sampling_budget as usize);
-        let tolerance = (context.diagonal * context.policy.relative_tolerance).max(context.policy.absolute_length_tolerance);
-        let hull = convex_hull_metrics(&hull_input, tolerance);
-        let compact = |value: Option<f64>| {
-            value
-                .map(|value| exact::<f64>(value, GltfUnit::Unitless, context.sample_count, Some(context.topology)))
-                .unwrap_or_else(|| unavailable::<f64>(GltfUnit::Unitless, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)))
-        };
+        let raw = raw(context);
         Self::Output {
-            compactness: compact(sphericity),
-            surface_to_volume_ratio: ratio
-                .map(|value| exact(value, GltfUnit::InverseMetre, context.sample_count, Some(context.topology)))
-                .unwrap_or_else(|| unavailable(GltfUnit::InverseMetre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology))),
-            sphericity: compact(sphericity),
-            compactness_index: compact(sphericity),
-            hull_fill_ratio: hull
-                .as_ref()
-                .filter(|(_, volume, _)| *volume > 0.0)
-                .map(|(_, volume, _)| {
-                    if context.solid.is_some() {
-                        estimate((context.volume / *volume).clamp(0.0, 1.0), GltfUnit::Unitless, context.sample_count, Some(context.topology))
-                    } else {
-                        unavailable(GltfUnit::Unitless, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology))
-                    }
-                })
-                .unwrap_or_else(|| unavailable(GltfUnit::Unitless, GltfAvailability::Degenerate, Vec::new(), context.sample_count, Some(context.topology))),
+            compactness: compactness::from_raw(context, &raw),
+            surface_to_volume_ratio: surface_to_volume_ratio::from_raw(context, &raw),
+            sphericity: sphericity::from_raw(context, &raw),
+            compactness_index: compactness_index::from_raw(context, &raw),
+            hull_fill_ratio: hull_fill_ratio::from_raw(context, &raw),
         }
     }
 
     fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
-        let unitless = || unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None);
         Self::Output {
-            compactness: unitless(),
-            surface_to_volume_ratio: unavailable(GltfUnit::InverseMetre, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            sphericity: unitless(),
-            compactness_index: unitless(),
-            hull_fill_ratio: unitless(),
+            compactness: compactness::unavailable_measure(diagnostic_ids),
+            surface_to_volume_ratio: surface_to_volume_ratio::unavailable_measure(diagnostic_ids),
+            sphericity: sphericity::unavailable_measure(diagnostic_ids),
+            compactness_index: compactness_index::unavailable_measure(diagnostic_ids),
+            hull_fill_ratio: hull_fill_ratio::unavailable_measure(diagnostic_ids),
         }
     }
 }

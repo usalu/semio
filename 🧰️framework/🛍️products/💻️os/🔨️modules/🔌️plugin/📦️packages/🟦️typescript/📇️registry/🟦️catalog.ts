@@ -10,8 +10,15 @@ import type { PlaygroundCatalogTarget, PluginCatalog, PluginCatalogTarget } from
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS, extensionModuleUrl, pluginModuleUrl } from "./🤖️generated/🟦️plugins.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "./🤖️generated/🟦️playgrounds.ts";
 
-function toCatalogTarget(target: { readonly pluginId: string; readonly wasmOut: string; readonly role: "plugin" | "extension"; readonly contributes: readonly string[]; readonly consumes: readonly string[] }): PluginCatalogTarget {
-  return { pluginId: target.pluginId, wasmOut: target.wasmOut, role: target.role, contributes: target.contributes, consumes: target.consumes };
+function toCatalogTarget(target: {
+  readonly pluginId: string;
+  readonly wasmOut: string;
+  readonly role: "plugin" | "extension";
+  readonly contributes: readonly string[];
+  readonly consumes: readonly string[];
+  readonly dependsOn?: readonly string[];
+}): PluginCatalogTarget {
+  return { pluginId: target.pluginId, wasmOut: target.wasmOut, role: target.role, contributes: target.contributes, consumes: target.consumes, dependsOn: target.dependsOn };
 }
 
 function toPlaygroundCatalogTarget(target: { readonly variant: string; readonly pluginId: string; readonly app?: string; readonly aliases: readonly string[] }): PlaygroundCatalogTarget {

@@ -51,9 +51,6 @@ pub fn default_sun_json() -> String {
     serde_json::to_string(&semio_framework_plugin::WorldSunConfig::default()).unwrap_or_default()
 }
 
-fn default_contributions_json() -> String {
-    "[]".into()
-}
 //#endregion 🔖️PreviewCamera
 
 //#region 🔖️Config
@@ -90,9 +87,7 @@ pub struct Procedural3dConfig {
     pub active_utility_id: String,
     /// 🗣️ BCP-47 locale tag.
     pub locale: String,
-    /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `flow.extension` hot-swap installs.
-    #[serde(default = "default_contributions_json")]
-    pub contributions_json: String}
+    pub locale: String}
 
 //#region 🔖️ArtifactCodec
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
@@ -167,8 +162,7 @@ impl Default for Procedural3dConfig {
             selected_generation_id: None,
             generation_preview_text: None,
             active_utility_id: "move".into(),
-            locale: "en-US".into(),
-            contributions_json: default_contributions_json()}
+            locale: "en-US".into()}
     }
 }
 
@@ -214,9 +208,7 @@ pub enum Procedural3dConfigMutation {
     #[dsl(key = "active-utility")]
     SetActiveUtility { utility_id: String },
     #[dsl(key = "locale")]
-    SetLocale { value: String },
-    #[dsl(key = "contributions")]
-    SetContributions { json: String }}
+    SetLocale { value: String }}
 
 //#region 🔖️OpCodec
 impl protocol::OpText for Procedural3dConfigMutation {
@@ -305,10 +297,6 @@ impl Mutation<Procedural3dConfig> for Procedural3dConfigMutation {
             }
             Procedural3dConfigMutation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
             Procedural3dConfigMutation::SetLocale { value } => next.locale = value.clone(),
-            Procedural3dConfigMutation::SetContributions { json } => {
-                next.contributions_json = json.clone();
-                crate::apps::procedural3d::sync_flow_extension_contributions(json);
-            }
         }
         next
     }

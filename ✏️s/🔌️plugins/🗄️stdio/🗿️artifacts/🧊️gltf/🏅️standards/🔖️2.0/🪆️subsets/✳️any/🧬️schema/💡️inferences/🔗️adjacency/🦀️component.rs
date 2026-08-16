@@ -1,7 +1,14 @@
 //! 🔗 GLTF adjacency indicators.
 
-use super::geometric_analysis::{GltfGeometryContext, GltfPairGeometry};
-use super::super::modules::{inference_measures::{estimate, exact, unavailable}, mesh_topology::Topology};
+#[path = "number-of-contacts/🦀️component.rs"]
+pub mod number_of_contacts;
+#[path = "contact-graph-degree/🦀️component.rs"]
+pub mod contact_graph_degree;
+#[path = "connected-components/🦀️component.rs"]
+pub mod connected_components;
+
+use super::geometry_core::{GltfGeometryContext, GltfPairGeometry};
+use super::super::modules::{mesh_topology::Topology};
 use super::super::modules::measurement_contracts::*;
 use serde::{Deserialize, Serialize};
 
@@ -17,17 +24,12 @@ pub struct GltfAdjacencyInference;
 
 impl GltfAdjacencyInference {
     pub(crate) fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<bool> {
-        estimate(pair.adjacent, GltfUnit::Unitless, pair.sample_count, None)
+        number_of_contacts::infer_pair(pair)
     }
 
     pub(crate) fn infer_assembly(indicators: &mut GltfAdjacencyIndicators, part_count: usize, contacts: u64, sample_count: usize, topology: Topology) {
-        if part_count <= 1 {
-            indicators.number_of_contacts = exact(0, GltfUnit::Unitless, sample_count, Some(topology));
-            indicators.contact_graph_degree = exact(0, GltfUnit::Unitless, sample_count, Some(topology));
-        } else {
-            indicators.number_of_contacts = estimate(contacts, GltfUnit::Unitless, sample_count, Some(topology));
-            indicators.contact_graph_degree = estimate(2 * contacts / part_count as u64, GltfUnit::Unitless, sample_count, Some(topology));
-        }
+        indicators.number_of_contacts = number_of_contacts::from_assembly(part_count, contacts, sample_count, topology);
+        indicators.contact_graph_degree = contact_graph_degree::from_assembly(part_count, contacts, sample_count, topology);
     }
 }
 
@@ -36,14 +38,17 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfAdjacencyInference {
 
     fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         Self::Output {
-            number_of_contacts: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology)),
-            contact_graph_degree: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology)),
-            connected_components: exact(context.topology.components, GltfUnit::Unitless, context.sample_count, Some(context.topology)),
+            number_of_contacts: number_of_contacts::infer(context),
+            contact_graph_degree: contact_graph_degree::infer(context),
+            connected_components: connected_components::infer(context),
         }
     }
 
     fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
-        let measure = || unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None);
-        Self::Output { number_of_contacts: measure(), contact_graph_degree: measure(), connected_components: measure() }
+        Self::Output {
+            number_of_contacts: number_of_contacts::unavailable_measure(diagnostic_ids),
+            contact_graph_degree: contact_graph_degree::unavailable_measure(diagnostic_ids),
+            connected_components: connected_components::unavailable_measure(diagnostic_ids),
+        }
     }
 }

@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📡communication` per Wave C.
 
 use super::mutation::DeleteCommunicationRequirement;
+use crate::artifacts::program::diff::ProgramCommunicationDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramCommunicationDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteCommunicationRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

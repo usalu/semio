@@ -8,7 +8,7 @@
 use crate::apps::procedural3d::commands::{
     add_generation, add_widget, delete_selection, flow_eval_resolve, flow_eval_tick, flow_tessellate_resolve, graph_pointer_down, move_media_node, node_graph_edit, node_graph_viewport,
     patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection, scale_selection, select_generation, set_active_example, set_active_utility,
-    set_camera, set_contributions, set_locale, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection, update_generation_values,
+    set_camera, set_locale, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection, update_generation_values,
     world_pointer_down,
 };
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
@@ -74,7 +74,6 @@ semio_framework_plugin::app_commands! {
         "selectGeneration" as "select-generation" => select_generation::SelectGeneration,
         "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
         "setLocale" as "locale" => set_locale::SetLocale,
-        "setContributions" as "contributions" => set_contributions::SetContributions,
         "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick,
         "flowEvalResolve" as "flow-eval-resolve" => flow_eval_resolve::FlowEvalResolve,
         "flowTessellateResolve" as "flow-tessellate-resolve" => flow_tessellate_resolve::FlowTessellateResolve}
@@ -128,6 +127,10 @@ impl ArtifactApp for Procedural3dPlayApp {
 
     const APP_ID: &'static str = PROCEDURAL_3D_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = PROCEDURAL_3D_SCHEMA;
+
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::procedural3d::config::schema::app_schema_descriptor())
+    }
 
     fn initial_snapshot() -> Procedural3dSnapshot {
         crate::artifacts::procedural3d::schema::default_snapshot()
@@ -268,8 +271,6 @@ impl ArtifactApp for Procedural3dPlayApp {
             "selectGeneration" => Ok(Procedural3dCommand::SelectGeneration(select_generation::SelectGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
             "setActiveUtility" => Ok(Procedural3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: str_arg(&["utilityId", "utility_id"]).unwrap_or_default() })),
             "setLocale" => Ok(Procedural3dCommand::SetLocale(set_locale::SetLocale { value: str_arg(&["value", "locale"]).unwrap_or_default() })),
-            "setContributions" => Ok(Procedural3dCommand::SetContributions(set_contributions::SetContributions {
-                json: str_arg(&["json", "contributionsJson", "contributions_json"]).or_else(|| args.get("contributions").map(|value| value.to_string())).unwrap_or_else(|| "[]".into())})),
             "flowEvalTick" => Ok(Procedural3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {})),
             "flowEvalResolve" => Ok(Procedural3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve {
                 node_hash: args.get("nodeHash").or_else(|| args.get("node_hash")).and_then(Value::as_u64).unwrap_or(0),
@@ -895,93 +896,7 @@ pub fn procedural3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData)
     serde_json::to_value(crate::artifacts::procedural3d::schema::default_snapshot()).map_err(|err| err.to_string())
 }
 
-/// 🗺️ Registers a DWG import bridge for procedural3d's own kind — self-registration, the COMPLIANT
-/// shape ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE's plugin dispatch calls out explicitly (unlike a foreign
-/// plugin naming a kind it does not own). No `ArtifactDeclaration` field models
-/// `register_mesh_dwg_import_handler` (not one of §6's covered registrars — see
-/// `📓️w1-mechanism-report.md`'s exhaustive field↔registrar census), so this stays a `.setup()` call
-/// from `🌀️procedural/🦀️component.rs`, flagged loudly as a genuine declaration gap in
-/// `📓️w1b-semio-s-plugin-procedural-report.md` rather than silently dropped.
-#[cfg(not(target_arch = "wasm32"))]
-pub fn register_dwg_mesh_bridge() {
-    semio_framework_os::register_mesh_dwg_import_handler("3d.procedural", procedural3d_document_from_mesh);
-}
-
-#[cfg(target_arch = "wasm32")]
-pub fn register_dwg_mesh_bridge() {}
 //#endregion 🔖️MeshBridge
-
-//#region 🔖️ExtensionContributions
-/// 🔌️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
-/// stateful flow-extension registration wiring (a global installed-extensions cache), genuinely
-/// behavioral rather than document-derived, and used from both procedural apps' commands/config.
-use semio_framework::TopicContribution;
-use std::sync::Mutex;
-
-/// 🧩️ One host-aggregated plugin contribution entry (`contributionsJson` wire shape).
-#[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct ProgramContributionEntry {
-    plugin_id: String,
-    #[serde(default)]
-    topic_contribution: Option<TopicContribution>,
-}
-
-const FLOW_EXTENSION_TOPIC: &str = "flow.extension";
-
-/// 🗂️ `flow.extension` topic payload shape, decoded from the open `TopicContribution`.
-#[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct FlowExtensionTopicPayload {
-    manifest_json: String,
-}
-
-/// 🗂️ Reads the open `TopicContribution` (`"flow.extension"` topic) shape per entry.
-fn flow_extension_manifest_json(entry: &ProgramContributionEntry) -> Option<String> {
-    let topic_contribution = entry.topic_contribution.as_ref()?;
-    if topic_contribution.topic != FLOW_EXTENSION_TOPIC {
-        return None;
-    }
-    topic_contribution.decode::<FlowExtensionTopicPayload>().ok().map(|payload| payload.manifest_json)
-}
-
-/// 🔌️ Installs or refreshes contributed `flow.extension` manifests when the host pushes a new catalogue.
-pub fn sync_flow_extension_contributions(contributions_json: &str) {
-    static LAST: Mutex<String> = Mutex::new(String::new());
-    let mut last = LAST.lock().expect("flow contributions lock");
-    if *last == contributions_json {
-        return;
-    }
-    for info in flow::installed_flow_extensions() {
-        flow::uninstall_flow_extension(&info.id);
-    }
-    if let Ok(entries) = serde_json::from_str::<Vec<ProgramContributionEntry>>(contributions_json) {
-        for entry in entries {
-            if let Some(manifest_json) = flow_extension_manifest_json(&entry) {
-                flow::install_flow_extension_manifest(&entry.plugin_id, &manifest_json);
-            }
-        }
-    }
-    *last = contributions_json.to_string();
-}
-
-/// 🔗 Registers in-process flow extension operators so eval + tessellate share one brep kernel.
-/// Safe to call repeatedly; installers are registered once and the host registry is rebuilt.
-pub fn ensure_linked_flow_extensions() {
-    use std::sync::Once;
-    static ONCE: Once = Once::new();
-    ONCE.call_once(|| {
-        flow::register_linked_flow_extension_installer("brep", semio_s_plugin_flow_extension_brep::register);
-        flow::register_linked_flow_extension_installer("math", semio_s_plugin_flow_extension_math::register);
-        flow::register_linked_flow_extension_installer("primitive", semio_s_plugin_flow_extension_primitive::register);
-        flow::register_linked_flow_extension_installer("logic", semio_s_plugin_flow_extension_logic::register);
-        flow::register_linked_flow_extension_installer("dictionary", semio_s_plugin_flow_extension_dictionary::register);
-        flow::register_linked_flow_extension_installer("list", semio_s_plugin_flow_extension_list::register);
-        flow::register_linked_flow_extension_installer("text", semio_s_plugin_flow_extension_text::register);
-        flow::sync_host_flow_extension_contributions("[]");
-    });
-}
-//#endregion 🔖️ExtensionContributions
 
 //#region 🧪️TestSupport
 /// 🧵️ `tessellate_geometry` (flow core brep geometry session) (and the flow-eval neuron kernel cache it sits behind)
@@ -1015,12 +930,10 @@ pub(crate) mod testkit {
     pub type Procedural3dApp = VcsArtifactApp<Procedural3dPlayApp>;
 
     pub fn app() -> Procedural3dApp {
-        ensure_linked_flow_extensions();
         new_app::<Procedural3dPlayApp>()
     }
 
     pub fn app_with_registry() -> Procedural3dApp {
-        ensure_linked_flow_extensions();
         new_app_with_registry::<Procedural3dPlayApp>(create_procedural3d_app)
     }
 
@@ -1153,7 +1066,6 @@ mod tests {
             Procedural3dCommand::SelectGeneration(select_generation::SelectGeneration { id: "generation-1".into() }),
             Procedural3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "rotate".into() }),
             Procedural3dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
-            Procedural3dCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
             Procedural3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}),
             Procedural3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { node_hash: 42, output_json: "{}".into() }),
         ]
@@ -1288,7 +1200,6 @@ mod tests {
     }
 
     fn preview_payload_from_evaluated_fixture(fixture: &flow::FlowFixture, cfg: &Procedural3dConfig) -> (String, String) {
-        ensure_linked_flow_extensions();
         let mut host = flow::FlowHost::from_fixture(fixture.clone());
         host.set_neuron_kind_infos_json(&flow::flow_neuron_kind_infos_json());
         let eval_json = host.evaluate().unwrap_or_default();

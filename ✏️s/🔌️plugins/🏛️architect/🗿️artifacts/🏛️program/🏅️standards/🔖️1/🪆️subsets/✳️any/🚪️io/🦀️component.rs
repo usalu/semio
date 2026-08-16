@@ -1,13 +1,16 @@
-//! 🚪️ IO s.program (1/✳️any) — registration now flows through 🎹️composer::register
-//! (called once from `crate::apps::architect::register`), not per-leaf register().
-pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"] }
-pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"] }
+//! 🚪️ IO s.program (1/✳️any) — the artifact declaration owns this composer table.
+pub fn import_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"]
+}
+pub fn export_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"]
+}
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::program::ProgramSnapshot;
     use crate::artifacts::program::standards::v1::subsets::any::schema::ProgramAnalyzer;
+    use crate::artifacts::program::ProgramSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.program", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_CSV: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
@@ -15,7 +18,6 @@ pub mod derived_composition {
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
     const DEP_XLSX: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
     const DEP_ZIP: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
-
 
     pub struct ProgramComposerComposition;
 
@@ -84,7 +86,6 @@ pub mod derived_composition {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
-
             }
             Err(ComposeError { message: "ProgramComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
         }
@@ -102,10 +103,10 @@ pub use derived_composition::*;
 /// — any bare `io_registry::entries()` reachable from artifact-root code silently rebinds to that
 /// shim instead of this real registry, so every call site fully qualifies this module's path.
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ArtifactBuilder, ComposerEntry, ComposedArtifact, ComposeError, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload, IoConfidence, composer_entry_of};
-    use crate::artifacts::program::standards::v1::subsets::any::schema::ProgramComposer as ProgramAnyComposer;
     use crate::artifacts::program::standards::v1::subsets::any::schema::ProgramBuilder as ProgramAnyBuilder;
+    use crate::artifacts::program::standards::v1::subsets::any::schema::ProgramComposer as ProgramAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
@@ -171,13 +172,17 @@ pub mod io_registry {
     //#endregion 🔖️ExportEntries
 
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![
-            composer_entry_of::<ProgramAnyComposer>(),
-            ComposerEntry { writes: EXPORT_ZIP_DIALECT, reads: &[PROGRAM_DIALECT], compose: compose_export_zip },
-            ComposerEntry { writes: EXPORT_CSV_DIALECT, reads: &[PROGRAM_DIALECT], compose: compose_export_csv },
-            ComposerEntry { writes: EXPORT_XLSX_DIALECT, reads: &[PROGRAM_DIALECT], compose: compose_export_xlsx },
-            ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[PROGRAM_DIALECT], compose: compose_export_json },
-        ]).as_slice()
+        ENTRIES
+            .get_or_init(|| {
+                vec![
+                    composer_entry_of::<ProgramAnyComposer>(),
+                    ComposerEntry { writes: EXPORT_ZIP_DIALECT, reads: &[PROGRAM_DIALECT], compose: compose_export_zip },
+                    ComposerEntry { writes: EXPORT_CSV_DIALECT, reads: &[PROGRAM_DIALECT], compose: compose_export_csv },
+                    ComposerEntry { writes: EXPORT_XLSX_DIALECT, reads: &[PROGRAM_DIALECT], compose: compose_export_xlsx },
+                    ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[PROGRAM_DIALECT], compose: compose_export_json },
+                ]
+            })
+            .as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry

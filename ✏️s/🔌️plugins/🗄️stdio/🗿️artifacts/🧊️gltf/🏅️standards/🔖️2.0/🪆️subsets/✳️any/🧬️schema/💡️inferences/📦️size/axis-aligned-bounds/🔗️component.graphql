@@ -1,0 +1,11 @@
+# 💡️ axis-aligned-bounds glTF inference leaf GraphQL facet.
+type GltfAxisAlignedBoundsInferenceV1 {
+  id: ID!
+  algorithmVersion: Int!
+  cacheKey: String!
+  validity: String!
+  quality: String!
+  diagnostics: [String!]!
+  provenance: [String!]!
+  valueJson: String!
+}

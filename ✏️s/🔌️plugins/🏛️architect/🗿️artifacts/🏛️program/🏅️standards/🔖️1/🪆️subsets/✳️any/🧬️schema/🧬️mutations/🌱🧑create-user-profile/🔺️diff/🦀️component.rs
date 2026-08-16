@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🧑users` per Wave C.
 
 use super::mutation::CreateUserProfile;
+use crate::artifacts::program::diff::ProgramUsersDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramUsersDelta};
 
 /// 🌱️ `added = [payload row]` — the row lands at the end of `program.users` on apply.
 pub fn diff(payload: &CreateUserProfile, _base: &ProgramSnapshot) -> ProgramDiff {

@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📅schedules` per Wave C.
 
 use super::mutation::RenameScheduleRequirement;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramSchedulesDelta, ProgramSchedulesPatchEntry};
 use crate::artifacts::program::registers::ScheduleRequirementPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameScheduleRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

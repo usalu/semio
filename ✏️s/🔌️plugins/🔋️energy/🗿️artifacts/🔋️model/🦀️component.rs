@@ -250,13 +250,10 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// off `⚙️engine` to the artifact root — `declaration()` describes the artifact itself, not engine
 /// behaviour) — replaces the old side-effecting `register()`, which the plugin root called
 /// unconditionally (energy has no document apps, so there was never a `.setup()` narrowing here to
-/// begin with). `crate::artifacts::model::io_registry::register()` (this file's OWN
-/// `🚪️DerivedIoRegistry` free fn, below) only ever called `register_composer_entries(v1::entries())`
-/// — exactly what `.composers(...)` below now does through `register_all` — so it is dropped here
-/// rather than kept as a duplicate call; the outer fn itself is left in place as orphaned dead code
-/// (see report), matching the `🗒️note` exemplar's own precedent for its orphaned `io_registry` module.
-/// `.composers(...)` below reaches `🚪️io/🦀️component.rs`'s OWN `io_registry` module (the one with
-/// the actual `ComposerEntry` rows, distinct from this file's thin wrapper above) by its full path —
+/// begin with). The retired root-level registrar only called `register_composer_entries(v1::entries())`
+/// — exactly what `.composers(...)` below now does through `register_all` — so no imperative alias
+/// remains. `.composers(...)` reaches `🚪️io/🦀️component.rs`'s own `io_registry` module (the one with
+/// the actual `ComposerEntry` rows) by its full path —
 /// ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES relocated it off the now-deleted
 /// `⚙️engine` (an artifact is a schema + io system, never an engine) into `🚪️io/`, updating this
 /// qualified reference in lockstep.
@@ -375,26 +372,3 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
         .as_slice()
 }
 //#endregion 🔖️Declaration
-
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::artifacts::model::standards::v1::subsets::any::io::io_registry as v1;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("EnergyModelComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
-}
-//#endregion 🚪️DerivedIoRegistry

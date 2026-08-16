@@ -1,7 +1,10 @@
-//! 🚪️ IO s.flow (1/✳️any) — registration now flows through 🎹️composer::register
-//! (called once from `crate::apps::flow::register`), not per-leaf register().
-pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.md", "stdio.txt"] }
-pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.md", "stdio.txt"] }
+//! 🚪️ IO s.flow (1/✳️any) — the artifact declaration owns this composer table.
+pub fn import_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.csv", "stdio.json", "stdio.md", "stdio.txt"]
+}
+pub fn export_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.csv", "stdio.json", "stdio.md", "stdio.txt"]
+}
 pub fn flow_to_wire(from: &crate::artifacts::flow::FlowSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(from)
 }
@@ -13,16 +16,15 @@ pub fn pack_err_as_text(err: store::PackError) -> store::TextError {
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::flow::FlowSnapshot;
     use crate::artifacts::flow::standards::v1::subsets::any::schema::FlowAnalyzer;
+    use crate::artifacts::flow::FlowSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.flow", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     const DEP_MD: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
-
 
     pub struct FlowComposerComposition;
 
@@ -77,7 +79,6 @@ pub mod derived_composition {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
-
             }
             Err(ComposeError { message: "FlowComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
         }
@@ -88,10 +89,10 @@ pub use derived_composition::*;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ArtifactBuilder, ComposerEntry, ComposedArtifact, ComposeError, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload, IoConfidence, composer_entry_of};
-    use crate::artifacts::flow::standards::v1::subsets::any::schema::FlowComposer as FlowAnyComposer;
     use crate::artifacts::flow::standards::v1::subsets::any::schema::FlowBuilder as FlowAnyBuilder;
+    use crate::artifacts::flow::standards::v1::subsets::any::schema::FlowComposer as FlowAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
@@ -144,13 +145,16 @@ pub mod io_registry {
     }
     //#endregion 🔖️ExportEntries
 
-
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![
-            composer_entry_of::<FlowAnyComposer>(),
-            ComposerEntry { writes: EXPORT_MD_DIALECT, reads: &[FLOW_DIALECT], compose: compose_export_md },
-            ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[FLOW_DIALECT], compose: compose_export_json },
-        ]).as_slice()
+        ENTRIES
+            .get_or_init(|| {
+                vec![
+                    composer_entry_of::<FlowAnyComposer>(),
+                    ComposerEntry { writes: EXPORT_MD_DIALECT, reads: &[FLOW_DIALECT], compose: compose_export_md },
+                    ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[FLOW_DIALECT], compose: compose_export_json },
+                ]
+            })
+            .as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry

@@ -10,10 +10,12 @@
 //! old role as the plugin's own editable in-memory geometry vocabulary.
 
 use protocol::{Identified, Patchable};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, };
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot, STDIO_SEMIOBREP_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
+    BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot, STDIO_SEMIOBREP_DOCUMENT_SCHEMA,
+};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::process3d::schema::mutations::Process3dMutation;
@@ -350,10 +352,14 @@ pub enum WorkingSolid {
         radius: f64,
     },
     /// 🖼️ Non-parametric GLB-imported reference mesh — tessellation-only, no real B-Rep topology.
-    ImportedMesh { mesh_url: String },
+    ImportedMesh {
+        mesh_url: String,
+    },
     /// 🧊️ STEP/OBJ/STL-imported solid with real B-Rep topology, resolved through the app's kernel
     /// session by handle id; ephemeral to that session.
-    ImportedSolid { solid_handle: String },
+    ImportedSolid {
+        solid_handle: String,
+    },
 }
 
 impl Default for WorkingSolid {
@@ -387,21 +393,11 @@ impl Default for Stock {
 #[serde(tag = "measure", rename_all = "camelCase")]
 pub enum ProcessMeasure {
     /// ✂️ Subtractive: subtracts an arbitrary tool solid (e.g. a thin box as a saw blade).
-    Cut {
-        tool: WorkingSolid,
-        pose: Pose,
-    },
+    Cut { tool: WorkingSolid, pose: Pose },
     /// 🕳️ Subtractive: a cylinder of `radius`×`depth` subtracted at `pose` (axis = drill direction).
-    Drill {
-        radius: f64,
-        depth: f64,
-        pose: Pose,
-    },
+    Drill { radius: f64, depth: f64, pose: Pose },
     /// 🔩️ Additive: fuses another component solid at `pose`.
-    Attach {
-        component: WorkingSolid,
-        pose: Pose,
-    },
+    Attach { component: WorkingSolid, pose: Pose },
 }
 
 impl ProcessMeasure {
@@ -537,13 +533,20 @@ fn brep_snapshot_for_box(width: f64, depth: f64, height: f64) -> SemioBrepSnapsh
         BrepEdge { id: id.into(), start_vertex: format!("v{a}"), end_vertex: format!("v{b}"), curve: BrepCurve::Line { origin: point3(origin), direction: point3(direction) } }
     };
     let edges = vec![
-        line_edge("e0", 0, 1), line_edge("e1", 1, 2), line_edge("e2", 2, 3), line_edge("e3", 3, 0),
-        line_edge("e4", 4, 5), line_edge("e5", 5, 6), line_edge("e6", 6, 7), line_edge("e7", 7, 4),
-        line_edge("e8", 0, 4), line_edge("e9", 1, 5), line_edge("e10", 2, 6), line_edge("e11", 3, 7),
+        line_edge("e0", 0, 1),
+        line_edge("e1", 1, 2),
+        line_edge("e2", 2, 3),
+        line_edge("e3", 3, 0),
+        line_edge("e4", 4, 5),
+        line_edge("e5", 5, 6),
+        line_edge("e6", 6, 7),
+        line_edge("e7", 7, 4),
+        line_edge("e8", 0, 4),
+        line_edge("e9", 1, 5),
+        line_edge("e10", 2, 6),
+        line_edge("e11", 3, 7),
     ];
-    let loop_of = |id: &str, edges: &[(&str, bool)]| -> BrepLoop {
-        BrepLoop { id: id.into(), edges: edges.iter().map(|(e, o)| BrepLoopEdge { edge: (*e).into(), orientation: *o }).collect() }
-    };
+    let loop_of = |id: &str, edges: &[(&str, bool)]| -> BrepLoop { BrepLoop { id: id.into(), edges: edges.iter().map(|(e, o)| BrepLoopEdge { edge: (*e).into(), orientation: *o }).collect() } };
     let loops = vec![
         loop_of("l0", &[("e0", true), ("e1", true), ("e2", true), ("e3", true)]),
         loop_of("l1", &[("e4", true), ("e5", true), ("e6", true), ("e7", true)]),
@@ -707,7 +710,10 @@ pub fn flow_child_handle(content: &SemioFlowSnapshot) -> store::ArtifactChild<Se
 /// approximation of a richer graph the old `Vec<ProcessStep>` never had either).
 pub fn flow_snapshot_for_steps(steps: &[ProcessStep], tool_child_ids: &std::collections::BTreeMap<String, String>) -> SemioFlowSnapshot {
     let nodes: Vec<FlowNode> = steps.iter().enumerate().map(|(i, step)| flow_node_from_process_step(step, i, tool_child_ids.get(&step.id).map(|s| s.as_str()))).collect();
-    let edges: Vec<FlowEdge> = steps.windows(2).map(|pair| FlowEdge { id: format!("e-{}-{}", pair[0].id, pair[1].id), from: PortRef { node: pair[0].id.clone(), port: "out".into() }, to: PortRef { node: pair[1].id.clone(), port: "in".into() }, kind: "sequence".into() }).collect();
+    let edges: Vec<FlowEdge> = steps
+        .windows(2)
+        .map(|pair| FlowEdge { id: format!("e-{}-{}", pair[0].id, pair[1].id), from: PortRef { node: pair[0].id.clone(), port: "out".into() }, to: PortRef { node: pair[1].id.clone(), port: "in".into() }, kind: "sequence".into() })
+        .collect();
     SemioFlowSnapshot { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes, edges }
 }
 
@@ -817,7 +823,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: PROCESS_3D_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl"],
+        export_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl"],
         import_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl"],
     }
 }
@@ -970,28 +976,85 @@ mod tests {
     //#endregion 🔖️WorkingSceneTests
 }
 //#endregion 🧪️Tests
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::process3d::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("Process3dComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
+//#region 🔖️Declaration
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.process3d")?)
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.schema.artifact")?, ArtifactCapabilityKind::schema())
+                .descriptor(b"s.process.process3d")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.process.process3d")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.inference.artifact")?, ArtifactCapabilityKind::inference())
+                .descriptor(b"s.process.process3d.inference")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.process.process3d.inference")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.composer.native")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.process3d@1/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.process3d@1/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.composer.ifc")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.ifc@4/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.ifc@4/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.composer.step")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.step@ap214/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.step@ap214/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.composer.png")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.png@1.2/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.png@1.2/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.composer.json")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.json@rfc8259/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.composer.dwg")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.dwg@ac1018/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.dwg@ac1018/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.composer.stl")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.stl@ascii/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.stl@ascii/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.composer.gltf")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.gltf@2.0/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.gltf@2.0/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.composer.obj")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.obj@3.0/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.obj@3.0/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.codec.document")?, ArtifactCapabilityKind::codec())
+                .descriptor(b"process.3d:process3d")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "process.3d")?)?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "process3d")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Process 3D")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Process 3D")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Process 3D")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Process 3D")?)?,
+        )
 }
-//#endregion 🚪️DerivedIoRegistry
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+        .schema(crate::artifacts::process3d::schema::process3d_artifact_schema_descriptor())
+        .inferences([crate::artifacts::process3d::standards::v1::subsets::any::schema::inferences::process3d_artifact_inference_descriptor()])
+        .composers(crate::artifacts::process3d::standards::v1::subsets::any::io::io_registry::entries())
+        .document_codec::<crate::apps::process3d::Process3dPlayApp>()
+        .try_build()
+}
+//#endregion 🔖️Declaration

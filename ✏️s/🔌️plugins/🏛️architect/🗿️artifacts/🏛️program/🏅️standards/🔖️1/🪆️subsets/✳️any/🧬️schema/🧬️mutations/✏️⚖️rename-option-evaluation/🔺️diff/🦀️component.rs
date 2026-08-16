@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `⚖️options` per Wave C.
 
 use super::mutation::RenameOptionEvaluation;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramOptionsDelta, ProgramOptionsPatchEntry};
 use crate::artifacts::program::registers::OptionEvaluationPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameOptionEvaluation, _base: &ProgramSnapshot) -> ProgramDiff {

@@ -96,29 +96,6 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::artifacts::block2d::standards::v1::subsets::any::io::io_registry as v1;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("Block2dComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
-}
-//#endregion 🚪️DerivedIoRegistry
-
 //#region 🪪️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
 /// the old side-effecting `crate::apps::block2d::register()`, which called four different global
@@ -174,8 +151,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
-/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
-/// `OnceLock`-backed `io_registry::entries()` convention already used above.
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`.
 fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES

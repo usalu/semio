@@ -6,8 +6,8 @@
 
 Extend/Refactor/Change clean mechanisms to properly achieve this.
 Exhaustively plan for a workforce of parallel agents.
-Everything end to end.
-Use a single Fable agent for creating the plan, a single Opus 5 agent for main plan coordination, multiple Sonnet 5 agents for task execution, multiple Haiku 4.5 agents for read-only exploration.
+Everything end to end for all non-legacy technology.
+Use the main chat with Fable 5 High for creating the plan, then use the main chat with Opus 5 High for main plan coordination, then use multiple Sonnet 5 High agents for task execution, then use multiple Haiku 4.5 agents for read-only exploration.
 
 ---
 
@@ -378,7 +378,6 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
-
 The current goal of where all apps are combined into workflows nodes, remain non-destructive and have a headless engine that replays everything will not work because every single ui interactions must be saved and checked in into vcs which will become too slow.
 Instead we adjusted the design:
 We introduce interactions.
@@ -478,6 +477,18 @@ The user can open artifacts in different viewers and editors and configure defau
 Mutations must be able to call other mutations.
 Plugins can depend on other plugins.
 Plugins can register mutations and inferences on artifacts defined by other plugins.
+
+---
+
+All mutations must produce a diff along with messages (level: info, warning, error, fatal).
+Conflicts are first class citizens only fatal messages prevent
+Introduce different policies for merges (laissez-faire, normal, vigilant)
+On laissez-faire mode only fatal messages prevent the merge.
+On normal mode only errors prevent the merge and warnings are ignored.
+On vigilant mode, merge is rejected on any warning.
+When working alone then errors and conflicts shouldnt arize because everything should be implemented in a way that all illegal actions are prevented etc.
+Due to the collaborative nature of the event sourcing system and the merging of mutations, it can always happen that errors or conflicts arise when trying to merge changes chronologically (new order due to time stamps).
+e.g. when a user modifies a part and in the mean time another user deletes that part, then all mutations that modified dont have any effect and when merging the changes.
 
 ---
 

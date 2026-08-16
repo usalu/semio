@@ -49,12 +49,7 @@ pub struct WriterEditorSettings {
 
 impl Default for WriterEditorSettings {
     fn default() -> Self {
-        Self {
-            show_line_numbers: true,
-            font_px: 14,
-            line_height: 22,
-            tab_size: 2,
-        }
+        Self { show_line_numbers: true, font_px: 14, line_height: 22, tab_size: 2 }
     }
 }
 
@@ -94,7 +89,15 @@ pub fn document_snapshot_from_text(text: &str, language_id: &str) -> SemioDocume
 /// common, lossless case is exactly one); any non-`Code` block is honestly skipped rather than
 /// fabricating prose from block content this plugin never authored.
 pub fn text_from_document_snapshot(snapshot: &SemioDocumentSnapshot) -> String {
-    snapshot.blocks.iter().filter_map(|block| match block { DocBlock::Code { text, .. } => Some(text.clone()), _ => None }).collect::<Vec<_>>().join("\n")
+    snapshot
+        .blocks
+        .iter()
+        .filter_map(|block| match block {
+            DocBlock::Code { text, .. } => Some(text.clone()),
+            _ => None,
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 /// 🕸️ Deterministic content-addressed CHILD handle for the document — same `(child_id, target)`
@@ -191,7 +194,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: WRITER_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
@@ -214,28 +217,52 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::writer::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("WriterComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
+//#region 🔖️Declaration
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.writer")?)
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.writer.writer")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.writer.writer")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.inference.artifact")?, ArtifactCapabilityKind::inference())
+                .descriptor(b"s.writer.writer.inference")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.writer.writer.inference")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.writer@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.writer@1/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.composer.txt")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.txt@utf-8/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.txt@utf-8/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.composer.md")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.md@commonmark/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.md@commonmark/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.composer.json")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.json@rfc8259/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.codec.document")?, ArtifactCapabilityKind::codec())
+                .descriptor(b"writer.document:writer")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "writer.document")?)?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "writer")?)?,
+        )?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.writer.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Writer")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Writer")?)?)?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.writer.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Writer")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Writer")?)?)
 }
-//#endregion 🚪️DerivedIoRegistry
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+        .schema(crate::artifacts::writer::schema::writer_artifact_schema_descriptor())
+        .inferences([crate::artifacts::writer::schema::inferences::writer_artifact_inference_descriptor()])
+        .composers(crate::artifacts::writer::standards::v1::subsets::any::io::io_registry::entries())
+        .document_codec::<crate::apps::writer::WriterPlayApp>()
+        .try_build()
+}
+//#endregion 🔖️Declaration

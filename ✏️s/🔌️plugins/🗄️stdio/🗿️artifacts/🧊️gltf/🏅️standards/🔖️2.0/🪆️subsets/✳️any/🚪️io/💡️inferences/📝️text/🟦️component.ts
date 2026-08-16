@@ -1,7 +1,25 @@
-/** 📝 Canonical UTF-8 text I/O envelope for the complete glTF geometric inference. */
-import type { GltfInference } from '../../../🧬️schema/💡️inferences/🧮️geometric-analysis/🟦️component.ts';
-export const GLTF_INFERENCE_TEXT_SCHEMA = 's.stdio.gltf.inference' as const;
-export const GLTF_INFERENCE_TEXT_VERSION = 2 as const;
-export interface GltfInferenceTextDocument { schema: typeof GLTF_INFERENCE_TEXT_SCHEMA; version: typeof GLTF_INFERENCE_TEXT_VERSION; payloadLength: number; checksum: string; value: GltfInference }
-/** 🔤 Four LF-terminated headers followed by RFC 8785 canonical JSON for `value`, without a trailing LF. */
-export type GltfInferenceText = string;
+/** 📝 Canonical UTF-8 text envelope for one independently executable glTF inference leaf. */
+export const GLTF_INFERENCE_LEAF_TEXT_VERSION = 1 as const;
+
+export interface GltfInferenceLeafEnvelope {
+  id: string;
+  algorithmVersion: number;
+  policyHash: string;
+  dependencyHashes: readonly string[];
+  cacheKey: string;
+  validity: string;
+  quality: string;
+  diagnosticIds: readonly string[];
+  provenance: readonly string[];
+  value: unknown;
+}
+
+export interface GltfInferenceLeafTextDocument {
+  schema: string;
+  version: typeof GLTF_INFERENCE_LEAF_TEXT_VERSION;
+  payloadLength: number;
+  checksum: string;
+  value: GltfInferenceLeafEnvelope;
+}
+
+export type GltfInferenceLeafText = string;

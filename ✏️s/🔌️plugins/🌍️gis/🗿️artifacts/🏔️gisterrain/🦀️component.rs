@@ -1,16 +1,15 @@
 // GIS terrain artifact — the document entity the 3d app edits (constitutional: general).
 
-pub use crate::artifacts::gisterrain::schema::snapshot::GisTerrainSnapshot;
-pub use crate::artifacts::gisterrain::schema::mutations::GisTerrainMutation;
 pub use crate::artifacts::gisterrain::schema::diff::GisTerrainDiff;
+pub use crate::artifacts::gisterrain::schema::mutations::GisTerrainMutation;
+pub use crate::artifacts::gisterrain::schema::snapshot::GisTerrainSnapshot;
 
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
 
 //#region 🔹Constants
 /// VCS-backed, undoable document for GIS 3D — deliberately minimal for the first pass: the only
 /// editable/undoable property is vertical exaggeration (a genuinely useful terrain control).
-
 
 pub const GIS_3D_TERRAIN_SCHEMA: &str = "gis.terrain";
 //#endregion 🔹Constants
@@ -69,9 +68,7 @@ pub fn gis_terrain_snapshot_with_derived_mesh(mut document: GisTerrainSnapshot) 
 /// is real, computed, and round-trips — the day a tessellator lands, only this function's body needs
 /// to grow real per-vertex elevation.
 pub fn gis_terrain_mesh_from_snapshot(document: &GisTerrainSnapshot) -> SemioMeshSnapshot {
-    let bounds = crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::bounds::lon_lat_bounds(
-        &crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::bounds::imported_lon_lat_positions(document),
-    );
+    let bounds = crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::bounds::lon_lat_bounds(&crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::bounds::imported_lon_lat_positions(document));
     let (min_x, min_y, max_x, max_y) = bounds.map(|b| (b.lon_min, b.lat_min, b.lon_max, b.lat_max)).unwrap_or((0.0, 0.0, 1.0, 1.0));
     let (min_x, max_x) = if min_x < max_x { (min_x, max_x) } else { (min_x, min_x + 1.0) };
     let (min_y, max_y) = if min_y < max_y { (min_y, max_y) } else { (min_y, min_y + 1.0) };
@@ -80,26 +77,12 @@ pub fn gis_terrain_mesh_from_snapshot(document: &GisTerrainSnapshot) -> SemioMes
     // real document state and still keys the mesh's content-addressed handle, it simply has no
     // per-vertex effect on THIS placeholder surface yet.
     let z = 0.0;
-    let positions = vec![
-        SemioPoint3 { x: min_x, y: min_y, z },
-        SemioPoint3 { x: max_x, y: min_y, z },
-        SemioPoint3 { x: max_x, y: max_y, z },
-        SemioPoint3 { x: min_x, y: max_y, z },
-    ];
+    let positions = vec![SemioPoint3 { x: min_x, y: min_y, z }, SemioPoint3 { x: max_x, y: min_y, z }, SemioPoint3 { x: max_x, y: max_y, z }, SemioPoint3 { x: min_x, y: max_y, z }];
     SemioMeshSnapshot {
         schema: "s.stdio.semio.mesh".into(),
         meshes: vec![SemioMesh {
             id: "gisterrain-surface".into(),
-            primitives: vec![SemioPrimitive {
-                id: "gisterrain-surface-quad".into(),
-                topology: SemioTopology::Triangles,
-                positions,
-                normals: Vec::new(),
-                uvs: Vec::new(),
-                colors: Vec::new(),
-                indices: vec![0, 1, 2, 0, 2, 3],
-                material_id: None,
-            }],
+            primitives: vec![SemioPrimitive { id: "gisterrain-surface-quad".into(), topology: SemioTopology::Triangles, positions, normals: Vec::new(), uvs: Vec::new(), colors: Vec::new(), indices: vec![0, 1, 2, 0, 2, 3], material_id: None }],
         }],
         materials: Vec::new(),
         textures: Vec::new(),
@@ -113,114 +96,92 @@ pub fn gis_terrain_mesh_from_snapshot(document: &GisTerrainSnapshot) -> SemioMes
 /// the plugin root's `register_gis_exports` fan-out. Relocated from `⚙️engine` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2): `declaration()` describes the artifact
 /// (kind, schema, io ports, ownership), which is not engine behaviour.
+/// 🧾️ Defines s.gisterrain's immutable runtime capability leaves.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.gisterrain.schema.artifact", "schema", "s.gis.gisterrain", &[("schema", "s.gis.gisterrain")], None),
-        ("s.gisterrain.inference.artifact", "inference", "s.gis.gisterrain.inference", &[("schema", "s.gis.gisterrain.inference")], None),
-        ("s.gisterrain.composer.las", "composer", "s.stdio.las@1.0/*", &[("dialect", "s.stdio.las@1.0/*")], None),
-        ("s.gisterrain.composer.ply", "composer", "s.stdio.ply@1.0/*", &[("dialect", "s.stdio.ply@1.0/*")], None),
-        ("s.gisterrain.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
-        ("s.gisterrain.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.gisterrain.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
-        ("s.gisterrain.composer.stl", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
-        ("s.gisterrain.composer.gltf", "composer", "s.stdio.gltf@2.0/*", &[("dialect", "s.stdio.gltf@2.0/*")], None),
-        ("s.gisterrain.composer.obj", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
-        ("s.gisterrain.grammar.document", "grammar", "gis.gisterrain", &[("grammar", "gis.gisterrain")], None),
-        ("s.gisterrain.grammar.op", "grammar", "gis.gisterrain.op", &[("grammar", "gis.gisterrain.op")], None),
-        ("s.gisterrain.grammar.diff", "grammar", "gis.gisterrain.diff", &[("grammar", "gis.gisterrain.diff")], None),
-        ("s.gisterrain.grammar.pack", "grammar", "gisterrain.pack", &[("grammar", "gisterrain.pack")], None),
-        ("s.gisterrain.grammar.spr", "grammar", "gisterrain.spr", &[("grammar", "gisterrain.spr")], None),
-        ("s.gisterrain.codec.document", "codec", "gis.terrain:gisterrain", &[("codec", "gis.terrain"), ("extension", "gisterrain")], None),
-        ("s.gisterrain.localization.en", "localization", "GIS Terrain", &[], Some(("en", "GIS Terrain"))),
-        ("s.gisterrain.localization.de", "localization", "GIS Gelände", &[], Some(("de", "GIS Gelände"))),
-    ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.gisterrain")?);
-    for (identity, kind, descriptor, claims, localization) in rows {
-        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
-        for (namespace, value) in *claims {
-            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
-        }
-        if let Some((locale, text)) = localization {
-            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
-        }
-        definition = definition.capability(capability)?;
-    }
-    Ok(definition)
+
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.gisterrain")?)
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.schema.artifact")?, ArtifactCapabilityKind::schema())
+                .descriptor(b"s.gis.gisterrain")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.gis.gisterrain")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.inference.artifact")?, ArtifactCapabilityKind::inference())
+                .descriptor(b"s.gis.gisterrain.inference")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.gis.gisterrain.inference")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.native")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.gisterrain@1/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.gisterrain@1/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.las")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.las@1.0/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.las@1.0/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.ply")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.ply@1.0/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.ply@1.0/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.png")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.png@1.2/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.png@1.2/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.json")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.json@rfc8259/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.dwg")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.dwg@ac1018/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.dwg@ac1018/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.stl")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.stl@ascii/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.stl@ascii/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.gltf")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.gltf@2.0/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.gltf@2.0/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.obj")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.obj@3.0/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.obj@3.0/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.codec.document")?, ArtifactCapabilityKind::codec())
+                .descriptor(b"gis.terrain:gisterrain")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "gis.terrain")?)?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "gisterrain")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.localization.en")?, ArtifactCapabilityKind::localization())
+                .descriptor(b"GIS Terrain")?
+                .localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "GIS Terrain")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.localization.de")?, ArtifactCapabilityKind::localization())
+                .descriptor(b"GIS Gel\xc3\xa4nde")?
+                .localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "GIS Gelände")?)?,
+        )
 }
 
+/// 🔖️ Assembles s.gisterrain's typed runtime declaration.
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::gisterrain::schema::gisterrain_artifact_schema_descriptor())
         .inferences([crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::gisterrain_artifact_inference_descriptor()])
         .composers(crate::artifacts::gisterrain::standards::v1::subsets::any::io::io_registry::entries())
-        .languages(pilot_languages())
         .document_codec::<crate::apps::gis3d::Gis3dPlayApp>()
         .try_build()
-}
-
-/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
-/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
-/// `OnceLock`-backed `io_registry::entries()` convention already used below. Relocated alongside
-/// `declaration()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2) — its only caller.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
-    LANGUAGES
-        .get_or_init(|| {
-            vec![
-                dsl::LanguageSpec {
-                    id: "gis.gisterrain",
-                    extension: Some("gisterrain"),
-                    role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::artifacts::gisterrain::dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::gisterrain::dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::gisterrain::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::gisterrain::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("gis.gisterrain"),
-                },
-                dsl::LanguageSpec {
-                    id: "gis.gisterrain.op",
-                    extension: None,
-                    role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::artifacts::gisterrain::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::gisterrain::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::gisterrain::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::gisterrain::spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("gis.gisterrain.op"),
-                },
-                dsl::LanguageSpec {
-                    id: "gis.gisterrain.diff",
-                    extension: None,
-                    role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::artifacts::gisterrain::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::gisterrain::diff::COMPONENT_GRAMMAR_PATH),
-                    protocol: None,
-                    protocol_path: None,
-                    hooks: dsl::passthrough_hooks("gis.gisterrain.diff"),
-                },
-                dsl::LanguageSpec {
-                    id: "gisterrain.pack",
-                    extension: None,
-                    role: dsl::LanguageRole::Pack,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(crate::artifacts::gisterrain::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::gisterrain::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("gisterrain.pack"),
-                },
-                dsl::LanguageSpec {
-                    id: "gisterrain.spr",
-                    extension: None,
-                    role: dsl::LanguageRole::Spr,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(crate::artifacts::gisterrain::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::gisterrain::spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("gisterrain.spr"),
-                },
-            ]
-        })
-        .as_slice()
 }
 //#endregion 🔖️Register
 
@@ -246,28 +207,3 @@ mod tests {
     }
 }
 //#endregion 🔹Tests
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::gisterrain::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("GisTerrainComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
-}
-//#endregion 🚪️DerivedIoRegistry

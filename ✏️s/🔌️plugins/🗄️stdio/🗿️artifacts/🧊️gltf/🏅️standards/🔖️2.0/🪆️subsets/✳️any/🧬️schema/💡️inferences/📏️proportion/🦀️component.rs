@@ -1,7 +1,15 @@
 //! 📏 GLTF proportion indicators.
 
-use super::geometric_analysis::{GltfGeometryContext};
-use super::super::modules::{inference_measures::{exact, unavailable}};
+#[path = "aspect-ratios/🦀️component.rs"]
+pub mod aspect_ratios;
+#[path = "slenderness/🦀️component.rs"]
+pub mod slenderness;
+#[path = "flatness/🦀️component.rs"]
+pub mod flatness;
+#[path = "elongation/🦀️component.rs"]
+pub mod elongation;
+
+use super::geometry_core::GltfGeometryContext;
 use super::super::modules::measurement_contracts::*;
 use serde::{Deserialize, Serialize};
 
@@ -20,27 +28,20 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfProportionInference {
     type Output = GltfProportionIndicators;
 
     fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
-        let mut extent = context.oriented_extent;
-        extent.sort_by(|left, right| right.total_cmp(left));
         Self::Output {
-            aspect_ratios: exact(
-                GltfVec3::new([if extent[1] > 0.0 { extent[0] / extent[1] } else { 0.0 }, if extent[2] > 0.0 { extent[1] / extent[2] } else { 0.0 }, if extent[2] > 0.0 { extent[0] / extent[2] } else { 0.0 }]),
-                GltfUnit::Unitless,
-                context.sample_count,
-                Some(context.topology),
-            ),
-            slenderness: exact(if extent[1] > 0.0 { extent[0] / extent[1] } else { 0.0 }, GltfUnit::Unitless, context.sample_count, Some(context.topology)),
-            flatness: exact(if extent[1] > 0.0 { extent[2] / extent[1] } else { 0.0 }, GltfUnit::Unitless, context.sample_count, Some(context.topology)),
-            elongation: exact(if extent[0] > 0.0 { extent[1] / extent[0] } else { 0.0 }, GltfUnit::Unitless, context.sample_count, Some(context.topology)),
+            aspect_ratios: aspect_ratios::infer(context),
+            slenderness: slenderness::infer(context),
+            flatness: flatness::infer(context),
+            elongation: elongation::infer(context),
         }
     }
 
     fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            aspect_ratios: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            slenderness: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            flatness: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            elongation: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
+            aspect_ratios: aspect_ratios::unavailable_measure(diagnostic_ids),
+            slenderness: slenderness::unavailable_measure(diagnostic_ids),
+            flatness: flatness::unavailable_measure(diagnostic_ids),
+            elongation: elongation::unavailable_measure(diagnostic_ids),
         }
     }
 }

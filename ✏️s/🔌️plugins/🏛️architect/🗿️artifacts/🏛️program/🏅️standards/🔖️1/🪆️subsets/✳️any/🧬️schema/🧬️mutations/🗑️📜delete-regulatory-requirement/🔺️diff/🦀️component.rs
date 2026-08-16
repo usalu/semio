@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📜regulatory` per Wave C.
 
 use super::mutation::DeleteRegulatoryRequirement;
+use crate::artifacts::program::diff::ProgramRegulatoryDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramRegulatoryDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteRegulatoryRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

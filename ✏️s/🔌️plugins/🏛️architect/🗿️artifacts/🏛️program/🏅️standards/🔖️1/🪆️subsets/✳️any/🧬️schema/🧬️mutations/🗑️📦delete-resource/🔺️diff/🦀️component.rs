@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📦resources` per Wave C.
 
 use super::mutation::DeleteResource;
+use crate::artifacts::program::diff::ProgramResourcesDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramResourcesDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteResource, _base: &ProgramSnapshot) -> ProgramDiff {

@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🔬analyses` per Wave C.
 
 use super::mutation::CreateAnalysisRecord;
+use crate::artifacts::program::diff::ProgramAnalysesDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramAnalysesDelta};
 
 /// 🌱️ `added = [payload row]` — the row lands at the end of `program.analyses` on apply.
 pub fn diff(payload: &CreateAnalysisRecord, _base: &ProgramSnapshot) -> ProgramDiff {

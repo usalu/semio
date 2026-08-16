@@ -1,0 +1,11 @@
+# 💡️ main-axis-direction glTF inference leaf GraphQL facet.
+type GltfMainAxisDirectionInferenceV1 {
+  id: ID!
+  algorithmVersion: Int!
+  cacheKey: String!
+  validity: String!
+  quality: String!
+  diagnostics: [String!]!
+  provenance: [String!]!
+  valueJson: String!
+}

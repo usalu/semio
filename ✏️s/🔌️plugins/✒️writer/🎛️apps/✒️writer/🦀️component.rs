@@ -10,40 +10,39 @@
 //! `render` → body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
 use crate::apps::writer::commands::set_camera;
-use crate::apps::writer::commands::{set_font_px, set_line_height, set_tab_size, toggle_line_numbers};
+use crate::apps::writer::commands::set_editor_selection;
+use crate::apps::writer::commands::set_locale;
+use crate::apps::writer::commands::{commit_rename, format_document, open_document, set_active_example, set_fixture_json, set_snapshot, set_snapshot_json, set_text, text_edit};
 use crate::apps::writer::commands::{engagement_input, engagement_submit};
 use crate::apps::writer::commands::{lint_document, request_completions};
-use crate::apps::writer::commands::set_locale;
-use crate::apps::writer::commands::set_editor_selection;
-use crate::apps::writer::commands::{commit_rename, format_document, open_document, set_active_example, set_snapshot, set_snapshot_json, set_fixture_json, set_text, text_edit};
+use crate::apps::writer::commands::{set_font_px, set_line_height, set_tab_size, toggle_line_numbers};
 use crate::apps::writer::config::{WriterConfig, WriterConfigMutation};
-use crate::apps::writer::presence::{WriterPresence, WriterPresenceMutation};
 use crate::apps::writer::modes::edit;
 use crate::apps::writer::modes::edit::windows::main;
 use crate::apps::writer::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
+use crate::apps::writer::presence::{WriterPresence, WriterPresenceMutation};
 use crate::apps::writer::terminology::writer_play_labels;
 use crate::artifacts::writer::op::WriterMutation;
 use crate::artifacts::writer::{writer_text, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use semio_framework::kernel::HostEffect;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, App, AppActionRegistry, AppIo, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, ArtifactApp, ArtifactView, Emit, Fault, Label,
-    LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, UiNode, WindowMeasure,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
-    DomainTopology, InteractionTopology, TopologyNode,
-};
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, App, AppActionRegistry, AppIo, ArtifactApp, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, DomainTopology,
+    DraftView, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode,
+    NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode, WindowMeasure,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use store::ArtifactPack;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const WRITER_PLAY_APP_ID: &str = "writer-play";
-pub use main::{WRITER_PLAY_BODY_MAIN, WRITER_PLAY_WINDOW_KIND};
 pub use catalogue_panel::WRITER_PLAY_BODY_CATALOGUE;
 pub use document_panel::WRITER_PLAY_BODY_ARTIFACT;
 pub use inspection_panel::WRITER_PLAY_BODY_INSPECTION;
+pub use main::{WRITER_PLAY_BODY_MAIN, WRITER_PLAY_WINDOW_KIND};
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`🎚️options/*`, `📌️panels/*`) builds its `on_change`/item actions with.
@@ -119,103 +118,6 @@ pub fn reset_document_effect(scene: &WriterSnapshot) -> HostEffect {
     HostEffect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Io
-
-//#region 🔌️Registration
-/// 🗂️ Registers `WriterSnapshot`'s pack↔dsl codec under `WRITER_DOCUMENT_SCHEMA` so `framework/sync`'s
-/// folder endpoints and any other schema-string-keyed caller can print/parse writer documents. Called
-/// from the plugin root's `semio_plugin!{ setup: … }`.
-pub fn register() {
-    crate::artifacts::writer::io_registry::register();
-
-    register_writer_languages();
-    register_artifact_schema();
-    register_artifact_inferences();
-    crate::apps::writer::config::schema::register_app_schema();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<WriterPlayApp>(WRITER_DOCUMENT_SCHEMA);
-}
-
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::writer::schema::writer_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.writer.writer.inference`'s facet leaves into the OS-wide inference catalog —
-/// sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::writer::schema::inferences::writer_artifact_inference_descriptor());
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution, plus
-/// the `jack`/`wire` `dsl::DslIdiom`s — pub(crate) so `🧬️schema`'s own test module can exercise
-/// `jack_completions_json` without a full app bootstrap.
-pub(crate) fn register_writer_languages() {
-    use crate::artifacts::writer::schema::{JackWriterIdiom, WireWriterIdiom};
-
-    dsl::register_idiom(dsl::hooks_for::<JackWriterIdiom>());
-    dsl::register_idiom(dsl::hooks_for::<WireWriterIdiom>());
-    let jack_hooks = dsl::hooks_for::<JackWriterIdiom>();
-    dsl::register_language(dsl::LanguageSpec {
-        id: "jack",
-        extension: None,
-        role: dsl::LanguageRole::Embedded,
-        grammar: None,
-        grammar_path: None,
-        protocol: None,
-        protocol_path: None,
-        hooks: jack_hooks,
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "writer.document",
-        extension: Some("writer"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::writer::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::writer::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::writer::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::writer::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("writer.document"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "writer.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::writer::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::writer::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::writer::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::writer::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("writer.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "writer.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::writer::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::writer::schema::diff::text::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("writer.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "writer.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::writer::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::writer::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("writer.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "writer.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::writer::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::writer::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("writer.spr"),
-    });
-}
-//#endregion 🔌️Registration
 
 //#region 🔖️Interaction
 /// 🕹️ `ast` domain topology from the jack AST's own parent links — `HierarchyProvider::Topology`, so
@@ -354,6 +256,10 @@ impl ArtifactApp for WriterPlayApp {
     const APP_ID: &'static str = WRITER_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::writer::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> WriterSnapshot {
         crate::artifacts::writer::schema::empty_writer_snapshot()
     }
@@ -375,7 +281,14 @@ impl ArtifactApp for WriterPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &WriterCommand, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WriterMutation, WriterConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(
+        command: &WriterCommand,
+        doc: &ArtifactView<'_, WriterSnapshot>,
+        cfg: &ConfigView<'_, WriterConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<WriterMutation, WriterConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -611,12 +524,8 @@ mod tests {
         serde_json::to_value(app.context_menu(&request)).unwrap_or(Value::Null)
     }
 
-    /// 🪶 Relocated from the artifact's `🧬️schema` tests: it needs `register_writer_languages()`, so
-    /// leaving it artifact-side made the artifact depend on its app — the inversion this ticket removes.
-    /// An app may reach into its artifact; never the reverse.
     #[test]
     fn jack_completions_use_example_fixture() {
-        register_writer_languages();
         let json = crate::artifacts::writer::standards::v1::subsets::any::schema::jack_completions_json("RETURN a.", 9).unwrap_or_default();
         assert!(!json.is_empty());
     }
@@ -714,9 +623,7 @@ mod tests {
     /// here is a real format break, not a test-fixture mismatch.
     #[test]
     fn optional_field_rows_keep_their_pre_migration_bytes() {
-        let cases: [(WriterCommand, &str, &str); 1] = [
-            (WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }), "engagement-submit engagement-submit", "01120000"),
-        ];
+        let cases: [(WriterCommand, &str, &str); 1] = [(WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }), "engagement-submit engagement-submit", "01120000")];
         for (command, text, hex) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text);
             assert_eq!(protocol::OpBinary::encode_op(&command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>(), hex);

@@ -51,7 +51,6 @@ pub fn window_measures(lod_mode: &str, on_change: impl Fn(&str, Option<serde_jso
 //#region 🔖️Render
 pub fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, session: &FlowEvalSession) -> UiNode {
     let fixture = &document.fixture;
-    crate::apps::procedural3d::sync_flow_extension_contributions(&config.contributions_json);
     let host = host_from_fixture(fixture);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
     let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };

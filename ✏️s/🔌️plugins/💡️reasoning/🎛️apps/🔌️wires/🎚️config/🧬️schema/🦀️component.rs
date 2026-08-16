@@ -6,18 +6,20 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.reasoning.wires.config")]
 pub struct WiresConfig {
-    #[state(config)] pub drag_node_id: Option<String>,
-    #[state(config)] pub drag_last_x: f64,
-    #[state(config)] pub drag_last_y: f64,
-    #[state(config)] pub locale: String,
+    #[state(config)]
+    pub drag_node_id: Option<String>,
+    #[state(config)]
+    pub drag_last_x: f64,
+    #[state(config)]
+    pub drag_last_y: f64,
+    #[state(config)]
+    pub locale: String,
 }
 
-//region 📎 App-schema self-registration
-/// 📎 Registers the `s.reasoning.wires` app-schema descriptor (config + presence facets) into the
-/// open [`::schema::AppSchemaRegistry`], mirroring the transplanted-from-framework closed-catalog
-/// entry — see `🧰️framework/🔨️modules/🧬️schema/🦀️component.rs::register_all_app_schema_descriptors()`.
-pub fn register_app_schema() {
-    ::schema::register_app_schema_descriptor(::schema::AppSchemaDescriptor {
+//region 📎 App-schema descriptor
+/// 📎 `s.reasoning.wires`'s config and presence schema, owned by this leaf.
+pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+    ::schema::AppSchemaDescriptor {
         id: "s.reasoning.wires",
         config: ::schema::FacetLeaves {
             rust: include_str!("🦀️component.rs"),
@@ -33,7 +35,6 @@ pub fn register_app_schema() {
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️component.json"),
             proto: include_str!("../../👥️presence/🧬️schema/🛰️component.proto"),
         },
-    });
+    }
 }
-//endregion 📎 App-schema self-registration
-
+//endregion 📎 App-schema descriptor

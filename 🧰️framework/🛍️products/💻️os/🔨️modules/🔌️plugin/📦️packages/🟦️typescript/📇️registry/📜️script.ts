@@ -33,6 +33,13 @@ export type PluginRegistryEntry = {
   readonly capabilities: readonly string[];
   readonly contributes: readonly string[];
   readonly consumes: readonly string[];
+  /** 🔗️ Every sibling `semio-s-plugin-<id>` Cargo dependency this crate declares, derived straight
+   * from its manifest — the ground-truth dependency edge set (contract freeze §4 rule 2) ahead of
+   * the runtime `.depends_on(...)` API's rollout (ticket 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-
+   * CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS). For an extension, `extends` is always `dependsOn[0]`
+   * (contract freeze §4 rule 1). Consumed by `resolveRegistryPluginIdsForFilter` to close a dev
+   * session's plugin set transitively. */
+  readonly dependsOn: readonly string[];
   readonly host?: PluginHostMetadata;
 };
 
@@ -134,6 +141,9 @@ function parsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistr
   const landingAppId = hostBlock?.match(/landing\s*=\s*"([^"]+)"/)?.[1];
   const hostAppId = hostBlock?.match(/shell\s*=\s*"([^"]+)"/)?.[1];
   const host = landingAppId && hostAppId ? { landingAppId, hostAppId } : undefined;
+  const cargoDependsOnIds = parseCargoPluginDependencyIds(text, componentPackage);
+  // 🔗️ contract freeze §4 rule 1: for an extension, `extends` is always dependsOn[0].
+  const dependsOn = extendsHost ? [extendsHost, ...cargoDependsOnIds.filter((id) => id !== extendsHost)] : cargoDependsOnIds;
   return {
     pluginId: componentPackage,
     cratePath,
@@ -143,6 +153,7 @@ function parsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistr
     capabilities,
     contributes,
     consumes,
+    dependsOn,
     ...(extendsHost ? { extends: extendsHost } : {}),
     ...(host ? { host } : {}),
   };
@@ -204,6 +215,25 @@ function parseTomlStringArray(block: string, key: string): string[] {
 
 function parseTomlBoolField(block: string, key: string): boolean {
   return new RegExp(`^${key}\\s*=\\s*true\\s*$`, "m").test(block);
+}
+
+/** @emoji 🔗️ Every `semio-s-plugin-<id>` entry in one crate's own Cargo manifest text, both the
+ * `key = { …, package = "semio-s-plugin-x" }` renamed-dependency shape and the plain
+ * `semio-s-plugin-x = { … }` shape — mirrors the root policy script's
+ * `policyCargoPluginDependencyIds` (`📜️script.ts:7562`) so the derived catalog and the
+ * `plugin-dependency/parity` gate can never read two different dependency sets from the same file.
+ * `ownId` (this crate's own `[package.metadata.component]` plugin id) is excluded so a crate can
+ * never be listed as depending on itself. */
+function parseCargoPluginDependencyIds(manifestText: string, ownId: string): string[] {
+  const ids = new Set<string>();
+  for (const match of manifestText.matchAll(/(?:^|\n)\s*(?:[\w-]+\s*=\s*\{[^}]*?)?package\s*=\s*"semio-s-plugin-([a-z0-9-]+)"/g)) {
+    ids.add(match[1]!);
+  }
+  for (const match of manifestText.matchAll(/(?:^|\n)\s*semio-s-plugin-([a-z0-9-]+)\s*=/g)) {
+    ids.add(match[1]!);
+  }
+  ids.delete(ownId);
+  return [...ids].sort();
 }
 
 function parsePlaygroundBlock(block: string, pluginId: string, cratePath: string): PlaygroundEntry | undefined {
@@ -367,9 +397,15 @@ export function isHostPluginFilter(pluginFilter?: string, repoRoot = getWorkspac
 /**
  * 🎯️ Resolves a raw playground filter (a variant id like "puzzle5d", or an already-bare crate
  * pluginId like "note") to the set of crate pluginIds that must be built for one dev session: the
- * target crate itself plus every crate whose declared `contributes` intersects the target crate
+ * target crate itself, plus every crate whose declared `contributes` intersects the target crate
  * `consumes` (per `[package.metadata.semio]` in each crate Cargo.toml — no more registry-id
- * indirection through framework/core/js).
+ * indirection through framework/core/js), plus the FULL TRANSITIVE `dependsOn` closure of everything
+ * gathered so far (contract freeze §4/§5's dependency graph — a dev session for one plugin must also
+ * load every plugin/extension it depends on, however many hops deep, not just its direct Cargo
+ * dependencies). The two membership rules are additive, not a replacement of one by the other: some
+ * topic-based consumption (e.g. `demonstrator` consuming `forms.questionKind`) is not backed by a
+ * Cargo dependency edge at all, so dropping the topic scan would silently shrink existing dev
+ * sessions.
  */
 export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string): readonly string[] {
   const repoRoot = getWorkspaceRoot();
@@ -377,12 +413,24 @@ export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string
   const playgrounds = generatePlaygroundRegistry(repoRoot);
   const variantRow = playgrounds.find((p) => p.variant === filterPlaygroundPlugin);
   const targetPluginId = variantRow?.pluginId ?? filterPlaygroundPlugin;
-  const targetEntry = allEntries.find((e) => e.pluginId === targetPluginId);
+  const byId = new Map(allEntries.map((entry) => [entry.pluginId, entry]));
+  const targetEntry = byId.get(targetPluginId);
   const ids = new Set<string>([targetPluginId]);
   if (targetEntry) {
     for (const entry of allEntries) {
       if (entry.pluginId === targetPluginId) continue;
       if (entry.contributes.some((topic) => targetEntry.consumes.includes(topic))) ids.add(entry.pluginId);
+    }
+  }
+  // 🔗️ Transitive dependsOn closure over whatever the topic scan already gathered — a BFS/DFS-order-
+  // agnostic worklist since `ids` only ever grows and every id is pushed at most once.
+  const queue = [...ids];
+  while (queue.length > 0) {
+    const id = queue.pop()!;
+    for (const depId of byId.get(id)?.dependsOn ?? []) {
+      if (ids.has(depId)) continue;
+      ids.add(depId);
+      queue.push(depId);
     }
   }
   return [...ids];
@@ -443,7 +491,7 @@ function emitTypeScript(entries: PluginRegistryEntry[]): string {
   const formatTargetRow = (entry: PluginRegistryEntry) => {
     const host = entry.host ? `, host: { landingAppId: ${JSON.stringify(entry.host.landingAppId)}, hostAppId: ${JSON.stringify(entry.host.hostAppId)} }` : "";
     const extendsHost = entry.extends ? `, extends: ${JSON.stringify(entry.extends)}` : "";
-    return `\t{ pluginId: ${JSON.stringify(entry.pluginId)}, cratePath: ${JSON.stringify(entry.cratePath)}, wasmOut: ${JSON.stringify(entry.wasmOut)}, role: ${JSON.stringify(entry.role)}, capabilities: ${JSON.stringify(entry.capabilities)}, contributes: ${JSON.stringify(entry.contributes)}, consumes: ${JSON.stringify(entry.consumes)}${extendsHost}${host} },`;
+    return `\t{ pluginId: ${JSON.stringify(entry.pluginId)}, cratePath: ${JSON.stringify(entry.cratePath)}, wasmOut: ${JSON.stringify(entry.wasmOut)}, role: ${JSON.stringify(entry.role)}, capabilities: ${JSON.stringify(entry.capabilities)}, contributes: ${JSON.stringify(entry.contributes)}, consumes: ${JSON.stringify(entry.consumes)}, dependsOn: ${JSON.stringify(entry.dependsOn)}${extendsHost}${host} },`;
   };
   const pluginRows = pluginEntries.map(formatTargetRow).join("\n");
   const extensionRows = extensionEntries.map(formatTargetRow).join("\n");
@@ -466,6 +514,10 @@ export type PluginBuildTarget = {
 \treadonly capabilities: readonly string[];
 \treadonly contributes: readonly string[];
 \treadonly consumes: readonly string[];
+\t/** @emoji 🔗️ Every sibling \`semio-s-plugin-<id>\` Cargo dependency this crate declares (extension's
+\t * \`extends\` target always first) — see \`PluginRegistryEntry.dependsOn\` in
+\t * \`📇️registry/📜️script.ts\`. */
+\treadonly dependsOn: readonly string[];
 \treadonly host?: PluginHostMetadata;
 };
 
@@ -1316,6 +1368,244 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
 }
 //#endregion 🗿️TaxonomyValidator
 
+//#region 🔖️SurfaceScaffolder
+/**
+ * 🏗️ `new surface` — the permanent, taxonomy-derived scaffolder for the 286-surface tree (143 subsets
+ * × `{viewer, editor}`), ticket `26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET`. Every path segment
+ * below comes from `🔣️taxonomy.json` except the default mode/window ids (`SURFACE_DEFAULT_MODE_DIRNAME`
+ * / `SURFACE_DEFAULT_WINDOW_DIRNAME`), which are not taxonomy vocabulary — a *specific* mode/window is
+ * per-subset authoring content the owning W2 packet picks; this only supplies the placeholder shape a
+ * fresh surface must start from. Every generated component leaf carries the `SCAFFOLD` marker so
+ * `policySubsetSurfaceCompletenessBreaches` (root `📜️script.ts`) can flag scaffold residue distinctly
+ * from a genuinely missing surface.
+ */
+const SURFACE_SCAFFOLD_TICKET_PATH = ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET";
+/** @emoji 🚧️ Marker every scaffolded component leaf carries; scanned for by the completeness policy. */
+const SCAFFOLD_MARKER = "SCAFFOLD";
+/** @emoji 🎭️ Default mode dir a freshly scaffolded surface gets — mirrors the pre-existing `🎛️apps`
+ * convention (`✏️edit` for editors) onto the read-only side (`👁️view` for viewers). Not taxonomy
+ * vocabulary (see the region docstring). */
+const SURFACE_DEFAULT_MODE_DIRNAME: Readonly<Record<string, string>> = { viewer: "👁️view", editor: "✏️edit" };
+/** @emoji 🪟️ Default window dir a freshly scaffolded mode gets — one obviously-generic placeholder
+ * window, replaced by real, per-subset window ids as the owning W2 packet fills the scaffold in. */
+const SURFACE_DEFAULT_WINDOW_DIRNAME = "🪟️main";
+
+/** @emoji 🧹️ Drops every non-ASCII codepoint (emoji + variation selectors) — `"📐️cad"` -> `"cad"` — so a
+ * bare CLI id (typed without emoji) can match the real on-disk directory name. Mirrors root
+ * `📜️script.ts`'s `policyStripEmoji`; duplicated here because the two scripts are separate bundles with
+ * no shared import path for this one-line helper. */
+function surfaceStripEmoji(segment: string): string {
+  return segment.replace(/[^\x00-\x7f]/g, "");
+}
+
+/** @emoji 🔎️ Resolves a bare CLI id to the real emoji-prefixed child directory name of `parentAbs`. */
+function surfaceResolveChildDir(parentAbs: string, wantStripped: string): string | undefined {
+  if (!existsSync(parentAbs)) return undefined;
+  for (const name of readdirSync(parentAbs)) {
+    if (!statSync(join(parentAbs, name)).isDirectory()) continue;
+    if (surfaceStripEmoji(name) === wantStripped) return name;
+  }
+  return undefined;
+}
+
+/** @emoji 🧭️ Resolves `<plugin> <kind> <standard> <subset>` CLI args to the subset's repo-relative path,
+ * throwing a precise error naming the failing segment rather than silently creating the wrong tree.
+ * `subsetArg === taxonomy.subsetAnyId` (`"*"`) is accepted as an alias for `subsetAnyDirName`
+ * (`"✳️any"`), mirroring the taxonomy's own alias. */
+function resolveSubsetRel(repoRoot: string, pluginArg: string, kindArg: string, standardArg: string, subsetArg: string): string {
+  let area: string | undefined;
+  let pluginDir: string | undefined;
+  for (const candidate of PLUGIN_AREAS) {
+    const found = surfaceResolveChildDir(join(repoRoot, candidate), pluginArg);
+    if (found) {
+      area = candidate;
+      pluginDir = found;
+      break;
+    }
+  }
+  if (!area || !pluginDir) throw new Error(`new surface: no plugin "${pluginArg}" under ${PLUGIN_AREAS.join(", ")}`);
+  const artifactsAbs = join(repoRoot, area, pluginDir, TAXONOMY.artifactsDirName);
+  const kindDir = surfaceResolveChildDir(artifactsAbs, kindArg);
+  if (!kindDir) throw new Error(`new surface: no artifact kind "${kindArg}" under ${area}/${pluginDir}/${TAXONOMY.artifactsDirName}`);
+  const standardsAbs = join(artifactsAbs, kindDir, TAXONOMY.standardsDirName);
+  const standardDir = surfaceResolveChildDir(standardsAbs, standardArg);
+  if (!standardDir) throw new Error(`new surface: no standard "${standardArg}" under .../${kindDir}/${TAXONOMY.standardsDirName}`);
+  const subsetsAbs = join(standardsAbs, standardDir, TAXONOMY.subsetsDirName);
+  const wantSubset = subsetArg === TAXONOMY.subsetAnyId ? surfaceStripEmoji(TAXONOMY.subsetAnyDirName ?? "") : subsetArg;
+  const subsetDir = surfaceResolveChildDir(subsetsAbs, wantSubset);
+  if (!subsetDir) throw new Error(`new surface: no subset "${subsetArg}" under .../${standardDir}/${TAXONOMY.subsetsDirName}`);
+  return relative(repoRoot, join(subsetsAbs, subsetDir)).replaceAll("\\", "/");
+}
+
+/** @emoji 🪆️ Every subset dir across every plugin area whose `🧬️schema` facet is present — the "owned"
+ * predicate this ticket freezes (contract §6): schema presence alone, independent of `🚪️io`, because
+ * the 286-surface target (143 subsets × 2 roles) only holds when every schema-bearing subset counts,
+ * including the one subset (🧩️assembly) that has no `🚪️io` yet. */
+function discoverOwnedSubsetRels(repoRoot: string): string[] {
+  const out: string[] = [];
+  for (const area of PLUGIN_AREAS) {
+    const areaAbs = join(repoRoot, area);
+    for (const plugin of listDirs(areaAbs)) {
+      const artifactsAbs = join(areaAbs, plugin, TAXONOMY.artifactsDirName);
+      for (const kind of listDirs(artifactsAbs)) {
+        const standardsAbs = join(artifactsAbs, kind, TAXONOMY.standardsDirName);
+        for (const std of listDirs(standardsAbs)) {
+          const subsetsAbs = join(standardsAbs, std, TAXONOMY.subsetsDirName);
+          for (const sub of listDirs(subsetsAbs)) {
+            const subsetAbs = join(subsetsAbs, sub);
+            if (!existsSync(join(subsetAbs, SCHEMA_FACET_DIR))) continue;
+            out.push(relative(repoRoot, subsetAbs).replaceAll("\\", "/"));
+          }
+        }
+      }
+    }
+  }
+  return out.sort();
+}
+
+function scaffoldRustLeaf(label: string): string {
+  return `//! 🚧️ ${SCAFFOLD_MARKER}: ${label} — generated by \`bun ./📜️script.ts new surface\`, not implemented.\n//! @see ${SURFACE_SCAFFOLD_TICKET_PATH}\npub const SCAFFOLD: bool = true;\n`;
+}
+
+function scaffoldTsLeaf(label: string): string {
+  return `// 🚧️ ${SCAFFOLD_MARKER}: ${label} — generated by \`bun ./📜️script.ts new surface\`, not implemented.\n// @see ${SURFACE_SCAFFOLD_TICKET_PATH}\nexport const SCAFFOLD = true;\n`;
+}
+
+function scaffoldEmptyFacetMarkdown(facetLabel: string): string {
+  return `# Empty ${surfaceStripEmoji(facetLabel)} Facet\n\nThis facet currently declares no specific items. Generated by \`bun ./📜️script.ts new surface\`.\n`;
+}
+
+function scaffoldLeafFilename(lang: string): string {
+  const filename = TAXONOMY.taxonomyLeafFilenames[lang];
+  if (!filename) throw new Error(`new surface: 🔣️taxonomy.json taxonomyLeafFilenames has no entry for "${lang}"`);
+  return filename;
+}
+
+function scaffoldLeafContentForLang(lang: string, label: string): string {
+  return lang === "🦀️rust" ? scaffoldRustLeaf(label) : scaffoldTsLeaf(label);
+}
+
+type SurfaceScaffoldResult = { created: string[]; skipped: string[] };
+
+/** @emoji 📝️ Writes `relPath` only when absent; an existing leaf is reported as skipped, never
+ * overwritten, so a hand-authored W2 packet can never be clobbered by a re-run of `--all`. */
+function scaffoldWriteIfAbsent(repoRoot: string, relPath: string, content: string, result: SurfaceScaffoldResult, dryRun: boolean): void {
+  const abs = join(repoRoot, relPath);
+  if (existsSync(abs)) {
+    result.skipped.push(relPath);
+    return;
+  }
+  result.created.push(relPath);
+  if (dryRun) return;
+  mkdirSync(dirname(abs), { recursive: true });
+  writeFileSync(abs, content);
+}
+
+/**
+ * 🏗️ Creates one surface's full scaffold shape under `<subsetRel>/<viewerDirName|editorDirName>` per
+ * the frozen tree (ticket Deliverable A): 2 surface leaves + 4 surface facets + 1 mode leaf + 4 mode
+ * facets + 2 window leaves + 6 window facets = 19 files. Idempotent — never overwrites.
+ */
+function scaffoldSurfaceTree(repoRoot: string, subsetRel: string, role: string, dryRun: boolean): SurfaceScaffoldResult {
+  const result: SurfaceScaffoldResult = { created: [], skipped: [] };
+  const surfaceRel = `${subsetRel}/${TAXONOMY.surfaceDirNames[role]}`;
+  const label = `${role} surface`;
+
+  for (const lang of TAXONOMY.surfaceComponentLangs) {
+    scaffoldWriteIfAbsent(repoRoot, `${surfaceRel}/${scaffoldLeafFilename(lang)}`, scaffoldLeafContentForLang(lang, label), result, dryRun);
+  }
+  for (const facet of TAXONOMY.surfaceRequiredChildDirs) {
+    if (facet === TAXONOMY.modesDirName) continue;
+    scaffoldWriteIfAbsent(repoRoot, `${surfaceRel}/${facet}/${TAXONOMY.windowEmptyFacetFilename}`, scaffoldEmptyFacetMarkdown(`Surface ${facet}`), result, dryRun);
+  }
+
+  const modeRel = `${surfaceRel}/${TAXONOMY.modesDirName}/${SURFACE_DEFAULT_MODE_DIRNAME[role]}`;
+  scaffoldWriteIfAbsent(repoRoot, `${modeRel}/${TAXONOMY.taxonomyLeafFilenames["🦀️rust"]}`, scaffoldRustLeaf(`${role} mode`), result, dryRun);
+  for (const facet of TAXONOMY.modeRequiredChildDirs ?? []) {
+    if (facet === TAXONOMY.windowsDirName) continue;
+    scaffoldWriteIfAbsent(repoRoot, `${modeRel}/${facet}/${TAXONOMY.windowEmptyFacetFilename}`, scaffoldEmptyFacetMarkdown(`Mode ${facet}`), result, dryRun);
+  }
+
+  const windowRel = `${modeRel}/${TAXONOMY.windowsDirName}/${SURFACE_DEFAULT_WINDOW_DIRNAME}`;
+  for (const lang of TAXONOMY.windowLeafLangs) {
+    scaffoldWriteIfAbsent(repoRoot, `${windowRel}/${scaffoldLeafFilename(lang)}`, scaffoldLeafContentForLang(lang, `${role} window`), result, dryRun);
+  }
+  for (const facet of TAXONOMY.windowRequiredChildDirs) {
+    scaffoldWriteIfAbsent(repoRoot, `${windowRel}/${facet}/${TAXONOMY.windowEmptyFacetFilename}`, scaffoldEmptyFacetMarkdown(`Window ${facet}`), result, dryRun);
+  }
+
+  return result;
+}
+
+function reportSurfaceScaffoldResult(label: string, result: SurfaceScaffoldResult, dryRun: boolean): void {
+  const verb = dryRun ? "would create" : "created";
+  console.log(`${label}: ${verb} ${result.created.length} file(s), ${result.skipped.length} already present`);
+  for (const path of result.created) console.log(`  ${dryRun ? "+ (dry-run)" : "+"} ${path}`);
+}
+
+/** @emoji 🌊️ `new surface --all`: walks every owned subset on disk and scaffolds whatever surface is
+ * missing, idempotently. Reports surface-granularity totals (subset × role pairs touched) alongside
+ * the raw file count, so a dry-run answers "how many of the 286 surfaces still need scaffolding". */
+function runSurfaceScaffoldAll(repoRoot: string, dryRun: boolean): void {
+  const subsetRels = discoverOwnedSubsetRels(repoRoot);
+  let surfacesTouched = 0;
+  let filesCreated = 0;
+  let filesSkipped = 0;
+  for (const subsetRel of subsetRels) {
+    for (const role of TAXONOMY.surfaceRoles) {
+      const result = scaffoldSurfaceTree(repoRoot, subsetRel, role, dryRun);
+      filesCreated += result.created.length;
+      filesSkipped += result.skipped.length;
+      if (result.created.length > 0) surfacesTouched += 1;
+    }
+  }
+  const totalSurfaces = subsetRels.length * TAXONOMY.surfaceRoles.length;
+  const verb = dryRun ? "would scaffold" : "scaffolded";
+  console.log(`new surface --all: ${verb} ${surfacesTouched}/${totalSurfaces} surface(s) across ${subsetRels.length} owned subset(s) (${filesCreated} file(s) ${dryRun ? "would be created" : "created"}, ${filesSkipped} already present).`);
+}
+
+/** @emoji 🚪️ `new surface` CLI: single surface (`<plugin> <kind> <standard> <subset> <role>`) or batch
+ * (`--all [--dry-run]`). Registered as `bun ./📜️script.ts new surface …` via `ScriptRouter`. */
+class NewScript extends BundleScript {
+  run(segments: string[]): void {
+    if (segments[0] !== "surface") {
+      console.error("usage: bun ./📜️script.ts new surface <plugin> <kind> <standard> <subset> <role>");
+      console.error("   or: bun ./📜️script.ts new surface --all [--dry-run]");
+      process.exit(1);
+    }
+    const repoRoot = getWorkspaceRoot();
+    const rest = segments.slice(1);
+    const dryRun = rest.includes("--dry-run");
+    const positional = rest.filter((arg) => arg !== "--dry-run");
+    if (positional[0] === "--all") {
+      runSurfaceScaffoldAll(repoRoot, dryRun);
+      return;
+    }
+    if (positional.length !== 5) {
+      console.error("usage: bun ./📜️script.ts new surface <plugin> <kind> <standard> <subset> <role>");
+      process.exit(1);
+      return;
+    }
+    const [pluginArg, kindArg, standardArg, subsetArg, roleArg] = positional;
+    if (!TAXONOMY.surfaceRoles.includes(roleArg!)) {
+      console.error(`new surface: role must be one of ${TAXONOMY.surfaceRoles.join(", ")}, got "${roleArg}"`);
+      process.exit(1);
+      return;
+    }
+    let subsetRel: string;
+    try {
+      subsetRel = resolveSubsetRel(repoRoot, pluginArg!, kindArg!, standardArg!, subsetArg!);
+    } catch (error) {
+      console.error((error as Error).message);
+      process.exit(1);
+      return;
+    }
+    const result = scaffoldSurfaceTree(repoRoot, subsetRel, roleArg!, dryRun);
+    reportSurfaceScaffoldResult(`${subsetRel}#${roleArg}`, result, dryRun);
+  }
+}
+//#endregion 🔖️SurfaceScaffolder
+
 /** @emoji 🧪️ Verifies that representative standalone and studio launches expand to complete sessions,
  * asserting shape rather than hardcoded plugin-id lists/counts so a plugin's crate-name change (or the
  * crate-consolidation restructure itself) can't silently break this check. */
@@ -1463,7 +1753,7 @@ class CheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("check", CheckScript);
+const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("check", CheckScript).register("new", NewScript);
 
 if (import.meta.main) {
   await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" });

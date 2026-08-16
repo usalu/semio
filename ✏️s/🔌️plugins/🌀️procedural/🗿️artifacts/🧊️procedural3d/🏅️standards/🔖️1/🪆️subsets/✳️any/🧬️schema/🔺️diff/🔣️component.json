@@ -86,11 +86,6 @@
     "locale": {
       "type": "string",
       "x-semio-state": "config"
-    },
-    "contributionsJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
     }
   },
   "$defs": {
@@ -328,8 +323,7 @@
         "previewCamera",
         "sunJson",
         "activeUtilityId",
-        "locale",
-        "contributionsJson"
+        "locale"
       ],
       "properties": {
         "fixture": {
@@ -377,10 +371,6 @@
         },
         "locale": {
           "type": "string"
-        },
-        "contributionsJson": {
-          "type": "string",
-          "contentMediaType": "application/json"
         }
       }
     }

@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📈growth` per Wave C.
 
 use super::mutation::RenameGrowthPlan;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramGrowthDelta, ProgramGrowthPatchEntry};
 use crate::artifacts::program::registers::GrowthPlanPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameGrowthPlan, _base: &ProgramSnapshot) -> ProgramDiff {

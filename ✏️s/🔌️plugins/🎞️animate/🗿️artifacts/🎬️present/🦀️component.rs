@@ -47,13 +47,7 @@ pub struct FigureTileDraft {
 //#endregion 🔖️Domain
 
 pub fn default_figure_tile_source() -> FigureTileSource {
-    FigureTileSource {
-        src: "/🖼️bauteilbörse.png".into(),
-        kind: "figure".into(),
-        frame: FigureTileFrame { x: 0.127, y: 0.1, width: 0.746, height: 0.75 },
-        source_aspect: Some(1222.0 / 896.0),
-        pdf_page: None,
-    }
+    FigureTileSource { src: "/🖼️bauteilbörse.png".into(), kind: "figure".into(), frame: FigureTileFrame { x: 0.127, y: 0.1, width: 0.746, height: 0.75 }, source_aspect: Some(1222.0 / 896.0), pdf_page: None }
 }
 
 pub fn default_present_snapshot() -> PresentSnapshot {
@@ -92,30 +86,17 @@ const ANIMATION_CHILD_ARTIFACT_ID: &str = "animate-present-deck-animation";
 /// through this lossy projection), so this only matters for a genuinely fresh reload with an empty
 /// cache, the same class of documented gap every `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` exemplar
 /// (lowpoly/cad/writer) has left for its own composed slot.
-pub fn presentation_snapshot_from_source_tiles(
-    source: &FigureTileSource,
-    tiles: &[FigureTileDraft],
-) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot {
+pub fn presentation_snapshot_from_source_tiles(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{
-        SemioPresentationSnapshot, Slide, SlideFrame, SlideMaster, SlidePictureImage, SlideShape, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA,
-    };
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideFrame, SlideMaster, SlidePictureImage, SlideShape, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
 
     const SOURCE_MASTER_ID: &str = "source";
     let frame_of = |frame: &FigureTileFrame| SlideFrame { origin: SemioPoint2 { x: frame.x, y: frame.y }, width: frame.width, height: frame.height };
     let image_of = || SlidePictureImage { asset_id: source.src.clone(), mime: source.kind.clone(), bytes: Vec::new() };
 
     let master = SlideMaster { id: SOURCE_MASTER_ID.into(), shapes: vec![SlideShape::Picture { frame: frame_of(&source.frame), image: image_of() }] };
-    let slides = tiles
-        .iter()
-        .map(|tile| Slide {
-            id: tile.id.clone(),
-            layout_id: None,
-            shapes: vec![SlideShape::Picture { frame: frame_of(&tile.crop), image: image_of() }],
-            notes: vec![DocBlock::paragraph(tile.name.clone())],
-        })
-        .collect();
+    let slides = tiles.iter().map(|tile| Slide { id: tile.id.clone(), layout_id: None, shapes: vec![SlideShape::Picture { frame: frame_of(&tile.crop), image: image_of() }], notes: vec![DocBlock::paragraph(tile.name.clone())] }).collect();
     SemioPresentationSnapshot { schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(), masters: vec![master], layouts: Vec::new(), slides }
 }
 
@@ -125,17 +106,13 @@ pub fn presentation_snapshot_from_source_tiles(
 /// first paragraph text back into a `FigureTileDraft`. A master/slide with no `Picture` shape at all
 /// (never produced by the forward converter, but a composed child can in principle arrive from
 /// elsewhere) falls back to `default_figure_tile_source()`/an empty name rather than panicking.
-pub fn source_tiles_from_presentation_snapshot(
-    snapshot: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot,
-) -> (FigureTileSource, Vec<FigureTileDraft>) {
+pub fn source_tiles_from_presentation_snapshot(snapshot: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot) -> (FigureTileSource, Vec<FigureTileDraft>) {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SlideShape;
 
     fn frame_from(shapes: &[SlideShape]) -> Option<(FigureTileFrame, String, String)> {
         shapes.iter().find_map(|shape| match shape {
-            SlideShape::Picture { frame, image } => {
-                Some((FigureTileFrame { x: frame.origin.x, y: frame.origin.y, width: frame.width, height: frame.height }, image.asset_id.clone(), image.mime.clone()))
-            }
+            SlideShape::Picture { frame, image } => Some((FigureTileFrame { x: frame.origin.x, y: frame.origin.y, width: frame.width, height: frame.height }, image.asset_id.clone(), image.mime.clone())),
             _ => None,
         })
     }
@@ -149,12 +126,7 @@ pub fn source_tiles_from_presentation_snapshot(
             .unwrap_or_default()
     }
 
-    let source = snapshot
-        .masters
-        .first()
-        .and_then(|master| frame_from(&master.shapes))
-        .map(|(frame, src, kind)| FigureTileSource { src, kind, frame, source_aspect: None, pdf_page: None })
-        .unwrap_or_else(default_figure_tile_source);
+    let source = snapshot.masters.first().and_then(|master| frame_from(&master.shapes)).map(|(frame, src, kind)| FigureTileSource { src, kind, frame, source_aspect: None, pdf_page: None }).unwrap_or_else(default_figure_tile_source);
 
     let tiles = snapshot
         .slides
@@ -278,7 +250,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: PRESENT_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.json", "stdio.md", "stdio.pdf", "stdio.png", "stdio.pptx", "stdio.svg"],
+        export_stdio_kinds: vec!["stdio.json", "stdio.md", "stdio.pdf", "stdio.png", "stdio.pptx", "stdio.svg"],
         import_stdio_kinds: vec!["stdio.json", "stdio.md", "stdio.pdf", "stdio.png", "stdio.pptx", "stdio.svg"],
     }
 }
@@ -310,10 +282,7 @@ impl Patchable<FigureTileDraftPatch> for FigureTileDraft {
     }
 
     fn diff_patch(&self, other: &Self) -> Option<FigureTileDraftPatch> {
-        Some(FigureTileDraftPatch {
-            name: (self.name != other.name).then(|| other.name.clone()),
-            crop: (self.crop != other.crop).then(|| other.crop.clone()),
-        })
+        Some(FigureTileDraftPatch { name: (self.name != other.name).then(|| other.name.clone()), crop: (self.crop != other.crop).then(|| other.crop.clone()) })
     }
 }
 //#endregion 🔖️CollectionSupport
@@ -335,28 +304,77 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::present::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("PresentComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
+//#region 🔖️Declaration
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.present")?)
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.present.schema.artifact")?, ArtifactCapabilityKind::schema())
+                .descriptor(b"s.animate.present")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.animate.present")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.present.inference.artifact")?, ArtifactCapabilityKind::inference())
+                .descriptor(b"s.animate.present.inference")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.animate.present.inference")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.present.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.present@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.present@1/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.present.composer.pptx")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.pptx@ecma-376/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.pptx@ecma-376/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.present.composer.svg")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.svg@1.1/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.svg@1.1/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.present.composer.pdf")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.pdf@1.4/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.pdf@1.4/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.present.composer.md")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.md@commonmark/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.md@commonmark/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.present.composer.png")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.png@1.2/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.png@1.2/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.present.composer.json")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.json@rfc8259/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.present.codec.document")?, ArtifactCapabilityKind::codec())
+                .descriptor(b"animate.present:present")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "animate.present")?)?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "present")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.present.localization.en")?, ArtifactCapabilityKind::localization())
+                .descriptor(b"Animate Present")?
+                .localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Animate Present")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.present.localization.de")?, ArtifactCapabilityKind::localization())
+                .descriptor(b"Animate Present")?
+                .localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Animate Present")?)?,
+        )
 }
-//#endregion 🚪️DerivedIoRegistry
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+        .schema(crate::artifacts::present::schema::present_artifact_schema_descriptor())
+        .inferences([crate::artifacts::present::standards::v1::subsets::any::schema::inferences::present_artifact_inference_descriptor()])
+        .composers(crate::artifacts::present::standards::v1::subsets::any::io::io_registry::entries())
+        .document_codec::<crate::apps::present::AnimatePresentPlayApp>()
+        .try_build()
+}
+//#endregion 🔖️Declaration

@@ -18,8 +18,6 @@ export interface Procedural3dConfig {
   activeUtilityId: string;
   /** @state config */
   locale: string;
-  /** @state config */
-  contributionsJson: string;
 }
 
 export type CameraJson = { x: number; y: number; zoom: number };

@@ -1,0 +1,25 @@
+{
+  "x-semio": {
+    "kind": "collection",
+    "members": [
+      {
+        "directory": "💻️os",
+        "id": "framework.product.os",
+        "kind": "product",
+        "responsibility": "Hosts the composable operating-system shell, application runtime, and product-scoped capabilities."
+      },
+      {
+        "directory": "📓️print",
+        "id": "framework.product.print",
+        "kind": "product",
+        "responsibility": "Builds and verifies canonical print templates, fonts, and generated LaTeX assets."
+      },
+      {
+        "directory": "🦑️repo",
+        "id": "framework.product.repo",
+        "kind": "product",
+        "responsibility": "Provides repository discovery, validation, orchestration, and developer tooling."
+      }
+    ]
+  }
+}

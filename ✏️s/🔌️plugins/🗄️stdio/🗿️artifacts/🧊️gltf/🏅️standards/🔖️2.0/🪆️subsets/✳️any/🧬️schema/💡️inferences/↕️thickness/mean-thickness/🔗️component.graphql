@@ -1,0 +1,11 @@
+# 💡️ mean-thickness glTF inference leaf GraphQL facet.
+type GltfMeanThicknessInferenceV1 {
+  id: ID!
+  algorithmVersion: Int!
+  cacheKey: String!
+  validity: String!
+  quality: String!
+  diagnostics: [String!]!
+  provenance: [String!]!
+  valueJson: String!
+}

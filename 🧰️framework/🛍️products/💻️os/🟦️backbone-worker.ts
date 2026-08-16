@@ -8,6 +8,9 @@
 
 import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, ClientFrame, CommandAckOutcome, MutationEnvelope, PersistenceBinding, RemoteState, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "./🟦️component";
 import { decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodeDocumentPackBytes, decodePackValue, decodePresencePeer, decodeServerFrame, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeClientFrame, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, encodeServerFrame } from "./🟦️component";
+/** 🎚️ config-lane attach (contract freeze §4) — `OpeningPreferences` is a kernel type (domain-neutral
+ * framework), never redefined here; see this file's `🔖️ConfigLane` region. */
+import type { OpeningPreferences } from "@semio-tech/framework";
 
 type RustWorkerHost = {
   handleRequestBytes(bytes: Uint8Array): void;
@@ -126,6 +129,41 @@ function hubBinding(config: ArtifactActorConfig): Extract<PersistenceBinding, { 
   return binding ?? null;
 }
 //#endregion 🔖️DocumentState
+
+//#region 🔖️ConfigLane
+/** 🎚️ Canonical `documentId`/`schema` for the OS-wide `os.config.opening` facet (contract freeze
+ * §4 of `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET/`) — one
+ * singleton instance per install, so the schema id doubles as its document id. */
+export const OPENING_PREFERENCES_SCHEMA = "os.config.opening";
+
+/** 🎚️ Builds the {@link ArtifactActorConfig} that opens the opening-preferences facet through
+ * this SAME generic actor mechanism every other document uses — `bindings: []` is not a stub, it
+ * IS the "persisted local-only" lane (contract freeze §4): {@link folderBinding}/{@link hubBinding}
+ * both return `null` on an empty `bindings` array, so `openArtifact` below already skips folder
+ * watch and hub websocket setup for this config entirely — no schema-specific branch exists or is
+ * needed anywhere in this file for that to hold. */
+export function openingPreferencesActorConfig(actor: string): ArtifactActorConfig {
+  return { documentId: OPENING_PREFERENCES_SCHEMA, schema: OPENING_PREFERENCES_SCHEMA, bindings: [], actor };
+}
+
+/** 🧮️ Reduces one {@link ArtifactEvent} onto a materialized `OpeningPreferences` — event-sourced,
+ * never a mutable map (contract freeze §4). This facet's `Mutation::diff` is whole-record (kernel
+ * `🔖️OpeningResolver`'s `decodeOpeningPreferences` docstring), so a `remoteMutations` envelope's
+ * already-diffed `diff.payload` IS the next full snapshot — folding is "last envelope wins", not a
+ * replay of individual `set`/`clear` operations. Every other event kind (`status`, `presence`, …)
+ * passes `base` through unchanged. `decodePayload` stays injected rather than imported from
+ * `@semio-tech/framework` at the call site — the caller already has `decodeOpeningPreferences` in
+ * scope wherever it decoded `MutationEnvelope.diff.payload` off the wire in the first place. */
+export function foldOpeningPreferencesEvent(base: OpeningPreferences, event: ArtifactEvent, decodePayload: (payload: unknown) => OpeningPreferences | undefined): OpeningPreferences {
+  if (event.kind !== "remoteMutations") return base;
+  let next = base;
+  for (const envelope of event.envelopes) {
+    const decoded = decodePayload(envelope.diff.payload);
+    if (decoded) next = decoded;
+  }
+  return next;
+}
+//#endregion 🔖️ConfigLane
 
 //#region 🔖️WireBridge
 /** 🧮️ A stable, deterministic 32-bit seed for an actor id string, for `WireMutationEnvelope.
@@ -764,7 +802,12 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
-      const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), "../../🔨️modules/🏪️store/🔄️sync/📦️packages/🦀️rust/🧫️fixtures/📡️wire");
+      // 📦️ Written by `wire_fixtures_stay_byte_identical_across_rust_and_ts` in
+      // `🔨️modules/🏪️store/🔄️sync/🦀️component.rs`, which resolves them as `CARGO_MANIFEST_DIR/../fixtures/wire`
+      // — i.e. beside the os-kernel crate, not under the sync module. The old path here pointed at a
+      // pre-restructure location that no longer exists, so this cross-language byte-identity check had
+      // been silently ENOENT-ing instead of comparing anything.
+      const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), "📦️packages/fixtures/wire");
 
       function loadClient(name: string) {
         const bytes = new Uint8Array(readFileSync(join(fixturesDir, name)));
@@ -803,11 +846,31 @@ if (import.meta.vitest) {
 
       const presence = loadClient("📦️client-presence.bin");
       if (typeof presence.frame === "string" || !("Presence" in presence.frame)) throw new Error("expected a Presence frame");
-      // 🎞️ The fixture's `peer` bytes are arbitrary opaque test content (not a real
-      // `encode_presence_peer` blob) — see `protocol_wire::tests`'s identical fixture — so this only
-      // proves the wire framing (tag + length-prefixed bytes) round-trips byte-for-byte, same as
-      // `PreviewPublish.payload` above.
-      expect(JSON.parse(new TextDecoder().decode(new Uint8Array(presence.frame.Presence.peer)))).toEqual({ cursor: [1, 2] });
+      // 👥️ The fixture's `peer` bytes ARE a real `encode_presence_peer` blob now (Rust writes
+      // `sample_presence_peer_with_interaction()`), so this decodes them with the TS twin and checks
+      // the fields survive the crossing — the strongest form of this assertion, and the one the old
+      // `JSON.parse` could never make. It read the blob as JSON and would have failed the moment the
+      // fixture became real; it never did, because the fixture path above pointed at a directory that
+      // no longer existed.
+      // 👥️ A REAL `encode_presence_peer` blob (Rust writes `sample_presence_peer_with_interaction()`,
+      // whose own doc says these fixtures exist "so the TS vitest twin exercises bit 7 with a
+      // realistic multi-domain payload"). Decoding it here proves the scalar fields AND the bit-7
+      // interaction section cross the language boundary, and re-encoding proves it byte-for-byte.
+      const peer = decodePresencePeer(new Uint8Array(presence.frame.Presence.peer), [0]);
+      expect(peer.actor).toBe("actor-1");
+      expect(peer.label).toBe("Ada");
+      expect(peer.userId).toBe("user-9");
+      expect(peer.role).toBe("owner");
+      expect(peer.connectedAtMs).toBe(1_700_000_000_000);
+      expect(peer.cursor).toEqual({ x: 12.5, y: -4 });
+      expect(peer.viewport).toEqual({ x: 0, y: 0, zoom: 1 });
+      expect(peer.interaction?.app_id).toBe("space");
+      expect(peer.interaction?.domains).toEqual([
+        { domain: "outline", granularity: "task", selected: ["t1", "t2"], hovered: [] },
+        { domain: "board", granularity: "card", selected: [], hovered: ["c1"] },
+        { domain: "canvas", granularity: "node", selected: ["n9"], hovered: ["n9", "n10"] },
+      ]);
+      expect(encodePresencePeer(peer)).toEqual(Array.from(new Uint8Array(presence.frame.Presence.peer)));
 
       const creditGrant = loadClient("📦️client-credit-grant.bin");
       if (typeof creditGrant.frame === "string" || !("CreditGrant" in creditGrant.frame)) throw new Error("expected a CreditGrant frame");
@@ -857,9 +920,12 @@ if (import.meta.vitest) {
 
       const serverPresence = loadServer("📦️server-presence.bin");
       if (typeof serverPresence.frame === "string" || !("Presence" in serverPresence.frame)) throw new Error("expected a Presence frame");
-      // 🎞️ Same opaque-test-content caveat as the client `Presence` fixture above.
-      expect(serverPresence.frame.Presence.peers.map((bytes) => JSON.parse(new TextDecoder().decode(new Uint8Array(bytes)))))
-        .toEqual([{ id: "a" }, { id: "b" }]);
+      // 👥️ Two peers, deliberately mixed by the Rust fixture: a plain JSON blob and a real
+      // `encode_presence_peer` payload — so this asserts the frame carries opaque per-peer bytes
+      // through untouched, and that the real one still decodes into the same peer as above.
+      expect(serverPresence.frame.Presence.peers).toHaveLength(2);
+      expect(JSON.parse(new TextDecoder().decode(new Uint8Array(serverPresence.frame.Presence.peers[0]!)))).toEqual({ id: "a" });
+      expect(decodePresencePeer(new Uint8Array(serverPresence.frame.Presence.peers[1]!), [0])).toEqual(peer);
 
       const creditGrantServer = loadServer("📦️server-credit-grant.bin");
       if (typeof creditGrantServer.frame === "string" || !("CreditGrant" in creditGrantServer.frame)) throw new Error("expected a CreditGrant frame");

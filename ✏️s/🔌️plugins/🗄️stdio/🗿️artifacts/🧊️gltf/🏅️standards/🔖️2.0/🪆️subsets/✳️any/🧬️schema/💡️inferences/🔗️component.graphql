@@ -1,0 +1,10 @@
+# 💡️ glTF inference DAG assembly facet.
+type GltfInferenceLeafReferenceV1 {
+  id: ID!
+  algorithmVersion: Int!
+  cacheKey: String!
+}
+
+type GltfInferenceDagV1 {
+  leaves: [GltfInferenceLeafReferenceV1!]!
+}

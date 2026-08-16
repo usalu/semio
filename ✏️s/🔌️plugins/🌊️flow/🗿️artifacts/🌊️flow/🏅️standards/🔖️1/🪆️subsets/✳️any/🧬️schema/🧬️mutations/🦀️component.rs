@@ -31,6 +31,7 @@ pub enum FlowMutation {
     ReorderSynapses(super::reorder_synapses::mutation::ReorderSynapses),
     UpdateSynapseEndpoints(super::update_synapse_endpoints::mutation::UpdateSynapseEndpoints),
     MoveWidgets(super::move_widgets::mutation::MoveWidgets),
+    DuplicateWidget(super::duplicate_widget::mutation::DuplicateWidget),
 }
 
 pub type FlowEnvelope = ArtifactEnvelope<FlowSnapshot, FlowMutation>;
@@ -94,10 +95,13 @@ pub fn from_framework_mutation(mutation: flow::FlowMutation) -> Option<FlowMutat
     })
 }
 
-/// 🌎️ Converts this plugin's semantic mutation into the framework kernel mutation enum — always
-/// total, since every semantic variant has an exact framework-generic counterpart.
-pub fn to_framework_mutation(mutation: &FlowMutation) -> flow::FlowMutation {
-    match mutation {
+/// 🌎️ Converts this plugin's semantic mutation into the framework kernel mutation enum — `None` for
+/// `DuplicateWidget`: a composite folds to a SINGLE `FlowDiff`, but it is not itself a single
+/// framework-generic op (it plans two: a `Widgets::Add` then a `Synapses::Add`), so there is no
+/// framework-generic counterpart to bridge to — mirrors [`from_framework_mutation`]'s `SetFixture`
+/// case, one direction over.
+pub fn to_framework_mutation(mutation: &FlowMutation) -> Option<flow::FlowMutation> {
+    Some(match mutation {
         FlowMutation::CreateWidget(payload) => flow::FlowMutation::Widgets(CollectionMutation::Add { index: payload.index, item: payload.widget.clone() }),
         FlowMutation::DeleteWidget(payload) => flow::FlowMutation::Widgets(CollectionMutation::Remove { id: payload.id.clone() }),
         FlowMutation::ReorderWidgets(payload) => flow::FlowMutation::Widgets(CollectionMutation::Move { id: payload.id.clone(), to_index: payload.to_index }),
@@ -113,16 +117,36 @@ pub fn to_framework_mutation(mutation: &FlowMutation) -> flow::FlowMutation {
             patch: flow::SynapseSpec { id: payload.id.clone(), from: payload.from.clone(), from_port: payload.from_port.clone(), to: payload.to.clone(), to_port: payload.to_port.clone() },
         }),
         FlowMutation::MoveWidgets(payload) => flow::FlowMutation::SetLayout { entries: payload.entries.clone() },
-    }
+        FlowMutation::DuplicateWidget(_) => return None,
+    })
 }
 //#endregion 🌉️FrameworkBridge
 
 //#region 🔹WireCodecs
+/// 🏷️ First byte of a `DuplicateWidget` op's binary encoding — reserved so it can never collide with
+/// `store::os_dsl::variants_binary::OP_BINARY_FORMAT` (always `1`), the format every framework-bridged
+/// leaf op decodes through. Any composite's own bytes are canonical-JSON of its payload (the same
+/// idiom `HistoryOpMeta.origin` uses for a structured, non-hot-path field), not a `flow::FlowMutation`
+/// bridge — see [`to_framework_mutation`]'s doc comment for why one cannot exist.
+const DUPLICATE_WIDGET_OP_BINARY_TAG: u8 = 0xD0;
+const DUPLICATE_WIDGET_OP_TEXT_KEYWORD: &str = "duplicate-widget ";
+
 impl protocol::OpBinary for FlowMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        protocol::OpBinary::encode_op(&to_framework_mutation(self))
+        let FlowMutation::DuplicateWidget(payload) = self else {
+            let framework_mutation = to_framework_mutation(self).expect("only DuplicateWidget has no framework-generic op");
+            return protocol::OpBinary::encode_op(&framework_mutation);
+        };
+        let mut bytes = vec![DUPLICATE_WIDGET_OP_BINARY_TAG];
+        bytes.extend(serde_json::to_vec(payload).map_err(|error| protocol::ProtocolError::Malformed { what: "flow.op", offset: 0, detail: format!("duplicate-widget: {error}") })?);
+        Ok(bytes)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        if bytes.first() == Some(&DUPLICATE_WIDGET_OP_BINARY_TAG) {
+            let payload: super::duplicate_widget::mutation::DuplicateWidget = serde_json::from_slice(&bytes[1..])
+                .map_err(|error| protocol::ProtocolError::Malformed { what: "flow.op", offset: 1, detail: format!("duplicate-widget: {error}") })?;
+            return Ok(FlowMutation::DuplicateWidget(payload));
+        }
         let framework_mutation = <flow::FlowMutation as protocol::OpBinary>::decode_op(bytes)?;
         from_framework_mutation(framework_mutation).ok_or_else(|| protocol::ProtocolError::Malformed {
             what: "flow.op",
@@ -133,6 +157,11 @@ impl protocol::OpBinary for FlowMutation {
 }
 impl protocol::OpText for FlowMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        if let Some(rest) = line.strip_prefix(DUPLICATE_WIDGET_OP_TEXT_KEYWORD) {
+            let payload: super::duplicate_widget::mutation::DuplicateWidget =
+                serde_json::from_str(rest).map_err(|error| store::TextError::new(format!("duplicate-widget: {error}"), store::TextSpan::at(1, 1)))?;
+            return Ok(FlowMutation::DuplicateWidget(payload));
+        }
         let framework_mutation = <flow::FlowMutation as protocol::OpText>::parse_op(line)?;
         from_framework_mutation(framework_mutation).ok_or_else(|| {
             store::TextError::new(
@@ -142,7 +171,11 @@ impl protocol::OpText for FlowMutation {
         })
     }
     fn print_op(&self) -> String {
-        protocol::OpText::print_op(&to_framework_mutation(self))
+        let FlowMutation::DuplicateWidget(payload) = self else {
+            let framework_mutation = to_framework_mutation(self).expect("only DuplicateWidget has no framework-generic op");
+            return protocol::OpText::print_op(&framework_mutation);
+        };
+        format!("{DUPLICATE_WIDGET_OP_TEXT_KEYWORD}{}", serde_json::to_string(payload).expect("DuplicateWidget's all-String fields always serialize"))
     }
 }
 //#endregion 🔹WireCodecs

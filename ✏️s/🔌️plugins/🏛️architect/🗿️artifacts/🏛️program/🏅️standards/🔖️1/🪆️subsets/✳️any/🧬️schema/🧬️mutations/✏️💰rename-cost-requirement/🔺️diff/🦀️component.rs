@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `💰costs` per Wave C.
 
 use super::mutation::RenameCostRequirement;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramCostsDelta, ProgramCostsPatchEntry};
 use crate::artifacts::program::registers::CostRequirementPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameCostRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

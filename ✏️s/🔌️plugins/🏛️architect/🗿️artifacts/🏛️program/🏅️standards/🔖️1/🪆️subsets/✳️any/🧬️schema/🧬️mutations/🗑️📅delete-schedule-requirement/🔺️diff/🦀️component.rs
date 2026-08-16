@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📅schedules` per Wave C.
 
 use super::mutation::DeleteScheduleRequirement;
+use crate::artifacts::program::diff::ProgramSchedulesDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramSchedulesDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteScheduleRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

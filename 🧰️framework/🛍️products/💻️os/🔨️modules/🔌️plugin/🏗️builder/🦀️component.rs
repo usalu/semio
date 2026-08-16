@@ -1,8 +1,8 @@
 //! 🏗️ Typestate `PluginBuilder` — missing label/version is a compile error.
 
-use crate::app::{App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, Plugin, PluginApp, PluginAssemblyError, PluginCommandHandler};
+use crate::app::{App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError, PluginCommandHandler};
 use semio_framework::{kernel::CapabilityRequirement, CommandDefinition};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::marker::PhantomData;
 
 /// 🏷️ Builder has plugin id only — next call must be `.label(...)`.
@@ -22,6 +22,9 @@ pub struct PluginBuilder<State> {
     capabilities: Vec<CapabilityRequirement>,
     commands: Vec<(CommandDefinition, PluginCommandHandler)>,
     artifact_kinds: Vec<semio_framework::ArtifactKindSpec>,
+    host_media_handlers: Vec<HostMediaHandlerDeclaration>,
+    flow_extensions: Vec<FlowExtensionDeclaration>,
+    foreign_document_codecs: Vec<crate::app::DocumentCodecSpec>,
     /// 🔗️ Direct plugin dependencies — contract freeze §3/§4; gate-checked in `try_build` via
     /// `crate::app::register_contributions`.
     dependencies: Vec<semio_framework::PluginDependency>,
@@ -34,6 +37,7 @@ pub struct PluginBuilder<State> {
     apps: HashMap<String, Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static>>,
     app_defs: Vec<(App, Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static>)>,
     app_schema_descriptors: Vec<fn() -> Option<::semio_framework_schema::AppSchemaDescriptor>>,
+    document_app_ids: Vec<&'static str>,
     _state: PhantomData<State>,
 }
 
@@ -49,12 +53,16 @@ impl PluginBuilder<NeedsLabel> {
             capabilities: Vec::new(),
             commands: Vec::new(),
             artifact_kinds: Vec::new(),
+            host_media_handlers: Vec::new(),
+            flow_extensions: Vec::new(),
+            foreign_document_codecs: Vec::new(),
             dependencies: Vec::new(),
             contributions: Vec::new(),
             owner_mutation_rosters: Vec::new(),
             apps: HashMap::new(),
             app_defs: Vec::new(),
             app_schema_descriptors: Vec::new(),
+            document_app_ids: Vec::new(),
             _state: PhantomData,
         }
     }
@@ -70,12 +78,16 @@ impl PluginBuilder<NeedsLabel> {
             capabilities: self.capabilities,
             commands: self.commands,
             artifact_kinds: self.artifact_kinds,
+            host_media_handlers: self.host_media_handlers,
+            flow_extensions: self.flow_extensions,
+            foreign_document_codecs: self.foreign_document_codecs,
             dependencies: self.dependencies,
             contributions: self.contributions,
             owner_mutation_rosters: self.owner_mutation_rosters,
             apps: self.apps,
             app_defs: self.app_defs,
             app_schema_descriptors: self.app_schema_descriptors,
+            document_app_ids: self.document_app_ids,
             _state: PhantomData,
         }
     }
@@ -93,12 +105,16 @@ impl PluginBuilder<NeedsVersion> {
             capabilities: self.capabilities,
             commands: self.commands,
             artifact_kinds: self.artifact_kinds,
+            host_media_handlers: self.host_media_handlers,
+            flow_extensions: self.flow_extensions,
+            foreign_document_codecs: self.foreign_document_codecs,
             dependencies: self.dependencies,
             contributions: self.contributions,
             owner_mutation_rosters: self.owner_mutation_rosters,
             apps: self.apps,
             app_defs: self.app_defs,
             app_schema_descriptors: self.app_schema_descriptors,
+            document_app_ids: self.document_app_ids,
             _state: PhantomData,
         }
     }
@@ -145,6 +161,24 @@ impl PluginBuilder<Ready> {
         self
     }
 
+    /// 🧭️ Declares an owned OS-media bridge or export renderer as frozen runtime authority.
+    pub fn host_media_handler(mut self, declaration: HostMediaHandlerDeclaration) -> Self {
+        self.host_media_handlers.push(declaration);
+        self
+    }
+
+    /// 🌊️ Declares one immutable `flow.extension` executable descriptor for runtime catalogue merging.
+    pub fn flow_extension(mut self, declaration: FlowExtensionDeclaration) -> Self {
+        self.flow_extensions.push(declaration);
+        self
+    }
+
+    /// 🗂️ Declares an app-owned codec under a foreign document schema for the aggregate codec commit.
+    pub fn foreign_document_codec<A: ArtifactApp>(mut self, schema: impl Into<String>) -> Self {
+        self.foreign_document_codecs.push(crate::app::DocumentCodecSpec::foreign::<A>(schema));
+        self
+    }
+
     /// 🔗️ Declares a direct plugin dependency this plugin requires to load — contract freeze §3/§4.
     /// Repeatable; order matters only for extensions (`ExtensionBundle::extends` must equal
     /// `dependencies[0].plugin_id`), which plain plugins have no equivalent constraint for.
@@ -183,6 +217,7 @@ impl PluginBuilder<Ready> {
         let factory: Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static> = Box::new(move || Box::new(crate::app::VcsArtifactApp::with_registry(A::default(), registry.clone())));
         self.app_defs.push((app, factory));
         self.app_schema_descriptors.push(app_schema::<A>);
+        self.document_app_ids.push(A::APP_ID);
         self.owner_mutation_rosters.push(owner_mutation_roster::<A>);
         self
     }
@@ -255,12 +290,16 @@ impl PluginBuilder<Ready> {
             capabilities,
             commands,
             artifact_kinds,
+            host_media_handlers,
+            flow_extensions,
+            foreign_document_codecs,
             dependencies,
             contributions,
             owner_mutation_rosters,
             apps: _,
             app_defs,
             app_schema_descriptors,
+            document_app_ids,
             _state: _,
         } = self;
         let label = label.ok_or_else(|| PluginAssemblyError::new("plugin-assembly.label", "typestate-ready builder has no label"))?;
@@ -272,13 +311,36 @@ impl PluginBuilder<Ready> {
         for declaration in &artifacts {
             declaration.preflight(&plugin_id, &mut definitions)?;
         }
+        let mut declared_media_kinds = BTreeMap::new();
+        for spec in artifact_kinds.iter().chain(app_defs.iter().flat_map(|(app, _)| app.definition.artifact_kinds.iter())) {
+            if spec.id.trim().is_empty() || spec.schema.trim().is_empty() {
+                return Err(PluginAssemblyError::new("plugin-assembly.media-kind", "artifact-kind contributions require non-empty id and schema"));
+            }
+            if let Some(existing) = declared_media_kinds.get(&spec.id) {
+                if existing != spec {
+                    return Err(PluginAssemblyError::new("plugin-assembly.media-kind", format!("artifact kind {:?} has conflicting descriptors", spec.id)));
+                }
+            } else {
+                declared_media_kinds.insert(spec.id.clone(), spec.clone());
+            }
+        }
+        for declaration in &host_media_handlers {
+            declaration.preflight(&plugin_id, &declared_media_kinds)?;
+        }
+        for declaration in &flow_extensions {
+            declaration.preflight(&plugin_id)?;
+        }
+        let document_app_ids: BTreeSet<_> = document_app_ids.into_iter().collect();
+        for codec in &foreign_document_codecs {
+            codec.preflight_foreign(&document_app_ids)?;
+        }
         let mut app_schemas = Vec::new();
         for get_schema in app_schema_descriptors {
             if let Some(descriptor) = get_schema() {
                 app_schemas.push(descriptor);
             }
         }
-        let plan = crate::app::ArtifactRegistrationPlan::from_declarations(&artifacts, app_schemas);
+        let plan = crate::app::ArtifactRegistrationPlan::from_declarations(&artifacts, app_schemas, foreign_document_codecs, &plugin_id, host_media_handlers, flow_extensions);
         let (mut runtime, registry_plan) = plan.into_runtime(definitions)?;
 
         // 🗂️ Resolve every declared contribution against this plugin's own (now-final) id — pure,
@@ -331,6 +393,36 @@ impl Plugin {
 mod plugin_builder_dependency_tests {
     use super::*;
     use crate::app::ArtifactContribution;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    static MESH_DWG_EXECUTIONS: AtomicUsize = AtomicUsize::new(0);
+
+    fn host_media_kind() -> semio_framework::ArtifactKindSpec {
+        semio_framework::ArtifactKindSpec {
+            id: "3d.builder-test".into(),
+            name: "Builder Test 3D".into(),
+            source_format: "semio.builder-test.mesh/v1".into(),
+            component_kind: "builder-test".into(),
+            dimension: "3d".into(),
+            media_capability: semio_framework::OsMediaCapability::MeshOnly,
+            media_type: semio_framework::MediaType { class: semio_framework::MediaClass::ThreeD, form: semio_framework::MediaForm::Mesh },
+            schema: "semio.builder-test.mesh/v1".into(),
+            export_formats: Vec::new(),
+            import_formats: Vec::new(),
+            export_stdio_kinds: Vec::new(),
+            import_stdio_kinds: Vec::new(),
+        }
+    }
+
+    fn counting_mesh_dwg_importer(_mesh: &semio_framework::MeshData) -> Result<serde_json::Value, String> {
+        MESH_DWG_EXECUTIONS.fetch_add(1, Ordering::SeqCst);
+        Ok(serde_json::json!({ "bridge": "counting" }))
+    }
+
+    fn alternate_mesh_dwg_importer(_mesh: &semio_framework::MeshData) -> Result<serde_json::Value, String> {
+        MESH_DWG_EXECUTIONS.fetch_add(100, Ordering::SeqCst);
+        Ok(serde_json::json!({ "bridge": "alternate" }))
+    }
 
     #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
     struct DependencyTestSnapshot {
@@ -427,5 +519,77 @@ mod plugin_builder_dependency_tests {
         assert_eq!(plugin.manifest.contributions.len(), 1);
         assert_eq!(plugin.manifest.contributions[0].artifact_kind, "s.builder-test-dep-target-ok.thing");
         assert_eq!(plugin.manifest.contributions[0].mutations[0].mutation_id, "dep-target.document#builder-test-contributor-ok:add-value");
+    }
+
+    #[test]
+    fn host_media_contributions_are_idempotent_and_execute_only_at_runtime() {
+        MESH_DWG_EXECUTIONS.store(0, Ordering::SeqCst);
+        let kind = host_media_kind();
+        let bridge = HostMediaHandlerDeclaration::mesh_dwg_bridge("builder-test.media.mesh-dwg", kind.clone(), kind.schema.clone(), counting_mesh_dwg_importer).expect("typed bridge declaration");
+        let plugin = Plugin::builder("builder-test-media")
+            .label("Builder Test Media")
+            .version("0.1.0")
+            .artifact_kind(kind.clone())
+            .host_media_handler(bridge.clone())
+            .host_media_handler(bridge)
+            .try_build()
+            .expect("identical frozen host-media declarations are idempotent");
+        assert_eq!(MESH_DWG_EXECUTIONS.load(Ordering::SeqCst), 0, "assembly must never execute a media converter");
+        assert_eq!(plugin.host_media_handlers().len(), 1);
+        let result = plugin.import_mesh_dwg(crate::MeshDwgBridgeRequest { artifact_kind: kind.id.clone(), document_schema: kind.schema.clone(), mesh: semio_framework::MeshData::default() }).expect("runtime bridge execution");
+        assert_eq!(result.document, serde_json::json!({ "bridge": "counting" }));
+        assert_eq!(MESH_DWG_EXECUTIONS.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn host_media_conflicts_reject_the_whole_candidate_before_execution() {
+        MESH_DWG_EXECUTIONS.store(0, Ordering::SeqCst);
+        let kind = host_media_kind();
+        let first = HostMediaHandlerDeclaration::mesh_dwg_bridge("builder-test.media.first", kind.clone(), kind.schema.clone(), counting_mesh_dwg_importer).expect("first bridge");
+        let second = HostMediaHandlerDeclaration::mesh_dwg_bridge("builder-test.media.second", kind.clone(), kind.schema.clone(), alternate_mesh_dwg_importer).expect("second bridge");
+        let error = Plugin::builder("builder-test-media-conflict")
+            .label("Builder Test Media Conflict")
+            .version("0.1.0")
+            .artifact_kind(kind)
+            .host_media_handler(first)
+            .host_media_handler(second)
+            .try_build()
+            .err()
+            .expect("two executable identities may not own one host-media target");
+        assert_eq!(error.code, "plugin-assembly.host-media-target");
+        assert_eq!(MESH_DWG_EXECUTIONS.load(Ordering::SeqCst), 0, "a rejected aggregate must have no runtime side effect");
+    }
+
+    #[test]
+    fn flow_extension_descriptors_are_idempotent_and_conflict_rejecting() {
+        let manifest = FlowExtensionManifest::new("builder-test-flow", "Builder Test Flow", "0.1.0").expect("typed manifest");
+        let executable = FlowExtensionExecutableIdentity::native("semio.builder-test.flow", "semio.builder-test.flow.module", "activate").expect("typed executable identity");
+        let declaration = FlowExtensionDeclaration::new("builder-test.flow.contribution", manifest.clone(), executable.clone()).expect("flow declaration");
+        let plugin = Plugin::builder("builder-test-flow")
+            .label("Builder Test Flow")
+            .version("0.1.0")
+            .flow_extension(declaration.clone())
+            .flow_extension(declaration)
+            .try_build()
+            .expect("identical frozen flow declarations are idempotent");
+        assert_eq!(plugin.flow_extensions().len(), 1);
+        let conflict = FlowExtensionDeclaration::new("builder-test.flow.other", manifest, executable).expect("conflicting target descriptor");
+        let error = Plugin::builder("builder-test-flow-conflict")
+            .label("Builder Test Flow Conflict")
+            .version("0.1.0")
+            .flow_extension(
+                plugin
+                    .flow_extensions()
+                    .into_iter()
+                    .next()
+                    .map(|descriptor| FlowExtensionDeclaration::new(descriptor.id, descriptor.manifest, descriptor.executable_identity))
+                    .expect("a flow extension to rebuild from")
+                    .expect("the rebuilt descriptor to be valid"),
+            )
+            .flow_extension(conflict)
+            .try_build()
+            .err()
+            .expect("one flow extension id may have exactly one contribution owner");
+        assert_eq!(error.code, "plugin-assembly.flow-extension-target");
     }
 }

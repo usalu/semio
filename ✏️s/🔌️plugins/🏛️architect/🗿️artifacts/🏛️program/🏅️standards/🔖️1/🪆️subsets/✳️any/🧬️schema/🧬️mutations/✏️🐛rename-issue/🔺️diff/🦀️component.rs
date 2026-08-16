@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🐛issues` per Wave C.
 
 use super::mutation::RenameIssue;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramIssuesDelta, ProgramIssuesPatchEntry};
 use crate::artifacts::program::registers::IssuePatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameIssue, _base: &ProgramSnapshot) -> ProgramDiff {

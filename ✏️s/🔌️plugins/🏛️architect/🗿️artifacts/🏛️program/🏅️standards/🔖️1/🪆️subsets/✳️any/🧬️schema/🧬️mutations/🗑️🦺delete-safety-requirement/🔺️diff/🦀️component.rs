@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🦺safety` per Wave C.
 
 use super::mutation::DeleteSafetyRequirement;
+use crate::artifacts::program::diff::ProgramSafetyDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramSafetyDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteSafetyRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

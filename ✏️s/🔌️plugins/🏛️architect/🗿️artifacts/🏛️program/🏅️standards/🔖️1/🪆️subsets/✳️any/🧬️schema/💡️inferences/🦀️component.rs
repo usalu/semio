@@ -25,7 +25,7 @@ use super::topology::{compute_topology, ProgramTopology};
 /// Value`-style read-only projection that used to live on the artifact-tree engine hub. Mutating /
 /// constructing counterparts (marked in each region below) moved to `crate::apps::architect`'s own
 /// `//#region 🔧️Behavior` instead, since they take `&mut ProgramSnapshot`.
-use crate::artifacts::program::kernel::{DiagnosticSeverity, EntityHeader, EntityId, LifecycleStatus, Priority, ProgramDiagnostic, PluginError};
+use crate::artifacts::program::kernel::{DiagnosticSeverity, EntityHeader, EntityId, LifecycleStatus, PluginError, Priority, ProgramDiagnostic};
 use crate::artifacts::program::registers::{AdjacencyKind, AnalysisKind, AuditEvent, RelationshipKind, ReportKind, RiskLevel, SearchFilter, SeparationKind, ValidationStatus};
 use crate::artifacts::program::ARCHITECT_PROGRAM_SCHEMA;
 use semio_s_plugin_stdio::artifacts::csv as stdio_csv;
@@ -670,8 +670,8 @@ pub fn validate_plugin(program: &ProgramSnapshot) -> Vec<ProgramDiagnostic> {
 mod tests_validate {
     use super::*;
     use crate::artifacts::program::kernel::EntityHeader;
-    use crate::artifacts::program::{empty_plugin, sample_plugin};
     use crate::artifacts::program::registers::Requirement;
+    use crate::artifacts::program::{empty_plugin, sample_plugin};
 
     #[test]
     fn sample_plugin_passes_validation() {
@@ -1213,13 +1213,7 @@ fn compliance_summary(program: &ProgramSnapshot) -> ProgramReport {
 
 fn cost_summary(program: &ProgramSnapshot) -> ProgramReport {
     let analysis = run_analysis(program, AnalysisKind::Cost);
-    ProgramReport {
-        kind: ReportKind::CostSummary,
-        title: "Cost Summary".into(),
-        generated_at: timestamp(program),
-        sections: vec![ReportSection { heading: analysis.title, body: analysis.summary, bullets: analysis.findings }],
-        entity_ids: Vec::new(),
-    }
+    ProgramReport { kind: ReportKind::CostSummary, title: "Cost Summary".into(), generated_at: timestamp(program), sections: vec![ReportSection { heading: analysis.title, body: analysis.summary, bullets: analysis.findings }], entity_ids: Vec::new() }
 }
 
 fn schedule_summary(program: &ProgramSnapshot) -> ProgramReport {
@@ -2201,7 +2195,10 @@ pub fn export_relationships_csv(program: &ProgramSnapshot) -> Result<String, Plu
 
 fn rows_to_csv_snapshot(rows: &[RegisterCsvRow]) -> stdio_csv::CsvSnapshot {
     let mut records = vec![csv_record(&REGISTER_ROW_COLUMNS)];
-    records.extend(rows.iter().map(|row| { let cols = row.columns(); csv_record(&[&cols[0], &cols[1], &cols[2], &cols[3], &cols[4], &cols[5], &cols[6]]) }));
+    records.extend(rows.iter().map(|row| {
+        let cols = row.columns();
+        csv_record(&[&cols[0], &cols[1], &cols[2], &cols[3], &cols[4], &cols[5], &cols[6]])
+    }));
     stdio_csv::CsvSnapshot { schema: stdio_csv::STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records }
 }
 
@@ -2289,15 +2286,7 @@ fn collect_rows(program: &ProgramSnapshot) -> Vec<RegisterCsvRow> {
 }
 
 fn header_row(register: &str, header: &EntityHeader, source: Option<String>) -> RegisterCsvRow {
-    RegisterCsvRow {
-        register: register.into(),
-        id: header.id.clone(),
-        name: header.name.clone(),
-        status: format!("{:?}", header.status),
-        priority: format!("{:?}", header.priority),
-        tags: header.tags.join(";"),
-        source: source.unwrap_or_default(),
-    }
+    RegisterCsvRow { register: register.into(), id: header.id.clone(), name: header.name.clone(), status: format!("{:?}", header.status), priority: format!("{:?}", header.priority), tags: header.tags.join(";"), source: source.unwrap_or_default() }
 }
 //#endregion 📤️ExchangeReads
 

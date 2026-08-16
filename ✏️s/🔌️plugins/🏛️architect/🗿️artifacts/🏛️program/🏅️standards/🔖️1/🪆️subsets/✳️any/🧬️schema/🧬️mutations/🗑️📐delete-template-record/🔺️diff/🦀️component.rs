@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📐templates` per Wave C.
 
 use super::mutation::DeleteTemplateRecord;
+use crate::artifacts::program::diff::ProgramTemplatesDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramTemplatesDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteTemplateRecord, _base: &ProgramSnapshot) -> ProgramDiff {

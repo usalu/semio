@@ -8,7 +8,6 @@ type Procedural3dConfig {
   generationPreviewText: String @state(class: CONFIG)
   activeUtilityId: String! @state(class: CONFIG)
   locale: String! @state(class: CONFIG)
-  contributionsJson: String! @state(class: CONFIG)
 }
 type CameraJson {
   x: Float!

@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `ℹ️information` per Wave C.
 
 use super::mutation::CreateInformationRequirement;
+use crate::artifacts::program::diff::ProgramInformationDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramInformationDelta};
 
 /// 🌱️ `added = [payload row]` — the row lands at the end of `program.information` on apply.
 pub fn diff(payload: &CreateInformationRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

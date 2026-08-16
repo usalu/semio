@@ -70,9 +70,7 @@ pub fn empty_wires_snapshot() -> WiresSnapshot {
 pub type WiresContentChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot>;
 
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{
-    GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,
-};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
 
 /// 🏷️ `wires.node` is the honest string boundary carrying the FULL raw board node `DslValue` (every
@@ -238,12 +236,8 @@ pub fn wires_content_child_handle_and_cache(nodes: Vec<DslValue>, edges: Vec<Dsl
 /// (`DslValue::Null`), matching the old `BoardFixtureDsl.meta`'s `skip_serializing_if` behavior.
 pub fn wires_working_board(snapshot: &WiresSnapshot) -> DslValue {
     let scene = wires_working_scene(snapshot);
-    let mut entries: Vec<(String, DslValue)> = vec![
-        ("schema".into(), DslValue::String(MINDMAP_BOARD_SCHEMA.into())),
-        ("camera".into(), snapshot.camera.clone()),
-        ("nodes".into(), DslValue::Array(scene.nodes)),
-        ("edges".into(), DslValue::Array(scene.edges)),
-    ];
+    let mut entries: Vec<(String, DslValue)> =
+        vec![("schema".into(), DslValue::String(MINDMAP_BOARD_SCHEMA.into())), ("camera".into(), snapshot.camera.clone()), ("nodes".into(), DslValue::Array(scene.nodes)), ("edges".into(), DslValue::Array(scene.edges))];
     if !matches!(snapshot.meta, DslValue::Null) {
         entries.push(("meta".into(), snapshot.meta.clone()));
     }
@@ -267,7 +261,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: MINDMAP_WIRES_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md", "stdio.png", "stdio.svg"],
+        export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md", "stdio.png", "stdio.svg"],
         import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md", "stdio.png", "stdio.svg"],
     }
 }
@@ -323,28 +317,68 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::wires::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("WiresComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
+//#region 🔖️Declaration
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.wires")?)
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.schema.artifact")?, ArtifactCapabilityKind::schema())
+                .descriptor(b"s.reasoning.wires")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.reasoning.wires")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.inference.artifact")?, ArtifactCapabilityKind::inference())
+                .descriptor(b"s.reasoning.wires.inference")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.reasoning.wires.inference")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.wires@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.wires@1/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.composer.svg")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.svg@1.1/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.svg@1.1/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.composer.csv")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.csv@rfc4180/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.csv@rfc4180/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.composer.md")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.md@commonmark/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.md@commonmark/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.composer.png")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.png@1.2/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.png@1.2/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.composer.json")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.json@rfc8259/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.codec.document")?, ArtifactCapabilityKind::codec())
+                .descriptor(b"reasoning.wires.fixture:wires")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "reasoning.wires.fixture")?)?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "wires")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Mindmap Wires")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Mindmap Wires")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Mindmap-Wires")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Mindmap-Wires")?)?,
+        )
 }
-//#endregion 🚪️DerivedIoRegistry
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+        .schema(crate::artifacts::wires::schema::wires_artifact_schema_descriptor())
+        .inferences([crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::wires_artifact_inference_descriptor()])
+        .composers(crate::artifacts::wires::standards::v1::subsets::any::io::io_registry::entries())
+        .document_codec::<crate::apps::wires::ReasoningWiresPlayApp>()
+        .try_build()
+}
+//#endregion 🔖️Declaration

@@ -260,6 +260,18 @@ impl IoRouter {
             .collect();
         serde_json::to_vec(&dialects).map_err(PluginHostError::Json)
     }
+
+    /// ✂️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (W2-A): drops
+    /// `plugin_id`'s runtime handle and every route it owns — required before a hot-reloaded
+    /// plugin can re-register a FRESH `Arc<WasmPluginRuntime>` under the same id (`register_plugin`'s
+    /// `PluginRuntimeConflict` check would otherwise reject the new `Arc` as a different pointer for
+    /// an already-registered plugin id) and before an unload actually drops the runtime.
+    pub fn unregister_plugin(&self, plugin_id: &str) -> Result<(), PluginHostError> {
+        let mut state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
+        state.runtimes.remove(plugin_id);
+        state.routes.retain(|_, owner| owner != plugin_id);
+        Ok(())
+    }
 }
 
 impl Default for IoRouter {
@@ -283,9 +295,20 @@ pub struct GuestArtifactInferenceMetadata {
     pub inference_schema_version: u32,
     pub algorithm_version: u32,
     pub policy_version: u32,
+    /// 🎯️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS: `Some(plugin_id)` when
+    /// this row is a CONTRIBUTED inference (contract §3/§4); absent/`None`, or equal to `owner`,
+    /// for an ordinary owner-authored inference. Additive+defaulted so today's guest wire (which
+    /// never sends this field) still decodes unchanged.
+    #[serde(default)]
+    pub contributor: Option<String>,
+    /// 🕸️ Other `inference_schema` ids (same `artifact_kind`) this inference's own computation
+    /// consumes the RESULT of — the per-artifact `depends_on` DAG `ArtifactInferenceRouter` toposorts
+    /// at registration and injects into `artifact-inference-request.dependencies` at call time.
+    #[serde(default)]
+    pub depends_on: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct InferenceRouteRequest {
     wire_version: u32,
@@ -311,7 +334,7 @@ struct InferenceRouteRequest {
     dependencies: Vec<(String, Vec<u8>)>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct InferenceRouteBudget {
     allocation_bytes: u64,
@@ -319,7 +342,7 @@ struct InferenceRouteBudget {
     recursion_depth: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 enum InferenceRouteCacheMode {
     Cold,
@@ -365,19 +388,40 @@ impl ArtifactInferenceRouter {
         Self { routes: Mutex::new(BTreeMap::new()), runtimes: Mutex::new(HashMap::new()) }
     }
 
-    pub fn register_plugin(&self, plugin_id: &str, runtime: Arc<WasmPluginRuntime>) -> Result<(), PluginHostError> {
+    /// 📌️ `dependencies` is the reporting plugin's OWN declared `PluginManifest.dependencies` —
+    /// required to gate a CONTRIBUTED row (contract §4 rule 1, same rule `ArtifactMutationRouter`
+    /// applies): its `contributor` must equal `plugin_id`, and `owner` must be a direct entry of
+    /// `dependencies`. Also toposorts every registered row's `depends_on` DAG (existing rows plus
+    /// this registration's own) and rejects a cycle before committing anything.
+    pub fn register_plugin(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], runtime: Arc<WasmPluginRuntime>) -> Result<(), PluginHostError> {
         let metadata: Vec<GuestArtifactInferenceMetadata> = serde_json::from_slice(&runtime.list_artifact_inferences()?)?;
+        for item in &metadata {
+            if let Some(contributor) = &item.contributor {
+                if contributor != &item.owner {
+                    if contributor != plugin_id {
+                        return Err(PluginHostError::Plugin(format!("inference metadata for {}/{} claims contributor `{contributor}` but was reported by plugin `{plugin_id}`", item.artifact_kind, item.inference_schema)));
+                    }
+                    if !dependencies.iter().any(|dependency| dependency.plugin_id == item.owner) {
+                        return Err(PluginHostError::Plugin(format!("plugin `{plugin_id}` contributes an inference on `{}` (owner `{}`) without declaring `{}` as a dependency (contract §4 rule 1)", item.artifact_kind, item.owner, item.owner)));
+                    }
+                }
+            }
+        }
+
         let mut routes = self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference routes"))?;
-        for item in metadata {
+        let mut candidate = routes.clone();
+        for item in &metadata {
             let key = (item.artifact_kind.clone(), item.inference_schema.clone());
-            if let Some((existing_plugin, existing)) = routes.get(&key) {
-                if existing_plugin == plugin_id && existing == &item {
+            if let Some((existing_plugin, existing)) = candidate.get(&key) {
+                if existing_plugin == plugin_id && existing == item {
                     continue;
                 }
                 return Err(PluginHostError::Plugin(format!("conflicting artifact inference owner for {}/{}: {} {:?}, incoming {} {:?}", key.0, key.1, existing_plugin, existing, plugin_id, item)));
             }
-            routes.insert(key, (plugin_id.to_string(), item));
+            candidate.insert(key, (plugin_id.to_string(), item.clone()));
         }
+        validate_inference_dependency_graph(&candidate)?;
+        *routes = candidate;
         drop(routes);
         self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference runtimes"))?.insert(plugin_id.to_string(), runtime);
         Ok(())
@@ -388,19 +432,137 @@ impl ArtifactInferenceRouter {
     }
 
     pub fn infer(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
-        let route: InferenceRouteRequest = serde_json::from_slice(request)?;
-        let owner = self
-            .routes
-            .lock()
-            .map_err(|_| PluginHostError::LockPoisoned("artifact inference routes"))?
-            .get(&(route.artifact_kind.clone(), route.inference_schema.clone()))
-            .map(|(plugin_id, _)| plugin_id.clone())
-            .ok_or_else(|| PluginHostError::Plugin(format!("no guest inference route for {}/{}", route.artifact_kind, route.inference_schema)))?;
+        self.infer_with_visited(request, &mut Vec::new())
+    }
+
+    /// 🕸️ Contract §6: before dispatching to the owner/contributor's own `artifact-infer`, resolves
+    /// this route's `depends_on` (same `artifact_kind`, per `GuestArtifactInferenceMetadata`'s own
+    /// doc) by recursively computing each dependency's OWN result first, injecting the pairs into
+    /// `dependencies: Vec<(inference_schema, result_wire_bytes)>` on the outgoing request — exactly
+    /// the WIT `artifact-inference-request.dependencies: list<tuple<string, list<u8>>>` shape.
+    /// `visited` is the runtime counterpart of `register_plugin`'s registration-time toposort — a
+    /// registered graph can still recurse infinitely if two rows' `depends_on` disagree with what
+    /// was toposorted (e.g. a hot-reloaded plugin), so this is real defense-in-depth, not
+    /// redundant.
+    fn infer_with_visited(&self, request: &[u8], visited: &mut Vec<String>) -> Result<Vec<u8>, PluginHostError> {
+        let mut route: InferenceRouteRequest = serde_json::from_slice(request)?;
+        if visited.contains(&route.inference_schema) {
+            return Err(PluginHostError::Plugin(format!("inference dependency cycle at call time: {} -> {}", visited.join(" -> "), route.inference_schema)));
+        }
+        let (owner, own_metadata) = {
+            let routes = self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference routes"))?;
+            routes
+                .get(&(route.artifact_kind.clone(), route.inference_schema.clone()))
+                .map(|(plugin_id, metadata)| (plugin_id.clone(), metadata.clone()))
+                .ok_or_else(|| PluginHostError::Plugin(format!("no guest inference route for {}/{}", route.artifact_kind, route.inference_schema)))?
+        };
+
+        if !own_metadata.depends_on.is_empty() {
+            visited.push(route.inference_schema.clone());
+            let mut dependencies = Vec::with_capacity(own_metadata.depends_on.len());
+            for dependency_schema in &own_metadata.depends_on {
+                let dependency_metadata = {
+                    let routes = self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference routes"))?;
+                    routes.get(&(route.artifact_kind.clone(), dependency_schema.clone())).map(|(_, metadata)| metadata.clone()).ok_or_else(|| PluginHostError::Plugin(format!("inference `{}` declares depends_on `{dependency_schema}` which is not registered for artifact kind `{}`", route.inference_schema, route.artifact_kind)))?
+                };
+                let dependency_request = build_dependency_inference_request(&route, &dependency_metadata);
+                let dependency_request_bytes = serde_json::to_vec(&dependency_request).map_err(PluginHostError::Json)?;
+                let dependency_result_bytes = self.infer_with_visited(&dependency_request_bytes, visited)?;
+                dependencies.push((dependency_schema.clone(), dependency_result_bytes));
+            }
+            visited.pop();
+            route.dependencies = dependencies;
+        }
+
+        let request = serde_json::to_vec(&route).map_err(PluginHostError::Json)?;
         let runtime = self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference runtimes"))?.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("inference owner `{owner}` is not loaded")))?;
-        let result = runtime.artifact_infer(request)?;
+        let result = runtime.artifact_infer(&request)?;
         let echoed: InferenceRouteResult = serde_json::from_slice(&result)?;
         validate_inference_echo(&route, &echoed)?;
         Ok(result)
+    }
+
+    /// ✂️ Drops every route reported by `plugin_id` — called on unload/hot-reload.
+    pub fn unregister_plugin(&self, plugin_id: &str) -> Result<(), PluginHostError> {
+        self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference routes"))?.retain(|_, (owner, _)| owner != plugin_id);
+        self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference runtimes"))?.remove(plugin_id);
+        Ok(())
+    }
+}
+
+/// 🕸️ DFS cycle detector over the `depends_on` DAG among every row of `routes`, scoped by
+/// `inference_schema` id (`depends_on` entries name a sibling `inference_schema` within the SAME
+/// `artifact_kind`, per `GuestArtifactInferenceMetadata`'s own field doc). Genuinely new logic —
+/// distinct from W0-C's plugin-manifest toposort, a different domain (inference schemas within one
+/// artifact kind, not plugins).
+fn validate_inference_dependency_graph(routes: &BTreeMap<(String, String), (String, GuestArtifactInferenceMetadata)>) -> Result<(), PluginHostError> {
+    let mut adjacency: BTreeMap<(&str, &str), Vec<&str>> = BTreeMap::new();
+    for ((artifact_kind, inference_schema), (_, item)) in routes {
+        adjacency.entry((artifact_kind.as_str(), inference_schema.as_str())).or_default().extend(item.depends_on.iter().map(|dep| dep.as_str()));
+    }
+
+    #[derive(Clone, Copy, PartialEq)]
+    enum Mark {
+        Visiting,
+        Done,
+    }
+
+    fn visit<'a>(artifact_kind: &'a str, node: &'a str, adjacency: &BTreeMap<(&'a str, &'a str), Vec<&'a str>>, marks: &mut BTreeMap<(&'a str, &'a str), Mark>, stack: &mut Vec<&'a str>) -> Result<(), PluginHostError> {
+        match marks.get(&(artifact_kind, node)) {
+            Some(Mark::Done) => return Ok(()),
+            Some(Mark::Visiting) => return Err(PluginHostError::Plugin(format!("inference dependency cycle on `{artifact_kind}`: {} -> {node}", stack.join(" -> ")))),
+            None => {}
+        }
+        marks.insert((artifact_kind, node), Mark::Visiting);
+        stack.push(node);
+        if let Some(deps) = adjacency.get(&(artifact_kind, node)) {
+            for dep in deps {
+                visit(artifact_kind, dep, adjacency, marks, stack)?;
+            }
+        }
+        stack.pop();
+        marks.insert((artifact_kind, node), Mark::Done);
+        Ok(())
+    }
+
+    let mut marks = BTreeMap::new();
+    let mut stack = Vec::new();
+    for (artifact_kind, node) in adjacency.keys() {
+        visit(artifact_kind, node, &adjacency, &mut marks, &mut stack)?;
+    }
+    Ok(())
+}
+
+/// 🎞️ Builds the outgoing request for one `depends_on` entry: identity fields (`owner`/`artifact_schema*`/
+/// `document_schema*`/`inference_schema*`/`algorithm_version`/`policy_version`) come from the
+/// DEPENDENCY's own registered metadata; caller-context fields (`revision`/`generation`/
+/// `source_dialect`/`policy`/`budgets`/`cancellation_id`/`requested_cache_mode`/`canonical_payload`)
+/// are inherited from the parent request — the same underlying artifact source, viewed through a
+/// different inference facet. `previous_state` always starts fresh (`None`): each dependency
+/// resolves its own current result, not a cached delta.
+fn build_dependency_inference_request(base: &InferenceRouteRequest, dependency: &GuestArtifactInferenceMetadata) -> InferenceRouteRequest {
+    InferenceRouteRequest {
+        wire_version: base.wire_version,
+        owner: dependency.owner.clone(),
+        artifact_kind: base.artifact_kind.clone(),
+        artifact_schema: dependency.artifact_schema.clone(),
+        artifact_schema_version: dependency.artifact_schema_version,
+        document_schema: dependency.document_schema.clone(),
+        document_schema_version: dependency.document_schema_version,
+        inference_schema: dependency.inference_schema.clone(),
+        inference_schema_version: dependency.inference_schema_version,
+        algorithm_version: dependency.algorithm_version,
+        policy_version: dependency.policy_version,
+        revision: base.revision,
+        generation: base.generation,
+        source_dialect: base.source_dialect.clone(),
+        policy: base.policy.clone(),
+        budgets: base.budgets.clone(),
+        cancellation_id: base.cancellation_id.clone(),
+        previous_state: None,
+        requested_cache_mode: base.requested_cache_mode.clone(),
+        canonical_payload: base.canonical_payload.clone(),
+        dependencies: Vec::new(),
     }
 }
 
@@ -498,6 +660,1563 @@ mod artifact_inference_router_tests {
     }
 }
 //#endregion 💡️InferenceRouter
+
+//#region 🔖️PluginGraph
+/// 🕸️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (W2-A host wave): the
+/// registered set of every loaded plugin's/extension's `PluginManifest`, validated against
+/// contract freeze §4 rule 5 by calling straight through to W0-C's PURE `semio_framework::
+/// {validate_dependency_graph, resolve_load_order, dependents}` — this type owns none of that
+/// graph logic itself, only the registration/lifecycle bookkeeping `runtime_for`
+/// (`🏃️run/🦀️component.rs`) needs to load a dependency before its dependent and to gate
+/// hot-reload/unload against a plugin's live dependents (scout-2 §3/§5: neither existed before
+/// this ticket).
+pub struct PluginGraph {
+    state: Mutex<BTreeMap<String, PluginManifest>>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum PluginGraphError {
+    #[error(transparent)]
+    Graph(#[from] semio_framework::DependencyGraphError),
+    #[error("plugin `{plugin_id}` cannot be unloaded: still depended on by {dependents:?}")]
+    UnloadBlocked { plugin_id: String, dependents: Vec<String> },
+    #[error("plugin `{plugin_id}` is not registered")]
+    Unknown { plugin_id: String },
+    #[error("plugin graph lock poisoned")]
+    LockPoisoned,
+}
+
+impl PluginGraph {
+    pub fn new() -> Self {
+        Self { state: Mutex::new(BTreeMap::new()) }
+    }
+
+    fn lock(&self) -> Result<std::sync::MutexGuard<'_, BTreeMap<String, PluginManifest>>, PluginGraphError> {
+        self.state.lock().map_err(|_| PluginGraphError::LockPoisoned)
+    }
+
+    /// 🔗️ Why a contributor may not act on `owner`'s artifact right now, if anything: `None` means
+    /// the dependency is declared, the owner is loaded, and its version satisfies the requirement.
+    /// Load-time registration already rejects all three, but a transaction can still meet them at
+    /// dispatch time — an owner unloaded after registration, or a contributor loaded against a
+    /// different build — so the transaction path asks again rather than assuming.
+    pub fn contribution_block(&self, contributor: &str, owner: &str) -> Result<Option<(&'static str, String)>, PluginGraphError> {
+        let state = self.lock()?;
+        let Some(contributor_manifest) = state.get(contributor) else {
+            return Ok(Some(("transaction.dependency-missing", format!("contributor `{contributor}` is not loaded"))));
+        };
+        let Some(dependency) = contributor_manifest.dependencies.iter().find(|dependency| dependency.plugin_id == owner) else {
+            return Ok(Some(("transaction.contribution-not-permitted", format!("`{contributor}` does not declare `{owner}` as a dependency"))));
+        };
+        let Some(owner_manifest) = state.get(owner) else {
+            return Ok(Some(("transaction.dependency-missing", format!("`{contributor}` depends on `{owner}`, which is not loaded"))));
+        };
+        match semio_framework::Version::parse(&owner_manifest.version) {
+            Ok(version) if dependency.version.matches(&version) => Ok(None),
+            Ok(version) => Ok(Some(("transaction.version-mismatch", format!("`{contributor}` requires `{owner}` {}, but the loaded build is {version}", dependency.version)))),
+            Err(error) => Ok(Some(("transaction.version-mismatch", format!("`{owner}`'s version {:?} is unparseable: {error}", owner_manifest.version)))),
+        }
+    }
+
+    /// ✅️ Registers (or replaces) `manifest`'s entry, re-validating the WHOLE resulting graph
+    /// before committing — an invalid addition (missing dependency, version mismatch, cycle)
+    /// leaves the previously-registered set untouched.
+    pub fn register(&self, manifest: PluginManifest) -> Result<(), PluginGraphError> {
+        let mut state = self.lock()?;
+        let mut candidate = state.clone();
+        candidate.insert(manifest.plugin_id.clone(), manifest);
+        let list: Vec<PluginManifest> = candidate.values().cloned().collect();
+        // 🪪️ `resolve_load_order` (not `validate_dependency_graph` alone) is what actually detects a
+        // CYCLE — per W0-C's own report: "a real cycle among present plugins passes validation and
+        // is caught by the toposort leftover-set walk". `validate_dependency_graph` alone only
+        // catches missing-dependency/version-mismatch.
+        semio_framework::resolve_load_order(&list)?;
+        *state = candidate;
+        Ok(())
+    }
+
+    /// 🩹️ Contract §4.5 hot-reload half: re-validates the graph as it would look with `plugin_id`
+    /// replaced by `new_manifest` — in particular every OTHER plugin's dependency ON `plugin_id`
+    /// is re-checked against `new_manifest.version`, so a reload that would break a live
+    /// dependent's contribution is rejected before the swap. Does not mutate on failure.
+    pub fn prepare_hot_reload(&self, new_manifest: &PluginManifest) -> Result<(), PluginGraphError> {
+        let state = self.lock()?;
+        let mut candidate = state.clone();
+        candidate.insert(new_manifest.plugin_id.clone(), new_manifest.clone());
+        let list: Vec<PluginManifest> = candidate.values().cloned().collect();
+        semio_framework::resolve_load_order(&list)?;
+        Ok(())
+    }
+
+    /// ✅️ Commits `new_manifest` after `prepare_hot_reload` has already validated it.
+    pub fn commit_hot_reload(&self, new_manifest: PluginManifest) -> Result<(), PluginGraphError> {
+        self.register(new_manifest)
+    }
+
+    /// 🔒️ Contract §4.5 unload half: refuses while any OTHER registered plugin still depends on
+    /// `plugin_id` (typed `UnloadBlocked`, names every blocking dependent).
+    pub fn guard_unload(&self, plugin_id: &str) -> Result<(), PluginGraphError> {
+        let blockers = self.dependents(plugin_id)?;
+        if !blockers.is_empty() {
+            return Err(PluginGraphError::UnloadBlocked { plugin_id: plugin_id.to_string(), dependents: blockers });
+        }
+        Ok(())
+    }
+
+    /// ✂️ Removes `plugin_id`'s registration — callers MUST call `guard_unload` first.
+    pub fn unregister(&self, plugin_id: &str) -> Result<(), PluginGraphError> {
+        let mut state = self.lock()?;
+        state.remove(plugin_id).ok_or_else(|| PluginGraphError::Unknown { plugin_id: plugin_id.to_string() })?;
+        Ok(())
+    }
+
+    /// 🔢️ Deterministic dependency-respecting load order over every currently registered plugin.
+    pub fn load_order(&self) -> Result<Vec<String>, PluginGraphError> {
+        let state = self.lock()?;
+        let list: Vec<PluginManifest> = state.values().cloned().collect();
+        Ok(semio_framework::resolve_load_order(&list)?)
+    }
+
+    /// 👥️ Direct dependents of `plugin_id`, sorted.
+    pub fn dependents(&self, plugin_id: &str) -> Result<Vec<String>, PluginGraphError> {
+        let state = self.lock()?;
+        let list: Vec<PluginManifest> = state.values().cloned().collect();
+        Ok(semio_framework::dependents(&list, plugin_id))
+    }
+
+    pub fn manifest(&self, plugin_id: &str) -> Result<Option<PluginManifest>, PluginGraphError> {
+        Ok(self.lock()?.get(plugin_id).cloned())
+    }
+
+    pub fn is_registered(&self, plugin_id: &str) -> Result<bool, PluginGraphError> {
+        Ok(self.lock()?.contains_key(plugin_id))
+    }
+}
+
+impl Default for PluginGraph {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod plugin_graph_tests {
+    use super::*;
+
+    fn manifest(plugin_id: &str, version: &str, deps: &[(&str, &str)]) -> PluginManifest {
+        PluginManifest {
+            plugin_id: plugin_id.to_string(),
+            label: plugin_id.to_string(),
+            version: version.to_string(),
+            apps: vec![],
+            examples: vec![],
+            capabilities: vec![],
+            topic_contributions: vec![],
+            commands: vec![],
+            artifact_kinds: vec![],
+            dependencies: deps.iter().map(|(id, req)| semio_framework::PluginDependency::new(*id, semio_framework::VersionReq::parse(req).unwrap())).collect(),
+            contributions: vec![],
+        }
+    }
+
+    /// 🔗️ The three ways a contribution can be blocked at DISPATCH time are distinguishable — the
+    /// frozen taxonomy has separate codes for them, and collapsing "owner gone" into
+    /// "not permitted" would tell an operator to fix a declaration that is already correct.
+    #[test]
+    fn contribution_block_separates_missing_owner_from_version_mismatch_from_undeclared() {
+        let graph = PluginGraph::new();
+        graph.register(manifest("cad", "1.0.0", &[])).unwrap();
+        graph.register(manifest("aec", "1.0.0", &[("cad", "^1.0.0")])).unwrap();
+        assert_eq!(graph.contribution_block("aec", "cad").unwrap(), None, "a declared, satisfied dependency blocks nothing");
+
+        let (code, _) = graph.contribution_block("ghost", "cad").unwrap().expect("an unloaded contributor is blocked");
+        assert_eq!(code, "transaction.dependency-missing");
+
+        let (code, _) = graph.contribution_block("cad", "aec").unwrap().expect("an undeclared dependency is blocked");
+        assert_eq!(code, "transaction.contribution-not-permitted");
+
+        // 🛡️ The version branch is defence-in-depth, and this asserts WHY it cannot fire today rather
+        // than pretending to exercise it: `register` re-validates the whole graph, so swapping `cad`
+        // for a build `aec`'s requirement excludes is refused outright and the registered set keeps
+        // its invariant. The branch stays because `contribution_block` is called per transaction, and
+        // a future load path that mutates the set without that re-validation would otherwise hand a
+        // contributor an owner it was never compiled against.
+        let drift = graph.register(manifest("cad", "2.0.0", &[])).unwrap_err();
+        assert!(matches!(drift, PluginGraphError::Graph(semio_framework::DependencyGraphError::VersionMismatch { .. })));
+        assert_eq!(graph.contribution_block("aec", "cad").unwrap(), None, "the refused swap must leave the satisfied dependency intact");
+    }
+
+    #[test]
+    fn load_order_respects_a_real_dependency_edge() {
+        let graph = PluginGraph::new();
+        graph.register(manifest("base", "1.0.0", &[])).unwrap();
+        graph.register(manifest("dependent", "1.0.0", &[("base", "^1.0.0")])).unwrap();
+        assert_eq!(graph.load_order().unwrap(), vec!["base".to_string(), "dependent".to_string()]);
+        assert_eq!(graph.dependents("base").unwrap(), vec!["dependent".to_string()]);
+    }
+
+    #[test]
+    fn register_rejects_a_missing_dependency() {
+        let graph = PluginGraph::new();
+        let error = graph.register(manifest("dependent", "1.0.0", &[("missing", "*")])).unwrap_err();
+        assert!(matches!(error, PluginGraphError::Graph(semio_framework::DependencyGraphError::MissingDependency { .. })));
+        assert!(!graph.is_registered("dependent").unwrap(), "a rejected registration must not partially commit");
+    }
+
+    #[test]
+    fn register_rejects_a_version_mismatch() {
+        let graph = PluginGraph::new();
+        graph.register(manifest("base", "1.0.0", &[])).unwrap();
+        let error = graph.register(manifest("dependent", "1.0.0", &[("base", "^2.0.0")])).unwrap_err();
+        assert!(matches!(error, PluginGraphError::Graph(semio_framework::DependencyGraphError::VersionMismatch { .. })));
+    }
+
+    #[test]
+    fn a_later_registration_that_would_close_a_cycle_is_rejected() {
+        let graph = PluginGraph::new();
+        graph.register(manifest("a", "1.0.0", &[])).unwrap();
+        graph.register(manifest("b", "1.0.0", &[("a", "*")])).unwrap();
+        // Re-registering "a" (as if hot-reloading it) to depend on "b" would close a -> b -> a.
+        let error = graph.register(manifest("a", "1.0.0", &[("b", "*")])).unwrap_err();
+        assert!(matches!(error, PluginGraphError::Graph(semio_framework::DependencyGraphError::Cycle { .. })));
+    }
+
+    #[test]
+    fn unload_is_refused_while_a_dependent_is_registered() {
+        let graph = PluginGraph::new();
+        graph.register(manifest("base", "1.0.0", &[])).unwrap();
+        graph.register(manifest("dependent", "1.0.0", &[("base", "^1.0.0")])).unwrap();
+        let error = graph.guard_unload("base").unwrap_err();
+        assert!(matches!(error, PluginGraphError::UnloadBlocked { .. }));
+        graph.unregister("dependent").unwrap();
+        graph.guard_unload("base").expect("no dependents left, unload must now be permitted");
+    }
+
+    #[test]
+    fn hot_reload_is_rejected_when_it_would_break_a_live_dependents_version_requirement() {
+        let graph = PluginGraph::new();
+        graph.register(manifest("base", "1.0.0", &[])).unwrap();
+        graph.register(manifest("dependent", "1.0.0", &[("base", "^1.0.0")])).unwrap();
+        let error = graph.prepare_hot_reload(&manifest("base", "2.0.0", &[])).unwrap_err();
+        assert!(matches!(error, PluginGraphError::Graph(semio_framework::DependencyGraphError::VersionMismatch { .. })));
+        graph.prepare_hot_reload(&manifest("base", "1.1.0", &[])).expect("a caret-compatible bump must still validate");
+    }
+}
+//#endregion 🔖️PluginGraph
+
+//#region 🎯️MutationRouter
+/// 🗂️ Host mirror of the guest `WireMutationRosterEntry` (contract §6's `contributor.
+/// list-artifact-mutations` roster row) — `semio-framework-plugin-host` does not depend on the
+/// guest SDK crate (same reasoning `ExtensionManifest` below already documents), so this is a
+/// field-for-field JSON-shape-identical local copy, decoded off the same `store::pack_rt::
+/// encode_wire_value`/`dsl::to_dsl_value` wire `list_artifact_mutations()` returns.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HostMutationRosterEntry {
+    pub mutation_id: String,
+    pub verb: String,
+    pub entity: String,
+    pub kind: String,
+    pub record: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub contributor: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub artifact_kind: Option<String>,
+}
+
+/// 🎞️ Host mirror of `WireArtifactMutationPlanRequest`/`Result` (contract §5.3's `contributor.
+/// artifact-mutation-plan` call) — same "cannot depend on the guest SDK crate" reasoning.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct HostArtifactMutationPlanRequest {
+    pub artifact_kind: String,
+    pub mutation_id: String,
+    pub revision: u64,
+    pub generation: u64,
+    pub snapshot_pack: Vec<u8>,
+    pub payload: Vec<u8>,
+}
+
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct HostArtifactMutationPlanResult {
+    pub artifact_kind: String,
+    pub mutation_id: String,
+    pub revision: u64,
+    pub generation: u64,
+    pub owner_ops: Vec<Vec<u8>>,
+    pub label: String,
+    pub foreign: Vec<protocol::ForeignStep>,
+}
+
+/// 🪶️ `store::pack_rt::decode_wire_value` + `dsl::from_dsl_value` in one step — the exact decode
+/// idiom `WasmPluginRuntime::read_manifest` already uses, mirrored here for the two new
+/// `contributor` wire calls (contract §6): the guest's own `encode_wire_serialized` (`🔌️plugin/
+/// 🦀️component.rs`) is `store::pack_rt::encode_wire_value(&to_dsl_value(value))`, NOT plain JSON.
+fn decode_wire_dsl<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Result<T, PluginHostError> {
+    let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+    let value = store::pack_rt::renormalize_whole_number_floats(value);
+    dsl::from_dsl_value(value).map_err(PluginHostError::Plugin)
+}
+
+fn encode_wire_dsl<T: serde::Serialize>(value: &T) -> Result<Vec<u8>, PluginHostError> {
+    let dsl_value = dsl::to_dsl_value(value).map_err(PluginHostError::Plugin)?;
+    Ok(store::pack_rt::encode_wire_value(&dsl_value))
+}
+
+/// 🎯️ Contract §5.3: who answers a `(artifact_kind, mutation_id)` mutation — the artifact kind's
+/// own owning plugin, or a contributor plugin that declared it as a direct dependency.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum MutationOwnership {
+    Owner { plugin_id: String },
+    Contributed { plugin_id: String },
+}
+
+/// 🎯️ Merges every loaded plugin's `list-artifact-mutations` roster into one
+/// `(artifact_kind, mutation_id) -> Owner | Contributed{plugin}` table (contract §4 rules 1/3).
+/// Conflict rule mirrors `ArtifactInferenceRouter::register_plugin` EXACTLY: two sources claiming
+/// the same key is an error unless byte-identical.
+pub struct ArtifactMutationRouter {
+    routes: Mutex<BTreeMap<(String, String), (String, HostMutationRosterEntry)>>,
+}
+
+impl ArtifactMutationRouter {
+    pub fn new() -> Self {
+        Self { routes: Mutex::new(BTreeMap::new()) }
+    }
+
+    /// 📌️ Decodes `roster_wire_bytes` (the exact `contributor.list-artifact-mutations` wire
+    /// payload) and registers every row — see `register_roster` for the gating rules.
+    pub fn register_plugin(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], roster_wire_bytes: &[u8]) -> Result<(), PluginHostError> {
+        let roster: Vec<HostMutationRosterEntry> = decode_wire_dsl(roster_wire_bytes)?;
+        self.register_roster(plugin_id, dependencies, roster)
+    }
+
+    /// 🧪️ Pure half of `register_plugin`, split out for deterministic testing without any wasm —
+    /// mirrors `crate::app::register_contributions`'s own split in the guest SDK (W1-A). A
+    /// CONTRIBUTED row (`contributor`/`artifact_kind` both `Some`) is gated against contract §4
+    /// rule 1: `entry.contributor` must equal the reporting `plugin_id`, and `artifact_kind`'s
+    /// owning plugin must be a DIRECT entry of `dependencies`. An OWNER row (both `None`) is keyed
+    /// by the reporting plugin's own id and gated only by the ordinary conflict rule.
+    pub fn register_roster(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], roster: Vec<HostMutationRosterEntry>) -> Result<(), PluginHostError> {
+        let mut candidate_inserts = Vec::new();
+        for entry in roster {
+            let owner_of_kind = match (&entry.contributor, &entry.artifact_kind) {
+                (Some(contributor), Some(artifact_kind)) => {
+                    if contributor != plugin_id {
+                        return Err(PluginHostError::Plugin(format!("mutation roster row {:?} claims contributor `{contributor}` but was reported by plugin `{plugin_id}`", entry.mutation_id)));
+                    }
+                    let owner_plugin = semio_framework::io::ArtifactKindId::parse(artifact_kind).map_err(PluginHostError::Plugin)?.plugin().to_string();
+                    if !dependencies.iter().any(|dependency| dependency.plugin_id == owner_plugin) {
+                        return Err(PluginHostError::Plugin(format!("plugin `{plugin_id}` contributes a mutation on `{artifact_kind}` (owner `{owner_plugin}`) without declaring `{owner_plugin}` as a dependency (contract §4 rule 1)")));
+                    }
+                    artifact_kind.clone()
+                }
+                (None, None) => plugin_id.to_string(),
+                _ => return Err(PluginHostError::Plugin(format!("mutation roster row {:?} has exactly one of contributor/artifact_kind set — both or neither are required", entry.mutation_id))),
+            };
+            candidate_inserts.push(((owner_of_kind, entry.mutation_id.clone()), entry));
+        }
+
+        let mut routes = self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router"))?;
+        for (key, entry) in &candidate_inserts {
+            if let Some((existing_plugin, existing_entry)) = routes.get(key) {
+                let reporting_plugin = entry.contributor.as_deref().unwrap_or(plugin_id);
+                if existing_plugin != reporting_plugin || existing_entry != entry {
+                    return Err(PluginHostError::Plugin(format!("conflicting artifact mutation owner for {}/{}: {} {:?}, incoming {} {:?}", key.0, key.1, existing_plugin, existing_entry, reporting_plugin, entry)));
+                }
+            }
+        }
+        for (key, entry) in candidate_inserts {
+            let reporting_plugin = entry.contributor.clone().unwrap_or_else(|| plugin_id.to_string());
+            routes.insert(key, (reporting_plugin, entry));
+        }
+        Ok(())
+    }
+
+    /// 🔎️ Contract §5.3 resolution: who answers `(artifact_kind, mutation_id)`.
+    /// 🔎️ Two-tier lookup: a CONTRIBUTED row is keyed by the exact `(target_artifact_kind,
+    /// mutation_id)` (the wire row carries `artifact_kind`), but an OWNER row's wire shape carries
+    /// no `artifact_kind` at all — it is keyed by `(reporting_plugin_id, mutation_id)` at
+    /// registration (see `register_roster`). So an owner lookup first tries the exact
+    /// `(artifact_kind, mutation_id)` key (a contributed row on this exact kind), then falls back
+    /// to `(ArtifactKindId::parse(artifact_kind).plugin(), mutation_id)` — the artifact kind's own
+    /// owning plugin's roster.
+    pub fn resolve(&self, artifact_kind: &str, mutation_id: &str) -> Result<MutationOwnership, PluginHostError> {
+        let routes = self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router"))?;
+        if let Some((plugin_id, entry)) = routes.get(&(artifact_kind.to_string(), mutation_id.to_string())) {
+            return Ok(match &entry.contributor {
+                Some(_) => MutationOwnership::Contributed { plugin_id: plugin_id.clone() },
+                None => MutationOwnership::Owner { plugin_id: plugin_id.clone() },
+            });
+        }
+        if let Ok(parsed) = semio_framework::io::ArtifactKindId::parse(artifact_kind) {
+            if let Some((plugin_id, _entry)) = routes.get(&(parsed.plugin().to_string(), mutation_id.to_string())) {
+                return Ok(MutationOwnership::Owner { plugin_id: plugin_id.clone() });
+            }
+        }
+        Err(PluginHostError::Plugin(format!("no mutation route for {artifact_kind}/{mutation_id}")))
+    }
+
+    /// 📚️ Every registered roster row — surfaced for the dev-boot smoke line and for tests
+    /// ("assert the contributed roster is visible").
+    pub fn roster(&self) -> Result<Vec<HostMutationRosterEntry>, PluginHostError> {
+        Ok(self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router"))?.values().map(|(_, entry)| entry.clone()).collect())
+    }
+
+    /// ✂️ Drops every route reported by `plugin_id` (owner rows keyed under its own id, contributed
+    /// rows it reported under an owner artifact kind) — called on unload/hot-reload.
+    pub fn unregister_plugin(&self, plugin_id: &str) -> Result<(), PluginHostError> {
+        let mut routes = self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router"))?;
+        routes.retain(|_, (owner_plugin, entry)| {
+            let reporter = entry.contributor.as_deref().unwrap_or(owner_plugin.as_str());
+            reporter != plugin_id
+        });
+        Ok(())
+    }
+}
+
+impl Default for ArtifactMutationRouter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod artifact_mutation_router_tests {
+    use super::*;
+
+    fn owner_entry(mutation_id: &str) -> HostMutationRosterEntry {
+        HostMutationRosterEntry { mutation_id: mutation_id.to_string(), verb: "set".into(), entity: "widget".into(), kind: "set-color".into(), record: "widget.doc".into(), contributor: None, artifact_kind: None }
+    }
+
+    fn contributed_entry(mutation_id: &str, contributor: &str, artifact_kind: &str) -> HostMutationRosterEntry {
+        HostMutationRosterEntry { mutation_id: mutation_id.to_string(), verb: "annotate".into(), entity: "widget".into(), kind: "annotate".into(), record: "widget.doc".into(), contributor: Some(contributor.to_string()), artifact_kind: Some(artifact_kind.to_string()) }
+    }
+
+    // 🪪️ `io::ArtifactKindId::parse("s.owner.widget").plugin()` returns the BARE middle segment
+    // ("owner", not "s.owner") — plugin ids throughout these fixtures are deliberately bare to
+    // match the real grammar (a real loaded plugin's `manifest.plugin_id` is its Cargo component
+    // metadata id, e.g. `"cad"`, never `"s.cad"`; only a canonical artifact kind string carries the
+    // `s.` prefix).
+    #[test]
+    fn owner_and_contributed_rows_both_resolve_correctly() {
+        let router = ArtifactMutationRouter::new();
+        router.register_roster("owner", &[], vec![owner_entry("widget.doc#set-color")]).unwrap();
+        let dependency = semio_framework::PluginDependency::new("owner", semio_framework::VersionReq::Any);
+        router.register_roster("contributor", &[dependency], vec![contributed_entry("widget.doc#contributor:annotate", "contributor", "s.owner.widget")]).unwrap();
+
+        assert_eq!(router.resolve("s.owner.widget", "widget.doc#set-color").unwrap(), MutationOwnership::Owner { plugin_id: "owner".into() });
+        assert_eq!(router.resolve("s.owner.widget", "widget.doc#contributor:annotate").unwrap(), MutationOwnership::Contributed { plugin_id: "contributor".into() });
+        assert_eq!(router.roster().unwrap().len(), 2, "both the owner and the contributed row must be visible");
+    }
+
+    #[test]
+    fn a_contribution_onto_a_non_dependency_is_rejected() {
+        let router = ArtifactMutationRouter::new();
+        router.register_roster("owner", &[], vec![owner_entry("widget.doc#set-color")]).unwrap();
+        let error = router.register_roster("contributor", &[], vec![contributed_entry("widget.doc#contributor:annotate", "contributor", "s.owner.widget")]).unwrap_err();
+        assert!(matches!(error, PluginHostError::Plugin(_)));
+    }
+
+    #[test]
+    fn conflicting_owner_rows_are_rejected_unless_byte_identical() {
+        let router = ArtifactMutationRouter::new();
+        router.register_roster("a", &[], vec![owner_entry("widget.doc#set-color")]).unwrap();
+        let error = router.register_roster("a", &[], vec![HostMutationRosterEntry { verb: "different".into(), ..owner_entry("widget.doc#set-color") }]).unwrap_err();
+        assert!(matches!(error, PluginHostError::Plugin(_)));
+        router.register_roster("a", &[], vec![owner_entry("widget.doc#set-color")]).expect("byte-identical re-registration is idempotent");
+    }
+
+    #[test]
+    fn unregister_drops_only_that_plugins_rows() {
+        let router = ArtifactMutationRouter::new();
+        router.register_roster("owner", &[], vec![owner_entry("widget.doc#set-color")]).unwrap();
+        let dependency = semio_framework::PluginDependency::new("owner", semio_framework::VersionReq::Any);
+        router.register_roster("contributor", &[dependency], vec![contributed_entry("widget.doc#contributor:annotate", "contributor", "s.owner.widget")]).unwrap();
+        router.unregister_plugin("contributor").unwrap();
+        assert_eq!(router.roster().unwrap().len(), 1);
+        assert!(router.resolve("s.owner.widget", "widget.doc#set-color").is_ok());
+    }
+}
+//#endregion 🎯️MutationRouter
+
+//#region 🔖️InstanceDirectory
+/// 🗺️ `ArtifactRef ↔ (plugin_id, instance_id, artifact_kind)` — genuinely new (scout-2 §3: "there
+/// is no instance directory" before this ticket). Populated at `instantiate-app`/`Hello`/
+/// `LoadDocument` (see `WasmPluginRuntime::create_app` and `HostState::pre_adopt_command_packs`'s
+/// hooks below) and consulted by `HostTransactionCoordinator` to resolve a `ForeignStep.target`
+/// into a live instance. Keyed by plain artifact-id strings (not the full `io::ArtifactRef`, which
+/// requires an `ArtifactDialect` not always resolvable at bind time) — callers that have a real
+/// `io::ArtifactRef` pass `.artifact_id` through.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct InstanceLocation {
+    pub plugin_id: String,
+    pub instance_id: u32,
+    pub artifact_kind: String,
+}
+
+pub struct InstanceDirectory {
+    state: Mutex<InstanceDirectoryState>,
+}
+
+#[derive(Default)]
+struct InstanceDirectoryState {
+    by_artifact_id: HashMap<String, InstanceLocation>,
+    by_instance: HashMap<(String, u32), Vec<String>>,
+}
+
+impl InstanceDirectory {
+    pub fn new() -> Self {
+        Self { state: Mutex::new(InstanceDirectoryState::default()) }
+    }
+
+    /// 📌️ Binds `artifact_id` to `(plugin_id, instance_id, artifact_kind)`, replacing any prior
+    /// binding for the SAME `artifact_id` — a `Hello`/`LoadDocument` re-bind on the same instance
+    /// is expected to be idempotent, not an error (unlike the mutation/inference routers' conflict
+    /// rule, this is a live pointer table, not a registration ledger).
+    pub fn bind(&self, artifact_id: &str, plugin_id: &str, instance_id: u32, artifact_kind: &str) -> Result<(), PluginHostError> {
+        let mut state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("instance directory"))?;
+        if let Some(previous) = state.by_artifact_id.get(artifact_id) {
+            if previous.plugin_id != plugin_id || previous.instance_id != instance_id {
+                let previous_key = (previous.plugin_id.clone(), previous.instance_id);
+                if let Some(previous_refs) = state.by_instance.get_mut(&previous_key) {
+                    previous_refs.retain(|existing| existing != artifact_id);
+                }
+            }
+        }
+        state.by_artifact_id.insert(artifact_id.to_string(), InstanceLocation { plugin_id: plugin_id.to_string(), instance_id, artifact_kind: artifact_kind.to_string() });
+        let refs = state.by_instance.entry((plugin_id.to_string(), instance_id)).or_default();
+        if !refs.iter().any(|existing| existing == artifact_id) {
+            refs.push(artifact_id.to_string());
+        }
+        Ok(())
+    }
+
+    pub fn resolve(&self, artifact_id: &str) -> Option<InstanceLocation> {
+        self.state.lock().ok()?.by_artifact_id.get(artifact_id).cloned()
+    }
+
+    /// ✂️ Drops every binding for `(plugin_id, instance_id)` — called on `destroy_app`.
+    pub fn unbind_instance(&self, plugin_id: &str, instance_id: u32) {
+        let Ok(mut state) = self.state.lock() else { return };
+        if let Some(refs) = state.by_instance.remove(&(plugin_id.to_string(), instance_id)) {
+            for artifact_id in refs {
+                state.by_artifact_id.remove(&artifact_id);
+            }
+        }
+    }
+
+    pub fn artifact_ids_for_instance(&self, plugin_id: &str, instance_id: u32) -> Vec<String> {
+        self.state.lock().ok().and_then(|state| state.by_instance.get(&(plugin_id.to_string(), instance_id)).cloned()).unwrap_or_default()
+    }
+}
+
+impl Default for InstanceDirectory {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod instance_directory_tests {
+    use super::*;
+
+    #[test]
+    fn bind_resolve_and_unbind_round_trip() {
+        let directory = InstanceDirectory::new();
+        directory.bind("artifacts/node-a", "s.cad", 7, "s.cad.document").unwrap();
+        let location = directory.resolve("artifacts/node-a").expect("bound artifact must resolve");
+        assert_eq!(location, InstanceLocation { plugin_id: "s.cad".into(), instance_id: 7, artifact_kind: "s.cad.document".into() });
+        directory.unbind_instance("s.cad", 7);
+        assert!(directory.resolve("artifacts/node-a").is_none());
+    }
+
+    #[test]
+    fn rebinding_the_same_artifact_id_replaces_the_prior_location() {
+        let directory = InstanceDirectory::new();
+        directory.bind("artifacts/node-a", "s.cad", 1, "s.cad.document").unwrap();
+        directory.bind("artifacts/node-a", "s.cad", 2, "s.cad.document").unwrap();
+        assert_eq!(directory.resolve("artifacts/node-a").unwrap().instance_id, 2);
+        assert!(directory.artifact_ids_for_instance("s.cad", 1).is_empty(), "the stale instance no longer owns this artifact id");
+    }
+}
+//#endregion 🔖️InstanceDirectory
+
+//#region 🎯️TransactionCoordinator
+/// 👥️ One transaction participant: which plugin, which live instance.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TransactionMember {
+    pub plugin_id: String,
+    pub instance_id: u32,
+}
+
+/// ✅️ A completed (committed) transaction — `members` is discovery order (member 0 = initiator);
+/// `edit_ids[i]` is `members[i]`'s own edit id, from the actual (reverse-order) commit phase.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TransactionOutcome {
+    pub txn_id: String,
+    pub members: Vec<TransactionMember>,
+    pub edit_ids: Vec<String>,
+}
+
+/// 🧯 Contract freeze §5's frozen rejection taxonomy, typed.
+#[derive(Debug, thiserror::Error)]
+pub enum TransactionError {
+    #[error("{code}: {message}")]
+    Rejected { code: String, message: String },
+    #[error("plugin host error: {0}")]
+    Host(#[from] PluginHostError),
+}
+
+impl TransactionError {
+    pub fn rejected(code: &str, message: impl Into<String>) -> Self {
+        Self::Rejected { code: code.to_string(), message: message.into() }
+    }
+
+    pub fn code(&self) -> &str {
+        match self {
+            TransactionError::Rejected { code, .. } => code,
+            TransactionError::Host(_) => "transaction.commit-failed",
+        }
+    }
+}
+
+fn payload_hash_of(bytes: &[u8]) -> protocol::PayloadHash {
+    protocol::PayloadHash(*blake3::hash(bytes).as_bytes())
+}
+
+/// 🧮️ One member's accumulated prepare state, built up while the resolution loop walks the
+/// foreign-step graph — never sent to the guest until every step targeting this member AT THE
+/// CURRENT DEPTH has been folded in, so a member is `TransactionPrepare`d AT MOST ONCE per
+/// transaction (contract §5.9: a second concurrent prepare on one instance is a hard
+/// `instance-busy` reject at the guest, so the host must never issue two). Always sent in the
+/// PRE-PLANNED wire form (never the owner-mutation form), per W1-B's own recommendation
+/// (`📓️w1-b-report.md` §5): the owner-mutation form carries no `origin` on the wire, so preferring
+/// pre-planned form for every foreign target closes that provenance gap and lets N accumulated ops
+/// ride in one `prepared_ops` list regardless of how many `ForeignStep`s targeted this member.
+struct MemberDraft {
+    prepared_ops: Vec<Vec<u8>>,
+    label: String,
+    origin: protocol::MutationOrigin,
+}
+
+pub struct HostTransactionCoordinator {
+    seq: std::sync::atomic::AtomicU64,
+}
+
+impl HostTransactionCoordinator {
+    pub fn new() -> Self {
+        Self { seq: std::sync::atomic::AtomicU64::new(1) }
+    }
+
+    fn next_seq(&self) -> u64 {
+        self.seq.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+    }
+
+    fn mint_txn_id(&self, initiator: &TransactionMember) -> String {
+        format!("txn-{}-{}-{}", initiator.plugin_id, initiator.instance_id, self.next_seq())
+    }
+
+    /// 🎯️ Contract §5 steps 1-6: resolves every `foreign` step to a live instance via
+    /// `instances`/`mutation_router`, recurses with depth/cycle guards (§5.4), issues ONE
+    /// `TransactionPrepare` per member (always pre-planned form — see `MemberDraft`'s doc),
+    /// requires every member's `TransactionPrepared.rejection` to be empty (§5.5, else rolls back
+    /// every already-prepared member), then commits in REVERSE discovery order (§5.6,
+    /// compensating already-committed members via `TransactionUndo` on a commit failure).
+    ///
+    /// `exchange`/`plan_contributed` are closures so this can be driven over real
+    /// `WasmPluginRuntime`s (production, see `🏃️run/🦀️component.rs`) or an in-process fake
+    /// (tests) without either depending on the other.
+    #[allow(clippy::too_many_arguments)]
+    pub fn run_transaction(
+        &self,
+        instances: &InstanceDirectory,
+        mutation_router: &ArtifactMutationRouter,
+        mut exchange: impl FnMut(&str, u32, protocol::AppCommand) -> Result<Vec<protocol::AppFrame>, TransactionError>,
+        mut plan_contributed: impl FnMut(&str, &str, &str, &TransactionMember, &[u8]) -> Result<HostArtifactMutationPlanResult, TransactionError>,
+        initiator: TransactionMember,
+        local_ops: Vec<Vec<u8>>,
+        description: String,
+        foreign: Vec<protocol::ForeignStep>,
+    ) -> Result<TransactionOutcome, TransactionError> {
+        let txn_id = self.mint_txn_id(&initiator);
+
+        let initiator_target = instances
+            .artifact_ids_for_instance(&initiator.plugin_id, initiator.instance_id)
+            .into_iter()
+            .next()
+            .and_then(|artifact_id| instances.resolve(&artifact_id).map(|location| protocol::ForeignTarget { artifact_id, artifact_kind: location.artifact_kind, dialect: None }))
+            .unwrap_or_else(|| protocol::ForeignTarget { artifact_id: String::new(), artifact_kind: String::new(), dialect: None });
+
+        let mut discovery_order: Vec<TransactionMember> = vec![initiator.clone()];
+        let mut drafts: BTreeMap<(String, u32), MemberDraft> = BTreeMap::new();
+        drafts.insert((initiator.plugin_id.clone(), initiator.instance_id), MemberDraft { prepared_ops: local_ops, label: description, origin: protocol::MutationOrigin::Owner });
+
+        let mut visited: std::collections::HashSet<(String, String, [u8; 32])> = std::collections::HashSet::new();
+        let mut frontier: Vec<protocol::ForeignStep> = foreign;
+        let mut depth: u8 = 0;
+
+        while !frontier.is_empty() {
+            depth += 1;
+            if depth > protocol::MAX_PLAN_DEPTH {
+                return Err(TransactionError::rejected("transaction.depth-exceeded", format!("transaction `{txn_id}` exceeded MAX_PLAN_DEPTH ({})", protocol::MAX_PLAN_DEPTH)));
+            }
+            let mut next_frontier: Vec<protocol::ForeignStep> = Vec::new();
+            for step in frontier {
+                let cycle_key = (step.target.artifact_id.clone(), step.mutation_id.0.clone(), *blake3::hash(&step.payload).as_bytes());
+                if !visited.insert(cycle_key) {
+                    return Err(TransactionError::rejected("transaction.cycle", format!("transaction `{txn_id}` revisited {}/{}", step.target.artifact_id, step.mutation_id.0)));
+                }
+
+                let location = instances.resolve(&step.target.artifact_id).ok_or_else(|| TransactionError::rejected("transaction.unknown-target", format!("no live instance bound to artifact id `{}`", step.target.artifact_id)))?;
+                let ownership = mutation_router.resolve(&location.artifact_kind, &step.mutation_id.0).map_err(|error| TransactionError::rejected("transaction.unknown-mutation", error.to_string()))?;
+
+                let member = TransactionMember { plugin_id: location.plugin_id.clone(), instance_id: location.instance_id };
+                let key = (member.plugin_id.clone(), member.instance_id);
+                if !drafts.contains_key(&key) {
+                    discovery_order.push(member.clone());
+                }
+
+                match ownership {
+                    MutationOwnership::Owner { .. } => {
+                        let draft = drafts.entry(key).or_insert_with(|| MemberDraft { prepared_ops: Vec::new(), label: step.label.clone(), origin: protocol::MutationOrigin::Transaction { initiator: initiator_target.clone() } });
+                        draft.prepared_ops.push(step.payload.clone());
+                    }
+                    MutationOwnership::Contributed { plugin_id: contributor } => {
+                        let plan = plan_contributed(&contributor, &location.artifact_kind, &step.mutation_id.0, &member, &step.payload)?;
+                        let origin = protocol::MutationOrigin::Contributed { plugin_id: contributor.clone(), mutation_id: step.mutation_id.clone(), payload_hash: payload_hash_of(&step.payload) };
+                        let draft = drafts.entry(key).or_insert_with(|| MemberDraft { prepared_ops: Vec::new(), label: plan.label.clone(), origin: origin.clone() });
+                        draft.prepared_ops.extend(plan.owner_ops);
+                        draft.origin = origin;
+                        next_frontier.extend(plan.foreign);
+                    }
+                }
+            }
+            frontier = next_frontier;
+        }
+
+        // Phase 1 (§5.5): prepare every member exactly once, in discovery order; any rejection
+        // rolls back every member already prepared before it.
+        let mut rejection: Option<TransactionError> = None;
+        let mut prepared: Vec<TransactionMember> = Vec::new();
+        for member in &discovery_order {
+            let key = (member.plugin_id.clone(), member.instance_id);
+            let draft = drafts.get(&key).expect("every discovered member has a draft");
+            let origin_bytes = match encode_wire_dsl(&draft.origin) {
+                Ok(bytes) => bytes,
+                Err(error) => {
+                    rejection = Some(TransactionError::Host(error));
+                    break;
+                }
+            };
+            let command = protocol::AppCommand::TransactionPrepare { seq: self.next_seq(), txn_id: txn_id.clone(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: draft.prepared_ops.clone(), label: draft.label.clone(), origin: origin_bytes };
+            let frames = match exchange(&member.plugin_id, member.instance_id, command) {
+                Ok(frames) => frames,
+                Err(error) => {
+                    rejection = Some(error);
+                    break;
+                }
+            };
+            let outcome = frames.iter().find_map(|frame| match frame {
+                protocol::AppFrame::TransactionPrepared { txn_id: reply_txn, rejection, .. } if reply_txn == &txn_id => Some(rejection.clone()),
+                protocol::AppFrame::Error { fault, .. } => Some(fault.clone()),
+                _ => None,
+            });
+            match outcome {
+                Some(rejection_bytes) if rejection_bytes.is_empty() => {
+                    prepared.push(member.clone());
+                }
+                Some(rejection_bytes) => {
+                    let fault = dsl::decode_fault_bytes(&rejection_bytes);
+                    rejection = Some(TransactionError::rejected("transaction.member-rejected", format!("{}/{} rejected prepare (`{}`): {}", member.plugin_id, member.instance_id, fault.code.0, fault.message)));
+                    break;
+                }
+                None => {
+                    rejection = Some(TransactionError::rejected("transaction.member-rejected", format!("{}/{} sent no TransactionPrepared reply", member.plugin_id, member.instance_id)));
+                    break;
+                }
+            }
+        }
+
+        if let Some(error) = rejection {
+            for member in prepared.iter().rev() {
+                let _ = exchange(&member.plugin_id, member.instance_id, protocol::AppCommand::TransactionRollback { seq: self.next_seq(), txn_id: txn_id.clone() });
+            }
+            return Err(error);
+        }
+
+        // Phase 2 (§5.6): commit in REVERSE discovery order.
+        let mut committed: Vec<TransactionMember> = Vec::new();
+        let mut edit_id_by_member: BTreeMap<(String, u32), String> = BTreeMap::new();
+        let mut commit_error: Option<TransactionError> = None;
+        for member in discovery_order.iter().rev() {
+            let command = protocol::AppCommand::TransactionCommit { seq: self.next_seq(), txn_id: txn_id.clone() };
+            let outcome = exchange(&member.plugin_id, member.instance_id, command).ok().and_then(|frames| {
+                frames.into_iter().find_map(|frame| match frame {
+                    protocol::AppFrame::TransactionCommitted { txn_id: reply_txn, edit_id } if reply_txn == txn_id => Some(edit_id),
+                    _ => None,
+                })
+            });
+            match outcome {
+                Some(edit_id) => {
+                    edit_id_by_member.insert((member.plugin_id.clone(), member.instance_id), edit_id);
+                    committed.push(member.clone());
+                }
+                None => {
+                    commit_error = Some(TransactionError::rejected("transaction.commit-failed", format!("{}/{} failed to commit txn `{txn_id}`", member.plugin_id, member.instance_id)));
+                    break;
+                }
+            }
+        }
+
+        if let Some(error) = commit_error {
+            for member in &committed {
+                let _ = exchange(&member.plugin_id, member.instance_id, protocol::AppCommand::TransactionUndo { seq: self.next_seq(), group_id: txn_id.clone() });
+            }
+            for member in discovery_order.iter().filter(|member| !committed.contains(member)) {
+                let _ = exchange(&member.plugin_id, member.instance_id, protocol::AppCommand::TransactionRollback { seq: self.next_seq(), txn_id: txn_id.clone() });
+            }
+            return Err(error);
+        }
+
+        let edit_ids: Vec<String> = discovery_order.iter().map(|member| edit_id_by_member.get(&(member.plugin_id.clone(), member.instance_id)).cloned().unwrap_or_default()).collect();
+        Ok(TransactionOutcome { txn_id, members: discovery_order, edit_ids })
+    }
+
+    /// 🔁️ Contract §5.7: fans `TransactionUndo{group_id}` out to every member, best-effort (a
+    /// member whose tail has since moved on independently errors on ITS side, not here — a host
+    /// must not assume success for every member).
+    pub fn undo_group(&self, mut exchange: impl FnMut(&str, u32, protocol::AppCommand) -> Result<Vec<protocol::AppFrame>, TransactionError>, members: &[TransactionMember], group_id: &str) {
+        for member in members {
+            let _ = exchange(&member.plugin_id, member.instance_id, protocol::AppCommand::TransactionUndo { seq: self.next_seq(), group_id: group_id.to_string() });
+        }
+    }
+
+    pub fn redo_group(&self, mut exchange: impl FnMut(&str, u32, protocol::AppCommand) -> Result<Vec<protocol::AppFrame>, TransactionError>, members: &[TransactionMember], group_id: &str) {
+        for member in members {
+            let _ = exchange(&member.plugin_id, member.instance_id, protocol::AppCommand::TransactionRedo { seq: self.next_seq(), group_id: group_id.to_string() });
+        }
+    }
+}
+
+impl Default for HostTransactionCoordinator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod host_transaction_coordinator_tests {
+    //! 🧪️ A minimal in-process fake — no wasm — that faithfully implements the SAME two-phase wire
+    //! contract §5 semantics `VcsArtifactApp::transaction_prepare/commit/rollback/undo/redo` (W1-B)
+    //! implements: one `Option<pending>` per instance, `TransactionCommit` applies as one edit
+    //! stamped with `group_id = txn_id`, `TransactionUndo`/`Redo` toggle a per-instance tail flag.
+    //! This proves `HostTransactionCoordinator`'s OWN orchestration (resolution via
+    //! `InstanceDirectory`/`ArtifactMutationRouter`, phase-1 all-or-nothing, reverse-order commit,
+    //! compensation, group fan-out) deterministically; the real wasmtime e2e in
+    //! `🏃️run/🦀️component.rs` proves the wire-level plumbing against a REAL guest.
+    use super::*;
+    use std::cell::RefCell;
+
+    #[derive(Default)]
+    struct FakeInstance {
+        pending: Option<(String, Vec<Vec<u8>>)>, // (txn_id, prepared_ops)
+        edits: Vec<(String, Vec<Vec<u8>>)>,      // (group_id, ops) applied, in commit order
+        undone: Vec<String>,
+    }
+
+    #[derive(Default)]
+    struct FakeCluster {
+        instances: RefCell<HashMap<(String, u32), FakeInstance>>,
+    }
+
+    impl FakeCluster {
+        fn exchange(&self, plugin_id: &str, instance_id: u32, command: protocol::AppCommand) -> Result<Vec<protocol::AppFrame>, TransactionError> {
+            let mut instances = self.instances.borrow_mut();
+            let instance = instances.entry((plugin_id.to_string(), instance_id)).or_default();
+            let frame = match command {
+                protocol::AppCommand::TransactionPrepare { txn_id, prepared_ops, .. } => {
+                    if instance.pending.is_some() {
+                        protocol::AppFrame::TransactionPrepared { txn_id, foreign: Vec::new(), rejection: host_fault_bytes("transaction.instance-busy", "already has a pending transaction") }
+                    } else {
+                        instance.pending = Some((txn_id.clone(), prepared_ops));
+                        protocol::AppFrame::TransactionPrepared { txn_id, foreign: Vec::new(), rejection: Vec::new() }
+                    }
+                }
+                protocol::AppCommand::TransactionCommit { txn_id, .. } => match instance.pending.take() {
+                    Some((pending_id, ops)) if pending_id == txn_id => {
+                        instance.edits.push((txn_id.clone(), ops));
+                        protocol::AppFrame::TransactionCommitted { txn_id: txn_id.clone(), edit_id: format!("edit-{}", instance.edits.len()) }
+                    }
+                    other => {
+                        instance.pending = other;
+                        protocol::AppFrame::Error { in_reply_to: None, fault: host_fault_bytes("transaction.commit-failed", "no matching pending transaction") }
+                    }
+                },
+                protocol::AppCommand::TransactionRollback { txn_id, .. } => {
+                    if matches!(&instance.pending, Some((pending_id, _)) if pending_id == &txn_id) {
+                        instance.pending = None;
+                    }
+                    protocol::AppFrame::Done { in_reply_to: 0 }
+                }
+                protocol::AppCommand::TransactionUndo { group_id, .. } => {
+                    if instance.edits.iter().any(|(id, _)| id == &group_id) {
+                        instance.undone.push(group_id.clone());
+                    }
+                    protocol::AppFrame::Done { in_reply_to: 0 }
+                }
+                other => panic!("unexpected command in fake transaction cluster: {other:?}"),
+            };
+            Ok(vec![frame])
+        }
+    }
+
+    fn dependency(id: &str) -> semio_framework::PluginDependency {
+        semio_framework::PluginDependency::new(id, semio_framework::VersionReq::Any)
+    }
+
+    #[test]
+    fn a_two_member_transaction_commits_and_group_undo_restores_both() {
+        let cluster = FakeCluster::default();
+        let instances = InstanceDirectory::new();
+        instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").unwrap();
+        instances.bind("artifacts/target", "s.b", 2, "s.b.widget").unwrap();
+
+        let router = ArtifactMutationRouter::new();
+        // 🪪️ `io::ArtifactKindId::parse("s.b.widget").plugin()` == "b" (bare middle segment) — the
+        // CONTRIBUTED row must be registered under the CONTRIBUTOR's own bare plugin id ("a"), with
+        // "b" (matching the artifact kind's real owner) as its declared dependency.
+        router.register_roster("a", &[dependency("b")], vec![HostMutationRosterEntry { mutation_id: "s.b.widget#a:annotate".into(), verb: "annotate".into(), entity: "widget".into(), kind: "annotate".into(), record: "widget.doc".into(), contributor: Some("a".into()), artifact_kind: Some("s.b.widget".into()) }]).unwrap();
+
+        let coordinator = HostTransactionCoordinator::new();
+        let foreign = vec![protocol::ForeignStep { target: protocol::ForeignTarget { artifact_id: "artifacts/target".into(), artifact_kind: "s.b.widget".into(), dialect: None }, mutation_id: protocol::SchemaId("s.b.widget#a:annotate".into()), payload: vec![9, 9], label: "annotate".into() }];
+
+        let outcome = coordinator
+            .run_transaction(
+                &instances,
+                &router,
+                |plugin_id, instance_id, command| cluster.exchange(plugin_id, instance_id, command),
+                |_contributor, _artifact_kind, _mutation_id, _member, payload| Ok(HostArtifactMutationPlanResult { artifact_kind: "s.b.widget".into(), mutation_id: "s.b.widget#a:annotate".into(), revision: 0, generation: 0, owner_ops: vec![payload.to_vec()], label: "annotate".into(), foreign: Vec::new() }),
+                TransactionMember { plugin_id: "s.a".into(), instance_id: 1 },
+                vec![vec![1, 2, 3]],
+                "propose annotate".into(),
+                foreign,
+            )
+            .expect("a well-formed two-member transaction must commit");
+
+        assert_eq!(outcome.members.len(), 2);
+        assert_eq!(outcome.members[0], TransactionMember { plugin_id: "s.a".into(), instance_id: 1 }, "member 0 is the initiator");
+        assert_eq!(outcome.edit_ids.len(), 2);
+        assert!(outcome.edit_ids.iter().all(|id| !id.is_empty()));
+
+        {
+            let instances_map = cluster.instances.borrow();
+            assert_eq!(instances_map.get(&("s.a".to_string(), 1)).unwrap().edits.len(), 1);
+            assert_eq!(instances_map.get(&("s.b".to_string(), 2)).unwrap().edits.len(), 1);
+        }
+
+        coordinator.undo_group(|plugin_id, instance_id, command| cluster.exchange(plugin_id, instance_id, command), &outcome.members, &outcome.txn_id);
+        let instances_map = cluster.instances.borrow();
+        assert!(instances_map.get(&("s.a".to_string(), 1)).unwrap().undone.contains(&outcome.txn_id), "initiator must be undone");
+        assert!(instances_map.get(&("s.b".to_string(), 2)).unwrap().undone.contains(&outcome.txn_id), "the contributed target must ALSO be undone (group undo restores both members)");
+    }
+
+    #[test]
+    fn an_unknown_target_is_rejected_before_any_prepare_is_sent() {
+        let cluster = FakeCluster::default();
+        let instances = InstanceDirectory::new();
+        instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").unwrap();
+        let router = ArtifactMutationRouter::new();
+        let coordinator = HostTransactionCoordinator::new();
+        let foreign = vec![protocol::ForeignStep { target: protocol::ForeignTarget { artifact_id: "artifacts/nowhere".into(), artifact_kind: "s.b.widget".into(), dialect: None }, mutation_id: protocol::SchemaId("s.b.widget#a:annotate".into()), payload: vec![1], label: "x".into() }];
+        let error = coordinator
+            .run_transaction(&instances, &router, |plugin_id, instance_id, command| cluster.exchange(plugin_id, instance_id, command), |_, _, _, _, _| unreachable!("no contributed step to plan"), TransactionMember { plugin_id: "s.a".into(), instance_id: 1 }, vec![vec![1]], "x".into(), foreign)
+            .unwrap_err();
+        assert_eq!(error.code(), "transaction.unknown-target");
+    }
+
+    #[test]
+    fn an_unknown_mutation_is_rejected() {
+        let cluster = FakeCluster::default();
+        let instances = InstanceDirectory::new();
+        instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").unwrap();
+        instances.bind("artifacts/target", "s.b", 2, "s.b.widget").unwrap();
+        let router = ArtifactMutationRouter::new();
+        let coordinator = HostTransactionCoordinator::new();
+        let foreign = vec![protocol::ForeignStep { target: protocol::ForeignTarget { artifact_id: "artifacts/target".into(), artifact_kind: "s.b.widget".into(), dialect: None }, mutation_id: protocol::SchemaId("s.b.widget#unregistered".into()), payload: vec![1], label: "x".into() }];
+        let error = coordinator
+            .run_transaction(&instances, &router, |plugin_id, instance_id, command| cluster.exchange(plugin_id, instance_id, command), |_, _, _, _, _| unreachable!("owner route, never contributed"), TransactionMember { plugin_id: "s.a".into(), instance_id: 1 }, vec![vec![1]], "x".into(), foreign)
+            .unwrap_err();
+        assert_eq!(error.code(), "transaction.unknown-mutation");
+    }
+
+    #[test]
+    fn a_cycle_is_rejected() {
+        let cluster = FakeCluster::default();
+        let instances = InstanceDirectory::new();
+        instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").unwrap();
+        instances.bind("artifacts/target", "s.b", 2, "s.b.widget").unwrap();
+        let router = ArtifactMutationRouter::new();
+        // 🪪️ `io::ArtifactKindId::parse("s.b.widget").plugin()` == "b" (bare middle segment) — the
+        // CONTRIBUTED row must be registered under the CONTRIBUTOR's own bare plugin id ("a"), with
+        // "b" (matching the artifact kind's real owner) as its declared dependency.
+        router.register_roster("a", &[dependency("b")], vec![HostMutationRosterEntry { mutation_id: "s.b.widget#a:annotate".into(), verb: "annotate".into(), entity: "widget".into(), kind: "annotate".into(), record: "widget.doc".into(), contributor: Some("a".into()), artifact_kind: Some("s.b.widget".into()) }]).unwrap();
+        let coordinator = HostTransactionCoordinator::new();
+        let step = protocol::ForeignStep { target: protocol::ForeignTarget { artifact_id: "artifacts/target".into(), artifact_kind: "s.b.widget".into(), dialect: None }, mutation_id: protocol::SchemaId("s.b.widget#a:annotate".into()), payload: vec![7], label: "x".into() };
+        // The contributed plan returns the SAME step again -> a real cycle by (artifact_id, mutation_id, payload_hash).
+        let step_for_plan = step.clone();
+        let error = coordinator
+            .run_transaction(
+                &instances,
+                &router,
+                |plugin_id, instance_id, command| cluster.exchange(plugin_id, instance_id, command),
+                move |_, _, _, _, payload| Ok(HostArtifactMutationPlanResult { artifact_kind: "s.b.widget".into(), mutation_id: "s.b.widget#a:annotate".into(), revision: 0, generation: 0, owner_ops: vec![payload.to_vec()], label: "x".into(), foreign: vec![step_for_plan.clone()] }),
+                TransactionMember { plugin_id: "s.a".into(), instance_id: 1 },
+                vec![vec![1]],
+                "x".into(),
+                vec![step],
+            )
+            .unwrap_err();
+        assert_eq!(error.code(), "transaction.cycle");
+    }
+
+    #[test]
+    fn a_member_rejection_rolls_back_every_already_prepared_member() {
+        let cluster = FakeCluster::default();
+        let instances = InstanceDirectory::new();
+        instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").unwrap();
+        instances.bind("artifacts/target", "s.b", 2, "s.b.widget").unwrap();
+        // Pre-occupy s.b/2's pending slot so its OWN prepare hits `transaction.instance-busy`
+        // for real, through the fake's genuine busy-check — not a stubbed rejection.
+        cluster.instances.borrow_mut().entry(("s.b".to_string(), 2)).or_default().pending = Some(("someone-elses-txn".into(), vec![]));
+
+        let router = ArtifactMutationRouter::new();
+        // 🪪️ `io::ArtifactKindId::parse("s.b.widget").plugin()` == "b" (bare middle segment) — the
+        // CONTRIBUTED row must be registered under the CONTRIBUTOR's own bare plugin id ("a"), with
+        // "b" (matching the artifact kind's real owner) as its declared dependency.
+        router.register_roster("a", &[dependency("b")], vec![HostMutationRosterEntry { mutation_id: "s.b.widget#a:annotate".into(), verb: "annotate".into(), entity: "widget".into(), kind: "annotate".into(), record: "widget.doc".into(), contributor: Some("a".into()), artifact_kind: Some("s.b.widget".into()) }]).unwrap();
+        let coordinator = HostTransactionCoordinator::new();
+        let foreign = vec![protocol::ForeignStep { target: protocol::ForeignTarget { artifact_id: "artifacts/target".into(), artifact_kind: "s.b.widget".into(), dialect: None }, mutation_id: protocol::SchemaId("s.b.widget#a:annotate".into()), payload: vec![1], label: "x".into() }];
+
+        let error = coordinator
+            .run_transaction(
+                &instances,
+                &router,
+                |plugin_id, instance_id, command| cluster.exchange(plugin_id, instance_id, command),
+                |_, _, _, _, payload| Ok(HostArtifactMutationPlanResult { artifact_kind: "s.b.widget".into(), mutation_id: "s.b.widget#a:annotate".into(), revision: 0, generation: 0, owner_ops: vec![payload.to_vec()], label: "x".into(), foreign: Vec::new() }),
+                TransactionMember { plugin_id: "s.a".into(), instance_id: 1 },
+                vec![vec![1]],
+                "x".into(),
+                foreign,
+            )
+            .unwrap_err();
+        assert_eq!(error.code(), "transaction.member-rejected");
+        let instances_map = cluster.instances.borrow();
+        assert!(instances_map.get(&("s.a".to_string(), 1)).unwrap().pending.is_none(), "the initiator, prepared before the rejection, must have been rolled back");
+    }
+
+    #[test]
+    fn a_chain_deeper_than_max_plan_depth_is_rejected() {
+        let cluster = FakeCluster::default();
+        let instances = InstanceDirectory::new();
+        instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").unwrap();
+        for i in 0..10u8 {
+            instances.bind(&format!("artifacts/target-{i}"), "s.b", 100 + i as u32, "s.b.widget").unwrap();
+        }
+        let router = ArtifactMutationRouter::new();
+        // 🪪️ `io::ArtifactKindId::parse("s.b.widget").plugin()` == "b" (bare middle segment) — the
+        // CONTRIBUTED row must be registered under the CONTRIBUTOR's own bare plugin id ("a"), with
+        // "b" (matching the artifact kind's real owner) as its declared dependency.
+        router.register_roster("a", &[dependency("b")], vec![HostMutationRosterEntry { mutation_id: "s.b.widget#a:annotate".into(), verb: "annotate".into(), entity: "widget".into(), kind: "annotate".into(), record: "widget.doc".into(), contributor: Some("a".into()), artifact_kind: Some("s.b.widget".into()) }]).unwrap();
+        let coordinator = HostTransactionCoordinator::new();
+        let foreign = vec![protocol::ForeignStep { target: protocol::ForeignTarget { artifact_id: "artifacts/target-0".into(), artifact_kind: "s.b.widget".into(), dialect: None }, mutation_id: protocol::SchemaId("s.b.widget#a:annotate".into()), payload: vec![0], label: "x".into() }];
+        // Each level's contributed plan hands back ONE new foreign step targeting the NEXT (distinct)
+        // instance in the chain, so the cycle guard (which keys on artifact_id) never fires — this is
+        // purely a depth chain, 10 hops deep against `MAX_PLAN_DEPTH` = 8.
+        let error = coordinator
+            .run_transaction(
+                &instances,
+                &router,
+                |plugin_id, instance_id, command| cluster.exchange(plugin_id, instance_id, command),
+                |_, _, _, _, payload| {
+                    let next = payload[0] + 1;
+                    let foreign = if (next as usize) < 10 { vec![protocol::ForeignStep { target: protocol::ForeignTarget { artifact_id: format!("artifacts/target-{next}"), artifact_kind: "s.b.widget".into(), dialect: None }, mutation_id: protocol::SchemaId("s.b.widget#a:annotate".into()), payload: vec![next], label: "x".into() }] } else { Vec::new() };
+                    Ok(HostArtifactMutationPlanResult { artifact_kind: "s.b.widget".into(), mutation_id: "s.b.widget#a:annotate".into(), revision: 0, generation: 0, owner_ops: vec![payload.to_vec()], label: "x".into(), foreign })
+                },
+                TransactionMember { plugin_id: "s.a".into(), instance_id: 1 },
+                vec![vec![1]],
+                "x".into(),
+                foreign,
+            )
+            .unwrap_err();
+        assert_eq!(error.code(), "transaction.depth-exceeded");
+    }
+}
+//#endregion 🎯️TransactionCoordinator
+
+//#region 🔖️AppRouter
+/// 🚪️👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §3: `(ArtifactDialect,
+/// AppRole) -> Vec<AppRef>`, built by walking every loaded plugin's `PluginManifest.apps`.
+/// Registration idiom mirrors `ArtifactInferenceRouter` above: one `Mutex`-guarded table,
+/// `register_plugin` called once per loaded `WasmPluginRuntime` (reads its own already-resident
+/// `.manifest` directly — no extra guest call needed, unlike `IoRouter`/`ArtifactInferenceRouter`,
+/// which must query a composer/inference roster over the wasm ABI because the host has no other way
+/// to see inside a guest's linear memory; a `PluginManifest` is already host-resident). Ownership of
+/// a dialect's `artifact_kind` is derived from `PluginManifest.artifact_kinds` (plugin-level
+/// declarations only — matches that field's own doc: "library plugins with zero apps declare kinds
+/// here"); the first plugin to claim a kind wins. Nothing here consults per-app `artifact_kinds` —
+/// that is a different vocabulary (OS resource/media catalog kinds, see `register_artifact_descriptors`
+/// in `semio-framework-os`), not dialect ownership. Deliberately independent of the peer `PluginGraph`
+/// region above (dependency-graph load-order/version validation) — this router only needs each
+/// manifest's OWN `dependencies` list for the contribution gate, not global load order.
+pub struct AppRouter {
+    state: Mutex<AppRouterState>,
+}
+
+#[derive(Default)]
+struct AppRouterState {
+    /// 🗂️ `artifact_kind -> owning plugin_id`.
+    owners: HashMap<String, String>,
+    /// 🗂️ `plugin_id -> its declared dependency plugin ids` (contract §3's contribution gate).
+    dependencies: HashMap<String, std::collections::BTreeSet<String>>,
+    /// 🗂️ `(dialect, role) -> registered AppRefs`, unsorted insertion order — `surfaces_for` sorts
+    /// lazily against the CURRENT `owners` snapshot (never stale, since ownership never changes once
+    /// claimed).
+    surfaces: HashMap<(semio_framework::ArtifactDialect, semio_framework::AppRole), Vec<semio_framework::AppRef>>,
+    /// 🚧️ Every `(plugin_id, app_id)` seen so far, for O(1) `surface.conflict` detection.
+    registered_refs: std::collections::HashSet<(String, String)>,
+}
+
+impl AppRouter {
+    pub fn new() -> Self {
+        Self { state: Mutex::new(AppRouterState::default()) }
+    }
+
+    /// 📌️ Registers one already-loaded plugin's surfaces — call once per plugin, after
+    /// `WasmPluginRuntime::load` succeeds (mirrors `IoRouter::register_plugin`/
+    /// `ArtifactInferenceRouter::register_plugin`'s call site in `semio-framework-os-run`).
+    pub fn register_plugin(&self, plugin_id: &str, runtime: &WasmPluginRuntime) -> Result<(), semio_framework::Fault> {
+        self.register_manifest(plugin_id, &runtime.manifest)
+    }
+
+    /// 🧪️ `register_plugin` split out for direct manifest-driven testing (no wasmtime component
+    /// needed to exercise the two frozen conflict/gate faults) — pure aside from the `Mutex` lock.
+    pub fn register_manifest(&self, plugin_id: &str, manifest: &PluginManifest) -> Result<(), semio_framework::Fault> {
+        let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let dependencies: std::collections::BTreeSet<String> = manifest.dependencies.iter().map(|dependency| dependency.plugin_id.clone()).collect();
+        state.dependencies.insert(plugin_id.to_string(), dependencies);
+        for spec in &manifest.artifact_kinds {
+            state.owners.entry(spec.id.clone()).or_insert_with(|| plugin_id.to_string());
+        }
+        for app in &manifest.apps {
+            let owner = state.owners.entry(app.dialect.artifact_kind.clone()).or_insert_with(|| plugin_id.to_string()).clone();
+            if owner != plugin_id {
+                let permitted = state.dependencies.get(plugin_id).map(|deps| deps.contains(&owner)).unwrap_or(false);
+                if !permitted {
+                    return Err(semio_framework::Fault::new(
+                        semio_framework::FaultOrigin::Framework,
+                        semio_framework::FaultCode::new("surface.contribution-not-permitted"),
+                        format!("plugin `{plugin_id}` declares a surface for `{}` (owned by `{owner}`) without listing `{owner}` in its dependencies", app.dialect.to_coordinate()),
+                    ));
+                }
+            }
+            let app_ref = semio_framework::AppRef { plugin_id: plugin_id.to_string(), app_id: app.id.clone() };
+            if !state.registered_refs.insert((app_ref.plugin_id.clone(), app_ref.app_id.clone())) {
+                return Err(semio_framework::Fault::new(
+                    semio_framework::FaultOrigin::Framework,
+                    semio_framework::FaultCode::new("surface.conflict"),
+                    format!("surface `{}` is already registered for plugin `{}`", app_ref.app_id, app_ref.plugin_id),
+                ));
+            }
+            state.surfaces.entry((app.dialect.clone(), app.role)).or_default().push(app_ref);
+        }
+        Ok(())
+    }
+
+    /// 📚️ Every `AppRef` serving `(dialect, role)`, deterministically ordered: the dialect's owner
+    /// plugin's surface first (if it has one), then the rest sorted `plugin_id` asc / `app_id` asc
+    /// (contract §3).
+    pub fn surfaces_for(&self, dialect: &semio_framework::ArtifactDialect, role: semio_framework::AppRole) -> Vec<semio_framework::AppRef> {
+        let state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let owner = state.owners.get(&dialect.artifact_kind).cloned();
+        let mut refs = state.surfaces.get(&(dialect.clone(), role)).cloned().unwrap_or_default();
+        refs.sort_by(|a, b| {
+            let a_owner = owner.as_deref() == Some(a.plugin_id.as_str());
+            let b_owner = owner.as_deref() == Some(b.plugin_id.as_str());
+            match (a_owner, b_owner) {
+                (true, false) => std::cmp::Ordering::Less,
+                (false, true) => std::cmp::Ordering::Greater,
+                _ => (a.plugin_id.as_str(), a.app_id.as_str()).cmp(&(b.plugin_id.as_str(), b.app_id.as_str())),
+            }
+        });
+        refs
+    }
+
+    /// 🎯️ The dialect's owner plugin id, if any plugin has claimed `artifact_kind` (via its own
+    /// `PluginManifest.artifact_kinds`, or by being first to declare ANY surface for it).
+    pub fn owner_of(&self, artifact_kind: &str) -> Option<String> {
+        self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).owners.get(artifact_kind).cloned()
+    }
+
+    /// ✂️ Drops every surface AND dependency record `plugin_id` registered — mirrors `IoRouter`/
+    /// `ArtifactMutationRouter`/`ArtifactInferenceRouter`'s own `unregister_plugin` (called from
+    /// `WasmtimeNodeHost::unload_plugin`/`hot_reload_plugin`). Deliberately does NOT clear `owners`:
+    /// a hot-reload of the owner plugin re-registers the same `artifact_kinds` and re-claims
+    /// ownership on its own; clearing the entry here would let whichever OTHER plugin happens to be
+    /// registered next silently inherit ownership mid-reload — worse than a momentarily-stale owner
+    /// pointing at a plugin with zero live surfaces (which `owned_surface_gaps` would then flag).
+    pub fn unregister_plugin(&self, plugin_id: &str) {
+        let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        state.dependencies.remove(plugin_id);
+        for refs in state.surfaces.values_mut() {
+            refs.retain(|app_ref| app_ref.plugin_id != plugin_id);
+        }
+        state.registered_refs.retain(|(owner, _)| owner != plugin_id);
+    }
+
+    /// 🩺️ Contract §3 (W1 soft gate — item 3 of this lane's brief): every dialect with AT LEAST ONE
+    /// registered surface, whose `artifact_kind` has a known owner, must resolve for BOTH roles. Pure
+    /// and total, never panics — the caller decides whether to log (W1, today's zero-surface reality)
+    /// or hard-fail (W3, once `policySubsetSurfaceCompletenessBreaches` + the W2 scaffolder have
+    /// populated real surfaces). Deliberately scoped to what the router can actually see: full
+    /// taxonomy-disk subset completeness (all 143 subsets, including ones with zero surfaces at all)
+    /// is `policySubsetSurfaceCompletenessBreaches`'s job in `📜️script.ts` (lane 1-E), not a host
+    /// runtime concern — a wasm plugin host cannot walk the repo filesystem.
+    pub fn owned_surface_gaps(&self) -> Vec<semio_framework::Fault> {
+        let state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut dialects: Vec<semio_framework::ArtifactDialect> = state.surfaces.keys().map(|(dialect, _)| dialect.clone()).collect();
+        dialects.sort();
+        dialects.dedup();
+        let mut gaps = Vec::new();
+        for dialect in dialects {
+            let Some(owner) = state.owners.get(&dialect.artifact_kind) else { continue };
+            for role in [semio_framework::AppRole::Viewer, semio_framework::AppRole::Editor] {
+                let has_surface = state.surfaces.get(&(dialect.clone(), role)).map(|refs| !refs.is_empty()).unwrap_or(false);
+                if !has_surface {
+                    gaps.push(semio_framework::Fault::new(
+                        semio_framework::FaultOrigin::Framework,
+                        semio_framework::FaultCode::new("surface.missing-owner-surface"),
+                        format!("`{}` (owned by `{owner}`) has no registered {} surface", dialect.to_coordinate(), role.as_str()),
+                    ));
+                }
+            }
+        }
+        gaps
+    }
+}
+
+impl Default for AppRouter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod app_router_tests {
+    use super::*;
+
+    fn fixture_artifact_kind(id: &str) -> semio_framework::ArtifactKindSpec {
+        semio_framework::ArtifactKindSpec {
+            id: id.into(),
+            name: id.into(),
+            source_format: id.into(),
+            component_kind: "document".into(),
+            dimension: "data".into(),
+            media_capability: semio_framework::OsMediaCapability::MeshOnly,
+            media_type: semio_framework::MediaType { class: semio_framework::MediaClass::Data, form: semio_framework::MediaForm::Value },
+            schema: id.into(),
+            export_formats: Vec::new(),
+            import_formats: Vec::new(),
+            export_stdio_kinds: Vec::new(),
+            import_stdio_kinds: Vec::new(),
+        }
+    }
+
+    pub(super) fn fixture_app(id: &str, dialect: semio_framework::ArtifactDialect, role: semio_framework::AppRole) -> semio_framework::AppDefinition {
+        semio_framework::AppDefinition {
+            id: id.into(),
+            role,
+            dialect,
+            label: ui_wgpu::wgpu::LocalizedLabel::data(id),
+            breadcrumb: vec![id.into()],
+            icon_id: None,
+            controller_id: format!("{id}-play"),
+            modes: semio_framework::Modes::one(semio_framework::ModeDefinition { id: "edit".into(), label: ui_wgpu::wgpu::LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+            default_mode_id: "edit".into(),
+            window_kinds: semio_framework::WindowKinds::one(semio_framework::WindowKindDefinition {
+                id: id.into(),
+                label: ui_wgpu::wgpu::LocalizedLabel::data(id),
+                body_key: id.into(),
+                surface_kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
+                icon_id: "app-window".into(),
+                options: ui_wgpu::wgpu::WindowOptions::default(),
+                actions: Vec::new(),
+                utilities: Vec::new(),
+                interactions: Vec::new(),
+                params_schema: None,
+                artifact_snapshot_schema: None,
+                input_event_schema: None,
+                output_schema: None,
+                capabilities: Vec::new(),
+            }),
+            panel_tabs: Vec::new(),
+            keybindings: Vec::new(),
+            utilities: Vec::new(),
+            tools: Vec::new(),
+            commands: Vec::new(),
+            interactions: Vec::new(),
+            named_layouts: Vec::new(),
+            default_layout: None,
+            terminologies: Vec::new(),
+            terminology_breadcrumbs: HashMap::new(),
+            introduction: None,
+            tutorials: Vec::new(),
+            dialogs: Vec::new(),
+            media_inputs: Vec::new(),
+            media_outputs: Vec::new(),
+            artifact_kinds: Vec::new(),
+            config: semio_framework::ConfigSpec::empty(),
+            command_grammar: semio_framework::CommandGrammar::empty(),
+            io: semio_framework::AppIo::from_document(id, semio_framework::MediaType { class: semio_framework::MediaClass::Data, form: semio_framework::MediaForm::Value }, semio_framework::ArtifactPresentation { id: id.into(), name: id.into(), dimension: String::new(), component_kind: id.into() }),
+        }
+    }
+
+    fn fixture_manifest(plugin_id: &str, dependencies: Vec<&str>, artifact_kinds: Vec<semio_framework::ArtifactKindSpec>, apps: Vec<semio_framework::AppDefinition>) -> PluginManifest {
+        PluginManifest {
+            plugin_id: plugin_id.into(),
+            label: plugin_id.into(),
+            version: "0.1.0".into(),
+            apps,
+            examples: Vec::new(),
+            capabilities: Vec::new(),
+            topic_contributions: Vec::new(),
+            commands: Vec::new(),
+            artifact_kinds,
+            dependencies: dependencies.into_iter().map(|id| semio_framework::PluginDependency::new(id, semio_framework::VersionReq::Any)).collect(),
+            contributions: Vec::new(),
+        }
+    }
+
+    pub(super) fn dialect(subset: &str) -> semio_framework::ArtifactDialect {
+        semio_framework::ArtifactDialect { artifact_kind: "s.cad.cad".into(), standard: "1".into(), subset: subset.into() }
+    }
+
+    fn register(router: &AppRouter, plugin_id: &str, dependencies: Vec<&str>, artifact_kinds: Vec<semio_framework::ArtifactKindSpec>, apps: Vec<semio_framework::AppDefinition>) -> Result<(), semio_framework::Fault> {
+        router.register_manifest(plugin_id, &fixture_manifest(plugin_id, dependencies, artifact_kinds, apps))
+    }
+
+    #[test]
+    fn owner_surface_sorts_first_then_plugin_id_then_app_id() {
+        let router = AppRouter::new();
+        let editor_dialect = dialect("*");
+        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad")], vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor)]).expect("owner registers");
+        register(&router, "aec-building", vec!["cad"], vec![], vec![fixture_app("s.cad.cad@1/1#editor", dialect("1"), semio_framework::AppRole::Editor)]).expect("a distinct subset's editor, contributed by a dependent, does not conflict");
+        let refs = router.surfaces_for(&editor_dialect, semio_framework::AppRole::Editor);
+        assert_eq!(refs, vec![semio_framework::AppRef { plugin_id: "cad".into(), app_id: "s.cad.cad@1/*#editor".into() }]);
+        assert_eq!(router.owner_of("s.cad.cad"), Some("cad".to_string()));
+    }
+
+    #[test]
+    fn duplicate_app_ref_is_a_conflict() {
+        let router = AppRouter::new();
+        let editor_dialect = dialect("*");
+        let app = fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor);
+        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad")], vec![app.clone()]).expect("first registration succeeds");
+        let error = register(&router, "cad", vec![], vec![], vec![app]).expect_err("re-registering the same AppRef must conflict");
+        assert_eq!(error.code.0, "surface.conflict");
+    }
+
+    #[test]
+    fn contribution_without_a_declared_dependency_is_rejected() {
+        let router = AppRouter::new();
+        let editor_dialect = dialect("*");
+        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad")], vec![]).expect("owner claims the kind with zero apps");
+        let error = register(&router, "norm", vec![], vec![], vec![fixture_app("s.cad.cad@1/*#viewer", editor_dialect, semio_framework::AppRole::Viewer)]).expect_err("a non-owner plugin without a dependency on the owner must be rejected");
+        assert_eq!(error.code.0, "surface.contribution-not-permitted");
+    }
+
+    #[test]
+    fn contribution_with_a_declared_dependency_is_admitted_and_sorted_after_the_owner() {
+        let router = AppRouter::new();
+        let editor_dialect = dialect("*");
+        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad")], vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor)]).expect("owner registers its editor");
+        register(&router, "norm", vec!["cad"], vec![], vec![fixture_app("s.cad.cad@1/*#viewer", editor_dialect.clone(), semio_framework::AppRole::Viewer)]).expect("norm depends on cad, so contributing a viewer for cad's dialect is permitted");
+        let viewers = router.surfaces_for(&editor_dialect, semio_framework::AppRole::Viewer);
+        assert_eq!(viewers, vec![semio_framework::AppRef { plugin_id: "norm".into(), app_id: "s.cad.cad@1/*#viewer".into() }]);
+    }
+
+    #[test]
+    fn owned_surface_gaps_reports_the_missing_role_only() {
+        let router = AppRouter::new();
+        let editor_dialect = dialect("*");
+        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad")], vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect, semio_framework::AppRole::Editor)]).expect("owner registers only an editor");
+        let gaps = router.owned_surface_gaps();
+        assert_eq!(gaps.len(), 1);
+        assert_eq!(gaps[0].code.0, "surface.missing-owner-surface");
+        assert!(gaps[0].message.contains("viewer"));
+    }
+
+    #[test]
+    fn unregister_plugin_drops_its_surfaces_but_keeps_its_ownership_claim() {
+        let router = AppRouter::new();
+        let editor_dialect = dialect("*");
+        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad")], vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor)]).expect("owner registers");
+        router.unregister_plugin("cad");
+        assert!(router.surfaces_for(&editor_dialect, semio_framework::AppRole::Editor).is_empty(), "the surface itself is gone");
+        assert_eq!(router.owner_of("s.cad.cad"), Some("cad".to_string()), "ownership claim survives so a re-registering hot-reload reclaims it, not a stray contributor");
+        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad")], vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor)]).expect("re-registering after unregister succeeds (no stale conflict)");
+        assert_eq!(router.surfaces_for(&editor_dialect, semio_framework::AppRole::Editor), vec![semio_framework::AppRef { plugin_id: "cad".into(), app_id: "s.cad.cad@1/*#editor".into() }]);
+    }
+
+    /// 🔗️ Lane 1-D parity reconciliation (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET,
+    /// `📓️w1-d-report.md`): the SAME ordered fixture — owner surface, two contributed surfaces
+    /// from different plugins, a duplicate, an unknown dialect — is asserted here AND in the TS
+    /// twin (`.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET/🧪️w1-d-parity.ts`),
+    /// which builds the identical manifests through `AppRouter.build`/`resolveOpeningApp`. Both
+    /// sides must produce identical `surfaces_for` ordering and identical fault codes — run both,
+    /// paste both outputs into the report, per the ticket's verification rule.
+    #[test]
+    fn w1_d_parity_fixture_owner_two_contributors_duplicate_and_unknown_dialect() {
+        let router = AppRouter::new();
+        let editor_dialect = dialect("*");
+        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad")], vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor)]).expect("owner registers");
+        register(&router, "norm", vec!["cad"], vec![], vec![fixture_app("s.cad.cad@1/*#editor-norm", editor_dialect.clone(), semio_framework::AppRole::Editor)]).expect("norm depends on cad, contributes a second editor");
+        register(&router, "aec-building", vec!["cad"], vec![], vec![fixture_app("s.cad.cad@1/*#editor-aec", editor_dialect.clone(), semio_framework::AppRole::Editor)]).expect("aec-building depends on cad, contributes a third editor");
+
+        let refs = router.surfaces_for(&editor_dialect, semio_framework::AppRole::Editor);
+        assert_eq!(
+            refs,
+            vec![
+                semio_framework::AppRef { plugin_id: "cad".into(), app_id: "s.cad.cad@1/*#editor".into() },
+                semio_framework::AppRef { plugin_id: "aec-building".into(), app_id: "s.cad.cad@1/*#editor-aec".into() },
+                semio_framework::AppRef { plugin_id: "norm".into(), app_id: "s.cad.cad@1/*#editor-norm".into() },
+            ],
+            "owner first, then contributors pluginId-ascending (aec-building < norm)"
+        );
+
+        let duplicate = register(&router, "aec-building", vec!["cad"], vec![], vec![fixture_app("s.cad.cad@1/*#editor-aec", editor_dialect.clone(), semio_framework::AppRole::Editor)]).expect_err("re-registering the same AppRef must conflict");
+        assert_eq!(duplicate.code.0, "surface.conflict");
+
+        let unknown_dialect = dialect("does-not-exist");
+        let unknown = OpeningResolver::resolve(&router, &unknown_dialect, semio_framework::AppRole::Editor, None).expect_err("no surface registered for this subset");
+        assert_eq!(unknown.code.0, "surface.unknown-dialect");
+    }
+}
+//#endregion 🔖️AppRouter
+
+//#region 🔖️OpeningResolver
+/// 🧭️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §3: the frozen four-step
+/// precedence — (1) an explicit user default, if it is still present in the router; (2) the
+/// dialect's owner plugin's surface; (3) the router's first entry; (4) `surface.unknown-dialect`.
+/// Steps 2 and 3 collapse into ONE branch below by construction: `AppRouter::surfaces_for` already
+/// sorts the owner's surface first (when the owner has one), so "the first entry" and "the owner's
+/// surface" are the same value whenever an owner surface exists — there is no code path where they
+/// would disagree. `user_default` is a single already-resolved lookup, not the whole
+/// `OpeningPreferences` value: folding the config op log into that lookup
+/// (`OpeningPreferences`'s `MutationDiff` impl / `apply_opening_config_mutation`, `🎚️config/🧬️schema`)
+/// is the CALLER's job — this function only ever reads, never mutates, matching the ticket's "never a
+/// mutable map" instruction for `prefs`.
+pub struct OpeningResolver;
+
+impl OpeningResolver {
+    pub fn resolve(router: &AppRouter, dialect: &semio_framework::ArtifactDialect, role: semio_framework::AppRole, user_default: Option<&semio_framework::AppRef>) -> Result<semio_framework::AppRef, semio_framework::Fault> {
+        let candidates = router.surfaces_for(dialect, role);
+        if let Some(default_ref) = user_default {
+            if candidates.contains(default_ref) {
+                return Ok(default_ref.clone());
+            }
+        }
+        if let Some(first) = candidates.into_iter().next() {
+            return Ok(first);
+        }
+        Err(semio_framework::Fault::new(
+            semio_framework::FaultOrigin::Framework,
+            semio_framework::FaultCode::new("surface.unknown-dialect"),
+            format!("no {} surface registered for `{}`", role.as_str(), dialect.to_coordinate()),
+        ))
+    }
+}
+
+#[cfg(test)]
+mod opening_resolver_tests {
+    use super::app_router_tests::{dialect, fixture_app};
+    use super::*;
+
+    #[test]
+    fn step1_explicit_default_still_in_router_wins() {
+        let router = AppRouter::new();
+        let editor_dialect = dialect("*");
+        router.register_manifest("cad", &PluginManifest { plugin_id: "cad".into(), label: "cad".into(), version: "0.1.0".into(), apps: vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor)], examples: Vec::new(), capabilities: Vec::new(), topic_contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new(), dependencies: Vec::new(), contributions: Vec::new() }).expect("owner registers");
+        router
+            .register_manifest(
+                "norm",
+                &PluginManifest {
+                    plugin_id: "norm".into(),
+                    label: "norm".into(),
+                    version: "0.1.0".into(),
+                    apps: vec![fixture_app("s.cad.cad@1/*#editor-alt", editor_dialect.clone(), semio_framework::AppRole::Editor)],
+                    examples: Vec::new(),
+                    capabilities: Vec::new(),
+                    topic_contributions: Vec::new(),
+                    commands: Vec::new(),
+                    artifact_kinds: Vec::new(),
+                    dependencies: vec![semio_framework::PluginDependency::new("cad", semio_framework::VersionReq::Any)],
+                    contributions: Vec::new(),
+                },
+            )
+            .expect("norm contributes a second editor for the same dialect");
+        let pinned = semio_framework::AppRef { plugin_id: "norm".into(), app_id: "s.cad.cad@1/*#editor-alt".into() };
+        let resolved = OpeningResolver::resolve(&router, &editor_dialect, semio_framework::AppRole::Editor, Some(&pinned)).expect("pinned default resolves");
+        assert_eq!(resolved, pinned);
+    }
+
+    #[test]
+    fn step2_and_step3_collapse_to_the_owner_surface_when_default_is_stale() {
+        let router = AppRouter::new();
+        let editor_dialect = dialect("*");
+        router.register_manifest("cad", &PluginManifest { plugin_id: "cad".into(), label: "cad".into(), version: "0.1.0".into(), apps: vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor)], examples: Vec::new(), capabilities: Vec::new(), topic_contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new(), dependencies: Vec::new(), contributions: Vec::new() }).expect("owner registers");
+        let stale_default = semio_framework::AppRef { plugin_id: "gone".into(), app_id: "s.cad.cad@1/*#editor".into() };
+        let resolved = OpeningResolver::resolve(&router, &editor_dialect, semio_framework::AppRole::Editor, Some(&stale_default)).expect("falls through to owner surface");
+        assert_eq!(resolved, semio_framework::AppRef { plugin_id: "cad".into(), app_id: "s.cad.cad@1/*#editor".into() });
+    }
+
+    #[test]
+    fn step3_first_entry_when_the_owner_has_no_surface_for_this_role() {
+        let router = AppRouter::new();
+        let editor_dialect = dialect("*");
+        router.register_manifest("cad", &PluginManifest { plugin_id: "cad".into(), label: "cad".into(), version: "0.1.0".into(), apps: Vec::new(), examples: Vec::new(), capabilities: Vec::new(), topic_contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new(), dependencies: Vec::new(), contributions: Vec::new() }).expect("owner claims nothing yet, zero apps");
+        router
+            .register_manifest(
+                "norm",
+                &PluginManifest {
+                    plugin_id: "norm".into(),
+                    label: "norm".into(),
+                    version: "0.1.0".into(),
+                    apps: vec![fixture_app("s.cad.cad@1/*#viewer", editor_dialect.clone(), semio_framework::AppRole::Viewer)],
+                    examples: Vec::new(),
+                    capabilities: Vec::new(),
+                    topic_contributions: Vec::new(),
+                    commands: Vec::new(),
+                    artifact_kinds: Vec::new(),
+                    dependencies: Vec::new(),
+                    contributions: Vec::new(),
+                },
+            )
+            .expect("s.cad.cad has no owner yet, so norm becomes it by being first to declare a surface for it");
+        let resolved = OpeningResolver::resolve(&router, &editor_dialect, semio_framework::AppRole::Viewer, None).expect("first (only) entry resolves");
+        assert_eq!(resolved, semio_framework::AppRef { plugin_id: "norm".into(), app_id: "s.cad.cad@1/*#viewer".into() });
+    }
+
+    #[test]
+    fn step4_unknown_dialect_when_the_router_has_nothing() {
+        let router = AppRouter::new();
+        let editor_dialect = dialect("*");
+        let error = OpeningResolver::resolve(&router, &editor_dialect, semio_framework::AppRole::Editor, None).expect_err("empty router must fault");
+        assert_eq!(error.code.0, "surface.unknown-dialect");
+    }
+}
+//#endregion 🔖️OpeningResolver
 
 //#region 🔖️HostState
 struct HostState {
@@ -1491,4 +3210,126 @@ mod tests {
         assert_eq!(second_text, first_text, "print(parse(print(parse(x)))) must be a fixpoint -- proves real parse/print logic ran on both routed hops, not a stub");
     }
     //#endregion 🔖️IoRouterE2e
+
+    //#region 🔖️W2aPluginDependencyE2e
+    /// 🎯️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (W2-A): the real
+    /// wasmtime proof for `PluginGraph`/`ArtifactMutationRouter`/`ArtifactInferenceRouter`/
+    /// `InstanceDirectory` — TWO real plugin components (cad, stdio — the same pair
+    /// `io_router_routes_a_real_cross_plugin_compose_between_two_loaded_wasm_plugins` above already
+    /// proves cross-instance IO with) plus ONE real extension component (flow's `math` extension),
+    /// all loaded via this crate's own `WasmPluginRuntime`/`ExtensionRuntime`, registered into REAL
+    /// router/graph/directory instances exactly as `🏃️run/🦀️component.rs`'s `WasmtimeNodeHost::
+    /// load_runtime_recursive`/`open` do it.
+    ///
+    /// ⚠️ Neither cad nor stdio (nor any shipped plugin) declares a real `.depends_on()`/
+    /// `.contributes()` relationship yet — that is explicitly W3 pilot work per this ticket's master
+    /// plan (`📓️master-plan.md`: "W3 pilots ... prove the mechanisms end to end"), not W2's. This
+    /// test therefore proves the REAL wiring (real manifests flow through real registration/lookup
+    /// code against real loaded components) and layers SYNTHETIC dependency manifests on top (via
+    /// the same `PluginGraph::register` a real dependent's real manifest would go through) to
+    /// exercise the three graph-level typed rejections. `HostTransactionCoordinator`'s full
+    /// two-member commit/group-undo path (which inherently needs a guest that actually proposes a
+    /// composite mutation) is proven separately in `host_transaction_coordinator_tests` above via
+    /// an in-process fake that speaks the identical wire protocol — see that module's own doc.
+    #[test]
+    fn plugin_dependency_infrastructure_wires_real_loaded_plugins_and_one_real_extension() {
+        let cad_path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/cad/semio_s_plugin_cad_component.core.wasm");
+        let stdio_path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/stdio/semio_s_plugin_stdio_component.core.wasm");
+        let extension_path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/flow-extension-math/semio_s_plugin_flow_extension_math_component.core.wasm");
+        if !cad_path.exists() || !stdio_path.exists() || !extension_path.exists() {
+            // 🧊️ Same convention as every other real-component test in this file: stays green on a
+            // fresh clone / no-wasm-toolchain CI run.
+            return;
+        }
+
+        let cad = WasmPluginRuntime::load(cad_path).expect("load real cad.wasm");
+        let stdio = WasmPluginRuntime::load(stdio_path).expect("load real stdio.wasm");
+        let cad_id = cad.manifest.plugin_id.clone();
+        let stdio_id = stdio.manifest.plugin_id.clone();
+        assert_ne!(cad_id, stdio_id, "two distinct real plugins");
+
+        //#region 🔖️PluginGraphOverRealManifests
+        let graph = PluginGraph::new();
+        graph.register(cad.manifest.clone()).expect("cad's real manifest registers cleanly (no declared dependencies yet)");
+        graph.register(stdio.manifest.clone()).expect("stdio's real manifest registers cleanly");
+        let order = graph.load_order().expect("no cycle among two dependency-free real plugins");
+        assert!(order.contains(&cad_id) && order.contains(&stdio_id), "load order must name both real plugins: {order:?}");
+        assert!(graph.dependents(&cad_id).unwrap().is_empty(), "neither real plugin declares a dependency yet");
+
+        // Typed rejections (contract §4 rule 5), layered as SYNTHETIC manifests on top of the real
+        // graph — see this test's own doc for why a real dependency edge doesn't exist yet.
+        let mut missing_dependency = cad.manifest.clone();
+        missing_dependency.plugin_id = "w2a-e2e-missing-dep-probe".into();
+        missing_dependency.dependencies = vec![semio_framework::PluginDependency::new("w2a-e2e-nonexistent", semio_framework::VersionReq::Any)];
+        let error = graph.register(missing_dependency).unwrap_err();
+        assert!(matches!(error, PluginGraphError::Graph(semio_framework::DependencyGraphError::MissingDependency { .. })), "expected MissingDependency, got {error:?}");
+
+        let mut version_mismatch = cad.manifest.clone();
+        version_mismatch.plugin_id = "w2a-e2e-version-probe".into();
+        version_mismatch.dependencies = vec![semio_framework::PluginDependency::new(&cad_id, semio_framework::VersionReq::parse("^999.0.0").unwrap())];
+        let error = graph.register(version_mismatch).unwrap_err();
+        assert!(matches!(error, PluginGraphError::Graph(semio_framework::DependencyGraphError::VersionMismatch { .. })), "expected VersionMismatch against cad's real version `{}`, got {error:?}", cad.manifest.version);
+
+        // A cycle: re-register the REAL cad manifest (as if hot-reloading it) with a synthetic
+        // dependency on stdio, after separately registering a synthetic plugin that depends on cad —
+        // closing synthetic-dependent -> cad -> stdio -> ??? is simpler as a direct two-node cycle:
+        // stdio (synthetic dependency on cad) already exists as a REAL, dependency-free manifest, so
+        // instead prove the cycle path the same way `plugin_graph_tests` does: two synthetic nodes.
+        let cycle_graph = PluginGraph::new();
+        cycle_graph.register(cad.manifest.clone()).unwrap();
+        let mut synthetic_dependent = stdio.manifest.clone();
+        synthetic_dependent.dependencies = vec![semio_framework::PluginDependency::new(&cad_id, semio_framework::VersionReq::Any)];
+        cycle_graph.register(synthetic_dependent).unwrap();
+        let mut cad_now_depends_on_stdio = cad.manifest.clone();
+        cad_now_depends_on_stdio.dependencies = vec![semio_framework::PluginDependency::new(&stdio_id, semio_framework::VersionReq::Any)];
+        let error = cycle_graph.register(cad_now_depends_on_stdio).unwrap_err();
+        assert!(matches!(error, PluginGraphError::Graph(semio_framework::DependencyGraphError::Cycle { .. })), "expected Cycle, got {error:?}");
+
+        // Unload guard: refuse while a (synthetic) dependent is registered; permitted once it's gone.
+        assert!(matches!(graph.guard_unload(&cad_id), Ok(())), "no dependent registered against the MAIN graph yet");
+        let mut real_dependent = stdio.manifest.clone();
+        real_dependent.plugin_id = "w2a-e2e-real-dependent-probe".into();
+        real_dependent.dependencies = vec![semio_framework::PluginDependency::new(&cad_id, semio_framework::VersionReq::Any)];
+        graph.register(real_dependent).unwrap();
+        assert!(matches!(graph.guard_unload(&cad_id), Err(PluginGraphError::UnloadBlocked { .. })), "unload must now be refused");
+        graph.unregister("w2a-e2e-real-dependent-probe").unwrap();
+        graph.guard_unload(&cad_id).expect("no dependents left, unload now permitted");
+        //#endregion 🔖️PluginGraphOverRealManifests
+
+        //#region 🔖️MutationAndInferenceRoutersOverRealPlugins
+        let mutation_router = ArtifactMutationRouter::new();
+        let cad_roster_bytes = cad.list_artifact_mutations().expect("real cad.wasm answers contributor.list-artifact-mutations");
+        mutation_router.register_plugin(&cad_id, &cad.manifest.dependencies, &cad_roster_bytes).expect("cad's real (today likely empty) roster registers without conflict");
+        let stdio_roster_bytes = stdio.list_artifact_mutations().expect("real stdio.wasm answers contributor.list-artifact-mutations");
+        mutation_router.register_plugin(&stdio_id, &stdio.manifest.dependencies, &stdio_roster_bytes).expect("stdio's real roster registers without conflict");
+        mutation_router.roster().expect("merged roster is readable (contributed rows, if any real plugin ever adds one, are visible here)");
+
+        let inference_router = ArtifactInferenceRouter::new();
+        let cad_dependencies = cad.manifest.dependencies.clone();
+        let cad_arc = Arc::new(cad);
+        inference_router.register_plugin(&cad_id, &cad_dependencies, Arc::clone(&cad_arc)).expect("cad's real inference metadata registers");
+        let stdio_arc = Arc::new(stdio);
+        inference_router.register_plugin(&stdio_id, &stdio_arc.manifest.dependencies, Arc::clone(&stdio_arc)).expect("stdio's real inference metadata registers");
+        inference_router.metadata().expect("merged inference metadata is readable");
+        //#endregion 🔖️MutationAndInferenceRoutersOverRealPlugins
+
+        //#region 🔖️InstanceDirectoryOverRealInstances
+        let directory = InstanceDirectory::new();
+        directory.bind("artifacts/w2a-e2e-cad-instance", &cad_id, 1, "s.cad.document").expect("bind a synthetic artifact ref to a real plugin's identity");
+        directory.bind("artifacts/w2a-e2e-stdio-instance", &stdio_id, 1, "s.stdio.document").expect("bind a synthetic artifact ref to the other real plugin's identity");
+        assert_eq!(directory.resolve("artifacts/w2a-e2e-cad-instance").unwrap().plugin_id, cad_id);
+        assert_eq!(directory.resolve("artifacts/w2a-e2e-stdio-instance").unwrap().plugin_id, stdio_id);
+        directory.unbind_instance(&cad_id, 1);
+        assert!(directory.resolve("artifacts/w2a-e2e-cad-instance").is_none());
+        //#endregion 🔖️InstanceDirectoryOverRealInstances
+
+        //#region 🔖️ExtensionComponentE2e
+        let extension_runtime = ExtensionRuntime::new().expect("extension runtime engine/linker build");
+        let extension_id = extension_runtime.load(extension_path).expect("load real flow-extension-math.wasm as an extension-world component");
+        let extension_manifest = extension_runtime.manifest(&extension_id).expect("loaded extension's manifest is readable");
+        assert_eq!(extension_manifest.extension_id, extension_id);
+        assert!(!extension_manifest.extends.is_empty(), "a real extension names the plugin it extends");
+        //#endregion 🔖️ExtensionComponentE2e
+    }
+    //#endregion 🔖️W2aPluginDependencyE2e
 }

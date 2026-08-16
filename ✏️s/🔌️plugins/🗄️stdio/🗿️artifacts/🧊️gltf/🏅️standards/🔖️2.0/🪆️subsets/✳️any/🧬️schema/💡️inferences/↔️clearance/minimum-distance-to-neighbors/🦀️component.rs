@@ -1,0 +1,42 @@
+//! 💡️ minimum-distance-to-neighbors atomic glTF inference leaf.
+use super::super::{geometry_core::{GltfGeometryContext, GltfPairGeometry}, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
+use super::super::super::modules::{inference_measures::{estimate, unavailable}, measurement_contracts::*, mesh_topology::Topology};
+
+pub struct GltfMinimumDistanceToNeighborsInference;
+
+impl GltfInferenceLeaf for GltfMinimumDistanceToNeighborsInference {
+    const DESCRIPTOR: GltfInferenceLeafDescriptor = GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.minimum-distance-to-neighbors.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.minimum-distance-to-neighbors.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
+}
+
+pub fn descriptor() -> GltfInferenceLeafDescriptor { GltfMinimumDistanceToNeighborsInference::DESCRIPTOR }
+
+pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+    unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology))
+}
+
+pub fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<f64> {
+    estimate(pair.minimum_distance, GltfUnit::Metre, pair.sample_count, None)
+}
+
+pub fn from_assembly(distances: &[f64], sample_count: usize, topology: Topology) -> Option<GltfMeasure<f64>> {
+    (!distances.is_empty()).then(|| estimate(distances.iter().copied().fold(f64::INFINITY, f64::min), GltfUnit::Metre, sample_count, Some(topology)))
+}
+
+pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
+    unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
+}
+
+pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
+    serde_json::to_value(&indicators.clearance.minimumDistanceToNeighbors)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn descriptor_is_versioned_and_cacheable() {
+        assert_eq!(descriptor().id, "s.stdio.gltf.inference.minimum-distance-to-neighbors.v1");
+        assert_eq!(descriptor().algorithm_version, 1);
+    }
+}

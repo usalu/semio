@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📊performance` per Wave C.
 
 use super::mutation::CreatePerformanceCriterion;
+use crate::artifacts::program::diff::ProgramPerformanceDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramPerformanceDelta};
 
 /// 🌱️ `added = [payload row]` — the row lands at the end of `program.performance` on apply.
 pub fn diff(payload: &CreatePerformanceCriterion, _base: &ProgramSnapshot) -> ProgramDiff {

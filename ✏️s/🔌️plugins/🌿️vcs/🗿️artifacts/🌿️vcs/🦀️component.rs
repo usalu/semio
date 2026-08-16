@@ -3,9 +3,9 @@
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 pub const VCS_DOCUMENT_SCHEMA: &str = "vcs.vcs";
-pub use crate::artifacts::vcs::snapshot::schema::VcsSnapshot;
 pub use crate::artifacts::vcs::diff::schema::VcsDiff;
 pub use crate::artifacts::vcs::mutations::VcsDemoMutation;
+pub use crate::artifacts::vcs::snapshot::schema::VcsSnapshot;
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
@@ -22,33 +22,43 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: VCS_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
 //#endregion 🔖️ArtifactKind
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::vcs::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("VcsComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
+//#region 🔖️Declaration
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.vcs")?)
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.vcs.vcs")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.vcs.vcs")?)?)?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.inference.artifact")?, ArtifactCapabilityKind::inference())
+                .descriptor(b"s.vcs.vcs.inference")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.vcs.vcs.inference")?)?,
+        )?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.vcs@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.vcs@1/*")?)?)?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.composer.json")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.json@rfc8259/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.codec.document")?, ArtifactCapabilityKind::codec())
+                .descriptor(b"vcs.vcs:vcs")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "vcs.vcs")?)?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "vcs")?)?,
+        )?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"VCS")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "VCS")?)?)?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"VCS")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "VCS")?)?)
 }
-//#endregion 🚪️DerivedIoRegistry
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+        .schema(crate::artifacts::vcs::schema::vcs_artifact_schema_descriptor())
+        .inferences([crate::artifacts::vcs::standards::v1::subsets::any::schema::inferences::vcs_artifact_inference_descriptor()])
+        .composers(crate::artifacts::vcs::standards::v1::subsets::any::io::io_registry::entries())
+        .document_codec::<crate::apps::vcs::VcsPlayApp>()
+        .try_build()
+}
+//#endregion 🔖️Declaration

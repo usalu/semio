@@ -30,6 +30,7 @@ semio_framework_plugin::app_labels! {
         canvas: native_en "Canvas", native_de "Leinwand", reuse_en "Canvas", reuse_de "Leinwand";
         widget: native_en "Widget", native_de "Widget", reuse_en "Widget", reuse_de "Widget";
         delete_selection: native_en "Delete selection", native_de "Auswahl löschen", reuse_en "Delete selection", reuse_de "Auswahl löschen";
+        duplicate_widget: native_en "Duplicate", native_de "Duplizieren", reuse_en "Duplicate", reuse_de "Duplizieren";
         hide_preview: native_en "Hide preview", native_de "Vorschau ausblenden", reuse_en "Hide preview", reuse_de "Vorschau ausblenden";
         show_preview: native_en "Show preview", native_de "Vorschau einblenden", reuse_en "Show preview", reuse_de "Vorschau einblenden";
         add_node: native_en "Add node…", native_de "Knoten hinzufügen…", reuse_en "Add node…", reuse_de "Knoten hinzufügen…";

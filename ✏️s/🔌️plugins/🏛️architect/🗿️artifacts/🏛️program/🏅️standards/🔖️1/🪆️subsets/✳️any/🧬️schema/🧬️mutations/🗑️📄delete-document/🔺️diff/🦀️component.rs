@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📄documents` per Wave C.
 
 use super::mutation::DeleteDocument;
+use crate::artifacts::program::diff::ProgramArtifactsDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramArtifactsDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteDocument, _base: &ProgramSnapshot) -> ProgramDiff {

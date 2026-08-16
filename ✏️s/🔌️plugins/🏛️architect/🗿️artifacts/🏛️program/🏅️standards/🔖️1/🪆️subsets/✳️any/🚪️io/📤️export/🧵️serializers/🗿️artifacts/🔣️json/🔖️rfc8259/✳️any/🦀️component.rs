@@ -8,8 +8,8 @@
 //! structural `serde_json::Value -> JsonValue` converter (stdio provides no such bridge) plus
 //! stdio's own real `write_json_pretty` text codec for `serialize_bytes`.
 use crate::artifacts::program::ProgramSnapshot;
-use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{write_json_pretty, JsonMember, JsonValue};
+use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

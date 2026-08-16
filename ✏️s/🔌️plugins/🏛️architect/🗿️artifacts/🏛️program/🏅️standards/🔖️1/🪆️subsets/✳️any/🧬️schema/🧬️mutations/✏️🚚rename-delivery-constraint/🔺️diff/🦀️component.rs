@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🚚delivery` per Wave C.
 
 use super::mutation::RenameDeliveryConstraint;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramDeliveryDelta, ProgramDeliveryPatchEntry};
 use crate::artifacts::program::registers::DeliveryConstraintPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameDeliveryConstraint, _base: &ProgramSnapshot) -> ProgramDiff {

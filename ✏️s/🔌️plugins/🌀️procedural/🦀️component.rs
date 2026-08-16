@@ -1,39 +1,55 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
-
-/// 🔌️ Everything left in `.setup()` after the ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1
-/// conversion — `.artifact(…)` now carries procedural2d's and procedural3d's own
-/// schema/inference/composer/language/document-codec registrations as data. Four calls remain here
-/// because `ArtifactDeclaration` has no field for any of them (all four named, not silently
-/// dropped — see `📓️w1b-semio-s-plugin-procedural-report.md`):
-/// - the two `register_app_schema()` calls are app-scope config/presence schema, the one §6
-///   registrar (`register_app_schema_descriptor`) `ArtifactDeclaration` deliberately excludes
-///   (same exception note's exemplar documents);
-/// - `register_dwg_mesh_bridge()` (self-registering procedural3d's OWN kind — the compliant shape,
-///   unlike a foreign plugin naming a kind it doesn't own) has no equivalent field because
-///   `register_mesh_dwg_import_handler` isn't one of the §6 registrars `ArtifactDeclaration` was
-///   built to cover — a genuine declaration gap, reported prominently rather than silently kept;
-/// - `ensure_linked_flow_extensions()` installs flow's `flow.extension` operator installers
-///   (brep/math/primitive/logic/dictionary/list/text) this artifact's own eval depends on;
-///   `register_linked_flow_extension_installer` is the OTHER §6 function the mechanism's own census
-///   names as excluded by design (flow's own extension registry, no declaration field). Idempotent
-///   (`Once`-guarded), so calling it here preserves this plugin's prior eager-boot behavior exactly.
-fn register_exports() {
-    crate::apps::procedural2d::config::schema::register_app_schema();
-    crate::apps::procedural3d::config::schema::register_app_schema();
-    crate::apps::procedural3d::register_dwg_mesh_bridge();
-    crate::apps::procedural3d::ensure_linked_flow_extensions();
-}
+use semio_framework_plugin::{FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, Plugin};
 
 /// 🔌️ Builds the plugin surface for host registration.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("procedural")
         .label("Procedural")
         .version("0.1.0")
-        .setup(register_exports)
         .artifact(crate::artifacts::procedural2d::declaration())
         .artifact(crate::artifacts::procedural3d::declaration())
+        .host_media_handler(HostMediaHandlerDeclaration::mesh_dwg_bridge(
+            "s.procedural.host-media.mesh-dwg",
+            crate::artifacts::procedural3d::artifact_kind(),
+            crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA,
+            crate::apps::procedural3d::procedural3d_document_from_mesh,
+        )?)
+        .flow_extension(FlowExtensionDeclaration::new(
+            "s.procedural.flow-extension.brep",
+            FlowExtensionManifest::new("brep", "Brep", "0.3.0")?,
+            FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.brep", "semio.s.plugin.flow.extension.brep", "register")?,
+        )?)
+        .flow_extension(FlowExtensionDeclaration::new(
+            "s.procedural.flow-extension.math",
+            FlowExtensionManifest::new("math", "Math", "0.1.0")?,
+            FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.math", "semio.s.plugin.flow.extension.math", "register")?,
+        )?)
+        .flow_extension(FlowExtensionDeclaration::new(
+            "s.procedural.flow-extension.primitive",
+            FlowExtensionManifest::new("core", "Core", "0.1.0")?,
+            FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.primitive", "semio.s.plugin.flow.extension.primitive", "register")?,
+        )?)
+        .flow_extension(FlowExtensionDeclaration::new(
+            "s.procedural.flow-extension.logic",
+            FlowExtensionManifest::new("logic", "Logic", "0.1.0")?,
+            FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.logic", "semio.s.plugin.flow.extension.logic", "register")?,
+        )?)
+        .flow_extension(FlowExtensionDeclaration::new(
+            "s.procedural.flow-extension.dictionary",
+            FlowExtensionManifest::new("dictionary", "Dictionary", "0.1.0")?,
+            FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.dictionary", "semio.s.plugin.flow.extension.dictionary", "register")?,
+        )?)
+        .flow_extension(FlowExtensionDeclaration::new(
+            "s.procedural.flow-extension.list",
+            FlowExtensionManifest::new("list", "List", "0.1.0")?,
+            FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.list", "semio.s.plugin.flow.extension.list", "register")?,
+        )?)
+        .flow_extension(FlowExtensionDeclaration::new(
+            "s.procedural.flow-extension.text",
+            FlowExtensionManifest::new("text", "Text", "0.1.0")?,
+            FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.text", "semio.s.plugin.flow.extension.text", "register")?,
+        )?)
         .document_app::<crate::apps::procedural2d::Procedural2dPlayApp>(crate::apps::procedural2d::create_procedural2d_app())
         .document_app::<crate::apps::procedural3d::Procedural3dPlayApp>(crate::apps::procedural3d::create_procedural3d_app())
         .try_build()

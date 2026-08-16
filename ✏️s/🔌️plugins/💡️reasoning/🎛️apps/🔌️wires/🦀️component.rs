@@ -14,32 +14,32 @@
 //! `crate::apps::wires::config::WiresConfigMutation`s (real `backwards`, no ad hoc runtime `RefCell`);
 //! every action dispatches through the single typed `WiresCommand` channel via `ArtifactApp::handle`.
 
+use crate::apps::wires::commands::add_node;
+use crate::apps::wires::commands::add_relationship;
 use crate::apps::wires::commands::delete_selection;
 use crate::apps::wires::commands::set_active_example::{self, WIRES_PLAY_EXAMPLE_METABOLISM_ID};
-use crate::apps::wires::commands::{force_layout, reorganize};
 use crate::apps::wires::commands::set_locale;
-use crate::apps::wires::commands::add_node;
 use crate::apps::wires::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up};
-use crate::apps::wires::commands::add_relationship;
+use crate::apps::wires::commands::{force_layout, reorganize};
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::apps::wires::modes::edit;
 use crate::apps::wires::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
 use semio_framework::kernel::HostEffect;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ui_text, ActionDescriptor, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
-    INTERACTION_SELECT_ACTION_ID,
-};
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_plugin::{
+    ui_text, ActionDescriptor, App, ArtifactApp, ArtifactView, ConfigView, DraftView, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode, NoDraft,
+    NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode, INTERACTION_SELECT_ACTION_ID,
+};
 use serde_json::{json, Value};
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const WIRES_PLAY_APP_ID: &str = "reasoning-wires-play";
-pub use edit::windows::canvas::{WIRES_PLAY_BODY_COMPOSITE, WIRES_PLAY_WINDOW_CANVAS};
 pub use catalogue_panel::WIRES_PLAY_BODY_CATALOGUE;
 pub use document_panel::WIRES_PLAY_BODY_DOCUMENT;
+pub use edit::windows::canvas::{WIRES_PLAY_BODY_COMPOSITE, WIRES_PLAY_WINDOW_CANVAS};
 pub use inspection_panel::WIRES_PLAY_BODY_PROPERTIES;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
@@ -90,87 +90,6 @@ pub fn wires_select_effect(ids: &[String], granularity: &str, merge: &str) -> Ho
 }
 //#endregion 🔖️Interaction
 
-//#region 🔌️Registration
-/// 🗂️ Registers `WiresSnapshot`'s pack↔dsl codec so `framework/sync`'s `FolderEndpoint::Pack`
-/// (and any other schema-string-keyed caller) can print/parse it without depending on this crate's
-/// concrete `Projection`/`Mutation` types. Called from the plugin root's `semio_plugin!{ setup: … }`.
-pub fn register() {
-    crate::artifacts::wires::io_registry::register();
-
-    register_pilot_languages();
-    register_artifact_schema();
-    register_artifact_inferences();
-    crate::apps::wires::config::schema::register_app_schema();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::wires::ReasoningWiresPlayApp>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA);
-}
-
-/// 📎 Registers the wires artifact schema descriptor into the process-local registry.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::wires::schema::wires_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.reasoning.wires.inference`'s five handcrafted facet leaves into the OS-wide
-/// inference catalog — sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::wires_artifact_inference_descriptor());
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "wires.document",
-        extension: Some("wires"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::wires::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::wires::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::wires::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::wires::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("wires.document"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "wires.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::wires::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::wires::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::wires::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::wires::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("wires.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "wires.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::wires::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::wires::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("wires.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "wires.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::wires::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::wires::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("wires.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "wires.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::wires::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::wires::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("wires.spr"),
-    });
-}
-//#endregion 🔌️Registration
-
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
     /// 🎯️ `ReasoningWiresPlayApp::Command` — the SOLE dispatch surface for this app's behavior,
@@ -218,6 +137,10 @@ impl ArtifactApp for ReasoningWiresPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::wires::MINDMAP_WIRES_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::wires::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> WiresSnapshot {
         crate::artifacts::wires::empty_wires_snapshot()
     }
@@ -231,7 +154,14 @@ impl ArtifactApp for ReasoningWiresPlayApp {
     /// `app_commands!`-generated `dispatch`, whose per-row `$module::handle(payload, doc, cfg)`
     /// signature is framework-fixed and has no `interaction` slot) — ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
-    fn handle(command: &WiresCommand, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WiresMutation, WiresConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(
+        command: &WiresCommand,
+        doc: &ArtifactView<'_, WiresSnapshot>,
+        cfg: &ConfigView<'_, WiresConfig>,
+        interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<WiresMutation, WiresConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             WiresCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction),
             _ => command.dispatch(doc, cfg),
@@ -513,12 +443,20 @@ mod tests {
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = new_app();
-        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| crate::artifacts::wires::schema::fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).len(), 0, 1);
+        semio_framework_plugin::testkit::assert_undo_redo_round_trip(
+            &mut app,
+            WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }),
+            |app| crate::artifacts::wires::schema::fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).len(),
+            0,
+            1,
+        );
     }
 
     #[test]
     fn ingest_operations_is_idempotent() {
-        semio_framework_plugin::testkit::assert_ingest_idempotent::<ReasoningWiresPlayApp, usize>(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| crate::artifacts::wires::schema::fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).len());
+        semio_framework_plugin::testkit::assert_ingest_idempotent::<ReasoningWiresPlayApp, usize>(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| {
+            crate::artifacts::wires::schema::fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).len()
+        });
     }
 
     /// 🧪️ The definitional merge proof: A adds a node while B renames another node — disjoint edits

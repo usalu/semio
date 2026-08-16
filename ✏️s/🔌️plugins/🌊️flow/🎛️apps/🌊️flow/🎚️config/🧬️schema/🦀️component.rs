@@ -7,26 +7,36 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.flow.flow.config")]
 pub struct FlowConfig {
-    #[state(config)] pub preview_off_node_ids: Vec<String>,
-    #[state(config)] pub camera: CameraJson,
-    #[state(config)] pub lod_mode: String,
-    #[state(config)] pub proximity_distance: f64,
-    #[state(config)] pub grid_visible: bool,
-    #[state(config)] pub grid_snap_enabled: bool,
-    #[state(config)] pub grid_factor: f64,
-    #[state(config)] pub catalogue_sections_json: String,
-    #[state(config)] pub automation_enabled_json: String,
-    #[state(config)] pub contributions_json: String,
-    #[state(config)] pub generation_json: String,
-    #[state(config)] pub locale: String,
+    #[state(config)]
+    pub preview_off_node_ids: Vec<String>,
+    #[state(config)]
+    pub camera: CameraJson,
+    #[state(config)]
+    pub lod_mode: String,
+    #[state(config)]
+    pub proximity_distance: f64,
+    #[state(config)]
+    pub grid_visible: bool,
+    #[state(config)]
+    pub grid_snap_enabled: bool,
+    #[state(config)]
+    pub grid_factor: f64,
+    #[state(config)]
+    pub catalogue_sections_json: String,
+    #[state(config)]
+    pub automation_enabled_json: String,
+    #[state(config)]
+    pub contributions_json: String,
+    #[state(config)]
+    pub generation_json: String,
+    #[state(config)]
+    pub locale: String,
 }
 
-//region 📎 App-schema self-registration
-/// 📎 Registers the `s.flow.flow` app-schema descriptor (config + presence facets) into the
-/// open [`::schema::AppSchemaRegistry`], mirroring the transplanted-from-framework closed-catalog
-/// entry — see `🧰️framework/🔨️modules/🧬️schema/🦀️component.rs::register_all_app_schema_descriptors()`.
-pub fn register_app_schema() {
-    ::schema::register_app_schema_descriptor(::schema::AppSchemaDescriptor {
+//region 📎 App-schema descriptor
+/// 📎 `s.flow.flow`'s config and presence schema, owned by this leaf.
+pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+    ::schema::AppSchemaDescriptor {
         id: "s.flow.flow",
         config: ::schema::FacetLeaves {
             rust: include_str!("🦀️component.rs"),
@@ -42,7 +52,6 @@ pub fn register_app_schema() {
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️component.json"),
             proto: include_str!("../../👥️presence/🧬️schema/🛰️component.proto"),
         },
-    });
+    }
 }
-//endregion 📎 App-schema self-registration
-
+//endregion 📎 App-schema descriptor

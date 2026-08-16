@@ -29,8 +29,7 @@ pub struct Procedural3dDiff {
     #[state(presence)] pub selected_generation_id: Option<Option<String>>,
     #[state(artifact)] pub generation_preview_text: Option<Option<String>>,
     #[state(presence)] pub active_utility_id: Option<String>,
-    #[state(config)] pub locale: Option<String>,
-    #[state(config)] pub contributions_json: Option<String>}
+    #[state(config)] pub locale: Option<String>}
 //#endregion 🔖️Procedural3dDiff
 
 //#region 🔖️Helpers

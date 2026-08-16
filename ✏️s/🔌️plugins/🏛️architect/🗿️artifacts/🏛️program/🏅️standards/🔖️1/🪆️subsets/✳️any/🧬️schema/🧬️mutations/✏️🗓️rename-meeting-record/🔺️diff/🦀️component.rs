@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🗓️meetings` per Wave C.
 
 use super::mutation::RenameMeetingRecord;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramMeetingsDelta, ProgramMeetingsPatchEntry};
 use crate::artifacts::program::registers::MeetingRecordPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameMeetingRecord, _base: &ProgramSnapshot) -> ProgramDiff {

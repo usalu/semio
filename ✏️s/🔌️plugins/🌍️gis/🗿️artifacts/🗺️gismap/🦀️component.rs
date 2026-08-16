@@ -1,19 +1,17 @@
 //! 🗺️ GIS map artifact — the document entity the 2d app edits (constitutional: general).
 
-
-pub use crate::artifacts::gismap::schema::snapshot::GisMapSnapshot;
-pub use crate::artifacts::gismap::schema::mutations::GisMapMutation;
 pub use crate::artifacts::gismap::schema::diff::GisMapDiff;
+pub use crate::artifacts::gismap::schema::mutations::GisMapMutation;
+pub use crate::artifacts::gismap::schema::snapshot::GisMapSnapshot;
 
 use protocol::{Identified, Patchable};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, };
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 
 //#region 🔹Constants
-
 
 pub const GIS_MAP_SCHEMA: &str = "gis.map";
 //#endregion 🔹Constants
@@ -112,13 +110,15 @@ pub fn semio_value_from_serde_json(value: &serde_json::Value) -> SemioValue {
         serde_json::Value::Bool(value) => SemioValue::Bool { value: *value },
         serde_json::Value::Number(number) => {
             let lexeme = number.to_string();
-            if lexeme.contains('.') || lexeme.contains('e') || lexeme.contains('E') { SemioValue::Float { lexeme } } else { SemioValue::Int { lexeme } }
+            if lexeme.contains('.') || lexeme.contains('e') || lexeme.contains('E') {
+                SemioValue::Float { lexeme }
+            } else {
+                SemioValue::Int { lexeme }
+            }
         }
         serde_json::Value::String(value) => SemioValue::Str { value: value.clone() },
         serde_json::Value::Array(items) => SemioValue::List { items: items.iter().map(semio_value_from_serde_json).collect() },
-        serde_json::Value::Object(members) => {
-            SemioValue::Map { entries: members.iter().map(|(key, value)| SemioValueEntry { key: key.clone(), value: semio_value_from_serde_json(value) }).collect() }
-        }
+        serde_json::Value::Object(members) => SemioValue::Map { entries: members.iter().map(|(key, value)| SemioValueEntry { key: key.clone(), value: semio_value_from_serde_json(value) }).collect() },
     }
 }
 
@@ -179,7 +179,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: GIS_MAP_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"],
+        export_stdio_kinds: vec!["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"],
         import_stdio_kinds: vec!["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"],
     }
 }
@@ -191,112 +191,70 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// the plugin root's `register_gis_exports` fan-out. Relocated from `⚙️engine` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2): `declaration()` describes the artifact
 /// (kind, schema, io ports, ownership), which is not engine behaviour.
+/// 🧾️ Defines s.gismap's immutable runtime capability leaves.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.gismap.schema.artifact", "schema", "s.gis.gismap", &[("schema", "s.gis.gismap")], None),
-        ("s.gismap.inference.artifact", "inference", "s.gis.gismap.inference", &[("schema", "s.gis.gismap.inference")], None),
-        ("s.gismap.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
-        ("s.gismap.composer.pdf", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
-        ("s.gismap.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
-        ("s.gismap.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.gismap.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
-        ("s.gismap.composer.dxf", "composer", "s.stdio.dxf@r12/*", &[("dialect", "s.stdio.dxf@r12/*")], None),
-        ("s.gismap.grammar.document", "grammar", "gis.gismap", &[("grammar", "gis.gismap")], None),
-        ("s.gismap.grammar.op", "grammar", "gis.gismap.op", &[("grammar", "gis.gismap.op")], None),
-        ("s.gismap.grammar.diff", "grammar", "gis.gismap.diff", &[("grammar", "gis.gismap.diff")], None),
-        ("s.gismap.grammar.pack", "grammar", "gismap.pack", &[("grammar", "gismap.pack")], None),
-        ("s.gismap.grammar.spr", "grammar", "gismap.spr", &[("grammar", "gismap.spr")], None),
-        ("s.gismap.codec.document", "codec", "gis.map:gismap", &[("codec", "gis.map"), ("extension", "gismap")], None),
-        ("s.gismap.localization.en", "localization", "GIS Map", &[], Some(("en", "GIS Map"))),
-        ("s.gismap.localization.de", "localization", "GIS Karte", &[], Some(("de", "GIS Karte"))),
-    ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.gismap")?);
-    for (identity, kind, descriptor, claims, localization) in rows {
-        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
-        for (namespace, value) in *claims {
-            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
-        }
-        if let Some((locale, text)) = localization {
-            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
-        }
-        definition = definition.capability(capability)?;
-    }
-    Ok(definition)
+
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.gismap")?)
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.gis.gismap")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.gis.gismap")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.inference.artifact")?, ArtifactCapabilityKind::inference())
+                .descriptor(b"s.gis.gismap.inference")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.gis.gismap.inference")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.gismap@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.gismap@1/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.composer.svg")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.svg@1.1/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.svg@1.1/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.composer.pdf")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.pdf@1.4/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.pdf@1.4/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.composer.png")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.png@1.2/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.png@1.2/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.composer.json")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.json@rfc8259/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.composer.dwg")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.dwg@ac1018/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.dwg@ac1018/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.composer.dxf")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.dxf@r12/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.dxf@r12/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.codec.document")?, ArtifactCapabilityKind::codec())
+                .descriptor(b"gis.map:gismap")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "gis.map")?)?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "gismap")?)?,
+        )?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"GIS Map")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "GIS Map")?)?)?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"GIS Karte")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "GIS Karte")?)?)
 }
 
+/// 🔖️ Assembles s.gismap's typed runtime declaration.
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::gismap::schema::gismap_artifact_schema_descriptor())
         .inferences([crate::artifacts::gismap::standards::v1::subsets::any::schema::inferences::gismap_artifact_inference_descriptor()])
         .composers(crate::artifacts::gismap::standards::v1::subsets::any::io::io_registry::entries())
-        .languages(pilot_languages())
         .document_codec::<crate::apps::gis2d::Gis2dPlayApp>()
         .try_build()
-}
-
-/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
-/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
-/// `OnceLock`-backed `io_registry::entries()` convention already used below. Relocated alongside
-/// `declaration()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2) — its only caller.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
-    LANGUAGES
-        .get_or_init(|| {
-            vec![
-                dsl::LanguageSpec {
-                    id: "gis.gismap",
-                    extension: Some("gismap"),
-                    role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::artifacts::gismap::dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::gismap::dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::gismap::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::gismap::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("gis.gismap"),
-                },
-                dsl::LanguageSpec {
-                    id: "gis.gismap.op",
-                    extension: None,
-                    role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::artifacts::gismap::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::gismap::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::gismap::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::gismap::spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("gis.gismap.op"),
-                },
-                dsl::LanguageSpec {
-                    id: "gis.gismap.diff",
-                    extension: None,
-                    role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::artifacts::gismap::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::gismap::diff::COMPONENT_GRAMMAR_PATH),
-                    protocol: None,
-                    protocol_path: None,
-                    hooks: dsl::passthrough_hooks("gis.gismap.diff"),
-                },
-                dsl::LanguageSpec {
-                    id: "gismap.pack",
-                    extension: None,
-                    role: dsl::LanguageRole::Pack,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(crate::artifacts::gismap::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::gismap::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("gismap.pack"),
-                },
-                dsl::LanguageSpec {
-                    id: "gismap.spr",
-                    extension: None,
-                    role: dsl::LanguageRole::Spr,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(crate::artifacts::gismap::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::gismap::spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("gismap.spr"),
-                },
-            ]
-        })
-        .as_slice()
 }
 //#endregion 🔖️Register
 
@@ -320,64 +278,5 @@ mod tests {
         assert!(document.regions.is_empty());
     }
 
-    //#region 🔌️HostIoRegistration
-    /// 🧪️ 🌍️gis — and only 🌍️gis — puts `"2d.map"`'s media codecs into the OS registry. Before
-    /// ticket 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION D2 the sole
-    /// registrant was `🎪️demonstrator`'s verfolgen pane, so this crate on its own registered
-    /// nothing; the assertions run entirely inside the owner crate, which is the property that was
-    /// missing.
-    ///
-    /// Unlike solids (`solid_exporter_for`), the OS media handler map exposes no membership
-    /// predicate to plugins — `export_os_app_instance_media_kind` needs the `WorkflowNode` type
-    /// that lives behind the `os-host-full` feature plugins do not enable. So what is pinned here
-    /// is everything observable from the owner side: the registration links and runs (twice — the
-    /// registry is keyed, not appended), it keys on this artifact's OWN declared `ArtifactKindSpec`
-    /// id rather than a foreign kind, and the DWG bridge fn it hands the OS is gis's own and
-    /// actually produces a map document.
-    ///
-    /// Deliberately NOT asserted: the svg half (`gis2d_document_json_to_svg`). That bridge renders
-    /// through `io_dispatch`, whose drawing→svg composer entry is registered by 🗄️stdio's plugin
-    /// build, which never runs in a bare gis unit test — so asserting on it would measure another
-    /// plugin's registration, not this one's ownership.
-    #[test]
-    fn gis_owns_the_host_io_registration_for_its_own_kind() {
-        use crate::artifacts::gismap::standards::v1::subsets::any::io::{register_host_io, GIS_MAP_KIND};
-        assert_eq!(GIS_MAP_KIND, artifact_kind().id, "register_host_io must key on the kind this artifact itself declares");
-        register_host_io();
-        register_host_io();
-        use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
-        let mut drawing = DwgDrawing::default();
-        let layer = drawing.ensure_layer("0");
-        drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::Point { at: [1.0, 2.0, 0.0] } });
-        let imported = crate::artifacts::gismap::schema::gis2d_document_json_from_dwg(&drawing).expect("registered dwg bridge imports");
-        let document: GisMapSnapshot = serde_json::from_value(imported).expect("dwg bridge yields a map document");
-        assert_eq!(document.positions.len(), 1, "registered dwg bridge must lower the drawing's point into a position feature");
-    }
-    //#endregion 🔌️HostIoRegistration
 }
 //#endregion 🔹Tests
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::gismap::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("GisMapComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
-}
-//#endregion 🚪️DerivedIoRegistry

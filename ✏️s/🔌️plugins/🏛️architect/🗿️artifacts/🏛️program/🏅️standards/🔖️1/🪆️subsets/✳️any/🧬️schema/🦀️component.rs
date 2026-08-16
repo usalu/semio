@@ -2,10 +2,10 @@
 
 use crate::artifacts::program::kernel::*;
 use crate::artifacts::program::registers::*;
-use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use crate::artifacts::program::ProgramSnapshot;
 use graph::{orient_endpoints, Undirected};
+use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full program artifact state across the artifact, presence and config lanes.
@@ -13,90 +13,172 @@ use graph::{orient_endpoints, Undirected};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.architect.program")]
 pub struct ProgramArtifact {
-    #[state(artifact)] pub schema: String,
-    #[state(artifact)] pub meta: ProgramMeta,
-    #[state(artifact)] pub project: ProjectDefinition,
-    #[state(artifact)] pub stakeholders: Vec<Stakeholder>,
-    #[state(artifact)] pub users: Vec<UserProfile>,
-    #[state(artifact)] pub activities: Vec<Activity>,
-    #[state(artifact)] pub functions: Vec<Function>,
-    #[state(artifact)] pub elements: Vec<ProgramElement>,
-    #[state(artifact)] pub quantities: Vec<QuantityRequirement>,
-    #[state(artifact)] pub relationships: Vec<Relationship>,
-    #[state(artifact)] pub adjacencies: Vec<Adjacency>,
-    #[state(artifact)] pub processes: Vec<Process>,
-    #[state(artifact)] pub flows: Vec<FlowRequirement>,
-    #[state(artifact)] pub access_rules: Vec<AccessRule>,
-    #[state(artifact)] pub operations: Vec<OperationalRequirement>,
-    #[state(artifact)] pub equipment: Vec<Equipment>,
-    #[state(artifact)] pub resources: Vec<Resource>,
-    #[state(artifact)] pub storage: Vec<StorageRequirement>,
-    #[state(artifact)] pub environmental: Vec<EnvironmentalRequirement>,
-    #[state(artifact)] pub human_factors: Vec<HumanFactorRequirement>,
-    #[state(artifact)] pub accessibility: Vec<AccessibilityRequirement>,
-    #[state(artifact)] pub privacy: Vec<PrivacyRequirement>,
-    #[state(artifact)] pub safety: Vec<SafetyRequirement>,
-    #[state(artifact)] pub security: Vec<SecurityRequirement>,
-    #[state(artifact)] pub regulatory: Vec<RegulatoryRequirement>,
-    #[state(artifact)] pub site_context: Vec<SiteContext>,
-    #[state(artifact)] pub organizational: Vec<OrganizationalRequirement>,
-    #[state(artifact)] pub services: Vec<ServiceRequirement>,
-    #[state(artifact)] pub infrastructure: Vec<InfrastructureRequirement>,
-    #[state(artifact)] pub information: Vec<InformationRequirement>,
-    #[state(artifact)] pub communication: Vec<CommunicationRequirement>,
-    #[state(artifact)] pub wayfinding: Vec<WayfindingRequirement>,
-    #[state(artifact)] pub schedules: Vec<ScheduleRequirement>,
-    #[state(artifact)] pub flexibility: Vec<FlexibilityRequirement>,
-    #[state(artifact)] pub growth: Vec<GrowthPlan>,
-    #[state(artifact)] pub sustainability: Vec<SustainabilityRequirement>,
-    #[state(artifact)] pub resilience: Vec<ResilienceRequirement>,
-    #[state(artifact)] pub costs: Vec<CostRequirement>,
-    #[state(artifact)] pub delivery: Vec<DeliveryConstraint>,
-    #[state(artifact)] pub risks: Vec<Risk>,
-    #[state(artifact)] pub conflicts: Vec<Conflict>,
-    #[state(artifact)] pub requirements: Vec<Requirement>,
-    #[state(artifact)] pub priorities: Vec<PriorityRecord>,
-    #[state(artifact)] pub scenarios: Vec<Scenario>,
-    #[state(artifact)] pub options: Vec<OptionEvaluation>,
-    #[state(artifact)] pub decisions: Vec<Decision>,
-    #[state(artifact)] pub validations: Vec<ValidationRecord>,
-    #[state(artifact)] pub performance: Vec<PerformanceCriterion>,
-    #[state(artifact)] pub quality: Vec<QualityRecord>,
-    #[state(artifact)] pub artifacts: Vec<ArtifactRecord>,
-    #[state(artifact)] pub assumptions: Vec<Assumption>,
-    #[state(artifact)] pub constraints: Vec<ConstraintRecord>,
-    #[state(artifact)] pub compliance_records: Vec<ComplianceRecord>,
-    #[state(artifact)] pub approvals: Vec<ApprovalRecord>,
-    #[state(artifact)] pub meetings: Vec<MeetingRecord>,
-    #[state(artifact)] pub changes: Vec<ChangeRecord>,
-    #[state(artifact)] pub collaboration: Vec<CollaborationRecord>,
-    #[state(artifact)] pub analyses: Vec<AnalysisRecord>,
-    #[state(artifact)] pub reports: Vec<ReportRecord>,
-    #[state(artifact)] pub search_filters: Vec<SearchFilter>,
-    #[state(artifact)] pub status_records: Vec<StatusRecord>,
-    #[state(artifact)] pub workshops: Vec<Workshop>,
-    #[state(artifact)] pub surveys: Vec<Survey>,
-    #[state(artifact)] pub issues: Vec<Issue>,
-    #[state(artifact)] pub audit_events: Vec<AuditEvent>,
-    #[state(artifact)] pub templates: Vec<TemplateRecord>,
-    #[state(artifact)] #[child(kind = "s.stdio.semio.table")] pub knowledge: crate::artifacts::program::ProgramKnowledgeChild,
-    #[state(artifact)] #[child(kind = "s.stdio.semio.table")] pub benchmarks: crate::artifacts::program::ProgramBenchmarksChild,
-    #[state(artifact)] pub traces: Vec<TraceLink>,
-    #[state(artifact)] pub governance: Governance,
-    #[state(presence)] pub selected_ids: Vec<String>,
-    #[state(presence)] pub active_register: String,
-    #[state(presence)] pub adjacency_kind_filter: Option<AdjacencyKind>,
-    #[state(presence)] pub active_report_json: String,
-    #[state(config)] pub search_query: String,
-    #[state(config)] pub search_history_json: String,
-    #[state(config)] pub last_result_json: String,
-    #[state(config)] pub last_analysis_json: String,
-    #[state(config)] pub graph_camera_x: f64,
-    #[state(config)] pub graph_camera_y: f64,
-    #[state(config)] pub graph_camera_zoom: f64,
+    #[state(artifact)]
+    pub schema: String,
+    #[state(artifact)]
+    pub meta: ProgramMeta,
+    #[state(artifact)]
+    pub project: ProjectDefinition,
+    #[state(artifact)]
+    pub stakeholders: Vec<Stakeholder>,
+    #[state(artifact)]
+    pub users: Vec<UserProfile>,
+    #[state(artifact)]
+    pub activities: Vec<Activity>,
+    #[state(artifact)]
+    pub functions: Vec<Function>,
+    #[state(artifact)]
+    pub elements: Vec<ProgramElement>,
+    #[state(artifact)]
+    pub quantities: Vec<QuantityRequirement>,
+    #[state(artifact)]
+    pub relationships: Vec<Relationship>,
+    #[state(artifact)]
+    pub adjacencies: Vec<Adjacency>,
+    #[state(artifact)]
+    pub processes: Vec<Process>,
+    #[state(artifact)]
+    pub flows: Vec<FlowRequirement>,
+    #[state(artifact)]
+    pub access_rules: Vec<AccessRule>,
+    #[state(artifact)]
+    pub operations: Vec<OperationalRequirement>,
+    #[state(artifact)]
+    pub equipment: Vec<Equipment>,
+    #[state(artifact)]
+    pub resources: Vec<Resource>,
+    #[state(artifact)]
+    pub storage: Vec<StorageRequirement>,
+    #[state(artifact)]
+    pub environmental: Vec<EnvironmentalRequirement>,
+    #[state(artifact)]
+    pub human_factors: Vec<HumanFactorRequirement>,
+    #[state(artifact)]
+    pub accessibility: Vec<AccessibilityRequirement>,
+    #[state(artifact)]
+    pub privacy: Vec<PrivacyRequirement>,
+    #[state(artifact)]
+    pub safety: Vec<SafetyRequirement>,
+    #[state(artifact)]
+    pub security: Vec<SecurityRequirement>,
+    #[state(artifact)]
+    pub regulatory: Vec<RegulatoryRequirement>,
+    #[state(artifact)]
+    pub site_context: Vec<SiteContext>,
+    #[state(artifact)]
+    pub organizational: Vec<OrganizationalRequirement>,
+    #[state(artifact)]
+    pub services: Vec<ServiceRequirement>,
+    #[state(artifact)]
+    pub infrastructure: Vec<InfrastructureRequirement>,
+    #[state(artifact)]
+    pub information: Vec<InformationRequirement>,
+    #[state(artifact)]
+    pub communication: Vec<CommunicationRequirement>,
+    #[state(artifact)]
+    pub wayfinding: Vec<WayfindingRequirement>,
+    #[state(artifact)]
+    pub schedules: Vec<ScheduleRequirement>,
+    #[state(artifact)]
+    pub flexibility: Vec<FlexibilityRequirement>,
+    #[state(artifact)]
+    pub growth: Vec<GrowthPlan>,
+    #[state(artifact)]
+    pub sustainability: Vec<SustainabilityRequirement>,
+    #[state(artifact)]
+    pub resilience: Vec<ResilienceRequirement>,
+    #[state(artifact)]
+    pub costs: Vec<CostRequirement>,
+    #[state(artifact)]
+    pub delivery: Vec<DeliveryConstraint>,
+    #[state(artifact)]
+    pub risks: Vec<Risk>,
+    #[state(artifact)]
+    pub conflicts: Vec<Conflict>,
+    #[state(artifact)]
+    pub requirements: Vec<Requirement>,
+    #[state(artifact)]
+    pub priorities: Vec<PriorityRecord>,
+    #[state(artifact)]
+    pub scenarios: Vec<Scenario>,
+    #[state(artifact)]
+    pub options: Vec<OptionEvaluation>,
+    #[state(artifact)]
+    pub decisions: Vec<Decision>,
+    #[state(artifact)]
+    pub validations: Vec<ValidationRecord>,
+    #[state(artifact)]
+    pub performance: Vec<PerformanceCriterion>,
+    #[state(artifact)]
+    pub quality: Vec<QualityRecord>,
+    #[state(artifact)]
+    pub artifacts: Vec<ArtifactRecord>,
+    #[state(artifact)]
+    pub assumptions: Vec<Assumption>,
+    #[state(artifact)]
+    pub constraints: Vec<ConstraintRecord>,
+    #[state(artifact)]
+    pub compliance_records: Vec<ComplianceRecord>,
+    #[state(artifact)]
+    pub approvals: Vec<ApprovalRecord>,
+    #[state(artifact)]
+    pub meetings: Vec<MeetingRecord>,
+    #[state(artifact)]
+    pub changes: Vec<ChangeRecord>,
+    #[state(artifact)]
+    pub collaboration: Vec<CollaborationRecord>,
+    #[state(artifact)]
+    pub analyses: Vec<AnalysisRecord>,
+    #[state(artifact)]
+    pub reports: Vec<ReportRecord>,
+    #[state(artifact)]
+    pub search_filters: Vec<SearchFilter>,
+    #[state(artifact)]
+    pub status_records: Vec<StatusRecord>,
+    #[state(artifact)]
+    pub workshops: Vec<Workshop>,
+    #[state(artifact)]
+    pub surveys: Vec<Survey>,
+    #[state(artifact)]
+    pub issues: Vec<Issue>,
+    #[state(artifact)]
+    pub audit_events: Vec<AuditEvent>,
+    #[state(artifact)]
+    pub templates: Vec<TemplateRecord>,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.table")]
+    pub knowledge: crate::artifacts::program::ProgramKnowledgeChild,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.table")]
+    pub benchmarks: crate::artifacts::program::ProgramBenchmarksChild,
+    #[state(artifact)]
+    pub traces: Vec<TraceLink>,
+    #[state(artifact)]
+    pub governance: Governance,
+    #[state(presence)]
+    pub selected_ids: Vec<String>,
+    #[state(presence)]
+    pub active_register: String,
+    #[state(presence)]
+    pub adjacency_kind_filter: Option<AdjacencyKind>,
+    #[state(presence)]
+    pub active_report_json: String,
+    #[state(config)]
+    pub search_query: String,
+    #[state(config)]
+    pub search_history_json: String,
+    #[state(config)]
+    pub last_result_json: String,
+    #[state(config)]
+    pub last_analysis_json: String,
+    #[state(config)]
+    pub graph_camera_x: f64,
+    #[state(config)]
+    pub graph_camera_y: f64,
+    #[state(config)]
+    pub graph_camera_zoom: f64,
 }
 //#endregion 🔖️Artifact
-
 
 //#region 🔖️Conversions
 impl Default for ProgramArtifact {
@@ -109,7 +191,76 @@ impl ProgramArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> crate::artifacts::program::ProgramSnapshot {
         crate::artifacts::program::ProgramSnapshot {
-            schema: self.schema.clone(), meta: self.meta.clone(), project: self.project.clone(), stakeholders: self.stakeholders.clone(), users: self.users.clone(), activities: self.activities.clone(), functions: self.functions.clone(), elements: self.elements.clone(), quantities: self.quantities.clone(), relationships: self.relationships.clone(), adjacencies: self.adjacencies.clone(), processes: self.processes.clone(), flows: self.flows.clone(), access_rules: self.access_rules.clone(), operations: self.operations.clone(), equipment: self.equipment.clone(), resources: self.resources.clone(), storage: self.storage.clone(), environmental: self.environmental.clone(), human_factors: self.human_factors.clone(), accessibility: self.accessibility.clone(), privacy: self.privacy.clone(), safety: self.safety.clone(), security: self.security.clone(), regulatory: self.regulatory.clone(), site_context: self.site_context.clone(), organizational: self.organizational.clone(), services: self.services.clone(), infrastructure: self.infrastructure.clone(), information: self.information.clone(), communication: self.communication.clone(), wayfinding: self.wayfinding.clone(), schedules: self.schedules.clone(), flexibility: self.flexibility.clone(), growth: self.growth.clone(), sustainability: self.sustainability.clone(), resilience: self.resilience.clone(), costs: self.costs.clone(), delivery: self.delivery.clone(), risks: self.risks.clone(), conflicts: self.conflicts.clone(), requirements: self.requirements.clone(), priorities: self.priorities.clone(), scenarios: self.scenarios.clone(), options: self.options.clone(), decisions: self.decisions.clone(), validations: self.validations.clone(), performance: self.performance.clone(), quality: self.quality.clone(), artifacts: self.artifacts.clone(), assumptions: self.assumptions.clone(), constraints: self.constraints.clone(), compliance_records: self.compliance_records.clone(), approvals: self.approvals.clone(), meetings: self.meetings.clone(), changes: self.changes.clone(), collaboration: self.collaboration.clone(), analyses: self.analyses.clone(), reports: self.reports.clone(), search_filters: self.search_filters.clone(), status_records: self.status_records.clone(), workshops: self.workshops.clone(), surveys: self.surveys.clone(), issues: self.issues.clone(), audit_events: self.audit_events.clone(), templates: self.templates.clone(), knowledge: self.knowledge.clone(), benchmarks: self.benchmarks.clone(), traces: self.traces.clone(), governance: self.governance.clone(),
+            schema: self.schema.clone(),
+            meta: self.meta.clone(),
+            project: self.project.clone(),
+            stakeholders: self.stakeholders.clone(),
+            users: self.users.clone(),
+            activities: self.activities.clone(),
+            functions: self.functions.clone(),
+            elements: self.elements.clone(),
+            quantities: self.quantities.clone(),
+            relationships: self.relationships.clone(),
+            adjacencies: self.adjacencies.clone(),
+            processes: self.processes.clone(),
+            flows: self.flows.clone(),
+            access_rules: self.access_rules.clone(),
+            operations: self.operations.clone(),
+            equipment: self.equipment.clone(),
+            resources: self.resources.clone(),
+            storage: self.storage.clone(),
+            environmental: self.environmental.clone(),
+            human_factors: self.human_factors.clone(),
+            accessibility: self.accessibility.clone(),
+            privacy: self.privacy.clone(),
+            safety: self.safety.clone(),
+            security: self.security.clone(),
+            regulatory: self.regulatory.clone(),
+            site_context: self.site_context.clone(),
+            organizational: self.organizational.clone(),
+            services: self.services.clone(),
+            infrastructure: self.infrastructure.clone(),
+            information: self.information.clone(),
+            communication: self.communication.clone(),
+            wayfinding: self.wayfinding.clone(),
+            schedules: self.schedules.clone(),
+            flexibility: self.flexibility.clone(),
+            growth: self.growth.clone(),
+            sustainability: self.sustainability.clone(),
+            resilience: self.resilience.clone(),
+            costs: self.costs.clone(),
+            delivery: self.delivery.clone(),
+            risks: self.risks.clone(),
+            conflicts: self.conflicts.clone(),
+            requirements: self.requirements.clone(),
+            priorities: self.priorities.clone(),
+            scenarios: self.scenarios.clone(),
+            options: self.options.clone(),
+            decisions: self.decisions.clone(),
+            validations: self.validations.clone(),
+            performance: self.performance.clone(),
+            quality: self.quality.clone(),
+            artifacts: self.artifacts.clone(),
+            assumptions: self.assumptions.clone(),
+            constraints: self.constraints.clone(),
+            compliance_records: self.compliance_records.clone(),
+            approvals: self.approvals.clone(),
+            meetings: self.meetings.clone(),
+            changes: self.changes.clone(),
+            collaboration: self.collaboration.clone(),
+            analyses: self.analyses.clone(),
+            reports: self.reports.clone(),
+            search_filters: self.search_filters.clone(),
+            status_records: self.status_records.clone(),
+            workshops: self.workshops.clone(),
+            surveys: self.surveys.clone(),
+            issues: self.issues.clone(),
+            audit_events: self.audit_events.clone(),
+            templates: self.templates.clone(),
+            knowledge: self.knowledge.clone(),
+            benchmarks: self.benchmarks.clone(),
+            traces: self.traces.clone(),
+            governance: self.governance.clone(),
         }
     }
 
@@ -314,10 +465,10 @@ pub fn program_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor 
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::program::schema::diff::ProgramDiff;
     use crate::artifacts::program::schema::mutations::ProgramMutation;
     use crate::artifacts::program::schema::snapshot::ProgramSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct ProgramBuilderConstruction {
@@ -329,8 +480,12 @@ pub mod derived_construction {
         type Snapshot = ProgramSnapshot;
         type Mutation = ProgramMutation;
         type Diff = ProgramDiff;
-        fn empty() -> Self { Self { snapshot: ProgramSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn empty() -> Self {
+            Self { snapshot: ProgramSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<ProgramSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -347,7 +502,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -356,8 +515,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::program::ProgramSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct ProgramParts {

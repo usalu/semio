@@ -2,7 +2,8 @@
 //! owns this content alone (see the master ticket's "shared code used by ≥2 apps of the plugin" rule),
 //! so it lives in this plugin-root `🫀️core` kernel instead of duplicated into both apps.
 
-use semio_framework_os::{create_backbone_document, register_os_fixture_json, OsWorkflowArtifactDocument, WorkflowSnapshot, S_WORKFLOW_SCHEMA};
+use crate::apps::space::SpaceApp;
+use semio_framework_os::{create_backbone_document, register_os_fixture_json, OsWorkflowArtifactDocument, WorkflowSnapshot, OS_SPACE_SCHEMA, S_WORKFLOW_SCHEMA};
 use semio_framework_plugin::Plugin;
 use std::sync::LazyLock;
 
@@ -55,26 +56,17 @@ pub fn demo_space_projection() -> WorkflowSnapshot {
 
 //#region 🔌️Registration
 /// 🔌️ Builds the S Studio plugin surface for host registration. `.artifact(…)` (ticket
-/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old imperative `register_s_exports()`
-/// pre-call for everything artifact-scoped (`🏠️home`'s schema/inferences/composers/languages/document
-/// codec). Both apps' config/presence schema (ticket W1c) moved off `.setup()` onto
-/// `ArtifactApp::app_schema()` overrides on `HomeApp`/`SpaceApp`, auto-registered by
-/// `.document_app::<A>()` below. `.setup()` survives narrowed to exactly ONE residue item:
-/// `SpaceApp`'s own document codec — `🪐️space`'s app wraps the kernel-owned `WorkflowSnapshot` and owns
-/// no `🗿️artifacts` node of its own in this plugin (see this file's own module doc), and the codec is
-/// keyed by a foreign kind (`OS_SPACE_SCHEMA`/`"os.space"`, owned by framework/os's `SpaceSnapshot`,
-/// not by any type this plugin declares) — see `📦️glue.rs::register_s_exports()`'s own doc for why
-/// `.document_codec_bare()` cannot honestly close this gap, and
-/// `📓️w1d-semio-s-plugin-space-report.md` for the full writeup.
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) builds all artifact, app-schema, and codec
+/// contributions as immutable data before the aggregate registration commit.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("s")
         .label("S Studio")
         .version("0.1.0")
         .local_backbone_storage()
-        .setup(crate::register_s_exports)
         .artifact(crate::artifacts::home::declaration())
         .document_app::<crate::apps::home::HomeApp>(crate::apps::home::create_home_app())
         .document_app::<crate::apps::space::SpaceApp>(crate::apps::space::create_space_app())
+        .foreign_document_codec::<SpaceApp>(OS_SPACE_SCHEMA)
         .try_build()
 }
 //#endregion 🔌️Registration

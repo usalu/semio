@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🌿environmental` per Wave C.
 
 use super::mutation::DeleteEnvironmentalRequirement;
+use crate::artifacts::program::diff::ProgramEnvironmentalDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramEnvironmentalDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteEnvironmentalRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

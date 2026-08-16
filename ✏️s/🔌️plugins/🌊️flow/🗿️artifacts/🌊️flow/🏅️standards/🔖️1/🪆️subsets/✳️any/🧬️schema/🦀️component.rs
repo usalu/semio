@@ -45,6 +45,24 @@ pub fn widget_kind_label(widget: &Widget) -> &'static str {
     }
 }
 
+/// 👯️ Clones a widget with every field but `id` copied verbatim — the `duplicate-widget` composite
+/// mutation's plan uses this to mint the copy it hands to `create-widget`.
+pub fn widget_with_id(widget: &Widget, id: String) -> Widget {
+    let mut copy = widget.clone();
+    match &mut copy {
+        Widget::Neuron { id: widget_id, .. }
+        | Widget::InputSlider { id: widget_id, .. }
+        | Widget::InputNote { id: widget_id, .. }
+        | Widget::InputImage { id: widget_id, .. }
+        | Widget::Variable { id: widget_id, .. }
+        | Widget::OutputPreview { id: widget_id, .. }
+        | Widget::OutputAction { id: widget_id, .. }
+        | Widget::OutputExport { id: widget_id, .. }
+        | Widget::Cluster { id: widget_id, .. } => *widget_id = id,
+    }
+    copy
+}
+
 pub fn widget_tree_label(widget: &Widget) -> String {
     match widget {
         Widget::Neuron { id, neuron_kind, .. } => format!("{id} ({neuron_kind})"),

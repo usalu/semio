@@ -1,14 +1,16 @@
-//! 🚪️ IO s.present (1/✳️any) — registration now flows through 🎹️composer::register
-//! (called once from `crate::apps::present::register`, relocated there by ticket
-//! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES), not per-leaf register().
-pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.json", "stdio.md", "stdio.pdf", "stdio.png", "stdio.pptx", "stdio.svg", "stdio.txt"] }
-pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.json", "stdio.md", "stdio.pdf", "stdio.png", "stdio.pptx", "stdio.svg", "stdio.txt"] }
+//! 🚪️ IO s.present (1/✳️any) — the artifact declaration owns this composer table.
+pub fn import_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.json", "stdio.md", "stdio.pdf", "stdio.png", "stdio.pptx", "stdio.svg", "stdio.txt"]
+}
+pub fn export_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.json", "stdio.md", "stdio.pdf", "stdio.png", "stdio.pptx", "stdio.svg", "stdio.txt"]
+}
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::present::PresentSnapshot;
     use crate::artifacts::present::standards::v1::subsets::any::schema::PresentAnalyzer;
+    use crate::artifacts::present::PresentSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.present", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
@@ -18,7 +20,6 @@ pub mod derived_composition {
     const DEP_PPTX: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
     const DEP_SVG: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
-
 
     pub struct PresentComposerComposition;
 
@@ -105,7 +106,6 @@ pub mod derived_composition {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
-
             }
             Err(ComposeError { message: "PresentComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
         }
@@ -122,10 +122,10 @@ pub use derived_composition::*;
 /// wrapper (`&'static [&'static ComposerEntry]`) that calls this one fully-qualified — never confuse
 /// the two, and never reference this module by a bare `io_registry::` path from outside `🚪️io`.
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ArtifactBuilder, ComposerEntry, ComposedArtifact, ComposeError, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload, IoConfidence, composer_entry_of};
-    use crate::artifacts::present::standards::v1::subsets::any::schema::PresentComposer as PresentAnyComposer;
     use crate::artifacts::present::standards::v1::subsets::any::schema::PresentBuilder as PresentAnyBuilder;
+    use crate::artifacts::present::standards::v1::subsets::any::schema::PresentComposer as PresentAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
@@ -202,17 +202,20 @@ pub mod io_registry {
     }
     //#endregion 🔖️ExportEntries
 
-
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![
-            composer_entry_of::<PresentAnyComposer>(),
-            ComposerEntry { writes: EXPORT_PPTX_DIALECT, reads: &[PRESENT_DIALECT], compose: compose_export_pptx },
-            ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[PRESENT_DIALECT], compose: compose_export_svg },
-            ComposerEntry { writes: EXPORT_PDF_DIALECT, reads: &[PRESENT_DIALECT], compose: compose_export_pdf },
-            ComposerEntry { writes: EXPORT_MD_DIALECT, reads: &[PRESENT_DIALECT], compose: compose_export_md },
-            ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[PRESENT_DIALECT], compose: compose_export_png },
-            ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[PRESENT_DIALECT], compose: compose_export_json },
-        ]).as_slice()
+        ENTRIES
+            .get_or_init(|| {
+                vec![
+                    composer_entry_of::<PresentAnyComposer>(),
+                    ComposerEntry { writes: EXPORT_PPTX_DIALECT, reads: &[PRESENT_DIALECT], compose: compose_export_pptx },
+                    ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[PRESENT_DIALECT], compose: compose_export_svg },
+                    ComposerEntry { writes: EXPORT_PDF_DIALECT, reads: &[PRESENT_DIALECT], compose: compose_export_pdf },
+                    ComposerEntry { writes: EXPORT_MD_DIALECT, reads: &[PRESENT_DIALECT], compose: compose_export_md },
+                    ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[PRESENT_DIALECT], compose: compose_export_png },
+                    ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[PRESENT_DIALECT], compose: compose_export_json },
+                ]
+            })
+            .as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry

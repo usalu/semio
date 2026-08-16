@@ -1,7 +1,20 @@
 //! 🪞 GLTF symmetry indicators.
 
-use super::geometric_analysis::{GltfGeometryContext};
-use super::super::modules::{inference_measures::{estimate, unavailable}, mesh_topology::Topology};
+#[path = "reflection-symmetry-score/🦀️component.rs"]
+pub mod reflection_symmetry_score;
+#[path = "rotational-symmetry-score/🦀️component.rs"]
+pub mod rotational_symmetry_score;
+#[path = "reflection-symmetries/🦀️component.rs"]
+pub mod reflection_symmetries;
+#[path = "rotational-symmetries/🦀️component.rs"]
+pub mod rotational_symmetries;
+#[path = "repetition-ratio/🦀️component.rs"]
+pub mod repetition_ratio;
+#[path = "modularity-ratio/🦀️component.rs"]
+pub mod modularity_ratio;
+
+use super::{geometry_core::GltfGeometryContext, GltfPartInference};
+use super::super::modules::{mesh_topology::Topology};
 use super::super::modules::measurement_contracts::*;
 use serde::{Deserialize, Serialize};
 
@@ -47,34 +60,52 @@ fn symmetry_score(points: &[[f64; 3]], centroid: [f64; 3], axis: [f64; 3], scale
 
 pub struct GltfSymmetryInference;
 
+pub(crate) struct GltfSymmetryRaw {
+    pub(crate) reflection_score: f64,
+    pub(crate) rotation_score: f64,
+    pub(crate) reflections: Vec<GltfDirectionScore>,
+    pub(crate) rotations: Vec<GltfDirectionScore>,
+}
+
+pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfSymmetryRaw {
+    let score = |axis: GltfVec3, rotation| symmetry_score(&context.points, context.centroid, axis.array(), context.diagonal, rotation, context.policy.sampling_budget as usize);
+    let axes = &context.principal_frame.axes;
+    GltfSymmetryRaw {
+        reflection_score: score(axes[0], false),
+        rotation_score: score(axes[0], true),
+        reflections: axes.iter().map(|axis| GltfDirectionScore { direction: *axis, score: score(*axis, false), order: None }).collect(),
+        rotations: axes.iter().map(|axis| GltfDirectionScore { direction: *axis, score: score(*axis, true), order: Some(2) }).collect(),
+    }
+}
+
+pub(crate) fn assembly_ratios(parts: &[GltfPartInference], policy: &GltfAnalysisPolicy) -> Option<(f64, f64)> {
+    if parts.is_empty() { return None; }
+    let signature = |part: &GltfPartInference| {
+        let mut dimensions = part.indicators.size.oriented_bounds.value.as_ref().map(|bounds| bounds.dimensions.array()).unwrap_or([0.0; 3]);
+        dimensions.sort_by(f64::total_cmp);
+        let quantum = policy.absolute_length_tolerance.max(1e-9);
+        let area_quantum = quantum * quantum;
+        let volume_quantum = area_quantum * quantum;
+        format!(
+            "{},{},{},{},{}",
+            (dimensions[0] / quantum).round() as i64,
+            (dimensions[1] / quantum).round() as i64,
+            (dimensions[2] / quantum).round() as i64,
+            (part.indicators.area_volume.surface_area.value.unwrap_or(0.0) / area_quantum).round() as i64,
+            (part.indicators.area_volume.volume.value.unwrap_or(0.0) / volume_quantum).round() as i64
+        )
+    };
+    let mut signatures = std::collections::BTreeMap::<String, usize>::new();
+    for part in parts { *signatures.entry(signature(part)).or_default() += 1; }
+    let repeated_members = signatures.values().filter(|count| **count > 1).sum::<usize>();
+    let repeated_excess = signatures.values().map(|count| count.saturating_sub(1)).sum::<usize>();
+    Some((repeated_excess as f64 / parts.len() as f64, repeated_members as f64 / parts.len() as f64))
+}
+
 impl GltfSymmetryInference {
-    pub(crate) fn infer_assembly(indicators: &mut GltfSymmetryIndicators, parts: &[super::geometric_analysis::GltfPartInference], policy: &GltfAnalysisPolicy, topology: Topology) {
-        if parts.is_empty() {
-            return;
-        }
-        let signature = |part: &super::geometric_analysis::GltfPartInference| {
-            let mut dimensions = part.indicators.size.oriented_bounds.value.as_ref().map(|bounds| bounds.dimensions.array()).unwrap_or([0.0; 3]);
-            dimensions.sort_by(f64::total_cmp);
-            let quantum = policy.absolute_length_tolerance.max(1e-9);
-            let area_quantum = quantum * quantum;
-            let volume_quantum = area_quantum * quantum;
-            format!(
-                "{},{},{},{},{}",
-                (dimensions[0] / quantum).round() as i64,
-                (dimensions[1] / quantum).round() as i64,
-                (dimensions[2] / quantum).round() as i64,
-                (part.indicators.area_volume.surface_area.value.unwrap_or(0.0) / area_quantum).round() as i64,
-                (part.indicators.area_volume.volume.value.unwrap_or(0.0) / volume_quantum).round() as i64
-            )
-        };
-        let mut signatures = std::collections::BTreeMap::<String, usize>::new();
-        for part in parts {
-            *signatures.entry(signature(part)).or_default() += 1;
-        }
-        let repeated_members = signatures.values().filter(|count| **count > 1).sum::<usize>();
-        let repeated_excess = signatures.values().map(|count| count.saturating_sub(1)).sum::<usize>();
-        indicators.repetition_ratio = estimate(repeated_excess as f64 / parts.len() as f64, GltfUnit::Unitless, parts.len(), Some(topology));
-        indicators.modularity_ratio = estimate(repeated_members as f64 / parts.len() as f64, GltfUnit::Unitless, parts.len(), Some(topology));
+    pub(crate) fn infer_assembly(indicators: &mut GltfSymmetryIndicators, parts: &[GltfPartInference], policy: &GltfAnalysisPolicy, topology: Topology) {
+        if let Some(measure) = repetition_ratio::from_assembly(parts, policy, topology) { indicators.repetition_ratio = measure; }
+        if let Some(measure) = modularity_ratio::from_assembly(parts, policy, topology) { indicators.modularity_ratio = measure; }
     }
 }
 
@@ -82,31 +113,25 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfSymmetryInference {
     type Output = GltfSymmetryIndicators;
 
     fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
-        let score = |axis: GltfVec3, rotation| symmetry_score(&context.points, context.centroid, axis.array(), context.diagonal, rotation, context.policy.sampling_budget as usize);
+        let raw = raw(context);
         Self::Output {
-            reflection_symmetry_score: estimate(score(context.principal_frame.axes[0], false), GltfUnit::Unitless, context.sample_count, Some(context.topology)),
-            rotational_symmetry_score: estimate(score(context.principal_frame.axes[0], true), GltfUnit::Unitless, context.sample_count, Some(context.topology)),
-            reflection_symmetries: estimate(context.principal_frame.axes.iter().map(|axis| GltfDirectionScore { direction: *axis, score: score(*axis, false), order: None }).collect(), GltfUnit::Unitless, context.sample_count, Some(context.topology)),
-            rotational_symmetries: estimate(
-                context.principal_frame.axes.iter().map(|axis| GltfDirectionScore { direction: *axis, score: score(*axis, true), order: Some(2) }).collect(),
-                GltfUnit::Unitless,
-                context.sample_count,
-                Some(context.topology),
-            ),
-            repetition_ratio: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology)),
-            modularity_ratio: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology)),
+            reflection_symmetry_score: reflection_symmetry_score::from_raw(context, &raw),
+            rotational_symmetry_score: rotational_symmetry_score::from_raw(context, &raw),
+            reflection_symmetries: reflection_symmetries::from_raw(context, &raw),
+            rotational_symmetries: rotational_symmetries::from_raw(context, &raw),
+            repetition_ratio: repetition_ratio::infer(context),
+            modularity_ratio: modularity_ratio::infer(context),
         }
     }
 
     fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
-        let unavail = || unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None);
         Self::Output {
-            reflection_symmetry_score: unavail(),
-            rotational_symmetry_score: unavail(),
-            reflection_symmetries: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            rotational_symmetries: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            repetition_ratio: unavail(),
-            modularity_ratio: unavail(),
+            reflection_symmetry_score: reflection_symmetry_score::unavailable_measure(diagnostic_ids),
+            rotational_symmetry_score: rotational_symmetry_score::unavailable_measure(diagnostic_ids),
+            reflection_symmetries: reflection_symmetries::unavailable_measure(diagnostic_ids),
+            rotational_symmetries: rotational_symmetries::unavailable_measure(diagnostic_ids),
+            repetition_ratio: repetition_ratio::unavailable_measure(diagnostic_ids),
+            modularity_ratio: modularity_ratio::unavailable_measure(diagnostic_ids),
         }
     }
 }

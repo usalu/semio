@@ -10,45 +10,40 @@
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
 use crate::apps::flow::commands::{
-    add_widget, connect_media_ports, context_menu_at, delete_selection, disconnect, evaluate, flow_eval_resolve, flow_eval_tick, focus_selection,
-    move_media_node, node_graph_edit, node_graph_viewport, open_spotlight, patch_flow_widgets, remove_widget, rename_flow_widget, replace_image,
-    reorganize, run_extension_action, set_catalogue_sections, set_contributions, set_grid_factor, set_grid_snap_enabled, set_grid_visible, set_locale,
-    set_lod_mode, set_preview_off, set_proximity_distance, spotlight_commit, toggle_extension,
+    add_widget, connect_media_ports, context_menu_at, delete_selection, disconnect, duplicate_widget, evaluate, flow_eval_resolve, flow_eval_tick, focus_selection, move_media_node, node_graph_edit, node_graph_viewport, open_spotlight,
+    patch_flow_widgets, remove_widget, rename_flow_widget, reorganize, replace_image, run_extension_action, set_catalogue_sections, set_contributions, set_grid_factor, set_grid_snap_enabled, set_grid_visible, set_locale, set_lod_mode,
+    set_preview_off, set_proximity_distance, spotlight_commit, toggle_extension,
 };
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
-use crate::apps::flow::presence::{FlowPresence, FlowPresenceMutation};
 use crate::apps::flow::modes::edit::windows::{compiled, main};
 use crate::apps::flow::modes::generate::commands::{add_generation, remove_generation, rename_generation, select_generation, update_generation_values};
 use crate::apps::flow::modes::generate::windows::{form, generations, preview};
 use crate::apps::flow::modes::{edit, generate};
 use crate::apps::flow::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
+use crate::apps::flow::presence::{FlowPresence, FlowPresenceMutation};
 use crate::apps::flow::terminology::{flow_play_labels, FlowPlayLabels};
 use crate::artifacts::flow::op::FlowMutation;
 use crate::artifacts::flow::{FlowSnapshot, FLOW_DOCUMENT_SCHEMA};
-use flow::{
-    dag::DagDrawLod, flow_fixture_operations, flow_host_with_session, with_process_flow_eval_session,
-    CameraJson, FlowEvalSession, FlowHost, Widget, FLOW_LOD_MODE_AUTOMATIC,
-};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, HostEffect, Label, LocalizedLabel,
-    UiNode, WindowMeasure,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
-    DomainTopology, InteractionTopology, TopologyNode,
-};
+use flow::{dag::DagDrawLod, flow_fixture_operations, flow_host_with_session, with_process_flow_eval_session, CameraJson, FlowEvalSession, FlowHost, Widget, FLOW_LOD_MODE_AUTOMATIC};
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_plugin::{
+    ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ArtifactApp, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DomainTopology, DraftView, Emit,
+    Fault, GranularityDefinition, HierarchyProvider, HostEffect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
+    TopologyNode, UiNode, WindowMeasure,
+};
 use serde_json::{json, Value};
 use std::collections::HashMap;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const FLOW_PLAY_APP_ID: &str = "flow-play";
-pub use compiled::FLOW_PLAY_BODY_COMPILED;
-pub use main::FLOW_PLAY_BODY_MAIN;
 pub use catalogue_panel::FLOW_PLAY_BODY_CATALOGUE;
+pub use compiled::FLOW_PLAY_BODY_COMPILED;
 pub use document_panel::FLOW_PLAY_BODY_DOCUMENT;
 pub use form::FLOW_PLAY_BODY_GENERATE_FORM;
 pub use generations::FLOW_PLAY_BODY_GENERATIONS;
 pub use inspection_panel::FLOW_PLAY_BODY_INSPECTOR;
+pub use main::FLOW_PLAY_BODY_MAIN;
 pub use preview::FLOW_PLAY_BODY_GENERATE_PREVIEW;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
@@ -96,79 +91,6 @@ pub fn flow_graph_selection_domains(selected: &[String]) -> (Vec<String>, Vec<St
 }
 //#endregion 🔖️Interaction
 
-//#region 🔌️Registration
-/// 🗂️ Registers `FlowSnapshot`'s pack↔dsl codec under `FLOW_DOCUMENT_SCHEMA` so `framework/sync`'s folder
-/// endpoints and any other schema-string-keyed caller can print/parse flow documents. Called from the
-/// plugin root's `semio_plugin!{ setup: … }`.
-pub fn register() {
-    crate::artifacts::flow::io_registry::register();
-
-    register_artifact_schema();
-    register_pilot_languages();
-    crate::apps::flow::config::schema::register_app_schema();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<FlowPlayApp>(FLOW_DOCUMENT_SCHEMA);
-}
-
-/// 🧬️ Registers this artifact's fifteen schema leaves with the framework table.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::flow::schema::flow_artifact_schema_descriptor());
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "flow.artifact",
-        extension: Some("flow"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::flow::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::flow::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::flow::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::flow::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("flow.artifact"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "flow.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::flow::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::flow::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::flow::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::flow::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("flow.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "flow.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::flow::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::flow::schema::diff::text::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("flow.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "flow.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::flow::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::flow::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("flow.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "flow.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::flow::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::flow::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("flow.spr"),
-    });
-}
-//#endregion 🔌️Registration
-
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
     /// 🎯️ `FlowPlayApp::Command` — the SOLE dispatch surface for flow's own behavior, assembled from the
@@ -188,6 +110,7 @@ semio_framework_plugin::app_commands! {
     pub enum FlowCommand for FlowSnapshot, FlowMutation, FlowConfig, FlowConfigMutation, ctx = FlowEvalSession {
         "addWidget" as "add-widget" => add_widget::AddWidget,
         "removeWidget" as "remove-widget" => remove_widget::RemoveWidget,
+        "duplicateWidget" as "duplicate-widget" => duplicate_widget::DuplicateWidget,
         "deleteSelection" as "delete-selection" => delete_selection::DeleteSelection,
         "disconnect" as "disconnect" => disconnect::Disconnect,
         "connectMediaPorts" as "connect-media-ports" => connect_media_ports::ConnectMediaPorts,
@@ -265,6 +188,16 @@ fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowSnapshot,
             .group("transform", |m| m.action("reorganize"));
     }
     if let Some(node_id) = hit_node {
+        menu = menu.group("actions", |m| {
+            m.item(ContextMenuItemSpec {
+                id: "duplicate-widget".into(),
+                label: Some(labels.duplicate_widget.into()),
+                icon: Some("copy".into()),
+                action: Some("duplicateWidget".into()),
+                args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "widgetId": node_id }))),
+                ..Default::default()
+            })
+        });
         if is_image {
             menu = menu.group("actions", |m| {
                 m.item(ContextMenuItemSpec {
@@ -331,6 +264,10 @@ impl ArtifactApp for FlowPlayApp {
     const APP_ID: &'static str = FLOW_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::flow::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> FlowSnapshot {
         FlowSnapshot::default()
     }
@@ -346,7 +283,14 @@ impl ArtifactApp for FlowPlayApp {
     /// `nodeGraphEdit`/`spotlightCommit` read the "graph" interaction domain directly (bypassing the
     /// `app_commands!`-generated `dispatch`, whose per-row `$module::handle(payload, doc, cfg, session)`
     /// signature is framework-fixed and has no `interaction` slot) — mirrors `space`'s equivalent routing.
-    fn handle(command: &FlowCommand, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FlowMutation, FlowConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(
+        command: &FlowCommand,
+        doc: &ArtifactView<'_, FlowSnapshot>,
+        cfg: &ConfigView<'_, FlowConfig>,
+        interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<FlowMutation, FlowConfigMutation, Self::DraftMutation>, Fault> {
         with_process_flow_eval_session(|session| match command {
             FlowCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, session, interaction),
             FlowCommand::FocusSelection(payload) => focus_selection::apply(payload, doc, cfg, session, interaction),
@@ -450,10 +394,7 @@ pub fn host_operations(snapshot: &FlowSnapshot, config: &FlowConfig, session: &F
     if !mutate(&mut host) {
         return Vec::new();
     }
-    flow_fixture_operations(&snapshot.to_fixture(), &host.fixture)
-        .into_iter()
-        .filter_map(crate::artifacts::flow::schema::mutations::from_framework_mutation)
-        .collect()
+    flow_fixture_operations(&snapshot.to_fixture(), &host.fixture).into_iter().filter_map(crate::artifacts::flow::schema::mutations::from_framework_mutation).collect()
 }
 //#endregion 🔖️Host
 
@@ -513,6 +454,8 @@ pub fn create_flow_app() -> App {
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
             .mutation("addWidget", LocalizedLabel::native("Add Widget", "Widget hinzufügen"))
             .mutation("removeWidget", LocalizedLabel::native("Remove Widget", "Widget entfernen"))
+            // 🌉️ COMPOSITE — plans create-widget then connect-widgets (ticket 26/08/16/…-COMPOSITE-MUTATIONS).
+            .mutation("duplicateWidget", LocalizedLabel::native("Duplicate Widget", "Widget duplizieren"))
             // 🗂️ Referenced by flow_context_menu_items — categorized for grouped-context-menu disclosure.
             .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
             .mutation("disconnect", LocalizedLabel::native("Disconnect", "Trennen"))
@@ -638,7 +581,6 @@ pub(crate) mod testkit {
         });
     }
 
-
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn flow_app() -> FlowApp {
         install_first_party_light_flow_extensions_for_tests();
@@ -737,11 +679,7 @@ mod tests {
     #[test]
     fn optional_field_rows_keep_their_pre_migration_bytes() {
         let cases: [(FlowCommand, &str, &str); 3] = [
-            (
-                FlowCommand::AddWidget(add_widget::AddWidget { kind: "neuron".into(), neuron_kind: Some("math.add".into()), x: None, y: None }),
-                "add-widget kind=neuron neuron-kind=math.add",
-                "010002086d6174682e616464066e6575726f6e02000601010600",
-            ),
+            (FlowCommand::AddWidget(add_widget::AddWidget { kind: "neuron".into(), neuron_kind: Some("math.add".into()), x: None, y: None }), "add-widget kind=neuron neuron-kind=math.add", "010002086d6174682e616464066e6575726f6e02000601010600"),
             // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `SetGridVisible`'s binary
             // ordinal shifted 24 (0x18) → 18 (0x12) — seven rows ahead of it in `FlowCommand`
             // (`setSelection`/`clearSelection`/`selectAll`/`selectNode`/`nodeGraphSelect`/
@@ -779,8 +717,7 @@ mod tests {
                     node_graph_edit::FlowNodeGraphEditOp::Connect { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() },
                 ],
             }),
-            FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit {
-                operations: vec![spotlight_commit::FlowNodeGraphEditOp::DeleteSelection] }),
+            FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit { operations: vec![spotlight_commit::FlowNodeGraphEditOp::DeleteSelection] }),
             FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }),
             FlowCommand::Evaluate(evaluate::Evaluate {}),
             FlowCommand::FocusSelection(focus_selection::FocusSelection {}),
@@ -867,7 +804,13 @@ mod tests {
     fn undo_restores_fixture_after_add_widget() {
         let mut app = flow_app();
         let before = app.snapshot().expect("snapshot").to_fixture().widgets.len();
-        assert_undo_redo_round_trip(&mut app, FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) }), |app| app.snapshot().expect("snapshot").to_fixture().widgets.len(), before, before + 1);
+        assert_undo_redo_round_trip(
+            &mut app,
+            FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) }),
+            |app| app.snapshot().expect("snapshot").to_fixture().widgets.len(),
+            before,
+            before + 1,
+        );
     }
 
     #[test]

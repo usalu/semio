@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📊performance` per Wave C.
 
 use super::mutation::RenamePerformanceCriterion;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramPerformanceDelta, ProgramPerformancePatchEntry};
 use crate::artifacts::program::registers::PerformanceCriterionPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenamePerformanceCriterion, _base: &ProgramSnapshot) -> ProgramDiff {

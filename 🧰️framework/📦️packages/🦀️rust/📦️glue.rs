@@ -89,7 +89,7 @@ pub use io::{
     io_keys_for, list_composer_entries, io_dispatch, set_io_fallback_dispatcher,
     WireComposeSource, WireComposedArtifact, wire_list_composer_entries, wire_artifact_compose, wire_decode_composed_artifact,
     SubsetValidator, SubsetValidatorEntry, subset_validator_entry_of, register_subset_validator, register_subset_validators, preflight_subset_validators,
-    FormatDescriptor, register_format_descriptors, preflight_format_descriptors, format_descriptor, normalize_format_kind, format_accept_filter, formats_csv,
+    FormatDescriptor, FormatRegistryError, register_format_descriptors, preflight_format_descriptors, format_descriptor, normalize_format_kind, format_accept_filter, formats_csv,
 };
 pub use platform::{PanelVisibility, Platform, PlatformSpec};
 pub use workflow::*;

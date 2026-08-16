@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `♿accessibility` per Wave C.
 
 use super::mutation::RenameAccessibilityRequirement;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramAccessibilityDelta, ProgramAccessibilityPatchEntry};
 use crate::artifacts::program::registers::AccessibilityRequirementPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameAccessibilityRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

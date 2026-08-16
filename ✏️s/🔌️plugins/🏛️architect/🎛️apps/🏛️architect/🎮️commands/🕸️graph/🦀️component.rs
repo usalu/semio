@@ -7,7 +7,7 @@ pub mod node_graph_edit {
     use crate::artifacts::program::registers::AdjacencyKind;
     use crate::artifacts::program::schema::mutations as leaves;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
-    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
 
@@ -59,7 +59,7 @@ pub mod node_graph_viewport {
     use crate::apps::architect::modes::edit::windows::graph::GraphCamera;
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
-    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

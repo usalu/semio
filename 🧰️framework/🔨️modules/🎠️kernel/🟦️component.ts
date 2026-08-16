@@ -203,6 +203,15 @@ export type PluginRegistryEntry = {
   readonly dependencies?: readonly PluginDependency[];
 };
 
+/** 🔗️ Widens a {@link PluginCatalogTarget.dependsOn} plugin-id list (no version info, build-time
+ * Cargo ground truth) into `PluginRegistryEntry.dependencies` — each id gets the always-satisfied `*`
+ * requirement so {@link resolvePluginLoadOrder}/{@link validatePluginDependencyGraph} can still
+ * validate presence and detect cycles today, ahead of any plugin adopting the runtime
+ * `.depends_on(id, VersionReq)` API. */
+function dependsOnToPluginDependencies(dependsOn: readonly string[] | undefined): readonly PluginDependency[] | undefined {
+  return dependsOn?.map((pluginId) => ({ pluginId, version: "*" }));
+}
+
 //#region 🔖️PluginDependency
 /** 🔢️ A frozen `major.minor.patch` version requirement string — one of `*`, `=X.Y.Z`, `^X.Y.Z`,
  * `~X.Y.Z`, `>=X.Y.Z` (contract freeze §3). Mirrors Rust `VersionReq`'s `Display`/`Serialize`
@@ -267,6 +276,371 @@ export type ArtifactContributionDescriptor = {
 };
 //#endregion 🔖️ArtifactContribution
 
+//#region 🔖️AppRouter
+/** 🎯️ Fully-qualified dialect coordinate — mirrors Rust `ArtifactDialect`
+ * (`🔨️modules/🚪️io/🦀️component.rs:50`, re-exported off `🛂️manifest/🦀️component.rs`). Duplicated
+ * locally rather than imported from `🛂️manifest/🟦️component.ts`'s generated `AppDefinition` twin:
+ * that twin's `apps` field is still `Record<string, unknown>[]` pending the ts-rs regen for
+ * contract freeze §1 C1, so this file reads the wire shape structurally instead of depending on a
+ * codegen timing this lease doesn't control — same idiom as the 🔖️PluginDependency/
+ * 🔖️ArtifactContribution regions above. */
+export type ArtifactDialect = {
+  readonly artifactKind: string;
+  readonly standard: string;
+  readonly subset: string;
+};
+
+function dialectEquals(a: ArtifactDialect, b: ArtifactDialect): boolean {
+  return a.artifactKind === b.artifactKind && a.standard === b.standard && a.subset === b.subset;
+}
+
+/** 🪪️ `<artifact_kind>@<standard>/<subset>` — mirrors Rust `ArtifactDialect::to_coordinate`
+ * (`🔨️modules/🚪️io/🦀️component.rs:67`). */
+export function dialectCoordinate(dialect: ArtifactDialect): string {
+  return `${dialect.artifactKind}@${dialect.standard}/${dialect.subset}`;
+}
+
+/** 🪪️ Inverse of {@link dialectCoordinate} — mirrors Rust `ArtifactDialect::parse_coordinate`
+ * (`🔨️modules/🚪️io/🦀️component.rs:74`): `@` splits at its FIRST occurrence, the LAST `/` splits
+ * standard from subset. */
+export function parseDialectCoordinate(coordinate: string): ArtifactDialect {
+  const atIndex = coordinate.indexOf("@");
+  if (atIndex < 0) throw new Error(`dialect coordinate ${JSON.stringify(coordinate)} missing '@'`);
+  const kind = coordinate.slice(0, atIndex);
+  const rest = coordinate.slice(atIndex + 1);
+  const slashIndex = rest.lastIndexOf("/");
+  if (slashIndex < 0) throw new Error(`dialect coordinate ${JSON.stringify(coordinate)} missing '/'`);
+  const standard = rest.slice(0, slashIndex);
+  const subset = rest.slice(slashIndex + 1);
+  if (kind === "" || standard === "" || subset === "") throw new Error(`dialect coordinate ${JSON.stringify(coordinate)} has an empty component`);
+  return { artifactKind: kind, standard, subset };
+}
+
+/** 👁️✏️ Mirrors Rust `AppRole` (`🛂️manifest/🦀️component.rs:2641`) — exactly `"viewer"`/`"editor"`,
+ * contract freeze §1 C1. Wire-identical to the `SEMIO_APP_ROLE`/`VITE_SEMIO_APP_ROLE` env values. */
+export type AppRole = "viewer" | "editor";
+
+/** 🎯️ Mirrors Rust `AppRef` (`🛂️manifest/🦀️component.rs:2672`). */
+export type AppRef = {
+  readonly pluginId: string;
+  readonly appId: string;
+};
+
+function appRefEquals(a: AppRef, b: AppRef): boolean {
+  return a.pluginId === b.pluginId && a.appId === b.appId;
+}
+
+/** 🪪️ `<artifact_kind>@<standard>/<subset>#<role>` — mirrors Rust `surface_app_id`
+ * (`🛂️manifest/🦀️component.rs:2678`). */
+export function surfaceAppId(dialect: ArtifactDialect, role: AppRole): string {
+  return `${dialectCoordinate(dialect)}#${role}`;
+}
+
+/** 🪪️ Inverse of {@link surfaceAppId} — mirrors Rust `parse_surface_app_id`
+ * (`🛂️manifest/🦀️component.rs:2683`): the LAST `#` splits off the role suffix. */
+export function parseSurfaceAppId(id: string): { readonly dialect: ArtifactDialect; readonly role: AppRole } {
+  const hashIndex = id.lastIndexOf("#");
+  if (hashIndex < 0) throw new Error(`surface id ${JSON.stringify(id)} missing '#'`);
+  const coordinate = id.slice(0, hashIndex);
+  const roleStr = id.slice(hashIndex + 1);
+  const dialect = parseDialectCoordinate(coordinate);
+  if (roleStr !== "viewer" && roleStr !== "editor") {
+    throw new Error(`surface id ${JSON.stringify(id)}: unknown app role ${JSON.stringify(roleStr)}, expected "viewer" or "editor"`);
+  }
+  return { dialect, role: roleStr };
+}
+
+/** 🧯️ The five frozen fault codes contract freeze §2.3 pins for the surface/viewer vocabulary —
+ * `origin` is `FaultOrigin::Framework` on every one of them (Rust `dsl::diagnostic::FaultOrigin`,
+ * `💻️os/🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:149` — landed by lane 1-A). {@link FaultOrigin}
+ * below now carries the `"framework"` member too (parity reconciliation, `📓️w1-d-report.md`), so
+ * {@link surfaceFault} writes the literal directly instead of the type-assertion this file
+ * previously needed while the two sides were out of sync. */
+export const SURFACE_FAULT_CODES = {
+  ViewerReadOnly: "viewer.read-only",
+  UnknownDialect: "surface.unknown-dialect",
+  ContributionNotPermitted: "surface.contribution-not-permitted",
+  Conflict: "surface.conflict",
+  MissingOwnerSurface: "surface.missing-owner-surface",
+} as const;
+
+function surfaceFault(code: string, message: string, scope: FaultScope = {}): Fault {
+  return { origin: "framework", code, severity: "error", message, scope, retryable: false };
+}
+
+/** 🗂️ The minimal per-plugin shape {@link AppRouter} needs — deliberately narrower than (and
+ * structurally compatible with) `🛂️manifest/🟦️component.ts`'s `PluginManifest`: `apps` stays
+ * `Record<string, unknown>[]` there pending the C1 ts-rs regen, and `artifactKinds` (this
+ * plugin's OWNED kinds, Rust `PluginManifest.artifact_kinds`, `🛂️manifest/🦀️component.rs:3218`)
+ * isn't mirrored on that type at all yet. A caller passes the real `PluginManifest` array straight
+ * through once it starts carrying `artifactKinds` — nothing here needs to change. */
+export type AppRouterManifest = {
+  readonly pluginId: string;
+  readonly apps: readonly Record<string, unknown>[];
+  /** 🗂️ This plugin's OWNED artifact kinds — the "owner plugin's surface first" ordering rule and
+   * the `surface.missing-owner-surface`/`surface.contribution-not-permitted` checks read this,
+   * never an app's own produces/consumes `artifactKinds` (ambiguous once a contributor registers
+   * a surface on a kind it doesn't own — contract freeze §2.4 `ArtifactContribution`). */
+  readonly artifactKinds?: readonly { readonly id: string }[];
+  readonly dependencies?: readonly PluginDependency[];
+};
+
+function readManifestAppSurface(app: Record<string, unknown>): { readonly appId: string; readonly dialect: ArtifactDialect; readonly role: AppRole } | undefined {
+  const id = app.id;
+  const role = app.role;
+  const dialect = app.dialect as Record<string, unknown> | undefined;
+  if (typeof id !== "string") return undefined;
+  if (role !== "viewer" && role !== "editor") return undefined;
+  if (!dialect || typeof dialect.artifactKind !== "string" || typeof dialect.standard !== "string" || typeof dialect.subset !== "string") return undefined;
+  return { appId: id, role, dialect: { artifactKind: dialect.artifactKind, standard: dialect.standard, subset: dialect.subset } };
+}
+
+function coordinateRoleKey(dialect: ArtifactDialect, role: AppRole): string {
+  return `${dialectCoordinate(dialect)}#${role}`;
+}
+
+/**
+ * 🧭️ TS twin of Rust `AppRouter` (contract freeze §3, C3; reconciled against the real Rust
+ * `AppRouter`/`AppRouterState` — `💻️os/🔌️plugin/🖥️host/🦀️component.rs:1723-1857` — in
+ * `📓️w1-d-report.md`). `(dialect, role) -> AppRef[]`, built from every loaded manifest: the owner
+ * plugin's entry first, then the rest sorted `pluginId` then `appId` ascending. A duplicate
+ * `AppRef` or an unauthorized cross-plugin contribution fails {@link AppRouter.build} outright —
+ * an `AppRouter` therefore never exists in an invalid state.
+ */
+export class AppRouter {
+  private readonly entriesByCoordinateRole: ReadonlyMap<string, readonly AppRef[]>;
+  private readonly dialectsByCoordinate: ReadonlyMap<string, ArtifactDialect>;
+  private readonly ownerByArtifactKind: ReadonlyMap<string, string>;
+
+  private constructor(entriesByCoordinateRole: ReadonlyMap<string, readonly AppRef[]>, dialectsByCoordinate: ReadonlyMap<string, ArtifactDialect>, ownerByArtifactKind: ReadonlyMap<string, string>) {
+    this.entriesByCoordinateRole = entriesByCoordinateRole;
+    this.dialectsByCoordinate = dialectsByCoordinate;
+    this.ownerByArtifactKind = ownerByArtifactKind;
+  }
+
+  /** 🏗️ Builds the router. Ownership claiming is a SINGLE pass over `manifests` in order,
+   * interleaved per manifest — first its own `artifactKinds` claim any still-unclaimed kind, THEN
+   * each of its apps claims its dialect's `artifactKind` if still unclaimed (first plugin to
+   * touch a kind, whether by declaring it or merely by registering a surface for it, wins —
+   * mirrors Rust `state.owners.entry(...).or_insert_with(...)`,
+   * `💻️os/🔌️plugin/🖥️host/🦀️component.rs:1759-1763`). Throws {@link SemioFaultError} with
+   * `"surface.contribution-not-permitted"` (checked first) or `"surface.conflict"` (checked
+   * second) per app — same order as Rust `register_manifest` (`🦀️component.rs:1755-1785`). A
+   * prior version of this method computed ownership from `artifactKinds` in one pass BEFORE any
+   * app was processed, which silently diverged from Rust whenever a plugin claimed a kind only
+   * implicitly, by being first to register a surface for it (Rust test
+   * `step3_first_entry_when_the_owner_has_no_surface_for_this_role`, `🦀️component.rs:2101`) —
+   * fixed here, see `📓️w1-d-report.md` parity table. */
+  static build(manifests: readonly AppRouterManifest[]): AppRouter {
+    const ownerByArtifactKind = new Map<string, string>();
+    const seenRefs = new Set<string>();
+    const grouped = new Map<string, { readonly dialect: ArtifactDialect; readonly role: AppRole; readonly entries: AppRef[] }>();
+    for (const manifest of manifests) {
+      for (const kind of manifest.artifactKinds ?? []) {
+        if (!ownerByArtifactKind.has(kind.id)) ownerByArtifactKind.set(kind.id, manifest.pluginId);
+      }
+
+      for (const raw of manifest.apps) {
+        const surface = readManifestAppSurface(raw);
+        if (!surface) continue;
+
+        let owner = ownerByArtifactKind.get(surface.dialect.artifactKind);
+        if (owner === undefined) {
+          owner = manifest.pluginId;
+          ownerByArtifactKind.set(surface.dialect.artifactKind, owner);
+        }
+        if (owner !== manifest.pluginId) {
+          const permitted = (manifest.dependencies ?? []).some((dependency) => dependency.pluginId === owner);
+          if (!permitted) {
+            throw new SemioFaultError(
+              surfaceFault(
+                SURFACE_FAULT_CODES.ContributionNotPermitted,
+                `plugin ${JSON.stringify(manifest.pluginId)} contributes a surface for ${JSON.stringify(dialectCoordinate(surface.dialect))} without depending on owner ${JSON.stringify(owner)}`,
+                { pluginId: manifest.pluginId },
+              ),
+            );
+          }
+        }
+
+        const ref: AppRef = { pluginId: manifest.pluginId, appId: surface.appId };
+        const refKey = `${ref.pluginId} ${ref.appId}`;
+        if (seenRefs.has(refKey)) {
+          throw new SemioFaultError(
+            surfaceFault(SURFACE_FAULT_CODES.Conflict, `AppRef {pluginId: ${JSON.stringify(ref.pluginId)}, appId: ${JSON.stringify(ref.appId)}} registered twice`, { pluginId: ref.pluginId, appId: ref.appId }),
+          );
+        }
+        seenRefs.add(refKey);
+
+        const key = coordinateRoleKey(surface.dialect, surface.role);
+        let group = grouped.get(key);
+        if (!group) {
+          group = { dialect: surface.dialect, role: surface.role, entries: [] };
+          grouped.set(key, group);
+        }
+        group.entries.push(ref);
+      }
+    }
+
+    const entriesByCoordinateRole = new Map<string, readonly AppRef[]>();
+    const dialectsByCoordinate = new Map<string, ArtifactDialect>();
+    for (const [key, group] of grouped) {
+      const owner = ownerByArtifactKind.get(group.dialect.artifactKind);
+      const sorted = [...group.entries].sort((a, b) => (a.pluginId === b.pluginId ? a.appId.localeCompare(b.appId) : a.pluginId.localeCompare(b.pluginId)));
+      const ordered = owner === undefined ? sorted : [...sorted.filter((ref) => ref.pluginId === owner), ...sorted.filter((ref) => ref.pluginId !== owner)];
+      entriesByCoordinateRole.set(key, ordered);
+      dialectsByCoordinate.set(dialectCoordinate(group.dialect), group.dialect);
+    }
+    return new AppRouter(entriesByCoordinateRole, dialectsByCoordinate, ownerByArtifactKind);
+  }
+
+  /** 📋️ Every registered surface for `(dialect, role)`, owner first — empty when none registered. */
+  entriesFor(dialect: ArtifactDialect, role: AppRole): readonly AppRef[] {
+    return this.entriesByCoordinateRole.get(coordinateRoleKey(dialect, role)) ?? [];
+  }
+
+  /** 🪪️ The plugin that owns `artifactKind`, or `undefined` when no loaded manifest claims it. */
+  ownerPluginId(artifactKind: string): string | undefined {
+    return this.ownerByArtifactKind.get(artifactKind);
+  }
+
+  /** 🩺️ "At plugin load, every owned subset must resolve for both roles" (contract freeze §3) —
+   * mirrors Rust `AppRouter::owned_surface_gaps` (`🦀️component.rs:1836`) exactly: pure, total,
+   * never throws. Every dialect with at least one registered surface whose kind is owned but
+   * missing a viewer or editor surface contributes one `Fault` (code
+   * `"surface.missing-owner-surface"`) to the result — the caller decides whether to log (W1) or
+   * hard-fail (W3). Renamed from the prior `assertOwnedSurfacesComplete` (which threw on the
+   * FIRST breach instead of collecting all of them, unlike Rust) during the parity
+   * reconciliation — no product code called it yet, so the rename carries no migration burden
+   * (`📓️w1-d-report.md`). Scoped to dialects that already have at least one registered surface —
+   * this class only sees loaded manifests, not the full on-disk taxonomy. */
+  ownedSurfaceGaps(): readonly Fault[] {
+    const gaps: Fault[] = [];
+    for (const [coordinate, dialect] of this.dialectsByCoordinate) {
+      const owner = this.ownerByArtifactKind.get(dialect.artifactKind);
+      if (owner === undefined) continue;
+      for (const role of ["viewer", "editor"] as const) {
+        if (this.entriesFor(dialect, role).length === 0) {
+          gaps.push(surfaceFault(SURFACE_FAULT_CODES.MissingOwnerSurface, `owned subset ${JSON.stringify(coordinate)} has no ${role} surface`, { pluginId: owner }));
+        }
+      }
+    }
+    return gaps;
+  }
+}
+//#endregion 🔖️AppRouter
+
+//#region 🔖️OpeningResolver
+/** 🎚️ One user-pinned default — mirrors Rust `DefaultApp`
+ * (`💻️os/🎚️config/🧬️schema/🦀️component.rs:17`) and its product-scoped TS twin
+ * `💻️os/🎚️config/🧬️schema/🟦️component.ts`. Duplicated (not imported) — a domain-neutral framework
+ * module must not depend on a product's config facet, same boundary this file already draws
+ * around `PluginCatalog` below. */
+export type DefaultApp = {
+  readonly dialect: ArtifactDialect;
+  readonly role: AppRole;
+  readonly app: AppRef;
+};
+
+/** 🎚️ `os.config.opening` materialized state — mirrors Rust `OpeningPreferences`
+ * (`💻️os/🎚️config/🧬️schema/🦀️component.rs:26`). */
+export type OpeningPreferences = {
+  readonly defaults: readonly DefaultApp[];
+};
+
+export const EMPTY_OPENING_PREFERENCES: OpeningPreferences = { defaults: [] };
+
+/** 📥️ Narrows a decoded JSON value into a whole {@link OpeningPreferences} snapshot, or
+ * `undefined` for anything else. Distinct from {@link decodeOpeningConfigMutation}: this facet's
+ * `Mutation::diff` is whole-record (`impl MutationDiff<OpeningPreferences> for OpeningPreferences`,
+ * `💻️os/🎚️config/🧬️schema/🦀️component.rs:36` — `apply` ignores `base` entirely), so a synced
+ * `MutationEnvelope.diff.payload` for this facet decodes straight to the NEXT full state, not an
+ * operation to replay. */
+export function decodeOpeningPreferences(value: unknown): OpeningPreferences | undefined {
+  if (!value || typeof value !== "object" || !("defaults" in value) || !Array.isArray((value as Record<string, unknown>).defaults)) return undefined;
+  const defaults: DefaultApp[] = [];
+  for (const raw of (value as Record<string, unknown>).defaults as unknown[]) {
+    if (!raw || typeof raw !== "object") return undefined;
+    const record = raw as Record<string, unknown>;
+    const dialect = record.dialect as Record<string, unknown> | undefined;
+    const role = record.role;
+    const app = record.app as Record<string, unknown> | undefined;
+    if (!dialect || typeof dialect.artifactKind !== "string" || typeof dialect.standard !== "string" || typeof dialect.subset !== "string") return undefined;
+    if (role !== "viewer" && role !== "editor") return undefined;
+    if (!app || typeof app.pluginId !== "string" || typeof app.appId !== "string") return undefined;
+    defaults.push({ dialect: { artifactKind: dialect.artifactKind, standard: dialect.standard, subset: dialect.subset }, role, app: { pluginId: app.pluginId, appId: app.appId } });
+  }
+  return { defaults };
+}
+
+/** 🧬️ Mirrors Rust `OpeningConfigMutation`'s two handcrafted kinds
+ * (`💻️os/🎚️config/🧬️schema/🧬️mutations/🦀️component.rs:15`) — `#[serde(tag = "mutation",
+ * rename_all = "camelCase")]`, so the wire JSON shape is `{mutation: "setDefaultApp" |
+ * "clearDefaultApp", ...}`. */
+export type OpeningConfigMutation =
+  | { readonly mutation: "setDefaultApp"; readonly dialect: ArtifactDialect; readonly role: AppRole; readonly app: AppRef }
+  | { readonly mutation: "clearDefaultApp"; readonly dialect: ArtifactDialect; readonly role: AppRole };
+
+/** 📥️ Narrows a decoded JSON value into an {@link OpeningConfigMutation}, or `undefined` for
+ * anything else — never throws, so a caller folding a mixed op log can skip what it doesn't
+ * recognize instead of aborting the whole fold. */
+export function decodeOpeningConfigMutation(value: unknown): OpeningConfigMutation | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const record = value as Record<string, unknown>;
+  const dialect = record.dialect as Record<string, unknown> | undefined;
+  const role = record.role;
+  if (!dialect || typeof dialect.artifactKind !== "string" || typeof dialect.standard !== "string" || typeof dialect.subset !== "string") return undefined;
+  if (role !== "viewer" && role !== "editor") return undefined;
+  const typedDialect: ArtifactDialect = { artifactKind: dialect.artifactKind, standard: dialect.standard, subset: dialect.subset };
+  if (record.mutation === "setDefaultApp") {
+    const app = record.app as Record<string, unknown> | undefined;
+    if (!app || typeof app.pluginId !== "string" || typeof app.appId !== "string") return undefined;
+    return { mutation: "setDefaultApp", dialect: typedDialect, role, app: { pluginId: app.pluginId, appId: app.appId } };
+  }
+  if (record.mutation === "clearDefaultApp") {
+    return { mutation: "clearDefaultApp", dialect: typedDialect, role };
+  }
+  return undefined;
+}
+
+/** 🔺️ Real handcrafted construction from `base`, never apply-then-capture — mirrors Rust
+ * `set-default-app`/`clear-default-app`'s `🔺️diff` leaves exactly: `setDefaultApp` drops any
+ * existing `(dialect, role)` entry then appends the new pin; `clearDefaultApp` only drops. */
+function applyOpeningConfigMutation(base: OpeningPreferences, mutation: OpeningConfigMutation): OpeningPreferences {
+  const defaults = base.defaults.filter((entry) => !(dialectEquals(entry.dialect, mutation.dialect) && entry.role === mutation.role));
+  if (mutation.mutation === "setDefaultApp") defaults.push({ dialect: mutation.dialect, role: mutation.role, app: mutation.app });
+  return { defaults };
+}
+
+/** 🧮️ Event-sourced fold over the `os.config.opening` op log — NEVER a mutable map (contract
+ * freeze §4: "the resolver reads a fold over the config op log, never a mutable map"). Each step
+ * recomputes a fresh `defaults` array; nothing here is ever mutated in place. */
+export function foldOpeningPreferences(ops: readonly OpeningConfigMutation[], base: OpeningPreferences = EMPTY_OPENING_PREFERENCES): OpeningPreferences {
+  return ops.reduce(applyOpeningConfigMutation, base);
+}
+
+/**
+ * 🧭️ TS twin of Rust `OpeningResolver::resolve` (contract freeze §3 — same "hadn't landed a
+ * concrete struct yet" caveat as {@link AppRouter} above). Four-step precedence, in order:
+ * 1. the pinned default from `prefs`, if it is STILL present in `router`;
+ * 2. the owner plugin's surface;
+ * 3. the first router entry;
+ * 4. otherwise throws {@link SemioFaultError} with `"surface.unknown-dialect"`.
+ */
+export function resolveOpeningApp(router: AppRouter, dialect: ArtifactDialect, role: AppRole, prefs: OpeningPreferences): AppRef {
+  const entries = router.entriesFor(dialect, role);
+  const pinned = prefs.defaults.find((entry) => dialectEquals(entry.dialect, dialect) && entry.role === role);
+  if (pinned && entries.some((ref) => appRefEquals(ref, pinned.app))) return pinned.app;
+  const owner = router.ownerPluginId(dialect.artifactKind);
+  if (owner !== undefined) {
+    const ownerEntry = entries.find((ref) => ref.pluginId === owner);
+    if (ownerEntry) return ownerEntry;
+  }
+  const first = entries[0];
+  if (first) return first;
+  throw new SemioFaultError(surfaceFault(SURFACE_FAULT_CODES.UnknownDialect, `no surface registered for ${dialectCoordinate(dialect)}#${role}`, {}));
+}
+//#endregion 🔖️OpeningResolver
+
 //#region 🗂️PluginCatalog
 /** 🗂️ Framework-owned mirror of the OS product's generated `PluginBuildTarget` row — kept
  * shape-compatible so `🛍️products/💻️os/…/🟦️catalog.ts` can build one straight off the generated array
@@ -277,6 +651,14 @@ export type PluginCatalogTarget = {
   readonly role: "plugin" | "extension";
   readonly contributes: readonly string[];
   readonly consumes: readonly string[];
+  /** 🔗️ Direct plugin dependency ids, Cargo-ground-truth (`semio-s-plugin-<id>` crate deps, `extends`
+   * target first for an extension) — mirrors the generated `PluginBuildTarget.dependsOn` 2-C's
+   * registry lane added (ticket 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS
+   * §W2-C report). No `VersionReq` travels with these yet (the registry's build-time view has none to
+   * derive it from) — `resolvePlaygroundBoot` maps each id to a `"*"` requirement, which is enough for
+   * {@link PluginGraph} to validate presence/cycles and compute load order even before a plugin
+   * adopts the runtime `.depends_on(id, VersionReq)` API. */
+  readonly dependsOn?: readonly string[];
 };
 
 /** 🗂️ Framework-owned mirror of the OS product's generated `PlaygroundBuildTarget` row — only the
@@ -358,8 +740,10 @@ export type AppEvent = { readonly kind: string; readonly payload: unknown };
 /** @emoji 🩺️ Canonical severity for faults and diagnostics. */
 export type Severity = "fatal" | "error" | "warning" | "hint";
 
-/** @emoji 🧭️ Layer that produced a fault. */
-export type FaultOrigin = "edge" | "renderer" | "os" | "module" | "plugin" | "app" | "extension";
+/** @emoji 🧭️ Layer that produced a fault. `"framework"` mirrors Rust `FaultOrigin::Framework`
+ * (`💻️os/🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:149`) — the origin for the five ticket
+ * 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET `surface.*`/`viewer.*` fault codes. */
+export type FaultOrigin = "edge" | "renderer" | "os" | "module" | "plugin" | "app" | "extension" | "framework";
 
 export type FaultScope = {
   readonly pluginId?: string;
@@ -1191,6 +1575,7 @@ export function createExtensionSource(catalog: PluginCatalog): PluginSource {
     moduleUrl: catalog.extensionModuleUrl(target.pluginId, target.wasmOut),
     contributes: target.contributes,
     consumes: target.consumes,
+    dependencies: dependsOnToPluginDependencies(target.dependsOn),
   }));
   const byId = new Map(registry.map((entry) => [entry.pluginId, entry] as const));
   return {
@@ -1278,6 +1663,10 @@ export type PlaygroundBoot = {
   readonly variant: string;
   readonly defaultAppId?: string;
   readonly plugins: readonly PluginRegistryEntry[];
+  /** 🧯 Any {@link PluginGraphError}s that kept an entry out of `plugins` — empty for the
+   * `session`-reuse fast path (nothing was recomputed). A caller renders these through
+   * {@link pluginGraphErrorMessage} instead of leaving the gap silent. */
+  readonly dependencyErrors: readonly PluginGraphError[];
 };
 
 /** @emoji 🎮️ Resolves the wasm plugin list and default app for one playground variant; when the on-disk
@@ -1286,7 +1675,7 @@ export type PlaygroundBoot = {
 export function resolvePlaygroundBoot(catalog: PluginCatalog, variant: string, session?: PlaygroundBootSession): PlaygroundBoot {
   const defaultAppId = resolvePlaygroundDefaultAppId(catalog, variant);
   if (session?.variant === variant) {
-    return { variant, defaultAppId: session.defaultAppId ?? defaultAppId, plugins: session.plugins };
+    return { variant, defaultAppId: session.defaultAppId ?? defaultAppId, plugins: session.plugins, dependencyErrors: [] };
   }
   const registryPluginId = resolvePluginRegistryId(catalog, variant);
   const hostMode = resolvePluginHostConfig(catalog, variant) !== undefined;
@@ -1295,11 +1684,22 @@ export function resolvePlaygroundBoot(catalog: PluginCatalog, variant: string, s
     moduleUrl: target.role === "extension" ? catalog.extensionModuleUrl(target.pluginId, target.wasmOut) : catalog.moduleUrl(target.pluginId, target.wasmOut),
     contributes: target.contributes,
     consumes: target.consumes,
+    dependencies: dependsOnToPluginDependencies(target.dependsOn),
   }));
+  const expanded = expandPluginRegistry(catalogPlugins, hostMode ? undefined : registryPluginId, hostMode);
+  // 🎯️ Boot activates in dependency order, not array order (scout-2 §4) — entries a dependency-graph
+  // fault blocks are simply left out of THIS list (best-effort degrade, contract freeze §4 rule 5);
+  // the caller surfaces `errors` through `pluginGraphErrorMessage` for the dependency-fault UI rather
+  // than this resolver throwing and taking the whole boot down with it.
+  const { order, errors } = orderPluginRegistryEntries(expanded);
+  if (errors.length > 0) {
+    for (const error of errors) console.error(`[DEBUG] resolvePlaygroundBoot(${variant}): ${pluginGraphErrorMessage(error, "en")}`);
+  }
   return {
     variant,
     defaultAppId,
-    plugins: expandPluginRegistry(catalogPlugins, hostMode ? undefined : registryPluginId, hostMode),
+    plugins: order,
+    dependencyErrors: errors,
   };
 }
 
@@ -1325,4 +1725,474 @@ export function resolvePluginHostConfig(catalog: PluginCatalog, playgroundPlugin
 }
 //#endregion 🏠️🧳️PluginHostConfig
 // #endregion 🎮️PlaygroundResolution
+
+//#region 🔖️PluginGraph
+/** 🔗️ One node of the plugin dependency graph — a plugin's own id/version plus the dependencies its
+ * manifest declares. Mirrors Rust `PluginManifest`'s `pluginId`/`version`/`dependencies` triple
+ * (`🛂️manifest/🦀️component.rs`), narrowed to exactly what {@link resolvePluginLoadOrder}/
+ * {@link validatePluginDependencyGraph} need — a caller with only a `PluginRegistryEntry` (no
+ * `version` yet, contract freeze §3-era catalogs) still validates presence/cycles correctly. */
+export type PluginGraphNode = {
+  readonly pluginId: string;
+  readonly version?: string;
+  readonly dependencies?: readonly PluginDependency[];
+};
+
+/** 🧯 One dependency-graph fault — reuses the frozen transaction rejection codes (contract freeze §5
+ * rejection taxonomy, ticket 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS)
+ * since plugin-load rejection and transaction contribution resolution share the same three failure
+ * shapes (contract freeze §4 rule 5: "Dependency graph: missing dependency, version mismatch, or
+ * cycle ⇒ plugin load rejected with a typed error"). */
+export type PluginGraphError =
+  | { readonly code: "transaction.dependency-missing"; readonly pluginId: string; readonly dependsOn: string }
+  | { readonly code: "transaction.version-mismatch"; readonly pluginId: string; readonly dependsOn: string; readonly required: VersionReq; readonly actual: string }
+  | { readonly code: "transaction.cycle"; readonly members: readonly string[] };
+
+type ParsedVersion = { readonly major: number; readonly minor: number; readonly patch: number };
+
+function parseVersion(raw: string | undefined): ParsedVersion | null {
+  if (!raw) return null;
+  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(raw.trim());
+  if (!match) return null;
+  return { major: Number(match[1]), minor: Number(match[2]), patch: Number(match[3]) };
+}
+
+function compareVersions(a: ParsedVersion, b: ParsedVersion): number {
+  if (a.major !== b.major) return a.major - b.major;
+  if (a.minor !== b.minor) return a.minor - b.minor;
+  return a.patch - b.patch;
+}
+
+type ParsedVersionReq =
+  | { readonly kind: "any" }
+  | { readonly kind: "exact"; readonly version: ParsedVersion }
+  | { readonly kind: "caret"; readonly version: ParsedVersion }
+  | { readonly kind: "tilde"; readonly version: ParsedVersion }
+  | { readonly kind: "atLeast"; readonly version: ParsedVersion };
+
+/** 🔢️ Parses the frozen version-requirement grammar (contract freeze §3): `*`, `=X.Y.Z`, `^X.Y.Z`,
+ * `~X.Y.Z`, `>=X.Y.Z`. Mirrors Rust `VersionReq::parse`'s accepted syntax exactly. */
+function parseVersionReq(raw: VersionReq): ParsedVersionReq | null {
+  const trimmed = raw.trim();
+  if (trimmed === "*") return { kind: "any" };
+  const opMatch = /^(=|\^|~|>=)(\d+\.\d+\.\d+)$/.exec(trimmed);
+  if (!opMatch) return null;
+  const version = parseVersion(opMatch[2]);
+  if (!version) return null;
+  switch (opMatch[1]) {
+    case "=":
+      return { kind: "exact", version };
+    case "^":
+      return { kind: "caret", version };
+    case "~":
+      return { kind: "tilde", version };
+    case ">=":
+      return { kind: "atLeast", version };
+    default:
+      return null;
+  }
+}
+
+/** ✅️ True when `actual` (a plain `major.minor.patch` string) satisfies `requirement`. An
+ * unparseable `actual`/`requirement` is treated as unsatisfied — never throws, matching the "typed
+ * error, never a panic" law the Rust planner's law tests hold `PlanError` to (contract freeze §1 law 4). */
+export function versionSatisfies(actual: string, requirement: VersionReq): boolean {
+  const req = parseVersionReq(requirement);
+  if (!req) return false;
+  if (req.kind === "any") return true;
+  const version = parseVersion(actual);
+  if (!version) return false;
+  if (req.kind === "exact") return compareVersions(version, req.version) === 0;
+  if (req.kind === "atLeast") return compareVersions(version, req.version) >= 0;
+  if (req.kind === "tilde") {
+    return version.major === req.version.major && version.minor === req.version.minor && version.patch >= req.version.patch;
+  }
+  // caret — leading-zero-tier semver semantics: the first nonzero component of the REQUIREMENT pins
+  // the upper bound; when every component is zero, only that exact version matches.
+  if (compareVersions(version, req.version) < 0) return false;
+  if (req.version.major > 0) return version.major === req.version.major;
+  if (req.version.minor > 0) return version.major === 0 && version.minor === req.version.minor;
+  return version.major === 0 && version.minor === 0 && version.patch === req.version.patch;
+}
+
+/** 🧯 Validates every node's declared `dependencies` resolve (present, version-satisfying) — does
+ * NOT detect cycles (see {@link resolvePluginLoadOrder}, which layers cycle detection on top only
+ * once every missing/mismatched edge has already been reported). A node with no `version` skips the
+ * version check for edges pointing at it (nothing to compare against) rather than failing closed.
+ * Mirrors Rust `validate_dependency_graph`. */
+export function validatePluginDependencyGraph(nodes: readonly PluginGraphNode[]): readonly PluginGraphError[] {
+  const byId = new Map(nodes.map((node) => [node.pluginId, node] as const));
+  const errors: PluginGraphError[] = [];
+  for (const node of nodes) {
+    for (const dependency of node.dependencies ?? []) {
+      const target = byId.get(dependency.pluginId);
+      if (!target) {
+        errors.push({ code: "transaction.dependency-missing", pluginId: node.pluginId, dependsOn: dependency.pluginId });
+        continue;
+      }
+      if (target.version !== undefined && !versionSatisfies(target.version, dependency.version)) {
+        errors.push({ code: "transaction.version-mismatch", pluginId: node.pluginId, dependsOn: dependency.pluginId, required: dependency.version, actual: target.version });
+      }
+    }
+  }
+  return errors;
+}
+
+/** 🔁️ DFS cycle extraction restricted to `leftover` (the toposort leftover set) — names every plugin
+ * actually on a cycle rather than the whole leftover set (which may include acyclic nodes downstream
+ * of the real cycle). Falls back to the sorted leftover set only if no back-edge is found (should not
+ * happen given `leftover` is non-empty and the full graph already passed structural validation). */
+function findCycleMembers(byId: ReadonlyMap<string, PluginGraphNode>, leftover: ReadonlySet<string>): readonly string[] {
+  const visiting = new Set<string>();
+  const visited = new Set<string>();
+  const stack: string[] = [];
+  let cycle: string[] | null = null;
+
+  function visit(id: string): void {
+    if (cycle || !leftover.has(id) || visited.has(id)) return;
+    if (visiting.has(id)) {
+      const start = stack.indexOf(id);
+      cycle = stack.slice(start);
+      return;
+    }
+    visiting.add(id);
+    stack.push(id);
+    for (const dependency of byId.get(id)?.dependencies ?? []) {
+      if (leftover.has(dependency.pluginId)) visit(dependency.pluginId);
+      if (cycle) return;
+    }
+    stack.pop();
+    visiting.delete(id);
+    visited.add(id);
+  }
+
+  for (const id of [...leftover].sort()) {
+    visit(id);
+    if (cycle) break;
+  }
+  return cycle ?? [...leftover].sort();
+}
+
+/** 🔁️ Kahn toposort with lexicographically-smallest-id tie-breaking — mirrors Rust
+ * `resolve_load_order` exactly, including the deterministic tie-break. `errors` is non-empty and
+ * `order` empty on any missing dependency or version mismatch (reported before a cycle would be,
+ * matching the Rust validate-then-sort order) or on a real cycle (members individually named via
+ * {@link findCycleMembers}, not just the toposort leftover set). */
+export function resolvePluginLoadOrder(nodes: readonly PluginGraphNode[]): { readonly order: readonly string[]; readonly errors: readonly PluginGraphError[] } {
+  const structural = validatePluginDependencyGraph(nodes);
+  if (structural.length > 0) return { order: [], errors: structural };
+
+  const byId = new Map(nodes.map((node) => [node.pluginId, node] as const));
+  const indegree = new Map<string, number>();
+  const dependents = new Map<string, string[]>();
+  for (const node of nodes) {
+    indegree.set(node.pluginId, indegree.get(node.pluginId) ?? 0);
+    for (const dependency of node.dependencies ?? []) {
+      indegree.set(node.pluginId, (indegree.get(node.pluginId) ?? 0) + 1);
+      const list = dependents.get(dependency.pluginId) ?? [];
+      list.push(node.pluginId);
+      dependents.set(dependency.pluginId, list);
+    }
+  }
+
+  const order: string[] = [];
+  const remaining = new Map(indegree);
+  const queue = [...indegree.entries()].filter(([, count]) => count === 0).map(([id]) => id);
+  while (queue.length > 0) {
+    queue.sort();
+    const id = queue.shift()!;
+    order.push(id);
+    for (const dependent of dependents.get(id) ?? []) {
+      const next = (remaining.get(dependent) ?? 0) - 1;
+      remaining.set(dependent, next);
+      if (next === 0) queue.push(dependent);
+    }
+  }
+
+  if (order.length === nodes.length) return { order, errors: [] };
+  const leftover = new Set(nodes.map((node) => node.pluginId).filter((id) => !order.includes(id)));
+  return { order: [], errors: [{ code: "transaction.cycle", members: findCycleMembers(byId, leftover) }] };
+}
+
+/** 🔎️ Direct dependents of `pluginId` — every node that declares `pluginId` in its own `dependencies`
+ * — sorted. Mirrors Rust `dependents`. */
+export function pluginDependents(nodes: readonly PluginGraphNode[], pluginId: string): readonly string[] {
+  return nodes
+    .filter((node) => (node.dependencies ?? []).some((dependency) => dependency.pluginId === pluginId))
+    .map((node) => node.pluginId)
+    .sort();
+}
+
+/** 🕸️ Convenience wrapper over the pure {@link validatePluginDependencyGraph}/
+ * {@link resolvePluginLoadOrder}/{@link pluginDependents} functions for a caller that wants to hold
+ * one graph instance across several queries (boot ordering, then later a hot-reload/unload guard). */
+export class PluginGraph {
+  private readonly nodes: readonly PluginGraphNode[];
+  constructor(nodes: readonly PluginGraphNode[]) {
+    this.nodes = nodes;
+  }
+  validate(): readonly PluginGraphError[] {
+    return validatePluginDependencyGraph(this.nodes);
+  }
+  loadOrder(): { readonly order: readonly string[]; readonly errors: readonly PluginGraphError[] } {
+    return resolvePluginLoadOrder(this.nodes);
+  }
+  dependents(pluginId: string): readonly string[] {
+    return pluginDependents(this.nodes, pluginId);
+  }
+  /** 🚫️ Contract freeze §4 rule 5's "unload refused while dependents are loaded" — `loadedIds` is
+   * every plugin id currently resident (not merely declared in the graph), so a dependent that was
+   * never actually loaded doesn't block `pluginId`'s unload. */
+  canUnload(pluginId: string, loadedIds: ReadonlySet<string>): boolean {
+    return this.dependents(pluginId).every((dependent) => !loadedIds.has(dependent));
+  }
+}
+
+/** 🎯️ Orders `entries` by {@link PluginGraph.loadOrder}; entries the graph can't place (missing
+ * dependency, version mismatch, or on a cycle) are dropped from the returned order and reported in
+ * `errors` instead of silently keeping their original array position — contract freeze §4 rule 5's
+ * "plugin load rejected with a typed error". Every other entry still boots, in dependency order
+ * (best-effort degrade, matching the shell's existing fail-soft posture toward a single unavailable
+ * plugin module). An entry with no declared `dependencies` at all always validates trivially, so a
+ * registry that hasn't adopted `dependsOn` yet round-trips through this function unchanged (array
+ * order in, array order out). */
+export function orderPluginRegistryEntries(entries: readonly PluginRegistryEntry[]): { readonly order: readonly PluginRegistryEntry[]; readonly errors: readonly PluginGraphError[] } {
+  const nodes: PluginGraphNode[] = entries.map((entry) => ({ pluginId: entry.pluginId, dependencies: entry.dependencies }));
+  const { order, errors } = new PluginGraph(nodes).loadOrder();
+  const byId = new Map(entries.map((entry) => [entry.pluginId, entry] as const));
+  if (errors.length === 0) {
+    return { order: order.map((id) => byId.get(id)).filter((entry): entry is PluginRegistryEntry => entry !== undefined), errors: [] };
+  }
+  // 🔁 Retry on the remaining (non-blocked) subset — a single missing/mismatched/cyclic entry must
+  // not degrade every OTHER entry back to plain array order; it only takes itself (and, for a cycle,
+  // its fellow cycle members) out of the graph. Each retry strictly shrinks `entries`, so this always
+  // terminates.
+  const blocked = new Set(errors.flatMap((error) => (error.code === "transaction.cycle" ? error.members : [error.pluginId])));
+  const remaining = entries.filter((entry) => !blocked.has(entry.pluginId));
+  const retried = orderPluginRegistryEntries(remaining);
+  return { order: retried.order, errors: [...errors, ...retried.errors] };
+}
+//#endregion 🔖️PluginGraph
+
+//#region 🌐️DependencyFault
+/** 🌐️ Picks the best string out of a {@link LocalizedLabel}-shaped `{en, de}` record for `locale` —
+ * falls back to English, then to whatever key exists, since this repo supports multiple languages
+ * with no default language but a fault MUST still render something rather than nothing. */
+function resolveLocalizedLabel(label: Record<string, string>, locale: ShellLocale): string {
+  return label[locale] ?? label.en ?? Object.values(label)[0] ?? "";
+}
+
+/** 🌐️ Turns a {@link PluginGraphError} into a real, localized (English + German) message — the
+ * dependency-fault UI this ticket requires instead of a bare console error. Callers needing a
+ * console-safe fallback can still log the same string; this is the single source of the wording so
+ * a boot banner and an in-shell notification never drift apart. */
+export function pluginGraphErrorMessage(error: PluginGraphError, locale: ShellLocale): string {
+  switch (error.code) {
+    case "transaction.dependency-missing":
+      return resolveLocalizedLabel(
+        {
+          en: `Plugin "${error.pluginId}" needs "${error.dependsOn}", which is not installed.`,
+          de: `Das Plugin „${error.pluginId}“ benötigt „${error.dependsOn}“, welches nicht installiert ist.`,
+        },
+        locale,
+      );
+    case "transaction.version-mismatch":
+      return resolveLocalizedLabel(
+        {
+          en: `Plugin "${error.pluginId}" needs "${error.dependsOn}" ${error.required}, but ${error.actual} is installed.`,
+          de: `Das Plugin „${error.pluginId}“ benötigt „${error.dependsOn}“ ${error.required}, installiert ist jedoch ${error.actual}.`,
+        },
+        locale,
+      );
+    case "transaction.cycle":
+      return resolveLocalizedLabel(
+        {
+          en: `Plugin dependency cycle: ${error.members.join(" → ")}.`,
+          de: `Zyklische Plugin-Abhängigkeit: ${error.members.join(" → ")}.`,
+        },
+        locale,
+      );
+  }
+}
+//#endregion 🌐️DependencyFault
+
+//#region 🔖️InstanceDirectory
+/** 🗺️ Where one artifact instance lives — mirrors the Rust host's `InstanceDirectory` entry shape
+ * (contract freeze, W2 ownership doc: "`InstanceDirectory` mapping an artifact ref to `(pluginId,
+ * instanceId, artifactKind)`"). */
+export type ArtifactInstanceRef = {
+  readonly pluginId: string;
+  readonly instanceId: number;
+  readonly artifactKind: string;
+};
+
+/** 🗺️ Host-side registry from artifact id to the plugin instance that owns it — the transaction
+ * coordinator's `InstanceDirectory(target) → (plugin, instance)` lookup (contract freeze §5.3).
+ * Registration/unregistration is the caller's responsibility (on `createApp`/`loadDocument` and on
+ * `destroyApp`), matching how the Rust host's directory is populated. */
+export class InstanceDirectory {
+  private readonly byArtifactId = new Map<string, ArtifactInstanceRef>();
+
+  register(artifactId: string, ref: ArtifactInstanceRef): void {
+    this.byArtifactId.set(artifactId, ref);
+  }
+
+  unregister(artifactId: string): void {
+    this.byArtifactId.delete(artifactId);
+  }
+
+  resolve(artifactId: string): ArtifactInstanceRef | undefined {
+    return this.byArtifactId.get(artifactId);
+  }
+
+  entries(): ReadonlyArray<readonly [string, ArtifactInstanceRef]> {
+    return [...this.byArtifactId.entries()];
+  }
+}
+//#endregion 🔖️InstanceDirectory
+
+//#region 🔖️ArtifactRouters
+/** 🧯 Thrown by both routers' `registerContributed` when the same `(artifactKind, key)` is claimed
+ * twice with non-identical metadata — contract freeze §4 rule 3's conflict rule. */
+export class ArtifactRouterConflictError extends Error {
+  readonly code = "artifact-router.conflict" as const;
+  constructor(artifactKind: string, key: string) {
+    super(`[DEBUG] router conflict: ${artifactKind}#${key} already registered with different metadata`);
+    this.name = "ArtifactRouterConflictError";
+  }
+}
+
+/** 🧯 Thrown when a contributor registers onto an artifact kind whose owning plugin is not a direct
+ * entry in the contributor's declared `dependencies` — contract freeze §4 rule 1. Carries the frozen
+ * transaction rejection code since an unpermitted contribution is exactly what that code names. */
+export class ArtifactContributionNotPermittedError extends Error {
+  readonly code = "transaction.contribution-not-permitted" as const;
+  constructor(contributorPluginId: string, ownerPluginId: string) {
+    super(`[DEBUG] "${contributorPluginId}" may not contribute onto "${ownerPluginId}"'s artifact kind — not a direct dependency`);
+    this.name = "ArtifactContributionNotPermittedError";
+  }
+}
+
+/** 🔢️ Deterministic deep stringify (sorted object keys) — the "byte-identical metadata" idempotence
+ * check contract freeze §4 rule 3 asks for, without requiring an actual byte-level codec on the TS
+ * side (mirrors the same rule Rust's `ArtifactInferenceRouter::register_plugin` already enforces). */
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+  const record = value as Record<string, unknown>;
+  const keys = Object.keys(record).sort();
+  return `{${keys.map((key) => `${JSON.stringify(key)}:${stableStringify(record[key])}`).join(",")}}`;
+}
+
+export type ArtifactRouterOwnership = { readonly kind: "owner" } | { readonly kind: "contributed"; readonly pluginId: string };
+
+/** 🗂️ Shared conflict-checked `(artifactKind, key) -> ownership` table both routers below build on —
+ * contract freeze §4 rule 3's conflict rule in one place instead of duplicated per router. */
+class ConflictCheckedRegistry {
+  private readonly entries = new Map<string, { readonly ownership: ArtifactRouterOwnership; readonly fingerprint: string }>();
+
+  register(artifactKind: string, key: string, ownership: ArtifactRouterOwnership, metadata: unknown): void {
+    const compositeKey = `${artifactKind} ${key}`;
+    const fingerprint = stableStringify(metadata);
+    const existing = this.entries.get(compositeKey);
+    if (existing && existing.fingerprint !== fingerprint) throw new ArtifactRouterConflictError(artifactKind, key);
+    this.entries.set(compositeKey, { ownership, fingerprint });
+  }
+
+  resolve(artifactKind: string, key: string): ArtifactRouterOwnership | undefined {
+    return this.entries.get(`${artifactKind} ${key}`)?.ownership;
+  }
+}
+
+/** 🗂️ `(artifactKind, mutationId) -> Owner | Contributed{pluginId}` — the transaction coordinator's
+ * `ArtifactMutationRouter` lookup (contract freeze §5.3). */
+export class ArtifactMutationRouter {
+  private readonly registry = new ConflictCheckedRegistry();
+
+  registerOwner(artifactKind: string, mutationId: string): void {
+    this.registry.register(artifactKind, mutationId, { kind: "owner" }, { kind: "owner", artifactKind, mutationId });
+  }
+
+  /** Contract freeze §4 rule 1 registration gate: `contributorDependsOnOwner` must already be true —
+   * callers derive it from a {@link PluginGraph} lookup (the contributor's declared `dependencies`
+   * directly naming `ownerPluginId`) before calling this. */
+  registerContributed(artifactKind: string, contributorPluginId: string, ownerPluginId: string, metadata: ContributedMutationMetadata, contributorDependsOnOwner: boolean): void {
+    if (!contributorDependsOnOwner) throw new ArtifactContributionNotPermittedError(contributorPluginId, ownerPluginId);
+    this.registry.register(artifactKind, metadata.mutationId, { kind: "contributed", pluginId: contributorPluginId }, metadata);
+  }
+
+  resolve(artifactKind: string, mutationId: string): ArtifactRouterOwnership | undefined {
+    return this.registry.resolve(artifactKind, mutationId);
+  }
+}
+
+/** 💡️ `(artifactKind, inferenceSchema) -> Owner | Contributed{pluginId}`, plus the contributed
+ * `dependsOn` DAG (contract freeze §5.3/§6's `dependencies` list on `artifact-inference-request`) —
+ * the transaction coordinator's contributor-aware `ArtifactInferenceRouter`. */
+export class ArtifactInferenceRouter {
+  private readonly registry = new ConflictCheckedRegistry();
+  private readonly dependsOn = new Map<string, readonly string[]>();
+
+  registerOwner(artifactKind: string, inferenceSchema: string): void {
+    this.registry.register(artifactKind, inferenceSchema, { kind: "owner" }, { kind: "owner", artifactKind, inferenceSchema });
+  }
+
+  /** Contract freeze §4 rules 1+4: the contributor must directly depend on the owner, and the
+   * metadata's own `owner`/`contributor` must match each other and `artifactKind` must match the
+   * target. */
+  registerContributed(artifactKind: string, metadata: ContributedInferenceMetadata, contributorDependsOnOwner: boolean): void {
+    if (metadata.owner !== metadata.contributor) {
+      throw new Error(`[DEBUG] contributed inference owner/contributor mismatch: ${metadata.owner} !== ${metadata.contributor}`);
+    }
+    if (metadata.artifactKind !== artifactKind) {
+      throw new Error(`[DEBUG] contributed inference artifactKind mismatch: ${metadata.artifactKind} !== ${artifactKind}`);
+    }
+    if (!contributorDependsOnOwner) throw new ArtifactContributionNotPermittedError(metadata.contributor, artifactKind);
+    this.registry.register(artifactKind, metadata.inferenceSchema, { kind: "contributed", pluginId: metadata.contributor }, metadata);
+    this.dependsOn.set(`${artifactKind} ${metadata.inferenceSchema}`, metadata.dependsOn ?? []);
+  }
+
+  resolve(artifactKind: string, inferenceSchema: string): ArtifactRouterOwnership | undefined {
+    return this.registry.resolve(artifactKind, inferenceSchema);
+  }
+
+  /** 🔗️ Topological order of every registered contributed inference's `(artifactKind,
+   * inferenceSchema)` key honoring the `dependsOn` DAG (an inference that itself needs another
+   * contributed inference's output runs after it) — Kahn toposort over `dependsOn` edges, same
+   * lexicographic tie-break as {@link resolvePluginLoadOrder}. Throws {@link Error} naming the
+   * cyclic keys on a cycle (never silently drops an entry). */
+  dependencyOrder(): readonly string[] {
+    const keys = [...this.dependsOn.keys()];
+    const indegree = new Map<string, number>(keys.map((key) => [key, 0]));
+    const dependents = new Map<string, string[]>();
+    for (const key of keys) {
+      for (const dependency of this.dependsOn.get(key) ?? []) {
+        if (!indegree.has(dependency)) continue; // an unregistered dependency is a registration-time error, not this pass's concern
+        indegree.set(key, (indegree.get(key) ?? 0) + 1);
+        const list = dependents.get(dependency) ?? [];
+        list.push(key);
+        dependents.set(dependency, list);
+      }
+    }
+    const order: string[] = [];
+    const remaining = new Map(indegree);
+    const queue = keys.filter((key) => (indegree.get(key) ?? 0) === 0);
+    while (queue.length > 0) {
+      queue.sort();
+      const key = queue.shift()!;
+      order.push(key);
+      for (const dependent of dependents.get(key) ?? []) {
+        const next = (remaining.get(dependent) ?? 0) - 1;
+        remaining.set(dependent, next);
+        if (next === 0) queue.push(dependent);
+      }
+    }
+    if (order.length !== keys.length) {
+      const leftover = keys.filter((key) => !order.includes(key)).sort();
+      throw new Error(`[DEBUG] ArtifactInferenceRouter.dependencyOrder: cycle among ${leftover.join(", ")}`);
+    }
+    return order;
+  }
+}
+//#endregion 🔖️ArtifactRouters
 // #endregion 🎠️Kernel

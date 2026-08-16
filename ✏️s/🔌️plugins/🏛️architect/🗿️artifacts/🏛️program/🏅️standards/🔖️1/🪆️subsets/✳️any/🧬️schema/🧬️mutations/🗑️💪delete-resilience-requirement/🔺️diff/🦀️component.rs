@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `💪resilience` per Wave C.
 
 use super::mutation::DeleteResilienceRequirement;
+use crate::artifacts::program::diff::ProgramResilienceDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramResilienceDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteResilienceRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

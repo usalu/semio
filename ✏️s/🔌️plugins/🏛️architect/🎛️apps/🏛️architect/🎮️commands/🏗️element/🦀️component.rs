@@ -7,7 +7,7 @@ pub mod add_element {
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::schema::mutations as leaves;
     use crate::artifacts::program::ProgramSnapshot;
-    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -24,11 +24,7 @@ pub mod add_element {
         let element = default_element(payload.name.clone());
         let mut next = cfg.snapshot.clone();
         next.active_register = "elements".into();
-        Ok(Emit {
-            artifact_mutations: vec![ProgramMutation::CreateProgramElement(leaves::create_program_element::mutation::CreateProgramElement { program_element: element })],
-            config_mutations: snapshot(next),
-            ..Default::default()
-        })
+        Ok(Emit { artifact_mutations: vec![ProgramMutation::CreateProgramElement(leaves::create_program_element::mutation::CreateProgramElement { program_element: element })], config_mutations: snapshot(next), ..Default::default() })
     }
 }
 
@@ -37,7 +33,7 @@ pub mod remove_element {
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::schema::mutations as leaves;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
-    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

@@ -2,286 +2,34 @@
   "x-semio": {
     "kind": "collection",
     "members": [
-      {
-        "directory": "🚫️no-mutation",
-        "id": "s.stdio.gltf.mutation.no-mutation",
-        "kind": "mutation",
-        "responsibility": "glTF no-mutation command.",
-        "mutation": {
-          "command": "gltf.no-mutation",
-          "event": "gltf.no-mutation.applied"
-        }
-      },
-      {
-        "directory": "📄set-snapshot",
-        "id": "s.stdio.gltf.mutation.set-snapshot",
-        "kind": "mutation",
-        "responsibility": "glTF set-snapshot command.",
-        "mutation": {
-          "command": "gltf.set-snapshot",
-          "event": "gltf.set-snapshot.applied"
-        }
-      },
-      {
-        "directory": "🏷️set-asset",
-        "id": "s.stdio.gltf.mutation.set-asset",
-        "kind": "mutation",
-        "responsibility": "glTF set-asset command.",
-        "mutation": {
-          "command": "gltf.set-asset",
-          "event": "gltf.set-asset.applied"
-        }
-      },
-      {
-        "directory": "➕️insert-scene",
-        "id": "s.stdio.gltf.mutation.insert-scene",
-        "kind": "mutation",
-        "responsibility": "glTF insert-scene command.",
-        "mutation": {
-          "command": "gltf.insert-scene",
-          "event": "gltf.insert-scene.applied"
-        }
-      },
-      {
-        "directory": "➖️remove-scene",
-        "id": "s.stdio.gltf.mutation.remove-scene",
-        "kind": "mutation",
-        "responsibility": "glTF remove-scene command.",
-        "mutation": {
-          "command": "gltf.remove-scene",
-          "event": "gltf.remove-scene.applied"
-        }
-      },
-      {
-        "directory": "✏️set-scene",
-        "id": "s.stdio.gltf.mutation.set-scene",
-        "kind": "mutation",
-        "responsibility": "glTF set-scene command.",
-        "mutation": {
-          "command": "gltf.set-scene",
-          "event": "gltf.set-scene.applied"
-        }
-      },
-      {
-        "directory": "➕️insert-node",
-        "id": "s.stdio.gltf.mutation.insert-node",
-        "kind": "mutation",
-        "responsibility": "glTF insert-node command.",
-        "mutation": {
-          "command": "gltf.insert-node",
-          "event": "gltf.insert-node.applied"
-        }
-      },
-      {
-        "directory": "➖️remove-node",
-        "id": "s.stdio.gltf.mutation.remove-node",
-        "kind": "mutation",
-        "responsibility": "glTF remove-node command.",
-        "mutation": {
-          "command": "gltf.remove-node",
-          "event": "gltf.remove-node.applied"
-        }
-      },
-      {
-        "directory": "✏️set-node",
-        "id": "s.stdio.gltf.mutation.set-node",
-        "kind": "mutation",
-        "responsibility": "glTF set-node command.",
-        "mutation": {
-          "command": "gltf.set-node",
-          "event": "gltf.set-node.applied"
-        }
-      },
-      {
-        "directory": "🔄️transform-node",
-        "id": "s.stdio.gltf.mutation.transform-node",
-        "kind": "mutation",
-        "responsibility": "glTF transform-node command.",
-        "mutation": {
-          "command": "gltf.transform-node",
-          "event": "gltf.transform-node.applied"
-        }
-      },
-      {
-        "directory": "🌳️reparent-node",
-        "id": "s.stdio.gltf.mutation.reparent-node",
-        "kind": "mutation",
-        "responsibility": "glTF reparent-node command.",
-        "mutation": {
-          "command": "gltf.reparent-node",
-          "event": "gltf.reparent-node.applied"
-        }
-      },
-      {
-        "directory": "🔗️bind-node-mesh",
-        "id": "s.stdio.gltf.mutation.bind-node-mesh",
-        "kind": "mutation",
-        "responsibility": "glTF bind-node-mesh command.",
-        "mutation": {
-          "command": "gltf.bind-node-mesh",
-          "event": "gltf.bind-node-mesh.applied"
-        }
-      },
-      {
-        "directory": "➕️insert-mesh",
-        "id": "s.stdio.gltf.mutation.insert-mesh",
-        "kind": "mutation",
-        "responsibility": "glTF insert-mesh command.",
-        "mutation": {
-          "command": "gltf.insert-mesh",
-          "event": "gltf.insert-mesh.applied"
-        }
-      },
-      {
-        "directory": "➖️remove-mesh",
-        "id": "s.stdio.gltf.mutation.remove-mesh",
-        "kind": "mutation",
-        "responsibility": "glTF remove-mesh command.",
-        "mutation": {
-          "command": "gltf.remove-mesh",
-          "event": "gltf.remove-mesh.applied"
-        }
-      },
-      {
-        "directory": "✏️set-mesh",
-        "id": "s.stdio.gltf.mutation.set-mesh",
-        "kind": "mutation",
-        "responsibility": "glTF set-mesh command.",
-        "mutation": {
-          "command": "gltf.set-mesh",
-          "event": "gltf.set-mesh.applied"
-        }
-      },
-      {
-        "directory": "➕️insert-accessor",
-        "id": "s.stdio.gltf.mutation.insert-accessor",
-        "kind": "mutation",
-        "responsibility": "glTF insert-accessor command.",
-        "mutation": {
-          "command": "gltf.insert-accessor",
-          "event": "gltf.insert-accessor.applied"
-        }
-      },
-      {
-        "directory": "➖️remove-accessor",
-        "id": "s.stdio.gltf.mutation.remove-accessor",
-        "kind": "mutation",
-        "responsibility": "glTF remove-accessor command.",
-        "mutation": {
-          "command": "gltf.remove-accessor",
-          "event": "gltf.remove-accessor.applied"
-        }
-      },
-      {
-        "directory": "✏️set-accessor",
-        "id": "s.stdio.gltf.mutation.set-accessor",
-        "kind": "mutation",
-        "responsibility": "glTF set-accessor command.",
-        "mutation": {
-          "command": "gltf.set-accessor",
-          "event": "gltf.set-accessor.applied"
-        }
-      },
-      {
-        "directory": "➕️insert-material",
-        "id": "s.stdio.gltf.mutation.insert-material",
-        "kind": "mutation",
-        "responsibility": "glTF insert-material command.",
-        "mutation": {
-          "command": "gltf.insert-material",
-          "event": "gltf.insert-material.applied"
-        }
-      },
-      {
-        "directory": "➖️remove-material",
-        "id": "s.stdio.gltf.mutation.remove-material",
-        "kind": "mutation",
-        "responsibility": "glTF remove-material command.",
-        "mutation": {
-          "command": "gltf.remove-material",
-          "event": "gltf.remove-material.applied"
-        }
-      },
-      {
-        "directory": "✏️set-material",
-        "id": "s.stdio.gltf.mutation.set-material",
-        "kind": "mutation",
-        "responsibility": "glTF set-material command.",
-        "mutation": {
-          "command": "gltf.set-material",
-          "event": "gltf.set-material.applied"
-        }
-      },
-      {
-        "directory": "🔗️bind-primitive-material",
-        "id": "s.stdio.gltf.mutation.bind-primitive-material",
-        "kind": "mutation",
-        "responsibility": "glTF bind-primitive-material command.",
-        "mutation": {
-          "command": "gltf.bind-primitive-material",
-          "event": "gltf.bind-primitive-material.applied"
-        }
-      },
-      {
-        "directory": "➕️insert-buffer",
-        "id": "s.stdio.gltf.mutation.insert-buffer",
-        "kind": "mutation",
-        "responsibility": "glTF insert-buffer command.",
-        "mutation": {
-          "command": "gltf.insert-buffer",
-          "event": "gltf.insert-buffer.applied"
-        }
-      },
-      {
-        "directory": "➖️remove-buffer",
-        "id": "s.stdio.gltf.mutation.remove-buffer",
-        "kind": "mutation",
-        "responsibility": "glTF remove-buffer command.",
-        "mutation": {
-          "command": "gltf.remove-buffer",
-          "event": "gltf.remove-buffer.applied"
-        }
-      },
-      {
-        "directory": "✏️set-buffer",
-        "id": "s.stdio.gltf.mutation.set-buffer",
-        "kind": "mutation",
-        "responsibility": "glTF set-buffer command.",
-        "mutation": {
-          "command": "gltf.set-buffer",
-          "event": "gltf.set-buffer.applied"
-        }
-      },
-      {
-        "directory": "➕️insert-animation",
-        "id": "s.stdio.gltf.mutation.insert-animation",
-        "kind": "mutation",
-        "responsibility": "glTF insert-animation command.",
-        "mutation": {
-          "command": "gltf.insert-animation",
-          "event": "gltf.insert-animation.applied"
-        }
-      },
-      {
-        "directory": "➖️remove-animation",
-        "id": "s.stdio.gltf.mutation.remove-animation",
-        "kind": "mutation",
-        "responsibility": "glTF remove-animation command.",
-        "mutation": {
-          "command": "gltf.remove-animation",
-          "event": "gltf.remove-animation.applied"
-        }
-      },
-      {
-        "directory": "✏️set-animation",
-        "id": "s.stdio.gltf.mutation.set-animation",
-        "kind": "mutation",
-        "responsibility": "glTF set-animation command.",
-        "mutation": {
-          "command": "gltf.set-animation",
-          "event": "gltf.set-animation.applied"
-        }
-      }
+      { "directory": "🚫️no-mutation", "id": "s.stdio.gltf.mutation.no-mutation", "kind": "mutation", "responsibility": "glTF no-mutation command.", "mutation": { "command": "gltf.no-mutation", "event": "gltf.no-mutation.applied" } },
+      { "directory": "📄set-snapshot", "id": "s.stdio.gltf.mutation.set-snapshot", "kind": "mutation", "responsibility": "glTF set-snapshot command.", "mutation": { "command": "gltf.set-snapshot", "event": "gltf.set-snapshot.applied" } },
+      { "directory": "🏷️set-asset", "id": "s.stdio.gltf.mutation.set-asset", "kind": "mutation", "responsibility": "glTF set-asset command.", "mutation": { "command": "gltf.set-asset", "event": "gltf.set-asset.applied" } },
+      { "directory": "➕️insert-scene", "id": "s.stdio.gltf.mutation.insert-scene", "kind": "mutation", "responsibility": "glTF insert-scene command.", "mutation": { "command": "gltf.insert-scene", "event": "gltf.insert-scene.applied" } },
+      { "directory": "➖️remove-scene", "id": "s.stdio.gltf.mutation.remove-scene", "kind": "mutation", "responsibility": "glTF remove-scene command.", "mutation": { "command": "gltf.remove-scene", "event": "gltf.remove-scene.applied" } },
+      { "directory": "✏️set-scene", "id": "s.stdio.gltf.mutation.set-scene", "kind": "mutation", "responsibility": "glTF set-scene command.", "mutation": { "command": "gltf.set-scene", "event": "gltf.set-scene.applied" } },
+      { "directory": "➕️insert-node", "id": "s.stdio.gltf.mutation.insert-node", "kind": "mutation", "responsibility": "glTF insert-node command.", "mutation": { "command": "gltf.insert-node", "event": "gltf.insert-node.applied" } },
+      { "directory": "➖️remove-node", "id": "s.stdio.gltf.mutation.remove-node", "kind": "mutation", "responsibility": "glTF remove-node command.", "mutation": { "command": "gltf.remove-node", "event": "gltf.remove-node.applied" } },
+      { "directory": "✏️set-node", "id": "s.stdio.gltf.mutation.set-node", "kind": "mutation", "responsibility": "glTF set-node command.", "mutation": { "command": "gltf.set-node", "event": "gltf.set-node.applied" } },
+      { "directory": "🔄️transform-node", "id": "s.stdio.gltf.mutation.transform-node", "kind": "mutation", "responsibility": "glTF transform-node command.", "mutation": { "command": "gltf.transform-node", "event": "gltf.transform-node.applied" } },
+      { "directory": "🌳️reparent-node", "id": "s.stdio.gltf.mutation.reparent-node", "kind": "mutation", "responsibility": "glTF reparent-node command.", "mutation": { "command": "gltf.reparent-node", "event": "gltf.reparent-node.applied" } },
+      { "directory": "🔗️bind-node-mesh", "id": "s.stdio.gltf.mutation.bind-node-mesh", "kind": "mutation", "responsibility": "glTF bind-node-mesh command.", "mutation": { "command": "gltf.bind-node-mesh", "event": "gltf.bind-node-mesh.applied" } },
+      { "directory": "➕️insert-mesh", "id": "s.stdio.gltf.mutation.insert-mesh", "kind": "mutation", "responsibility": "glTF insert-mesh command.", "mutation": { "command": "gltf.insert-mesh", "event": "gltf.insert-mesh.applied" } },
+      { "directory": "➖️remove-mesh", "id": "s.stdio.gltf.mutation.remove-mesh", "kind": "mutation", "responsibility": "glTF remove-mesh command.", "mutation": { "command": "gltf.remove-mesh", "event": "gltf.remove-mesh.applied" } },
+      { "directory": "✏️set-mesh", "id": "s.stdio.gltf.mutation.set-mesh", "kind": "mutation", "responsibility": "glTF set-mesh command.", "mutation": { "command": "gltf.set-mesh", "event": "gltf.set-mesh.applied" } },
+      { "directory": "➕️insert-accessor", "id": "s.stdio.gltf.mutation.insert-accessor", "kind": "mutation", "responsibility": "glTF insert-accessor command.", "mutation": { "command": "gltf.insert-accessor", "event": "gltf.insert-accessor.applied" } },
+      { "directory": "➖️remove-accessor", "id": "s.stdio.gltf.mutation.remove-accessor", "kind": "mutation", "responsibility": "glTF remove-accessor command.", "mutation": { "command": "gltf.remove-accessor", "event": "gltf.remove-accessor.applied" } },
+      { "directory": "✏️set-accessor", "id": "s.stdio.gltf.mutation.set-accessor", "kind": "mutation", "responsibility": "glTF set-accessor command.", "mutation": { "command": "gltf.set-accessor", "event": "gltf.set-accessor.applied" } },
+      { "directory": "➕️insert-material", "id": "s.stdio.gltf.mutation.insert-material", "kind": "mutation", "responsibility": "glTF insert-material command.", "mutation": { "command": "gltf.insert-material", "event": "gltf.insert-material.applied" } },
+      { "directory": "➖️remove-material", "id": "s.stdio.gltf.mutation.remove-material", "kind": "mutation", "responsibility": "glTF remove-material command.", "mutation": { "command": "gltf.remove-material", "event": "gltf.remove-material.applied" } },
+      { "directory": "✏️set-material", "id": "s.stdio.gltf.mutation.set-material", "kind": "mutation", "responsibility": "glTF set-material command.", "mutation": { "command": "gltf.set-material", "event": "gltf.set-material.applied" } },
+      { "directory": "🔗️bind-primitive-material", "id": "s.stdio.gltf.mutation.bind-primitive-material", "kind": "mutation", "responsibility": "glTF bind-primitive-material command.", "mutation": { "command": "gltf.bind-primitive-material", "event": "gltf.bind-primitive-material.applied" } },
+      { "directory": "➕️insert-buffer", "id": "s.stdio.gltf.mutation.insert-buffer", "kind": "mutation", "responsibility": "glTF insert-buffer command.", "mutation": { "command": "gltf.insert-buffer", "event": "gltf.insert-buffer.applied" } },
+      { "directory": "➖️remove-buffer", "id": "s.stdio.gltf.mutation.remove-buffer", "kind": "mutation", "responsibility": "glTF remove-buffer command.", "mutation": { "command": "gltf.remove-buffer", "event": "gltf.remove-buffer.applied" } },
+      { "directory": "✏️set-buffer", "id": "s.stdio.gltf.mutation.set-buffer", "kind": "mutation", "responsibility": "glTF set-buffer command.", "mutation": { "command": "gltf.set-buffer", "event": "gltf.set-buffer.applied" } },
+      { "directory": "➕️insert-animation", "id": "s.stdio.gltf.mutation.insert-animation", "kind": "mutation", "responsibility": "glTF insert-animation command.", "mutation": { "command": "gltf.insert-animation", "event": "gltf.insert-animation.applied" } },
+      { "directory": "➖️remove-animation", "id": "s.stdio.gltf.mutation.remove-animation", "kind": "mutation", "responsibility": "glTF remove-animation command.", "mutation": { "command": "gltf.remove-animation", "event": "gltf.remove-animation.applied" } },
+      { "directory": "✏️set-animation", "id": "s.stdio.gltf.mutation.set-animation", "kind": "mutation", "responsibility": "glTF set-animation command.", "mutation": { "command": "gltf.set-animation", "event": "gltf.set-animation.applied" } }
     ]
   }
 }

@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🐛issues` per Wave C.
 
 use super::mutation::CreateIssue;
+use crate::artifacts::program::diff::ProgramIssuesDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramIssuesDelta};
 
 /// 🌱️ `added = [payload row]` — the row lands at the end of `program.issues` on apply.
 pub fn diff(payload: &CreateIssue, _base: &ProgramSnapshot) -> ProgramDiff {

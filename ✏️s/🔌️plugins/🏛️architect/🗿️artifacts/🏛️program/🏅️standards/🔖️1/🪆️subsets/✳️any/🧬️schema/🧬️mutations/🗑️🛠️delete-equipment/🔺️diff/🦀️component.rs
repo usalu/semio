@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🛠️equipment` per Wave C.
 
 use super::mutation::DeleteEquipment;
+use crate::artifacts::program::diff::ProgramEquipmentDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramEquipmentDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteEquipment, _base: &ProgramSnapshot) -> ProgramDiff {

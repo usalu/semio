@@ -166,11 +166,7 @@ fn sequence_step_params(step: &SequenceStep) -> Vec<SemioFlowParam> {
     fn p(key: &str, value: String) -> SemioFlowParam {
         SemioFlowParam { key: key.into(), value }
     }
-    vec![
-        p("params", serde_json::to_string(&step.params.0).unwrap_or_default()),
-        p("slot", serde_json::to_string(&step.slot).unwrap_or_else(|_| "null".into())),
-        p("collapsed", step.collapsed.to_string()),
-    ]
+    vec![p("params", serde_json::to_string(&step.params.0).unwrap_or_default()), p("slot", serde_json::to_string(&step.slot).unwrap_or_else(|_| "null".into())), p("collapsed", step.collapsed.to_string())]
 }
 
 /// 🌉 Inverse of [`sequence_step_params`] — reconstructs a `SequenceStep` from a `FlowNode`'s `id`/
@@ -197,14 +193,8 @@ fn sequence_step_from_node(node: &SemioFlowNode) -> SequenceStep {
 /// plain step-to-step flow, not port-addressed) — the constant `kind: "sequence"` tag is written on
 /// encode and discarded on decode (lossless, since `SequenceEdge` carries no `kind` of its own).
 pub fn sequence_content_snapshot_from_working(steps: &[SequenceStep], edges: &[SequenceEdge]) -> SemioFlowSnapshot {
-    let nodes = steps
-        .iter()
-        .map(|step| SemioFlowNode { id: step.id.clone(), kind: step.kind.clone(), label: step.kind.clone(), params: sequence_step_params(step), position: SemioPoint2 { x: step.x, y: step.y } })
-        .collect();
-    let edges = edges
-        .iter()
-        .map(|edge| SemioFlowEdge { id: edge.id.clone(), from: SemioPortRef { node: edge.from.clone(), port: String::new() }, to: SemioPortRef { node: edge.to.clone(), port: String::new() }, kind: "sequence".into() })
-        .collect();
+    let nodes = steps.iter().map(|step| SemioFlowNode { id: step.id.clone(), kind: step.kind.clone(), label: step.kind.clone(), params: sequence_step_params(step), position: SemioPoint2 { x: step.x, y: step.y } }).collect();
+    let edges = edges.iter().map(|edge| SemioFlowEdge { id: edge.id.clone(), from: SemioPortRef { node: edge.from.clone(), port: String::new() }, to: SemioPortRef { node: edge.to.clone(), port: String::new() }, kind: "sequence".into() }).collect();
     SemioFlowSnapshot { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes, edges }
 }
 
@@ -315,7 +305,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "sequence.sequence".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md"],
+        export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md"],
         import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md"],
     }
 }
@@ -347,28 +337,56 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::sequence::standards::v1::subsets::any::io::io_registry as v1;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("SequenceComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
+//#region 🔖️Declaration
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.sequence")?)
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.schema.artifact")?, ArtifactCapabilityKind::schema())
+                .descriptor(b"s.sequence.sequence")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.sequence.sequence")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.inference.artifact")?, ArtifactCapabilityKind::inference())
+                .descriptor(b"s.sequence.sequence.inference")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.sequence.sequence.inference")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.composer.native")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.sequence@1/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.sequence@1/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.composer.csv")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.csv@rfc4180/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.csv@rfc4180/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.composer.md")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.md@commonmark/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.md@commonmark/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.composer.json")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.json@rfc8259/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.codec.document")?, ArtifactCapabilityKind::codec())
+                .descriptor(b"sequence.sequence:sequence")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "sequence.sequence")?)?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "sequence")?)?,
+        )?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Sequence")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Sequence")?)?)?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Sequenz")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Sequenz")?)?)
 }
-//#endregion 🚪️DerivedIoRegistry
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+        .schema(crate::artifacts::sequence::schema::sequence_artifact_schema_descriptor())
+        .inferences([crate::artifacts::sequence::standards::v1::subsets::any::schema::inferences::sequence_artifact_inference_descriptor()])
+        .composers(crate::artifacts::sequence::standards::v1::subsets::any::io::io_registry::entries())
+        .document_codec::<crate::apps::sequence::SequencePlayApp>()
+        .try_build()
+}
+//#endregion 🔖️Declaration

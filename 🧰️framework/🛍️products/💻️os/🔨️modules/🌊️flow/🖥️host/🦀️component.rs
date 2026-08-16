@@ -11,6 +11,7 @@ use dag::{
     computation_node_height, computation_node_width, dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size,
     slider_widget_height, slider_widget_width, would_create_cycle, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, EdgeRouteStyle, IoPortSpec,
 };
+use graph::dsl::{WireEdge, WireNode};
 use graph::manifest::{PropertyBag, PropertyValue};
 use neural::{
     channel_output, cluster_operator_info, compute_dirty_set, Atom, BudgetedEval, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorImpl, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND,
@@ -974,11 +975,71 @@ impl FlowHost {
         }
     }
 
+    // #region 🌳️TreeBuilding
     fn build_tree(&self) -> Tree {
         let fixture = self.build_dag_fixture_v1();
         let (nodes, edges) = dag_fixture_execution_rows(&fixture);
-        crate::neural_dag::tree_from_dag(&nodes, &edges)
+        Self::tree_from_dag(&nodes, &edges)
     }
+
+    // #region 🔗️DagTreeConversion
+    fn tree_from_dag(nodes: &[WireNode], edges: &[WireEdge]) -> Tree {
+        let neurons = nodes
+            .iter()
+            .map(|node| {
+                let mut params = Self::dictionary_from_property_bag(&node.properties);
+                if node.kind == CLUSTER_KIND {
+                    if let Some(PropertyValue::String(name)) = node.properties.get("name") {
+                        params = params.insert("name", NeuralValue::Atom(Atom::String(name.clone())));
+                    }
+                }
+                let nested = if node.kind == CLUSTER_KIND { Self::cluster_tree_from_node(node).map(Box::new) } else { None };
+                Neuron { id: node.id.clone(), kind: node.kind.clone(), params, tree: nested }
+            })
+            .collect();
+        let synapses = edges.iter().enumerate().map(|(index, edge)| Synapse { id: format!("synapse-{index}"), from: edge.from.clone(), to: edge.to.clone(), from_port: edge.from_port.clone(), to_port: edge.to_port.clone() }).collect();
+        Tree { neurons, synapses }
+    }
+
+    fn cluster_tree_from_node(node: &WireNode) -> Option<Tree> {
+        let PropertyValue::String(json) = node.properties.get("clusterTree")? else {
+            return None;
+        };
+        serde_json::from_str(json).ok()
+    }
+
+    fn dictionary_from_property_bag(bag: &PropertyBag) -> Dictionary {
+        let mut dict = Dictionary::new();
+        for (key, value) in bag {
+            dict = dict.insert(key, Self::property_value_to_neural(value));
+        }
+        dict
+    }
+
+    fn property_value_to_neural(value: &PropertyValue) -> NeuralValue {
+        match value {
+            PropertyValue::String(s) => NeuralValue::Atom(Atom::String(s.clone())),
+            PropertyValue::Number(n) => NeuralValue::Atom(Atom::Decimal(*n)),
+            PropertyValue::Bool(b) => NeuralValue::Atom(Atom::Boolean(*b)),
+            PropertyValue::Null => NeuralValue::Atom(Atom::Null),
+            PropertyValue::Array(items) => {
+                let mut dict = Dictionary::new();
+                for (index, row) in items.iter().enumerate() {
+                    dict = dict.insert(index.to_string(), Self::property_value_to_neural(row));
+                }
+                NeuralValue::Dictionary(dict)
+            }
+            PropertyValue::Object(map) => {
+                let mut dict = Dictionary::new();
+                for (key, row) in map {
+                    dict = dict.insert(key, Self::property_value_to_neural(row));
+                }
+                NeuralValue::Dictionary(dict)
+            }
+        }
+    }
+    // #endregion 🔗️DagTreeConversion
+    // #endregion 🌳️TreeBuilding
 
     /// 📝️ Renders the compiled DAG fixture as wire-literal text.
     pub fn compiled_wire_literal(&self) -> String {
@@ -2178,11 +2239,22 @@ mod tests {
     use canvas::camera::{world_to_screen, Camera, Viewport};
     use canvas::Point;
     use dag::HandleRole;
+    use graph::dsl::{WireEdge, WireNode};
+    use graph::manifest::PropertyBag;
     use neural::{ChannelSpec as InputSpec, OperatorInfo as NeuronKindInfo, Registry};
     use std::sync::{Mutex, OnceLock};
 
     const NUMBER_OPS: &[&str] = &["core.number"];
     static RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+    #[test]
+    fn tree_from_dag_builds_neurons_and_synapses() {
+        let nodes = vec![WireNode { id: "a".into(), kind: "core.number".into(), port: None, properties: PropertyBag::new() }, WireNode { id: "b".into(), kind: "math.add".into(), port: None, properties: PropertyBag::new() }];
+        let edges = vec![WireEdge { from: "a".into(), from_port: "number".into(), to: "b".into(), to_port: "a".into(), directed: true, properties: PropertyBag::new() }];
+        let tree = FlowHost::tree_from_dag(&nodes, &edges);
+        assert_eq!(tree.neurons.len(), 2);
+        assert_eq!(tree.synapses.len(), 1);
+    }
 
     fn test_math_bridge(kind: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
         if kind == "core.number" {

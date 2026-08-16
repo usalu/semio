@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🧵traces` per Wave C.
 
 use super::mutation::ConnectTrace;
-use protocol::Patchable;
+use crate::artifacts::program::diff::ProgramTracesDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::ProgramTracesDelta;
+use protocol::Patchable;
 
 /// 🔌️ `added = [trace]` if the id is new, else `patched = [{id, full patch}]`.
 pub fn diff(payload: &ConnectTrace, base: &ProgramSnapshot) -> ProgramDiff {

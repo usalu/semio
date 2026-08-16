@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🔒privacy` per Wave C.
 
 use super::mutation::DeletePrivacyRequirement;
+use crate::artifacts::program::diff::ProgramPrivacyDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramPrivacyDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeletePrivacyRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

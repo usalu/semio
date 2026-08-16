@@ -3,10 +3,10 @@
 
 pub mod export_registers_csv {
     use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::export_registers_csv;
     use crate::artifacts::program::op::ProgramMutation;
+    use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::export_registers_csv;
     use crate::artifacts::program::ProgramSnapshot;
-    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HostEffect};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -21,11 +21,11 @@ pub mod export_registers_csv {
 }
 
 pub mod import_registers_csv {
-    use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::apps::architect::behavior::{import_registers_csv, MergeStrategy};
+    use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
-    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -53,7 +53,7 @@ pub mod export_program {
     use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
-    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HostEffect};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -71,7 +71,7 @@ pub mod import_program_request {
     use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
-    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HostEffect};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -87,7 +87,7 @@ pub mod import_program {
     use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
-    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

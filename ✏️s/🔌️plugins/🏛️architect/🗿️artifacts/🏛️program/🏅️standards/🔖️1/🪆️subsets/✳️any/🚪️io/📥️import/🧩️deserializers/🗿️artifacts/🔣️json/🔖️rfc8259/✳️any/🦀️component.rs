@@ -5,8 +5,8 @@
 //! reverse structural converter and stdio's own real `parse_json_text` for `deserialize_bytes`.
 use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::ARCHITECT_PROGRAM_SCHEMA;
-use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{parse_json_text, JsonValue};
+use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 use std::str::FromStr;
 
 pub fn register() {}
@@ -26,8 +26,7 @@ fn json_value_to_serde(value: &JsonValue) -> serde_json::Value {
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<ProgramSnapshot, store::TextError> {
     let _ = ARCHITECT_PROGRAM_SCHEMA;
-    let mut out: ProgramSnapshot = serde_json::from_value(from.to_serde_value())
-        .map_err(|e| store::TextError::new(format!("program<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
+    let mut out: ProgramSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("program<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
     if out.schema.is_empty() {
         out.schema = ARCHITECT_PROGRAM_SCHEMA.into();
     }

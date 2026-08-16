@@ -1,7 +1,17 @@
 //! 🕸 GLTF topology indicators.
 
-use super::geometric_analysis::{GltfGeometryContext};
-use super::super::modules::{inference_measures::{exact, unavailable}};
+#[path = "holes/🦀️component.rs"]
+pub mod holes;
+#[path = "handles/🦀️component.rs"]
+pub mod handles;
+#[path = "boundary-loops/🦀️component.rs"]
+pub mod boundary_loops;
+#[path = "euler-characteristic/🦀️component.rs"]
+pub mod euler_characteristic;
+#[path = "genus/🦀️component.rs"]
+pub mod genus;
+
+use super::geometry_core::GltfGeometryContext;
 use super::super::modules::measurement_contracts::*;
 use serde::{Deserialize, Serialize};
 
@@ -21,29 +31,22 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfTopologyInference {
     type Output = GltfTopologyIndicators;
 
     fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
-        let genus = || {
-            context
-                .topology
-                .genus
-                .map(|value| exact(value, GltfUnit::Unitless, context.sample_count, Some(context.topology)))
-                .unwrap_or_else(|| unavailable(GltfUnit::Unitless, GltfAvailability::NonManifold, Vec::new(), context.sample_count, Some(context.topology)))
-        };
         Self::Output {
-            holes: genus(),
-            handles: genus(),
-            boundary_loops: exact(context.topology.boundary_loops, GltfUnit::Unitless, context.sample_count, Some(context.topology)),
-            euler_characteristic: exact(context.topology.chi, GltfUnit::Unitless, context.sample_count, Some(context.topology)),
-            genus: genus(),
+            holes: holes::infer(context),
+            handles: handles::infer(context),
+            boundary_loops: boundary_loops::infer(context),
+            euler_characteristic: euler_characteristic::infer(context),
+            genus: genus::infer(context),
         }
     }
 
     fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            holes: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            handles: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            boundary_loops: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            euler_characteristic: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            genus: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
+            holes: holes::unavailable_measure(diagnostic_ids),
+            handles: handles::unavailable_measure(diagnostic_ids),
+            boundary_loops: boundary_loops::unavailable_measure(diagnostic_ids),
+            euler_characteristic: euler_characteristic::unavailable_measure(diagnostic_ids),
+            genus: genus::unavailable_measure(diagnostic_ids),
         }
     }
 }

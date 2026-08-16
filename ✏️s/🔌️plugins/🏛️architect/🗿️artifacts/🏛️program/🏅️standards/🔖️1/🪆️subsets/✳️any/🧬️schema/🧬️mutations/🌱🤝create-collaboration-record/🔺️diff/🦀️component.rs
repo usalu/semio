@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🤝collaboration` per Wave C.
 
 use super::mutation::CreateCollaborationRecord;
+use crate::artifacts::program::diff::ProgramCollaborationDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramCollaborationDelta};
 
 /// 🌱️ `added = [payload row]` — the row lands at the end of `program.collaboration` on apply.
 pub fn diff(payload: &CreateCollaborationRecord, _base: &ProgramSnapshot) -> ProgramDiff {

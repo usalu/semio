@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🐛issues` per Wave C.
 
 use super::mutation::DeleteIssue;
+use crate::artifacts::program::diff::ProgramIssuesDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramIssuesDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteIssue, _base: &ProgramSnapshot) -> ProgramDiff {

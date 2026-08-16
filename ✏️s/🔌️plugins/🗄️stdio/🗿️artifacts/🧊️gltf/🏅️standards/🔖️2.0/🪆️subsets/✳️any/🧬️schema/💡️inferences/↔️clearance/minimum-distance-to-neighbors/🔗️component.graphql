@@ -1,0 +1,11 @@
+# 💡️ minimum-distance-to-neighbors glTF inference leaf GraphQL facet.
+type GltfMinimumDistanceToNeighborsInferenceV1 {
+  id: ID!
+  algorithmVersion: Int!
+  cacheKey: String!
+  validity: String!
+  quality: String!
+  diagnostics: [String!]!
+  provenance: [String!]!
+  valueJson: String!
+}

@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📒audit-events` per Wave C.
 
 use super::mutation::DeleteAuditEvent;
+use crate::artifacts::program::diff::ProgramAuditEventsDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramAuditEventsDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteAuditEvent, _base: &ProgramSnapshot) -> ProgramDiff {

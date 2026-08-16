@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🏗️infrastructure` per Wave C.
 
 use super::mutation::RenameInfrastructureRequirement;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramInfrastructureDelta, ProgramInfrastructurePatchEntry};
 use crate::artifacts::program::registers::InfrastructureRequirementPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameInfrastructureRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

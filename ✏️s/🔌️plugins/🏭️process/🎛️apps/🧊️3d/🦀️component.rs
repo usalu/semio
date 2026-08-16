@@ -14,22 +14,23 @@
 
 use crate::apps::process3d::commands::{camera, contribution, cursor, document, engagement, inspector, locale, media, step, stock, sun, utility, workshop, world};
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::apps::process3d::presence::{Process3dPresence, Process3dPresenceMutation};
 use crate::apps::process3d::modes::edit;
 use crate::apps::process3d::modes::edit::windows::workpiece;
 use crate::apps::process3d::panels::{catalogue, document as document_panel, inspection, workshop as workshop_panel};
+use crate::apps::process3d::presence::{Process3dPresence, Process3dPresenceMutation};
 use crate::apps::process3d::terminology::process3d_labels;
 use crate::artifacts::process3d::op::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
 use semio_framework::kernel::HostEffect;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ArtifactKindSpec, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, Menu, OsMediaCapability,
-    SelectionMethod, SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowMeasure,
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ArtifactApp, ArtifactKindSpec, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DraftView, Emit, Fault,
+    FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation,
+    OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
-use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
 use store::ArtifactPack;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_APP_ID: &str = "process3d-play";
@@ -73,11 +74,11 @@ fn process3d_interaction_definition() -> InteractionDefinition {
 }
 pub const PROCESS3D_EXAMPLE_TIMBER: &str = "timber-beam-joinery";
 pub const PROCESS3D_EXAMPLE_PLATE: &str = "drilled-plate";
-pub use workpiece::PROCESS_3D_PLAY_BODY_MAIN;
-pub use document_panel::PROCESS_3D_PLAY_BODY_DOCUMENT;
 pub use catalogue::PROCESS_3D_PLAY_BODY_CATALOGUE;
-pub use workshop_panel::PROCESS_3D_PLAY_BODY_WORKSHOP;
+pub use document_panel::PROCESS_3D_PLAY_BODY_DOCUMENT;
 pub use inspection::PROCESS_3D_PLAY_BODY_INSPECTION;
+pub use workpiece::PROCESS_3D_PLAY_BODY_MAIN;
+pub use workshop_panel::PROCESS_3D_PLAY_BODY_WORKSHOP;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`🎚️options/*`, `📌️panels/*`, `🎮️commands/*`) builds its `on_change`/item actions with.
@@ -171,12 +172,12 @@ semio_framework_plugin::app_commands! {
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
 use camera::set_camera;
+use contribution::set_contributions;
 use cursor::{set_cursor, step_cursor, step_cursor_back, step_cursor_forward};
 use document::{set_active_example, set_snapshot};
 use engagement::{engagement_abort, engagement_input, engagement_submit};
 use inspector::patch_inspector;
 use locale::set_locale;
-use contribution::set_contributions;
 use media::{export_model, import_model_file, load_model_request};
 use step::{add_step, move_step, remove_selected_step, remove_step, set_step_enabled, update_step};
 use stock::set_stock;
@@ -209,6 +210,10 @@ impl ArtifactApp for Process3dPlayApp {
     const APP_ID: &'static str = PROCESS_3D_PLAY_APP_ID;
 
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::process3d::PROCESS_3D_SCHEMA;
+
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::process3d::config::schema::app_schema_descriptor())
+    }
 
     fn initial_snapshot() -> Process3dSnapshot {
         crate::artifacts::process3d::schema::default_document()
@@ -312,9 +317,7 @@ impl ArtifactApp for Process3dPlayApp {
                 let json = string_field("json").or_else(|| field("document").and_then(|value| serde_json::to_string(value).ok())).unwrap_or_default();
                 Ok(Process3dCommand::SetDocument(set_snapshot::SetDocument { json }))
             }
-            "setActiveExample" => Ok(Process3dCommand::SetActiveExample(set_active_example::SetActiveExample {
-                example_id: string_field("exampleId").or_else(|| string_field("id")).unwrap_or_else(|| PROCESS3D_EXAMPLE_TIMBER.into()),
-            })),
+            "setActiveExample" => Ok(Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: string_field("exampleId").or_else(|| string_field("id")).unwrap_or_else(|| PROCESS3D_EXAMPLE_TIMBER.into()) })),
             "addStep" => Ok(Process3dCommand::AddStep(add_step::AddStep {
                 measure: string_field("measure"),
                 machine_id: string_field("machineId").or_else(|| string_field("machine_id")),
@@ -342,10 +345,7 @@ impl ArtifactApp for Process3dPlayApp {
                 let step_json = string_field("stepJson").or_else(|| string_field("step_json")).or_else(|| field("step").and_then(|value| serde_json::to_string(value).ok())).unwrap_or_default();
                 Ok(Process3dCommand::UpdateStep(update_step::UpdateStep { step_json }))
             }
-            "setStepEnabled" => Ok(Process3dCommand::SetStepEnabled(set_step_enabled::SetStepEnabled {
-                id: string_field("id").unwrap_or_default(),
-                enabled: field("enabled").and_then(Value::as_bool).unwrap_or(true),
-            })),
+            "setStepEnabled" => Ok(Process3dCommand::SetStepEnabled(set_step_enabled::SetStepEnabled { id: string_field("id").unwrap_or_default(), enabled: field("enabled").and_then(Value::as_bool).unwrap_or(true) })),
             "setStock" => Ok(Process3dCommand::SetStock(set_stock::SetStock { kind: string_field("kind").or_else(|| string_field("value")).unwrap_or_else(|| "box".into()) })),
             "patchInspector" => Ok(Process3dCommand::PatchInspector(patch_inspector::PatchInspector {
                 target: string_field("target").unwrap_or_default(),
@@ -365,20 +365,13 @@ impl ArtifactApp for Process3dPlayApp {
                 distance: number_field("distance").unwrap_or_default(),
                 face_extent: vec2_field("faceExtent").or_else(|| vec2_field("face_extent")),
             })),
-            "importModelFile" => Ok(Process3dCommand::ImportModelFile(import_model_file::ImportModelFile {
-                name: string_field("name").unwrap_or_default(),
-                payload: string_field("payload").unwrap_or_default(),
-            })),
+            "importModelFile" => Ok(Process3dCommand::ImportModelFile(import_model_file::ImportModelFile { name: string_field("name").unwrap_or_default(), payload: string_field("payload").unwrap_or_default() })),
             "setActiveUtility" => Ok(Process3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility {
                 utility_id: string_field("utilityId").or_else(|| string_field("utility_id")).unwrap_or_else(|| crate::apps::process3d::config::PROCESS3D_DEFAULT_UTILITY.into()),
             })),
             "engagementInput" => Ok(Process3dCommand::EngagementInput(engagement_input::EngagementInput { value: string_field("value").unwrap_or_default() })),
             "engagementAbort" => Ok(Process3dCommand::EngagementAbort(engagement_abort::EngagementAbort {})),
-            "setCamera" => Ok(Process3dCommand::SetCamera(set_camera::SetCamera {
-                position: vec3_field("position").unwrap_or([3.0, -3.0, 2.0]),
-                target: vec3_field("target").unwrap_or_default(),
-                fov: number_field("fov").unwrap_or(45.0),
-            })),
+            "setCamera" => Ok(Process3dCommand::SetCamera(set_camera::SetCamera { position: vec3_field("position").unwrap_or([3.0, -3.0, 2.0]), target: vec3_field("target").unwrap_or_default(), fov: number_field("fov").unwrap_or(45.0) })),
             "toggleSun" => Ok(Process3dCommand::ToggleSun(toggle_sun::ToggleSun {})),
             "setSunAzimuth" => Ok(Process3dCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: number_field("value").unwrap_or_default() })),
             "setSunElevation" => Ok(Process3dCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: number_field("value").unwrap_or_default() })),
@@ -395,7 +388,14 @@ impl ArtifactApp for Process3dPlayApp {
     /// `"geometry"` domain selection once per dispatch and threads it through `Process3dDispatchCtx`
     /// — the one retained verb that operates ON the selection (`remove_selected_step`) reads it from
     /// there; every other command ignores it (mirrors `📐️cad`'s own `handle`).
-    fn handle(command: &Process3dCommand, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, interaction: &semio_framework_plugin::app::InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(
+        command: &Process3dCommand,
+        doc: &ArtifactView<'_, Process3dSnapshot>,
+        cfg: &ConfigView<'_, Process3dConfig>,
+        interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, Fault> {
         let selection = interaction.selection(PROCESS3D_INTERACTION_DOMAIN);
         let mut ctx = Process3dDispatchCtx { interaction: Process3dInteractionSnapshot { ids: selection.ids.clone() } };
         command.dispatch(doc, cfg, &mut ctx)
@@ -606,108 +606,6 @@ pub fn process3d_io() -> semio_framework_plugin::AppIo {
 }
 //#endregion 🔖️Io
 
-//#region 🔌️Registration
-/// 🔌️ Registers this app's document exporters/import handlers and codec with the OS runtime — the
-/// plugin root (`🏭️process/🦀️component.rs`)'s `.setup(crate::apps::process3d::register)` call invokes
-/// this. Dissolved out of the former `⚙️engine::register()` (ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — process3d has not yet migrated to the
-/// `declaration()`/`.artifact(...)` pattern block2d/block3d/block5d use (see that plugin's own
-/// `🔌️Registration` doc comment), so this stays a `.setup()`-invoked free function rather than an
-/// `ArtifactDeclaration`.
-pub fn register() {
-    crate::artifacts::process3d::io_registry::register();
-
-    register_artifact_schema();
-    register_artifact_inference();
-    crate::apps::process3d::config::schema::register_app_schema();
-    register_pilot_languages();
-    fn process3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
-        let snapshot: Process3dSnapshot = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
-        // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: a bare snapshot's
-        // `stock_solid`/`steps` are composed CHILD HANDLES with no resolvable content (no
-        // `LinkResolver` — see `ProcessWorkingScene`'s doc comment); this degrades to the honest
-        // empty scene until a resolver exists.
-        let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(&snapshot);
-        crate::artifacts::process3d::schema::inferences::processed_mesh(&scene, snapshot.resolved_up_to).ok_or_else(|| "process3d: kernel replay failed (no resolved working-scene content)".to_string())
-    }
-
-    fn process3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
-        Err("process3d: mesh import not supported".into())
-    }
-
-    semio_framework_os::register_mesh_dwg_import_handler("3d.process", process3d_document_from_mesh);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Process3dPlayApp>(crate::artifacts::process3d::PROCESS_3D_SCHEMA);
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "process.process3d",
-        extension: Some("process3d"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::process3d::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::process3d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::process3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::process3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("process.process3d"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "process.process3d.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::process3d::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::process3d::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::process3d::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::process3d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("process.process3d.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "process.process3d.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::process3d::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::process3d::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("process.process3d.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "process3d.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::process3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::process3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("process3d.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "process3d.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::process3d::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::process3d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("process3d.spr"),
-    });
-}
-
-/// 🧬️ Registers the twenty handcrafted schema leaves for `s.process.process3d`.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::process3d::schema::process3d_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers the process3d artifact `💡️inference` descriptor into the OS-wide inference
-/// catalog — sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inference() {
-    ::schema::register_artifact_inference_descriptor(
-        crate::artifacts::process3d::standards::v1::subsets::any::schema::inferences::process3d_artifact_inference_descriptor(),
-    );
-}
-//#endregion 🔌️Registration
-
 //#region 🔧️Behavior
 /// 🧭️ Axis-angle rotation that maps world-up `[0,0,1]` onto an arbitrary unit `normal`, so a box
 /// primitive's local Z axis (its `height` dimension) ends up flush with a picked face's normal. Pure
@@ -785,12 +683,7 @@ pub fn sync_process_machine_contributions(contributions_json: &str) {
     }
     let mut catalogs = Vec::new();
     for entry in semio_framework::parse_contributions(contributions_json) {
-        let Some(payload) = entry
-            .topic_contribution
-            .as_ref()
-            .filter(|topic| topic.topic == "process.machines")
-            .and_then(|topic| topic.decode::<ProcessMachinesTopicPayload>().ok())
-        else {
+        let Some(payload) = entry.topic_contribution.as_ref().filter(|topic| topic.topic == "process.machines").and_then(|topic| topic.decode::<ProcessMachinesTopicPayload>().ok()) else {
             continue;
         };
         let (app_id, module_id, label, icon_id, machines_json) = (payload.app_id, payload.module_id, payload.label, payload.icon_id, payload.machines_json);
@@ -798,12 +691,7 @@ pub fn sync_process_machine_contributions(contributions_json: &str) {
             continue;
         }
         let machines: Vec<crate::artifacts::process3d::WorkshopMachine> = serde_json::from_str(&machines_json).unwrap_or_default();
-        catalogs.push(ContributedMachineCatalog {
-            catalog_id: leak_str(module_id),
-            label: leak_str(label),
-            icon_id: leak_str(icon_id.to_string()),
-            machines,
-        });
+        catalogs.push(ContributedMachineCatalog { catalog_id: leak_str(module_id), label: leak_str(label), icon_id: leak_str(icon_id.to_string()), machines });
     }
     *CONTRIBUTED_MACHINE_CATALOGS.lock().expect("process contributed catalogs lock") = catalogs;
     *last = contributions_json.to_string();
@@ -886,10 +774,7 @@ pub(crate) mod testkit {
                     icon_id: "scissors".into(),
                     recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
                     parameters: vec![param("bladeDiameter", "Blade Diameter", 0.315), param("kerf", "Kerf", 0.0032), param("maxCutDepth", "Max Cut Depth", 0.102), param("fenceWidth", "Fence Width", 0.8)],
-                    rules: vec![
-                        CapabilityRule::Max { quantity: StockQuantity::Height, parameter: "maxCutDepth".into(), margin: 0.0 },
-                        CapabilityRule::Max { quantity: StockQuantity::Width, parameter: "fenceWidth".into(), margin: 0.0 },
-                    ],
+                    rules: vec![CapabilityRule::Max { quantity: StockQuantity::Height, parameter: "maxCutDepth".into(), margin: 0.0 }, CapabilityRule::Max { quantity: StockQuantity::Width, parameter: "fenceWidth".into(), margin: 0.0 }],
                 }],
             },
         ];
@@ -1072,7 +957,8 @@ mod tests {
                     enabled: true,
                     origin: None,
                     measure: crate::artifacts::process3d::ProcessMeasure::Cut { tool: crate::artifacts::process3d::WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: crate::artifacts::process3d::Pose::default() },
-                }).expect("json"),
+                })
+                .expect("json"),
             }),
             Process3dCommand::SetStepEnabled(set_step_enabled::SetStepEnabled { id: "cut-1".into(), enabled: false }),
             Process3dCommand::SetStock(set_stock::SetStock { kind: "cylinder".into() }),
@@ -1182,10 +1068,7 @@ mod tests {
         let definition = create_process3d_app().definition;
         let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
         assert_eq!(utility_ids, ["select", "cut", "drill", "attach"], "utilities declared in registry order");
-        assert!(
-            definition.utilities.iter().all(|utility| utility.group.is_none()),
-            "process's select/cut/drill/attach are the window's entire top-level utility set, so none carry a visual group",
-        );
+        assert!(definition.utilities.iter().all(|utility| utility.group.is_none()), "process's select/cut/drill/attach are the window's entire top-level utility set, so none carry a visual group",);
         let window = definition.window_kinds.iter().find(|window| window.id == workpiece::PROCESS_3D_PLAY_WINDOW_MAIN).expect("workpiece window");
         let scoped: Vec<&str> = window.utilities.iter().map(|utility| utility.as_str()).collect();
         assert_eq!(scoped, ["select", "cut", "drill", "attach"], "all four utilities scoped to the workpiece window kind");
@@ -1244,7 +1127,13 @@ mod tests {
     fn undo_after_add_step_leaves_the_steps_handle_unchanged() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot").steps.clone();
-        testkit::assert_undo_redo_round_trip(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }), |app| app.snapshot().expect("snapshot").steps == before, true, true);
+        testkit::assert_undo_redo_round_trip(
+            &mut app,
+            Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }),
+            |app| app.snapshot().expect("snapshot").steps == before,
+            true,
+            true,
+        );
     }
 
     #[test]
@@ -1461,13 +1350,7 @@ mod tests {
     #[test]
     fn sync_process_machine_contributions_merges_hot_installed_catalogs() {
         use semio_framework::{ProgramContributionEntry, TopicContribution};
-        let machine = crate::artifacts::process3d::WorkshopMachine {
-            id: "hot-saw".into(),
-            label: "Hot Saw".into(),
-            icon_id: "scissors".into(),
-            catalog_id: None,
-            capabilities: vec![],
-        };
+        let machine = crate::artifacts::process3d::WorkshopMachine { id: "hot-saw".into(), label: "Hot Saw".into(), icon_id: "scissors".into(), catalog_id: None, capabilities: vec![] };
         let entry = ProgramContributionEntry {
             plugin_id: "process-module-test".into(),
             topic_contribution: Some(TopicContribution::new(

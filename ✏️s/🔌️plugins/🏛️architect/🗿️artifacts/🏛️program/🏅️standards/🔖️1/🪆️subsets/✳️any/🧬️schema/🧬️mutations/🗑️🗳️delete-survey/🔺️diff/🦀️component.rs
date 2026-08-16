@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🗳️surveys` per Wave C.
 
 use super::mutation::DeleteSurvey;
+use crate::artifacts::program::diff::ProgramSurveysDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramSurveysDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteSurvey, _base: &ProgramSnapshot) -> ProgramDiff {

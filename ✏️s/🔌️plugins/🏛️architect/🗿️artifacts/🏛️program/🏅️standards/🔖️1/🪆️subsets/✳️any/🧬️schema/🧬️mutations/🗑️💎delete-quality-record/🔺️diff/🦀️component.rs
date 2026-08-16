@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `💎quality` per Wave C.
 
 use super::mutation::DeleteQualityRecord;
+use crate::artifacts::program::diff::ProgramQualityDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramQualityDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteQualityRecord, _base: &ProgramSnapshot) -> ProgramDiff {

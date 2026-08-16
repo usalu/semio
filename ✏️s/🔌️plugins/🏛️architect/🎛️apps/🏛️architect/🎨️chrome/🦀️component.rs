@@ -9,8 +9,8 @@ use crate::apps::architect::ARCHITECT_APP_ID;
 use crate::artifacts::program::registers::AdjacencyKind;
 use crate::artifacts::program::{EntityId, ProgramSnapshot};
 use semio_framework_plugin::{
-    ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ActionDescriptor, Label, SurfaceKind, UiComponentSceneNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiStackNode,
-    UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+    ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ActionDescriptor, Label, SurfaceKind, UiComponentSceneNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiStackNode, UiToggleNode,
+    UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
 };
 use serde::Serialize;
 use serde_json::{json, Value};

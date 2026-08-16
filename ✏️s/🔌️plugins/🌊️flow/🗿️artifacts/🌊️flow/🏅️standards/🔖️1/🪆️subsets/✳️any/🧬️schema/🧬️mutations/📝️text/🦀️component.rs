@@ -64,5 +64,30 @@ mod tests {
         let restored = disconnect.inverse(&after_connect).iter().fold(after_disconnect, |snapshot, inverse| inverse.diff(&snapshot).apply(&snapshot));
         assert_eq!(restored, after_connect);
     }
+
+    /// 🌉️ The composite pilot: `duplicate-widget` plans `create-widget` then `connect-widgets` —
+    /// applying it must land the same widget/synapse pair a hand-written create+connect would, and
+    /// its `inverse` (folded from the SAME plan) must undo both in one shot.
+    #[test]
+    fn duplicate_widget_composite_round_trips_to_base() {
+        let base = FlowSnapshot::default();
+        let widget = flow::Widget::InputNote { id: "note-1".into(), text: "hello".into() };
+        let create = FlowMutation::CreateWidget(crate::artifacts::flow::schema::mutations::create_widget::mutation::CreateWidget { index: base.to_fixture().widgets.len(), widget });
+        let after_create = create.diff(&base).apply(&base);
+
+        let duplicate = FlowMutation::DuplicateWidget(crate::artifacts::flow::schema::mutations::duplicate_widget::mutation::DuplicateWidget {
+            source_id: "note-1".into(),
+            new_id: "note-2".into(),
+            synapse_id: "note-1-to-note-2".into(),
+            from_port: "out".into(),
+            to_port: "in".into(),
+        });
+        let after_duplicate = duplicate.diff(&after_create).apply(&after_create);
+        assert!(after_duplicate.to_fixture().widgets.iter().any(|widget| widget.id() == "note-2"));
+        assert!(after_duplicate.to_fixture().synapses.iter().any(|synapse| synapse.id == "note-1-to-note-2"));
+
+        let restored = duplicate.inverse(&after_create).iter().fold(after_duplicate, |snapshot, inverse| inverse.diff(&snapshot).apply(&snapshot));
+        assert_eq!(restored, after_create);
+    }
 }
 //#endregion 🧪️Tests

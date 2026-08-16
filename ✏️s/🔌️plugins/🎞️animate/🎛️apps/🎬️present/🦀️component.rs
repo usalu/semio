@@ -15,33 +15,33 @@
 //! `definition()` per node.
 
 use crate::apps::present::commands::{
-    add_tile, canvas_pointer_down, clear_tiles, copy_prompt, delete_selection, delete_tile, engagement_input, engagement_submit, export_video_from_deck, no_operation, patch_tile_crops, rename_tiles, reset_grid, seed_grid, set_active_example, set_frame, set_locale, set_source,
+    add_tile, canvas_pointer_down, clear_tiles, copy_prompt, delete_selection, delete_tile, engagement_input, engagement_submit, export_video_from_deck, no_operation, patch_tile_crops, rename_tiles, reset_grid, seed_grid, set_active_example,
+    set_frame, set_locale, set_source,
 };
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
 use crate::apps::present::modes::main;
 use crate::apps::present::modes::main::windows::tile_editor;
 use crate::apps::present::panels::{artifact, catalogue, inspection};
 use crate::apps::present::terminology::animate_present_labels;
-use crate::artifacts::present::schema::build_tile_morph_prompt;
 use crate::artifacts::present::mutations::create_tile::mutation::CreateTile;
 use crate::artifacts::present::op::PresentMutation;
+use crate::artifacts::present::schema::build_tile_morph_prompt;
 use crate::artifacts::present::{default_present_snapshot, FigureTileDraft, PresentSnapshot, PRESENT_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{
-    NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, HostEffect, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
-};
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, App, AppIo, ArtifactApp, ArtifactView, ConfigView, DraftView, Emit, Fault, GranularityDefinition, HierarchyProvider, HostEffect, HoverSpec, InteractionDefinition, InteractionRef,
+    Label, LocalizedLabel, Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
+};
 use serde_json::Value;
 use std::collections::HashSet;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const PRESENT_PLAY_APP_ID: &str = "animate-present-play";
-pub use catalogue::PRESENT_PLAY_BODY_CATALOGUE;
 pub use artifact::PRESENT_PLAY_BODY_DOCUMENT;
+pub use catalogue::PRESENT_PLAY_BODY_CATALOGUE;
 pub use inspection::PRESENT_PLAY_BODY_DETAILS;
 pub use tile_editor::PRESENT_PLAY_BODY_MAIN;
-
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
@@ -127,87 +127,6 @@ pub fn next_frame_tile_crop(existing_tile_count: usize) -> crate::artifacts::pre
     crate::artifacts::present::schema::clamp_tile_crop(&crate::artifacts::present::FigureTileFrame { x: column as f64 * cell, y: (row as f64 * cell).min(1.0 - cell), width: cell, height: cell })
 }
 //#endregion 🔖️Io
-
-//#region 🔌️Registration
-/// 🔌️ Relocated verbatim from the former artifact-tree `⚙️engine`'s root `component.rs` (ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — called by the plugin-root `📦️glue.rs`'s
-/// `semio_plugin!{}` `setup:` field (`.setup(crate::apps::present::register)`).
-pub fn register() {
-    crate::artifacts::present::io_registry::register();
-
-    register_pilot_languages();
-    register_artifact_schema();
-    register_artifact_inferences();
-    crate::apps::present::config::schema::register_app_schema();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::present::AnimatePresentPlayApp>(PRESENT_DOCUMENT_SCHEMA);
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "present.document",
-        extension: Some("present"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::present::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::present::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::present::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::present::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("present.document"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "present.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::present::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::present::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::present::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::present::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("present.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "present.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::present::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::present::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("present.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "present.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::present::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::present::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("present.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "present.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::present::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::present::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("present.spr"),
-    });
-}
-
-/// 📌️ Registers the twenty handcrafted schema leaves for `s.animate.present`.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::present::schema::present_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.animate.present.inference`'s facet leaves into the OS-wide inference catalog —
-/// sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::present::standards::v1::subsets::any::schema::inferences::present_artifact_inference_descriptor());
-}
-//#endregion 🔌️Registration
 
 //#region 🔖️Helpers
 /// 🔢️ Mints a fresh, process-unique tile id — shared by `🎮️commands/🀄️add-tile::add_tile` and
@@ -318,6 +237,10 @@ impl ArtifactApp for AnimatePresentPlayApp {
     const APP_ID: &'static str = PRESENT_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = PRESENT_DOCUMENT_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::present::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> PresentSnapshot {
         default_present_snapshot()
     }
@@ -354,7 +277,14 @@ impl ArtifactApp for AnimatePresentPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &PresentCommand, doc: &ArtifactView<'_, PresentSnapshot>, cfg: &ConfigView<'_, PresentConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(
+        command: &PresentCommand,
+        doc: &ArtifactView<'_, PresentSnapshot>,
+        cfg: &ConfigView<'_, PresentConfig>,
+        interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>, Fault> {
         let mut ctx = PresentDispatchCtx { selected_ids: interaction.selection(PRESENT_INTERACTION_DOMAIN).ids.clone() };
         command.dispatch(doc, cfg, &mut ctx)
     }

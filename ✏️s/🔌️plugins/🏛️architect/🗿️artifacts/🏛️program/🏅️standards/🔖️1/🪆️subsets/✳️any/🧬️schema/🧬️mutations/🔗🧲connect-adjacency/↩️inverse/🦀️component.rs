@@ -2,10 +2,10 @@
 //! captured pre-state (`base`), never by structurally inverting the diff. Split from
 //! `🗺️set-adjacency` per Wave C.
 
+use crate::artifacts::program::kernel::EntityId;
+use crate::artifacts::program::standards::v1::subsets::any::schema::normalize_pair;
 use crate::artifacts::program::ProgramMutation;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::standards::v1::subsets::any::schema::normalize_pair;
-use crate::artifacts::program::kernel::EntityId;
 
 /// ↩️ If the pair already existed, undo restores its prior full value; if this connect added a
 /// brand-new edge, undo disconnects it by the id the connect used.

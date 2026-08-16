@@ -15,7 +15,6 @@ type Procedural3dArtifact {
   generationPreviewText: String @state(class: ARTIFACT)
   activeUtilityId: String! @state(class: PRESENCE)
   locale: String! @state(class: CONFIG)
-  contributionsJson: String! @state(class: CONFIG)
 }
 
 type CameraJson {

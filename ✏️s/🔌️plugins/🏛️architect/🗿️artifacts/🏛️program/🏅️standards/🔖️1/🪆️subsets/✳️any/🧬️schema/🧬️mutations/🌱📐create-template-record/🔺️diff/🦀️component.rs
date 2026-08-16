@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📐templates` per Wave C.
 
 use super::mutation::CreateTemplateRecord;
+use crate::artifacts::program::diff::ProgramTemplatesDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramTemplatesDelta};
 
 /// 🌱️ `added = [payload row]` — the row lands at the end of `program.templates` on apply.
 pub fn diff(payload: &CreateTemplateRecord, _base: &ProgramSnapshot) -> ProgramDiff {

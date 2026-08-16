@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📶status-records` per Wave C.
 
 use super::mutation::DeleteStatusRecord;
+use crate::artifacts::program::diff::ProgramStatusRecordsDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramStatusRecordsDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteStatusRecord, _base: &ProgramSnapshot) -> ProgramDiff {

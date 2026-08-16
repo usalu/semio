@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📑reports` per Wave C.
 
 use super::mutation::RenameReportRecord;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramReportsDelta, ProgramReportsPatchEntry};
 use crate::artifacts::program::registers::ReportRecordPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameReportRecord, _base: &ProgramSnapshot) -> ProgramDiff {

@@ -31,7 +31,12 @@ import {
   type AppDefinition,
   type AppModeDefinition,
   type AppPanelTabDefinition,
+  type AppRef,
+  type AppRole,
+  type AppRouter,
   type AppWindowKindDefinition,
+  type ArtifactDialect,
+  dialectCoordinate,
   type CommandAddress,
   type CommandDefinition,
   type CommandInvocation,
@@ -1760,6 +1765,99 @@ export function shellLabel(key: UiTranslationKey, options?: Record<string, unkno
   return wireLabel(resolveTranslationLabel(uiI18n.t(key, options)) ?? key);
 }
 
+//#region 👁️✏️SurfaceRoleLabels
+/** 👁️✏️ Frozen bilingual text pair (contract freeze §5) — English first, no default language. These
+ * strings are net-new chrome vocabulary and the domain-neutral `uiChromeTranslationBundles` dictionary
+ * they'd normally register into lives outside this lease (`🖱️ui/📦️packages/🟦️typescript/🎯️targets/
+ * ⚛️react/📦️component.tsx`), so they resolve directly off `uiLocale` here — the same
+ * `{ native: { en, de }, reuse: { en, de } }`-shaped idiom `resolveManifestLabel` already gives a
+ * plugin's own `LocalizedLabel`, just constructed locally instead of decoded off the wire. */
+type FrozenLabel = { readonly en: string; readonly de: string };
+
+function frozenLabelText(pair: FrozenLabel, locale: string): string {
+  return locale === "de" ? pair.de : pair.en;
+}
+
+/** 👁️✏️ Window title chip / read-only badge text — contract freeze §5. */
+const SURFACE_ROLE_CHIP_LABEL: Readonly<Record<AppRole, FrozenLabel>> = {
+  viewer: { en: "Viewer", de: "Betrachter" },
+  editor: { en: "Editor", de: "Editor" },
+};
+export function surfaceRoleChipText(role: AppRole, locale: string): string {
+  return frozenLabelText(SURFACE_ROLE_CHIP_LABEL[role], locale);
+}
+
+const OPEN_ARTIFACT_WITH_LABEL: FrozenLabel = { en: "Open with…", de: "Öffnen mit…" };
+export function openArtifactWithText(locale: string): string {
+  return frozenLabelText(OPEN_ARTIFACT_WITH_LABEL, locale);
+}
+
+const SET_AS_DEFAULT_LABEL: FrozenLabel = { en: "Set as default", de: "Als Standard festlegen" };
+export function setAsDefaultText(locale: string): string {
+  return frozenLabelText(SET_AS_DEFAULT_LABEL, locale);
+}
+
+const DEFAULT_APPS_SETTINGS_TAB_LABEL: FrozenLabel = { en: "Default apps", de: "Standard-Apps" };
+export function defaultAppsSettingsTabText(locale: string): string {
+  return frozenLabelText(DEFAULT_APPS_SETTINGS_TAB_LABEL, locale);
+}
+
+/** 👁️✏️ Palette command ids, frozen (contract freeze §5) — `owner: "os"`, no `os.` prefix (unlike the
+ * wire `AppCommand`s in `💻️os/🎮️commands/`, which these are NOT the same thing as: selecting either
+ * one opens the shell's own "Open with…" picker scoped to that role, it doesn't itself send
+ * `os.open-artifact-with` over the app channel — the picker's own row click does that). */
+export const OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID = "open-artifact-with-viewer";
+export const OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID = "open-artifact-with-editor";
+
+/** 👁️✏️ `true` for a `mutation`-kind action/command — the one predicate every viewer-chrome hiding
+ * rule in this lease (context menu, command palette, dispatch guard) shares, so "what counts as an
+ * editing verb" has exactly one definition. */
+export function isMutationKindDefinition(definition: Pick<ActionDefinition, "kind"> | Pick<CommandDefinition, "kind">): boolean {
+  return definition.kind === "mutation";
+}
+
+/** 👁️✏️ Filters `Mutation`-kind entries out of an action/command list for a `"viewer"` role — a no-op
+ * for `"editor"` (and for `undefined`, since an app with no resolved session has no role to gate on
+ * yet). Shared by the shell context menu and the command palette so both hide the exact same set. */
+export function filterDefinitionsForRole<T extends Pick<ActionDefinition, "kind"> | Pick<CommandDefinition, "kind">>(definitions: readonly T[], role: AppRole | undefined): readonly T[] {
+  if (role !== "viewer") return definitions;
+  return definitions.filter((definition) => !isMutationKindDefinition(definition));
+}
+
+/** 👁️✏️ One `AppRouter` entry resolved for display in the "Open with…" surfaces (Document panel,
+ * context menu, command palette) — plugin-labelled, flagged as the current session's own app and/or
+ * the pinned default so the picker can render both without a second lookup. */
+export type OpenWithEntry = {
+  readonly app: AppRef;
+  readonly pluginLabel: string;
+  readonly current: boolean;
+  readonly isDefault: boolean;
+};
+
+/** 👁️✏️ Groups one dialect's `AppRouter` entries by role for the "Open with…" surfaces — owner-plugin
+ * first within each role group (the router's own build-time ordering, contract freeze §3), annotated
+ * with `current`/`isDefault` against the live session and pinned prefs. `pluginLabel` falls back to
+ * the raw `pluginId` when the plugin's own manifest label isn't available (e.g. not loaded yet). */
+export function groupOpenWithEntries(
+  router: AppRouter,
+  dialect: ArtifactDialect,
+  currentApp: AppRef | undefined,
+  pinnedApp: (role: AppRole) => AppRef | undefined,
+  pluginLabelById: ReadonlyMap<string, string>,
+): Readonly<Record<AppRole, readonly OpenWithEntry[]>> {
+  const forRole = (role: AppRole): readonly OpenWithEntry[] => {
+    const pinned = pinnedApp(role);
+    return router.entriesFor(dialect, role).map((app) => ({
+      app,
+      pluginLabel: pluginLabelById.get(app.pluginId) ?? app.pluginId,
+      current: currentApp?.pluginId === app.pluginId && currentApp?.appId === app.appId,
+      isDefault: pinned?.pluginId === app.pluginId && pinned?.appId === app.appId,
+    }));
+  };
+  return { viewer: forRole("viewer"), editor: forRole("editor") };
+}
+//#endregion 👁️✏️SurfaceRoleLabels
+
 /** @emoji 🧭️ The five panel tabs the framework itself owns (never app-supplied) — routed through the typed chrome schema instead of the plugin overlay so a locale-locked shell can never show their English manifest label. */
 const FRAMEWORK_PANEL_TAB_LABEL_KEYS: Readonly<Record<string, UiTranslationKey>> = {
   [FRAMEWORK_PANEL_TAB_ARTIFACT_ID]: "ui.panel.artifact",
@@ -2997,6 +3095,10 @@ export function buildOsCommands(
   tutorialRecorderAvailable = false,
   terminology: string = UI_TERMINOLOGY_NATIVE,
   locale: string = SHELL_LOCALES[0],
+  /** 👁️✏️ Whether the active session's dialect has at least one `AppRouter` entry for either role —
+   * gates `open-artifact-with-viewer`/`open-artifact-with-editor` (contract freeze §5) the same way
+   * `hasIntroduction`/`tutorialRecorderAvailable` gate their own optional commands above. */
+  hasOpenArtifactSurfaces = false,
 ): CommandDefinition[] {
   const lockedCommandIds = new Set<string>([...(locks.appearance ? ["os.setAppearance"] : []), ...(locks.themeId ? ["os.setThemeId"] : []), ...(locks.locale ? ["os.setLocale"] : []), ...(locks.terminology ? ["os.setTerminology"] : [])]);
   const commands: CommandDefinition[] = [
@@ -3117,6 +3219,15 @@ export function buildOsCommands(
         ),
       ],
     },
+    // 👁️✏️ Both share the frozen "Open with…" label (contract freeze §5) — the role is which picker
+    // group they focus, not a different label; `dispatchOsCommand` opens the Document panel's
+    // "Open with…" section pre-scoped to that role rather than sending a wire command itself.
+    ...(hasOpenArtifactSurfaces
+      ? [
+          { id: OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID, label: openArtifactWithText(locale), category: "artifact", iconId: "eye" as IconName, kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
+          { id: OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID, label: openArtifactWithText(locale), category: "artifact", iconId: "pencil" as IconName, kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
+        ]
+      : []),
   ];
   return commands.filter((command) => !lockedCommandIds.has(command.id));
 }
@@ -3163,6 +3274,14 @@ export function dispatchOsCommand(
       return;
     case "os.setDriver":
       if (typeof args?.driver === "string") dispatch({ type: "SET_UI_DRIVER_ID", value: args.driver });
+      return;
+    // 👁️✏️ Neither sends a wire command itself (contract freeze §5) — both just focus the Document
+    // panel's "Open with…" section, pre-expanded to the role the palette entry named.
+    case OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID:
+    case OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID:
+      dispatch({ type: "SET_OPEN_WITH_FOCUS_ROLE", value: commandId === OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID ? "viewer" : "editor" });
+      dispatch({ type: "SET_PANEL_PATH", anchor: "top-left", value: [FRAMEWORK_PANEL_TAB_ARTIFACT_ID] });
+      dispatch({ type: "SET_PANEL_VISIBLE", anchor: "top-left", value: true });
       return;
     default:
       return;

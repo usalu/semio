@@ -7,7 +7,7 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("reasoning-mindmap")
         .label("Mindmap")
         .version("0.1.0")
-        .setup(crate::apps::wires::register)
+        .artifact(crate::artifacts::wires::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .document_app::<crate::apps::wires::ReasoningWiresPlayApp>(crate::apps::wires::create_wires_app())
         .try_build()
 }

@@ -1,9 +1,8 @@
 // #region 🎯️ActionBus
 /// <reference types="vitest/importMeta" />
-/** @emoji 🎯️ `@semio-tech/framework` — action arg resolution and utility/tool derivation helpers. */
+/** @emoji 🎯️ `@semio-tech/framework` — utility and tool derivation helpers. */
 import type { IconName } from "@semio-tech/assets";
 import {
-  type ActionArgDef,
   type ActionDefinition,
   type ToolDefinition,
   type ToolRef,
@@ -14,7 +13,7 @@ import {
   SET_ACTIVE_UTILITY_ACTION_ID,
 } from "../🛂️manifest/🟦️component.ts";
 
-//#region 🧰️ActionArgsAndUtilities
+//#region 🧰️ActionUtilities
 /** 🧰️ A resolved utility ready for the utility bar — the TS twin of Rust `DerivedUtilitySpec` in `ui_wgpu`. */
 export type DerivedUtilitySpec = {
   readonly id: string;
@@ -85,36 +84,6 @@ export function partitionWindowMeasures(measures: readonly WindowMeasure[], acti
 }
 
 /**
- * 🧮️ Hand-written twin of Rust `effective_action_args`: for each declared arg, the staged value if
- * present, else its declared `default`, else omitted.
- */
-export function effectiveActionArgs(defs: readonly ActionArgDef[], staged: Readonly<Record<string, unknown>>): Record<string, unknown> {
-  const effective: Record<string, unknown> = {};
-  for (const def of defs) {
-    if (Object.prototype.hasOwnProperty.call(staged, def.id)) {
-      effective[def.id] = staged[def.id];
-    } else if (def.default !== undefined && def.default !== null) {
-      effective[def.id] = def.default;
-    }
-  }
-  return effective;
-}
-
-/**
- * ❗️ Hand-written twin of Rust `missing_required_args`: ids of required args still unset in `effective`
- * (absent, null, or an empty string).
- */
-export function missingRequiredArgs(defs: readonly ActionArgDef[], effective: Readonly<Record<string, unknown>>): string[] {
-  return defs
-    .filter((def) => def.required)
-    .filter((def) => {
-      const value = effective[def.id];
-      return value === undefined || value === null || value === "";
-    })
-    .map((def) => def.id);
-}
-
-/**
  * 📇️ Returns the definitions owned by one window kind in declaration order.
  */
 export function resolveWindowActions(
@@ -155,5 +124,5 @@ export function resolveModeTools(
   }
   return resolved;
 }
-//#endregion 🧰️ActionArgsAndUtilities
+//#endregion 🧰️ActionUtilities
 // #endregion 🎯️ActionBus

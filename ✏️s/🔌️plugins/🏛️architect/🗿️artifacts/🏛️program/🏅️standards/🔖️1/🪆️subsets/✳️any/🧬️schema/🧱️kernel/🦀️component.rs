@@ -340,7 +340,6 @@ pub struct TraceLinkPatch {
     pub label: Option<Option<String>>,
 }
 
-
 impl Patchable<TraceLinkPatch> for TraceLink {
     fn apply_patch(&mut self, patch: &TraceLinkPatch) {
         if let Some(value) = &patch.from_id {
@@ -358,12 +357,6 @@ impl Patchable<TraceLinkPatch> for TraceLink {
     }
 
     fn diff_patch(&self, other: &Self) -> Option<TraceLinkPatch> {
-        Some(TraceLinkPatch {
-            from_id: Some(other.from_id.clone()),
-            to_id: Some(other.to_id.clone()),
-            kind: Some(other.kind.clone()),
-            label: Some(other.label.clone()),
-        })
+        Some(TraceLinkPatch { from_id: Some(other.from_id.clone()), to_id: Some(other.to_id.clone()), kind: Some(other.kind.clone()), label: Some(other.label.clone()) })
     }
 }
-

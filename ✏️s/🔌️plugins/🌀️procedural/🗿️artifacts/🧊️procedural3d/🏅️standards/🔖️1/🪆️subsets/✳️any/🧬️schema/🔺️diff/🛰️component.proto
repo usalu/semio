@@ -34,8 +34,6 @@ message Procedural3dDiff {
   optional string active_utility_id = 14;
   // @state config
   optional string locale = 15;
-  // @state config
-  optional string contributions_json = 16;
 }
 
 message CameraJson {

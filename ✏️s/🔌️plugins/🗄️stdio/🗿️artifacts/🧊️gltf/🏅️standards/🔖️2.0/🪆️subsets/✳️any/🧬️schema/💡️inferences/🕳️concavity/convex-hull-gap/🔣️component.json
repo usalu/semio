@@ -1,0 +1,13 @@
+{
+  "x-semio": {
+    "id": "s.stdio.gltf.inference.convex-hull-gap.v1",
+    "kind": "inference",
+    "inference": {
+      "algorithmVersion": 1,
+      "cacheKey": "s.stdio.gltf.inference.convex-hull-gap.v1:geometry-v2",
+      "inputs": ["schema/snapshot", "buffers"],
+      "target": "geometricAnalysis.overall.convex-hull-gap"
+    }
+  }
+}
+

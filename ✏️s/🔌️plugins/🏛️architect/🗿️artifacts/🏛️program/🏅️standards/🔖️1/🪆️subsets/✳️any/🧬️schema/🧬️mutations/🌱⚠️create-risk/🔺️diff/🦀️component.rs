@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `⚠️risks` per Wave C.
 
 use super::mutation::CreateRisk;
+use crate::artifacts::program::diff::ProgramRisksDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramRisksDelta};
 
 /// 🌱️ `added = [payload row]` — the row lands at the end of `program.risks` on apply.
 pub fn diff(payload: &CreateRisk, _base: &ProgramSnapshot) -> ProgramDiff {

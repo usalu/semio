@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `👍approvals` per Wave C.
 
 use super::mutation::DeleteApprovalRecord;
+use crate::artifacts::program::diff::ProgramApprovalsDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramApprovalsDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteApprovalRecord, _base: &ProgramSnapshot) -> ProgramDiff {

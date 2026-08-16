@@ -45,10 +45,10 @@ import {
   uiDataLabel,
   windowTemplatePaletteTreeDragController,
 } from "@semio-tech/ui-react";
-import { type NamedLayout, type WindowLayout, createNamedLayout } from "@semio-tech/framework";
+import { type AppRef, type AppRole, type ArtifactDialect, dialectCoordinate, type NamedLayout, type WindowLayout, createNamedLayout } from "@semio-tech/framework";
 import { createWorldProjectionTemplates, encodeWorldProjectionTemplateId, type WorldProjectionTemplateDescriptor } from "@semio-tech/infinite-world-r3f";
 import { type PluginPanelStatus, type ResolvedShellLocks } from "../Shell/🟦️component.tsx";
-import { driverDisplayLabel, shellLabel, shellTabIcon, shellTerminologyLabel } from "../ShellHelpers/🟦️component.tsx";
+import { driverDisplayLabel, shellLabel, shellTabIcon, shellTerminologyLabel, surfaceRoleChipText } from "../ShellHelpers/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️os-chrome-panels
@@ -71,6 +71,9 @@ export const FRAMEWORK_SETTINGS_PANEL_ID = "framework.settings";
 export const FRAMEWORK_SETTINGS_GENERAL_TAB_ID = "framework.settings.general";
 export const FRAMEWORK_SETTINGS_THEME_TAB_ID = "framework.settings.theme";
 export const FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID = "framework.settings.keybindings";
+/** 👁️✏️ Mirrors Rust `PanelTabKind::SettingsDefaultApps.id_str()` (`🛂️manifest/🦀️component.rs:2607`,
+ * contract freeze §1). */
+export const FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID = "framework.settings.default-apps";
 
 function groupNamedLayoutsToTreeItems(layouts: readonly NamedLayout[], onApply: (layoutId: string) => void, onDeleteUser?: (layoutId: string) => void): TreeDataItem[] {
   const root: TreeDataItem[] = [];
@@ -854,7 +857,86 @@ function buildSettingsKeybindingsTree(host: SettingsHostApi): TreePanelConfig {
   };
 }
 
-export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi | null): PanelTabNode {
+//#region 🔖️DefaultAppsPanel
+/** 👁️✏️ One `AppRef` option in a default-apps `Select` — `"none"` clears the pin. */
+const DEFAULT_APP_NONE_VALUE = "none";
+
+function encodeDefaultAppValue(app: AppRef): string {
+  return `${app.pluginId} ${app.appId}`;
+}
+
+function decodeDefaultAppValue(value: string): AppRef | null {
+  if (value === DEFAULT_APP_NONE_VALUE) return null;
+  const separator = value.indexOf(" ");
+  if (separator < 0) return null;
+  return { pluginId: value.slice(0, separator), appId: value.slice(separator + 1) };
+}
+
+/** 👁️✏️ One dialect's viewer/editor `AppRouter` options for the `SettingsDefaultApps` table — built by
+ * `ShellHost` from `AppRouter.entriesFor` + `OpeningPreferences`, one row per role per dialect. */
+export type DefaultAppRow = {
+  readonly dialect: ArtifactDialect;
+  readonly role: AppRole;
+  readonly options: readonly { readonly value: string; readonly label: string }[];
+  readonly value: string;
+};
+
+export type DefaultAppsHostApi = {
+  readonly rows: readonly DefaultAppRow[];
+  readonly locale: string;
+  readonly setDefault: (dialect: ArtifactDialect, role: AppRole, app: AppRef) => void;
+  readonly clearDefault: (dialect: ArtifactDialect, role: AppRole) => void;
+};
+
+function buildSettingsDefaultAppsTree(host: DefaultAppsHostApi): TreePanelConfig {
+  if (host.rows.length === 0) {
+    return { sections: [{ id: "framework.settings.defaultApps.empty", items: [{ id: "framework.settings.defaultApps.empty.row", label: shellLabel("ui.settings.unavailable") }] }] };
+  }
+  return {
+    sections: [
+      {
+        id: "framework.settings.defaultApps.table",
+        label: defaultAppsSettingsTabText(host.locale),
+        defaultOpen: true,
+        items: host.rows.map((row) => {
+          const rowId = `framework.settings.defaultApps.${dialectCoordinate(row.dialect)}.${row.role}`;
+          return {
+            id: rowId,
+            label: `${dialectCoordinate(row.dialect)} — ${surfaceRoleChipText(row.role, host.locale)}`,
+            control: (
+              <Select
+                value={row.value}
+                onValueChange={(value) => {
+                  if (value === DEFAULT_APP_NONE_VALUE) {
+                    host.clearDefault(row.dialect, row.role);
+                    return;
+                  }
+                  const app = decodeDefaultAppValue(value);
+                  if (app) host.setDefault(row.dialect, row.role, app);
+                }}
+              >
+                <SelectTrigger id={rowId} className="h-small w-48" size="sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={DEFAULT_APP_NONE_VALUE}>{shellLabel("ui.common.none")}</SelectItem>
+                  {row.options.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ),
+          };
+        }),
+      },
+    ],
+  };
+}
+//#endregion 🔖️DefaultAppsPanel
+
+export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi | null, getDefaultAppsHost?: () => DefaultAppsHostApi | null): PanelTabNode {
   const children: PanelTabNode[] = [
     singleTreeLeaf({
       id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID,

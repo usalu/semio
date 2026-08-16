@@ -1610,7 +1610,7 @@
       "name": "⚖️gate🗄️stdio-catalog",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyStdioCatalogBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "command": "bun nx run workspace:stdio-quick",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -1725,6 +1725,28 @@
       "presentation": {
         "group": "4_gate",
         "order": 410.95
+      }
+    },
+    {
+      "name": "⚖️gate🔗️plugin-dependency-parity",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyPluginDependencyParityBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.96
+      }
+    },
+    {
+      "name": "⚖️gate🎯️contribution-target",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun -e 'const m = await import(\"./📜️script.ts\"); const b = m.policyContributionTargetBreaches(process.cwd()); console.log(b.length); for (const x of b) console.log(x.kind, \"|\", x.scope, \"|\", x.summary); process.exit(b.length === 0 ? 0 : 1);'",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.97
       }
     },
     {

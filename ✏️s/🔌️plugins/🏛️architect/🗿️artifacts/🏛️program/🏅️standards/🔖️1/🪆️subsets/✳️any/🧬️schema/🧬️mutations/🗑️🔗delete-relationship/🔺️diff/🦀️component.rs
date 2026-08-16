@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🔗relationships` per Wave C.
 
 use super::mutation::DeleteRelationship;
+use crate::artifacts::program::diff::ProgramRelationshipsDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramRelationshipsDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteRelationship, _base: &ProgramSnapshot) -> ProgramDiff {

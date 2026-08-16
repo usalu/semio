@@ -151,9 +151,6 @@ impl Procedural3dDiff {
         if let Some(value) = &self.locale {
             next.locale = value.clone();
         }
-        if let Some(value) = &self.contributions_json {
-            next.contributions_json = value.clone();
-        }
         next
     }
 }
@@ -199,7 +196,6 @@ impl MutationDiff<Procedural3dSnapshot> for Procedural3dDiff {
         take!(generation_preview_text);
         take!(active_utility_id);
         take!(locale);
-        take!(contributions_json);
     }
 }
 //#endregion 🔖️Apply

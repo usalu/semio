@@ -7,7 +7,7 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("flow")
         .label("Flow")
         .version("0.1.0")
-        .setup(crate::apps::flow::register)
+        .artifact(crate::artifacts::flow::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .document_app::<crate::apps::flow::FlowPlayApp>(crate::apps::flow::create_flow_app())
         .try_build()
 }

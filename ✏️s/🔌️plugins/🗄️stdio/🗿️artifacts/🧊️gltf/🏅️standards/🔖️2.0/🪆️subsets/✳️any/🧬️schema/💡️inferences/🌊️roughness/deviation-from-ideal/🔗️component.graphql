@@ -1,0 +1,11 @@
+# 💡️ deviation-from-ideal glTF inference leaf GraphQL facet.
+type GltfDeviationFromIdealInferenceV1 {
+  id: ID!
+  algorithmVersion: Int!
+  cacheKey: String!
+  validity: String!
+  quality: String!
+  diagnostics: [String!]!
+  provenance: [String!]!
+  valueJson: String!
+}

@@ -4,7 +4,13 @@
 //! `OpeningPreferences` value (see `📌️set-default-app`/`🧹clear-default-app`'s `🔺️diff` leaves),
 //! matching `📕️norm`'s `NormConfigMutation` precedent rather than a sparse per-field diff type.
 
-use super::{DefaultApp, OpeningPreferences};
+// 🩹️ W1-A wiring fix (this facet was authored "not yet wired into any crate's glue.rs" — see the
+// module doc above): one hop short. Under the mount this facet's own leaf files already assume
+// (`🧬️mutations` a real module wrapping this dispatch enum, itself inside the schema module — the
+// SAME depth `📌️set-default-app`/`🧹clear-default-app`'s `use super::super::OpeningConfigMutation;`
+// already require two supers to reach), this file's own module sits ONE level inside `🧬️mutations`,
+// so `DefaultApp`/`OpeningPreferences` (declared at the schema level) need `super::super`, not `super`.
+use super::super::{DefaultApp, OpeningPreferences};
 use protocol::{Mutation, MutationDiff, MutationKind};
 use serde::{Deserialize, Serialize};
 

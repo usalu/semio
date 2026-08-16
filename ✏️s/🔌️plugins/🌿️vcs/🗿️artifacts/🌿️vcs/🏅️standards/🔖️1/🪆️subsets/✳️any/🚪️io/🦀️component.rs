@@ -1,7 +1,10 @@
-//! 🚪️ IO s.vcs (1/✳️any) — registration now flows through 🎹️composer::register
-//! (called once from `crate::apps::vcs::register`), not per-leaf register().
-pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"] }
-pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"] }
+//! 🚪️ IO s.vcs (1/✳️any) — the artifact declaration owns this composer table.
+pub fn import_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"]
+}
+pub fn export_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"]
+}
 pub fn vcs_to_wire(from: &crate::artifacts::vcs::VcsSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(from)
 }
@@ -13,15 +16,14 @@ pub fn pack_err_as_text(err: store::PackError) -> store::TextError {
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::vcs::VcsSnapshot;
     use crate::artifacts::vcs::standards::v1::subsets::any::schema::VcsAnalyzer;
+    use crate::artifacts::vcs::VcsSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.vcs", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
-
 
     pub struct VcsComposerComposition;
 
@@ -65,7 +67,6 @@ pub mod derived_composition {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
-
             }
             Err(ComposeError { message: "VcsComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
         }
@@ -76,10 +77,10 @@ pub use derived_composition::*;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ArtifactBuilder, ComposerEntry, ComposedArtifact, ComposeError, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload, IoConfidence, composer_entry_of};
-    use crate::artifacts::vcs::standards::v1::subsets::any::schema::VcsComposer as VcsAnyComposer;
     use crate::artifacts::vcs::standards::v1::subsets::any::schema::VcsBuilder as VcsAnyBuilder;
+    use crate::artifacts::vcs::standards::v1::subsets::any::schema::VcsComposer as VcsAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
@@ -126,12 +127,8 @@ pub mod io_registry {
     }
     //#endregion 🔖️ExportEntries
 
-
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![
-            composer_entry_of::<VcsAnyComposer>(),
-            ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[VCS_DIALECT], compose: compose_export_json },
-        ]).as_slice()
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<VcsAnyComposer>(), ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[VCS_DIALECT], compose: compose_export_json }]).as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry

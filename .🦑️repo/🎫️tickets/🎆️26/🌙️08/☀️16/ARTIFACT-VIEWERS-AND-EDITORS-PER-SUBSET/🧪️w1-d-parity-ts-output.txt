@@ -1,0 +1,5 @@
+[ok] owner first, then pluginId ascending (aec-building < norm)
+[ok] duplicate AppRef -> surface.conflict (code=surface.conflict)
+[ok] unknown dialect -> surface.unknown-dialect (code=surface.unknown-dialect)
+
+All checks passed

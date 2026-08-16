@@ -17,19 +17,20 @@ use crate::apps::architect::commands::register::{add_register_item, patch_regist
 use crate::apps::architect::commands::search::query;
 use crate::apps::architect::commands::template::apply;
 use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-use crate::apps::architect::presence::{ArchitectPresence, ArchitectPresenceMutation};
 use crate::apps::architect::modes::edit as edit_mode;
 use crate::apps::architect::modes::edit::windows::{adjacency as adjacency_window, graph as graph_window, register as register_window, report as report_window, trace as trace_window};
 use crate::apps::architect::modes::{report as report_mode, review as review_mode};
 use crate::apps::architect::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
+use crate::apps::architect::presence::{ArchitectPresence, ArchitectPresenceMutation};
 use crate::artifacts::program::op::ProgramMutation;
 use crate::artifacts::program::{empty_plugin, sample_plugin, ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
-};
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactApp, ArtifactView, ConfigView, DraftView, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label,
+    LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
+};
 use serde_json::Value;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const ARCHITECT_APP_ID: &str = "architect";
@@ -67,99 +68,6 @@ pub fn reset_document_effect(document: &ProgramSnapshot) -> semio_framework_plug
 }
 //#endregion 🔖️ResetDocument
 
-//#region 🔌️Registration
-/// 🗂️ Dissolved out of the former artifact-tree `⚙️engine` root (ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — `register_architect_exports` is still
-/// the live plugin setup entry (`Plugin::builder(...).setup(crate::register_architect_exports)` in
-/// the plugin root `🦀️component.rs`, re-exported crate-root-wide by a `pub use` in `📦️glue.rs`'s
-/// out-of-scope shim section), so unlike block2d's fully
-/// superseded `register()` this one is NOT dead — it is app-scoped registration wiring (registers
-/// this app's document codec, app schema, pilot languages, artifact schema/inference descriptors
-/// and the io composer table), so it belongs here rather than on the artifact.
-pub fn register() {
-    crate::artifacts::program::io_registry::register();
-
-    register_pilot_languages();
-    register_artifact_schema();
-    register_artifact_inference();
-    crate::apps::architect::config::schema::register_app_schema();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<ArchitectPlayApp>(crate::artifacts::program::ARCHITECT_PROGRAM_SCHEMA);
-}
-
-/// 🗂️ Plugin setup entry — same as `register`, named for `Plugin::builder(...).setup(...)`.
-pub fn register_architect_exports() {
-    register();
-}
-
-/// 📎 Registers the program artifact schema descriptor into the process-local registry.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::program::schema::program_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers the program artifact `💡️inference` descriptor into the OS-wide inference catalog
-/// — sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inference() {
-    ::schema::register_artifact_inference_descriptor(
-        crate::artifacts::program::standards::v1::subsets::any::schema::inferences::program_artifact_inference_descriptor(),
-    );
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "architect.program",
-        extension: Some("architect"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::program::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::program::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::program::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::program::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("architect.program"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "architect.program.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::program::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::program::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::program::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::program::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("architect.program.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "architect.program.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::program::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::program::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("architect.program.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "program.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::program::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::program::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("program.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "program.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::program::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::program::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("program.spr"),
-    });
-}
-//#endregion 🔌️Registration
-
 //#region 🔧️Behavior
 /// 🔧️ Dissolved out of the former artifact-tree `⚙️engine` topic files (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — every function that takes `&mut
@@ -175,14 +83,12 @@ pub mod behavior {
     use crate::artifacts::program::kernel::{EntityHeader, EntityId, PluginError, TextField, TraceKind, TraceLink};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::registers::{
-        Activity, Adjacency, AdjacencyKind, AnalysisKind, AnalysisRecord, ConnectionKind, Equipment, Function, FunctionKind, Process, ProgramElement, ProgramElementKind, Relationship, RelationshipKind, ReportKind, ReportRecord,
-        Requirement, RequirementKind, Risk, RiskLevel, Stakeholder, TemplateRecord, UserCategory, UserProfile, ValidationStatus,
+        Activity, Adjacency, AdjacencyKind, AnalysisKind, AnalysisRecord, ConnectionKind, Equipment, Function, FunctionKind, Process, ProgramElement, ProgramElementKind, Relationship, RelationshipKind, ReportKind, ReportRecord, Requirement,
+        RequirementKind, Risk, RiskLevel, Stakeholder, TemplateRecord, UserCategory, UserProfile, ValidationStatus,
     };
-    use crate::artifacts::program::ProgramSnapshot;
-    use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::{
-        build_report, run_analysis, RegisterCsvRow,
-    };
+    use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::{build_report, run_analysis, RegisterCsvRow};
     use crate::artifacts::program::standards::v1::subsets::any::schema::normalize_pair;
+    use crate::artifacts::program::ProgramSnapshot;
     use semio_s_plugin_stdio::artifacts::csv as stdio_csv;
     use semio_s_plugin_stdio::artifacts::tsv as stdio_tsv;
     use semio_s_plugin_stdio::artifacts::tsv::standards::iana::subsets::any::schema::snapshot as stdio_tsv_engine;
@@ -1202,6 +1108,10 @@ impl ArtifactApp for ArchitectPlayApp {
     const APP_ID: &'static str = ARCHITECT_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::architect::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> ProgramSnapshot {
         sample_plugin()
     }
@@ -1222,15 +1132,12 @@ impl ArtifactApp for ArchitectPlayApp {
         let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_bool);
         match action {
             "selectRegister" => Ok(ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: parse_register_id(args).unwrap_or_default() })),
-            "addRegisterItem" => Ok(ArchitectCommand::AddRegisterItem(add_register_item::AddRegisterItem {
-                register_id: parse_register_id(args).unwrap_or_default(),
-                name: str_field("name").unwrap_or_else(|| "New Item".into()),
-                template_id: str_field("templateId"),
-            })),
-            "removeRegisterItem" => Ok(ArchitectCommand::RemoveRegisterItem(remove_register_item::RemoveRegisterItem {
-                register_id: parse_register_id(args).unwrap_or_default(),
-                entity_id: parse_entity_id_from_args(args, "entityId").map(|id| id.0).unwrap_or_default(),
-            })),
+            "addRegisterItem" => {
+                Ok(ArchitectCommand::AddRegisterItem(add_register_item::AddRegisterItem { register_id: parse_register_id(args).unwrap_or_default(), name: str_field("name").unwrap_or_else(|| "New Item".into()), template_id: str_field("templateId") }))
+            }
+            "removeRegisterItem" => {
+                Ok(ArchitectCommand::RemoveRegisterItem(remove_register_item::RemoveRegisterItem { register_id: parse_register_id(args).unwrap_or_default(), entity_id: parse_entity_id_from_args(args, "entityId").map(|id| id.0).unwrap_or_default() }))
+            }
             "patchRegisterItem" => Ok(ArchitectCommand::PatchRegisterItem(patch_register_item::PatchRegisterItem {
                 register_id: parse_register_id(args).unwrap_or_default(),
                 entity_id: parse_entity_id_from_args(args, "entityId").map(|id| id.0).unwrap_or_default(),
@@ -1243,10 +1150,7 @@ impl ArtifactApp for ArchitectPlayApp {
             })),
             "applyTemplate" => Ok(ArchitectCommand::ApplyTemplate(apply::ApplyTemplate { template_id: parse_entity_id_from_args(args, "templateId").map(|id| id.0).unwrap_or_default() })),
             "exportRegistersCsv" => Ok(ArchitectCommand::ExportRegistersCsv(export_registers_csv::ExportRegistersCsv {})),
-            "importRegistersCsv" => Ok(ArchitectCommand::ImportRegistersCsv(import_registers_csv::ImportRegistersCsv {
-                csv: str_field("csv").unwrap_or_default(),
-                strategy: str_field("strategy").unwrap_or_else(|| "upsert".into()),
-            })),
+            "importRegistersCsv" => Ok(ArchitectCommand::ImportRegistersCsv(import_registers_csv::ImportRegistersCsv { csv: str_field("csv").unwrap_or_default(), strategy: str_field("strategy").unwrap_or_else(|| "upsert".into()) })),
             "addElement" => Ok(ArchitectCommand::AddElement(add_element::AddElement { name: str_field("name").unwrap_or_else(|| "New Room".into()) })),
             "removeElement" => Ok(ArchitectCommand::RemoveElement(remove_element::RemoveElement { element_id: str_field("elementId").or_else(|| str_field("id")).unwrap_or_default() })),
             "runValidation" => Ok(ArchitectCommand::RunValidation(run_validation::RunValidation {})),
@@ -1255,9 +1159,7 @@ impl ArtifactApp for ArchitectPlayApp {
             "exportProgram" => Ok(ArchitectCommand::ExportProgram(export_program::ExportProgram {})),
             "importProgramRequest" => Ok(ArchitectCommand::ImportProgramRequest(import_program_request::ImportProgramRequest {})),
             "importProgram" => Ok(ArchitectCommand::ImportProgram(import_program::ImportProgram { payload: str_field("payload").or_else(|| str_field("dsl")).unwrap_or_default() })),
-            "nodeGraphEdit" => Ok(ArchitectCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-                operations_json: args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), Value::to_string),
-            })),
+            "nodeGraphEdit" => Ok(ArchitectCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), Value::to_string) })),
             "nodeGraphViewport" => Ok(ArchitectCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: str_field("viewportJson").unwrap_or_default() })),
             "setAdjacencyKind" => Ok(ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind {
                 element_a_id: parse_entity_id(args, "elementAId").map(|id| id.0).unwrap_or_default(),
@@ -1277,7 +1179,14 @@ impl ArtifactApp for ArchitectPlayApp {
     /// reaches `handle` (see `dispatch_action`'s reserved-verb interception), and every remaining
     /// command derives its ids from explicit args, not the live selection (mirrors `note`'s
     /// `app_commands!`-dispatched leaves that never needed `InteractionView` either).
-    fn handle(command: &ArchitectCommand, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ProgramMutation, ArchitectConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(
+        command: &ArchitectCommand,
+        doc: &ArtifactView<'_, ProgramSnapshot>,
+        cfg: &ConfigView<'_, ArchitectConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<ProgramMutation, ArchitectConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -1487,8 +1396,8 @@ mod tests {
     use super::*;
     use crate::apps::architect::catalog::{analysis_kind_from_str, register_entities};
     use crate::apps::architect::testkit;
-    use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::export_registers_csv;
     use crate::artifacts::program::registers::{AdjacencyKind, AnalysisKind};
+    use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::export_registers_csv;
     use semio_framework_plugin::PluginApp;
     use serde_json::json;
 
@@ -1547,22 +1456,13 @@ mod tests {
     #[test]
     fn optional_field_rows_keep_their_pre_migration_bytes() {
         let hex = |command: &ArchitectCommand| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-        assert_eq!(
-            hex(&ArchitectCommand::AddRegisterItem(add_register_item::AddRegisterItem { register_id: "elements".into(), name: "Room".into(), template_id: None })),
-            "01010204526f6f6d08656c656d656e747302000601010600"
-        );
-        assert_eq!(
-            hex(&ArchitectCommand::AddRegisterItem(add_register_item::AddRegisterItem { register_id: "elements".into(), name: "Room".into(), template_id: Some("t1".into()) })),
-            "01010304526f6f6d08656c656d656e747302743103000601010600020602"
-        );
+        assert_eq!(hex(&ArchitectCommand::AddRegisterItem(add_register_item::AddRegisterItem { register_id: "elements".into(), name: "Room".into(), template_id: None })), "01010204526f6f6d08656c656d656e747302000601010600");
+        assert_eq!(hex(&ArchitectCommand::AddRegisterItem(add_register_item::AddRegisterItem { register_id: "elements".into(), name: "Room".into(), template_id: Some("t1".into()) })), "01010304526f6f6d08656c656d656e747302743103000601010600020602");
         assert_eq!(hex(&ArchitectCommand::ExportRegistersCsv(export_registers_csv::ExportRegistersCsv {})), "01060000");
         assert_eq!(hex(&ArchitectCommand::RunValidation(run_validation::RunValidation {})), "010a0000");
         assert_eq!(hex(&ArchitectCommand::ExportProgram(export_program::ExportProgram {})), "010d0000");
         assert_eq!(hex(&ArchitectCommand::ImportProgramRequest(import_program_request::ImportProgramRequest {})), "010e0000");
-        assert_eq!(
-            hex(&ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind { element_a_id: "a".into(), element_b_id: "b".into(), kind: None, cycle: true })),
-            "01120201610162030006000106010302"
-        );
+        assert_eq!(hex(&ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind { element_a_id: "a".into(), element_b_id: "b".into(), kind: None, cycle: true })), "01120201610162030006000106010302");
         assert_eq!(
             hex(&ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind { element_a_id: "a".into(), element_b_id: "b".into(), kind: Some("required".into()), cycle: false })),
             "01120301610162087265717569726564040006000106010206020301"
@@ -1602,13 +1502,7 @@ mod tests {
         for body_key in [document_panel::ARCHITECT_BODY_DOCUMENT, catalogue_panel::ARCHITECT_BODY_CATALOGUE, inspection_panel::ARCHITECT_BODY_INSPECTION] {
             assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
         }
-        for window in [
-            adjacency_window::ARCHITECT_WINDOW_ADJACENCY,
-            graph_window::ARCHITECT_WINDOW_GRAPH,
-            register_window::ARCHITECT_WINDOW_REGISTER,
-            report_window::ARCHITECT_WINDOW_REPORT,
-            trace_window::ARCHITECT_WINDOW_TRACE,
-        ] {
+        for window in [adjacency_window::ARCHITECT_WINDOW_ADJACENCY, graph_window::ARCHITECT_WINDOW_GRAPH, register_window::ARCHITECT_WINDOW_REGISTER, report_window::ARCHITECT_WINDOW_REPORT, trace_window::ARCHITECT_WINDOW_TRACE] {
             assert!(definition.window_kinds.iter().any(|kind| kind.id == window), "window kind {window} is stitched into the manifest");
         }
     }
@@ -1640,10 +1534,7 @@ mod tests {
     fn set_adjacency_kind_cycles_required_to_preferred() {
         let program = sample_plugin();
         let adjacency = program.adjacencies.first().expect("adjacency");
-        let emit = testkit::drive(
-            &ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind { element_a_id: adjacency.element_a_id.0.clone(), element_b_id: adjacency.element_b_id.0.clone(), kind: None, cycle: true }),
-            &program,
-        );
+        let emit = testkit::drive(&ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind { element_a_id: adjacency.element_a_id.0.clone(), element_b_id: adjacency.element_b_id.0.clone(), kind: None, cycle: true }), &program);
         assert!(matches!(
             emit.artifact_mutations.first(),
             Some(ProgramMutation::ConnectAdjacency(payload)) if payload.adjacency.kind == AdjacencyKind::Preferred
@@ -1686,10 +1577,7 @@ mod tests {
     fn patch_register_item_updates_element_name() {
         let program = sample_plugin();
         let element_id = program.elements[0].header.id.clone();
-        let emit = testkit::drive(
-            &ArchitectCommand::PatchRegisterItem(patch_register_item::PatchRegisterItem { register_id: "elements".into(), entity_id: element_id.0, patch_json: json!({ "name": "Updated Reception" }).to_string() }),
-            &program,
-        );
+        let emit = testkit::drive(&ArchitectCommand::PatchRegisterItem(patch_register_item::PatchRegisterItem { register_id: "elements".into(), entity_id: element_id.0, patch_json: json!({ "name": "Updated Reception" }).to_string() }), &program);
         assert!(matches!(
             emit.artifact_mutations.first(),
             Some(ProgramMutation::ReplaceProgramElement(payload)) if payload.program_element.header.name == "Updated Reception"

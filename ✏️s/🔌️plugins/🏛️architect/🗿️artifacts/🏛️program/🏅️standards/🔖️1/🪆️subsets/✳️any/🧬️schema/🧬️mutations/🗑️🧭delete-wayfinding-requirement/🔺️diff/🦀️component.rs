@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🧭wayfinding` per Wave C.
 
 use super::mutation::DeleteWayfindingRequirement;
+use crate::artifacts::program::diff::ProgramWayfindingDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramWayfindingDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteWayfindingRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

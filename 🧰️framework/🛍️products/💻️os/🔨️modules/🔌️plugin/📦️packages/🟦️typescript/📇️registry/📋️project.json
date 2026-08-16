@@ -17,6 +17,14 @@
         "command": "bun ./📜️script.ts check",
         "forwardAllArgs": true
       }
+    },
+    "new": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry",
+        "command": "bun ./📜️script.ts new",
+        "forwardAllArgs": true
+      }
     }
   },
   "tags": [

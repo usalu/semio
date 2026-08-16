@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🛎️services` per Wave C.
 
 use super::mutation::RenameServiceRequirement;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramServicesDelta, ProgramServicesPatchEntry};
 use crate::artifacts::program::registers::ServiceRequirementPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameServiceRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

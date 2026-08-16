@@ -6938,6 +6938,7 @@ dependencies = [
 name = "semio-framework-plugin-host"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "semio-framework",
  "semio-framework-os-kernel",
  "semio-framework-ui",
@@ -7163,7 +7164,9 @@ name = "semio-s-plugin-cad-aec-building"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-s-plugin-cad",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -7311,6 +7314,7 @@ dependencies = [
  "semio-framework-os-flow",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
+ "semio-framework-os-kernel-dsl-derive",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui",
@@ -7676,13 +7680,6 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-ui",
  "semio-framework-ui-styling",
- "semio-s-plugin-flow-extension-brep",
- "semio-s-plugin-flow-extension-dictionary",
- "semio-s-plugin-flow-extension-list",
- "semio-s-plugin-flow-extension-logic",
- "semio-s-plugin-flow-extension-math",
- "semio-s-plugin-flow-extension-primitive",
- "semio-s-plugin-flow-extension-text",
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",

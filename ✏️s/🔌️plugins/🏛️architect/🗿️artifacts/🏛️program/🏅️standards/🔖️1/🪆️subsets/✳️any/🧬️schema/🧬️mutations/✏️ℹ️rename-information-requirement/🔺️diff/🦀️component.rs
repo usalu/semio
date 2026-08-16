@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `ℹ️information` per Wave C.
 
 use super::mutation::RenameInformationRequirement;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramInformationDelta, ProgramInformationPatchEntry};
 use crate::artifacts::program::registers::InformationRequirementPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameInformationRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

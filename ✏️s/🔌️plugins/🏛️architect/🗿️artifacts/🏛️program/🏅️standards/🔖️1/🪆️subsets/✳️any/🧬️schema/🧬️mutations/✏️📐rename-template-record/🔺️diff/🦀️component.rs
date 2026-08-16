@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📐templates` per Wave C.
 
 use super::mutation::RenameTemplateRecord;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramTemplatesDelta, ProgramTemplatesPatchEntry};
 use crate::artifacts::program::registers::TemplateRecordPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameTemplateRecord, _base: &ProgramSnapshot) -> ProgramDiff {

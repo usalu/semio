@@ -2,21 +2,1012 @@
   "x-semio": {
     "kind": "collection",
     "members": [
-      { "directory": "📦️size", "id": "s.stdio.gltf.inference.size", "kind": "inference", "responsibility": "Size indicators derived from geometric analysis context.", "inference": { "inputs": ["schema/snapshot"], "target": "geometricAnalysis.overall.size" } },
-      { "directory": "🧱️area-volume", "id": "s.stdio.gltf.inference.area-volume", "kind": "inference", "responsibility": "Area and volume indicators derived from geometric analysis context.", "inference": { "inputs": ["schema/snapshot"], "target": "geometricAnalysis.overall.areaVolume" } },
-      { "directory": "⚪️compactness", "id": "s.stdio.gltf.inference.compactness", "kind": "inference", "responsibility": "Compactness indicators derived from geometric analysis context.", "inference": { "inputs": ["schema/snapshot"], "target": "geometricAnalysis.overall.compactness" } },
-      { "directory": "📏️proportion", "id": "s.stdio.gltf.inference.proportion", "kind": "inference", "responsibility": "Proportion indicators derived from geometric analysis context.", "inference": { "inputs": ["schema/snapshot"], "target": "geometricAnalysis.overall.proportion" } },
-      { "directory": "⚖️mass-distribution", "id": "s.stdio.gltf.inference.mass-distribution", "kind": "inference", "responsibility": "Mass-distribution indicators derived from geometric analysis context.", "inference": { "inputs": ["schema/snapshot"], "target": "geometricAnalysis.overall.mass" } },
-      { "directory": "🌀️curvature", "id": "s.stdio.gltf.inference.curvature", "kind": "inference", "responsibility": "Curvature indicators derived from geometric analysis context.", "inference": { "inputs": ["schema/snapshot"], "target": "geometricAnalysis.overall.curvature" } },
-      { "directory": "↕️thickness", "id": "s.stdio.gltf.inference.thickness", "kind": "inference", "responsibility": "Thickness indicators derived from geometric analysis context.", "inference": { "inputs": ["schema/snapshot"], "target": "geometricAnalysis.overall.thickness" } },
-      { "directory": "🕳️concavity", "id": "s.stdio.gltf.inference.concavity", "kind": "inference", "responsibility": "Concavity indicators derived from geometric analysis context.", "inference": { "inputs": ["schema/snapshot"], "target": "geometricAnalysis.overall.concavity" } },
-      { "directory": "↔️clearance", "id": "s.stdio.gltf.inference.clearance", "kind": "inference", "responsibility": "Clearance indicators derived from geometric analysis context.", "inference": { "inputs": ["schema/snapshot"], "target": "geometricAnalysis.overall.clearance" } },
-      { "directory": "🔗️adjacency", "id": "s.stdio.gltf.inference.adjacency", "kind": "inference", "responsibility": "Adjacency indicators derived from geometric analysis context.", "inference": { "inputs": ["schema/snapshot"], "target": "geometricAnalysis.overall.adjacency" } },
-      { "directory": "🧭️orientation", "id": "s.stdio.gltf.inference.orientation", "kind": "inference", "responsibility": "Orientation indicators derived from geometric analysis context.", "inference": { "inputs": ["schema/snapshot"], "target": "geometricAnalysis.overall.orientation" } },
-      { "directory": "🪞️symmetry", "id": "s.stdio.gltf.inference.symmetry", "kind": "inference", "responsibility": "Symmetry indicators derived from geometric analysis context.", "inference": { "inputs": ["schema/snapshot"], "target": "geometricAnalysis.overall.symmetry" } },
-      { "directory": "🌊️roughness", "id": "s.stdio.gltf.inference.roughness", "kind": "inference", "responsibility": "Roughness indicators derived from geometric analysis context.", "inference": { "inputs": ["schema/snapshot"], "target": "geometricAnalysis.overall.roughness" } },
-      { "directory": "🕸️topology", "id": "s.stdio.gltf.inference.topology", "kind": "inference", "responsibility": "Topology indicators derived from geometric analysis context.", "inference": { "inputs": ["schema/snapshot"], "target": "geometricAnalysis.overall.topology" } },
-      { "directory": "🧮️geometric-analysis", "id": "s.stdio.gltf.inference.geometric-analysis", "kind": "inference", "responsibility": "Aggregate static-pose glTF geometric analysis.", "inference": { "inputs": ["schema/snapshot", "buffers"], "target": "geometricAnalysis" } }
+      {
+        "directory": "📦️size/overall-size",
+        "id": "s.stdio.gltf.inference.overall-size.v1",
+        "kind": "inference",
+        "responsibility": "Atomic overall-size glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.overall-size.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.size.overallSize"
+        }
+      },
+      {
+        "directory": "📦️size/axis-aligned-bounds",
+        "id": "s.stdio.gltf.inference.axis-aligned-bounds.v1",
+        "kind": "inference",
+        "responsibility": "Atomic axis-aligned-bounds glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.axis-aligned-bounds.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.size.axisAlignedBounds"
+        }
+      },
+      {
+        "directory": "📦️size/oriented-bounds",
+        "id": "s.stdio.gltf.inference.oriented-bounds.v1",
+        "kind": "inference",
+        "responsibility": "Atomic oriented-bounds glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.oriented-bounds.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.size.orientedBounds"
+        }
+      },
+      {
+        "directory": "📦️size/bounding-box-dimensions",
+        "id": "s.stdio.gltf.inference.bounding-box-dimensions.v1",
+        "kind": "inference",
+        "responsibility": "Atomic bounding-box-dimensions glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.bounding-box-dimensions.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.size.boundingBoxDimensions"
+        }
+      },
+      {
+        "directory": "📦️size/characteristic-length",
+        "id": "s.stdio.gltf.inference.characteristic-length.v1",
+        "kind": "inference",
+        "responsibility": "Atomic characteristic-length glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.characteristic-length.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.size.characteristicLength"
+        }
+      },
+      {
+        "directory": "📦️size/footprint-area",
+        "id": "s.stdio.gltf.inference.footprint-area.v1",
+        "kind": "inference",
+        "responsibility": "Atomic footprint-area glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.footprint-area.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.size.footprintArea"
+        }
+      },
+      {
+        "directory": "📦️size/projected-area",
+        "id": "s.stdio.gltf.inference.projected-area.v1",
+        "kind": "inference",
+        "responsibility": "Atomic projected-area glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.projected-area.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.size.projectedArea"
+        }
+      },
+      {
+        "directory": "🧱️area-volume/surface-area",
+        "id": "s.stdio.gltf.inference.surface-area.v1",
+        "kind": "inference",
+        "responsibility": "Atomic surface-area glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.surface-area.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.areaVolume.surfaceArea"
+        }
+      },
+      {
+        "directory": "🧱️area-volume/total-area",
+        "id": "s.stdio.gltf.inference.total-area.v1",
+        "kind": "inference",
+        "responsibility": "Atomic total-area glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.total-area.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.areaVolume.totalArea"
+        }
+      },
+      {
+        "directory": "🧱️area-volume/exposed-area",
+        "id": "s.stdio.gltf.inference.exposed-area.v1",
+        "kind": "inference",
+        "responsibility": "Atomic exposed-area glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.exposed-area.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.areaVolume.exposedArea"
+        }
+      },
+      {
+        "directory": "🧱️area-volume/contact-area",
+        "id": "s.stdio.gltf.inference.contact-area.v1",
+        "kind": "inference",
+        "responsibility": "Atomic contact-area glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.contact-area.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.areaVolume.contactArea"
+        }
+      },
+      {
+        "directory": "🧱️area-volume/volume",
+        "id": "s.stdio.gltf.inference.volume.v1",
+        "kind": "inference",
+        "responsibility": "Atomic volume glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.volume.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.areaVolume.volume"
+        }
+      },
+      {
+        "directory": "🧱️area-volume/enclosed-volume",
+        "id": "s.stdio.gltf.inference.enclosed-volume.v1",
+        "kind": "inference",
+        "responsibility": "Atomic enclosed-volume glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.enclosed-volume.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.areaVolume.enclosedVolume"
+        }
+      },
+      {
+        "directory": "🧱️area-volume/material-volume",
+        "id": "s.stdio.gltf.inference.material-volume.v1",
+        "kind": "inference",
+        "responsibility": "Atomic material-volume glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.material-volume.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.areaVolume.materialVolume"
+        }
+      },
+      {
+        "directory": "🧱️area-volume/void-volume",
+        "id": "s.stdio.gltf.inference.void-volume.v1",
+        "kind": "inference",
+        "responsibility": "Atomic void-volume glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.void-volume.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.areaVolume.voidVolume"
+        }
+      },
+      {
+        "directory": "⚪️compactness/compactness",
+        "id": "s.stdio.gltf.inference.compactness.v1",
+        "kind": "inference",
+        "responsibility": "Atomic compactness glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.compactness.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.compactness.compactness"
+        }
+      },
+      {
+        "directory": "⚪️compactness/surface-to-volume-ratio",
+        "id": "s.stdio.gltf.inference.surface-to-volume-ratio.v1",
+        "kind": "inference",
+        "responsibility": "Atomic surface-to-volume-ratio glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.surface-to-volume-ratio.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.compactness.surfaceToVolumeRatio"
+        }
+      },
+      {
+        "directory": "⚪️compactness/sphericity",
+        "id": "s.stdio.gltf.inference.sphericity.v1",
+        "kind": "inference",
+        "responsibility": "Atomic sphericity glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.sphericity.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.compactness.sphericity"
+        }
+      },
+      {
+        "directory": "⚪️compactness/compactness-index",
+        "id": "s.stdio.gltf.inference.compactness-index.v1",
+        "kind": "inference",
+        "responsibility": "Atomic compactness-index glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.compactness-index.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.compactness.compactnessIndex"
+        }
+      },
+      {
+        "directory": "⚪️compactness/hull-fill-ratio",
+        "id": "s.stdio.gltf.inference.hull-fill-ratio.v1",
+        "kind": "inference",
+        "responsibility": "Atomic hull-fill-ratio glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.hull-fill-ratio.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.compactness.hullFillRatio"
+        }
+      },
+      {
+        "directory": "📏️proportion/aspect-ratios",
+        "id": "s.stdio.gltf.inference.aspect-ratios.v1",
+        "kind": "inference",
+        "responsibility": "Atomic aspect-ratios glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.aspect-ratios.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.proportion.aspectRatios"
+        }
+      },
+      {
+        "directory": "📏️proportion/slenderness",
+        "id": "s.stdio.gltf.inference.slenderness.v1",
+        "kind": "inference",
+        "responsibility": "Atomic slenderness glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.slenderness.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.proportion.slenderness"
+        }
+      },
+      {
+        "directory": "📏️proportion/flatness",
+        "id": "s.stdio.gltf.inference.flatness.v1",
+        "kind": "inference",
+        "responsibility": "Atomic flatness glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.flatness.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.proportion.flatness"
+        }
+      },
+      {
+        "directory": "📏️proportion/elongation",
+        "id": "s.stdio.gltf.inference.elongation.v1",
+        "kind": "inference",
+        "responsibility": "Atomic elongation glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.elongation.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.proportion.elongation"
+        }
+      },
+      {
+        "directory": "⚖️mass-distribution/centroid",
+        "id": "s.stdio.gltf.inference.centroid.v1",
+        "kind": "inference",
+        "responsibility": "Atomic centroid glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.centroid.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.mass.centroid"
+        }
+      },
+      {
+        "directory": "⚖️mass-distribution/principal-frame",
+        "id": "s.stdio.gltf.inference.principal-frame.v1",
+        "kind": "inference",
+        "responsibility": "Atomic principal-frame glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.principal-frame.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.mass.principalFrame"
+        }
+      },
+      {
+        "directory": "⚖️mass-distribution/principal-axes",
+        "id": "s.stdio.gltf.inference.principal-axes.v1",
+        "kind": "inference",
+        "responsibility": "Atomic principal-axes glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.principal-axes.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.mass.principalAxes"
+        }
+      },
+      {
+        "directory": "⚖️mass-distribution/moments-of-inertia",
+        "id": "s.stdio.gltf.inference.moments-of-inertia.v1",
+        "kind": "inference",
+        "responsibility": "Atomic moments-of-inertia glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.moments-of-inertia.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.mass.momentsOfInertia"
+        }
+      },
+      {
+        "directory": "⚖️mass-distribution/inertia-tensor",
+        "id": "s.stdio.gltf.inference.inertia-tensor.v1",
+        "kind": "inference",
+        "responsibility": "Atomic inertia-tensor glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.inertia-tensor.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.mass.inertiaTensor"
+        }
+      },
+      {
+        "directory": "🌀️curvature/mean-curvature",
+        "id": "s.stdio.gltf.inference.mean-curvature.v1",
+        "kind": "inference",
+        "responsibility": "Atomic mean-curvature glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.mean-curvature.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.curvature.meanCurvature"
+        }
+      },
+      {
+        "directory": "🌀️curvature/gaussian-curvature",
+        "id": "s.stdio.gltf.inference.gaussian-curvature.v1",
+        "kind": "inference",
+        "responsibility": "Atomic gaussian-curvature glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.gaussian-curvature.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.curvature.gaussianCurvature"
+        }
+      },
+      {
+        "directory": "🌀️curvature/curvature-histogram",
+        "id": "s.stdio.gltf.inference.curvature-histogram.v1",
+        "kind": "inference",
+        "responsibility": "Atomic curvature-histogram glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.curvature-histogram.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.curvature.curvatureHistogram"
+        }
+      },
+      {
+        "directory": "🌀️curvature/sharp-feature-proportion",
+        "id": "s.stdio.gltf.inference.sharp-feature-proportion.v1",
+        "kind": "inference",
+        "responsibility": "Atomic sharp-feature-proportion glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.sharp-feature-proportion.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.curvature.sharpFeatureProportion"
+        }
+      },
+      {
+        "directory": "↕️thickness/mean-thickness",
+        "id": "s.stdio.gltf.inference.mean-thickness.v1",
+        "kind": "inference",
+        "responsibility": "Atomic mean-thickness glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.mean-thickness.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.thickness.meanThickness"
+        }
+      },
+      {
+        "directory": "↕️thickness/minimum-thickness",
+        "id": "s.stdio.gltf.inference.minimum-thickness.v1",
+        "kind": "inference",
+        "responsibility": "Atomic minimum-thickness glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.minimum-thickness.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.thickness.minimumThickness"
+        }
+      },
+      {
+        "directory": "↕️thickness/thickness-variability",
+        "id": "s.stdio.gltf.inference.thickness-variability.v1",
+        "kind": "inference",
+        "responsibility": "Atomic thickness-variability glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.thickness-variability.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.thickness.thicknessVariability"
+        }
+      },
+      {
+        "directory": "↕️thickness/thickness-distribution",
+        "id": "s.stdio.gltf.inference.thickness-distribution.v1",
+        "kind": "inference",
+        "responsibility": "Atomic thickness-distribution glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.thickness-distribution.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.thickness.thicknessDistribution"
+        }
+      },
+      {
+        "directory": "🕳️concavity/convex-hull-gap",
+        "id": "s.stdio.gltf.inference.convex-hull-gap.v1",
+        "kind": "inference",
+        "responsibility": "Atomic convex-hull-gap glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.convex-hull-gap.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.concavity.convexHullGap"
+        }
+      },
+      {
+        "directory": "🕳️concavity/reentrant-area",
+        "id": "s.stdio.gltf.inference.reentrant-area.v1",
+        "kind": "inference",
+        "responsibility": "Atomic reentrant-area glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.reentrant-area.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.concavity.reentrantArea"
+        }
+      },
+      {
+        "directory": "🕳️concavity/reentrant-volume",
+        "id": "s.stdio.gltf.inference.reentrant-volume.v1",
+        "kind": "inference",
+        "responsibility": "Atomic reentrant-volume glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.reentrant-volume.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.concavity.reentrantVolume"
+        }
+      },
+      {
+        "directory": "🕳️concavity/concavity-index",
+        "id": "s.stdio.gltf.inference.concavity-index.v1",
+        "kind": "inference",
+        "responsibility": "Atomic concavity-index glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.concavity-index.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.concavity.concavityIndex"
+        }
+      },
+      {
+        "directory": "↔️clearance/minimum-distance-to-neighbors",
+        "id": "s.stdio.gltf.inference.minimum-distance-to-neighbors.v1",
+        "kind": "inference",
+        "responsibility": "Atomic minimum-distance-to-neighbors glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.minimum-distance-to-neighbors.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.clearance.minimumDistanceToNeighbors"
+        }
+      },
+      {
+        "directory": "↔️clearance/clearance-distribution",
+        "id": "s.stdio.gltf.inference.clearance-distribution.v1",
+        "kind": "inference",
+        "responsibility": "Atomic clearance-distribution glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.clearance-distribution.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.clearance.clearanceDistribution"
+        }
+      },
+      {
+        "directory": "↔️clearance/interference-volume",
+        "id": "s.stdio.gltf.inference.interference-volume.v1",
+        "kind": "inference",
+        "responsibility": "Atomic interference-volume glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.interference-volume.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.clearance.interferenceVolume"
+        }
+      },
+      {
+        "directory": "↔️clearance/overlap-volume",
+        "id": "s.stdio.gltf.inference.overlap-volume.v1",
+        "kind": "inference",
+        "responsibility": "Atomic overlap-volume glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.overlap-volume.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.clearance.overlapVolume"
+        }
+      },
+      {
+        "directory": "🔗️adjacency/number-of-contacts",
+        "id": "s.stdio.gltf.inference.number-of-contacts.v1",
+        "kind": "inference",
+        "responsibility": "Atomic number-of-contacts glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.number-of-contacts.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.adjacency.numberOfContacts"
+        }
+      },
+      {
+        "directory": "🔗️adjacency/contact-graph-degree",
+        "id": "s.stdio.gltf.inference.contact-graph-degree.v1",
+        "kind": "inference",
+        "responsibility": "Atomic contact-graph-degree glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.contact-graph-degree.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.adjacency.contactGraphDegree"
+        }
+      },
+      {
+        "directory": "🔗️adjacency/connected-components",
+        "id": "s.stdio.gltf.inference.connected-components.v1",
+        "kind": "inference",
+        "responsibility": "Atomic connected-components glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.connected-components.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.adjacency.connectedComponents"
+        }
+      },
+      {
+        "directory": "🧭️orientation/main-axis-direction",
+        "id": "s.stdio.gltf.inference.main-axis-direction.v1",
+        "kind": "inference",
+        "responsibility": "Atomic main-axis-direction glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.main-axis-direction.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.orientation.mainAxisDirection"
+        }
+      },
+      {
+        "directory": "🧭️orientation/face-normal-distribution",
+        "id": "s.stdio.gltf.inference.face-normal-distribution.v1",
+        "kind": "inference",
+        "responsibility": "Atomic face-normal-distribution glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.face-normal-distribution.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.orientation.faceNormalDistribution"
+        }
+      },
+      {
+        "directory": "🧭️orientation/orientation-consistency",
+        "id": "s.stdio.gltf.inference.orientation-consistency.v1",
+        "kind": "inference",
+        "responsibility": "Atomic orientation-consistency glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.orientation-consistency.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.orientation.orientationConsistency"
+        }
+      },
+      {
+        "directory": "🪞️symmetry/reflection-symmetry-score",
+        "id": "s.stdio.gltf.inference.reflection-symmetry-score.v1",
+        "kind": "inference",
+        "responsibility": "Atomic reflection-symmetry-score glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.reflection-symmetry-score.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.symmetry.reflectionSymmetryScore"
+        }
+      },
+      {
+        "directory": "🪞️symmetry/rotational-symmetry-score",
+        "id": "s.stdio.gltf.inference.rotational-symmetry-score.v1",
+        "kind": "inference",
+        "responsibility": "Atomic rotational-symmetry-score glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.rotational-symmetry-score.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.symmetry.rotationalSymmetryScore"
+        }
+      },
+      {
+        "directory": "🪞️symmetry/reflection-symmetries",
+        "id": "s.stdio.gltf.inference.reflection-symmetries.v1",
+        "kind": "inference",
+        "responsibility": "Atomic reflection-symmetries glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.reflection-symmetries.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.symmetry.reflectionSymmetries"
+        }
+      },
+      {
+        "directory": "🪞️symmetry/rotational-symmetries",
+        "id": "s.stdio.gltf.inference.rotational-symmetries.v1",
+        "kind": "inference",
+        "responsibility": "Atomic rotational-symmetries glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.rotational-symmetries.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.symmetry.rotationalSymmetries"
+        }
+      },
+      {
+        "directory": "🪞️symmetry/repetition-ratio",
+        "id": "s.stdio.gltf.inference.repetition-ratio.v1",
+        "kind": "inference",
+        "responsibility": "Atomic repetition-ratio glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.repetition-ratio.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.symmetry.repetitionRatio"
+        }
+      },
+      {
+        "directory": "🪞️symmetry/modularity-ratio",
+        "id": "s.stdio.gltf.inference.modularity-ratio.v1",
+        "kind": "inference",
+        "responsibility": "Atomic modularity-ratio glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.modularity-ratio.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.symmetry.modularityRatio"
+        }
+      },
+      {
+        "directory": "🌊️roughness/deviation-from-ideal",
+        "id": "s.stdio.gltf.inference.deviation-from-ideal.v1",
+        "kind": "inference",
+        "responsibility": "Atomic deviation-from-ideal glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.deviation-from-ideal.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.roughness.deviationFromIdeal"
+        }
+      },
+      {
+        "directory": "🌊️roughness/deviation-from-smoothed-geometry",
+        "id": "s.stdio.gltf.inference.deviation-from-smoothed-geometry.v1",
+        "kind": "inference",
+        "responsibility": "Atomic deviation-from-smoothed-geometry glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.deviation-from-smoothed-geometry.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.roughness.deviationFromSmoothedGeometry"
+        }
+      },
+      {
+        "directory": "🌊️roughness/normal-variation",
+        "id": "s.stdio.gltf.inference.normal-variation.v1",
+        "kind": "inference",
+        "responsibility": "Atomic normal-variation glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.normal-variation.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.roughness.normalVariation"
+        }
+      },
+      {
+        "directory": "🌊️roughness/surface-waviness",
+        "id": "s.stdio.gltf.inference.surface-waviness.v1",
+        "kind": "inference",
+        "responsibility": "Atomic surface-waviness glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.surface-waviness.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.roughness.surfaceWaviness"
+        }
+      },
+      {
+        "directory": "🌊️roughness/irregularity",
+        "id": "s.stdio.gltf.inference.irregularity.v1",
+        "kind": "inference",
+        "responsibility": "Atomic irregularity glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.irregularity.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.roughness.irregularity"
+        }
+      },
+      {
+        "directory": "🕸️topology/holes",
+        "id": "s.stdio.gltf.inference.holes.v1",
+        "kind": "inference",
+        "responsibility": "Atomic holes glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.holes.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.topology.holes"
+        }
+      },
+      {
+        "directory": "🕸️topology/handles",
+        "id": "s.stdio.gltf.inference.handles.v1",
+        "kind": "inference",
+        "responsibility": "Atomic handles glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.handles.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.topology.handles"
+        }
+      },
+      {
+        "directory": "🕸️topology/boundary-loops",
+        "id": "s.stdio.gltf.inference.boundary-loops.v1",
+        "kind": "inference",
+        "responsibility": "Atomic boundary-loops glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.boundary-loops.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.topology.boundaryLoops"
+        }
+      },
+      {
+        "directory": "🕸️topology/euler-characteristic",
+        "id": "s.stdio.gltf.inference.euler-characteristic.v1",
+        "kind": "inference",
+        "responsibility": "Atomic euler-characteristic glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.euler-characteristic.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.topology.eulerCharacteristic"
+        }
+      },
+      {
+        "directory": "🕸️topology/genus",
+        "id": "s.stdio.gltf.inference.genus.v1",
+        "kind": "inference",
+        "responsibility": "Atomic genus glTF geometric inference.",
+        "inference": {
+          "algorithmVersion": 1,
+          "cacheKey": "s.stdio.gltf.inference.genus.v1:geometry-v2",
+          "inputs": [
+            "schema/snapshot",
+            "buffers"
+          ],
+          "target": "geometricAnalysis.overall.topology.genus"
+        }
+      }
     ]
   }
 }
+

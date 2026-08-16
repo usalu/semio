@@ -8,7 +8,6 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::program::schema::diff::*;
 
-
 use crate::artifacts::program::kernel::*;
 use crate::artifacts::program::schema::ProgramArtifact;
 use crate::artifacts::program::ProgramSnapshot;
@@ -22,577 +21,207 @@ impl ProgramDiff {
             return (**replacement).clone();
         }
         let mut next = artifact.clone();
-        if let Some(v) = &self.schema { next.schema = v.clone(); }
-        if let Some(v) = &self.meta { next.meta = v.clone(); }
-        if let Some(v) = &self.project { next.project = v.clone(); }
-        if let Some(v) = &self.governance { next.governance = v.clone(); }
+        if let Some(v) = &self.schema {
+            next.schema = v.clone();
+        }
+        if let Some(v) = &self.meta {
+            next.meta = v.clone();
+        }
+        if let Some(v) = &self.project {
+            next.project = v.clone();
+        }
+        if let Some(v) = &self.governance {
+            next.governance = v.clone();
+        }
 
         if let Some(delta) = &self.stakeholders {
-            apply_collection_delta(
-                &mut next.stakeholders,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.stakeholders, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.users {
-            apply_collection_delta(
-                &mut next.users,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.users, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.activities {
-            apply_collection_delta(
-                &mut next.activities,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.activities, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.functions {
-            apply_collection_delta(
-                &mut next.functions,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.functions, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.elements {
-            apply_collection_delta(
-                &mut next.elements,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.elements, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.quantities {
-            apply_collection_delta(
-                &mut next.quantities,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.quantities, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.relationships {
-            apply_collection_delta(
-                &mut next.relationships,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.relationships, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.adjacencies {
-            apply_collection_delta(
-                &mut next.adjacencies,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.adjacencies, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.processes {
-            apply_collection_delta(
-                &mut next.processes,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.processes, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.flows {
-            apply_collection_delta(
-                &mut next.flows,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.flows, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.access_rules {
-            apply_collection_delta(
-                &mut next.access_rules,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.access_rules, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.operations {
-            apply_collection_delta(
-                &mut next.operations,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.operations, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.equipment {
-            apply_collection_delta(
-                &mut next.equipment,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.equipment, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.resources {
-            apply_collection_delta(
-                &mut next.resources,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.resources, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.storage {
-            apply_collection_delta(
-                &mut next.storage,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.storage, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.environmental {
-            apply_collection_delta(
-                &mut next.environmental,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.environmental, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.human_factors {
-            apply_collection_delta(
-                &mut next.human_factors,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.human_factors, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.accessibility {
-            apply_collection_delta(
-                &mut next.accessibility,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.accessibility, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.privacy {
-            apply_collection_delta(
-                &mut next.privacy,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.privacy, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.safety {
-            apply_collection_delta(
-                &mut next.safety,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.safety, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.security {
-            apply_collection_delta(
-                &mut next.security,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.security, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.regulatory {
-            apply_collection_delta(
-                &mut next.regulatory,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.regulatory, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.site_context {
-            apply_collection_delta(
-                &mut next.site_context,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.site_context, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.organizational {
-            apply_collection_delta(
-                &mut next.organizational,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.organizational, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.services {
-            apply_collection_delta(
-                &mut next.services,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.services, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.infrastructure {
-            apply_collection_delta(
-                &mut next.infrastructure,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.infrastructure, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.information {
-            apply_collection_delta(
-                &mut next.information,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.information, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.communication {
-            apply_collection_delta(
-                &mut next.communication,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.communication, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.wayfinding {
-            apply_collection_delta(
-                &mut next.wayfinding,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.wayfinding, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.schedules {
-            apply_collection_delta(
-                &mut next.schedules,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.schedules, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.flexibility {
-            apply_collection_delta(
-                &mut next.flexibility,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.flexibility, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.growth {
-            apply_collection_delta(
-                &mut next.growth,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.growth, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.sustainability {
-            apply_collection_delta(
-                &mut next.sustainability,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.sustainability, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.resilience {
-            apply_collection_delta(
-                &mut next.resilience,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.resilience, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.costs {
-            apply_collection_delta(
-                &mut next.costs,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.costs, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.delivery {
-            apply_collection_delta(
-                &mut next.delivery,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.delivery, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.risks {
-            apply_collection_delta(
-                &mut next.risks,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.risks, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.conflicts {
-            apply_collection_delta(
-                &mut next.conflicts,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.conflicts, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.requirements {
-            apply_collection_delta(
-                &mut next.requirements,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.requirements, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.priorities {
-            apply_collection_delta(
-                &mut next.priorities,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.priorities, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.scenarios {
-            apply_collection_delta(
-                &mut next.scenarios,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.scenarios, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.options {
-            apply_collection_delta(
-                &mut next.options,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.options, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.decisions {
-            apply_collection_delta(
-                &mut next.decisions,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.decisions, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.validations {
-            apply_collection_delta(
-                &mut next.validations,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.validations, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.performance {
-            apply_collection_delta(
-                &mut next.performance,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.performance, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.quality {
-            apply_collection_delta(
-                &mut next.quality,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.quality, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.documents {
-            apply_collection_delta(
-                &mut next.artifacts,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.artifacts, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.assumptions {
-            apply_collection_delta(
-                &mut next.assumptions,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.assumptions, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.constraints {
-            apply_collection_delta(
-                &mut next.constraints,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.constraints, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.compliance_records {
-            apply_collection_delta(
-                &mut next.compliance_records,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.compliance_records, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.approvals {
-            apply_collection_delta(
-                &mut next.approvals,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.approvals, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.meetings {
-            apply_collection_delta(
-                &mut next.meetings,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.meetings, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.changes {
-            apply_collection_delta(
-                &mut next.changes,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.changes, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.collaboration {
-            apply_collection_delta(
-                &mut next.collaboration,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.collaboration, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.analyses {
-            apply_collection_delta(
-                &mut next.analyses,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.analyses, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.reports {
-            apply_collection_delta(
-                &mut next.reports,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.reports, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.search_filters {
-            apply_collection_delta(
-                &mut next.search_filters,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.search_filters, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.status_records {
-            apply_collection_delta(
-                &mut next.status_records,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.status_records, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.workshops {
-            apply_collection_delta(
-                &mut next.workshops,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.workshops, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.surveys {
-            apply_collection_delta(
-                &mut next.surveys,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.surveys, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.issues {
-            apply_collection_delta(
-                &mut next.issues,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.issues, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.audit_events {
-            apply_collection_delta(
-                &mut next.audit_events,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.audit_events, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(delta) = &self.templates {
-            apply_collection_delta(
-                &mut next.templates,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.templates, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
         if let Some(child) = &self.knowledge {
             next.knowledge = child.clone();
@@ -601,25 +230,41 @@ impl ProgramDiff {
             next.benchmarks = child.clone();
         }
         if let Some(delta) = &self.traces {
-            apply_collection_delta(
-                &mut next.traces,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+            apply_collection_delta(&mut next.traces, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
         }
-        if let Some(v) = &self.selected_ids { next.selected_ids = v.values.clone(); }
-        if let Some(v) = &self.active_register { next.active_register = v.clone(); }
-        if let Some(v) = &self.adjacency_kind_filter { next.adjacency_kind_filter = v.clone(); }
-        if let Some(v) = &self.active_report_json { next.active_report_json = v.clone(); }
-        if let Some(v) = &self.search_query { next.search_query = v.clone(); }
-        if let Some(v) = &self.search_history_json { next.search_history_json = v.clone(); }
-        if let Some(v) = &self.last_result_json { next.last_result_json = v.clone(); }
-        if let Some(v) = &self.last_analysis_json { next.last_analysis_json = v.clone(); }
-        if let Some(v) = &self.graph_camera_x { next.graph_camera_x = *v; }
-        if let Some(v) = &self.graph_camera_y { next.graph_camera_y = *v; }
-        if let Some(v) = &self.graph_camera_zoom { next.graph_camera_zoom = *v; }
+        if let Some(v) = &self.selected_ids {
+            next.selected_ids = v.values.clone();
+        }
+        if let Some(v) = &self.active_register {
+            next.active_register = v.clone();
+        }
+        if let Some(v) = &self.adjacency_kind_filter {
+            next.adjacency_kind_filter = v.clone();
+        }
+        if let Some(v) = &self.active_report_json {
+            next.active_report_json = v.clone();
+        }
+        if let Some(v) = &self.search_query {
+            next.search_query = v.clone();
+        }
+        if let Some(v) = &self.search_history_json {
+            next.search_history_json = v.clone();
+        }
+        if let Some(v) = &self.last_result_json {
+            next.last_result_json = v.clone();
+        }
+        if let Some(v) = &self.last_analysis_json {
+            next.last_analysis_json = v.clone();
+        }
+        if let Some(v) = &self.graph_camera_x {
+            next.graph_camera_x = *v;
+        }
+        if let Some(v) = &self.graph_camera_y {
+            next.graph_camera_y = *v;
+        }
+        if let Some(v) = &self.graph_camera_zoom {
+            next.graph_camera_zoom = *v;
+        }
         next
     }
 }
@@ -633,7 +278,13 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
             *self = other;
             return;
         }
-        macro_rules! absorb_opt { ($f:ident) => { if other.$f.is_some() { self.$f = other.$f; } }; }
+        macro_rules! absorb_opt {
+            ($f:ident) => {
+                if other.$f.is_some() {
+                    self.$f = other.$f;
+                }
+            };
+        }
         absorb_opt!(schema);
         absorb_opt!(meta);
         absorb_opt!(project);
@@ -645,7 +296,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.stakeholders = Some(delta),
             }
@@ -656,7 +309,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.users = Some(delta),
             }
@@ -667,7 +322,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.activities = Some(delta),
             }
@@ -678,7 +335,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.functions = Some(delta),
             }
@@ -689,7 +348,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.elements = Some(delta),
             }
@@ -700,7 +361,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.quantities = Some(delta),
             }
@@ -711,7 +374,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.relationships = Some(delta),
             }
@@ -722,7 +387,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.adjacencies = Some(delta),
             }
@@ -733,7 +400,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.processes = Some(delta),
             }
@@ -744,7 +413,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.flows = Some(delta),
             }
@@ -755,7 +426,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.access_rules = Some(delta),
             }
@@ -766,7 +439,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.operations = Some(delta),
             }
@@ -777,7 +452,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.equipment = Some(delta),
             }
@@ -788,7 +465,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.resources = Some(delta),
             }
@@ -799,7 +478,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.storage = Some(delta),
             }
@@ -810,7 +491,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.environmental = Some(delta),
             }
@@ -821,7 +504,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.human_factors = Some(delta),
             }
@@ -832,7 +517,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.accessibility = Some(delta),
             }
@@ -843,7 +530,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.privacy = Some(delta),
             }
@@ -854,7 +543,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.safety = Some(delta),
             }
@@ -865,7 +556,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.security = Some(delta),
             }
@@ -876,7 +569,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.regulatory = Some(delta),
             }
@@ -887,7 +582,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.site_context = Some(delta),
             }
@@ -898,7 +595,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.organizational = Some(delta),
             }
@@ -909,7 +608,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.services = Some(delta),
             }
@@ -920,7 +621,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.infrastructure = Some(delta),
             }
@@ -931,7 +634,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.information = Some(delta),
             }
@@ -942,7 +647,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.communication = Some(delta),
             }
@@ -953,7 +660,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.wayfinding = Some(delta),
             }
@@ -964,7 +673,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.schedules = Some(delta),
             }
@@ -975,7 +686,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.flexibility = Some(delta),
             }
@@ -986,7 +699,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.growth = Some(delta),
             }
@@ -997,7 +712,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.sustainability = Some(delta),
             }
@@ -1008,7 +725,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.resilience = Some(delta),
             }
@@ -1019,7 +738,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.costs = Some(delta),
             }
@@ -1030,7 +751,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.delivery = Some(delta),
             }
@@ -1041,7 +764,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.risks = Some(delta),
             }
@@ -1052,7 +777,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.conflicts = Some(delta),
             }
@@ -1063,7 +790,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.requirements = Some(delta),
             }
@@ -1074,7 +803,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.priorities = Some(delta),
             }
@@ -1085,7 +816,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.scenarios = Some(delta),
             }
@@ -1096,7 +829,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.options = Some(delta),
             }
@@ -1107,7 +842,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.decisions = Some(delta),
             }
@@ -1118,7 +855,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.validations = Some(delta),
             }
@@ -1129,7 +868,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.performance = Some(delta),
             }
@@ -1140,7 +881,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.quality = Some(delta),
             }
@@ -1151,7 +894,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.documents = Some(delta),
             }
@@ -1162,7 +907,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.assumptions = Some(delta),
             }
@@ -1173,7 +920,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.constraints = Some(delta),
             }
@@ -1184,7 +933,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.compliance_records = Some(delta),
             }
@@ -1195,7 +946,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.approvals = Some(delta),
             }
@@ -1206,7 +959,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.meetings = Some(delta),
             }
@@ -1217,7 +972,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.changes = Some(delta),
             }
@@ -1228,7 +985,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.collaboration = Some(delta),
             }
@@ -1239,7 +998,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.analyses = Some(delta),
             }
@@ -1250,7 +1011,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.reports = Some(delta),
             }
@@ -1261,7 +1024,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.search_filters = Some(delta),
             }
@@ -1272,7 +1037,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.status_records = Some(delta),
             }
@@ -1283,7 +1050,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.workshops = Some(delta),
             }
@@ -1294,7 +1063,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.surveys = Some(delta),
             }
@@ -1305,7 +1076,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.issues = Some(delta),
             }
@@ -1316,7 +1089,9 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.audit_events = Some(delta),
             }
@@ -1327,20 +1102,28 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.templates = Some(delta),
             }
         }
-        if other.knowledge.is_some() { self.knowledge = other.knowledge; }
-        if other.benchmarks.is_some() { self.benchmarks = other.benchmarks; }
+        if other.knowledge.is_some() {
+            self.knowledge = other.knowledge;
+        }
+        if other.benchmarks.is_some() {
+            self.benchmarks = other.benchmarks;
+        }
         if let Some(delta) = other.traces {
             match &mut self.traces {
                 Some(existing) => {
                     existing.added.extend(delta.added);
                     existing.removed.extend(delta.removed);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.traces = Some(delta),
             }
@@ -1359,13 +1142,8 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
     }
 }
 
-fn apply_collection_delta<T, P>(
-    items: &mut Vec<T>,
-    added: &[T],
-    removed: &[String],
-    patched: &[(String, P)],
-    reordered: &Option<Vec<String>>,
-) where
+fn apply_collection_delta<T, P>(items: &mut Vec<T>, added: &[T], removed: &[String], patched: &[(String, P)], reordered: &Option<Vec<String>>)
+where
     T: Identified<EntityId> + Clone + Patchable<P>,
     P: Clone,
 {
@@ -1394,7 +1172,6 @@ fn apply_collection_delta<T, P>(
     }
 }
 //#endregion 🔖️Apply
-
 
 //#region 🧪️Tests
 #[cfg(test)]

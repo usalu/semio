@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🌊flows` per Wave C.
 
 use super::mutation::DeleteFlowRequirement;
+use crate::artifacts::program::diff::ProgramFlowsDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramFlowsDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteFlowRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

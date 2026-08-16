@@ -1326,8 +1326,6 @@ pub mod apps {
             pub mod flow_tessellate_resolve;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗣️set-contributions/🦀️component.rs"]
-            pub mod set_contributions;
         }
 
         #[path = "."]

@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🗓️meetings` per Wave C.
 
 use super::mutation::CreateMeetingRecord;
+use crate::artifacts::program::diff::ProgramMeetingsDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramMeetingsDelta};
 
 /// 🌱️ `added = [payload row]` — the row lands at the end of `program.meetings` on apply.
 pub fn diff(payload: &CreateMeetingRecord, _base: &ProgramSnapshot) -> ProgramDiff {

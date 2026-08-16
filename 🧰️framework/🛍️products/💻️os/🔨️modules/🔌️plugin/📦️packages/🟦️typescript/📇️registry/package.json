@@ -11,7 +11,8 @@
   },
   "scripts": {
     "generate": "bun nx run @semio-tech/plugin-registry:generate",
-    "check": "bun nx run @semio-tech/plugin-registry:check"
+    "check": "bun nx run @semio-tech/plugin-registry:check",
+    "new": "bun nx run @semio-tech/plugin-registry:new"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

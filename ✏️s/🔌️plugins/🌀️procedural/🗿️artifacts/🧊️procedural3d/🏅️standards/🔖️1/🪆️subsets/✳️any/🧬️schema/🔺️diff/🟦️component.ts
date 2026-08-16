@@ -31,8 +31,6 @@ export interface Procedural3dDiff {
   activeUtilityId?: string;
   /** @state config */
   locale?: string;
-  /** @state config */
-  contributionsJson?: string;
 }
 
 export type Procedural3dStringList = { values: string[] };

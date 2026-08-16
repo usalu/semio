@@ -7,15 +7,15 @@
 //! consumer that would benefit from owning them.
 
 use crate::apps::architect::chrome::{element_label, entity_to_json};
-use crate::artifacts::program::standards::v1::subsets::any::schema::normalize_pair;
-use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::AnalysisResult;
-use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::ProgramReport;
 use crate::artifacts::program::op::ProgramMutation;
 use crate::artifacts::program::registers::{
-    Adjacency, AdjacencyKind, AnalysisKind, AnalysisRecord, ConnectionKind, EngagementLevel, Function, FunctionKind, InfluenceLevel, Issue, IssueSeverity, ProgramElement, ProgramElementKind, ReportKind,
-    ReportRecord, Requirement, RequirementKind, Risk, RiskLevel, Stakeholder, UserCategory, UserProfile, ValidationStatus,
+    Adjacency, AdjacencyKind, AnalysisKind, AnalysisRecord, ConnectionKind, EngagementLevel, Function, FunctionKind, InfluenceLevel, Issue, IssueSeverity, ProgramElement, ProgramElementKind, ReportKind, ReportRecord, Requirement, RequirementKind,
+    Risk, RiskLevel, Stakeholder, UserCategory, UserProfile, ValidationStatus,
 };
 use crate::artifacts::program::schema::mutations as leaves;
+use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::AnalysisResult;
+use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::ProgramReport;
+use crate::artifacts::program::standards::v1::subsets::any::schema::normalize_pair;
 use crate::artifacts::program::{EntityHeader, EntityId, ProgramSnapshot, TextField, TraceKind, TraceLink};
 use semio_framework_plugin::{ActionArgOption, LocalizedLabel};
 use serde::de::DeserializeOwned;
@@ -171,7 +171,6 @@ pub fn parse_register_id(args: Option<&Value>) -> Option<String> {
 pub fn parse_entity_id_from_args(args: Option<&Value>, key: &str) -> Option<EntityId> {
     args.and_then(|value| value.get(key)).and_then(|v| v.as_str()).map(|s| EntityId(s.into()))
 }
-
 
 pub fn register_entities(program: &ProgramSnapshot, register: &str) -> Vec<Value> {
     // 🧩️ `benchmarks` composes stdio's `table` subset (ticket UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
@@ -577,11 +576,18 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
                 }),
             )?
         ),
-        "meetings" => create!(CreateMeetingRecord, create_meeting_record, meeting_record, default_from_json::<crate::artifacts::program::MeetingRecord>("meetings", label, json!({ "meetingType": "workshop", "quorumMet": false, "meetingStatus": "draft" }),)?),
+        "meetings" => {
+            create!(CreateMeetingRecord, create_meeting_record, meeting_record, default_from_json::<crate::artifacts::program::MeetingRecord>("meetings", label, json!({ "meetingType": "workshop", "quorumMet": false, "meetingStatus": "draft" }),)?)
+        }
         "analyses" => create!(CreateAnalysisRecord, create_analysis_record, analysis_record, default_from_json::<AnalysisRecord>("analysis", label, json!({ "kind": "gap", "title": label, "outputSummary": { "text": "" } }),)?),
         "reports" => create!(CreateReportRecord, create_report_record, report_record, default_from_json::<ReportRecord>("report", label, json!({ "kind": "executiveSummary", "title": label, "approvalStatus": "pending", "version": "0" }),)?),
         "issues" => create!(CreateIssue, create_issue, issue, default_issue(label)),
-        "templates" => create!(CreateTemplateRecord, create_template_record, template_record, default_from_json::<crate::artifacts::program::TemplateRecord>("template", label, json!({ "templateType": "sector", "version": "1", "approvalStatus": "pending", "usageCount": 0 }),)?),
+        "templates" => create!(
+            CreateTemplateRecord,
+            create_template_record,
+            template_record,
+            default_from_json::<crate::artifacts::program::TemplateRecord>("template", label, json!({ "templateType": "sector", "version": "1", "approvalStatus": "pending", "usageCount": 0 }),)?
+        ),
         "traces" => {
             let from = program.elements.first().map_or_else(|| EntityId::new_serial("from", "from"), |element| element.header.id.clone());
             let to = program.elements.get(1).map_or_else(|| EntityId::new_serial("to", "to"), |element| element.header.id.clone());
@@ -772,7 +778,6 @@ pub fn report_record_from(program: &ProgramSnapshot, kind: ReportKind, report: &
     }
 }
 
-
 pub fn parse_entity_id(value: Option<&Value>, key: &str) -> Option<EntityId> {
     value.and_then(|args| args.get(key)).and_then(|v| v.as_str()).map(|s| EntityId(s.into()))
 }
@@ -896,4 +901,3 @@ pub fn report_kind_picker_options() -> Vec<ActionArgOption> {
     .map(|(id, en, de)| ActionArgOption::new(id, LocalizedLabel::native(en, de)))
     .collect()
 }
-

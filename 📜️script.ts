@@ -6927,6 +6927,256 @@ export function policySubsetConformanceBreaches(repoRoot: string): BreachRecord[
 //#endregion 🔧️PolicyRuleSubsetConformance
 
 
+//#region 🔧️PolicyRuleArtifactViewersEditors
+/**
+ * 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET, contract §6 "Policies" (W0/W1,
+ * add-only). Four rules over the new `👁️viewer`/`✏️editor` subset-surface axis, driven entirely by
+ * `🔣️taxonomy.json` (`viewerDirName`/`editorDirName`/`surfaceRoles`/`surfaceDirNames`/
+ * `windowLeafLangs`/`taxonomyLeafFilenames`) — never a hardcoded emoji literal for the axis itself.
+ * `policySubsetSurfaceCompletenessBreaches` and `policyViewerPurityBreaches` land at `"medium"`/`"high"`
+ * respectively per the contract; `policyOsConfigShapeBreaches` locks a facet that already shipped
+ * (C4), so it fails the gate like any other completed-shape lock.
+ */
+
+/** 👁️✏️ Every OWNED subset (has `🧬️schema`, independent of `🚪️io` — see the scaffolder's identical
+ * predicate in `📇️registry/📜️script.ts`) carries both `👁️viewer`/`✏️editor`, each with ≥1 mode
+ * carrying ≥1 window with both `windowLeafLangs` leaves. A surface whose scaffolded leaves still carry
+ * the `SCAFFOLD` marker is a separate, non-passing breach kind — see the scaffolder region docstring
+ * in `📇️registry/📜️script.ts` for why the marker exists. */
+export function policySubsetSurfaceCompletenessBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const breaches: BreachRecord[] = [];
+  const scaffoldLeafNames = new Set([taxonomy.taxonomyLeafFilenames["🦀️rust"], taxonomy.taxonomyLeafFilenames["🟦️typescript"]].filter((name): name is string => !!name));
+  for (const subRel of policyListTopLevelSubsetDirs(repoRoot)) {
+    if (!existsSync(join(repoRoot, subRel, "🧬️schema"))) continue;
+    for (const role of taxonomy.surfaceRoles) {
+      const surfaceDirName = taxonomy.surfaceDirNames[role];
+      const surfaceRel = `${subRel}/${surfaceDirName}`;
+      if (!existsSync(join(repoRoot, surfaceRel))) {
+        breaches.push({
+          id: `subset-surface-missing-${surfaceRel}`,
+          summary: `"${subRel}" is missing required surface "${surfaceDirName}"`,
+          kind: "taxonomy/surface-completeness",
+          scope: subRel,
+          priority: "medium",
+          reason: `Every owned subset carries both ${taxonomy.subsetRequiredSurfaceDirs.join(", ")}.`,
+          solution: `cd 📇️registry && bun ./📜️script.ts new surface <plugin> <kind> <standard> <subset> ${role} (or "new surface --all" to batch every missing surface).`,
+        });
+        continue;
+      }
+      const modesRel = `${surfaceRel}/${taxonomy.modesDirName}`;
+      let hasCompleteWindow = false;
+      for (const mode of policyReaddirSafe(repoRoot, modesRel).filter((e) => e.isDirectory)) {
+        const windowsRel = `${modesRel}/${mode.name}/${taxonomy.windowsDirName}`;
+        for (const w of policyReaddirSafe(repoRoot, windowsRel).filter((e) => e.isDirectory)) {
+          const windowDir = `${windowsRel}/${w.name}`;
+          if (taxonomy.windowLeafLangs.every((lang) => existsSync(join(repoRoot, windowDir, taxonomy.taxonomyLeafFilenames[lang] ?? "")))) hasCompleteWindow = true;
+        }
+      }
+      if (!hasCompleteWindow) {
+        breaches.push({
+          id: `subset-surface-window-incomplete-${surfaceRel}`,
+          summary: `"${surfaceRel}" has no mode with a window carrying both ${taxonomy.windowLeafLangs.join(", ")} leaves`,
+          kind: "taxonomy/surface-completeness",
+          scope: subRel,
+          priority: "medium",
+          reason: "Every surface must carry at least one mode with at least one window declaring every windowLeafLangs leaf.",
+          solution: `Scaffold with "new surface … ${role}" (📇️registry/), then author a real mode/window.`,
+        });
+      }
+      const scaffoldLeaves = policyWalkRelFiles(repoRoot, [surfaceRel], (_p, name) => scaffoldLeafNames.has(name)).filter((relPath) => policyReadFileSafe(repoRoot, relPath).includes("SCAFFOLD"));
+      if (scaffoldLeaves.length > 0) {
+        breaches.push({
+          id: `subset-surface-scaffold-residue-${surfaceRel}`,
+          summary: `"${surfaceRel}" still carries ${scaffoldLeaves.length} SCAFFOLD-marker leaf(ves)`,
+          kind: "taxonomy/surface-scaffold-residue",
+          scope: subRel,
+          priority: "medium",
+          reason: "A surface at scaffold content is not a finished W2 packet — the SCAFFOLD marker exists so this can never masquerade as done.",
+          solution: `Author real render/view-model/commands for ${scaffoldLeaves.slice(0, 3).join(", ")}${scaffoldLeaves.length > 3 ? ", …" : ""}, removing the SCAFFOLD marker.`,
+        });
+      }
+    }
+  }
+  return breaches;
+}
+
+/** 👁️ No file under a `👁️viewer` dir may reference mutation dispatch, `artifact_mutations`, or an
+ * `::editor::` module path — `ViewEmit` is structurally read-only (contract §2.2); this is the
+ * filesystem-content half of that guarantee. */
+export function policyViewerPurityBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const breaches: BreachRecord[] = [];
+  const patterns: readonly { re: RegExp; label: string }[] = [
+    { re: /\.mutation\(/, label: ".mutation(" },
+    { re: /Emit::mutations/, label: "Emit::mutations" },
+    { re: /artifact_mutations/, label: "artifact_mutations" },
+    { re: /::editor::/, label: "::editor::" },
+  ];
+  for (const subRel of policyListTopLevelSubsetDirs(repoRoot)) {
+    const viewerRel = `${subRel}/${taxonomy.viewerDirName}`;
+    if (!existsSync(join(repoRoot, viewerRel))) continue;
+    for (const relPath of policyWalkRelFiles(repoRoot, [viewerRel], () => true)) {
+      const content = policyReadFileSafe(repoRoot, relPath);
+      for (const { re, label } of patterns) {
+        if (!re.test(content)) continue;
+        breaches.push({
+          id: `viewer-purity-${relPath}-${label}`,
+          summary: `"${relPath}" under a ${taxonomy.viewerDirName} dir matches forbidden pattern "${label}"`,
+          kind: "taxonomy/viewer-purity",
+          scope: subRel,
+          priority: "high",
+          reason: "ViewEmit is structurally read-only; no file under a viewer surface may reference mutation dispatch, artifact_mutations, or an editor-only module path.",
+          solution: `Remove the "${label}" reference from ${relPath}, or move the mutating logic to the sibling ${taxonomy.editorDirName} surface.`,
+        });
+      }
+    }
+  }
+  return breaches;
+}
+
+/** 🔗️A surface dir under a subset this plugin does NOT own (no `🧬️schema` of its own — a contributed,
+ * mirrored surface per `contributedSubsetChildDirs`) must be backed by a `.depends_on(<owner-plugin>)`
+ * on the contributing plugin's builder, exactly like `policyContributionTargetBreaches` requires for
+ * mutation/inference contributions. Dormant on today's tree (no contributed surface exists yet — every
+ * scaffolded surface sits under a subset its own plugin owns), verified structurally sound so it fires
+ * correctly once W2 packets start contributing surfaces onto foreign kinds. */
+export function policyContributedSurfaceTargetBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const breaches: BreachRecord[] = [];
+  const subsetRels = policyListTopLevelSubsetDirs(repoRoot);
+  const pluginRootOf = (subRel: string): string => subRel.split("/").slice(0, 3).join("/");
+  const ownerRootBySuffix = new Map<string, string>();
+  for (const subRel of subsetRels) {
+    if (!existsSync(join(repoRoot, subRel, "🧬️schema"))) continue;
+    const pluginRoot = pluginRootOf(subRel);
+    const suffix = subRel.slice(pluginRoot.length + 1);
+    if (!ownerRootBySuffix.has(suffix)) ownerRootBySuffix.set(suffix, pluginRoot);
+  }
+  for (const subRel of subsetRels) {
+    if (existsSync(join(repoRoot, subRel, "🧬️schema"))) continue; // this plugin owns this triple — not a contribution
+    const pluginRoot = pluginRootOf(subRel);
+    const suffix = subRel.slice(pluginRoot.length + 1);
+    const ownerRoot = ownerRootBySuffix.get(suffix);
+    for (const role of taxonomy.surfaceRoles) {
+      const surfaceRel = `${subRel}/${taxonomy.surfaceDirNames[role]}`;
+      if (!existsSync(join(repoRoot, surfaceRel))) continue;
+      if (!ownerRoot) {
+        breaches.push({
+          id: `contributed-surface-unknown-owner-${surfaceRel}`,
+          summary: `"${surfaceRel}" contributes a surface but no other plugin owns "${suffix}"`,
+          kind: "plugin-dependency/contributed-surface-target",
+          scope: pluginRoot,
+          priority: "medium",
+          reason: "A contributed surface must mirror the path of a subset some OTHER plugin actually owns (has 🧬️schema for).",
+          solution: `Verify "${suffix}" is a real owned subset elsewhere, or remove ${surfaceRel} if it is stray.`,
+        });
+        continue;
+      }
+      if (ownerRoot === pluginRoot) continue;
+      const ownerPluginId = policyStripEmoji(ownerRoot.split("/").pop() ?? "");
+      const declared = policyWalkRelFiles(repoRoot, [pluginRoot], (_p, name) => name === POLICY_RS_COMPONENT_LEAF_NAME).some((relPath) =>
+        new RegExp(`\\.depends_on\\s*\\(\\s*"${ownerPluginId}"`).test(policyReadFileSafe(repoRoot, relPath)),
+      );
+      if (declared) continue;
+      breaches.push({
+        id: `contributed-surface-target-undeclared-${surfaceRel}`,
+        summary: `"${surfaceRel}" contributes a surface onto "${ownerPluginId}"'s subset without declaring .depends_on("${ownerPluginId}")`,
+        kind: "plugin-dependency/contributed-surface-target",
+        scope: pluginRoot,
+        priority: "high",
+        reason: "A surface contributed onto a subset this plugin does not own must be backed by a declared dependency on the owning plugin (surface.contribution-not-permitted).",
+        solution: `Add .depends_on("${ownerPluginId}", …) to the plugin/extension builder in ${pluginRoot}.`,
+      });
+    }
+  }
+  return breaches;
+}
+
+const POLICY_OS_CONFIG_ROOT = "🧰️framework/🛍️products/💻️os/🎚️config";
+const POLICY_OS_CONFIG_SCHEMA_ID = "os.config.opening";
+const POLICY_OS_CONFIG_MUTATION_KINDS = ["set-default-app", "clear-default-app"] as const;
+
+/** 🎚️Locks the shape of the already-shipped C4 OS config facet: five `schemaFormats` leaves, the
+ * frozen `os.config.opening` schema id, and both `set-default-app`/`clear-default-app` mutation
+ * triads. Content-keyed (schema id / `kind:` string), not folder-name-keyed, so it survives a slug
+ * rename without drifting from the real frozen contract. */
+export function policyOsConfigShapeBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const breaches: BreachRecord[] = [];
+  const schemaRel = `${POLICY_OS_CONFIG_ROOT}/🧬️schema`;
+  if (!existsSync(join(repoRoot, schemaRel))) {
+    breaches.push({
+      id: `os-config-shape-missing-schema`,
+      summary: `"${schemaRel}" is missing`,
+      kind: "taxonomy/os-config-shape",
+      scope: "os/config",
+      priority: "high",
+      reason: `The OS-level opening-preferences config facet (${POLICY_OS_CONFIG_SCHEMA_ID}) is a frozen C4 facet.`,
+      solution: `Restore ${schemaRel}/ per contract §4.`,
+    });
+    return breaches;
+  }
+  for (const format of Object.values(taxonomy.schemaFormats)) {
+    if (existsSync(join(repoRoot, schemaRel, format.leafFilename))) continue;
+    breaches.push({
+      id: `os-config-shape-schema-leaf-${format.leafFilename}`,
+      summary: `"${schemaRel}" is missing required schema leaf "${format.leafFilename}"`,
+      kind: "taxonomy/os-config-shape",
+      scope: "os/config",
+      priority: "high",
+      reason: `Every schemaFormats leaf is frozen for ${POLICY_OS_CONFIG_SCHEMA_ID}.`,
+      solution: `Add ${schemaRel}/${format.leafFilename}.`,
+    });
+  }
+  const rootRust = policyReadFileSafe(repoRoot, schemaRel, "🦀️component.rs");
+  if (!rootRust.includes(POLICY_OS_CONFIG_SCHEMA_ID)) {
+    breaches.push({
+      id: `os-config-shape-schema-id`,
+      summary: `"${schemaRel}/🦀️component.rs" no longer declares the frozen schema id "${POLICY_OS_CONFIG_SCHEMA_ID}"`,
+      kind: "taxonomy/os-config-shape",
+      scope: "os/config",
+      priority: "high",
+      reason: "C4 froze the schema id os.config.opening; OpeningResolver and both hosts key off this exact string.",
+      solution: `Restore the "${POLICY_OS_CONFIG_SCHEMA_ID}" schema id constant in ${schemaRel}/🦀️component.rs.`,
+    });
+  }
+  const mutationsRel = `${schemaRel}/🧬️mutations`;
+  const mutationChildDirs = taxonomy.mutationChildDirs ?? ["🦠️mutation", "🔺️diff", "↩️inverse"];
+  const mutationDirs = policyReaddirSafe(repoRoot, mutationsRel).filter((e) => e.isDirectory);
+  for (const mutationKind of POLICY_OS_CONFIG_MUTATION_KINDS) {
+    const owner = mutationDirs.find((d) => policyReadFileSafe(repoRoot, mutationsRel, d.name, "🦠️mutation", "🦀️component.rs").includes(`kind: "${mutationKind}"`));
+    if (!owner) {
+      breaches.push({
+        id: `os-config-shape-mutation-missing-${mutationKind}`,
+        summary: `"${mutationsRel}" is missing the frozen "${mutationKind}" mutation triad`,
+        kind: "taxonomy/os-config-shape",
+        scope: "os/config",
+        priority: "high",
+        reason: `C4 froze both mutation kinds (set-default-app, clear-default-app) on ${POLICY_OS_CONFIG_SCHEMA_ID}.`,
+        solution: `Restore ${mutationsRel}/<slug>/🦠️mutation/🦀️component.rs declaring kind: "${mutationKind}".`,
+      });
+      continue;
+    }
+    for (const child of mutationChildDirs) {
+      const childRel = `${mutationsRel}/${owner.name}/${child}/🦀️component.rs`;
+      if (existsSync(join(repoRoot, childRel))) continue;
+      breaches.push({
+        id: `os-config-shape-mutation-leaf-${childRel}`,
+        summary: `"${childRel}" is missing`,
+        kind: "taxonomy/os-config-shape",
+        scope: "os/config",
+        priority: "high",
+        reason: `Every mutation dir carries the full ${mutationChildDirs.join(", ")} triad.`,
+        solution: `Add ${childRel}.`,
+      });
+    }
+  }
+  return breaches;
+}
+//#endregion 🔧️PolicyRuleArtifactViewersEditors
+
+
 //#region 🔧️PolicyRuleHandcraftedSpecP3
 /** ⚖️P3/M4 handcrafted-grammar policy scanners (distinctness / generic / declared-use / wiring / empty examples). Exemptions shrink to empty by P6 — see ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT. */
 
@@ -7559,6 +7809,17 @@ function policyDependencyOwnerRoots(repoRoot: string): readonly string[] {
   return roots;
 }
 
+/**
+ * 🔗️Component leaves that belong to `ownerRel` ITSELF, excluding any nested `🧩️extensions/<ext>/`
+ * subtree — an extension is its own dependency owner (it appears separately in
+ * [[policyDependencyOwnerRoots]]), so folding its files into its parent plugin's walk made the parent
+ * inherit the extension's `.depends_on(...)` and demand a Cargo dependency the parent never needs. A
+ * plugin that hosts an extension declaring `.depends_on("cad")` is not itself a dependent of `cad`.
+ */
+function policyOwnerOwnComponentFiles(repoRoot: string, ownerRel: string): string[] {
+  return policyWalkRelFiles(repoRoot, [ownerRel], (relPath, name) => name === POLICY_RS_COMPONENT_LEAF_NAME && !relPath.slice(ownerRel.length).includes("/🧩️extensions/"));
+}
+
 /** 🔗️Every `semio-s-plugin-<id>` entry in an owner's Cargo manifests, mapped to the plugin id it names. */
 function policyCargoPluginDependencyIds(repoRoot: string, ownerRel: string): Set<string> {
   const ids = new Set<string>();
@@ -7578,11 +7839,11 @@ function policyCargoPluginDependencyIds(repoRoot: string, ownerRel: string): Set
  * dependency crate's snapshot/mutation types to plan against, and the host refuses to load a plugin
  * whose declared dependency is absent. Both directions are checked so neither half can drift.
  */
-function policyPluginDependencyParityBreaches(repoRoot: string): BreachRecord[] {
+export function policyPluginDependencyParityBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const ownerRel of policyDependencyOwnerRoots(repoRoot)) {
     const declared = new Set<string>();
-    for (const relPath of policyWalkRelFiles(repoRoot, [ownerRel], (_relPath, name) => name === POLICY_RS_COMPONENT_LEAF_NAME)) {
+    for (const relPath of policyOwnerOwnComponentFiles(repoRoot, ownerRel)) {
       for (const match of policyReadFileSafe(repoRoot, relPath).matchAll(/\.depends_on\s*\(\s*"([a-z0-9-]+)"/g)) {
         declared.add(match[1]!);
       }
@@ -7625,12 +7886,12 @@ function policyPluginDependencyParityBreaches(repoRoot: string): BreachRecord[] 
  * owning plugin the contributor declares as a direct dependency — contributing onto a plugin you do
  * not depend on is exactly the unowned-registration this ticket's contract forbids.
  */
-function policyContributionTargetBreaches(repoRoot: string): BreachRecord[] {
+export function policyContributionTargetBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const ownerRel of policyDependencyOwnerRoots(repoRoot)) {
     const declared = new Set<string>();
     const targets = new Map<string, string>();
-    for (const relPath of policyWalkRelFiles(repoRoot, [ownerRel], (_relPath, name) => name === POLICY_RS_COMPONENT_LEAF_NAME)) {
+    for (const relPath of policyOwnerOwnComponentFiles(repoRoot, ownerRel)) {
       const content = policyReadFileSafe(repoRoot, relPath);
       for (const match of content.matchAll(/\.depends_on\s*\(\s*"([a-z0-9-]+)"/g)) declared.add(match[1]!);
       for (const match of content.matchAll(/ArtifactContribution::builder\s*\(\s*"([^"]+)"/g)) targets.set(match[1]!, relPath);
@@ -13676,6 +13937,10 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyMcpConfigBreaches(repoRoot));
   breaches.push(...policySniffRealityBreaches(repoRoot));
   breaches.push(...policySubsetConformanceBreaches(repoRoot));
+  breaches.push(...policySubsetSurfaceCompletenessBreaches(repoRoot));
+  breaches.push(...policyViewerPurityBreaches(repoRoot));
+  breaches.push(...policyContributedSurfaceTargetBreaches(repoRoot));
+  breaches.push(...policyOsConfigShapeBreaches(repoRoot));
   return breaches;
 });
 //#endregion 🔖️PolicyExport

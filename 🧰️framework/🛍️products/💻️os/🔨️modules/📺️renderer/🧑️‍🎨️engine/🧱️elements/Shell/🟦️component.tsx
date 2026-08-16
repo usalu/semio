@@ -41,11 +41,13 @@ import {
   SemioFaultError,
   SHELL_LOCALES,
   type AppDefinition,
+  type AppRole,
   type CommandDefinition,
   type DockSkeleton,
   type DockUiState,
   type Fault,
   type PluginAppLabelsOverlay,
+  type PluginDependency,
   type PluginViewState,
   type PresenceInteraction,
   type ShellBrand,
@@ -95,6 +97,14 @@ export type PluginManifest = {
   }[];
   /** 🎛️ Plugin-scope commands this plugin exposes — apply whenever any of its apps is focused. */
   readonly commands?: readonly CommandDefinition[];
+  /** 🗂️ This plugin's OWNED artifact kinds — mirrors Rust `PluginManifest.artifact_kinds`. Feeds
+   * {@link AppRouter.build}'s "owner plugin's surface first" ordering and its
+   * `surface.missing-owner-surface`/`surface.contribution-not-permitted` checks (contract freeze §3).
+   * Optional: a wasm build that predates the C3 router still decodes, just with no owner ordering. */
+  readonly artifactKinds?: readonly { readonly id: string }[];
+  /** 🔗️ This plugin's direct dependencies — mirrors Rust `PluginManifest.dependencies`, gates a
+   * contributed surface through {@link AppRouter.build}'s `surface.contribution-not-permitted` check. */
+  readonly dependencies?: readonly PluginDependency[];
 };
 
 export type LoadedProgramState = {
@@ -148,10 +158,39 @@ export type FrameworkOsBootOptions = {
   readonly plugin?: string;
   readonly plugins?: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
   readonly appId?: string;
+  /** 👁️✏️ Boot-time surface role preference (contract freeze §5) — defaults to `"editor"` via
+   * {@link resolveBootAppRole} when omitted, never inferred from `appId`. */
+  readonly appRole?: AppRole;
   readonly locks?: FrameworkOsLocks;
   readonly defaults?: FrameworkOsDefaults;
   readonly brand?: ShellBrand;
 };
+
+//#region 👁️✏️BootAppRole
+/** 👁️✏️ Reads `VITE_SEMIO_APP_ROLE` (contract freeze §5: `"viewer"`/`"editor"`, default `"editor"`) —
+ * the React shell's half of "both shells read the role from `SEMIO_APP_ROLE`/`VITE_SEMIO_APP_ROLE`".
+ * Guarded for non-Vite embeds (SSR/tests/other bundlers) where `import.meta.env` is absent. An
+ * unrecognized value warns and falls back to `"editor"`, matching {@link resolveShellLocks}'s
+ * fall-back-but-stay-safe idiom. */
+function readViteAppRoleEnv(): string | undefined {
+  try {
+    const env = (import.meta as unknown as { readonly env?: Readonly<Record<string, string | undefined>> }).env;
+    return env?.VITE_SEMIO_APP_ROLE;
+  } catch {
+    return undefined;
+  }
+}
+
+/** 👁️✏️ Resolves the boot-time {@link AppRole}: an explicit `options.appRole` wins, otherwise
+ * {@link readViteAppRoleEnv}, otherwise `"editor"`. */
+export function resolveBootAppRole(explicit?: AppRole): AppRole {
+  if (explicit === "viewer" || explicit === "editor") return explicit;
+  const raw = readViteAppRoleEnv();
+  if (raw === "viewer" || raw === "editor") return raw;
+  if (raw !== undefined && raw !== "") console.warn(`[os] invalid VITE_SEMIO_APP_ROLE ${JSON.stringify(raw)}, falling back to "editor"`);
+  return "editor";
+}
+//#endregion 👁️✏️BootAppRole
 
 //#region 🔒️FrameworkOsLocks
 /** 🔒️ Raw boot-time lock values from env, before validation (any of the five may be unset). */
@@ -448,6 +487,23 @@ type OverlayState = {
   readonly introductionCompletedInteractions: readonly number[];
   /** 🗨️ The open declared dialog (id + `HostEffect`-seeded args), or `null` when none is open. */
   readonly dialog: { readonly dialogId: string; readonly seedArgs?: Readonly<Record<string, unknown>> } | null;
+  /** 🧯️ A non-blocking, auto-dismissing notice — e.g. a `"viewer.read-only"` fault arriving from the
+   * host (contract freeze §2.3/§5: surfaces as a notice, never a crash). `null` when nothing to show. */
+  readonly transientNotice: TransientNotice | null;
+  /** 👁️✏️ Which role group the Document panel's "Open with…" section should default-expand —
+   * set by the `open-artifact-with-viewer`/`open-artifact-with-editor` palette commands (contract
+   * freeze §5) right before focusing the panel; `null` leaves both groups at their own default. */
+  readonly openWithFocusRole: AppRole | null;
+};
+
+/** 🧯️ One non-blocking shell notice — `code` carries the originating fault code (e.g.
+ * `SURFACE_FAULT_CODES.ViewerReadOnly`) when the notice was raised from a decoded {@link Fault},
+ * `undefined` for a locally-raised notice. */
+export type TransientNotice = {
+  readonly id: number;
+  readonly message: string;
+  readonly kind: "info" | "error";
+  readonly code?: string;
 };
 
 /** 🎥️ Playback/recording state of the active `TutorialDefinition` — mutually exclusive with `overlays.introductionStepIndex` (see `SET_TUTORIAL`/`SET_INTRODUCTION_STEP` reducer cases). `playing`/`rate`/`muted`/`captionsOn`/`recording`/`deviated` are all UI-only (never persisted into the tutorial data itself). */
@@ -575,6 +631,8 @@ export type ShellAction =
   | { readonly type: "SET_INTRODUCTION_STEP"; readonly value: Updatable<number | null> }
   | { readonly type: "COMPLETE_INTRODUCTION_INTERACTION"; readonly index: number }
   | { readonly type: "SET_DIALOG"; readonly value: OverlayState["dialog"] }
+  | { readonly type: "SET_TRANSIENT_NOTICE"; readonly value: TransientNotice | null }
+  | { readonly type: "SET_OPEN_WITH_FOCUS_ROLE"; readonly value: AppRole | null }
   | { readonly type: "SET_TUTORIAL"; readonly value: string | null }
   | { readonly type: "SET_TUTORIAL_PLAYING"; readonly value: Updatable<boolean> }
   | { readonly type: "SET_TUTORIAL_RATE"; readonly value: number }
@@ -813,6 +871,10 @@ function overlayReducer(state: OverlayState, action: ShellAction): OverlayState 
       return action.value != null && state.introductionStepIndex != null ? { ...state, introductionStepIndex: null, introductionCompletedInteractions: [] } : state;
     case "SET_DIALOG":
       return { ...state, dialog: action.value };
+    case "SET_TRANSIENT_NOTICE":
+      return { ...state, transientNotice: action.value };
+    case "SET_OPEN_WITH_FOCUS_ROLE":
+      return { ...state, openWithFocusRole: action.value };
     // 🎥️ `commandPanelOpen`/`openDialogId` restore onto the existing `searchOpen`/`dialog` fields — a
     // tutorial snapshot's "command panel" IS the shell's command palette (`UISearch`), and a dialog
     // restore only ever carries the id (seed args are not part of `TutorialUiSnapshot`).
@@ -948,7 +1010,7 @@ export function initialShellState(_props: {
       windowTitlesById: {},
       windowIconsById: {},
     },
-    overlays: { searchOpen: false, findOpen: false, introductionStepIndex: null, introductionAutoStartedKeys: [], introductionCompletedInteractions: [], dialog: null },
+    overlays: { searchOpen: false, findOpen: false, introductionStepIndex: null, introductionAutoStartedKeys: [], introductionCompletedInteractions: [], dialog: null, transientNotice: null, openWithFocusRole: null },
     tutorial: { activeTutorialId: null, playing: false, rate: 1, muted: false, captionsOn: true, recording: false, deviated: false },
     uiPrefs: {
       // 🐚️ No more `ephemeral ? default : readStored...()` branching here — `storage` already resolves
@@ -985,7 +1047,8 @@ export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Pro
   bootstrapElementsSurfaceChromeDocument(locks.appearance ?? readStoredUiChromeAppearance(ephemeral ? createMemoryStoragePort() : createBrowserStoragePort()));
   // 🐢️ No hardcoded fallback app — an omitted `plugins` list boots the shell with an explicit
   // "no plugins available" state rather than silently picking one app.
-  createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? []} appId={options.appId} locks={locks} defaults={defaults} brand={options.brand} ownsPage />);
+  const appRole = resolveBootAppRole(options.appRole);
+  createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? []} appId={options.appId} appRole={appRole} locks={locks} defaults={defaults} brand={options.brand} ownsPage />);
 }
 //#endregion Boot
 

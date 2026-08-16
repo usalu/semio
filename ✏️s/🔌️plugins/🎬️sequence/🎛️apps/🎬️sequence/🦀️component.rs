@@ -17,30 +17,29 @@ use crate::apps::sequence::commands::node_graph::{node_graph_edit, set_viewport}
 use crate::apps::sequence::commands::playback::{run_command, stop_command};
 use crate::apps::sequence::commands::step::{add_step, add_step_dropped, add_step_to_slot, delete_selection, move_step, remove_step, set_step_collapsed, set_step_params};
 use crate::apps::sequence::config::{SequenceConfig, SequenceConfigMutation};
-use crate::apps::sequence::presence::{SequencePresence, SequencePresenceMutation};
 use crate::apps::sequence::modes::edit;
 use crate::apps::sequence::modes::edit::windows::{compiled, main, script};
 use crate::apps::sequence::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
+use crate::apps::sequence::presence::{SequencePresence, SequencePresenceMutation};
 use crate::apps::sequence::terminology::sequence_play_labels;
 use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::op::sequence_snapshot_mutations;
 use crate::artifacts::sequence::{default_snapshot, SequenceCamera, SequenceEdge, SequenceFixture, SequenceSnapshot, SequenceStep, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppIo, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, DslValue, Emit,
-    Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode,
-    DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
-};
-use store::EngineHandles;
-use serde_json::{json, Value};
-use infinite_board_port_directed_dag as dag;
 use dag::{dag_fixture_to_wire_literal, would_create_cycle, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape};
-use imperative_engine::{
-    compile_to_text as imperative_compile_to_text, contributions_json_from_entries, imperative_catalogue_json, imperative_module_registry,
-    register_native_imperative_module, sync_imperative_module_contributions, Executor, Path, RunResult, Step,
-};
 use graph::manifest::PropertyBag;
+use imperative_engine::{
+    compile_to_text as imperative_compile_to_text, contributions_json_from_entries, imperative_catalogue_json, imperative_module_registry, register_native_imperative_module, sync_imperative_module_contributions, Executor, Path, RunResult, Step,
+};
+use infinite_board_port_directed_dag as dag;
 use neural_engine::{ChannelSpec, Dictionary, Registry, Value as NeuralValue};
+use semio_framework_plugin::{
+    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppIo, ArtifactApp, ArtifactView, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView, ContextMenuItemSpec,
+    ContextMenuRequest, DomainTopology, DraftView, DslValue, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaError, MediaPayload,
+    MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
+};
+use serde_json::{json, Value};
 use std::collections::{BTreeMap, HashMap};
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_APP_ID: &str = "sequence-play";
@@ -96,88 +95,6 @@ pub fn next_available_step_id(fixture: &SequenceSnapshot) -> String {
     format!("step-{}", max_serial_in_snapshot(&fixture.to_fixture()).max(100) + 1)
 }
 //#endregion 🔖️Io
-
-//#region 🔌️Registration
-/// 🗂️ Registers `SequenceSnapshot`'s pack↔dsl codec under `SEQUENCE_DOCUMENT_SCHEMA` so
-/// `framework/sync`'s folder endpoints and any other schema-string-keyed caller can print/parse
-/// sequence documents. Called from the plugin root's `semio_plugin!{ setup: … }`.
-pub fn register() {
-    crate::artifacts::sequence::io_registry::register();
-
-    register_pilot_languages();
-    register_artifact_schema();
-    register_artifact_inferences();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<SequencePlayApp>(SEQUENCE_DOCUMENT_SCHEMA);
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "sequence.document",
-        extension: Some("sequence"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::sequence::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::sequence::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::sequence::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::sequence::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("sequence.document"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "sequence.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::sequence::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::sequence::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::sequence::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::sequence::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("sequence.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "sequence.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::sequence::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::sequence::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("sequence.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "sequence.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::sequence::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::sequence::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("sequence.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "sequence.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::sequence::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::sequence::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("sequence.spr"),
-    });
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::sequence::schema::sequence_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.sequence.sequence.inference`'s facet leaves into the OS-wide
-/// inference catalog — sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(
-        crate::artifacts::sequence::standards::v1::subsets::any::schema::inferences::sequence_artifact_inference_descriptor(),
-    );
-}
-//#endregion 🔌️Registration
 
 //#region 🔖️Camera
 /// 🎥️ `SequenceCamera` <-> `DagCamera` conversions — plain functions rather than `From`/`Into` trait
@@ -874,6 +791,10 @@ impl ArtifactApp for SequencePlayApp {
     const APP_ID: &'static str = SEQUENCE_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::sequence::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> SequenceSnapshot {
         crate::artifacts::sequence::default_snapshot()
     }
@@ -915,7 +836,14 @@ impl ArtifactApp for SequencePlayApp {
     /// the `app_commands!`-generated `dispatch`, whose per-row `$module::handle(payload, doc, cfg)`
     /// signature is framework-fixed and has no `interaction` slot) — ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
-    fn handle(command: &SequenceCommand, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(
+        command: &SequenceCommand,
+        doc: &ArtifactView<'_, SequenceSnapshot>,
+        cfg: &ConfigView<'_, SequenceConfig>,
+        interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             SequenceCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction),
             SequenceCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction),
@@ -937,7 +865,12 @@ impl ArtifactApp for SequencePlayApp {
     /// 🧮️ This app's typed configuration spec — the layout orientation `reorganize` reads.
     fn config_spec() -> ConfigSpec {
         ConfigSpec {
-            fields: vec![ConfigFieldSpec { key: "orientation".into(), label: "Layout Orientation".into(), shape: ConfigFieldShape::Select { options: vec!["leftRight".into(), "topBottom".into()] }, default: Some(DslValue::String("leftRight".into())) }],
+            fields: vec![ConfigFieldSpec {
+                key: "orientation".into(),
+                label: "Layout Orientation".into(),
+                shape: ConfigFieldShape::Select { options: vec!["leftRight".into(), "topBottom".into()] },
+                default: Some(DslValue::String("leftRight".into())),
+            }],
         }
     }
 

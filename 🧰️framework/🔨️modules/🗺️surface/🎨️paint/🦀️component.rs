@@ -340,8 +340,7 @@ pub struct RasterHost {
     /// 🖼️ (d) ephemeral working representation — decoded-image GPU cache, rebuildable from `buffers`.
     images: canvas::raster::RasterImageCache,
     /// 🖌️ (d) ephemeral working representation during an active paint gesture — raw pixel scratch
-    /// buffers keyed by layer, analogous to `DraftEngineSession`'s rebuild-from-base invariant: drop
-    /// at any instant and nothing a user has committed is lost. The eventual persisted commit of
+    /// buffers keyed by layer: drop at any instant and nothing a user has committed is lost. The eventual persisted commit of
     /// painted pixels is an `image:in`-shaped asset import through the plugin's real `add-layer-asset`
     /// mutation (see the module docstring) — this host never calls that; it only holds the scratch.
     buffers: RasterLayerBuffers,

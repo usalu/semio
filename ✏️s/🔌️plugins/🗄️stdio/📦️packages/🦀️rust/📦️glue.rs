@@ -2217,6 +2217,13 @@ pub mod artifacts {
                             }
                             #[path = "."]
                             pub mod inferences {
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🦀️component.rs"]
+                                pub mod geometry_core;
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️dag-assembly/🦀️component.rs"]
+                                pub mod dag_assembly;
                                 #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️size/🦀️component.rs"]
                                 pub mod size;
                                 #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/🦀️component.rs"]
@@ -2245,8 +2252,6 @@ pub mod artifacts {
                                 pub mod roughness;
                                 #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/🦀️component.rs"]
                                 pub mod topology;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧮️geometric-analysis/🦀️component.rs"]
-                                pub mod geometric_analysis;
                             }
                             #[path = "."]
                             pub mod mutations {

@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🤝collaboration` per Wave C.
 
 use super::mutation::DeleteCollaborationRecord;
+use crate::artifacts::program::diff::ProgramCollaborationDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramCollaborationDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteCollaborationRecord, _base: &ProgramSnapshot) -> ProgramDiff {

@@ -353,7 +353,7 @@ impl ArtifactApp for HomeApp {
 
     /// 🪪️ `s.space.home`'s config+presence schema descriptor (ticket
     /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) — `register_document_app` registers it the
-    /// moment this type is bound to the plugin, closing the app-schema half of `🪐️space`'s `.setup()`.
+    /// moment this type is bound to the plugin, completing the app-schema declaration for `🪐️space`.
     fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::apps::home::config::schema::app_schema_descriptor())
     }

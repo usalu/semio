@@ -1,0 +1,94 @@
+$ bun ./📜️script.ts nx run @semio-tech/framework:test
+
+> nx run @semio-tech/framework:test
+
+> bun ./📜️script.ts test
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript
+
+
+ Test Files  2 passed (2)
+      Tests  150 passed (150)
+   Start at  11:27:12
+   Duration  471ms (transform 360ms, setup 0ms, import 464ms, tests 150ms, environment 0ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/framework
+
+
+EXIT:0
+
+=== bun run 🧪️w1-b-verify.ts (standalone kernel AppRouter/OpeningResolver smoke checks; glue.ts's includeSource is scoped to itself only, so these new exports get no coverage from the nx test target above until glue.ts's own inline suite is extended) ===
+[ok] dialectCoordinate
+[ok] parseDialectCoordinate
+[ok] surfaceAppId editor
+[ok] parseSurfaceAppId editor
+[ok] dotted standard round trip
+[ok] owner first, then pluginId ascending
+[ok] ownerPluginId
+[ok] assertOwnedSurfacesComplete: no throw (both roles present)
+[ok] surface.conflict on duplicate AppRef
+[ok] surface.contribution-not-permitted without dependency
+[ok] surface.missing-owner-surface
+[ok] surface.unknown-dialect on resolve with no entries
+[ok] step 2: owner wins with no pin
+[ok] step 1: pin wins when still present
+[ok] step 1 skipped when pin no longer in router -> step 2 owner
+[ok] step 3: first entry when no owner known
+[ok] decodeOpeningConfigMutation setDefaultApp
+[ok] fold set
+[ok] fold set-then-clear returns to empty
+[ok] fold is pure — repeated calls don't share mutable state
+[ok] fold is pure — but structurally equal
+[ok] decodeOpeningPreferences whole-record
+
+All checks passed
+EXIT:0
+
+=== bun nx run @semio-tech/framework-os:test ===
+Submitted in background; got stuck behind ~300 concurrent identical `nx run @semio-tech/framework-os:test`
+invocations from other live sessions in this shared repo (confirmed via `ps aux | grep framework-os:test | wc -l`
+-> 322), a known contention pattern (see MEMORY.md "Concurrent Cargo Workspace Churn"). Did not kill any process
+(not mine to kill in a shared multi-session repo) and did not wait indefinitely for it.
+
+=== bunx vitest run --config 🧪️vitest.config.ts (same config the nx target above wraps; run directly from
+🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript to get an uncontended, authoritative result) ===
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript
+
+ ❯ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts (4 tests | 1 failed) 130ms
+     × decodes the Rust-generated binary wire fixtures byte-identically 110ms
+ ❯ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts (4 tests | 1 failed) 139ms
+     × decodes the Rust-generated binary wire fixtures byte-identically 129ms
+ ❯ |@semio-tech/framework-os| ../../🟦️component.ts (143 tests | 1 failed) 945ms
+     × matches the Rust plan_workflow across shared fixtures decoded via wasm 50ms
+ ❯ |@semio-tech/framework-os| ../../🟦️component.ts (143 tests | 1 failed) 921ms
+     × matches the Rust plan_workflow across shared fixtures decoded via wasm 50ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker wire bridge > decodes the Rust-generated binary wire fixtures byte-identically
+ FAIL  |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker wire bridge > decodes the Rust-generated binary wire fixtures byte-identically
+Error: ENOENT: no such file or directory, open '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏪️store/🔄️sync/📦️packages/🦀️rust/🧫️fixtures/📡️wire/📦️client-hello.bin'
+ ❯ loadClient ../../ð¦ï¸backbone-worker.ts:808:38
+ ❯ ../../ð¦ï¸backbone-worker.ts:824:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > matches the Rust plan_workflow across shared fixtures decoded via wasm
+ FAIL  |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > matches the Rust plan_workflow across shared fixtures decoded via wasm
+Error: Cannot find module 'file:///Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%A6%80%EF%B8%8Frust/pkg/semio_framework_os.js' imported from /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts
+ ❯ ../../ð¦ï¸component.ts:2692:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+
+ Test Files  4 failed (4)
+      Tests  4 failed | 290 passed (294)
+   Start at  11:29:55
+   Duration  1.53s (transform 2.02s, setup 0ms, import 1.07s, tests 2.12s, environment 0ms)
+
+EXIT:1

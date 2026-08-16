@@ -10,7 +10,7 @@ use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 /// 🧾️ Resets the ephemeral generation-preview to match a freshly-loaded example, keeping every other
-/// display option (preview camera, LOD, show mode, sun, active utility, locale, contributions)
+/// display option (preview camera, LOD, show mode, sun, active utility, locale)
 /// unchanged. `graph`'s selection resets on its own — the framework prunes it against the new
 /// fixture's `interaction_topology` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 fn config_after_example_load(previous: &Procedural3dConfig, flow_camera: &CameraJson) -> Procedural3dConfig {
@@ -23,8 +23,7 @@ fn config_after_example_load(previous: &Procedural3dConfig, flow_camera: &Camera
         show_mode: previous.show_mode.clone(),
         sun_json: previous.sun_json.clone(),
         active_utility_id: previous.active_utility_id.clone(),
-        locale: previous.locale.clone(),
-        contributions_json: previous.contributions_json.clone()}
+        locale: previous.locale.clone()}
 }
 
 //#region 🔖️SetActiveExample

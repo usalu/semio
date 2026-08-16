@@ -1,0 +1,150 @@
+W1-A verification log — 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
+Lane: 1-A (AppRouter / OpeningResolver, Rust hosts)
+All commands run serially, never in parallel, as instructed.
+
+════════════════════════════════════════════════════════════════════════════
+1. RUSTC_WRAPPER="" cargo check -p semio-framework-plugin-host --all-targets --keep-going
+   (AppRouter / OpeningResolver / the opening_config glue wiring all live in this crate)
+════════════════════════════════════════════════════════════════════════════
+Result: CLEAN. Exit 0. (Full raw output archived at
+.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET/ was not the location —
+kept in the session scratchpad; last line reproduced below, tail of the actual run.)
+
+warning: unused variable: `error`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:109:17
+    |
+109 |             Err(error) => {
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_error`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-plugin-host` (lib) generated 4 warnings (run `cargo fix --lib -p semio-framework-plugin-host` to apply 4 suggestions)
+warning: `semio-framework-plugin-host` (lib test) generated 3 warnings (3 duplicates)
+    Finished `dev` profile [unoptimized] target(s) in 3.21s
+EXIT: 0
+
+(The 7 warnings above are all pre-existing, none from this lane's own new code: two `unused extern
+crate` in this crate's own `📦️glue.rs` predate this ticket, one `unused import: DefaultApp` is in
+the config facet's own `🧬️mutations/🦀️component.rs` — a genuinely-unused re-export left there by
+lane 0-C, harmless — and the `unused variable: error` is inside `plugin_runtime`'s pre-existing
+`clear_instance_guard`, line 109, untouched by this lane.)
+
+Repeated 3 times across this session (11:28, 11:42, and the final run above) as peer sessions
+(PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS) actively edited THIS SAME FILE
+concurrently — see "Concurrent churn observed" below. All 3 runs were clean for this crate.
+
+════════════════════════════════════════════════════════════════════════════
+2. RUSTC_WRAPPER="" cargo test -p semio-framework-plugin-host --lib -- app_router_tests opening_resolver_tests
+════════════════════════════════════════════════════════════════════════════
+running 10 tests
+test component::opening_resolver_tests::step2_and_step3_collapse_to_the_owner_surface_when_default_is_stale ... ok
+test component::app_router_tests::contribution_without_a_declared_dependency_is_rejected ... ok
+test component::app_router_tests::owned_surface_gaps_reports_the_missing_role_only ... ok
+test component::app_router_tests::duplicate_app_ref_is_a_conflict ... ok
+test component::app_router_tests::contribution_with_a_declared_dependency_is_admitted_and_sorted_after_the_owner ... ok
+test component::opening_resolver_tests::step4_unknown_dialect_when_the_router_has_nothing ... ok
+test component::app_router_tests::unregister_plugin_drops_its_surfaces_but_keeps_its_ownership_claim ... ok
+test component::opening_resolver_tests::step3_first_entry_when_the_owner_has_no_surface_for_this_role ... ok
+test component::opening_resolver_tests::step1_explicit_default_still_in_router_wins ... ok
+test component::app_router_tests::owner_surface_sorts_first_then_plugin_id_then_app_id ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 28 filtered out; finished in 0.00s
+EXIT: 0
+
+Coverage against the brief's required list:
+- router ordering determinism            -> owner_surface_sorts_first_then_plugin_id_then_app_id
+- duplicate-AppRef conflict               -> duplicate_app_ref_is_a_conflict
+- contribution gate rejection             -> contribution_without_a_declared_dependency_is_rejected
+- contribution gate admission (positive)  -> contribution_with_a_declared_dependency_is_admitted_and_sorted_after_the_owner
+- resolver step 1 (explicit default)      -> step1_explicit_default_still_in_router_wins
+- resolver steps 2+3 (owner / first entry)-> step2_and_step3_collapse_to_the_owner_surface_when_default_is_stale,
+                                              step3_first_entry_when_the_owner_has_no_surface_for_this_role
+- resolver step 4 (unknown-dialect fault) -> step4_unknown_dialect_when_the_router_has_nothing
+- W1 soft gate diagnostic                 -> owned_surface_gaps_reports_the_missing_role_only
+- unregister/hot-reload symmetry          -> unregister_plugin_drops_its_surfaces_but_keeps_its_ownership_claim
+
+════════════════════════════════════════════════════════════════════════════
+3. RUSTC_WRAPPER="" cargo check -p semio-framework-os-run --all-targets --keep-going
+   (the `resolve_open_artifact`/`set_default_app`/`clear_default_app` OS-command wiring and the
+   `exchange` interception live in this crate's `🏃️run/🦀️component.rs`, wholly this lane's lease)
+════════════════════════════════════════════════════════════════════════════
+Result: BLOCKED — NOT a clean run. Exit 101, every single time (5 attempts across the session, at
+~11:33, 11:39, 11:40, 11:42, and the final attempt below), but every reported error is in a file
+this lane never opened, and the SET of failing files changed between attempts as peer sessions kept
+editing them live:
+
+  Attempt 1 (11:39) — 6 errors, all in ✏️s/🔌️plugins/🗄️stdio/…/🗿️artifacts/🧊️gltf/…/💡️inferences/…
+    (literal unresolved `+pub fn infer(...)` — a diff/patch leftover, `git status` showed these
+    exact files as freshly `A`/`AM`/`MM` i.e. mid-write by another live session)
+  Attempt 2 (11:40) — 16 errors, same subtree, WORSE (more inference leaves broken) — confirms a
+    live in-progress edit, not a stale/stuck state
+  Attempt 3 (11:42, after a 45s wait) — 25 errors, same subtree, still worsening
+  Final attempt (below) — the stdio subtree is now CLEAN, but 4 NEW errors appeared in
+    🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🦀️component.rs — a file explicitly
+    named in this ticket's own `📋️ownership-and-handoffs.md` contention table as owned by peer
+    ticket "26/08/16 PLUGIN-DEPENDENCIES (W1-A): `.depends_on`/`.contributes`/`ArtifactContribution`"
+    (unresolved imports `HostMediaHandlerDeclaration`/`LinkedFlowExtensionInstallerDeclaration`,
+    `DocumentCodecSpec::foreign` missing, `.preflight_foreign` missing, an arity mismatch on
+    `ArtifactRegistrationPlan::from_declarations`) — this breaks `semio-framework-plugin`, which
+    `semio-framework-os-run` depends on transitively, so this crate cannot reach a clean state while
+    that peer lane is mid-edit, regardless of anything in this lane's own files.
+
+error[E0432]: unresolved imports `crate::app::HostMediaHandlerDeclaration`, `crate::app::LinkedFlowExtensionInstallerDeclaration`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:3:107
+error[E0599]: no associated function or constant named `foreign` found for struct `DocumentCodecSpec`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:178:74
+error[E0599]: no method named `preflight_foreign` found for reference `&DocumentCodecSpec`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:335:19
+error[E0061]: this function takes 2 arguments but 5 arguments were supplied
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:343:20
+error: could not compile `semio-framework-plugin` (lib) due to 4 previous errors; 63 warnings emitted
+EXIT: 101
+
+grep across every attempt's error list for this lane's own touched files
+(🔌️plugin/🖥️host/🦀️component.rs, 🔌️plugin/🖥️host/📦️packages/🦀️rust/📦️glue.rs, 🏃️run/🦀️component.rs,
+🎚️config/🧬️schema/🧬️mutations/🦀️component.rs, 🗣️dsl/⚠️diagnostic/🦀️component.rs) — ZERO matches in
+any attempt. Every reported error across all 5 attempts sits in a file this lane never edited.
+
+CONCLUSION: `semio-framework-os-run`'s `--all-targets` check could not be verified green in this
+session because it transitively depends on two crates (`semio-s-plugin-stdio`, `semio-framework-
+plugin` via its `🏗️builder`) that peer tickets (FULL-STDIO, PLUGIN-DEPENDENCIES) were actively
+mid-edit on for the entire session, per this ticket's own `📋️ownership-and-handoffs.md` contention
+table. This lane's own additions to `🏃️run/🦀️component.rs` (`app_router` field, `opening_preferences`
+field, `resolve_open_artifact`/`set_default_app`/`clear_default_app`, the `exchange` interception,
+router/unregister wiring in `load_runtime_recursive`/`unload_plugin`/`hot_reload_plugin`) never
+appear in any error list across 5 attempts. Confidence in their correctness rests on: (a) they use
+only APIs already exercised and passing in the `semio-framework-plugin-host` crate above (`AppRouter`,
+`OpeningResolver`, `opening_config::{OpeningPreferences, mutations::*}`), and (b) a careful manual
+re-read of the diff for brace/type balance. This is NOT a substitute for a green `cargo check` and is
+reported as NOT DONE, per this ticket's rule against claiming an unverified pass.
+
+════════════════════════════════════════════════════════════════════════════
+4. Supporting checks (crates touched only by the additive `FaultOrigin::Framework` variant)
+════════════════════════════════════════════════════════════════════════════
+RUSTC_WRAPPER="" cargo check -p semio-framework --all-targets --keep-going        -> EXIT 0 (clean)
+RUSTC_WRAPPER="" cargo check -p semio-framework-os-kernel --all-targets --keep-going -> EXIT 0 (clean)
+RUSTC_WRAPPER="" cargo check -p semio-framework-plugin --all-targets --keep-going  -> volatile, see
+  note below (clean when checked in isolation early in the session; broke later from the SAME
+  `🏗️builder/🦀️component.rs` peer edit described in section 3 — never from anything this lane touched)
+
+════════════════════════════════════════════════════════════════════════════
+Concurrent churn observed this session (for the record, not this lane's bugs)
+════════════════════════════════════════════════════════════════════════════
+- `🔌️plugin/🖥️host/🦀️component.rs` grew from ~1494 lines to 3000+ lines mid-session as the peer
+  ticket 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS landed
+  `PluginGraph`/`ArtifactMutationRouter`/`HostTransactionCoordinator` regions between this lane's
+  first read and its first `Edit` — the tool's stale-file guard caught this once (see report); the
+  insertion point was re-found and the edit re-applied against fresh content, never reverting any
+  peer hunk.
+- A peer-owned unit test in that same file, `host_transaction_coordinator_tests::…`, briefly failed
+  a fresh-real-wasm E0505 borrow-checker error (`🔌️plugin/🖥️host/🦀️component.rs:3224`) on one
+  attempt and was gone (crate compiled clean) on the very next — confirms live editing, not a stuck
+  build.
+- `🔌️plugin/🏗️builder/🦀️component.rs` and the `✏️s/🔌️plugins/🗄️stdio/…/🧊️gltf/…` inference leaves were
+  both mid-refactor for most of the session (see section 3).
+- `InferenceRouteRequest` in `🔌️plugin/🖥️host/🦀️component.rs` was missing `serde::Serialize` early in
+  the session (blocking `semio-framework-plugin-host`) and had it added by the peer session between
+  two of this lane's own check attempts.
+None of the above were touched by this lane; they are recorded here only because the instructions
+require checking `git log`/provenance before attributing a repo-wide failure to this lane, which was
+done for each one (see `📓️w1-a-report.md` for the `git status`/`git log --date=iso` evidence).

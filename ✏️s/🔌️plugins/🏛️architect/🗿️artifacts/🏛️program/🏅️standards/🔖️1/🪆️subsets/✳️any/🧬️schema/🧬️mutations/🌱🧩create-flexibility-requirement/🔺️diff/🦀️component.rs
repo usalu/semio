@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🧩flexibility` per Wave C.
 
 use super::mutation::CreateFlexibilityRequirement;
+use crate::artifacts::program::diff::ProgramFlexibilityDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramFlexibilityDelta};
 
 /// 🌱️ `added = [payload row]` — the row lands at the end of `program.flexibility` on apply.
 pub fn diff(payload: &CreateFlexibilityRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

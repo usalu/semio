@@ -5,8 +5,8 @@ fn primary_asset_is_nonempty() {
 }
 
 //#region 🧪️InferenceLaws
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::ProgramInference;
+use crate::artifacts::program::ProgramSnapshot;
 use protocol::Inference;
 
 #[test]

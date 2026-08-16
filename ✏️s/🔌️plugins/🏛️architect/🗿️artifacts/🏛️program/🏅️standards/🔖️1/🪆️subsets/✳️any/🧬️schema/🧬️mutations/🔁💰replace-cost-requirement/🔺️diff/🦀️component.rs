@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `💰costs` per Wave C.
 
 use super::mutation::ReplaceCostRequirement;
-use protocol::Patchable;
+use crate::artifacts::program::diff::{ProgramCostsDelta, ProgramCostsPatchEntry};
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramCostsDelta, ProgramCostsPatchEntry};
+use protocol::Patchable;
 
 /// 🔁️ `patched = [{id, full patch}]` via `Patchable::diff_patch` — every field of the payload
 /// row becomes the patch, so applying it fully overwrites the target's non-identity content.

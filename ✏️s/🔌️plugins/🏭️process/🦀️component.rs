@@ -7,7 +7,7 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("process")
         .label("Process")
         .version("0.1.0")
-        .setup(crate::apps::process3d::register)
+        .artifact(crate::artifacts::process3d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .document_app::<crate::apps::process3d::Process3dPlayApp>(crate::apps::process3d::create_process3d_app())
         .try_build()
 }

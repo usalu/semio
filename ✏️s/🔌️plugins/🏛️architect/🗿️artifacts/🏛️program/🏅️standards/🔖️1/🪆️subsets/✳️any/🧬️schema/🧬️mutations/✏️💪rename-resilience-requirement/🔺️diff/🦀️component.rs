@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `💪resilience` per Wave C.
 
 use super::mutation::RenameResilienceRequirement;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramResilienceDelta, ProgramResiliencePatchEntry};
 use crate::artifacts::program::registers::ResilienceRequirementPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameResilienceRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

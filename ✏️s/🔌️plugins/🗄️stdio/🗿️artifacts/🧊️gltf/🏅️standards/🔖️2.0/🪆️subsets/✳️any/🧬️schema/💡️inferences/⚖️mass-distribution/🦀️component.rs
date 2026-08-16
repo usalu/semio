@@ -1,7 +1,17 @@
 //! ⚖️ GLTF mass-distribution indicators.
 
-use super::geometric_analysis::{GltfGeometryContext};
-use super::super::modules::{inference_measures::{estimate, exact, unavailable}};
+#[path = "centroid/🦀️component.rs"]
+pub mod centroid;
+#[path = "principal-frame/🦀️component.rs"]
+pub mod principal_frame;
+#[path = "principal-axes/🦀️component.rs"]
+pub mod principal_axes;
+#[path = "moments-of-inertia/🦀️component.rs"]
+pub mod moments_of_inertia;
+#[path = "inertia-tensor/🦀️component.rs"]
+pub mod inertia_tensor;
+
+use super::geometry_core::GltfGeometryContext;
 use super::super::modules::measurement_contracts::*;
 use serde::{Deserialize, Serialize};
 
@@ -21,30 +31,22 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfMassInference {
     type Output = GltfMassIndicators;
 
     fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
-        let eigenvalues = context.principal_frame.eigenvalues;
-        let moments = GltfVec3::new([eigenvalues[1] + eigenvalues[2], eigenvalues[0] + eigenvalues[2], eigenvalues[0] + eigenvalues[1]]);
-        let tensor = vec![moments.x, 0.0, 0.0, 0.0, moments.y, 0.0, 0.0, 0.0, moments.z];
-        let centroid = if context.topology.watertight && context.volume > 1e-15 {
-            exact(GltfVec3::new(context.centroid), GltfUnit::Metre, context.sample_count, Some(context.topology))
-        } else {
-            estimate(GltfVec3::new(context.centroid), GltfUnit::Metre, context.sample_count, Some(context.topology))
-        };
         Self::Output {
-            centroid,
-            principal_frame: estimate(context.principal_frame.clone(), GltfUnit::Unitless, context.sample_count, Some(context.topology)),
-            principal_axes: estimate(context.principal_axes.clone(), GltfUnit::Unitless, context.sample_count, Some(context.topology)),
-            moments_of_inertia: estimate(moments, GltfUnit::SquareMetre, context.sample_count, Some(context.topology)),
-            inertia_tensor: estimate(tensor, GltfUnit::SquareMetre, context.sample_count, Some(context.topology)),
+            centroid: centroid::infer(context),
+            principal_frame: principal_frame::infer(context),
+            principal_axes: principal_axes::infer(context),
+            moments_of_inertia: moments_of_inertia::infer(context),
+            inertia_tensor: inertia_tensor::infer(context),
         }
     }
 
     fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            centroid: unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            principal_frame: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            principal_axes: unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            moments_of_inertia: unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
-            inertia_tensor: unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, diagnostic_ids.to_vec(), 0, None),
+            centroid: centroid::unavailable_measure(diagnostic_ids),
+            principal_frame: principal_frame::unavailable_measure(diagnostic_ids),
+            principal_axes: principal_axes::unavailable_measure(diagnostic_ids),
+            moments_of_inertia: moments_of_inertia::unavailable_measure(diagnostic_ids),
+            inertia_tensor: inertia_tensor::unavailable_measure(diagnostic_ids),
         }
     }
 }

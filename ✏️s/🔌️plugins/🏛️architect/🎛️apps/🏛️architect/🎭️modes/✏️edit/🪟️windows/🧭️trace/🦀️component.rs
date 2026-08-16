@@ -44,11 +44,7 @@ pub fn definition() -> WindowKindDefinition {
 pub fn render(program: &ProgramSnapshot) -> UiNode {
     let trail = audit_trail(program, None);
     let audit_items: Vec<UiTreeItemNode> = trail.events.iter().take(12).enumerate().map(|(index, event)| tree_item(format!("architect-trace.audit.{index}"), format!("{:?} @ {} — {}", event.action, event.timestamp, event.header.name))).collect();
-    tree_node(vec![tree_section(
-        "architect-trace.audit",
-        Some(format!("Audit Trail ({})", trail.events.len())),
-        if audit_items.is_empty() { vec![tree_item("architect-trace.audit.empty", "(no events)")] } else { audit_items },
-    )])
+    tree_node(vec![tree_section("architect-trace.audit", Some(format!("Audit Trail ({})", trail.events.len())), if audit_items.is_empty() { vec![tree_item("architect-trace.audit.empty", "(no events)")] } else { audit_items })])
 }
 //#endregion 🔖️Render
 
@@ -56,9 +52,9 @@ pub fn render(program: &ProgramSnapshot) -> UiNode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::program::sample_plugin;
     use crate::artifacts::program::kernel::{EntityHeader, TextField};
     use crate::artifacts::program::registers::{AuditAction, AuditEvent};
+    use crate::artifacts::program::sample_plugin;
     use crate::artifacts::program::EntityId;
 
     #[test]

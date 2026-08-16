@@ -2,7 +2,7 @@
   "name": "@semio-tech/flow-js",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🔨️modules/**/*.ts"]
+    "default": ["{projectRoot}/**/*"]
   },
   "targets": {
     "test": {

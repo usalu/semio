@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🧵traces` per Wave C.
 
 use super::mutation::DisconnectTrace;
+use crate::artifacts::program::diff::ProgramTracesDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::ProgramTracesDelta;
 
 /// ✂️ `removed = [id]`.
 pub fn diff(payload: &DisconnectTrace, _base: &ProgramSnapshot) -> ProgramDiff {

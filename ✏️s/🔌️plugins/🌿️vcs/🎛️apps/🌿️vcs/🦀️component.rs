@@ -8,26 +8,28 @@
 //! `VcsCommand::dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls one
 //! `definition()` per node.
 
-use crate::apps::vcs::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, increment_counter, no_operation, patch_snapshot, set_locale, text_edit};
 use crate::apps::vcs::commands::edit as edit_command;
+use crate::apps::vcs::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, increment_counter, no_operation, patch_snapshot, set_locale, text_edit};
 use crate::apps::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
-use crate::apps::vcs::presence::{VcsDemoPresence, VcsDemoPresenceMutation};
 use crate::apps::vcs::modes::edit;
 use crate::apps::vcs::modes::edit::windows::{editor, history};
 use crate::apps::vcs::panels::{document as document_panel, inspection as inspection_panel};
+use crate::apps::vcs::presence::{VcsDemoPresence, VcsDemoPresenceMutation};
 use crate::apps::vcs::terminology::vcs_play_labels;
 use crate::artifacts::vcs::{op::VcsDemoMutation, VcsSnapshot, VCS_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ui_text, ActionDescriptor, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_plugin::{
+    ui_text, ActionDescriptor, App, ArtifactApp, ArtifactView, ConfigView, DraftView, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode, NoDraft,
+    NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
+};
 use serde_json::Value;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const VCS_PLAY_APP_ID: &str = "vcs-play";
+pub use document_panel::VCS_PLAY_BODY_DOCUMENT;
 pub use editor::VCS_PLAY_BODY_EDITOR;
 pub use history::VCS_PLAY_BODY_HISTORY;
-pub use document_panel::VCS_PLAY_BODY_DOCUMENT;
 pub use inspection_panel::VCS_PLAY_BODY_INSPECTION;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
@@ -47,94 +49,6 @@ pub fn vcs_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 /// ordinary actions.
 pub const VCS_INTERACTION_HISTORY: &str = "history";
 //#endregion 🔖️Interaction
-
-//#region 🔌️Registration
-/// 🗂️ Registers `VcsSnapshot`'s pack<->dsl codec under its real `document_schema()` string so
-/// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse vcs-play
-/// documents without depending on this crate's concrete snapshot/mutation types. Called by
-/// `semio_plugin!`'s `setup:` hook — was the old bundle crate's `register_vcs_exports()`, then
-/// `⚙️engine::register()` (dissolved per ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES:
-/// `register()`/`register_pilot_languages()` are app-constitutional, not headless-engine compute — this
-/// body calls `crate::apps::vcs::config::schema::register_app_schema()` and
-/// `register_document_codec_for_app::<VcsPlayApp>(…)`, both app types).
-pub fn register() {
-    crate::artifacts::vcs::io_registry::register();
-
-    register_artifact_schema();
-    register_artifact_inference();
-    register_pilot_languages();
-    crate::apps::vcs::config::schema::register_app_schema();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<VcsPlayApp>(VCS_DOCUMENT_SCHEMA);
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "vcs.document",
-        extension: Some("vcs"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::vcs::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::vcs::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::vcs::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::vcs::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("vcs.document"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "vcs.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::vcs::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::vcs::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::vcs::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::vcs::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("vcs.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "vcs.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::vcs::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::vcs::schema::diff::text::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("vcs.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "vcs.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::vcs::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::vcs::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("vcs.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "vcs.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::vcs::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::vcs::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("vcs.spr"),
-    });
-}
-//#endregion 🔌️Registration
-
-//#region 🔖️SchemaRegistry
-/// 📌️ Registers the twenty handcrafted schema leaves for `s.vcs.vcs`.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::vcs::schema::vcs_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.vcs.vcs.inference`'s facet leaves into the OS-wide inference catalog — sibling
-/// to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inference() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::vcs::standards::v1::subsets::any::schema::inferences::vcs_artifact_inference_descriptor());
-}
-//#endregion 🔖️SchemaRegistry
 
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
@@ -199,6 +113,10 @@ impl ArtifactApp for VcsPlayApp {
     const APP_ID: &'static str = VCS_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::vcs::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> VcsSnapshot {
         crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot()
     }
@@ -210,7 +128,14 @@ impl ArtifactApp for VcsPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &VcsCommand, doc: &ArtifactView<'_, VcsSnapshot>, cfg: &ConfigView<'_, VcsDemoConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(
+        command: &VcsCommand,
+        doc: &ArtifactView<'_, VcsSnapshot>,
+        cfg: &ConfigView<'_, VcsDemoConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -362,68 +287,105 @@ pub(crate) mod testkit {
         };
         let last_checkpoint_id = |app: &VcsApp| -> String { seeded_envelope(app).vcs.checkpoints.last().expect("checkpoint just committed").id.clone() };
 
-        edit(app, |s| { s.counter = 1; s.title = "VCS Demo".into(); });
+        edit(app, |s| {
+            s.counter = 1;
+            s.title = "VCS Demo".into();
+        });
         commit(app, "Bootstrap");
         let c1 = last_checkpoint_id(app);
 
-        edit(app, |s| { s.notes = "main line".into(); s.status = "draft".into(); });
+        edit(app, |s| {
+            s.notes = "main line".into();
+            s.status = "draft".into();
+        });
         commit(app, "Annotate main draft");
         let c2 = last_checkpoint_id(app);
 
-        edit(app, |s| { s.counter = 2; });
+        edit(app, |s| {
+            s.counter = 2;
+        });
         commit(app, "Main milestone");
         let c3 = last_checkpoint_id(app);
 
         checkout(app, &c3);
         let feature_a_id = create_alternative(app, "feature-a");
-        edit(app, |s| { s.title = "Feature A".into(); s.tags.push("feature-a".into()); });
+        edit(app, |s| {
+            s.title = "Feature A".into();
+            s.tags.push("feature-a".into());
+        });
         commit(app, "Start feature A");
         let c4 = last_checkpoint_id(app);
 
-        edit(app, |s| { s.counter = 10; });
+        edit(app, |s| {
+            s.counter = 10;
+        });
         commit(app, "Feature A progress");
 
         checkout(app, &c3);
         let feature_b_id = create_alternative(app, "feature-b");
-        edit(app, |s| { s.title = "Feature B".into(); s.notes = "branch b".into(); });
+        edit(app, |s| {
+            s.title = "Feature B".into();
+            s.notes = "branch b".into();
+        });
         commit(app, "Start feature B");
 
-        edit(app, |s| { s.counter = 20; });
+        edit(app, |s| {
+            s.counter = 20;
+        });
         commit(app, "Feature B try");
 
         checkout(app, &c3);
-        edit(app, |s| { s.status = "active".into(); });
+        edit(app, |s| {
+            s.status = "active".into();
+        });
         commit(app, "Resume main");
         let c8 = last_checkpoint_id(app);
 
         switch_alternative(app, &feature_a_id);
-        edit(app, |s| { s.counter = 11; s.tags.push("wip".into()); });
+        edit(app, |s| {
+            s.counter = 11;
+            s.tags.push("wip".into());
+        });
         commit(app, "Feature A sprint");
 
         checkout(app, &c4);
         let _ = create_alternative(app, "feature-a-hotfix");
-        edit(app, |s| { s.status = "hotfix".into(); });
+        edit(app, |s| {
+            s.status = "hotfix".into();
+        });
         commit(app, "Hotfix off feature A");
 
         switch_alternative(app, &feature_b_id);
-        edit(app, |s| { s.tags.push("review".into()); });
+        edit(app, |s| {
+            s.tags.push("review".into());
+        });
         commit(app, "Feature B review");
 
         checkout(app, &c8);
-        edit(app, |s| { s.counter = 3; s.notes = "main polish".into(); s.tags.push("release".into()); });
+        edit(app, |s| {
+            s.counter = 3;
+            s.notes = "main polish".into();
+            s.tags.push("release".into());
+        });
         commit(app, "Main batch polish");
 
-        edit(app, |s| { s.status = "done".into(); });
+        edit(app, |s| {
+            s.status = "done".into();
+        });
         commit(app, "Main release");
 
         checkout(app, &c2);
         let _ = create_alternative(app, "docs");
-        edit(app, |s| { s.notes = "documentation pass".into(); });
+        edit(app, |s| {
+            s.notes = "documentation pass".into();
+        });
         commit(app, "Docs branch");
 
         checkout(app, &c1);
         let _ = create_alternative(app, "spike");
-        edit(app, |s| { s.title = "Spike prototype".into(); });
+        edit(app, |s| {
+            s.title = "Spike prototype".into();
+        });
         commit(app, "Spike experiment");
     }
 }

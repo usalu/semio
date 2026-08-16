@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📑reports` per Wave C.
 
 use super::mutation::DeleteReportRecord;
+use crate::artifacts::program::diff::ProgramReportsDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramReportsDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteReportRecord, _base: &ProgramSnapshot) -> ProgramDiff {

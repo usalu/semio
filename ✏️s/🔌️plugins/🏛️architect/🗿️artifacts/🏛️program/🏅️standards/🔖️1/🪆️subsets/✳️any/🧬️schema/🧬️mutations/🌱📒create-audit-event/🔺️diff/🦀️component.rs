@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📒audit-events` per Wave C.
 
 use super::mutation::CreateAuditEvent;
+use crate::artifacts::program::diff::ProgramAuditEventsDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramAuditEventsDelta};
 
 /// 🌱️ `added = [payload row]` — the row lands at the end of `program.audit_events` on apply.
 pub fn diff(payload: &CreateAuditEvent, _base: &ProgramSnapshot) -> ProgramDiff {

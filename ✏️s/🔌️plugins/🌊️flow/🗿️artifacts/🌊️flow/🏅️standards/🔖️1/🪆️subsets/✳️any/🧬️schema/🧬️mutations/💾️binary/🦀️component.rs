@@ -34,6 +34,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<FlowMutation, protocol::ProtocolError> 
 mod tests {
     use super::*;
     use crate::artifacts::flow::FlowSnapshot;
+    use protocol::Identified;
 
     fn sample_move_widgets_operation() -> FlowMutation {
         FlowMutation::MoveWidgets(crate::artifacts::flow::schema::mutations::move_widgets::mutation::MoveWidgets {
@@ -54,6 +55,35 @@ mod tests {
         let envelope = store::create_document_envelope::<FlowSnapshot, FlowMutation>("flow.fixture", "doc-text-test", FlowSnapshot::default(), None);
         let mut doc_store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![sample_move_widgets_operation()], description: None }).expect("apply");
+        store::os_store::test_support::assert_document_text_round_trip(&doc_store);
+        store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
+    }
+
+    /// 🌉️ The composite pilot's own op text/binary law, plus proof it survives the REAL
+    /// `ArtifactStore::dispatch` path — `replay_mutations` calls `Op::encode_op()` on every applied
+    /// mutation before it even reaches history, so a composite whose codec only worked in isolation
+    /// would still fail here.
+    #[test]
+    fn duplicate_widget_composite_round_trips_through_op_codecs_and_a_real_store_dispatch() {
+        let widget = flow::Widget::InputNote { id: "note-1".into(), text: "hello".into() };
+        let create = FlowMutation::CreateWidget(crate::artifacts::flow::schema::mutations::create_widget::mutation::CreateWidget { index: 0, widget });
+        let duplicate = FlowMutation::DuplicateWidget(crate::artifacts::flow::schema::mutations::duplicate_widget::mutation::DuplicateWidget {
+            source_id: "note-1".into(),
+            new_id: "note-2".into(),
+            synapse_id: "note-1-to-note-2".into(),
+            from_port: "out".into(),
+            to_port: "in".into(),
+        });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&duplicate);
+        let bytes = encode_op(&duplicate).expect("encode");
+        assert_eq!(decode_op(&bytes).expect("decode"), duplicate);
+
+        let envelope = store::create_document_envelope::<FlowSnapshot, FlowMutation>("flow.fixture", "doc-composite-test", FlowSnapshot::default(), None);
+        let mut doc_store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![create, duplicate], description: None }).expect("apply composite through the real store");
+        let live = doc_store.snapshot().expect("snapshot").to_fixture();
+        assert!(live.widgets.iter().any(|widget| widget.id() == "note-2"));
+        assert!(live.synapses.iter().any(|synapse| synapse.id == "note-1-to-note-2"));
         store::os_store::test_support::assert_document_text_round_trip(&doc_store);
         store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
     }

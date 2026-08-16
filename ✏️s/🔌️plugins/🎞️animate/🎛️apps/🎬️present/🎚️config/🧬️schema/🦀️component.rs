@@ -9,16 +9,17 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.animate.present.config")]
 pub struct PresentConfig {
-    #[state(config)] pub engagement_input: String,
-    #[state(config)] pub locale: String,
+    #[state(config)]
+    pub engagement_input: String,
+    #[state(config)]
+    pub locale: String,
 }
 //#endregion 🔖️Config
 
-//region 📎 App-schema self-registration
-/// 📎 Self-registers this app's schema descriptor into the open `AppSchemaRegistry`, mirroring the
-/// same construction the framework's closed catalog previously hardcoded for `s.animate.present`.
-pub fn register_app_schema() {
-    ::schema::register_app_schema_descriptor(::schema::AppSchemaDescriptor {
+//region 📎 App-schema descriptor
+/// 📎 `s.animate.present`'s config and presence schema, owned by this leaf.
+pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+    ::schema::AppSchemaDescriptor {
         id: "s.animate.present",
         config: ::schema::FacetLeaves {
             rust: include_str!("🦀️component.rs"),
@@ -34,7 +35,6 @@ pub fn register_app_schema() {
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️component.json"),
             proto: include_str!("../../👥️presence/🧬️schema/🛰️component.proto"),
         },
-    });
+    }
 }
-//endregion 📎 App-schema self-registration
-
+//endregion 📎 App-schema descriptor

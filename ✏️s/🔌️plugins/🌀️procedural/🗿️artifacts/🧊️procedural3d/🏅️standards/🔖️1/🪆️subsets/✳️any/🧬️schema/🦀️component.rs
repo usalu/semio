@@ -37,8 +37,7 @@ pub struct Procedural3dArtifact {
     #[state(presence)] pub selected_generation_id: Option<String>,
     #[state(artifact)] pub generation_preview_text: Option<String>,
     #[state(presence)] pub active_utility_id: String,
-    #[state(config)] pub locale: String,
-    #[state(config)] pub contributions_json: String}
+    #[state(config)] pub locale: String}
 //#endregion 🔖️Procedural3dArtifact
 
 //#region 🔖️PreviewCamera
@@ -84,8 +83,7 @@ impl Default for Procedural3dArtifact {
             selected_generation_id: None,
             generation_preview_text: None,
             active_utility_id: "move".into(),
-            locale: "en-US".into(),
-            contributions_json: "[]".into()}
+            locale: "en-US".into()}
     }
 }
 

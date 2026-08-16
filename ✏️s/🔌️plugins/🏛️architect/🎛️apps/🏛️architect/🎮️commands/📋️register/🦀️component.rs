@@ -5,7 +5,7 @@ pub mod select_register {
     use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
-    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -22,12 +22,12 @@ pub mod select_register {
 }
 
 pub mod add_register_item {
+    use crate::apps::architect::behavior::apply_template;
     use crate::apps::architect::catalog::add_register_item_operation;
     use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
-    use crate::apps::architect::behavior::apply_template;
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
-    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -66,7 +66,7 @@ pub mod remove_register_item {
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::schema::mutations as leaves;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
-    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -100,7 +100,7 @@ pub mod patch_register_item {
     use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
-    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
 

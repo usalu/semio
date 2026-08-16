@@ -7,9 +7,14 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.architect.architect.presence")]
 pub struct ArchitectPresence {
-    #[state(presence)] pub active_register: String,
-    #[state(presence)] pub adjacency_kind_filter: Option<AdjacencyKind>,
-    #[state(presence)] pub graph_camera_x: f64,
-    #[state(presence)] pub graph_camera_y: f64,
-    #[state(presence)] pub graph_camera_zoom: f64,
+    #[state(presence)]
+    pub active_register: String,
+    #[state(presence)]
+    pub adjacency_kind_filter: Option<AdjacencyKind>,
+    #[state(presence)]
+    pub graph_camera_x: f64,
+    #[state(presence)]
+    pub graph_camera_y: f64,
+    #[state(presence)]
+    pub graph_camera_zoom: f64,
 }

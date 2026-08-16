@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🎓workshops` per Wave C.
 
 use super::mutation::DeleteWorkshop;
+use crate::artifacts::program::diff::ProgramWorkshopsDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramWorkshopsDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeleteWorkshop, _base: &ProgramSnapshot) -> ProgramDiff {

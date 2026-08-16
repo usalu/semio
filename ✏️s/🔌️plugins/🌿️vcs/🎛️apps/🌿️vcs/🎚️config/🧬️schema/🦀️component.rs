@@ -6,13 +6,14 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.vcs.vcs.config")]
 pub struct VcsDemoConfig {
-    #[state(config)] pub locale: String,
+    #[state(config)]
+    pub locale: String,
 }
 
-//region 📎 App-schema self-registration
-/// 📎 Registers `s.vcs.vcs`'s config+presence schema descriptor into the process-local registry.
-pub fn register_app_schema() {
-    ::schema::register_app_schema_descriptor(::schema::AppSchemaDescriptor {
+//region 📎 App-schema descriptor
+/// 📎 `s.vcs.vcs`'s config and presence schema, owned by this leaf.
+pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+    ::schema::AppSchemaDescriptor {
         id: "s.vcs.vcs",
         config: ::schema::FacetLeaves {
             rust: include_str!("🦀️component.rs"),
@@ -28,7 +29,6 @@ pub fn register_app_schema() {
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️component.json"),
             proto: include_str!("../../👥️presence/🧬️schema/🛰️component.proto"),
         },
-    });
+    }
 }
-//endregion 📎 App-schema self-registration
-
+//endregion 📎 App-schema descriptor

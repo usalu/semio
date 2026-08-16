@@ -304,10 +304,10 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
 /// the old side-effecting `register()`, which called five different global registries directly from a
 /// plugin `.setup()` callback. Mesh/DWG format handling for `"3d.lowpoly"` flows entirely through
-/// `.composers(...)` below (the same `io_registry::entries()` table `io_registry::register()` used to
-/// call directly) — the former `register_mesh_exporter`/`register_mesh_importer`/`register_mesh_dwg_*`
+/// `.composers(...)` below (the typed `standards::v1::subsets::any::io::io_registry::entries()` table)
+/// — the former `register_mesh_exporter`/`register_mesh_importer`/`register_mesh_dwg_*`
 /// calls were never carried into this file; they would have duplicated this composer registration
-/// rather than adding anything (see this file's own `io_registry` wrapper below). Relocated from
+/// rather than adding anything. Relocated from
 /// `⚙️engine/🦀️component.rs` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g3): `⚙️engine`
 /// was removed from the taxonomy and `declaration()` describes the artifact, not engine behaviour, so
 /// its home is the artifact root alongside `artifact_kind()`.
@@ -500,25 +500,3 @@ fn artifact_schema_descriptor_leaves_parse_and_field_states_match_snapshot_json(
     assert_eq!(crate::artifacts::lowpoly::schema::LowpolyArtifact::artifact_schema_id(), "s.lowpoly.lowpoly");
 }
 //#endregion 🧪️Tests
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::artifacts::lowpoly::standards::v1::subsets::any::io::io_registry as v1;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("LowpolyComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
-    }
-
-    pub fn register() {
-        register_composer_entries(v1::entries());
-    }
-}
-//#endregion 🚪️DerivedIoRegistry

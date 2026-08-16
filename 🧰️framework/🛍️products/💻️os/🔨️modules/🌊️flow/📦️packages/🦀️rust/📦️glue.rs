@@ -34,12 +34,6 @@ pub use crate::infinite::canvas as canvas;
 pub use neural_engine as neural;
 //#endregion 🔖️DagCanvasNeural
 
-//#region 🔖️NeuralDag
-/// 🌳️ DAG→neural tree adapter (`neural_dag::tree_from_dag`) — parent of the engine package.
-#[path = "../../../🧠️neural/🦀️component.rs"]
-pub mod neural_dag;
-//#endregion 🔖️NeuralDag
-
 //#region 🔖️Playbook
 /// 📖️ Playbook domain types used by the forms bridge (`playbook::PlaybookSpec`, …).
 #[path = "../../../📖️playbook/🦀️component.rs"]

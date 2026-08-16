@@ -6,8 +6,8 @@
 //! `unwrap_or_default` against a `ProgramSnapshot`-shaped JSON value that has no such keys),
 //! just through the current fields and printing the real DSL text honestly.
 use crate::artifacts::program::schema::snapshot::ProgramSnapshot;
-use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
+use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 
@@ -15,10 +15,7 @@ pub fn serialize(snapshot: &ProgramSnapshot) -> Result<CsvSnapshot, store::TextE
     Ok(CsvSnapshot {
         schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),
         has_header: true,
-        records: vec![
-            CsvRecord { fields: vec![CsvField { value: "payload".into(), quoted: false }] },
-            CsvRecord { fields: vec![CsvField { value: <ProgramSnapshot as store::ArtifactDsl>::print_dsl(snapshot), quoted: true }] },
-        ],
+        records: vec![CsvRecord { fields: vec![CsvField { value: "payload".into(), quoted: false }] }, CsvRecord { fields: vec![CsvField { value: <ProgramSnapshot as store::ArtifactDsl>::print_dsl(snapshot), quoted: true }] }],
     })
 }
 

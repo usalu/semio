@@ -10,8 +10,7 @@
     "previewCamera",
     "sunJson",
     "activeUtilityId",
-    "locale",
-    "contributionsJson"
+    "locale"
   ],
   "properties": {
     "lodMode": {
@@ -47,10 +46,6 @@
       "x-semio-state": "config"
     },
     "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "contributionsJson": {
       "type": "string",
       "x-semio-state": "config"
     }

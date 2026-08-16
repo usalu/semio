@@ -349,6 +349,23 @@ export type ArtifactPresencePeer = {
   readonly cursor?: { readonly x: number; readonly y: number };
   readonly viewport?: { readonly x: number; readonly y: number; readonly zoom: number };
   readonly dragGhostJson?: string;
+  /** 🕹️ Twin of Rust `PresenceInteraction` (presence bit 7) — the peer's live hover/selection per
+   * interaction domain. Optional because a peer that has never interacted encodes no bit-7 section. */
+  readonly interaction?: ArtifactPresenceInteraction;
+};
+
+/** 🕹️ Twin of Rust `PresenceInteraction`. */
+export type ArtifactPresenceInteraction = {
+  readonly app_id: string;
+  readonly domains: readonly ArtifactPresenceDomain[];
+};
+
+/** 🕹️ Twin of Rust `PresenceDomain` — one domain's granularity plus its selected/hovered ids. */
+export type ArtifactPresenceDomain = {
+  readonly domain: string;
+  readonly granularity: string;
+  readonly selected: readonly string[];
+  readonly hovered: readonly string[];
 };
 
 /** 🌐️ One causally-ordered operation crossing the wire — mirrors Rust `protocol_causal::
@@ -564,6 +581,7 @@ export function encodePresencePeer(peer: ArtifactPresencePeer): number[] {
   if (peer.cursor !== undefined) presence |= 1 << 4;
   if (peer.viewport !== undefined) presence |= 1 << 5;
   if (peer.dragGhostJson !== undefined) presence |= 1 << 6;
+  if (peer.interaction !== undefined) presence |= 1 << 7;
   out.push(presence);
   writeVarintU64(out, peer.connectedAtMs);
   if (peer.label !== undefined) writeStr(out, peer.label);
@@ -580,6 +598,16 @@ export function encodePresencePeer(peer: ArtifactPresencePeer): number[] {
     writeF64(out, peer.viewport.zoom);
   }
   if (peer.dragGhostJson !== undefined) writeStr(out, peer.dragGhostJson);
+  if (peer.interaction !== undefined) {
+    writeStr(out, peer.interaction.app_id);
+    writeVarintU64(out, peer.interaction.domains.length);
+    for (const domain of peer.interaction.domains) {
+      writeStr(out, domain.domain);
+      writeStr(out, domain.granularity);
+      writeVecStr(out, domain.selected);
+      writeVecStr(out, domain.hovered);
+    }
+  }
   return out;
 }
 
@@ -598,7 +626,19 @@ export function decodePresencePeer(bytes: Uint8Array, pos: [number]): ArtifactPr
   const cursor = presence & (1 << 4) ? { x: readF64(bytes, pos), y: readF64(bytes, pos) } : undefined;
   const viewport = presence & (1 << 5) ? { x: readF64(bytes, pos), y: readF64(bytes, pos), zoom: readF64(bytes, pos) } : undefined;
   const dragGhostJson = presence & (1 << 6) ? readStr(bytes, pos) : undefined;
-  return { actor, label, presencePack, connectedAtMs, userId, role, cursor, viewport, dragGhostJson };
+  const interaction = presence & (1 << 7) ? readPresenceInteraction(bytes, pos) : undefined;
+  return { actor, label, presencePack, connectedAtMs, userId, role, cursor, viewport, dragGhostJson, interaction };
+}
+
+/** 🕹️ Twin of Rust `decode_presence_interaction` — app id, then a varint-counted run of domains. */
+function readPresenceInteraction(bytes: Uint8Array, pos: [number]): ArtifactPresenceInteraction {
+  const app_id = readStr(bytes, pos);
+  const count = Number(readVarintU64(bytes, pos));
+  const domains: ArtifactPresenceDomain[] = [];
+  for (let index = 0; index < count; index += 1) {
+    domains.push({ domain: readStr(bytes, pos), granularity: readStr(bytes, pos), selected: readVecStr(bytes, pos), hovered: readVecStr(bytes, pos) });
+  }
+  return { app_id, domains };
 }
 
 //#region 🔖️Combinators
@@ -2327,6 +2367,15 @@ export class AppChannelClient {
   private readonly instanceId: number;
   private readonly appId: string;
   private readonly actor: string;
+  /** 📦️ Per-instance document-pack cache (ticket
+   * 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS, scout-1 §4: "the
+   * browser host keeps NO document pack per instance today"). Populated from BOTH directions —
+   * {@link loadDocument}'s own arguments (no round trip needed to know what we just sent) and every
+   * `AppFrame::Document` reply any `exchange` call returns (`ReadDocument`, `LoadDocument`'s own
+   * echo, or any future command that happens to include one) — so a transaction coordinator can ask
+   * "what does this instance's document look like right now" without a dedicated round trip. */
+  private cachedPack: Uint8Array | null = null;
+  private cachedSpr: Uint8Array | null = null;
 
   constructor(handle: AppChannelHandle, instanceId: number, appId: string, actor: string = "local") {
     this.handle = handle;
@@ -2340,10 +2389,32 @@ export class AppChannelClient {
     return this.seq;
   }
 
+  /** 📦️ Scans every frame from one `exchange` call for `AppFrame::Document` and refreshes the pack
+   * cache — the "every `AppFrame::Document` reply" half of the cache-population contract. */
+  private captureDocumentFrames(frames: readonly AppFrameValue[]): void {
+    for (const frame of frames) {
+      if ("Document" in frame) {
+        this.cachedPack = new Uint8Array(frame.Document.pack);
+        this.cachedSpr = new Uint8Array(frame.Document.spr);
+      }
+    }
+  }
+
+  /** 📦️ The cached `{pack, spr}` for this instance's document, or `null` before any
+   * {@link loadDocument} call or `AppFrame::Document` reply has been observed. Surfaced to the
+   * transaction coordinator through the `PluginWasmHandle` adapter's own `documentPack` accessor
+   * (`PluginRuntime/🟦️component.tsx`) — a contributor plan call needs the target's current snapshot
+   * pack, and this is the only place that snapshot is retained host-side. */
+  documentPack(): { readonly pack: Uint8Array; readonly spr: Uint8Array } | null {
+    return this.cachedPack && this.cachedSpr ? { pack: this.cachedPack, spr: this.cachedSpr } : null;
+  }
+
   /** 🔀️ Sends one encoded command, decodes every frame the batched `exchange` call returns. */
   private async exchangeOne(command: AppCommandValue): Promise<AppFrameValue[]> {
     const replies = await this.handle.exchange(this.instanceId, [encodeAppCommand(command)]);
-    return replies.map(decodeAppFrame);
+    const frames = replies.map(decodeAppFrame);
+    this.captureDocumentFrames(frames);
+    return frames;
   }
 
   /** 👋️ The channel handshake — must be the first call on a freshly created instance. Returns the
@@ -2382,6 +2453,11 @@ export class AppChannelClient {
   }
 
   async loadDocument(pack: Uint8Array, spr: Uint8Array): Promise<AppFrameValue[]> {
+    // 📦️ Cache from the call's own arguments too — the "both directions" half of the cache-population
+    // contract, so a caller doesn't have to wait for an echoed `AppFrame::Document` to know what it
+    // just loaded (and `plugin_exchange`'s `LoadDocument` handling is not guaranteed to echo one).
+    this.cachedPack = pack;
+    this.cachedSpr = spr;
     return this.exchangeOne({ LoadDocument: { seq: this.nextSeq(), pack: Array.from(pack), spr: Array.from(spr) } });
   }
 
@@ -2399,6 +2475,28 @@ export class AppChannelClient {
   /** 🔗️ Detaches this instance's backbone, if any. */
   async detachBackbone(): Promise<AppFrameValue[]> {
     return this.exchangeOne({ DetachBackbone: { seq: this.nextSeq() } });
+  }
+
+  /** 📂️ Opens an artifact in its resolved (or explicitly named) viewer/editor surface —
+   * `os.open-artifact` (contract-freeze §3 of
+   * `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET/`). Empty
+   * `pluginId`/`appId` means "resolve via the `OpeningResolver`". `role` is `0` Viewer, `1`
+   * Editor — declaration order of `AppRole` (kernel `🔖️AppRouter` region). */
+  async openArtifact(artifactRef: string, role: number, pluginId = "", appId = ""): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ openArtifact: { seq: this.nextSeq(), artifact_ref: artifactRef, role, plugin_id: pluginId, app_id: appId } });
+  }
+
+  /** 🎚️ Pins a viewer/editor default for one `(artifactKind, standard, subset, role)` coordinate,
+   * persisted event-sourced in the OS `os.config.opening` facet — `os.set-default-viewer`/
+   * `os.set-default-editor`. */
+  async setDefaultApp(artifactKind: string, standard: string, subset: string, role: number, pluginId: string, appId: string): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ setDefaultApp: { seq: this.nextSeq(), artifact_kind: artifactKind, standard, subset, role, plugin_id: pluginId, app_id: appId } });
+  }
+
+  /** 🎚️ Clears a previously pinned default, falling back to the `OpeningResolver`'s owner/router
+   * order — `os.clear-default-app`. */
+  async clearDefaultApp(artifactKind: string, standard: string, subset: string, role: number): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ clearDefaultApp: { seq: this.nextSeq(), artifact_kind: artifactKind, standard, subset, role } });
   }
 
   /** 🖱️ On-demand context menu — one `ContextMenu` reply whose `in_reply_to` matches this call's `seq`. */
@@ -2431,8 +2529,57 @@ export class AppChannelClient {
    * refresh-ui tick. */
   async drain(): Promise<AppFrameValue[]> {
     const replies = await this.handle.exchange(this.instanceId, []);
-    return replies.map(decodeAppFrame);
+    const frames = replies.map(decodeAppFrame);
+    this.captureDocumentFrames(frames);
+    return frames;
   }
+
+  //#region 🔖️Transaction
+  /** 🎫️ `TransactionPrepare`, owner-mutation wire form (contract freeze §2/§5.3): `mutationId` +
+   * `payload` set, `preparedOps` empty. Sent when `ArtifactMutationRouter` resolves the mutation to
+   * its OWNING plugin. */
+  async transactionPrepareOwner(txnId: string, mutationId: string, payload: Uint8Array): Promise<AppFrameValue[]> {
+    return this.exchangeOne({
+      transactionPrepare: { seq: this.nextSeq(), txn_id: txnId, mutation_id: mutationId, payload: Array.from(payload), prepared_ops: [], label: "", origin: [] },
+    });
+  }
+
+  /** 🎫️ `TransactionPrepare`, pre-planned wire form: `preparedOps`/`label`/`origin` set, `mutationId`
+   * empty. Sent to a CONTRIBUTED-mutation target (after the host has already called the contributor's
+   * `contributor.artifact-mutation-plan`) or to any member the coordinator is re-batching several
+   * already-known ops onto in one call — see `PluginRuntime/🟦️component.tsx`'s `TransactionCoordinator`. */
+  async transactionPreparePlanned(txnId: string, preparedOps: readonly Uint8Array[], label: string, origin: Uint8Array): Promise<AppFrameValue[]> {
+    return this.exchangeOne({
+      transactionPrepare: {
+        seq: this.nextSeq(),
+        txn_id: txnId,
+        mutation_id: "",
+        payload: [],
+        prepared_ops: preparedOps.map((op) => Array.from(op)),
+        label,
+        origin: Array.from(origin),
+      },
+    });
+  }
+
+  async transactionCommit(txnId: string): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ transactionCommit: { seq: this.nextSeq(), txn_id: txnId } });
+  }
+
+  async transactionRollback(txnId: string): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ transactionRollback: { seq: this.nextSeq(), txn_id: txnId } });
+  }
+
+  /** 🎁️ Group undo — fans out to every member of `groupId` (contract freeze §5.7); this call is one
+   * member's half, the coordinator drives the fan-out. */
+  async transactionUndo(groupId: string): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ transactionUndo: { seq: this.nextSeq(), group_id: groupId } });
+  }
+
+  async transactionRedo(groupId: string): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ transactionRedo: { seq: this.nextSeq(), group_id: groupId } });
+  }
+  //#endregion 🔖️Transaction
 }
 //#endregion 🔖️AppChannelClient
 
@@ -2579,8 +2726,14 @@ if (import.meta.vitest) {
       const { fileURLToPath, pathToFileURL } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(import.meta.url));
-      const fixturesDir = join(here, "..", "..", "🧫️fixtures");
-      const rsPkgDir = join(here, "..", "🦀️rust", "pkg");
+      // 📦️ Both of these pointed at pre-restructure locations (`🧰️framework/🧫️fixtures` and
+      // `🧰️framework/🛍️products/🦀️rust/pkg`), neither of which exists — so this cross-language check
+      // had been failing on a missing module rather than comparing anything. The fixtures live beside
+      // this file; the wasm package is the one `🖥️host`'s own `wasm` target builds (crate
+      // `semio-framework-os`, whose `wasm_exports` module is gated on its `os-host-full` feature —
+      // the kernel crate next door has neither that module nor that feature).
+      const fixturesDir = join(here, "🧫️fixtures");
+      const rsPkgDir = join(here, "🖥️host", "📦️packages", "🦀️rust", "pkg");
 
       const wasmModule = (await import(/* @vite-ignore */ pathToFileURL(join(rsPkgDir, "semio_framework_os.js")).href)) as {
         default: (opts: { module_or_path: Uint8Array }) => Promise<unknown>;
@@ -2969,12 +3122,12 @@ if (import.meta.vitest) {
       const handle = fakeHandle((instanceId, commands) => {
         seen = commands;
         expect(instanceId).toBe(7);
-        return [{ Welcome: { channel_version: 8, instance: 7, manifest: [9, 9] } }];
+        return [{ Welcome: { channel_version: 10, instance: 7, manifest: [9, 9] } }];
       });
       const client = new AppChannelClient(handle, 7, "app.demo", "actor-1");
       const frame = await client.hello({ mode: "edit" });
-      expect(seen).toEqual([{ Hello: { channel_version: 8, app_id: "app.demo", actor: "actor-1", config: Array.from(encodePackValue({ mode: "edit" })) } }]);
-      expect(frame).toEqual({ Welcome: { channel_version: 8, instance: 7, manifest: [9, 9] } });
+      expect(seen).toEqual([{ Hello: { channel_version: 10, app_id: "app.demo", actor: "actor-1", config: Array.from(encodePackValue({ mode: "edit" })) } }]);
+      expect(frame).toEqual({ Welcome: { channel_version: 10, instance: 7, manifest: [9, 9] } });
     });
 
     it("hello() throws when the exchange returns no frame", async () => {
@@ -3024,6 +3177,246 @@ if (import.meta.vitest) {
       });
       const client = new AppChannelClient(handle, 1, "app.demo");
       expect(await client.drain()).toEqual([{ Events: { in_reply_to: null, events: [[1]] } }]);
+    });
+
+    it("caches the document pack from loadDocument()'s own arguments before any reply arrives", async () => {
+      const handle = fakeHandle(() => [{ Done: { in_reply_to: 1 } }]);
+      const client = new AppChannelClient(handle, 1, "app.demo");
+      expect(client.documentPack()).toBeNull();
+      await client.loadDocument(new Uint8Array([1, 2]), new Uint8Array([3]));
+      expect(client.documentPack()).toEqual({ pack: new Uint8Array([1, 2]), spr: new Uint8Array([3]) });
+    });
+
+    it("caches the document pack from every AppFrame::Document reply, most recent wins", async () => {
+      const handle = fakeHandle((_instanceId, commands) => {
+        const cmd = commands[0];
+        if (cmd && cmd !== "Bye" && "ReadDocument" in cmd) {
+          return [{ Document: { in_reply_to: cmd.ReadDocument.seq, pack: [9, 9], spr: [8], ops: "" } }];
+        }
+        return [{ Done: { in_reply_to: 1 } }];
+      });
+      const client = new AppChannelClient(handle, 1, "app.demo");
+      await client.readDocument();
+      expect(client.documentPack()).toEqual({ pack: new Uint8Array([9, 9]), spr: new Uint8Array([8]) });
+    });
+
+    it("transactionPrepareOwner()/transactionPreparePlanned()/transactionCommit()/transactionRollback()/transactionUndo()/transactionRedo() frame the right AppCommand variant", async () => {
+      const seen: AppCommandValue[] = [];
+      const handle = fakeHandle((_instanceId, commands) => {
+        seen.push(...commands);
+        return [{ Done: { in_reply_to: 1 } }];
+      });
+      const client = new AppChannelClient(handle, 1, "app.demo");
+      await client.transactionPrepareOwner("txn-1", "s.doc#kind", new Uint8Array([1]));
+      await client.transactionPreparePlanned("txn-1", [new Uint8Array([2]), new Uint8Array([3])], "duplicate", new Uint8Array([4]));
+      await client.transactionCommit("txn-1");
+      await client.transactionRollback("txn-1");
+      await client.transactionUndo("grp-1");
+      await client.transactionRedo("grp-1");
+      expect(seen[0]).toEqual({ transactionPrepare: { seq: 1, txn_id: "txn-1", mutation_id: "s.doc#kind", payload: [1], prepared_ops: [], label: "", origin: [] } });
+      expect(seen[1]).toEqual({ transactionPrepare: { seq: 2, txn_id: "txn-1", mutation_id: "", payload: [], prepared_ops: [[2], [3]], label: "duplicate", origin: [4] } });
+      expect(seen[2]).toEqual({ transactionCommit: { seq: 3, txn_id: "txn-1" } });
+      expect(seen[3]).toEqual({ transactionRollback: { seq: 4, txn_id: "txn-1" } });
+      expect(seen[4]).toEqual({ transactionUndo: { seq: 5, group_id: "grp-1" } });
+      expect(seen[5]).toEqual({ transactionRedo: { seq: 6, group_id: "grp-1" } });
+    });
+  });
+
+  // 🕸️ `@semio-tech/framework`'s `PluginGraph`/`InstanceDirectory`/`ArtifactMutationRouter`/
+  // `ArtifactInferenceRouter` (ticket 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS,
+  // W2-B) have no in-source-testing harness of their own (`@semio-tech/framework`'s vitest only
+  // `includeSource`s `🟦️glue.ts`, not the module file they're defined in) — dynamically importing the
+  // real workspace package here exercises them under a config that DOES run, without this file taking
+  // on a static dependency on `@semio-tech/framework`'s runtime exports.
+  describe("@semio-tech/framework PluginGraph", () => {
+    it("validates a graph with every dependency present and version-satisfying", async () => {
+      const { validatePluginDependencyGraph } = await import("@semio-tech/framework");
+      expect(
+        validatePluginDependencyGraph([
+          { pluginId: "a", version: "1.2.3" },
+          { pluginId: "b", version: "1.0.0", dependencies: [{ pluginId: "a", version: "^1.0.0" }] },
+        ]),
+      ).toEqual([]);
+    });
+
+    it("reports a missing dependency", async () => {
+      const { validatePluginDependencyGraph } = await import("@semio-tech/framework");
+      expect(validatePluginDependencyGraph([{ pluginId: "b", dependencies: [{ pluginId: "missing", version: "*" }] }])).toEqual([
+        { code: "transaction.dependency-missing", pluginId: "b", dependsOn: "missing" },
+      ]);
+    });
+
+    it("reports a version mismatch", async () => {
+      const { validatePluginDependencyGraph } = await import("@semio-tech/framework");
+      expect(
+        validatePluginDependencyGraph([
+          { pluginId: "a", version: "2.0.0" },
+          { pluginId: "b", dependencies: [{ pluginId: "a", version: "^1.0.0" }] },
+        ]),
+      ).toEqual([{ code: "transaction.version-mismatch", pluginId: "b", dependsOn: "a", required: "^1.0.0", actual: "2.0.0" }]);
+    });
+
+    it("resolves a diamond load order deterministically, tie-broken lexicographically", async () => {
+      const { resolvePluginLoadOrder } = await import("@semio-tech/framework");
+      const result = resolvePluginLoadOrder([
+        {
+          pluginId: "d",
+          dependencies: [
+            { pluginId: "b", version: "*" },
+            { pluginId: "c", version: "*" },
+          ],
+        },
+        { pluginId: "c", dependencies: [{ pluginId: "a", version: "*" }] },
+        { pluginId: "b", dependencies: [{ pluginId: "a", version: "*" }] },
+        { pluginId: "a" },
+      ]);
+      expect(result.errors).toEqual([]);
+      expect(result.order).toEqual(["a", "b", "c", "d"]);
+    });
+
+    it("names every member of a cycle", async () => {
+      const { resolvePluginLoadOrder } = await import("@semio-tech/framework");
+      const result = resolvePluginLoadOrder([
+        { pluginId: "a", dependencies: [{ pluginId: "b", version: "*" }] },
+        { pluginId: "b", dependencies: [{ pluginId: "a", version: "*" }] },
+      ]);
+      expect(result.order).toEqual([]);
+      expect(result.errors).toEqual([{ code: "transaction.cycle", members: ["a", "b"] }]);
+    });
+
+    it("versionSatisfies matches the frozen grammar (*, =, ^, ~, >=), including caret's leading-zero tiers", async () => {
+      const { versionSatisfies } = await import("@semio-tech/framework");
+      expect(versionSatisfies("1.2.3", "*")).toBe(true);
+      expect(versionSatisfies("1.2.3", "=1.2.3")).toBe(true);
+      expect(versionSatisfies("1.2.4", "=1.2.3")).toBe(false);
+      expect(versionSatisfies("1.9.0", "^1.2.3")).toBe(true);
+      expect(versionSatisfies("2.0.0", "^1.2.3")).toBe(false);
+      expect(versionSatisfies("0.2.9", "^0.2.3")).toBe(true);
+      expect(versionSatisfies("0.3.0", "^0.2.3")).toBe(false);
+      expect(versionSatisfies("0.0.9", "^0.0.3")).toBe(false);
+      expect(versionSatisfies("0.0.3", "^0.0.3")).toBe(true);
+      expect(versionSatisfies("1.2.9", "~1.2.3")).toBe(true);
+      expect(versionSatisfies("1.3.0", "~1.2.3")).toBe(false);
+      expect(versionSatisfies("1.2.3", ">=1.2.3")).toBe(true);
+      expect(versionSatisfies("9.9.9", ">=1.2.3")).toBe(true);
+      expect(versionSatisfies("1.2.2", ">=1.2.3")).toBe(false);
+    });
+
+    it("orderPluginRegistryEntries drops only the blocked entries, dependency-orders the rest", async () => {
+      const { orderPluginRegistryEntries } = await import("@semio-tech/framework");
+      const result = orderPluginRegistryEntries([
+        { pluginId: "b", moduleUrl: "b.js", dependencies: [{ pluginId: "a", version: "*" }] },
+        { pluginId: "a", moduleUrl: "a.js" },
+        { pluginId: "broken", moduleUrl: "broken.js", dependencies: [{ pluginId: "missing", version: "*" }] },
+      ]);
+      expect(result.order.map((entry) => entry.pluginId)).toEqual(["a", "b"]);
+      expect(result.errors).toEqual([{ code: "transaction.dependency-missing", pluginId: "broken", dependsOn: "missing" }]);
+    });
+
+    it("pluginGraphErrorMessage renders a real English and a real German message", async () => {
+      const { pluginGraphErrorMessage } = await import("@semio-tech/framework");
+      const error = { code: "transaction.dependency-missing" as const, pluginId: "b", dependsOn: "a" };
+      expect(pluginGraphErrorMessage(error, "en")).toContain("needs");
+      expect(pluginGraphErrorMessage(error, "de")).toContain("benötigt");
+    });
+
+    it("PluginGraph.canUnload refuses while a loaded dependent exists, allows once it's gone", async () => {
+      const { PluginGraph } = await import("@semio-tech/framework");
+      const graph = new PluginGraph([{ pluginId: "a" }, { pluginId: "b", dependencies: [{ pluginId: "a", version: "*" }] }]);
+      expect(graph.canUnload("a", new Set(["a", "b"]))).toBe(false);
+      expect(graph.canUnload("a", new Set(["a"]))).toBe(true);
+    });
+  });
+
+  describe("@semio-tech/framework InstanceDirectory and ArtifactRouters", () => {
+    it("InstanceDirectory registers, resolves, and unregisters", async () => {
+      const { InstanceDirectory } = await import("@semio-tech/framework");
+      const directory = new InstanceDirectory();
+      directory.register("artifact-1", { pluginId: "cad", instanceId: 3, artifactKind: "s.cad.model" });
+      expect(directory.resolve("artifact-1")).toEqual({ pluginId: "cad", instanceId: 3, artifactKind: "s.cad.model" });
+      directory.unregister("artifact-1");
+      expect(directory.resolve("artifact-1")).toBeUndefined();
+    });
+
+    it("ArtifactMutationRouter accepts a byte-identical re-registration, rejects a conflicting one", async () => {
+      const { ArtifactMutationRouter } = await import("@semio-tech/framework");
+      const router = new ArtifactMutationRouter();
+      router.registerOwner("s.cad.model", "s.cad#add-wall");
+      router.registerOwner("s.cad.model", "s.cad#add-wall");
+      expect(router.resolve("s.cad.model", "s.cad#add-wall")).toEqual({ kind: "owner" });
+      expect(() =>
+        router.registerContributed(
+          "s.cad.model",
+          "aec-building",
+          "cad",
+          { mutationId: "s.cad#add-wall", semantics: { verb: "add", entity: "wall", kind: "add-wall", record: "Wall" }, schemaVersion: 1, algorithmVersion: 1 },
+          true,
+        ),
+      ).toThrow(/conflict/);
+    });
+
+    it("ArtifactMutationRouter.registerContributed rejects a contributor that doesn't depend on the owner", async () => {
+      const { ArtifactMutationRouter } = await import("@semio-tech/framework");
+      const router = new ArtifactMutationRouter();
+      expect(() =>
+        router.registerContributed(
+          "s.cad.model",
+          "aec-building",
+          "cad",
+          { mutationId: "s.cad#aec-building:add-room", semantics: { verb: "add", entity: "room", kind: "add-room", record: "Room" }, schemaVersion: 1, algorithmVersion: 1 },
+          false,
+        ),
+      ).toThrow(/not a direct dependency/);
+    });
+
+    it("ArtifactInferenceRouter enforces owner === contributor and orders the depends_on DAG", async () => {
+      const { ArtifactInferenceRouter } = await import("@semio-tech/framework");
+      const router = new ArtifactInferenceRouter();
+      router.registerContributed(
+        "s.cad.model",
+        {
+          owner: "aec-building",
+          artifactKind: "s.cad.model",
+          artifactSchema: "s.cad.model",
+          artifactSchemaVersion: 1,
+          documentSchema: "s.cad",
+          documentSchemaVersion: 1,
+          inferenceSchema: "s.aec-building.load-path",
+          inferenceSchemaVersion: 1,
+          algorithmVersion: 1,
+          policyVersion: 1,
+          contributor: "aec-building",
+          dependsOn: [],
+        },
+        true,
+      );
+      expect(router.resolve("s.cad.model", "s.aec-building.load-path")).toEqual({ kind: "contributed", pluginId: "aec-building" });
+      expect(router.dependencyOrder()).toEqual(["s.cad.model s.aec-building.load-path"]);
+    });
+
+    it("ArtifactInferenceRouter.registerContributed rejects owner !== contributor", async () => {
+      const { ArtifactInferenceRouter } = await import("@semio-tech/framework");
+      const router = new ArtifactInferenceRouter();
+      expect(() =>
+        router.registerContributed(
+          "s.cad.model",
+          {
+            owner: "someone-else",
+            artifactKind: "s.cad.model",
+            artifactSchema: "s.cad.model",
+            artifactSchemaVersion: 1,
+            documentSchema: "s.cad",
+            documentSchemaVersion: 1,
+            inferenceSchema: "s.aec-building.load-path",
+            inferenceSchemaVersion: 1,
+            algorithmVersion: 1,
+            policyVersion: 1,
+            contributor: "aec-building",
+            dependsOn: [],
+          },
+          true,
+        ),
+      ).toThrow(/owner\/contributor mismatch/);
     });
   });
 }

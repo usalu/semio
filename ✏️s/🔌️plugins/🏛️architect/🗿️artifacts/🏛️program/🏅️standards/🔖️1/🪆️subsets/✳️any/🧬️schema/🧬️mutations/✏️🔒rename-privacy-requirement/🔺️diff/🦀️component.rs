@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🔒privacy` per Wave C.
 
 use super::mutation::RenamePrivacyRequirement;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramPrivacyDelta, ProgramPrivacyPatchEntry};
 use crate::artifacts::program::registers::PrivacyRequirementPatch;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenamePrivacyRequirement, _base: &ProgramSnapshot) -> ProgramDiff {

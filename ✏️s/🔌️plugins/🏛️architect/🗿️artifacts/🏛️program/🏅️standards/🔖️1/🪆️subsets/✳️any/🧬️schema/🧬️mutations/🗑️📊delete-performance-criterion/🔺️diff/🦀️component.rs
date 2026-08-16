@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📊performance` per Wave C.
 
 use super::mutation::DeletePerformanceCriterion;
+use crate::artifacts::program::diff::ProgramPerformanceDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramPerformanceDelta};
 
 /// 🗑️ `removed = [id]`.
 pub fn diff(payload: &DeletePerformanceCriterion, _base: &ProgramSnapshot) -> ProgramDiff {

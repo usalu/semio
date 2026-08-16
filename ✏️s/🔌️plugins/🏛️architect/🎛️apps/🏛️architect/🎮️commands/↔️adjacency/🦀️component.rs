@@ -6,7 +6,7 @@ pub mod set_adjacency_field {
     use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
-    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
 
@@ -37,7 +37,7 @@ pub mod set_adjacency_kind {
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::schema::mutations as leaves;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
-    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -83,7 +83,7 @@ pub mod set_adjacency_filter {
     use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
-    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

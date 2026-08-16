@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🚚delivery` per Wave C.
 
 use super::mutation::CreateDeliveryConstraint;
+use crate::artifacts::program::diff::ProgramDeliveryDelta;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramDeliveryDelta};
 
 /// 🌱️ `added = [payload row]` — the row lands at the end of `program.delivery` on apply.
 pub fn diff(payload: &CreateDeliveryConstraint, _base: &ProgramSnapshot) -> ProgramDiff {

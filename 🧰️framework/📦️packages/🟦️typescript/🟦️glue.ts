@@ -1,5 +1,6 @@
 /** @emoji 📦️ `@semio-tech/framework` — package glue (reexports + inline vitest). */
 export * from "../../🔨️modules/🎯️action-bus/🟦️component.ts";
+export * from "../../🔨️modules/🧮️action-argument-resolution/🟦️component.ts";
 export * from "../../🔨️modules/🧬️schema/🟦️component.ts";
 export * from "../../🔨️modules/🖥️platform/🟦️component.ts";
 export * from "../../🔨️modules/🔺️mesh/🟦️component.ts";

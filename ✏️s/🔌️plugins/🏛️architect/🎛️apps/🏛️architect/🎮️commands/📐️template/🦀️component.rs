@@ -1,11 +1,11 @@
 //! 📐️ Architect play app command — applying a sector/project template to the program.
 
 pub mod apply {
-    use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::apps::architect::behavior::apply_template;
+    use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
-    use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
