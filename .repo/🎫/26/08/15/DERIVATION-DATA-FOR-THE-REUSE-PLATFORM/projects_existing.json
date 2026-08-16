@@ -1,0 +1,3934 @@
+[
+  {
+    "id": "P01",
+    "title": "Kopfbau Halle 118",
+    "image": "asset/projekt/P01_k118_kopfbau_halle_118.jpg",
+    "city": "Winterthur",
+    "country": "Schweiz",
+    "year": "2021",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "in-situ-k-118-kopfbau-halle-118"
+    ],
+    "sources": [
+      {
+        "key": "in-situ-k-118-kopfbau-halle-118",
+        "title": "K.118 / Kopfbau Halle 118",
+        "url": "https://www.insitu.ch/projekte/196-k118-kopfbau-halle-118",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Stahltrag\\-struktur",
+        "—",
+        "—",
+        "Stahl",
+        "rückgebauter Stahlske\\-lettbau",
+        "Extern ex situ",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Stahlauß\\-entreppe",
+        "—",
+        "—",
+        "Stahl",
+        "Bürogebäude",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Fenster",
+        "—",
+        "—",
+        "Glas",
+        "Bürogebäude",
+        "Lokal ex situ",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Granit\\-fassaden\\-platte",
+        "Boden\\-belag",
+        "—",
+        "Naturstein",
+        "Fassade Bürogebäude",
+        "Lokal ex situ",
+        "Gebäude\\-hülle $\\to$ Innen\\-ausbau",
+        "Umnutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P02",
+    "title": "BedZED (Beddington Zero Energy Development)",
+    "image": "asset/projekt/P02_bedzed.jpg",
+    "city": "London",
+    "country": "Vereinigtes Königreich",
+    "year": "2002",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "bioregional-bedzed"
+    ],
+    "sources": [
+      {
+        "key": "bioregional-bedzed",
+        "title": "BedZED",
+        "url": "https://www.bioregional.com/projects-and-services/case-studies/bedzed-the-uks-first-large-scale-eco-village",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Stahlträger",
+        "—",
+        "ca. 98 t",
+        "Stahl",
+        "Umbau Bahnhof Brighton",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Holzstän\\-derwerk",
+        "—",
+        "54.000 m",
+        "Holz",
+        "Rückbau\\-bestand",
+        "—",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Tür",
+        "—",
+        "—",
+        "—",
+        "Rückbau\\-bestand",
+        "—",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P03",
+    "title": "BioPartner 5",
+    "image": "asset/projekt/P03_biopartner_5.jpg",
+    "city": "Leiden–Oegstgeest",
+    "country": "Niederlande",
+    "year": "2021",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "leiden-bio-science-park-circularity-biopartner-5"
+    ],
+    "sources": [
+      {
+        "key": "leiden-bio-science-park-circularity-biopartner-5",
+        "title": "Circularity / BioPartner 5",
+        "url": "https://leidenbioscienceparkprojects.nl/en/sustainability/circulariteit",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Stahlträger",
+        "—",
+        "ca. 150 t",
+        "Stahl",
+        "ehem. Gorlaeus-Hochhaus",
+        "Gleiches Areal",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Ziegelstein",
+        "—",
+        "—",
+        "Gebrannter Ton",
+        "ehem. Gorlaeus-Hochhaus",
+        "Gleiches Areal",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Schiefer",
+        "—",
+        "—",
+        "Naturstein",
+        "ehem. Gorlaeus-Hochhaus",
+        "Gleiches Areal",
+        "Dach",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P04",
+    "title": "Kristian Augusts gate 13",
+    "image": "asset/projekt/P04_ka13.jpg",
+    "city": "Oslo",
+    "country": "Norwegen",
+    "year": "2021",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "futurebuilt-kristian-augusts-gate-13"
+    ],
+    "sources": [
+      {
+        "key": "futurebuilt-kristian-augusts-gate-13",
+        "title": "Kristian Augusts gate 13",
+        "url": "https://www.futurebuilt.no/forbildeprosjekter/kristian-augusts-gate-13-oslo",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Fenster",
+        "—",
+        "—",
+        "Glas",
+        "anderes Bauprojekt",
+        "—",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Hohlkörp\\-erdecke",
+        "—",
+        "—",
+        "Beton",
+        "Rückbau-Fertigteile",
+        "—",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Stahl\\-konstruktion",
+        "—",
+        "—",
+        "Stahl",
+        "Rückbau\\-bestand",
+        "—",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Fassade\\-nplatte",
+        "—",
+        "—",
+        "Faserzement",
+        "Restposten (Faserzement/\\hspace{0pt}Steni)",
+        "—",
+        "Restposten $\\to$ Gebäude\\-hülle",
+        "Reststoff-/\\hspace{0pt}Restposten\\-nutzung"
+      ],
+      [
+        "Glasfeld",
+        "—",
+        "—",
+        "Glas",
+        "Dronning Eufemias gate 8",
+        "Lokal ex situ",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Ziegelstein",
+        "—",
+        "ca. 20.000 Stk.",
+        "Gebrannter Ton",
+        "Rückbauziegel",
+        "—",
+        "Gebäude\\-hülle",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Handlauf\\-holz",
+        "—",
+        "—",
+        "Holz",
+        "Tøyenbadet",
+        "Lokal ex situ",
+        "Innen\\-ausbau",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Glasgeländer",
+        "—",
+        "—",
+        "Glas",
+        "St. Olavs plass 5",
+        "Lokal ex situ",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Gitterrost",
+        "—",
+        "—",
+        "Metall",
+        "Tøyenbadet",
+        "Lokal ex situ",
+        "Technische Gebäude\\-ausrüstung $\\to$ Innen\\-ausbau",
+        "Umnutzung"
+      ],
+      [
+        "Restfliese",
+        "—",
+        "—",
+        "Keramik",
+        "Bergersen Flis (Restposten)",
+        "Extern ex situ",
+        "Restposten $\\to$ Innen\\-ausbau",
+        "Reststoff-/\\hspace{0pt}Restposten\\-nutzung"
+      ],
+      [
+        "Granit\\-platte",
+        "Boden\\-belag",
+        "—",
+        "Naturstein",
+        "Fassade Drammensveien 134",
+        "Lokal ex situ",
+        "Gebäude\\-hülle $\\to$ Innen\\-ausbau",
+        "Umnutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P05",
+    "title": "Recypark Demets",
+    "image": "asset/projekt/P05_recypark_demets.jpg",
+    "city": "Anderlecht",
+    "country": "Belgien",
+    "year": "2024",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "rotor-recypark-anderlecht"
+    ],
+    "sources": [
+      {
+        "key": "rotor-recypark-anderlecht",
+        "title": "Recypark Anderlecht",
+        "url": "https://rotordb.org/en/projects/recypark-anderlecht",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "BSH-Dachbogen",
+        "—",
+        "20 Stk.",
+        "Holz",
+        "ehem. Reithalle",
+        "Extern ex situ",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P06",
+    "title": "The Swan Kindergarten",
+    "image": "asset/projekt/P06_svanen_kindergarten.jpg",
+    "city": "Gladsaxe",
+    "country": "Dänemark",
+    "year": "2022",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "lendager-the-swan"
+    ],
+    "sources": [
+      {
+        "key": "lendager-the-swan",
+        "title": "The Swan",
+        "url": "https://lendager.com/project/the-swan/",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Ziegelstein",
+        "—",
+        "—",
+        "Gebrannter Ton",
+        "ehem. Schule",
+        "Gleiches Areal",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Dachziegel",
+        "—",
+        "—",
+        "Gebrannter Ton",
+        "ehem. Schule",
+        "Gleiches Areal",
+        "Dach",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Holz-Dachbinder",
+        "—",
+        "—",
+        "Holz",
+        "ehem. Sporthalle",
+        "Gleiches Areal",
+        "Dach $\\to$ Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Stahlfassa\\-denelement",
+        "—",
+        "—",
+        "Stahl",
+        "ehem. Schule",
+        "Gleiches Areal",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P07",
+    "title": "Villa Welpeloo",
+    "image": "asset/projekt/P07_villa_welpeloo.jpg",
+    "city": "Enschede",
+    "country": "Niederlande",
+    "year": "2009",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "superuse-studios-villa-welpeloo"
+    ],
+    "sources": [
+      {
+        "key": "superuse-studios-villa-welpeloo",
+        "title": "Villa Welpeloo",
+        "url": "https://www.superuse-studios.com/projectplus/villa-welpeloo/",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Fassaden\\-latte",
+        "—",
+        "—",
+        "Holz",
+        "Kabeltrommeln",
+        "Lokal ex situ",
+        "Produktions\\-rest $\\to$ Gebäude\\-hülle",
+        "Umnutzung"
+      ],
+      [
+        "Stahltragwerk",
+        "—",
+        "—",
+        "Stahl",
+        "Textilm\\-aschine",
+        "Lokal ex situ",
+        "Industrie\\-anlage $\\to$ Tragwerk",
+        "Umnutzung"
+      ],
+      [
+        "Dämmung",
+        "—",
+        "—",
+        "Kunststoff",
+        "Restposten der Caravan-Industrie",
+        "Lokal ex situ",
+        "Produktions\\-rest $\\to$ Gebäude\\-hülle",
+        "Reststoff-/\\hspace{0pt}Restposten\\-nutzung"
+      ],
+      [
+        "Gewächshaus\\-verglasung",
+        "—",
+        "—",
+        "Glas",
+        "Verschnitt der Glasfabrik Pilkington",
+        "Lokal ex situ",
+        "Produktions\\-rest $\\to$ Gebäude\\-hülle",
+        "Reststoff-/\\hspace{0pt}Restposten\\-nutzung"
+      ],
+      [
+        "Holzdiele",
+        "—",
+        "—",
+        "Holz",
+        "demontierte Holzdielen",
+        "Lokal ex situ",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Holzbalken",
+        "—",
+        "—",
+        "Holz",
+        "gebrauchte Holzbalken",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Badezim\\-merwand",
+        "—",
+        "—",
+        "Kunststoff",
+        "gepresste Kaffeebecher",
+        "—",
+        "Produktions\\-rest $\\to$ Innen\\-ausbau",
+        "Recycling"
+      ],
+      [
+        "Aufzug",
+        "—",
+        "—",
+        "Metall",
+        "gebrauchter Bauaufzug",
+        "—",
+        "Technische Gebäude\\-ausrüstung",
+        "Angepasste Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P08",
+    "title": "Holbein Gardens",
+    "image": "asset/projekt/P08_holbein_gardens.jpg",
+    "city": "London",
+    "country": "Vereinigtes Königreich",
+    "year": "2023",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "grosvenor-holbein-gardens-salvaged-steel"
+    ],
+    "sources": [
+      {
+        "key": "grosvenor-holbein-gardens-salvaged-steel",
+        "title": "Holbein Gardens salvaged steel",
+        "url": "https://www.grosvenor.com/news-insights/some-of-uk%E2%80%99s-first-salvaged-steelwork-reused-in-holbein-gardens-retrofit",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Stahlträger",
+        "—",
+        "9 t",
+        "Stahl",
+        "nahe Abbruchstelle",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Stahlträger",
+        "Dachaufs\\-tockung",
+        "ca. 15 t",
+        "Stahl",
+        "Lagerbestand Cleveland Steel and Tubes",
+        "Extern ex situ",
+        "Tragwerk $\\to$ Dach",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Hohlraumboden",
+        "—",
+        "—",
+        "—",
+        "Rückbau\\-bestand",
+        "—",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Boden\\-fliese",
+        "—",
+        "—",
+        "Keramik",
+        "Rückbau\\-bestand",
+        "—",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "York-Stone-Pflaster",
+        "—",
+        "—",
+        "Naturstein",
+        "Rückbau\\-bestand",
+        "—",
+        "Außenraum $\\to$ Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Ziegelfassade",
+        "—",
+        "—",
+        "Gebrannter Ton",
+        "eigene Fassade",
+        "Gleiches Gebäude",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P09",
+    "title": "Werkhof 29",
+    "image": "asset/projekt/P09_werkhof_29.jpg",
+    "city": "Zürich",
+    "country": "Schweiz",
+    "year": "2025",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "in-situ-werkhof-29"
+    ],
+    "sources": [
+      {
+        "key": "in-situ-werkhof-29",
+        "title": "Werkhof 29",
+        "url": "https://insitu.ch/projekte/351-werkhof-29-aufstockung-grubenstrasse",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Fassaden\\-blech",
+        "—",
+        "—",
+        "Metall",
+        "Rückbau\\-bestand",
+        "—",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Fenster",
+        "—",
+        "—",
+        "Glas",
+        "Rückbau\\-bestand",
+        "—",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Tür",
+        "—",
+        "—",
+        "—",
+        "Rückbau\\-bestand",
+        "—",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Heizkörper",
+        "—",
+        "—",
+        "Metall",
+        "Rückbau\\-bestand",
+        "—",
+        "Technische Gebäude\\-ausrüstung",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Dämmstoff",
+        "—",
+        "—",
+        "—",
+        "Rückbau\\-bestand",
+        "—",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P10",
+    "title": "Haus HOS",
+    "image": "asset/projekt/P10_haus_hos.jpg",
+    "city": "Mühlhausen",
+    "country": "Deutschland",
+    "year": "2008",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "epfl-atlas-of-reused-concrete"
+    ],
+    "sources": [
+      {
+        "key": "epfl-atlas-of-reused-concrete",
+        "title": "Atlas of Reused Concrete",
+        "url": "https://concrete-reuse.epfl.ch/list?view=list",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Wand\\-platte (WBS70)",
+        "—",
+        "28 Stk.",
+        "Beton",
+        "Plattenbau\\SemioDash{}Massenwohnbau",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Decken\\-platte (WBS70)",
+        "—",
+        "23 Stk.",
+        "Beton",
+        "Plattenbau\\SemioDash{}Massenwohnbau",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Treppe (WBS70)",
+        "—",
+        "7 Stk.",
+        "Beton",
+        "Plattenbau\\SemioDash{}Massenwohnbau",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P11",
+    "title": "Mehrow Pilot House",
+    "image": "asset/projekt/P11_mehrow_pilot_house.jpg",
+    "city": "Mehrow",
+    "country": "Deutschland",
+    "year": "2005",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "epfl-atlas-of-reused-concrete"
+    ],
+    "sources": [
+      {
+        "key": "epfl-atlas-of-reused-concrete",
+        "title": "Atlas of Reused Concrete",
+        "url": "https://concrete-reuse.epfl.ch/list?view=list",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Wand\\-platte (WBS70)",
+        "—",
+        "22 Stk.",
+        "Beton",
+        "Plattenbau\\SemioDash{}Massenwohnbau",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Decken\\-platte (WBS70)",
+        "—",
+        "27 Stk.",
+        "Beton",
+        "Plattenbau\\SemioDash{}Massenwohnbau",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P12",
+    "title": "Bröthen Twin-House",
+    "image": "asset/projekt/P12_broethen_twin_house.jpg",
+    "city": "Hoyerswerda",
+    "country": "Deutschland",
+    "year": "2001",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "epfl-atlas-of-reused-concrete"
+    ],
+    "sources": [
+      {
+        "key": "epfl-atlas-of-reused-concrete",
+        "title": "Atlas of Reused Concrete",
+        "url": "https://concrete-reuse.epfl.ch/list?view=list",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Wand\\-platte (P2)",
+        "—",
+        "26 Stk.",
+        "Beton",
+        "Plattenbau\\SemioDash{}Massenwohnbau",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Decken\\-platte (P2)",
+        "—",
+        "50 Stk.",
+        "Beton",
+        "Plattenbau\\SemioDash{}Massenwohnbau",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P13",
+    "title": "CRCLR House",
+    "image": "asset/projekt/P13_crclr_house.jpg",
+    "city": "Berlin",
+    "country": "Deutschland",
+    "year": "2023",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "zrs-architekten-crclr-house"
+    ],
+    "sources": [
+      {
+        "key": "zrs-architekten-crclr-house",
+        "title": "CRCLR House",
+        "url": "https://www.zrs.berlin/en/project/crclr-house-2/",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Stahlträger",
+        "Treppenwange",
+        "ca. 120 Stk.",
+        "Stahl",
+        "Bestandsdach der Halle",
+        "Gleiches Gebäude",
+        "Dach $\\to$ Tragwerk",
+        "Umnutzung"
+      ],
+      [
+        "Fenster",
+        "—",
+        "106 Stk.",
+        "Holz",
+        "Rückbau Wohngebäude",
+        "Extern ex situ",
+        "Gebäude\\-hülle",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Brandsc\\-hutztür",
+        "—",
+        "—",
+        "—",
+        "Hotelsa\\-nierung Alexand\\-erplatz",
+        "Lokal ex situ",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Fassaden\\-blech",
+        "—",
+        "—",
+        "Metall",
+        "Südfassade des Bestands",
+        "Gleiches Gebäude",
+        "Gebäude\\-hülle",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Schiebetür",
+        "—",
+        "—",
+        "—",
+        "vormaliger Impact Hub Berlin",
+        "Lokal ex situ",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Holzver\\-schnitt",
+        "—",
+        "—",
+        "Holz",
+        "Verschnitt aus Tischlereien",
+        "Lokal ex situ",
+        "Innen\\-ausbau",
+        "Reststoff-/\\hspace{0pt}Restposten\\-nutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P14",
+    "title": "Recyclinghaus Hannover",
+    "image": "asset/projekt/P14_recyclinghaus_hannover.jpg",
+    "city": "Hannover",
+    "country": "Deutschland",
+    "year": "2019",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "cityforster-recyclinghaus-hannover"
+    ],
+    "sources": [
+      {
+        "key": "cityforster-recyclinghaus-hannover",
+        "title": "Recyclinghaus Hannover",
+        "url": "https://www.cityfoerster.net/projects/recyclinghaus_hanover-218-2.html",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Fundament",
+        "—",
+        "—",
+        "Recy\\-cling\\-beton",
+        "Bau-/\\hspace{0pt}Abbruchabfall",
+        "—",
+        "Tragwerk",
+        "Recycling"
+      ],
+      [
+        "Wanddämmung",
+        "—",
+        "—",
+        "Jute",
+        "alte Jutesäcke",
+        "—",
+        "Produktions\\-rest $\\to$ Gebäude\\-hülle",
+        "Umnutzung"
+      ],
+      [
+        "Innenwand",
+        "—",
+        "—",
+        "Gebrannter Ton",
+        "Rückbau\\-bestand",
+        "—",
+        "Gebäude\\-hülle $\\to$ Innen\\-ausbau",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Historische Tür",
+        "—",
+        "—",
+        "—",
+        "Bestand Gundlach",
+        "Lokal ex situ",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Eternit-Platte",
+        "—",
+        "—",
+        "Faserzement",
+        "Rückbau\\-bestand",
+        "—",
+        "Gebäude\\-hülle $\\to$ Außenraum",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Lärchenholz",
+        "—",
+        "—",
+        "Holz",
+        "Rückbau\\-bestand",
+        "—",
+        "Außenraum",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Wandfliese",
+        "—",
+        "—",
+        "Keramik",
+        "Restposten",
+        "—",
+        "Restposten $\\to$ Innen\\-ausbau",
+        "Reststoff-/\\hspace{0pt}Restposten\\-nutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P15",
+    "title": "Thoravej 29",
+    "image": "asset/projekt/P15_thoravej_29.jpg",
+    "city": "Kopenhagen",
+    "country": "Dänemark",
+    "year": "2025",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "thoravej-29-sustainability"
+    ],
+    "sources": [
+      {
+        "key": "thoravej-29-sustainability",
+        "title": "Sustainability",
+        "url": "https://www.thoravej29.dk/en/sustainability",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "TT-Decken\\-platte",
+        "Treppe",
+        "—",
+        "Beton",
+        "Bestands\\-gebäude",
+        "Gleiches Gebäude",
+        "Tragwerk $\\to$ Innen\\-ausbau",
+        "Umnutzung"
+      ],
+      [
+        "Betonplatte",
+        "Möbel",
+        "—",
+        "Beton",
+        "Bestands\\-gebäude",
+        "Gleiches Gebäude",
+        "Tragwerk $\\to$ Mobiliar",
+        "Umnutzung"
+      ],
+      [
+        "Fassaden\\-ziegel",
+        "Boden\\-belag",
+        "—",
+        "Gebrannter Ton",
+        "Bestands\\-gebäude",
+        "Gleiches Gebäude",
+        "Gebäude\\-hülle $\\to$ Innen\\-ausbau",
+        "Umnutzung"
+      ],
+      [
+        "Holzabfall",
+        "Spanplatten-Möbel",
+        "—",
+        "Holz",
+        "Abfallholz aus dem Gebäude",
+        "Gleiches Gebäude",
+        "Innen\\-ausbau $\\to$ Mobiliar",
+        "Recycling"
+      ]
+    ]
+  },
+  {
+    "id": "P16",
+    "title": "Timber Square",
+    "image": "asset/projekt/P16_timber_square.jpg",
+    "city": "London",
+    "country": "Vereinigtes Königreich",
+    "year": "2026",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "landsec-timber-square",
+      "ukgbc-timber-square"
+    ],
+    "sources": [
+      {
+        "key": "landsec-timber-square",
+        "title": "Timber Square",
+        "url": "https://www.landsec.com/en/media-insights/press-releases/landsec-leases-54-percent-of-timber-square-to-bp",
+        "urldate": "2026-07-20"
+      },
+      {
+        "key": "ukgbc-timber-square",
+        "title": "Timber Square — Case Study",
+        "url": "https://ukgbc.org/resources/timber-square/",
+        "urldate": "2026-07-30"
+      }
+    ],
+    "components": [
+      [
+        "Stahlträger",
+        "—",
+        "ca. 115 t",
+        "Stahl",
+        "Lagerbestand Cleveland Steel and Tubes",
+        "Extern ex situ",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Stahlträger",
+        "Empfangs\\-tresen",
+        "—",
+        "Stahl",
+        "Abbruch am Standort",
+        "Gleiches Areal",
+        "Tragwerk $\\to$ Mobiliar",
+        "Umnutzung"
+      ],
+      [
+        "Boden\\-fliese",
+        "—",
+        "ca. 33.450 m²",
+        "Keramik",
+        "Abbruch Row One und weitere Projekte",
+        "Lokal ex situ",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P17",
+    "title": "TBC.London",
+    "image": "asset/projekt/P17_tbc_london.jpg",
+    "city": "London",
+    "country": "Vereinigtes Königreich",
+    "year": "2025",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "tbc-london-steel-saved"
+    ],
+    "sources": [
+      {
+        "key": "tbc-london-steel-saved",
+        "title": "Steel Saved",
+        "url": "https://tbc.london/c/news/steelsaved.php",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Stahlträger",
+        "—",
+        "16 t",
+        "Stahl",
+        "ehem. House of Fraser",
+        "Extern ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P18",
+    "title": "55 Great Suffolk Street",
+    "image": "asset/projekt/P18_55_great_suffolk_street.jpg",
+    "city": "London",
+    "country": "Vereinigtes Königreich",
+    "year": "2026*",
+    "type": "Gebäude",
+    "status": "Unbestätigt",
+    "citations": [
+      "hawkinsbrown-55-great-suffolk-street"
+    ],
+    "sources": [
+      {
+        "key": "hawkinsbrown-55-great-suffolk-street",
+        "title": "55 Great Suffolk Street",
+        "url": "https://www.hawkinsbrown.com/projects/55-great-suffolk-street/",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Baustahl",
+        "—",
+        "139 t",
+        "Stahl",
+        "abgerissenes Bürogebäude",
+        "Extern ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P19",
+    "title": "Brent Cross Town Substation",
+    "image": "asset/projekt/P19_brent_cross_town_substation.jpg",
+    "city": "London",
+    "country": "Vereinigtes Königreich",
+    "year": "2023",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "new-london-architecture-brent-cross-town-electrical-substation"
+    ],
+    "sources": [
+      {
+        "key": "new-london-architecture-brent-cross-town-electrical-substation",
+        "title": "Brent Cross Town Electrical Substation",
+        "url": "https://nla.london/projects/brent-cross-town-electrical-substation",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Baustahl",
+        "—",
+        "—",
+        "Stahl",
+        "alte Öl-Pipelines",
+        "—",
+        "Infra\\-struktur $\\to$ Tragwerk",
+        "Umnutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P20",
+    "title": "Boulder Fire Station 3",
+    "image": "asset/projekt/P20_boulder_fire_station_3.jpg",
+    "city": "Boulder",
+    "country": "USA",
+    "year": "2024",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "city-of-boulder-new-fire-station-3",
+      "boulder-fire-station-awards"
+    ],
+    "sources": [
+      {
+        "key": "city-of-boulder-new-fire-station-3",
+        "title": "New Fire Station 3",
+        "url": "https://bouldercolorado.gov/projects/new-fire-station-3",
+        "urldate": "2026-07-20"
+      },
+      {
+        "key": "boulder-fire-station-awards",
+        "title": "Fire Station 3 earns national awards",
+        "url": "https://bouldercolorado.gov/news/city-boulder-fire-rescue-station-3-earns-national-gold-and-health-wellness-awards",
+        "urldate": "2026-07-30"
+      }
+    ],
+    "components": [
+      [
+        "Stahlträger",
+        "—",
+        "22 t",
+        "Stahl",
+        "stillgel. Boulder Community Hospital",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P21",
+    "title": "Big Dig House",
+    "image": "asset/projekt/P21_big_dig_house.jpg",
+    "city": "Lexington",
+    "country": "USA",
+    "year": "2006",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "project-architecture-big-dig-house"
+    ],
+    "sources": [
+      {
+        "key": "project-architecture-big-dig-house",
+        "title": "Big Dig House",
+        "url": "https://projectarchitecture.com/big-dig-house/",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Stahlträger",
+        "—",
+        "—",
+        "Stahl",
+        "demontierte Autobahn I-93",
+        "Extern ex situ",
+        "Infra\\-struktur $\\to$ Tragwerk",
+        "Umnutzung"
+      ],
+      [
+        "Betonträger",
+        "—",
+        "—",
+        "Beton",
+        "demontierte Autobahn I-93",
+        "Extern ex situ",
+        "Infra\\-struktur $\\to$ Tragwerk",
+        "Umnutzung"
+      ],
+      [
+        "Stahlrahmen",
+        "—",
+        "—",
+        "Stahl",
+        "Autobahn\\SemioDash{}Rampenstützen",
+        "Extern ex situ",
+        "Infra\\-struktur $\\to$ Tragwerk",
+        "Umnutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P22",
+    "title": "Saxum Vineyard Equipment Barn",
+    "image": "asset/projekt/P22_saxum_vineyard_barn.jpg",
+    "city": "Paso Robles",
+    "country": "USA",
+    "year": "2018",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "archdaily-saxum-vineyard-equipment-barn"
+    ],
+    "sources": [
+      {
+        "key": "archdaily-saxum-vineyard-equipment-barn",
+        "title": "Saxum Vineyard Equipment Barn",
+        "url": "https://www.archdaily.com/932817/saxum-vineyard-equipment-barn-clayton-and-little",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Bohrgestänge-Rohr",
+        "Dachtragwerk",
+        "—",
+        "Stahl",
+        "Ölfeld-Bohrgestänge",
+        "Extern ex situ",
+        "Industrie\\-anlage $\\to$ Tragwerk",
+        "Umnutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P23",
+    "title": "Europa Building (Résidence Palace)",
+    "image": "asset/projekt/P23_europa_building.jpg",
+    "city": "Brüssel",
+    "country": "Belgien",
+    "year": "2016",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "council-of-the-european-union-europa-building",
+      "worldarchitecture-europa"
+    ],
+    "sources": [
+      {
+        "key": "council-of-the-european-union-europa-building",
+        "title": "Europa Building",
+        "url": "https://www.consilium.europa.eu/en/contact/address/council-buildings/europa-building/",
+        "urldate": "2026-07-20"
+      },
+      {
+        "key": "worldarchitecture-europa",
+        "title": "EU headquarters façade of reclaimed oak windows",
+        "url": "https://worldarchitecture.org/articles/cgmcc/eu_headquarters_facade_is_made_of_harmonised_patchwork_of_oak_windows_and_crystal_like_glazing.html",
+        "urldate": "2026-07-30"
+      }
+    ],
+    "components": [
+      [
+        "Eichenfens\\-terrahmen",
+        "—",
+        "3.750 Stk.",
+        "Holz",
+        "Abbruch/\\hspace{0pt}Renovierung EU-weit",
+        "Extern ex situ",
+        "Gebäude\\-hülle",
+        "Angepasste Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P24",
+    "title": "ELYS Kultur- \\& Gewerbehaus",
+    "image": "asset/projekt/P24_elys_kultur_gewerbehaus.jpg",
+    "city": "Basel",
+    "country": "Schweiz",
+    "year": "2021",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "zirkular-elys-kultur-gewerbehaus",
+      "zukunftbau-elys"
+    ],
+    "sources": [
+      {
+        "key": "zirkular-elys-kultur-gewerbehaus",
+        "title": "ELYS Kultur- \\& Gewerbehaus",
+        "url": "https://zirkular.net/en/project/culture-commercial-center-elys/",
+        "urldate": "2026-07-20"
+      },
+      {
+        "key": "zukunftbau-elys",
+        "title": "Adaptive Reuse ELYS — Lysbüchelareal",
+        "url": "https://www.zukunft-bau.at/en/project/sport-culture/adaptive-reuse-elys-cultural-and-commercial-building-lysbuchelareal",
+        "urldate": "2026-07-30"
+      }
+    ],
+    "components": [
+      [
+        "Trapezblech",
+        "—",
+        "ca. 1.000 m²",
+        "Aluminium",
+        "ehem. Dachaufbauten",
+        "Gleiches Gebäude",
+        "Dach $\\to$ Gebäude\\-hülle",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Fenster",
+        "—",
+        "ca. 200 Stk.",
+        "Glas",
+        "Restposten",
+        "—",
+        "Restposten $\\to$ Gebäude\\-hülle",
+        "Reststoff-/\\hspace{0pt}Restposten\\-nutzung"
+      ],
+      [
+        "Konstruktions\\-holz",
+        "—",
+        "ca. 150 m³",
+        "Holz",
+        "Ursprung\\-sgebäude /\\hspace{0pt} Rückbau",
+        "Gleiches Gebäude",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Mineral\\-wolle-Verschnitt",
+        "—",
+        "—",
+        "Mineral\\-wolle",
+        "regionale Baustellen",
+        "Lokal ex situ",
+        "Produktions\\-rest $\\to$ Gebäude\\-hülle",
+        "Reststoff-/\\hspace{0pt}Restposten\\-nutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P25",
+    "title": "Lycée Michel Lucius Conversion",
+    "image": "asset/projekt/P25_lycee_michel_lucius.jpg",
+    "city": "Luxemburg",
+    "country": "Luxemburg",
+    "year": "2021",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "opalis-lycee-michel-lucius"
+    ],
+    "sources": [
+      {
+        "key": "opalis-lycee-michel-lucius",
+        "title": "Lycée Michel Lucius",
+        "url": "https://opalis.eu/en/projects/conversion-two-wings-lycee-michel-lucius",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Leuchte",
+        "—",
+        "88 Stk.",
+        "—",
+        "3000-Flügel",
+        "Gleiches Areal",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Regal",
+        "—",
+        "ca. 52 m",
+        "Metall",
+        "Baustelle",
+        "Lokal ex situ",
+        "Mobiliar",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Pflaste\\-rplatte",
+        "—",
+        "135 m²",
+        "Beton",
+        "Restbestand Landsch\\-aftsbau",
+        "—",
+        "Restposten $\\to$ Außenraum",
+        "Reststoff-/\\hspace{0pt}Restposten\\-nutzung"
+      ],
+      [
+        "Betonrinne",
+        "—",
+        "38 Stk.",
+        "Beton",
+        "Bauabfall",
+        "—",
+        "Produktions\\-rest $\\to$ Außenraum",
+        "Umnutzung"
+      ],
+      [
+        "Gips\\-akustik\\-paneel",
+        "—",
+        "419 m²",
+        "Gips",
+        "3000-Flügel Abhangdecke",
+        "Gleiches Areal",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Metall\\-decken\\-paneel",
+        "—",
+        "12 Stk.",
+        "Metall",
+        "3000-Flügel Abhangdecke",
+        "Gleiches Areal",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Stahl\\-fassaden\\-paneel",
+        "Geländer",
+        "—",
+        "Stahl",
+        "3000-Flügel Fassade",
+        "Gleiches Areal",
+        "Gebäude\\-hülle $\\to$ Innen\\-ausbau",
+        "Umnutzung"
+      ],
+      [
+        "Bodenblech",
+        "Fassaden\\-verkleidung",
+        "61 m²",
+        "Metall",
+        "3000-Flügel Böden",
+        "Gleiches Areal",
+        "Innen\\-ausbau $\\to$ Gebäude\\-hülle",
+        "Umnutzung"
+      ],
+      [
+        "Stahlprofil",
+        "Pergola",
+        "11,8 t",
+        "Stahl",
+        "3000-Flügel Tragwerk",
+        "Gleiches Areal",
+        "Tragwerk $\\to$ Außenraum",
+        "Umnutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P26",
+    "title": "Jeugdkliniek Ithaka",
+    "image": "asset/projekt/P26_jeugdkliniek_ithaka.jpg",
+    "city": "Kloetinge",
+    "country": "Niederlande",
+    "year": "2019",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "innax-emergis-opent-eerste-circulaire"
+    ],
+    "sources": [
+      {
+        "key": "innax-emergis-opent-eerste-circulaire",
+        "title": "Emergis opent eerste circulaire zorgkliniek van Nederland",
+        "url": "https://www.innax.nl/kennisbank/toekomstvast-bouwen/emergis",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Außenfens\\-terrahmen",
+        "—",
+        "—",
+        "—",
+        "RWS-Büro",
+        "Lokal ex situ",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Innentür",
+        "—",
+        "—",
+        "—",
+        "RWS-Büro",
+        "Lokal ex situ",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Fassaden\\-verkleidung",
+        "—",
+        "—",
+        "—",
+        "RWS-Büro",
+        "Lokal ex situ",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Holzdiele",
+        "—",
+        "—",
+        "Holz",
+        "RWS-Büro",
+        "Lokal ex situ",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Straßen\\-klinker",
+        "—",
+        "—",
+        "Gebrannter Ton",
+        "RWS-Büro",
+        "Lokal ex situ",
+        "Außenraum",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Installation",
+        "—",
+        "—",
+        "—",
+        "RWS-Büro",
+        "Lokal ex situ",
+        "Technische Gebäude\\-ausrüstung",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P27",
+    "title": "gjG House",
+    "image": "asset/projekt/P27_gjg_house.jpg",
+    "city": "Gent",
+    "country": "Belgien",
+    "year": "2015",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "archdaily-gjg-house"
+    ],
+    "sources": [
+      {
+        "key": "archdaily-gjg-house",
+        "title": "gjG House",
+        "url": "https://www.archdaily.com/951845/gjg-house-blaf-architecten",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Ziegel-Außenwand",
+        "—",
+        "—",
+        "Gebrannter Ton",
+        "Rückbauziegel",
+        "—",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P28",
+    "title": "Maison DnA",
+    "image": "asset/projekt/P28_maison_dna.jpg",
+    "city": "Asse",
+    "country": "Belgien",
+    "year": "2013",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "opalis-maison-dna"
+    ],
+    "sources": [
+      {
+        "key": "opalis-maison-dna",
+        "title": "Maison DnA",
+        "url": "https://opalis.eu/fr/projets/maison-dna-blaf-architecten",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Ziegelfassade",
+        "—",
+        "50 m³",
+        "Gebrannter Ton",
+        "Re-Use-Markt (Händler De Roover)",
+        "Extern ex situ",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P29",
+    "title": "Association House Gröditz",
+    "image": "asset/projekt/P29_association_house_groeditz.jpg",
+    "city": "Gröditz",
+    "country": "Deutschland",
+    "year": "2007",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "epfl-atlas-of-reused-concrete"
+    ],
+    "sources": [
+      {
+        "key": "epfl-atlas-of-reused-concrete",
+        "title": "Atlas of Reused Concrete",
+        "url": "https://concrete-reuse.epfl.ch/list?view=list",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Betonfer\\-tigteil",
+        "—",
+        "279 Stk.",
+        "Beton",
+        "Dresden-Typ-Schule",
+        "—",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "WBS70-Paneel",
+        "—",
+        "159 Stk.",
+        "Beton",
+        "anderes WBS70-Gebäude",
+        "—",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P30",
+    "title": "Association House Plauen",
+    "image": "asset/projekt/P30_association_house_plauen.jpg",
+    "city": "Plauen",
+    "country": "Deutschland",
+    "year": "2007",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "epfl-atlas-of-reused-concrete"
+    ],
+    "sources": [
+      {
+        "key": "epfl-atlas-of-reused-concrete",
+        "title": "Atlas of Reused Concrete",
+        "url": "https://concrete-reuse.epfl.ch/list?view=list",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "IW73-Wandpaneel",
+        "—",
+        "17 Stk.",
+        "Beton",
+        "Massenwohnbau (IW73)",
+        "—",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "IW73-Deckenpaneel",
+        "—",
+        "14 Stk.",
+        "Beton",
+        "Massenwohnbau (IW73)",
+        "—",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Treppe",
+        "—",
+        "1 Stk.",
+        "Beton",
+        "Massenwohnbau (IW73)",
+        "—",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P31",
+    "title": "Berlin-Schildow Pilot House",
+    "image": "asset/projekt/P31_berlin_schildow_pilot_house.jpg",
+    "city": "Schildow",
+    "country": "Deutschland",
+    "year": "2005",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "epfl-atlas-of-reused-concrete"
+    ],
+    "sources": [
+      {
+        "key": "epfl-atlas-of-reused-concrete",
+        "title": "Atlas of Reused Concrete",
+        "url": "https://concrete-reuse.epfl.ch/list?view=list",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Boden\\-platte",
+        "—",
+        "200 Stk.",
+        "Beton",
+        "WBS70\\SemioDash{}Massenwohnbau",
+        "—",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Innenwa\\-ndstück",
+        "—",
+        "—",
+        "Beton",
+        "WBS70\\SemioDash{}Massenwohnbau",
+        "—",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P32",
+    "title": "Circular Centre Nederland",
+    "image": "asset/projekt/P32_circular_centre_nederland.jpg",
+    "city": "Heerde",
+    "country": "Niederlande",
+    "year": "—",
+    "type": "Gebäude",
+    "status": "Geplant",
+    "citations": [
+      "circulair-centrum-nederland-where-circular-centre-nederland-stands"
+    ],
+    "sources": [
+      {
+        "key": "circulair-centrum-nederland-where-circular-centre-nederland-stands",
+        "title": "Where Circular Centre Nederland stands",
+        "url": "https://ccn.nl/over-ccn/waar-staat-ccn/",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Hohldielen\\-decke",
+        "—",
+        "—",
+        "Beton",
+        "Prinsenhof A",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Beton\\-fassaden\\-element",
+        "—",
+        "—",
+        "Beton",
+        "Prinsenhof A",
+        "Lokal ex situ",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P33",
+    "title": "Juch-Areal Recyclingzentrum",
+    "image": "asset/projekt/P33_juch_areal.jpg",
+    "city": "Zürich",
+    "country": "Schweiz",
+    "year": "2027*",
+    "type": "Gebäude",
+    "status": "Geplant",
+    "citations": [
+      "stadt-zurich-recyclingzentrum-juch-areal"
+    ],
+    "sources": [
+      {
+        "key": "stadt-zurich-recyclingzentrum-juch-areal",
+        "title": "Recyclingzentrum Juch-Areal",
+        "url": "https://www.stadt-zuerich.ch/de/planen-und-bauen/projekte-und-ausschreibungen/hochbauvorhaben/planung-ausfuehrung/recyclingzentrum-juch-areal.html",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Stahlhalle\\-ntragwerk",
+        "—",
+        "—",
+        "Stahl",
+        "ehem. Recy\\-clinghalle Hagenholz",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Pilzstütze",
+        "—",
+        "—",
+        "Beton",
+        "Rückbau\\-bestand",
+        "—",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Betonplatte",
+        "—",
+        "—",
+        "Beton",
+        "Kerenzerb\\-ergtunnel",
+        "Extern ex situ",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Leitplanke",
+        "Fassaden\\-element",
+        "—",
+        "Stahl",
+        "Rückbau\\-bestand",
+        "—",
+        "Außenraum $\\to$ Gebäude\\-hülle",
+        "Umnutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P34",
+    "title": "Melkinlaituri School \\& Day-care",
+    "image": "asset/projekt/P34_melkinlaituri_school.jpg",
+    "city": "Helsinki",
+    "country": "Finnland",
+    "year": "2027*",
+    "type": "Gebäude",
+    "status": "Teilweise eingebaut",
+    "citations": [
+      "yit-melkinlaituri-elementary-school-and"
+    ],
+    "sources": [
+      {
+        "key": "yit-melkinlaituri-elementary-school-and",
+        "title": "Melkinlaituri elementary school and daycare centre",
+        "url": "https://www.yit.fi/en/projects/melkinlaituri-elementary-school-and-daycare-centre-helsinki",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Hohldielen\\-decke",
+        "—",
+        "ca. 350 m²",
+        "Beton",
+        "Rückbau-Fertigteile",
+        "—",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P35",
+    "title": "Härmälänranta (A-Kruunu / ReCreate)",
+    "image": "asset/projekt/P35_harmalanranta.jpg",
+    "city": "Tampere",
+    "country": "Finnland",
+    "year": "2024",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "recreate-harmalanranta-mini-pilot"
+    ],
+    "sources": [
+      {
+        "key": "recreate-harmalanranta-mini-pilot",
+        "title": "Härmälänranta mini-pilot",
+        "url": "https://recreate-project.eu/2025/02/13/first-elements-reclaimed-by-the-finnish-cluster-reused-in-a-real-life-mini-pilot/",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Hohldielen\\-decke",
+        "—",
+        "25 Stk.",
+        "Beton",
+        "1980er-Bürogebäude",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P36",
+    "title": "Lokomotion Technology Centre",
+    "image": "asset/projekt/P36_lokomotion_technology_centre.jpg",
+    "city": "Tampere",
+    "country": "Finnland",
+    "year": "2025",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "recreate-lokomotion-mini-pilot"
+    ],
+    "sources": [
+      {
+        "key": "recreate-lokomotion-mini-pilot",
+        "title": "Lokomotion mini-pilot",
+        "url": "https://recreate-project.eu/2026/02/24/second-reuse-mini-pilot-successful-in-finland/",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Hohldielen\\-decke",
+        "—",
+        "27 Stk.",
+        "Beton",
+        "1980er-Gebäude",
+        "Lokal ex situ",
+        "Tragwerk $\\to$ Dach",
+        "Angepasste Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P37",
+    "title": "Grande Halle de Colombelles",
+    "image": "asset/projekt/P37_grande_halle_de_colombelles.jpg",
+    "city": "Colombelles",
+    "country": "Frankreich",
+    "year": "2019",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "fcrbe-grande-halle-de-colombelles",
+      "adokin-grande-halle"
+    ],
+    "sources": [
+      {
+        "key": "fcrbe-grande-halle-de-colombelles",
+        "title": "Grande Halle de Colombelles",
+        "url": "https://vb.nweurope.eu/media/21155/fcrbe_cashallecolombelle_final18oct2023_en.pdf",
+        "urldate": "2026-07-20"
+      },
+      {
+        "key": "adokin-grande-halle",
+        "title": "Grande Halle de Colombelles — Réemploi de matériaux",
+        "url": "https://adokin.eu/fr/2020/07/grande-halle-de-colombelles-fr/",
+        "urldate": "2026-07-30"
+      }
+    ],
+    "components": [
+      [
+        "Guss\\-heizkörper",
+        "—",
+        "27 Stk.",
+        "Gusseisen",
+        "Bürogebäude und Garage",
+        "Lokal ex situ",
+        "Technische Gebäude\\-ausrüstung",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Stahl\\-heizkörper",
+        "—",
+        "25 Stk.",
+        "Stahl",
+        "Bürogebäude und Garage",
+        "Lokal ex situ",
+        "Technische Gebäude\\-ausrüstung",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Massiv\\-holztür",
+        "—",
+        "18 Stk.",
+        "Holz",
+        "Wohngebäude",
+        "Lokal ex situ",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Sanitär\\-objekt",
+        "—",
+        "31 Stk.",
+        "Keramik",
+        "Büro-/\\hspace{0pt}Gewerbe\\-gebäude",
+        "Lokal ex situ",
+        "Technische Gebäude\\-ausrüstung",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Steinwoll\\-dämmung",
+        "—",
+        "200 m²",
+        "Mineral\\-wolle",
+        "Büro-/\\hspace{0pt}Gewerbe\\-gebäude",
+        "Lokal ex situ",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Geländer\\-pfosten",
+        "—",
+        "21 Stk.",
+        "Holz",
+        "Bau-/\\hspace{0pt}Dachholz",
+        "Lokal ex situ",
+        "Tragwerk $\\to$ Innen\\-ausbau",
+        "Umnutzung"
+      ],
+      [
+        "Fliese",
+        "—",
+        "—",
+        "Keramik",
+        "Restposten",
+        "—",
+        "Restposten $\\to$ Innen\\-ausbau",
+        "Reststoff-/\\hspace{0pt}Restposten\\-nutzung"
+      ],
+      [
+        "Palettenholz",
+        "—",
+        "—",
+        "Holz",
+        "Transport\\-paletten",
+        "—",
+        "Verpackung $\\to$ Innen\\-ausbau",
+        "Reststoff-/\\hspace{0pt}Restposten\\-nutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P38",
+    "title": "La Ferme du Rail",
+    "image": "asset/projekt/P38_ferme_du_rail.jpg",
+    "city": "Paris",
+    "country": "Frankreich",
+    "year": "2019",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "world-architects-the-railway-farm",
+      "grandhuit-ferme-du-rail"
+    ],
+    "sources": [
+      {
+        "key": "world-architects-the-railway-farm",
+        "title": "The Railway Farm",
+        "url": "https://world-architects.com/en/grand-huit-paris/project/the-railway-farm",
+        "urldate": "2026-07-20"
+      },
+      {
+        "key": "grandhuit-ferme-du-rail",
+        "title": "Ferme du Rail",
+        "url": "https://grandhuit.eu/projet/ferme-du-rail/",
+        "urldate": "2026-07-30"
+      }
+    ],
+    "components": [
+      [
+        "Straßen\\-pflaster",
+        "Stützmauer",
+        "—",
+        "Naturstein",
+        "Straßen\\-pflaster",
+        "—",
+        "Außenraum",
+        "Umnutzung"
+      ],
+      [
+        "Fliese",
+        "—",
+        "—",
+        "Keramik",
+        "Rückbau\\-bestand",
+        "—",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Metallteil",
+        "—",
+        "—",
+        "Metall",
+        "Rückbau\\-bestand",
+        "—",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P39",
+    "title": "Résilience",
+    "image": "asset/projekt/P39_ferme_des_possibles.jpg",
+    "city": "Stains",
+    "country": "Frankreich",
+    "year": "2020",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "socotec-resilience-la-ferme-des-possibles",
+      "construction21-resilience"
+    ],
+    "sources": [
+      {
+        "key": "socotec-resilience-la-ferme-des-possibles",
+        "title": "Résilience / La Ferme des Possibles",
+        "url": "https://www.socotec.com/media/client-projects/reused-materials-novaedia",
+        "urldate": "2026-07-20"
+      },
+      {
+        "key": "construction21-resilience",
+        "title": "Résilience — The Farm of Possibilities",
+        "url": "https://www.construction21.org/france/case-studies/h/resilience-the-farm-of-possibilities-en.html",
+        "urldate": "2026-07-30"
+      }
+    ],
+    "components": [
+      [
+        "Holzfenster (einfachv\\-erglast)",
+        "—",
+        "—",
+        "Holz",
+        "thermische Sanierung Sozialwo\\-hnungen",
+        "Lokal ex situ",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P40",
+    "title": "Maison Vignette",
+    "image": "asset/projekt/P40_maison_vignette.jpg",
+    "city": "Auderghem",
+    "country": "Belgien",
+    "year": "2020",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "opalis-maison-vignette"
+    ],
+    "sources": [
+      {
+        "key": "opalis-maison-vignette",
+        "title": "Maison Vignette",
+        "url": "https://opalis.eu/fr/projets/maison-vignette",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Fassaden\\-ziegel",
+        "—",
+        "3.000 Stk.",
+        "Gebrannter Ton",
+        "Ziegelhändler Franck",
+        "Extern ex situ",
+        "Gebäude\\-hülle",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Überschu\\-ssziegel",
+        "Gartentreppe",
+        "—",
+        "Gebrannter Ton",
+        "Fassaden\\-ziegel-Überschuss",
+        "Gleiches Areal",
+        "Gebäude\\-hülle $\\to$ Außenraum",
+        "Umnutzung"
+      ],
+      [
+        "Wandfliese",
+        "—",
+        "21 m²",
+        "Naturstein",
+        "Solvay-Gebäude",
+        "Extern ex situ",
+        "Gebäude\\-hülle $\\to$ Innen\\-ausbau",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Boden\\-fliese",
+        "—",
+        "13,5 m²",
+        "Gebrannter Ton",
+        "Rotor DC",
+        "Extern ex situ",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Blaustei\\-nplatte",
+        "—",
+        "40 m²",
+        "Naturstein",
+        "Kleinanzeige",
+        "Extern ex situ",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P41",
+    "title": "MULTI Brussels",
+    "image": "asset/projekt/P41_multi_brussels.jpg",
+    "city": "Brüssel",
+    "country": "Belgien",
+    "year": "2024",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "conix-rdbm-architects-multi",
+      "rotor-multi-blue-limestone"
+    ],
+    "sources": [
+      {
+        "key": "conix-rdbm-architects-multi",
+        "title": "Multi",
+        "url": "https://www.conixrdbm.com/project/multi/",
+        "urldate": "2026-07-20"
+      },
+      {
+        "key": "rotor-multi-blue-limestone",
+        "title": "Reuse of blue limestone at MULTI",
+        "url": "https://rotordb.org/en/news/reuse-blue-limestone-multi",
+        "urldate": "2026-07-30"
+      }
+    ],
+    "components": [
+      [
+        "Blauste\\-inblock",
+        "—",
+        "82 Stk.",
+        "Naturstein",
+        "eigene Fassade des Turms",
+        "Gleiches Gebäude",
+        "Gebäude\\-hülle $\\to$ Außenraum",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Granitfliese",
+        "—",
+        "400 Stk.",
+        "Naturstein",
+        "Rückbau\\-bestand",
+        "—",
+        "Außenraum",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Aluminium\\-profil",
+        "Geländer und Leuchten",
+        "ca. 1.300 m",
+        "Aluminium",
+        "eigene Fassade des Turms",
+        "Gleiches Gebäude",
+        "Gebäude\\-hülle $\\to$ Innen\\-ausbau",
+        "Umnutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P42",
+    "title": "Musée de Folklore et de la Vie frontalière",
+    "image": "asset/projekt/P42_musee_de_folklore.jpg",
+    "city": "Mouscron",
+    "country": "Belgien",
+    "year": "2018",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "v-folklore-museum"
+    ],
+    "sources": [
+      {
+        "key": "v-folklore-museum",
+        "title": "Folklore Museum",
+        "url": "https://www.vplus.org/folklore-museum",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Fassaden\\-ziegel",
+        "—",
+        "30.000 Stk.",
+        "Gebrannter Ton",
+        "8 Abbruch\\-objekte",
+        "Lokal ex situ",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P43",
+    "title": "Lo-Reninge Town Hall Façade",
+    "image": "asset/projekt/P43_lo_reninge_town_hall.jpg",
+    "city": "Lo-Reninge",
+    "country": "Belgien",
+    "year": "—",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "noaarchitecten-lo-reninge-town-hall"
+    ],
+    "sources": [
+      {
+        "key": "noaarchitecten-lo-reninge-town-hall",
+        "title": "Lo-Reninge Town Hall",
+        "url": "https://divisare.com/projects/391079-noaarchitecten-filip-dujardin-046-town-hall-lo-reninge",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Fassaden\\-ziegel",
+        "—",
+        "—",
+        "Gebrannter Ton",
+        "nicht dokumentiert",
+        "—",
+        "Gebäude\\-hülle",
+        "Angepasste Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P44",
+    "title": "Institut de Botanique ULg",
+    "image": "asset/projekt/P44_institut_de_botanique_ulg.jpg",
+    "city": "Lüttich",
+    "country": "Belgien",
+    "year": "—",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "construction21-institut-de-botanique-ulg"
+    ],
+    "sources": [
+      {
+        "key": "construction21-institut-de-botanique-ulg",
+        "title": "Institut de Botanique ULg",
+        "url": "https://www.construction21.org/belgique/case-studies/h/institute-of-botany-of-uliege-building-b22-en.html",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Holzverk\\-leidung",
+        "—",
+        "2.600 m²",
+        "Holz",
+        "Rückbau\\-bestand",
+        "—",
+        "Gebäude\\-hülle",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Lüftungs\\-leitung",
+        "—",
+        "—",
+        "—",
+        "Bestand B22",
+        "Gleiches Gebäude",
+        "Technische Gebäude\\-ausrüstung",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P45",
+    "title": "Chiro d’Itterbeek – Sanitärgebäude",
+    "image": "asset/projekt/P45_chiro_d_itterbeek.jpg",
+    "city": "Dilbeek",
+    "country": "Belgien",
+    "year": "—",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "rotor-chiro-d-itterbeek"
+    ],
+    "sources": [
+      {
+        "key": "rotor-chiro-d-itterbeek",
+        "title": "Chiro d’Itterbeek",
+        "url": "https://rotordb.org/en/projects/sanitary-block-itterbeek-chiro",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Fassaden\\-ziegel",
+        "—",
+        "—",
+        "Gebrannter Ton",
+        "Ziegelhändler Franck",
+        "Extern ex situ",
+        "Gebäude\\-hülle",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Keramikfliese",
+        "—",
+        "—",
+        "Keramik",
+        "ehem. Grundschule Everheide",
+        "Extern ex situ",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Tragstruktur",
+        "—",
+        "—",
+        "Beton",
+        "Baustellen-/\\hspace{0pt}Produktions\\-überschuss",
+        "Extern ex situ",
+        "Tragwerk",
+        "Reststoff-/\\hspace{0pt}Restposten\\-nutzung"
+      ],
+      [
+        "Dachziegel",
+        "—",
+        "—",
+        "Gebrannter Ton",
+        "Villa-Renovierung",
+        "Extern ex situ",
+        "Dach",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P46",
+    "title": "Vergleichscluster Verbiest / Karreveld",
+    "image": "asset/projekt/P46_verbiest_karreveld.jpg",
+    "city": "Brüssel",
+    "country": "Belgien",
+    "year": "2020",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "agwa-1718-verbiest",
+      "brussels-architecture-prize-esp-karreveld"
+    ],
+    "sources": [
+      {
+        "key": "agwa-1718-verbiest",
+        "title": "1718\\_VERBIEST",
+        "url": "https://www.agwa.be/en/projects/1718_verbiest/201/",
+        "urldate": "2026-07-20"
+      },
+      {
+        "key": "brussels-architecture-prize-esp-karreveld",
+        "title": "ESP KARREVELD",
+        "url": "https://brusselsarchitectureprize.be/en/project/esp-karreveld/",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Dachziegel",
+        "—",
+        "—",
+        "Gebrannter Ton",
+        "Bestands\\-struktur",
+        "Gleiches Gebäude",
+        "Dach",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Terrasse\\-nfliese",
+        "—",
+        "—",
+        "Keramik",
+        "Bestands\\-struktur",
+        "Gleiches Gebäude",
+        "Außenraum",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Geländer",
+        "—",
+        "—",
+        "Metall",
+        "Palais des Expositions",
+        "Extern ex situ",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Fliese",
+        "—",
+        "—",
+        "Keramik",
+        "Palais des Expositions",
+        "Extern ex situ",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Naturstein",
+        "—",
+        "—",
+        "Naturstein",
+        "Palais des Expositions",
+        "Extern ex situ",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Dekorfliese",
+        "—",
+        "—",
+        "Keramik",
+        "altes Projekt Hanzinelle",
+        "Extern ex situ",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P47",
+    "title": "Zinneke",
+    "image": "asset/projekt/P47_zinneke_feder_masui4ever.jpg",
+    "city": "Brüssel",
+    "country": "Belgien",
+    "year": "—",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "rotor-zinneke-feder-masui4ever"
+    ],
+    "sources": [
+      {
+        "key": "rotor-zinneke-feder-masui4ever",
+        "title": "Zinneke / FEDER Masui4ever",
+        "url": "https://rotordb.org/en/projects/zinneke-feder-masui4ever",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Stahlträger",
+        "Sturz",
+        "ca. 30 Stk.",
+        "Stahl",
+        "Rückbau\\-bestand",
+        "—",
+        "Tragwerk $\\to$ Gebäude\\-hülle",
+        "Umnutzung"
+      ],
+      [
+        "Fenster\\-rahmen",
+        "—",
+        "5 Stk.",
+        "—",
+        "Rückbau\\-bestand",
+        "—",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Steinwoll\\-dämmung",
+        "—",
+        "450 m²",
+        "Mineral\\-wolle",
+        "Rückbau\\-bestand",
+        "—",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Stahltreppe",
+        "—",
+        "2 Stk.",
+        "Stahl",
+        "ehem. Sitz der flämischen Regierung",
+        "Extern ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Azobé-Terrassen\\-diele",
+        "—",
+        "90 m²",
+        "Tropen\\-hartholz",
+        "Rückbau\\-bestand",
+        "—",
+        "Außenraum",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Eichenparkett",
+        "—",
+        "300 m²",
+        "Holz",
+        "Rückbau\\-bestand",
+        "—",
+        "Innen\\-ausbau",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Heizkörper",
+        "—",
+        "ca. 20 Stk.",
+        "Metall",
+        "Rückbau\\-bestand",
+        "—",
+        "Technische Gebäude\\-ausrüstung",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Tür",
+        "—",
+        "ca. 20 Stk.",
+        "—",
+        "Rückbau\\-bestand",
+        "—",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Lüftung\\-sanlage",
+        "—",
+        "1 Stk.",
+        "—",
+        "Innenstadt-Büroturm",
+        "Extern ex situ",
+        "Technische Gebäude\\-ausrüstung",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P48",
+    "title": "Alliander HQ",
+    "image": "asset/projekt/P48_alliander_hq.jpg",
+    "city": "Duiven",
+    "country": "Niederlande",
+    "year": "2015",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "archdaily-alliander-hq",
+      "arch2o-alliander-hq"
+    ],
+    "sources": [
+      {
+        "key": "archdaily-alliander-hq",
+        "title": "Alliander HQ",
+        "url": "https://www.archdaily.com/777783/alliander-hq-rau-architects",
+        "urldate": "2026-07-20"
+      },
+      {
+        "key": "arch2o-alliander-hq",
+        "title": "Alliander HQ — RAU Architects",
+        "url": "https://www.arch2o.com/alliander-hq-rau-architects/",
+        "urldate": "2026-07-30"
+      }
+    ],
+    "components": [
+      [
+        "Beton\\-konstruktion",
+        "—",
+        "—",
+        "Beton",
+        "Rückbau\\-bestand",
+        "—",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Stahl\\-konstruktion",
+        "—",
+        "—",
+        "Stahl",
+        "Bestand vor Ort",
+        "Gleiches Areal",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Fassaden\\-verkleidung",
+        "—",
+        "—",
+        "Holz",
+        "Abfallho\\-lzstrom",
+        "—",
+        "Produktions\\-rest $\\to$ Gebäude\\-hülle",
+        "Reststoff-/\\hspace{0pt}Restposten\\-nutzung"
+      ],
+      [
+        "Dachasphalt",
+        "—",
+        "—",
+        "Asphalt",
+        "Bestand\\-sdächer",
+        "Gleiches Areal",
+        "Dach",
+        "Recycling"
+      ],
+      [
+        "Decken\\-platte",
+        "—",
+        "—",
+        "Beton",
+        "Bestand vor Ort",
+        "Gleiches Gebäude",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Tür",
+        "Möbel",
+        "—",
+        "—",
+        "Bestand vor Ort",
+        "Gleiches Gebäude",
+        "Innen\\-ausbau $\\to$ Mobiliar",
+        "Umnutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P49",
+    "title": "The Green House",
+    "image": "asset/projekt/P49_the_green_house.jpg",
+    "city": "Utrecht",
+    "country": "Niederlande",
+    "year": "2017",
+    "type": "Temporär",
+    "status": "Ausgeführt",
+    "citations": [
+      "cepezed-the-green-house"
+    ],
+    "sources": [
+      {
+        "key": "cepezed-the-green-house",
+        "title": "The Green House",
+        "url": "https://www.cepezed.com/projects/the-green-house/",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Rauchgla\\-spaneel",
+        "—",
+        "—",
+        "Glas",
+        "ehem. Knoop-Kaserne",
+        "Lokal ex situ",
+        "Gebäude\\-hülle",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Pflaster\\-klinker",
+        "—",
+        "—",
+        "Gebrannter Ton",
+        "alter Kai",
+        "Extern ex situ",
+        "Außenraum $\\to$ Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Geschossdecke",
+        "—",
+        "—",
+        "Holz",
+        "Rückbau\\-bestand",
+        "—",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P50",
+    "title": "Resource Rows",
+    "image": "asset/projekt/P50_resource_rows.jpg",
+    "city": "Kopenhagen",
+    "country": "Dänemark",
+    "year": "2019",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "lendager-resource-rows"
+    ],
+    "sources": [
+      {
+        "key": "lendager-resource-rows",
+        "title": "Resource Rows",
+        "url": "https://lendager.com/project/resource-rows/",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Ziegelf\\-assaden-Modul",
+        "—",
+        "—",
+        "Gebrannter Ton",
+        "Rückbau\\-bestand",
+        "—",
+        "Gebäude\\-hülle",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Holzabfall",
+        "—",
+        "—",
+        "Holz",
+        "U-Bahn-Bau",
+        "Lokal ex situ",
+        "Produktions\\-rest $\\to$ Gebäude\\-hülle",
+        "Reststoff-/\\hspace{0pt}Restposten\\-nutzung"
+      ],
+      [
+        "Boden\\-belag-Verschnitt",
+        "—",
+        "—",
+        "—",
+        "Bodenpro\\-duktion",
+        "—",
+        "Produktions\\-rest $\\to$ Innen\\-ausbau",
+        "Reststoff-/\\hspace{0pt}Restposten\\-nutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P51",
+    "title": "Upcycle Studios",
+    "image": "asset/projekt/P51_upcycle_studios.jpg",
+    "city": "Kopenhagen",
+    "country": "Dänemark",
+    "year": "2018",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "lendager-upcycle-studios"
+    ],
+    "sources": [
+      {
+        "key": "lendager-upcycle-studios",
+        "title": "Upcycle Studios",
+        "url": "https://lendager.com/project/upcycle-studios/",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Recy\\-cling\\-beton",
+        "—",
+        "—",
+        "Recy\\-cling\\-beton",
+        "Bau-/\\hspace{0pt}Abbruchabfall",
+        "—",
+        "Tragwerk",
+        "Recycling"
+      ],
+      [
+        "Fenster",
+        "—",
+        "—",
+        "Glas",
+        "ausrangierte Fenster",
+        "—",
+        "Gebäude\\-hülle",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Bodendiele",
+        "—",
+        "—",
+        "Holz",
+        "ausrangierte Bodendielen",
+        "—",
+        "Innen\\-ausbau",
+        "Angepasste Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P52",
+    "title": "TRÆ High-Rise",
+    "image": "asset/projekt/P52_trae_high_rise.jpg",
+    "city": "Aarhus",
+    "country": "Dänemark",
+    "year": "2025",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "lendager-trae"
+    ],
+    "sources": [
+      {
+        "key": "lendager-trae",
+        "title": "TRÆ",
+        "url": "https://lendager.com/project/trae/",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Trapezblech",
+        "—",
+        "—",
+        "Aluminium",
+        "Industrie-/\\hspace{0pt}Bauernhof\\-dächer",
+        "—",
+        "Dach $\\to$ Gebäude\\-hülle",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Metallpaneel",
+        "—",
+        "—",
+        "Aluminium",
+        "wasserbes\\-chädigte Briefkästen",
+        "—",
+        "Außenraum $\\to$ Gebäude\\-hülle",
+        "Umnutzung"
+      ],
+      [
+        "Rotorblatt\\-segment",
+        "Sonnenschutz",
+        "—",
+        "GFK-Verbund\\-werkstoff",
+        "ausrangierte Wind\\-turbinen\\-blätter",
+        "—",
+        "Energie\\-anlage $\\to$ Gebäude\\-hülle",
+        "Umnutzung"
+      ],
+      [
+        "Rückbauholz",
+        "—",
+        "—",
+        "Holz",
+        "Rückbau\\-bestand",
+        "—",
+        "Innen\\-ausbau",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Holzver\\-schnitt",
+        "—",
+        "—",
+        "Holz",
+        "Holzpro\\-duktion",
+        "—",
+        "Produktions\\-rest $\\to$ Innen\\-ausbau",
+        "Reststoff-/\\hspace{0pt}Restposten\\-nutzung"
+      ],
+      [
+        "PET-Akustikfilz",
+        "—",
+        "—",
+        "Kunststoff",
+        "recycelte PET-Flaschen",
+        "—",
+        "Produktions\\-rest $\\to$ Innen\\-ausbau",
+        "Recycling"
+      ],
+      [
+        "Textilakustik",
+        "—",
+        "—",
+        "Textil",
+        "Textilabfall",
+        "—",
+        "Produktions\\-rest $\\to$ Innen\\-ausbau",
+        "Recycling"
+      ],
+      [
+        "Ziegelstein",
+        "Bar",
+        "—",
+        "Gebrannter Ton",
+        "Rückbau\\-bestand",
+        "—",
+        "Gebäude\\-hülle $\\to$ Mobiliar",
+        "Umnutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P53",
+    "title": "Woongroep Boschgaard",
+    "image": "asset/projekt/P53_woongroep_boschgaard.jpg",
+    "city": "’s-Hertogenbosch",
+    "country": "Niederlande",
+    "year": "2022",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "superuse-studios-woongroep-boschgaard",
+      "ajansen-boschgaard"
+    ],
+    "sources": [
+      {
+        "key": "superuse-studios-woongroep-boschgaard",
+        "title": "Woongroep Boschgaard",
+        "url": "https://www.superuse-studios.com/projectplus/woongroep-boschgaard/",
+        "urldate": "2026-07-20"
+      },
+      {
+        "key": "ajansen-boschgaard",
+        "title": "Hergebruikte bouwmaterialen in woningproject Boschgaard",
+        "url": "https://www.ajansenbv.com/projecten/hergebruikte-bouwmaterialen-in-woningproject-boschgaard/",
+        "urldate": "2026-07-31"
+      }
+    ],
+    "components": [
+      [
+        "Holzbalken",
+        "—",
+        "—",
+        "Holz",
+        "Abbruch einer Kunstakademie",
+        "—",
+        "Dach",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Recy\\-cling\\-beton",
+        "—",
+        "ca. 85,5 m³",
+        "Recy\\-cling\\-beton",
+        "Betongranulat aus Abbruch",
+        "—",
+        "Tragwerk",
+        "Recycling"
+      ]
+    ]
+  },
+  {
+    "id": "P54",
+    "title": "Kindergarten Mööslistrasse",
+    "image": "asset/projekt/P54_kindergarten_moeoeslistrasse.jpg",
+    "city": "Zürich",
+    "country": "Schweiz",
+    "year": "2023",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "stadt-zurich-kindergarten-mooslistrasse"
+    ],
+    "sources": [
+      {
+        "key": "stadt-zurich-kindergarten-mooslistrasse",
+        "title": "Kindergarten Mööslistrasse",
+        "url": "https://www.stadt-zuerich.ch/de/planen-und-bauen/portfolio/bauten-anlagen/schulbauten/kindergarten-moeoeslistrasse.html",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Brandsc\\-hutztür",
+        "—",
+        "—",
+        "Stahl",
+        "Schulhaus Lavater",
+        "Lokal ex situ",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Stahlträger",
+        "—",
+        "—",
+        "Stahl",
+        "kommunales Bauteillager",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Stahl-Pergola",
+        "Rankhilfe",
+        "—",
+        "Stahl",
+        "Einkaufsw\\-agendepot",
+        "Lokal ex situ",
+        "Außenraum",
+        "Umnutzung"
+      ],
+      [
+        "Holzvordach",
+        "Wetterschutz",
+        "—",
+        "Holz",
+        "Mock-up eines Wohnprojekts",
+        "—",
+        "Gebäude\\-hülle $\\to$ Außenraum",
+        "Umnutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P55",
+    "title": "Brighton Waste House",
+    "image": "asset/projekt/P55_brighton_waste_house.jpg",
+    "city": "Brighton",
+    "country": "Vereinigtes Königreich",
+    "year": "2014",
+    "type": "Prototyp",
+    "status": "Ausgeführt",
+    "citations": [
+      "university-of-brighton-brighton-waste-house"
+    ],
+    "sources": [
+      {
+        "key": "university-of-brighton-brighton-waste-house",
+        "title": "Brighton Waste House",
+        "url": "https://www.brighton.ac.uk/research/research-news/feature/brighton-waste-house.aspx",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Teppichfliese",
+        "Fassaden\\-verkleidung",
+        "2.000 Stk.",
+        "Textil",
+        "Büro-Teppich\\-fliesen",
+        "—",
+        "Innen\\-ausbau $\\to$ Gebäude\\-hülle",
+        "Umnutzung"
+      ],
+      [
+        "Zahnbürste",
+        "Dämmung",
+        "ca. 20.000 Stk.",
+        "Kunststoff",
+        "Fluggast-Abfall",
+        "Extern ex situ",
+        "Produktions\\-rest $\\to$ Gebäude\\-hülle",
+        "Umnutzung"
+      ],
+      [
+        "Denim",
+        "Dämmung",
+        "2 t",
+        "Textil",
+        "Textilabfall",
+        "—",
+        "Produktions\\-rest $\\to$ Gebäude\\-hülle",
+        "Umnutzung"
+      ],
+      [
+        "VHS-Kassette",
+        "Dämmung",
+        "4.000 Stk.",
+        "Kunststoff",
+        "Haushalt\\-sabfall",
+        "—",
+        "Produktions\\-rest $\\to$ Gebäude\\-hülle",
+        "Umnutzung"
+      ],
+      [
+        "Kreideabfall",
+        "Stampfwand",
+        "10 t",
+        "Material\\-mix",
+        "Kreideabfall und Ton",
+        "—",
+        "Produktions\\-rest $\\to$ Gebäude\\-hülle",
+        "Recycling"
+      ],
+      [
+        "Ziegelstein",
+        "—",
+        "—",
+        "Gebrannter Ton",
+        "Rückbau\\-bestand",
+        "—",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Sperrholz",
+        "—",
+        "—",
+        "Holz",
+        "Verschnitt",
+        "—",
+        "Innen\\-ausbau",
+        "Reststoff-/\\hspace{0pt}Restposten\\-nutzung"
+      ],
+      [
+        "Bauholz",
+        "—",
+        "—",
+        "Holz",
+        "Rückbau\\-bestand",
+        "—",
+        "Innen\\-ausbau",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P56",
+    "title": "Hastings Pier Visitor Centre",
+    "image": "asset/projekt/P56_hastings_pier.jpg",
+    "city": "Hastings",
+    "country": "Vereinigtes Königreich",
+    "year": "2017",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "drmm-reclaimed-timber-at-hastings-pier"
+    ],
+    "sources": [
+      {
+        "key": "drmm-reclaimed-timber-at-hastings-pier",
+        "title": "Reclaimed timber at Hastings Pier",
+        "url": "https://drmmstudio.com/insight/reclaimed-timber-at-hastings-pier/",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Pier-Deckholz",
+        "—",
+        "—",
+        "Tropen\\-hartholz",
+        "brandgesc\\-hädigter Pier",
+        "Gleiches Areal",
+        "Außenraum $\\to$ Gebäude\\-hülle",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Pier-Deckholz",
+        "—",
+        "Sitzbank",
+        "Tropen\\-hartholz",
+        "brandgesc\\-hädigter Pier",
+        "Gleiches Areal",
+        "Außenraum $\\to$ Mobiliar",
+        "Umnutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P57",
+    "title": "Kamikatsu Zero Waste Center",
+    "image": "asset/projekt/P57_kamikatsu_zero_waste_center.jpg",
+    "city": "Kamikatsu",
+    "country": "Japan",
+    "year": "2020",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "hiroshi-nakamura-nap-kamikatsu-zero-waste-center"
+    ],
+    "sources": [
+      {
+        "key": "hiroshi-nakamura-nap-kamikatsu-zero-waste-center",
+        "title": "Kamikatsu Zero Waste Center",
+        "url": "https://www.nakam.info/en/works/kamikatsu0/",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Öffnungs\\-element",
+        "—",
+        "ca. 700 Stk.",
+        "Glas",
+        "von Anwohnern gesammelte Fenster/\\hspace{0pt}Türen",
+        "Lokal ex situ",
+        "Gebäude\\-hülle",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Ziegelstein",
+        "Pflaster",
+        "—",
+        "Gebrannter Ton",
+        "entsorgte Ziegel",
+        "Gleiches Areal",
+        "Gebäude\\-hülle $\\to$ Außenraum",
+        "Umnutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P58",
+    "title": "People’s Pavilion",
+    "image": "asset/projekt/P58_peoples_pavilion.jpg",
+    "city": "Eindhoven",
+    "country": "Niederlande",
+    "year": "2017",
+    "type": "Temporär",
+    "status": "Ausgeführt",
+    "citations": [
+      "bureau-sla-people-s-pavilion"
+    ],
+    "sources": [
+      {
+        "key": "bureau-sla-people-s-pavilion",
+        "title": "People’s Pavilion",
+        "url": "https://bureausla.nl/projects/peoples-pavilion/",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Fundame\\-ntpfahl",
+        "—",
+        "—",
+        "—",
+        "Leihgabe IJB groep",
+        "Extern ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Holzmatte",
+        "—",
+        "—",
+        "Holz",
+        "Leihgabe Stiho",
+        "Extern ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Stahlmatte",
+        "—",
+        "—",
+        "Stahl",
+        "Leihgabe Stiho",
+        "Extern ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Fassade\\-nfliese",
+        "—",
+        "—",
+        "—",
+        "Leihgabe Govaerts",
+        "Extern ex situ",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Glasdach",
+        "—",
+        "—",
+        "Glas",
+        "Leihgabe DEGO",
+        "Extern ex situ",
+        "Dach",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Betonboden",
+        "—",
+        "—",
+        "Beton",
+        "Leihgabe Heezen",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Fassade\\-nfliese",
+        "—",
+        "—",
+        "Kunststoff",
+        "Plastik-Haushalt\\-sabfall der Bürger",
+        "Lokal ex situ",
+        "Produktions\\-rest $\\to$ Gebäude\\-hülle",
+        "Recycling"
+      ]
+    ]
+  },
+  {
+    "id": "P59",
+    "title": "Pavillon Circulaire",
+    "image": "asset/projekt/P59_circular_pavilion.jpg",
+    "city": "Paris",
+    "country": "Frankreich",
+    "year": "2015",
+    "type": "Temporär",
+    "status": "Ausgeführt",
+    "citations": [
+      "encore-heureux-pavillon-circulaire"
+    ],
+    "sources": [
+      {
+        "key": "encore-heureux-pavillon-circulaire",
+        "title": "Pavillon Circulaire",
+        "url": "https://encoreheureux.org/fr/projets/pavillon-circulaire",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Holztür",
+        "Fassaden\\-verkleidung",
+        "180 Stk.",
+        "Holz",
+        "Sanierung Wohngebäude",
+        "Lokal ex situ",
+        "Innen\\-ausbau $\\to$ Gebäude\\-hülle",
+        "Umnutzung"
+      ],
+      [
+        "Steinwoll\\-dämmung",
+        "—",
+        "—",
+        "Mineral\\-wolle",
+        "Dachsanierung Supermarkt",
+        "Lokal ex situ",
+        "Dach $\\to$ Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Holztragwerk",
+        "—",
+        "—",
+        "Holz",
+        "Baustell\\-enreste Altenheim",
+        "Lokal ex situ",
+        "Produktions\\-rest $\\to$ Tragwerk",
+        "Reststoff-/\\hspace{0pt}Restposten\\-nutzung"
+      ],
+      [
+        "Gitterrost",
+        "—",
+        "—",
+        "Metall",
+        "Aktion Paris-Plage",
+        "Lokal ex situ",
+        "Außenraum",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Holzstuhl",
+        "—",
+        "50 Stk.",
+        "Holz",
+        "Pariser Wertstoffhöfe",
+        "Lokal ex situ",
+        "Mobiliar",
+        "Angepasste Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P60",
+    "title": "Christ Pavilion",
+    "image": "asset/projekt/P60_christ_pavilion.jpg",
+    "city": "Volkenroda",
+    "country": "Deutschland",
+    "year": "2001",
+    "type": "Gebäude",
+    "status": "Ausgeführt",
+    "citations": [
+      "gmp-christ-pavilion"
+    ],
+    "sources": [
+      {
+        "key": "gmp-christ-pavilion",
+        "title": "Christ Pavilion",
+        "url": "https://www.gmp.de/en/projects/415/christ-pavilion-expo-2000",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Pavillon-Ensemble",
+        "—",
+        "ca. 2.004 m²",
+        "Material\\-mix",
+        "Expo-2000-Pavillon",
+        "Extern ex situ",
+        "Gesamt\\-struktur",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P61",
+    "title": "Plattenvereinigung",
+    "image": "asset/projekt/P61_plattenvereinigung.jpg",
+    "city": "Berlin",
+    "country": "Deutschland",
+    "year": "2010",
+    "type": "Temporär",
+    "status": "Ausgeführt",
+    "citations": [
+      "epfl-atlas-of-reused-concrete"
+    ],
+    "sources": [
+      {
+        "key": "epfl-atlas-of-reused-concrete",
+        "title": "Atlas of Reused Concrete",
+        "url": "https://concrete-reuse.epfl.ch/list?view=list",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Betonwand",
+        "—",
+        "—",
+        "Beton",
+        "Bungalows Olympisches Dorf",
+        "Extern ex situ",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Tür",
+        "—",
+        "—",
+        "—",
+        "Bungalows Olympisches Dorf",
+        "Extern ex situ",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Beton\\-element",
+        "—",
+        "—",
+        "Beton",
+        "Hochhäuser Typ PH12",
+        "Extern ex situ",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Fenster",
+        "—",
+        "—",
+        "Glas",
+        "Hochhäuser Typ PH12",
+        "Extern ex situ",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Boden\\-platte",
+        "—",
+        "—",
+        "Beton",
+        "Plattenbau",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Treppe",
+        "—",
+        "—",
+        "Beton",
+        "Plattenbau",
+        "Extern ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P62",
+    "title": "Plattenpalast",
+    "image": "asset/projekt/P62_plattenpalast.jpg",
+    "city": "Berlin",
+    "country": "Deutschland",
+    "year": "2009",
+    "type": "Prototyp",
+    "status": "Ausgeführt",
+    "citations": [
+      "baunetzwissen-plattenpalast",
+      "beton-org-plattenpalast"
+    ],
+    "sources": [
+      {
+        "key": "baunetzwissen-plattenpalast",
+        "title": "Plattenpalast",
+        "url": "https://www.baunetzwissen.de/beton/objekte/sonderbauten/plattenpalast-in-berlin-841145",
+        "urldate": "2026-07-20"
+      },
+      {
+        "key": "beton-org-plattenpalast",
+        "title": "Plattenpalast in Berlin",
+        "url": "https://www.beton.org/betonbau/architektur/objektdatenbank/objekt-details/plattenpalast-in-berlin/",
+        "urldate": "2026-07-30"
+      }
+    ],
+    "components": [
+      [
+        "WBS70-Fertigteil",
+        "—",
+        "13 Stk.",
+        "Beton",
+        "abgerissene WBS70-Wohnbauten",
+        "Lokal ex situ",
+        "Tragwerk",
+        "Direkte Wieder\\-verwendung"
+      ],
+      [
+        "Fenster",
+        "—",
+        "12 Stk.",
+        "Glas",
+        "Palast der Republik",
+        "Lokal ex situ",
+        "Gebäude\\-hülle",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P63",
+    "title": "SUPERLOCAL Expogebouw",
+    "image": "asset/projekt/P63_superlocal_expogebouw.jpg",
+    "city": "Kerkrade",
+    "country": "Niederlande",
+    "year": "2019",
+    "type": "Prototyp",
+    "status": "Ausgeführt",
+    "citations": [
+      "superlocal-expogebouw"
+    ],
+    "sources": [
+      {
+        "key": "superlocal-expogebouw",
+        "title": "Expogebouw",
+        "url": "https://www.superlocal.eu/sce-en/",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Wohnungs\\-segment",
+        "—",
+        "—",
+        "Beton",
+        "leerstehendes Hochhaus",
+        "Gleiches Areal",
+        "Gesamt\\-struktur",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P64",
+    "title": "CascadeUp Glulam Demonstrator",
+    "image": "asset/projekt/P64_cascadeup_glulam.jpg",
+    "city": "London",
+    "country": "Vereinigtes Königreich",
+    "year": "2024",
+    "type": "Prototyp",
+    "status": "Ausgeführt",
+    "citations": [
+      "ucl-circular-economy-lab-cascadeup"
+    ],
+    "sources": [
+      {
+        "key": "ucl-circular-economy-lab-cascadeup",
+        "title": "CascadeUp",
+        "url": "https://www.ucl.ac.uk/circular-economy-lab/research/reusing-wood-demolition-mass-timber-products",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "glulamST-Träger",
+        "—",
+        "—",
+        "Holz",
+        "Abbruchholz",
+        "—",
+        "Produktions\\-rest $\\to$ Tragwerk",
+        "Recycling"
+      ],
+      [
+        "CLST-Paneel",
+        "—",
+        "—",
+        "Holz",
+        "Abbruchholz",
+        "—",
+        "Produktions\\-rest $\\to$ Tragwerk",
+        "Recycling"
+      ]
+    ]
+  },
+  {
+    "id": "P65",
+    "title": "Re:Crete Footbridge",
+    "image": "asset/projekt/P65_recrete_footbridge.jpg",
+    "city": "Lausanne",
+    "country": "Schweiz",
+    "year": "2021",
+    "type": "Prototyp",
+    "status": "Ausgeführt",
+    "citations": [
+      "epfl-re-crete"
+    ],
+    "sources": [
+      {
+        "key": "epfl-re-crete",
+        "title": "RE:CRETE",
+        "url": "https://www.epfl.ch/schools/enac/recrete/",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Betonblock",
+        "Bogenbrücke",
+        "25 Stk.",
+        "Beton",
+        "Wände eines umgebauten Gebäudes",
+        "—",
+        "Tragwerk",
+        "Umnutzung"
+      ]
+    ]
+  },
+  {
+    "id": "P66",
+    "title": "Bestandsverpflanzung Pavillon",
+    "image": "asset/projekt/P66_bestandverplanzung_pavilion.jpg",
+    "city": "München",
+    "country": "Deutschland",
+    "year": "2008",
+    "type": "Prototyp",
+    "status": "Ausgeführt",
+    "citations": [
+      "sciencedirect-structural-component-reuse-case-studies",
+      "baunetz-bestandsverpflanzung"
+    ],
+    "sources": [
+      {
+        "key": "sciencedirect-structural-component-reuse-case-studies",
+        "title": "Environmental assessment of structural component reuse case studies",
+        "url": "https://www.sciencedirect.com/science/article/pii/S0959652622048090",
+        "urldate": "2026-07-20"
+      },
+      {
+        "key": "baunetz-bestandsverpflanzung",
+        "title": "Bestandsverpflanzungen in München",
+        "url": "https://www.baunetz.de/meldungen/Meldungen_Bestandsverpflanzungen_in_Muenchen_539293.html",
+        "urldate": "2026-07-30"
+      }
+    ],
+    "components": [
+      [
+        "Studenten\\-bungalow",
+        "—",
+        "3 Stk.",
+        "Beton",
+        "Olympisches Dorf 1972",
+        "Lokal ex situ",
+        "Gesamt\\-struktur",
+        "Direkte Wieder\\-verwendung"
+      ]
+    ]
+  },
+  {
+    "id": "P67",
+    "title": "Montessori Maassluis",
+    "image": "asset/projekt/P67_montessori_maassluis.jpg",
+    "city": "Maassluis",
+    "country": "Niederlande",
+    "year": "2027*",
+    "type": "Gebäude",
+    "status": "Im Bau",
+    "citations": [
+      "gemeente-maassluis-montessori-construction-start"
+    ],
+    "sources": [
+      {
+        "key": "gemeente-maassluis-montessori-construction-start",
+        "title": "Montessori construction start",
+        "url": "https://www.maassluis.nl/eerste-paal-geslagen-voor-nieuwe-montessorischool-maassluis",
+        "urldate": "2026-07-20"
+      }
+    ],
+    "components": [
+      [
+        "Hohldielen\\-decke",
+        "—",
+        "—",
+        "Beton",
+        "Rückbau-Fertigteile",
+        "—",
+        "Tragwerk",
+        "Angepasste Wieder\\-verwendung"
+      ],
+      [
+        "Altschul-Material",
+        "Schulhof",
+        "—",
+        "—",
+        "alte Montesso\\-rischule",
+        "Gleiches Areal",
+        "Außenraum",
+        "Umnutzung"
+      ]
+    ]
+  }
+]
