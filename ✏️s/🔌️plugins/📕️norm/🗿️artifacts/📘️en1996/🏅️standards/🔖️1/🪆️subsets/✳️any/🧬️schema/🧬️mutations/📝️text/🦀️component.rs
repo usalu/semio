@@ -3,19 +3,20 @@
 //! whole-document-replace macro, `impl_norm_set_snapshot_ops!`, no longer applies now that the
 //! whole-document-replace variant is gone).
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
-pub use crate::artifacts::en1996::schema::mutations::En1996Mutation;
-use crate::artifacts::en1996::schema::mutations::{change_m_ed_knm, change_n_ed_kn, change_v_ed_kn, change_h_ed_kn, change_z_mm3, change_area_mm2, change_shear_area_mm2, change_f_k_mpa, change_f_vk_mpa, change_annex, change_masonry_class, change_design_situation, change_mu, change_wall_thickness_mm, change_fire_resistance_min, change_unit, change_exposure, change_mortar, change_bed_joint_thickness_mm, change_storeys, change_h_ef_mm, change_t_ef_mm};
-use crate::artifacts::en1996::MasonryClass;
 use crate::artifacts::en1996::part_2::ExposureClass;
 use crate::artifacts::en1996::part_2::MortarClass;
+pub use crate::artifacts::en1996::schema::mutations::En1996Mutation;
+use crate::artifacts::en1996::schema::mutations::{
+    change_annex, change_area_mm2, change_bed_joint_thickness_mm, change_design_situation, change_exposure, change_f_k_mpa, change_f_vk_mpa, change_fire_resistance_min, change_h_ed_kn, change_h_ef_mm, change_m_ed_knm, change_masonry_class,
+    change_mortar, change_mu, change_n_ed_kn, change_shear_area_mm2, change_storeys, change_t_ef_mm, change_unit, change_v_ed_kn, change_wall_thickness_mm, change_z_mm3,
+};
+use crate::artifacts::en1996::MasonryClass;
 use crate::document::AnnexChoice;
 use crate::document::DesignSituation;
 use protocol::OpText;
@@ -26,72 +27,28 @@ use protocol::OpText;
 /// and every consumer matching on it, is completely untouched.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum En1996MutationDsl {
-    ChangeMEdKnm {
-        new_m_ed_knm: f64,
-    },
-    ChangeNEdKn {
-        new_n_ed_kn: f64,
-    },
-    ChangeVEdKn {
-        new_v_ed_kn: f64,
-    },
-    ChangeHEdKn {
-        new_h_ed_kn: f64,
-    },
-    ChangeZMm3 {
-        new_z_mm3: f64,
-    },
-    ChangeAreaMm2 {
-        new_area_mm2: f64,
-    },
-    ChangeShearAreaMm2 {
-        new_shear_area_mm2: f64,
-    },
-    ChangeFKMpa {
-        new_f_k_mpa: f64,
-    },
-    ChangeFVkMpa {
-        new_f_vk_mpa: f64,
-    },
-    ChangeAnnex {
-        new_annex: AnnexChoice,
-    },
-    ChangeMasonryClass {
-        new_masonry_class: MasonryClass,
-    },
-    ChangeDesignSituation {
-        new_design_situation: DesignSituation,
-    },
-    ChangeMu {
-        new_mu: f64,
-    },
-    ChangeWallThicknessMm {
-        new_wall_thickness_mm: f64,
-    },
-    ChangeFireResistanceMin {
-        new_fire_resistance_min: u32,
-    },
-    ChangeUnit {
-        new_unit: String,
-    },
-    ChangeExposure {
-        new_exposure: ExposureClass,
-    },
-    ChangeMortar {
-        new_mortar: MortarClass,
-    },
-    ChangeBedJointThicknessMm {
-        new_bed_joint_thickness_mm: f64,
-    },
-    ChangeStoreys {
-        new_storeys: u32,
-    },
-    ChangeHEfMm {
-        new_h_ef_mm: f64,
-    },
-    ChangeTEfMm {
-        new_t_ef_mm: f64,
-    },
+    ChangeMEdKnm { new_m_ed_knm: f64 },
+    ChangeNEdKn { new_n_ed_kn: f64 },
+    ChangeVEdKn { new_v_ed_kn: f64 },
+    ChangeHEdKn { new_h_ed_kn: f64 },
+    ChangeZMm3 { new_z_mm3: f64 },
+    ChangeAreaMm2 { new_area_mm2: f64 },
+    ChangeShearAreaMm2 { new_shear_area_mm2: f64 },
+    ChangeFKMpa { new_f_k_mpa: f64 },
+    ChangeFVkMpa { new_f_vk_mpa: f64 },
+    ChangeAnnex { new_annex: AnnexChoice },
+    ChangeMasonryClass { new_masonry_class: MasonryClass },
+    ChangeDesignSituation { new_design_situation: DesignSituation },
+    ChangeMu { new_mu: f64 },
+    ChangeWallThicknessMm { new_wall_thickness_mm: f64 },
+    ChangeFireResistanceMin { new_fire_resistance_min: u32 },
+    ChangeUnit { new_unit: String },
+    ChangeExposure { new_exposure: ExposureClass },
+    ChangeMortar { new_mortar: MortarClass },
+    ChangeBedJointThicknessMm { new_bed_joint_thickness_mm: f64 },
+    ChangeStoreys { new_storeys: u32 },
+    ChangeHEfMm { new_h_ef_mm: f64 },
+    ChangeTEfMm { new_t_ef_mm: f64 },
 }
 
 //#region 🔖️HandcraftedOpCodecs
@@ -102,11 +59,7 @@ impl OpText for En1996MutationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }

@@ -3,16 +3,20 @@
 //! whole-document-replace macro no longer applies now that the whole-document-replace variant is
 //! gone).
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 pub use crate::artifacts::en1998::schema::mutations::En1998Mutation;
-use crate::artifacts::en1998::schema::mutations::{change_seismic_zone, change_ground_type, change_importance_class, change_structural_system, change_t1_s, change_mass_t, change_v_rd_kn, change_drift_mm, change_height_m, change_multiple_resisting_systems, change_annex, change_en_a_gr, change_en_ground_type, change_en_spectrum_type, change_period_ratio, change_bridge_v_rd_kn, change_bearing_d_ed_mm, change_bearing_d_rd_mm, change_retrofit_knowledge_level, change_retrofit_limit_state, change_retrofit_e_d_kn, change_retrofit_r_k_kn, change_retrofit_gamma_el, change_silo_height_m, change_silo_radius_m, change_silo_n_rd_kn, change_silo_v_ed_kn, change_silo_v_rd_kn, change_silo_q_nominal, change_tank_height_m, change_tank_radius_m, change_tank_mass_t, change_tank_v_rd_kn, change_tower_m_ed_knm, change_tower_m_rd_knm, change_tower_is_chimney, change_tower_q_nominal, change_tower_mass_t, change_foundation_area_m2, change_foundation_p_rd_kpa, change_foundation_h_ed_kn, change_foundation_h_rd_kn, change_k_foundation, change_k_soil, change_wall_height_m, change_wall_phi_deg, change_wall_soil_gamma_kn_m3, change_wall_r, change_wall_h_rd_kn};
+use crate::artifacts::en1998::schema::mutations::{
+    change_annex, change_bearing_d_ed_mm, change_bearing_d_rd_mm, change_bridge_v_rd_kn, change_drift_mm, change_en_a_gr, change_en_ground_type, change_en_spectrum_type, change_foundation_area_m2, change_foundation_h_ed_kn,
+    change_foundation_h_rd_kn, change_foundation_p_rd_kpa, change_ground_type, change_height_m, change_importance_class, change_k_foundation, change_k_soil, change_mass_t, change_multiple_resisting_systems, change_period_ratio,
+    change_retrofit_e_d_kn, change_retrofit_gamma_el, change_retrofit_knowledge_level, change_retrofit_limit_state, change_retrofit_r_k_kn, change_seismic_zone, change_silo_height_m, change_silo_n_rd_kn, change_silo_q_nominal, change_silo_radius_m,
+    change_silo_v_ed_kn, change_silo_v_rd_kn, change_structural_system, change_t1_s, change_tank_height_m, change_tank_mass_t, change_tank_radius_m, change_tank_v_rd_kn, change_tower_is_chimney, change_tower_m_ed_knm, change_tower_m_rd_knm,
+    change_tower_mass_t, change_tower_q_nominal, change_v_rd_kn, change_wall_h_rd_kn, change_wall_height_m, change_wall_phi_deg, change_wall_r, change_wall_soil_gamma_kn_m3,
+};
 
 use protocol::OpText;
 
@@ -22,153 +26,55 @@ use protocol::OpText;
 /// and every consumer matching on it, is completely untouched.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum En1998MutationDsl {
-    ChangeSeismicZone {
-        new_seismic_zone: u8,
-    },
-    ChangeGroundType {
-        new_ground_type: String,
-    },
-    ChangeImportanceClass {
-        new_importance_class: String,
-    },
-    ChangeStructuralSystem {
-        new_structural_system: String,
-    },
-    ChangeT1S {
-        new_t1_s: f64,
-    },
-    ChangeMassT {
-        new_mass_t: f64,
-    },
-    ChangeVRdKn {
-        new_v_rd_kn: f64,
-    },
-    ChangeDriftMm {
-        new_drift_mm: f64,
-    },
-    ChangeHeightM {
-        new_height_m: f64,
-    },
-    ChangeMultipleResistingSystems {
-        new_multiple_resisting_systems: bool,
-    },
-    ChangeAnnex {
-        new_annex: String,
-    },
-    ChangeEnAGr {
-        new_en_a_gr: f64,
-    },
-    ChangeEnGroundType {
-        new_en_ground_type: String,
-    },
-    ChangeEnSpectrumType {
-        new_en_spectrum_type: String,
-    },
-    ChangePeriodRatio {
-        new_period_ratio: f64,
-    },
-    ChangeBridgeVRdKn {
-        new_bridge_v_rd_kn: f64,
-    },
-    ChangeBearingDEdMm {
-        new_bearing_d_ed_mm: f64,
-    },
-    ChangeBearingDRdMm {
-        new_bearing_d_rd_mm: f64,
-    },
-    ChangeRetrofitKnowledgeLevel {
-        new_retrofit_knowledge_level: String,
-    },
-    ChangeRetrofitLimitState {
-        new_retrofit_limit_state: String,
-    },
-    ChangeRetrofitEDKn {
-        new_retrofit_e_d_kn: f64,
-    },
-    ChangeRetrofitRKKn {
-        new_retrofit_r_k_kn: f64,
-    },
-    ChangeRetrofitGammaEl {
-        new_retrofit_gamma_el: f64,
-    },
-    ChangeSiloHeightM {
-        new_silo_height_m: f64,
-    },
-    ChangeSiloRadiusM {
-        new_silo_radius_m: f64,
-    },
-    ChangeSiloNRdKn {
-        new_silo_n_rd_kn: f64,
-    },
-    ChangeSiloVEdKn {
-        new_silo_v_ed_kn: f64,
-    },
-    ChangeSiloVRdKn {
-        new_silo_v_rd_kn: f64,
-    },
-    ChangeSiloQNominal {
-        new_silo_q_nominal: f64,
-    },
-    ChangeTankHeightM {
-        new_tank_height_m: f64,
-    },
-    ChangeTankRadiusM {
-        new_tank_radius_m: f64,
-    },
-    ChangeTankMassT {
-        new_tank_mass_t: f64,
-    },
-    ChangeTankVRdKn {
-        new_tank_v_rd_kn: f64,
-    },
-    ChangeTowerMEdKnm {
-        new_tower_m_ed_knm: f64,
-    },
-    ChangeTowerMRdKnm {
-        new_tower_m_rd_knm: f64,
-    },
-    ChangeTowerIsChimney {
-        new_tower_is_chimney: bool,
-    },
-    ChangeTowerQNominal {
-        new_tower_q_nominal: f64,
-    },
-    ChangeTowerMassT {
-        new_tower_mass_t: f64,
-    },
-    ChangeFoundationAreaM2 {
-        new_foundation_area_m2: f64,
-    },
-    ChangeFoundationPRdKpa {
-        new_foundation_p_rd_kpa: f64,
-    },
-    ChangeFoundationHEdKn {
-        new_foundation_h_ed_kn: f64,
-    },
-    ChangeFoundationHRdKn {
-        new_foundation_h_rd_kn: f64,
-    },
-    ChangeKFoundation {
-        new_k_foundation: f64,
-    },
-    ChangeKSoil {
-        new_k_soil: f64,
-    },
-    ChangeWallHeightM {
-        new_wall_height_m: f64,
-    },
-    ChangeWallPhiDeg {
-        new_wall_phi_deg: f64,
-    },
-    ChangeWallSoilGammaKnM3 {
-        new_wall_soil_gamma_kn_m3: f64,
-    },
-    ChangeWallR {
-        new_wall_r: f64,
-    },
-    ChangeWallHRdKn {
-        new_wall_h_rd_kn: f64,
-    },
+    ChangeSeismicZone { new_seismic_zone: u8 },
+    ChangeGroundType { new_ground_type: String },
+    ChangeImportanceClass { new_importance_class: String },
+    ChangeStructuralSystem { new_structural_system: String },
+    ChangeT1S { new_t1_s: f64 },
+    ChangeMassT { new_mass_t: f64 },
+    ChangeVRdKn { new_v_rd_kn: f64 },
+    ChangeDriftMm { new_drift_mm: f64 },
+    ChangeHeightM { new_height_m: f64 },
+    ChangeMultipleResistingSystems { new_multiple_resisting_systems: bool },
+    ChangeAnnex { new_annex: String },
+    ChangeEnAGr { new_en_a_gr: f64 },
+    ChangeEnGroundType { new_en_ground_type: String },
+    ChangeEnSpectrumType { new_en_spectrum_type: String },
+    ChangePeriodRatio { new_period_ratio: f64 },
+    ChangeBridgeVRdKn { new_bridge_v_rd_kn: f64 },
+    ChangeBearingDEdMm { new_bearing_d_ed_mm: f64 },
+    ChangeBearingDRdMm { new_bearing_d_rd_mm: f64 },
+    ChangeRetrofitKnowledgeLevel { new_retrofit_knowledge_level: String },
+    ChangeRetrofitLimitState { new_retrofit_limit_state: String },
+    ChangeRetrofitEDKn { new_retrofit_e_d_kn: f64 },
+    ChangeRetrofitRKKn { new_retrofit_r_k_kn: f64 },
+    ChangeRetrofitGammaEl { new_retrofit_gamma_el: f64 },
+    ChangeSiloHeightM { new_silo_height_m: f64 },
+    ChangeSiloRadiusM { new_silo_radius_m: f64 },
+    ChangeSiloNRdKn { new_silo_n_rd_kn: f64 },
+    ChangeSiloVEdKn { new_silo_v_ed_kn: f64 },
+    ChangeSiloVRdKn { new_silo_v_rd_kn: f64 },
+    ChangeSiloQNominal { new_silo_q_nominal: f64 },
+    ChangeTankHeightM { new_tank_height_m: f64 },
+    ChangeTankRadiusM { new_tank_radius_m: f64 },
+    ChangeTankMassT { new_tank_mass_t: f64 },
+    ChangeTankVRdKn { new_tank_v_rd_kn: f64 },
+    ChangeTowerMEdKnm { new_tower_m_ed_knm: f64 },
+    ChangeTowerMRdKnm { new_tower_m_rd_knm: f64 },
+    ChangeTowerIsChimney { new_tower_is_chimney: bool },
+    ChangeTowerQNominal { new_tower_q_nominal: f64 },
+    ChangeTowerMassT { new_tower_mass_t: f64 },
+    ChangeFoundationAreaM2 { new_foundation_area_m2: f64 },
+    ChangeFoundationPRdKpa { new_foundation_p_rd_kpa: f64 },
+    ChangeFoundationHEdKn { new_foundation_h_ed_kn: f64 },
+    ChangeFoundationHRdKn { new_foundation_h_rd_kn: f64 },
+    ChangeKFoundation { new_k_foundation: f64 },
+    ChangeKSoil { new_k_soil: f64 },
+    ChangeWallHeightM { new_wall_height_m: f64 },
+    ChangeWallPhiDeg { new_wall_phi_deg: f64 },
+    ChangeWallSoilGammaKnM3 { new_wall_soil_gamma_kn_m3: f64 },
+    ChangeWallR { new_wall_r: f64 },
+    ChangeWallHRdKn { new_wall_h_rd_kn: f64 },
 }
 
 //#region 🔖️HandcraftedOpCodecs
@@ -179,11 +85,7 @@ impl OpText for En1998MutationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -272,7 +174,9 @@ fn en1998_mutation_from_dsl(mutation: En1998MutationDsl) -> En1998Mutation {
         En1998MutationDsl::ChangeVRdKn { new_v_rd_kn } => En1998Mutation::ChangeVRdKn(change_v_rd_kn::mutation::ChangeVRdKn { new_v_rd_kn }),
         En1998MutationDsl::ChangeDriftMm { new_drift_mm } => En1998Mutation::ChangeDriftMm(change_drift_mm::mutation::ChangeDriftMm { new_drift_mm }),
         En1998MutationDsl::ChangeHeightM { new_height_m } => En1998Mutation::ChangeHeightM(change_height_m::mutation::ChangeHeightM { new_height_m }),
-        En1998MutationDsl::ChangeMultipleResistingSystems { new_multiple_resisting_systems } => En1998Mutation::ChangeMultipleResistingSystems(change_multiple_resisting_systems::mutation::ChangeMultipleResistingSystems { new_multiple_resisting_systems }),
+        En1998MutationDsl::ChangeMultipleResistingSystems { new_multiple_resisting_systems } => {
+            En1998Mutation::ChangeMultipleResistingSystems(change_multiple_resisting_systems::mutation::ChangeMultipleResistingSystems { new_multiple_resisting_systems })
+        }
         En1998MutationDsl::ChangeAnnex { new_annex } => En1998Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex }),
         En1998MutationDsl::ChangeEnAGr { new_en_a_gr } => En1998Mutation::ChangeEnAGr(change_en_a_gr::mutation::ChangeEnAGr { new_en_a_gr }),
         En1998MutationDsl::ChangeEnGroundType { new_en_ground_type } => En1998Mutation::ChangeEnGroundType(change_en_ground_type::mutation::ChangeEnGroundType { new_en_ground_type }),

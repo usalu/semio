@@ -1,12 +1,11 @@
 //! 🧬️ Din4108 snapshot schema — artifact-lane fields only.
 
-use schema::ArtifactSchema;
 use crate::artifacts::din4108::LayerDocument;
 use crate::document::ClimateZoneDe;
+use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
-
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]

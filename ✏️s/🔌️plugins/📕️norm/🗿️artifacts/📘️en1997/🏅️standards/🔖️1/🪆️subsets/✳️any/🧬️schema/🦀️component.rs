@@ -1,7 +1,7 @@
 //! 🌍️ EN 1997 artifact schema — every field with its state class.
 
-use crate::document::AnnexChoice;
 use crate::artifacts::en1997::En1997Snapshot;
+use crate::document::AnnexChoice;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -11,29 +11,52 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1997")]
 pub struct En1997Artifact {
-    #[state(artifact)] pub v_ed_kn: f64,
-    #[state(artifact)] pub h_ed_kn: f64,
-    #[state(artifact)] pub footing_area_m2: f64,
-    #[state(artifact)] pub phi_deg: f64,
-    #[state(artifact)] pub c_kpa: f64,
-    #[state(artifact)] pub gamma_kn_m3: f64,
-    #[state(artifact)] pub b_m: f64,
-    #[state(artifact)] pub d_f_m: f64,
-    #[state(artifact)] pub e_s_mpa: f64,
-    #[state(artifact)] pub nu: f64,
-    #[state(artifact)] pub design_approach: String,
-    #[state(artifact)] pub annex: crate::document::AnnexChoice,
-    #[state(artifact)] pub settlement_limit_mm: f64,
-    #[state(artifact)] pub n_pile_ed_kn: f64,
-    #[state(artifact)] pub alpha_s: f64,
-    #[state(artifact)] pub pile_d_m: f64,
-    #[state(artifact)] pub q_s_kpa: f64,
-    #[state(artifact)] pub pile_l_m: f64,
-    #[state(artifact)] pub q_b_kpa: f64,
-    #[state(artifact)] pub pile_base_area_m2: f64,
-    #[state(artifact)] pub pile_n_profiles: u32,
-    #[state(artifact)] pub z_investigated_m: f64,
-    #[state(presence)] pub selected_check_index: Option<u32>,
+    #[state(artifact)]
+    pub v_ed_kn: f64,
+    #[state(artifact)]
+    pub h_ed_kn: f64,
+    #[state(artifact)]
+    pub footing_area_m2: f64,
+    #[state(artifact)]
+    pub phi_deg: f64,
+    #[state(artifact)]
+    pub c_kpa: f64,
+    #[state(artifact)]
+    pub gamma_kn_m3: f64,
+    #[state(artifact)]
+    pub b_m: f64,
+    #[state(artifact)]
+    pub d_f_m: f64,
+    #[state(artifact)]
+    pub e_s_mpa: f64,
+    #[state(artifact)]
+    pub nu: f64,
+    #[state(artifact)]
+    pub design_approach: String,
+    #[state(artifact)]
+    pub annex: crate::document::AnnexChoice,
+    #[state(artifact)]
+    pub settlement_limit_mm: f64,
+    #[state(artifact)]
+    pub n_pile_ed_kn: f64,
+    #[state(artifact)]
+    pub alpha_s: f64,
+    #[state(artifact)]
+    pub pile_d_m: f64,
+    #[state(artifact)]
+    pub q_s_kpa: f64,
+    #[state(artifact)]
+    pub pile_l_m: f64,
+    #[state(artifact)]
+    pub q_b_kpa: f64,
+    #[state(artifact)]
+    pub pile_base_area_m2: f64,
+    #[state(artifact)]
+    pub pile_n_profiles: u32,
+    #[state(artifact)]
+    pub z_investigated_m: f64,
+    #[state(presence)]
+    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -170,8 +193,8 @@ pub fn en1997_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::en1997::{En1997Diff, En1997Mutation, En1997Snapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct En1997BuilderConstruction {
@@ -183,8 +206,12 @@ pub mod derived_construction {
         type Snapshot = En1997Snapshot;
         type Mutation = En1997Mutation;
         type Diff = En1997Diff;
-        fn empty() -> Self { Self { snapshot: En1997Snapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn empty() -> Self {
+            Self { snapshot: En1997Snapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<En1997Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -201,7 +228,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -210,8 +241,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::en1997::En1997Snapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct En1997Parts {
@@ -616,4 +647,3 @@ mod compliance_helpers_tests {
     }
 }
 //#endregion 🧪️ComplianceHelpersTests
-

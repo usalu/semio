@@ -8,17 +8,7 @@ use crate::artifacts::vdi3805::Vdi3805Snapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
-const SECTION_FIELDS: &[&str] = &[
-        "manufacturer_file",
-        "catalog",
-        "edition_profile",
-        "correction_as_of",
-        "strict_mode",
-        "index",
-        "geometry",
-        "curves",
-        "limits",
-];
+const SECTION_FIELDS: &[&str] = &["manufacturer_file", "catalog", "edition_profile", "correction_as_of", "strict_mode", "index", "geometry", "curves", "limits"];
 
 /// 🧾️ `Vdi3805` document outline.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

@@ -1,7 +1,7 @@
 //! 🧬️ En1990 artifact schema — every field of the artifact with its state class.
 
-use schema::ArtifactSchema;
 use crate::artifacts::en1990::En1990QkChild;
+use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
@@ -13,15 +13,21 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1990")]
 pub struct En1990Artifact {
-    #[state(artifact)] pub g_k: f64,
+    #[state(artifact)]
+    pub g_k: f64,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.table")]
     pub q_k: En1990QkChild,
-    #[state(artifact)] pub resistance_kn: f64,
-    #[state(artifact)] pub consequence_class: u8,
-    #[state(artifact)] pub annex: crate::document::AnnexChoice,
-    #[state(artifact)] pub seismic_a_ed_kn: f64,
-    #[state(presence)] pub selected_check_index: Option<u32>,
+    #[state(artifact)]
+    pub resistance_kn: f64,
+    #[state(artifact)]
+    pub consequence_class: u8,
+    #[state(artifact)]
+    pub annex: crate::document::AnnexChoice,
+    #[state(artifact)]
+    pub seismic_a_ed_kn: f64,
+    #[state(presence)]
+    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -29,27 +35,12 @@ pub struct En1990Artifact {
 impl En1990Artifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> crate::artifacts::en1990::En1990Snapshot {
-        crate::artifacts::en1990::En1990Snapshot {
-            g_k: self.g_k,
-            q_k: self.q_k.clone(),
-            resistance_kn: self.resistance_kn,
-            consequence_class: self.consequence_class,
-            annex: self.annex,
-            seismic_a_ed_kn: self.seismic_a_ed_kn,
-        }
+        crate::artifacts::en1990::En1990Snapshot { g_k: self.g_k, q_k: self.q_k.clone(), resistance_kn: self.resistance_kn, consequence_class: self.consequence_class, annex: self.annex, seismic_a_ed_kn: self.seismic_a_ed_kn }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub fn from_snapshot(snapshot: crate::artifacts::en1990::En1990Snapshot) -> Self {
-        Self {
-            g_k: snapshot.g_k,
-            q_k: snapshot.q_k.clone(),
-            resistance_kn: snapshot.resistance_kn,
-            consequence_class: snapshot.consequence_class,
-            annex: snapshot.annex,
-            seismic_a_ed_kn: snapshot.seismic_a_ed_kn,
-            selected_check_index: None,
-        }
+        Self { g_k: snapshot.g_k, q_k: snapshot.q_k.clone(), resistance_kn: snapshot.resistance_kn, consequence_class: snapshot.consequence_class, annex: snapshot.annex, seismic_a_ed_kn: snapshot.seismic_a_ed_kn, selected_check_index: None }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
     pub fn set_snapshot(&mut self, snapshot: crate::artifacts::en1990::En1990Snapshot) {
@@ -99,8 +90,8 @@ pub fn en1990_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::en1990::{En1990Diff, En1990Mutation, En1990Snapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct En1990BuilderConstruction {
@@ -112,8 +103,12 @@ pub mod derived_construction {
         type Snapshot = En1990Snapshot;
         type Mutation = En1990Mutation;
         type Diff = En1990Diff;
-        fn empty() -> Self { Self { snapshot: En1990Snapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn empty() -> Self {
+            Self { snapshot: En1990Snapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<En1990Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -130,7 +125,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -139,8 +138,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::en1990::En1990Snapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct En1990Parts {

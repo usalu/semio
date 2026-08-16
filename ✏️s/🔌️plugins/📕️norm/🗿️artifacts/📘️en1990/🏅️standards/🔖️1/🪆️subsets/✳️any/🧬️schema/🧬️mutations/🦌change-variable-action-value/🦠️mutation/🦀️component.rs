@@ -12,8 +12,7 @@ pub struct ChangeVariableActionValue {
 }
 
 impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeVariableActionValue {
-    const SEMANTICS: protocol::SemanticDescriptor =
-        protocol::SemanticDescriptor { verb: "change", entity: "variable-action", kind: "change-variable-action-value", record: "ChangedVariableActionValue" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "variable-action", kind: "change-variable-action-value", record: "ChangedVariableActionValue" };
 
     fn diff(&self, base: &En1990Snapshot) -> <En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff {
         super::diff::diff(self, base)

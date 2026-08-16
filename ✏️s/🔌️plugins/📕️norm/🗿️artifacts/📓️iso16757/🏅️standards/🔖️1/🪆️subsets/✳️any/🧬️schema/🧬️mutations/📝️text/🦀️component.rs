@@ -10,13 +10,11 @@
 pub use crate::artifacts::iso16757::schema::mutations::Iso16757Mutation;
 
 use crate::artifacts::iso16757::schema::mutations::{
-    add_selection_constraint::mutation::AddSelectionConstraint, change_exchange_process::mutation::ChangeExchangeProcess, change_part_number_input::mutation::ChangePartNumberInput,
-    change_selection_class::mutation::ChangeSelectionClass, change_selection_series::mutation::ChangeSelectionSeries, create_product::mutation::CreateProduct,
-    create_product_group::mutation::CreateProductGroup, create_property_definition::mutation::CreatePropertyDefinition, create_subject::mutation::CreateSubject,
-    delete_product::mutation::DeleteProduct, delete_product_group::mutation::DeleteProductGroup, delete_property_definition::mutation::DeletePropertyDefinition,
-    delete_subject::mutation::DeleteSubject, remove_part_number_input::mutation::RemovePartNumberInput, remove_selection_constraint::mutation::RemoveSelectionConstraint,
-    rename_catalogue::mutation::RenameCatalogue, rename_manufacturer::mutation::RenameManufacturer, rename_product::mutation::RenameProduct, rename_product_group::mutation::RenameProductGroup,
-    replace_part_number_rule::mutation::ReplacePartNumberRule, update_script_limits::mutation::UpdateScriptLimits,
+    add_selection_constraint::mutation::AddSelectionConstraint, change_exchange_process::mutation::ChangeExchangeProcess, change_part_number_input::mutation::ChangePartNumberInput, change_selection_class::mutation::ChangeSelectionClass,
+    change_selection_series::mutation::ChangeSelectionSeries, create_product::mutation::CreateProduct, create_product_group::mutation::CreateProductGroup, create_property_definition::mutation::CreatePropertyDefinition,
+    create_subject::mutation::CreateSubject, delete_product::mutation::DeleteProduct, delete_product_group::mutation::DeleteProductGroup, delete_property_definition::mutation::DeletePropertyDefinition, delete_subject::mutation::DeleteSubject,
+    remove_part_number_input::mutation::RemovePartNumberInput, remove_selection_constraint::mutation::RemoveSelectionConstraint, rename_catalogue::mutation::RenameCatalogue, rename_manufacturer::mutation::RenameManufacturer,
+    rename_product::mutation::RenameProduct, rename_product_group::mutation::RenameProductGroup, replace_part_number_rule::mutation::ReplacePartNumberRule, update_script_limits::mutation::UpdateScriptLimits,
 };
 
 //#region 📖️SemioGrammar
@@ -55,7 +53,11 @@ fn enc_opt_str(s: &Option<String>) -> String {
     }
 }
 fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
-    if s == "-" { Ok(None) } else { Ok(Some(dec_str(s)?)) }
+    if s == "-" {
+        Ok(None)
+    } else {
+        Ok(Some(dec_str(s)?))
+    }
 }
 fn enc_usize(v: usize) -> String {
     v.to_string()
@@ -70,7 +72,11 @@ fn enc_opt_usize(v: &Option<usize>) -> String {
     }
 }
 fn dec_opt_usize(s: &str) -> Result<Option<usize>, String> {
-    if s == "-" { Ok(None) } else { Ok(Some(dec_usize(s)?)) }
+    if s == "-" {
+        Ok(None)
+    } else {
+        Ok(Some(dec_usize(s)?))
+    }
 }
 /// 🧬️ Every structured payload field (entity records, catalogue values, part-number rule,
 /// selection constraints) already derives `Serialize`/`Deserialize` — a quoted JSON string reuses
@@ -117,10 +123,7 @@ fn tokenize_args(rest: &str) -> Vec<String> {
     tokens
 }
 fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
-    tokenize_args(rest)
-        .into_iter()
-        .map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}")))
-        .collect()
+    tokenize_args(rest).into_iter().map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}"))).collect()
 }
 //#endregion 🔖️Tokenizer
 
@@ -177,9 +180,7 @@ fn parse_iso16757_mutation(line: &str) -> Result<Iso16757Mutation, String> {
         "create-product" => Ok(Iso16757Mutation::CreateProduct(CreateProduct { product: dec_json(&arg("product")?)?, index: dec_opt_usize(&arg("index")?)? })),
         "delete-product" => Ok(Iso16757Mutation::DeleteProduct(DeleteProduct { id: dec_str(&arg("id")?)? })),
         "rename-product" => Ok(Iso16757Mutation::RenameProduct(RenameProduct { id: dec_str(&arg("id")?)?, new_name: dec_str(&arg("new-name")?)? })),
-        "create-property-definition" => {
-            Ok(Iso16757Mutation::CreatePropertyDefinition(CreatePropertyDefinition { property_definition: dec_json(&arg("property-definition")?)?, index: dec_opt_usize(&arg("index")?)? }))
-        }
+        "create-property-definition" => Ok(Iso16757Mutation::CreatePropertyDefinition(CreatePropertyDefinition { property_definition: dec_json(&arg("property-definition")?)?, index: dec_opt_usize(&arg("index")?)? })),
         "delete-property-definition" => Ok(Iso16757Mutation::DeletePropertyDefinition(DeletePropertyDefinition { id: dec_str(&arg("id")?)? })),
         "create-subject" => Ok(Iso16757Mutation::CreateSubject(CreateSubject { subject: dec_json(&arg("subject")?)?, index: dec_opt_usize(&arg("index")?)? })),
         "delete-subject" => Ok(Iso16757Mutation::DeleteSubject(DeleteSubject { id: dec_str(&arg("id")?)? })),
@@ -426,7 +427,15 @@ pub(crate) fn demo_mutation_cases() -> Vec<Iso16757Mutation> {
         Iso16757Mutation::DeleteProduct(DeleteProduct { id: "product.cv".into() }),
         Iso16757Mutation::RenameProduct(RenameProduct { id: "product.cv".into(), new_name: "Renamed Product".into() }),
         Iso16757Mutation::CreatePropertyDefinition(CreatePropertyDefinition {
-            property_definition: part_1::PropertyDefinition { id: "prop.new".into(), names: names("New Prop"), data_type: "text".into(), unit: None, cardinality: Cardinality::optional(), kind: part_1::PropertyKind::Static, dictionary_property_id: None },
+            property_definition: part_1::PropertyDefinition {
+                id: "prop.new".into(),
+                names: names("New Prop"),
+                data_type: "text".into(),
+                unit: None,
+                cardinality: Cardinality::optional(),
+                kind: part_1::PropertyKind::Static,
+                dictionary_property_id: None,
+            },
             index: None,
         }),
         Iso16757Mutation::DeletePropertyDefinition(DeletePropertyDefinition { id: "prop.dn".into() }),

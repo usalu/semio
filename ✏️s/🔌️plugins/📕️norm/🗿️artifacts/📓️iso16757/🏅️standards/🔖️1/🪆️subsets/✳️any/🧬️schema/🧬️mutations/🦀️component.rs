@@ -22,30 +22,30 @@ use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Snapshot};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
+use super::add_selection_constraint;
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️component.rs`.
 //#region 🔖️Leaves
 use super::change_exchange_process;
-use super::update_script_limits;
-use super::replace_part_number_rule;
 use super::change_part_number_input;
-use super::remove_part_number_input;
 use super::change_selection_class;
 use super::change_selection_series;
-use super::add_selection_constraint;
+use super::create_product;
+use super::create_product_group;
+use super::create_property_definition;
+use super::create_subject;
+use super::delete_product;
+use super::delete_product_group;
+use super::delete_property_definition;
+use super::delete_subject;
+use super::remove_part_number_input;
 use super::remove_selection_constraint;
 use super::rename_catalogue;
 use super::rename_manufacturer;
-use super::create_product_group;
-use super::delete_product_group;
-use super::rename_product_group;
-use super::create_product;
-use super::delete_product;
 use super::rename_product;
-use super::create_property_definition;
-use super::delete_property_definition;
-use super::create_subject;
-use super::delete_subject;
+use super::rename_product_group;
+use super::replace_part_number_rule;
+use super::update_script_limits;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
@@ -94,7 +94,11 @@ impl Iso16757Mutation {
         mutations.push(Iso16757Mutation::RenameCatalogue(rename_catalogue::mutation::RenameCatalogue { new_name: target.catalogue.metadata.names.preferred.text.clone() }));
         mutations.push(Iso16757Mutation::RenameManufacturer(rename_manufacturer::mutation::RenameManufacturer { new_name: target.catalogue.manufacturer.names.preferred.text.clone() }));
         mutations.push(Iso16757Mutation::ChangeExchangeProcess(change_exchange_process::mutation::ChangeExchangeProcess { new_exchange_process: target.exchange_process.clone() }));
-        mutations.push(Iso16757Mutation::UpdateScriptLimits(update_script_limits::mutation::UpdateScriptLimits { new_max_steps: target.script_limits.max_steps.clone(), new_max_recursion: target.script_limits.max_recursion.clone(), new_timeout_ms: target.script_limits.timeout_ms.clone() }));
+        mutations.push(Iso16757Mutation::UpdateScriptLimits(update_script_limits::mutation::UpdateScriptLimits {
+            new_max_steps: target.script_limits.max_steps.clone(),
+            new_max_recursion: target.script_limits.max_recursion.clone(),
+            new_timeout_ms: target.script_limits.timeout_ms.clone(),
+        }));
         mutations.push(Iso16757Mutation::ReplacePartNumberRule(replace_part_number_rule::mutation::ReplacePartNumberRule { new_rule: target.part_number_rule.clone() }));
         mutations.push(Iso16757Mutation::ChangeSelectionClass(change_selection_class::mutation::ChangeSelectionClass { new_class_id: target.selection.class_id.clone() }));
         mutations.push(Iso16757Mutation::ChangeSelectionSeries(change_selection_series::mutation::ChangeSelectionSeries { new_series_id: target.selection.series_id.clone() }));

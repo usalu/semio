@@ -187,6 +187,58 @@ impl PluginBuilder<Ready> {
         self
     }
 
+    //#region 🔖️Surfaces
+    /// 👁️ Declares a typed viewer app factory (read-only surface) — the `ArtifactViewer` twin of
+    /// `document_app` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.4/§2.6).
+    /// `def` is `Viewer::builder(V::DIALECT)...build_definition()` — already carries the derived id,
+    /// `role`, and `dialect`.
+    pub fn viewer<V: crate::app::ArtifactViewer>(mut self, def: crate::app::AppDefinition) -> Self
+    where
+        V::Mutation: protocol::SemanticMutation<V::Snapshot>,
+    {
+        fn app_schema<V: crate::app::ArtifactViewer>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+            V::app_schema()
+        }
+        fn owner_mutation_roster<V: crate::app::ArtifactViewer>() -> (&'static str, &'static [protocol::SemanticDescriptor])
+        where
+            V::Mutation: protocol::SemanticMutation<V::Snapshot>,
+        {
+            (V::DOCUMENT_SCHEMA, <V::Mutation as protocol::SemanticMutation<V::Snapshot>>::kinds())
+        }
+        let app = App { definition: def, examples: Vec::new() };
+        let registry = crate::app::AppActionRegistry::from_definition(&app.definition);
+        let factory: Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static> = Box::new(move || Box::new(crate::app::VcsArtifactApp::with_registry(crate::app::ViewerApp::<V>::default(), registry.clone())));
+        self.app_defs.push((app, factory));
+        self.app_schema_descriptors.push(app_schema::<V>);
+        self.owner_mutation_rosters.push(owner_mutation_roster::<V>);
+        self
+    }
+
+    /// ✏️ Declares a typed editor app factory (mutation-capable surface) — the `ArtifactEditor` twin
+    /// of `document_app`. `def` is `Editor::builder(E::DIALECT)...build_definition()`.
+    pub fn editor<E: crate::app::ArtifactEditor>(mut self, def: crate::app::AppDefinition) -> Self
+    where
+        E::Mutation: protocol::SemanticMutation<E::Snapshot>,
+    {
+        fn app_schema<E: crate::app::ArtifactEditor>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+            E::app_schema()
+        }
+        fn owner_mutation_roster<E: crate::app::ArtifactEditor>() -> (&'static str, &'static [protocol::SemanticDescriptor])
+        where
+            E::Mutation: protocol::SemanticMutation<E::Snapshot>,
+        {
+            (E::DOCUMENT_SCHEMA, <E::Mutation as protocol::SemanticMutation<E::Snapshot>>::kinds())
+        }
+        let app = App { definition: def, examples: Vec::new() };
+        let registry = crate::app::AppActionRegistry::from_definition(&app.definition);
+        let factory: Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static> = Box::new(move || Box::new(crate::app::VcsArtifactApp::with_registry(crate::app::EditorApp::<E>::default(), registry.clone())));
+        self.app_defs.push((app, factory));
+        self.app_schema_descriptors.push(app_schema::<E>);
+        self.owner_mutation_rosters.push(owner_mutation_roster::<E>);
+        self
+    }
+    //#endregion 🔖️Surfaces
+
     /// 📚️ Assembles a library-only plugin through the typed boundary.
     pub fn try_library(self) -> Result<Plugin, PluginAssemblyError> {
         self.try_build()

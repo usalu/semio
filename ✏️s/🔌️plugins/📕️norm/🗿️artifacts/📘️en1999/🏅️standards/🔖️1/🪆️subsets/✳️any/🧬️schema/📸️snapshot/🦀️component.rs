@@ -75,7 +75,6 @@ pub struct En1999Snapshot {
 crate::impl_norm_artifact_record!(En1999Snapshot, extension = "en1999", envelope_id = "norm.en1999");
 //#endregion 🔖️HandcraftedArtifactCodecs
 
-
 impl Default for En1999Snapshot {
     fn default() -> Self {
         Self {

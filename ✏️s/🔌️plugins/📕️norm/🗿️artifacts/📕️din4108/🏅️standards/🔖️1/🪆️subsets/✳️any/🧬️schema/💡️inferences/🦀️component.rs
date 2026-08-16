@@ -86,12 +86,12 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
+use crate::artifacts::din4108::standards::v1::subsets::any::schema::{bb_2, part_1, part_10, part_2, part_3, part_4, part_5, part_6, part_7, part_8, R_SE_WALL_M2K_W, R_SI_WALL_M2K_W};
 /// 📋️ Full DIN 4108 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `Din4108Snapshot -> CheckReport` projection; everything it composes
 /// (`part_N`/`bb_2`) is a pure helper living in the parent `🧬️schema`.
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, Quantity};
-use crate::artifacts::din4108::standards::v1::subsets::any::schema::{part_1, part_2, part_3, part_4, part_5, part_6, part_7, part_8, part_10, bb_2, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W};
 
 /// 📋️ Run all applicable DIN 4108 checks for a typical opaque wall.
 pub fn check_opaque_wall(category: part_2::BuildingCategory, layers: &[part_2::Layer], climate: ClimateZoneDe, airtightness_n50: f64) -> Result<CheckReport, NormError> {
@@ -224,7 +224,13 @@ pub fn evaluate(document: &Din4108Snapshot) -> CheckReport {
     )
     .unwrap_or_else(|err| {
         let mut report = CheckReport::default();
-        report.push(CheckResult::from_utilization(ClauseId::new("DIN 4108", "input", "1"), Quantity::new(crate::document::QuantityKind::Dimensionless, 2.0), Quantity::new(crate::document::QuantityKind::Dimensionless, 1.0), err.to_string(), AnnexChoice::De));
+        report.push(CheckResult::from_utilization(
+            ClauseId::new("DIN 4108", "input", "1"),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, 2.0),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, 1.0),
+            err.to_string(),
+            AnnexChoice::De,
+        ));
         report
     })
 }

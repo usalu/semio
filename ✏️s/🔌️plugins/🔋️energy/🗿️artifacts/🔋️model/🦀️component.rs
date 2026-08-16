@@ -1,16 +1,14 @@
 //! 🎪 Energy model artifact — headless BEM document surface over `crate::Model`.
 
-
-pub use crate::artifacts::model::schema::snapshot::EnergyModelSnapshot;
-pub use crate::artifacts::model::schema::mutations::EnergyModelMutation;
 pub use crate::artifacts::model::schema::diff::EnergyModelDiff;
+pub use crate::artifacts::model::schema::mutations::EnergyModelMutation;
+pub use crate::artifacts::model::schema::snapshot::EnergyModelSnapshot;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 pub use crate::artifacts::model::schema::EnergyModelArtifact;
 
 /// @emoji 🔖️ Document schema / DSL envelope id.
-
 
 pub const ENERGY_MODEL_DOCUMENT_SCHEMA: &str = "energy.model";
 
@@ -72,9 +70,7 @@ fn semio_value_from_json(value: &serde_json::Value) -> semio_s_plugin_stdio::art
         }
         serde_json::Value::String(value) => SemioValue::Str { value: value.clone() },
         serde_json::Value::Array(items) => SemioValue::List { items: items.iter().map(semio_value_from_json).collect() },
-        serde_json::Value::Object(entries) => SemioValue::Map {
-            entries: entries.iter().map(|(key, value)| SemioValueEntry { key: key.clone(), value: semio_value_from_json(value) }).collect(),
-        },
+        serde_json::Value::Object(entries) => SemioValue::Map { entries: entries.iter().map(|(key, value)| SemioValueEntry { key: key.clone(), value: semio_value_from_json(value) }).collect() },
     }
 }
 
@@ -86,12 +82,7 @@ fn json_from_semio_value(value: &semio_s_plugin_stdio::artifacts::semio::standar
         SemioValue::Null => serde_json::Value::Null,
         SemioValue::Bool { value } => serde_json::Value::Bool(*value),
         SemioValue::Int { lexeme } => lexeme.parse::<i64>().map(serde_json::Value::from).unwrap_or_else(|_| serde_json::Value::String(lexeme.clone())),
-        SemioValue::Float { lexeme } => lexeme
-            .parse::<f64>()
-            .ok()
-            .and_then(serde_json::Number::from_f64)
-            .map(serde_json::Value::Number)
-            .unwrap_or_else(|| serde_json::Value::String(lexeme.clone())),
+        SemioValue::Float { lexeme } => lexeme.parse::<f64>().ok().and_then(serde_json::Number::from_f64).map(serde_json::Value::Number).unwrap_or_else(|| serde_json::Value::String(lexeme.clone())),
         SemioValue::Str { value } => serde_json::Value::String(value.clone()),
         SemioValue::Bytes { value } => serde_json::Value::Array(value.iter().map(|b| serde_json::Value::from(*b)).collect()),
         SemioValue::List { items } => serde_json::Value::Array(items.iter().map(json_from_semio_value).collect()),
@@ -214,9 +205,7 @@ pub fn energy_children_from_model(model: &crate::model::Model) -> (EnergyStructu
 /// 🔎️ Reads the cached working scene behind a snapshot's composed children — `Model::default()`
 /// (never a panic) on a cache miss, per this region's own doc comment.
 pub fn energy_scene(snapshot: &EnergyModelSnapshot) -> EnergyWorkingScene {
-    ENERGY_SCRATCH
-        .with(|cache| cache.borrow().get(&snapshot.structure.child_id).map(|scene| EnergyWorkingScene { model: scene.model.clone() }))
-        .unwrap_or_else(|| EnergyWorkingScene { model: crate::model::Model::default() })
+    ENERGY_SCRATCH.with(|cache| cache.borrow().get(&snapshot.structure.child_id).map(|scene| EnergyWorkingScene { model: scene.model.clone() })).unwrap_or_else(|| EnergyWorkingScene { model: crate::model::Model::default() })
 }
 
 /// 🔎️ The live `Model` behind a snapshot's composed children — the single read call site every
@@ -250,7 +239,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: ENERGY_MODEL_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
+        export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
         import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
     }
 }
@@ -277,14 +266,50 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// headless library with ZERO apps — there is no `ArtifactApp` to name. `document_codec_bare` is the
 /// new sibling closing exactly that gap (see its own doc); the old free fn in `⚙️engine` is deleted
 /// with this — nothing else called it.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.model")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.model.standard.v1", "standard", "1", &[], None),
+        ("s.model.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.model.schema.artifact", "schema", "s.energy.model", &[("schema", "s.energy.model")], None),
+        ("s.model.inference.artifact", "inference", "s.energy.model.inference", &[("schema", "s.energy.model.inference")], None),
+        ("s.model.composer.native", "composer", "s.model@1/*", &[("dialect", "s.model@1/*")], None),
+        ("s.model.composer.format-1", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
+        ("s.model.composer.format-2", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
+        ("s.model.composer.format-3", "composer", "s.stdio.xlsx@ecma-376/*", &[("dialect", "s.stdio.xlsx@ecma-376/*")], None),
+        ("s.model.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.model.grammar.1", "grammar", "energy.model", &[("grammar", "energy.model")], None),
+        ("s.model.grammar.2", "grammar", "energy.model.op", &[("grammar", "energy.model.op")], None),
+        ("s.model.grammar.3", "grammar", "energy.model.diff", &[("grammar", "energy.model.diff")], None),
+        ("s.model.grammar.4", "grammar", "energy.model.pack", &[("grammar", "energy.model.pack")], None),
+        ("s.model.grammar.5", "grammar", "energy.model.spr", &[("grammar", "energy.model.spr")], None),
+        ("s.model.codec.document-1", "codec", "energy.model:model", &[("codec", "energy.model"), ("extension", "model")], None),
+        ("s.model.localization.en", "localization", "Energy Model", &[], Some(("en", "Energy Model"))),
+        ("s.model.localization.de", "localization", "Energiemodell", &[], Some(("de", "Energiemodell"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.model")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::model::standards::v1::subsets::any::schema::energy_model_artifact_schema_descriptor())
         .inferences([crate::artifacts::model::standards::v1::subsets::any::schema::inferences::energy_model_artifact_inference_descriptor()])
         .composers(crate::artifacts::model::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA)
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -353,9 +378,9 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::model::standards::v1::subsets::any::io::io_registry as v1;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -364,10 +389,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("EnergyModelComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("EnergyModelComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

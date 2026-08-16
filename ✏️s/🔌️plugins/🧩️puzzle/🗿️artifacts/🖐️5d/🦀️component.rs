@@ -6,10 +6,9 @@
 //! per ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, an artifact is a `🧬️schema` +
 //! `🚪️io` system only; behaviour lives in `crate::apps::puzzle5d`.
 
-
-pub use crate::artifacts::puzzle5d::schema::snapshot::Puzzle5dSnapshot;
-pub use crate::artifacts::puzzle5d::schema::mutations::Puzzle5dMutation;
 pub use crate::artifacts::puzzle5d::schema::diff::Puzzle5dDiff;
+pub use crate::artifacts::puzzle5d::schema::mutations::Puzzle5dMutation;
+pub use crate::artifacts::puzzle5d::schema::snapshot::Puzzle5dSnapshot;
 
 use serde::{Deserialize, Serialize};
 
@@ -21,8 +20,6 @@ pub enum Puzzle5dError {
     Puzzle3d(#[from] crate::artifacts::puzzle3d::Puzzle3dError),
 }
 //#endregion ⚠️ Errors
-
-
 
 pub const PUZZLE_5D_SCHEMA: &str = "puzzle.5d";
 
@@ -231,14 +228,7 @@ pub struct Puzzle5dPart {
 
 impl Default for Puzzle5dPart {
     fn default() -> Self {
-        Self {
-            id: String::new(),
-            part_kind: None,
-            anchor: Puzzle5dPartAnchor::Fixed,
-            part_2d: Puzzle5dPart2d::default(),
-            part_3d: Puzzle5dPart3d::default(),
-            grips: Vec::new(),
-        }
+        Self { id: String::new(), part_kind: None, anchor: Puzzle5dPartAnchor::Fixed, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() }
     }
 }
 
@@ -387,19 +377,7 @@ pub struct Puzzle5dGripTemplate {
 
 impl Default for Puzzle5dGripTemplate {
     fn default() -> Self {
-        Self {
-            id: String::new(),
-            name: String::new(),
-            label: String::new(),
-            description: String::new(),
-            icon: String::new(),
-            grip_kind: None,
-            point: [0.0, 0.0, 0.0],
-            direction: default_grip_direction(),
-            t: None,
-            mandatory: None,
-            radius: None,
-        }
+        Self { id: String::new(), name: String::new(), label: String::new(), description: String::new(), icon: String::new(), grip_kind: None, point: [0.0, 0.0, 0.0], direction: default_grip_direction(), t: None, mandatory: None, radius: None }
     }
 }
 
@@ -621,17 +599,40 @@ pub struct Puzzle5dKindCatalogsExtra {
 }
 
 //#region 🔖️RowConverters
-pub fn kit_type_from_part_kind(k: &Puzzle5dCatalogPartKind) -> SemioKitType { SemioKitType { id: k.id.clone(), name: k.name.clone(), category: "part".into() } }
+pub fn kit_type_from_part_kind(k: &Puzzle5dCatalogPartKind) -> SemioKitType {
+    SemioKitType { id: k.id.clone(), name: k.name.clone(), category: "part".into() }
+}
 pub fn part_kind_extra_from_part_kind(k: &Puzzle5dCatalogPartKind) -> Puzzle5dCatalogPartKindExtra {
     Puzzle5dCatalogPartKindExtra {
-        id: k.id.clone(), label: k.label.clone(), description: k.description.clone(), icon: k.icon.clone(), image: k.image.clone(), unit: k.unit.clone(),
-        is_abstract: k.is_abstract, base_kinds: k.base_kinds.clone(), representations: k.representations.clone(), grips: k.grips.clone(), attributes: k.attributes.clone(), authors: k.authors.clone(),
+        id: k.id.clone(),
+        label: k.label.clone(),
+        description: k.description.clone(),
+        icon: k.icon.clone(),
+        image: k.image.clone(),
+        unit: k.unit.clone(),
+        is_abstract: k.is_abstract,
+        base_kinds: k.base_kinds.clone(),
+        representations: k.representations.clone(),
+        grips: k.grips.clone(),
+        attributes: k.attributes.clone(),
+        authors: k.authors.clone(),
     }
 }
 pub fn part_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogPartKindExtra) -> Puzzle5dCatalogPartKind {
     Puzzle5dCatalogPartKind {
-        id: kit_type.id.clone(), name: kit_type.name.clone(), label: extra.label.clone(), description: extra.description.clone(), icon: extra.icon.clone(), image: extra.image.clone(), unit: extra.unit.clone(),
-        is_abstract: extra.is_abstract, base_kinds: extra.base_kinds.clone(), representations: extra.representations.clone(), grips: extra.grips.clone(), attributes: extra.attributes.clone(), authors: extra.authors.clone(),
+        id: kit_type.id.clone(),
+        name: kit_type.name.clone(),
+        label: extra.label.clone(),
+        description: extra.description.clone(),
+        icon: extra.icon.clone(),
+        image: extra.image.clone(),
+        unit: extra.unit.clone(),
+        is_abstract: extra.is_abstract,
+        base_kinds: extra.base_kinds.clone(),
+        representations: extra.representations.clone(),
+        grips: extra.grips.clone(),
+        attributes: extra.attributes.clone(),
+        authors: extra.authors.clone(),
     }
 }
 
@@ -641,26 +642,48 @@ pub fn kit_type_from_grip_kind(k: &Puzzle5dCatalogGripKind) -> SemioKitType {
 }
 pub fn grip_kind_extra_from_grip_kind(k: &Puzzle5dCatalogGripKind) -> Puzzle5dCatalogGripKindExtra {
     Puzzle5dCatalogGripKindExtra {
-        id: k.id.clone(), code: k.code.clone(), label: k.label.clone(), order: k.order, compatible_with: k.compatible_with.clone(),
-        description: k.description.clone(), icon: k.icon.clone(), color: k.color.clone(), default_rope_kind: k.default_rope_kind.clone(),
+        id: k.id.clone(),
+        code: k.code.clone(),
+        label: k.label.clone(),
+        order: k.order,
+        compatible_with: k.compatible_with.clone(),
+        description: k.description.clone(),
+        icon: k.icon.clone(),
+        color: k.color.clone(),
+        default_rope_kind: k.default_rope_kind.clone(),
     }
 }
 pub fn grip_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogGripKindExtra) -> Puzzle5dCatalogGripKind {
     let _ = kit_type;
     Puzzle5dCatalogGripKind {
-        id: extra.id.clone(), code: extra.code.clone(), label: extra.label.clone(), order: extra.order, compatible_with: extra.compatible_with.clone(),
-        description: extra.description.clone(), icon: extra.icon.clone(), color: extra.color.clone(), default_rope_kind: extra.default_rope_kind.clone(),
+        id: extra.id.clone(),
+        code: extra.code.clone(),
+        label: extra.label.clone(),
+        order: extra.order,
+        compatible_with: extra.compatible_with.clone(),
+        description: extra.description.clone(),
+        icon: extra.icon.clone(),
+        color: extra.color.clone(),
+        default_rope_kind: extra.default_rope_kind.clone(),
     }
 }
 
-pub fn kit_type_from_fastener_kind(k: &Puzzle5dCatalogFastenerKind) -> SemioKitType { SemioKitType { id: k.id.clone(), name: k.name.clone(), category: "fastener".into() } }
-pub fn fastener_kind_extra_from_fastener_kind(k: &Puzzle5dCatalogFastenerKind) -> Puzzle5dCatalogFastenerKindExtra { Puzzle5dCatalogFastenerKindExtra { id: k.id.clone(), label: k.label.clone() } }
+pub fn kit_type_from_fastener_kind(k: &Puzzle5dCatalogFastenerKind) -> SemioKitType {
+    SemioKitType { id: k.id.clone(), name: k.name.clone(), category: "fastener".into() }
+}
+pub fn fastener_kind_extra_from_fastener_kind(k: &Puzzle5dCatalogFastenerKind) -> Puzzle5dCatalogFastenerKindExtra {
+    Puzzle5dCatalogFastenerKindExtra { id: k.id.clone(), label: k.label.clone() }
+}
 pub fn fastener_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogFastenerKindExtra) -> Puzzle5dCatalogFastenerKind {
     Puzzle5dCatalogFastenerKind { id: kit_type.id.clone(), name: kit_type.name.clone(), label: extra.label.clone() }
 }
 
-pub fn kit_type_from_rope_kind(k: &Puzzle5dCatalogRopeKind) -> SemioKitType { SemioKitType { id: k.id.clone(), name: k.name.clone(), category: "rope".into() } }
-pub fn rope_kind_extra_from_rope_kind(k: &Puzzle5dCatalogRopeKind) -> Puzzle5dCatalogRopeKindExtra { Puzzle5dCatalogRopeKindExtra { id: k.id.clone(), label: k.label.clone(), default_fastener_kind: k.default_fastener_kind.clone() } }
+pub fn kit_type_from_rope_kind(k: &Puzzle5dCatalogRopeKind) -> SemioKitType {
+    SemioKitType { id: k.id.clone(), name: k.name.clone(), category: "rope".into() }
+}
+pub fn rope_kind_extra_from_rope_kind(k: &Puzzle5dCatalogRopeKind) -> Puzzle5dCatalogRopeKindExtra {
+    Puzzle5dCatalogRopeKindExtra { id: k.id.clone(), label: k.label.clone(), default_fastener_kind: k.default_fastener_kind.clone() }
+}
 pub fn rope_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogRopeKindExtra) -> Puzzle5dCatalogRopeKind {
     Puzzle5dCatalogRopeKind { id: kit_type.id.clone(), name: kit_type.name.clone(), label: extra.label.clone(), default_fastener_kind: extra.default_fastener_kind.clone() }
 }
@@ -671,11 +694,7 @@ pub fn rope_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogRope
 /// four kind lists flattened into one `category`-tagged list, matching `SemioKitSnapshot.types`'s
 /// own id-keyed, category-differentiated shape).
 pub fn kind_catalogs_kit_types(catalogs: &Puzzle5dKindCatalogs) -> Vec<SemioKitType> {
-    catalogs.parts.iter().map(kit_type_from_part_kind)
-        .chain(catalogs.grips.iter().map(kit_type_from_grip_kind))
-        .chain(catalogs.fasteners.iter().map(kit_type_from_fastener_kind))
-        .chain(catalogs.ropes.iter().map(kit_type_from_rope_kind))
-        .collect()
+    catalogs.parts.iter().map(kit_type_from_part_kind).chain(catalogs.grips.iter().map(kit_type_from_grip_kind)).chain(catalogs.fasteners.iter().map(kit_type_from_fastener_kind)).chain(catalogs.ropes.iter().map(kit_type_from_rope_kind)).collect()
 }
 
 /// 🔀️ `Puzzle5dKindCatalogs` → the puzzle5d-owned overflow half. Lossless together with
@@ -695,9 +714,7 @@ pub fn kind_catalogs_extra_from_kind_catalogs(catalogs: &Puzzle5dKindCatalogs) -
 /// scene cache hasn't seen yet — see `kind_catalogs_of`'s doc comment) is silently dropped rather than
 /// fabricated with placeholder fields.
 pub fn kind_catalogs_from_kit_types_and_extra(types: &[SemioKitType], extra: &Puzzle5dKindCatalogsExtra) -> Puzzle5dKindCatalogs {
-    let by_category = |category: &str| -> std::collections::HashMap<&str, &SemioKitType> {
-        types.iter().filter(|t| t.category == category).map(|t| (t.id.as_str(), t)).collect()
-    };
+    let by_category = |category: &str| -> std::collections::HashMap<&str, &SemioKitType> { types.iter().filter(|t| t.category == category).map(|t| (t.id.as_str(), t)).collect() };
     let part_types = by_category("part");
     let grip_types = by_category("grip");
     let fastener_types = by_category("fastener");
@@ -814,7 +831,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "puzzle.5d".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
+        export_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
         import_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
     }
 }
@@ -828,14 +845,51 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// per ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) has NO `ArtifactDeclaration`
 /// field — same OS media-host 14-function family flagged on puzzle2d's `declaration()` doc — so it
 /// stays wired through `🧩️puzzle/🦀️component.rs`'s own `.setup()`, not here.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.puzzle5d")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.puzzle5d.standard.v1", "standard", "1", &[], None),
+        ("s.puzzle5d.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.puzzle5d.schema.artifact", "schema", "s.puzzle.puzzle5d", &[("schema", "s.puzzle.puzzle5d")], None),
+        ("s.puzzle5d.inference.artifact", "inference", "s.puzzle.puzzle5d.inference", &[("schema", "s.puzzle.puzzle5d.inference")], None),
+        ("s.puzzle5d.composer.native", "composer", "s.puzzle5d@1/*", &[("dialect", "s.puzzle5d@1/*")], None),
+        ("s.puzzle5d.composer.format-1", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
+        ("s.puzzle5d.composer.format-2", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.puzzle5d.composer.format-3", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.puzzle5d.composer.format-4", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
+        ("s.puzzle5d.composer.format-5", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.puzzle5d.grammar.1", "grammar", "puzzle.puzzle5d", &[("grammar", "puzzle.puzzle5d")], None),
+        ("s.puzzle5d.grammar.2", "grammar", "puzzle.puzzle5d.op", &[("grammar", "puzzle.puzzle5d.op")], None),
+        ("s.puzzle5d.grammar.3", "grammar", "puzzle.puzzle5d.diff", &[("grammar", "puzzle.puzzle5d.diff")], None),
+        ("s.puzzle5d.grammar.4", "grammar", "5d.pack", &[("grammar", "5d.pack")], None),
+        ("s.puzzle5d.grammar.5", "grammar", "5d.spr", &[("grammar", "5d.spr")], None),
+        ("s.puzzle5d.codec.document-1", "codec", "puzzle.5d:puzzle5d", &[("codec", "puzzle.5d"), ("extension", "puzzle5d")], None),
+        ("s.puzzle5d.localization.en", "localization", "5D Puzzle", &[], Some(("en", "5D Puzzle"))),
+        ("s.puzzle5d.localization.de", "localization", "5D-Puzzle", &[], Some(("de", "5D-Puzzle"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.puzzle5d")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::puzzle5d::schema::puzzle5d_artifact_schema_descriptor())
         .inferences([crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::puzzle5d_artifact_inference_descriptor()])
         .composers(crate::artifacts::puzzle5d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::puzzle5d::Puzzle5dPlayApp>()
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -927,20 +981,7 @@ mod tests {
 
     #[test]
     fn fastener_round_trips_eight_transform_params() {
-        let fastener = Puzzle5dFastener {
-            id: "f1".into(),
-            source: "p1:g0".into(),
-            target: "p2:g0".into(),
-            fastener_kind: Some("fk".into()),
-            gap: 1.0,
-            shift: 2.0,
-            rise: 3.0,
-            rotation: 4.0,
-            turn: 5.0,
-            tilt: 6.0,
-            x: 7.0,
-            y: 8.0,
-        };
+        let fastener = Puzzle5dFastener { id: "f1".into(), source: "p1:g0".into(), target: "p2:g0".into(), fastener_kind: Some("fk".into()), gap: 1.0, shift: 2.0, rise: 3.0, rotation: 4.0, turn: 5.0, tilt: 6.0, x: 7.0, y: 8.0 };
         let value = serde_json::to_value(&fastener).unwrap();
         assert_eq!(value["x"], 7.0);
         assert_eq!(value["y"], 8.0);
@@ -989,15 +1030,7 @@ mod tests {
             unit: "m".into(),
             is_abstract: false,
             base_kinds: vec!["solid".into()],
-            representations: vec![Puzzle5dRepresentation {
-                id: "lod0".into(),
-                name: "mesh".into(),
-                url: "/mesh/hex.glb".into(),
-                mime: "model/gltf-binary".into(),
-                tags: vec!["mesh".into()],
-                lod: Some("0".into()),
-                description: "".into(),
-            }],
+            representations: vec![Puzzle5dRepresentation { id: "lod0".into(), name: "mesh".into(), url: "/mesh/hex.glb".into(), mime: "model/gltf-binary".into(), tags: vec!["mesh".into()], lod: Some("0".into()), description: "".into() }],
             grips: vec![Puzzle5dGripTemplate {
                 id: "g0".into(),
                 name: "north".into(),
@@ -1050,9 +1083,9 @@ mod tests {
 //#endregion 🧪️Tests
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::puzzle5d::standards::v1::subsets::any::io::io_registry as v1;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -1061,10 +1094,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("Puzzle5dComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("Puzzle5dComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

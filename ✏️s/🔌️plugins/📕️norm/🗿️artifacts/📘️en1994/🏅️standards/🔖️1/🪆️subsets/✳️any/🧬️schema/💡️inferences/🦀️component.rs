@@ -86,12 +86,12 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
+use crate::artifacts::en1994::standards::v1::subsets::any::schema::{check_composite_beam, part_1_1, part_1_2, part_2};
 /// 📋️ Full EN 1994 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1994Snapshot -> CheckReport` projection; everything it composes
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
-use crate::artifacts::en1994::standards::v1::subsets::any::schema::{check_composite_beam, part_1_1, part_1_2, part_2};
 
 fn parse_fire_rating(value: &str) -> part_1_2::FireRating {
     match value.to_ascii_lowercase().as_str() {
@@ -192,4 +192,3 @@ mod compliance_report_tests {
     }
 }
 //#endregion 🧪️ComplianceReportTests
-

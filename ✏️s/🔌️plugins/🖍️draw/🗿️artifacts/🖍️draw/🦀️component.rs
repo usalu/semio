@@ -469,14 +469,39 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// `🧬️schema/`/`🚪️io/`/the app (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES); the
 /// `.composers(...)` call below is re-qualified onto `subsets::any::io::io_registry`, the real
 /// `io_registry`'s new home.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.draw")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.draw.standard.v1", "standard", "1", &[], None), ("s.draw.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.draw.schema.artifact", "schema", "s.draw.draw", &[("schema", "s.draw.draw")], None),
+        ("s.draw.inference.artifact", "inference", "s.draw.draw.inference", &[("schema", "s.draw.draw.inference")], None),
+        ("s.draw.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None), ("s.draw.composer.pdf", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
+        ("s.draw.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None), ("s.draw.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.draw.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None), ("s.draw.composer.dxf", "composer", "s.stdio.dxf@r12/*", &[("dialect", "s.stdio.dxf@r12/*")], None),
+        ("s.draw.grammar.document", "grammar", "draw.document", &[("grammar", "draw.document")], None), ("s.draw.grammar.op", "grammar", "draw.op", &[("grammar", "draw.op")], None),
+        ("s.draw.grammar.diff", "grammar", "draw.diff", &[("grammar", "draw.diff")], None), ("s.draw.grammar.pack", "grammar", "draw.pack", &[("grammar", "draw.pack")], None),
+        ("s.draw.grammar.spr", "grammar", "draw.spr", &[("grammar", "draw.spr")], None),
+        ("s.draw.codec.document.v1", "codec", "draw.document:draw", &[("codec", "draw.document"), ("extension", "draw")], None),
+        ("s.draw.localization.en", "localization", "Drawing", &[], Some(("en", "Drawing"))), ("s.draw.localization.de", "localization", "Zeichnung", &[], Some(("de", "Zeichnung"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.draw")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims { capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?; }
+        if let Some((locale, text)) = localization { capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?; }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::draw::schema::draw_artifact_schema_descriptor())
         .inferences([crate::artifacts::draw::schema::inferences::draw_artifact_inference_descriptor()])
         .composers(crate::artifacts::draw::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::draw::DrawPlayApp>()
-        .build()
+        .try_build()
 }
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry

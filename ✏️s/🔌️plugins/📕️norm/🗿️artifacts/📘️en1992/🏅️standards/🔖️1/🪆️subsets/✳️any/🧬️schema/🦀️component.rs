@@ -1,8 +1,8 @@
 //! 🧬️ En1992 artifact schema — every field of the artifact with its state class.
 
-use schema::ArtifactSchema;
-use crate::artifacts::en1992::part_3::TightnessClass;
 use crate::artifacts::en1992::part_1_2::FireRating;
+use crate::artifacts::en1992::part_3::TightnessClass;
+use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
@@ -11,42 +11,78 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1992")]
 pub struct En1992Artifact {
-    #[state(artifact)] pub annex: crate::document::AnnexChoice,
-    #[state(artifact)] pub m_ed_knm: f64,
-    #[state(artifact)] pub v_ed_kn: f64,
-    #[state(artifact)] pub f_ck: f64,
-    #[state(artifact)] pub b_mm: f64,
-    #[state(artifact)] pub d_mm: f64,
-    #[state(artifact)] pub a_s_mm2: f64,
-    #[state(artifact)] pub f_yk: f64,
-    #[state(artifact)] pub rho_l: f64,
-    #[state(artifact)] pub n_ed_kn: f64,
-    #[state(artifact)] pub p_kn: f64,
-    #[state(artifact)] pub a_c_mm2: f64,
-    #[state(artifact)] pub use_fem: bool,
-    #[state(artifact)] pub span_m: f64,
-    #[state(artifact)] pub udl_kn_m: f64,
-    #[state(artifact)] pub fire_rating: crate::artifacts::en1992::part_1_2::FireRating,
-    #[state(artifact)] pub provided_axis_distance_mm: f64,
-    #[state(artifact)] pub bridge_sigma_c_mpa: f64,
-    #[state(artifact)] pub bridge_delta_sigma_s_mpa: f64,
-    #[state(artifact)] pub tightness_class: crate::artifacts::en1992::part_3::TightnessClass,
-    #[state(artifact)] pub hd_over_h: f64,
-    #[state(artifact)] pub liquid_sigma_s_mpa: f64,
-    #[state(artifact)] pub liquid_rho_p_eff: f64,
-    #[state(artifact)] pub liquid_f_ct_eff_mpa: f64,
-    #[state(artifact)] pub liquid_e_s_mpa: f64,
-    #[state(artifact)] pub liquid_s_r_max_mm: f64,
-    #[state(artifact)] pub anchor_h_ef_mm: f64,
-    #[state(artifact)] pub anchor_cracked: bool,
-    #[state(artifact)] pub anchor_f_uk_mpa: f64,
-    #[state(artifact)] pub anchor_f_yk_mpa: f64,
-    #[state(artifact)] pub anchor_a_s_mm2: f64,
-    #[state(artifact)] pub anchor_d_mm: f64,
-    #[state(artifact)] pub anchor_c1_mm: f64,
-    #[state(artifact)] pub anchor_n_ed_kn: f64,
-    #[state(artifact)] pub anchor_v_ed_kn: f64,
-    #[state(presence)] pub selected_check_index: Option<u32>,
+    #[state(artifact)]
+    pub annex: crate::document::AnnexChoice,
+    #[state(artifact)]
+    pub m_ed_knm: f64,
+    #[state(artifact)]
+    pub v_ed_kn: f64,
+    #[state(artifact)]
+    pub f_ck: f64,
+    #[state(artifact)]
+    pub b_mm: f64,
+    #[state(artifact)]
+    pub d_mm: f64,
+    #[state(artifact)]
+    pub a_s_mm2: f64,
+    #[state(artifact)]
+    pub f_yk: f64,
+    #[state(artifact)]
+    pub rho_l: f64,
+    #[state(artifact)]
+    pub n_ed_kn: f64,
+    #[state(artifact)]
+    pub p_kn: f64,
+    #[state(artifact)]
+    pub a_c_mm2: f64,
+    #[state(artifact)]
+    pub use_fem: bool,
+    #[state(artifact)]
+    pub span_m: f64,
+    #[state(artifact)]
+    pub udl_kn_m: f64,
+    #[state(artifact)]
+    pub fire_rating: crate::artifacts::en1992::part_1_2::FireRating,
+    #[state(artifact)]
+    pub provided_axis_distance_mm: f64,
+    #[state(artifact)]
+    pub bridge_sigma_c_mpa: f64,
+    #[state(artifact)]
+    pub bridge_delta_sigma_s_mpa: f64,
+    #[state(artifact)]
+    pub tightness_class: crate::artifacts::en1992::part_3::TightnessClass,
+    #[state(artifact)]
+    pub hd_over_h: f64,
+    #[state(artifact)]
+    pub liquid_sigma_s_mpa: f64,
+    #[state(artifact)]
+    pub liquid_rho_p_eff: f64,
+    #[state(artifact)]
+    pub liquid_f_ct_eff_mpa: f64,
+    #[state(artifact)]
+    pub liquid_e_s_mpa: f64,
+    #[state(artifact)]
+    pub liquid_s_r_max_mm: f64,
+    #[state(artifact)]
+    pub anchor_h_ef_mm: f64,
+    #[state(artifact)]
+    pub anchor_cracked: bool,
+    #[state(artifact)]
+    pub anchor_f_uk_mpa: f64,
+    #[state(artifact)]
+    pub anchor_f_yk_mpa: f64,
+    #[state(artifact)]
+    pub anchor_a_s_mm2: f64,
+    #[state(artifact)]
+    pub anchor_d_mm: f64,
+    #[state(artifact)]
+    pub anchor_c1_mm: f64,
+    #[state(artifact)]
+    pub anchor_n_ed_kn: f64,
+    #[state(artifact)]
+    pub anchor_v_ed_kn: f64,
+    #[state(presence)]
+    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -182,8 +218,8 @@ pub fn en1992_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::en1992::{En1992Diff, En1992Mutation, En1992Snapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct En1992BuilderConstruction {
@@ -195,8 +231,12 @@ pub mod derived_construction {
         type Snapshot = En1992Snapshot;
         type Mutation = En1992Mutation;
         type Diff = En1992Diff;
-        fn empty() -> Self { Self { snapshot: En1992Snapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn empty() -> Self {
+            Self { snapshot: En1992Snapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<En1992Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -213,7 +253,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -222,8 +266,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::en1992::En1992Snapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct En1992Parts {
@@ -404,7 +448,13 @@ pub mod part_1_1 {
     }
 
     pub fn check_flexure(m_ed_knm: f64, m_rd_knm: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 1992-1-1", "§6.1", "6.1"), Quantity::new(crate::document::QuantityKind::Moment, m_ed_knm * 1_000_000.0), Quantity::new(crate::document::QuantityKind::Moment, m_rd_knm * 1_000_000.0), "flexural ULS", annex)
+        CheckResult::from_utilization(
+            ClauseId::new("EN 1992-1-1", "§6.1", "6.1"),
+            Quantity::new(crate::document::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
+            Quantity::new(crate::document::QuantityKind::Moment, m_rd_knm * 1_000_000.0),
+            "flexural ULS",
+            annex,
+        )
     }
 
     pub fn check_shear(v_ed_kn: f64, v_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
@@ -416,7 +466,13 @@ pub mod part_1_1 {
     }
 
     pub fn check_torsion(t_ed_knm: f64, t_rd_knm: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 1992-1-1", "§6.3", "6.3"), Quantity::new(crate::document::QuantityKind::Moment, t_ed_knm * 1_000_000.0), Quantity::new(crate::document::QuantityKind::Moment, t_rd_knm * 1_000_000.0), "torsion ULS", annex)
+        CheckResult::from_utilization(
+            ClauseId::new("EN 1992-1-1", "§6.3", "6.3"),
+            Quantity::new(crate::document::QuantityKind::Moment, t_ed_knm * 1_000_000.0),
+            Quantity::new(crate::document::QuantityKind::Moment, t_rd_knm * 1_000_000.0),
+            "torsion ULS",
+            annex,
+        )
     }
 
     pub fn check_crack_width(w_k_mm: f64, limit_mm: f64, annex: AnnexChoice) -> CheckResult {

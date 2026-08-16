@@ -46,14 +46,46 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// deliberately has no field for app-scope schema (see that struct's own doc); it is registered by
 /// `.register_document_app::<A>()` instead, keyed off `A` the same way this declaration is keyed off
 /// `kind`.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.home")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.home.schema.artifact", "schema", "s.space.home", &[("schema", "s.space.home")], None),
+        ("s.home.inference.artifact", "inference", "s.space.home.inference", &[("schema", "s.space.home.inference")], None),
+        ("s.home.composer.zip", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
+        ("s.home.composer.csv", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
+        ("s.home.composer.xlsx", "composer", "s.stdio.xlsx@ecma-376/*", &[("dialect", "s.stdio.xlsx@ecma-376/*")], None),
+        ("s.home.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.home.grammar.document", "grammar", "space.home.document", &[("grammar", "space.home.document")], None),
+        ("s.home.grammar.op", "grammar", "space.home.op", &[("grammar", "space.home.op")], None),
+        ("s.home.grammar.diff", "grammar", "space.home.diff", &[("grammar", "space.home.diff")], None),
+        ("s.home.grammar.pack", "grammar", "home.pack", &[("grammar", "home.pack")], None),
+        ("s.home.grammar.spr", "grammar", "home.spr", &[("grammar", "home.spr")], None),
+        ("s.home.codec.document", "codec", "s.home:shome", &[("codec", "s.home"), ("extension", "shome")], None),
+        ("s.home.localization.en", "localization", "Home", &[], Some(("en", "Home"))),
+        ("s.home.localization.de", "localization", "Startseite", &[], Some(("de", "Startseite"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.home")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::home::schema::home_artifact_schema_descriptor())
         .inferences([crate::artifacts::home::standards::v1::subsets::any::schema::inferences::home_artifact_inference_descriptor()])
         .composers(crate::artifacts::home::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::home::HomeApp>()
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — moved

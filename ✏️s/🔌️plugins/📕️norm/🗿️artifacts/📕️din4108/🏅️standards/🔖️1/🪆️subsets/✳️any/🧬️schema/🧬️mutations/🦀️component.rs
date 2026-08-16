@@ -20,6 +20,11 @@ use crate::artifacts::din4108::{Din4108Diff, Din4108Snapshot};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
+use super::change_airtightness_class;
+use super::change_airtightness_n50;
+use super::change_application_type;
+use super::change_bb2_details_conform;
+use super::change_catalog_id;
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<Din4108Snapshot, Din4108Mutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️component.rs`. Plugin
 /// crates don't depend on `dsl_derive` directly (only the framework kernel crate does) — the
@@ -31,26 +36,21 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Leaves
 use super::change_category;
 use super::change_climate;
-use super::change_airtightness_n50;
-use super::change_psi_times_l_sum;
-use super::change_rh_int;
-use super::change_catalog_id;
-use super::change_material_id;
-use super::change_airtightness_class;
-use super::change_t_int_c;
-use super::change_solar_absorptance;
+use super::change_declared_application_class;
+use super::change_envelope_area_m2;
 use super::change_irradiance_w_m2;
+use super::change_layer_lambda;
+use super::change_layer_thickness;
+use super::change_material_id;
 use super::change_moisture_mu_exterior;
 use super::change_moisture_mu_interior;
-use super::change_envelope_area_m2;
-use super::change_bb2_details_conform;
-use super::change_application_type;
-use super::change_declared_application_class;
+use super::change_psi_times_l_sum;
+use super::change_rh_int;
+use super::change_solar_absorptance;
+use super::change_t_int_c;
 use super::insert_layer;
 use super::remove_layer;
 use super::reorder_layers;
-use super::change_layer_thickness;
-use super::change_layer_lambda;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]

@@ -11,9 +11,6 @@ pub fn inverse(payload: &DeletePropertyDefinition, base: &Iso16757Snapshot) -> V
     let Some(position) = base.catalogue.property_definitions.iter().position(|definition| definition.id == payload.id) else {
         return Vec::new();
     };
-    vec![Iso16757Mutation::CreatePropertyDefinition(create_property_definition::mutation::CreatePropertyDefinition {
-        property_definition: base.catalogue.property_definitions[position].clone(),
-        index: Some(position),
-    })]
+    vec![Iso16757Mutation::CreatePropertyDefinition(create_property_definition::mutation::CreatePropertyDefinition { property_definition: base.catalogue.property_definitions[position].clone(), index: Some(position) })]
 }
 //#endregion 🔖️Inverse

@@ -10,7 +10,7 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("remodel")
         .label("Remodel")
         .version("0.1.0")
-        .artifact(crate::artifacts::remodel::declaration())
+        .artifact(crate::artifacts::remodel::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .document_app::<crate::apps::remodel::RemodelPlayApp>(crate::apps::remodel::create_remodel_app())
         .try_build()
 }

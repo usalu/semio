@@ -1,9 +1,6 @@
 //! 🧾️ Schema-owned definition assembler for norm artifact declarations.
 
-use semio_framework_plugin::{
-    ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactDefinitionError, ArtifactIdentity,
-    ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization,
-};
+use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactDefinitionError, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
 //#region 🧾️Capabilities
 /// 🧷️ One immutable external identity claim owned by a leaf definition row.
@@ -28,28 +25,15 @@ pub struct CapabilitySpec {
 }
 
 /// 🧩️ Validates and assembles one leaf's already-declared capability rows.
-pub fn assemble_definition(
-    identity: &'static str,
-    capabilities: &'static [CapabilitySpec],
-) -> Result<ArtifactDefinition, ArtifactDefinitionError> {
+pub fn assemble_definition(identity: &'static str, capabilities: &'static [CapabilitySpec]) -> Result<ArtifactDefinition, ArtifactDefinitionError> {
     let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse(identity)?);
     for row in capabilities {
-        let mut capability = ArtifactCapability::new(
-            ArtifactIdentity::parse(row.identity)?,
-            ArtifactCapabilityKind::parse(row.kind)?,
-        )
-        .descriptor(row.descriptor.as_bytes())?;
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(row.identity)?, ArtifactCapabilityKind::parse(row.kind)?).descriptor(row.descriptor.as_bytes())?;
         for claim in row.claims {
-            capability = capability.claim(ArtifactIdentityClaim::new(
-                ArtifactIdentityNamespace::parse(claim.namespace)?,
-                claim.value,
-            )?)?;
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(claim.namespace)?, claim.value)?)?;
         }
         for localization in row.localizations {
-            capability = capability.localization(ArtifactLocalization::new(
-                ArtifactLocale::parse(localization.locale)?,
-                localization.text,
-            )?)?;
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(localization.locale)?, localization.text)?)?;
         }
         definition = definition.capability(capability)?;
     }

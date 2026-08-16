@@ -11,7 +11,7 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .label("Note")
         .version("0.1.0")
         .artifact_kind(crate::artifacts::note::artifact_kind())
-        .artifact(crate::artifacts::note::declaration())
+        .artifact(crate::artifacts::note::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .document_app::<crate::apps::note::NotePlayApp>(crate::apps::note::create_note_app())
         .try_build()
 }

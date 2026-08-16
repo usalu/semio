@@ -507,14 +507,35 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// `.setup()`: it registers the `LayoutPlayApp` CONFIG/PRESENCE schema, an app-scope concern
 /// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) —
 /// `register_app_schema_descriptor` is not in §6's artifact-scoped function set.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.layout")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.layout.standard.v1", "standard", "1", &[], None), ("s.layout.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.layout.schema.artifact", "schema", "s.layout.layout", &[("schema", "s.layout.layout")], None), ("s.layout.inference.artifact", "inference", "s.layout.layout.inference", &[("schema", "s.layout.layout.inference")], None),
+        ("s.layout.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None), ("s.layout.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.layout.grammar.document", "grammar", "layout.document", &[("grammar", "layout.document")], None), ("s.layout.grammar.op", "grammar", "layout.op", &[("grammar", "layout.op")], None),
+        ("s.layout.grammar.diff", "grammar", "layout.diff", &[("grammar", "layout.diff")], None), ("s.layout.grammar.pack", "grammar", "layout.pack", &[("grammar", "layout.pack")], None), ("s.layout.grammar.spr", "grammar", "layout.spr", &[("grammar", "layout.spr")], None),
+        ("s.layout.codec.document.v1", "codec", "layout.layout:layout", &[("codec", "layout.layout"), ("extension", "layout")], None),
+        ("s.layout.localization.en", "localization", "Layout", &[], Some(("en", "Layout"))), ("s.layout.localization.de", "localization", "Layout", &[], Some(("de", "Layout"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.layout")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims { capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?; }
+        if let Some((locale, text)) = localization { capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?; }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::layout::schema::layout_artifact_schema_descriptor())
         .inferences([crate::artifacts::layout::standards::v1::subsets::any::schema::inferences::layout_artifact_inference_descriptor()])
         .composers(crate::artifacts::layout::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::layout::LayoutPlayApp>()
-        .build()
+        .try_build()
 }
 //#endregion 🔖️ArtifactKind
 

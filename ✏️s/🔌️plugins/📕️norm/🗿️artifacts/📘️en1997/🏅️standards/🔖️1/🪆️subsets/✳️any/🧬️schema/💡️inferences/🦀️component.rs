@@ -86,12 +86,12 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
+use crate::artifacts::en1997::standards::v1::subsets::any::schema::{check_shallow_foundation, part_1, part_2, DesignApproach};
 /// 📋️ Full EN 1997 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1997Snapshot -> CheckReport` projection; everything it composes
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::{AnnexChoice, CheckReport, CheckStatus};
-use crate::artifacts::en1997::standards::v1::subsets::any::schema::{check_shallow_foundation, part_1, part_2, DesignApproach};
 
 /// 📋️ Full EN 1997 check across bearing, sliding, settlement, pile axial (part 1), and ground investigation adequacy (part 2).
 #[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
@@ -190,4 +190,3 @@ mod compliance_report_tests {
     }
 }
 //#endregion 🧪️ComplianceReportTests
-

@@ -525,14 +525,45 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// `FormsPlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has
 /// no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
 /// artifact-scoped function set (mirrors `🗒️note`'s exemplar exactly, see its own engine `declaration()`).
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.forms")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.forms.standard.v1", "standard", "1", &[], None),
+        ("s.forms.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.forms.schema.artifact", "schema", "s.forms.forms", &[("schema", "s.forms.forms")], None),
+        ("s.forms.inference.artifact", "inference", "s.forms.forms.inference", &[("schema", "s.forms.forms.inference")], None),
+        ("s.forms.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.forms.grammar.document", "grammar", "forms.forms", &[("grammar", "forms.forms")], None),
+        ("s.forms.grammar.op", "grammar", "forms.forms.op", &[("grammar", "forms.forms.op")], None),
+        ("s.forms.grammar.diff", "grammar", "forms.forms.diff", &[("grammar", "forms.forms.diff")], None),
+        ("s.forms.grammar.pack", "grammar", "forms.pack", &[("grammar", "forms.pack")], None),
+        ("s.forms.grammar.spr", "grammar", "forms.spr", &[("grammar", "forms.spr")], None),
+        ("s.forms.codec.document.v1", "codec", "forms.form:forms", &[("codec", "forms.form"), ("extension", "forms")], None),
+        ("s.forms.localization.en", "localization", "Forms", &[], Some(("en", "Forms"))),
+        ("s.forms.localization.de", "localization", "Formulare", &[], Some(("de", "Formulare"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.forms")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::forms::schema::forms_artifact_schema_descriptor())
         .inferences([crate::artifacts::forms::standards::v1::subsets::any::schema::inferences::forms_artifact_inference_descriptor()])
         .composers(crate::artifacts::forms::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::forms::FormsPlayApp>()
-        .build()
+        .try_build()
 }
 //#endregion 🔖️Declaration
 

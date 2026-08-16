@@ -1,15 +1,13 @@
 //! 📦️ VDI 3805 app — binary document surface + laws (constitutional: pack).
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-
-use store::PackError;
 use crate::artifacts::vdi3805::Vdi3805Snapshot;
+use store::PackError;
 
 /// 📦️ Encodes a `Document` to its binary pack form.
 pub fn encode(document: &Vdi3805Snapshot) -> Vec<u8> {

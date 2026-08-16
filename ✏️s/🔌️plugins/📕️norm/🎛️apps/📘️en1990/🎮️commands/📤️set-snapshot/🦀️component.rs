@@ -24,7 +24,7 @@
 use crate::artifacts::en1990::op::En1990Mutation;
 use crate::artifacts::en1990::En1990Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
@@ -55,12 +55,7 @@ mod tests {
         let projection = En1990Snapshot::default();
         let config = NormConfig::default();
         let text = crate::document::escape_op_text_field(&<En1990Snapshot as store::ArtifactDsl>::print_dsl(&En1990Snapshot::default()));
-        let emit = handle(
-            &ReplaceSnapshot { text },
-            &ArtifactView::new(&projection, &HistoryView::empty()),
-            &ConfigView { snapshot: &config },
-        )
-        .expect("handle");
+        let emit = handle(&ReplaceSnapshot { text }, &ArtifactView::new(&projection, &HistoryView::empty()), &ConfigView { snapshot: &config }).expect("handle");
         assert_eq!(emit.artifact_mutations, En1990Mutation::from_snapshot(&En1990Snapshot::default(), &En1990Snapshot::default()));
         assert_eq!(emit.description.as_deref(), Some("setSnapshot"));
         assert!(emit.config_mutations.is_empty());

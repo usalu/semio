@@ -2,8 +2,6 @@
 //! `#[derive(dsl::Mutations)]`-mandated (its `to_kebab` groups a trailing acronym+digit run like
 //! `WM2` as one word, `wm2` — never `w-m2`), not a style choice.
 
-
-
 use crate::artifacts::din4108::{Din4108Mutation, Din4108Snapshot};
 use serde::{Deserialize, Serialize};
 

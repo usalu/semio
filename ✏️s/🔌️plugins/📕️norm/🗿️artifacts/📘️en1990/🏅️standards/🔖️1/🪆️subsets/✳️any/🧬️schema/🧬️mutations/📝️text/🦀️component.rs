@@ -8,10 +8,9 @@
 pub use crate::artifacts::en1990::schema::mutations::En1990Mutation;
 
 use crate::artifacts::en1990::schema::mutations::{
-    change_consequence_class::mutation::ChangeConsequenceClass, change_permanent_action::mutation::ChangePermanentAction, change_resistance::mutation::ChangeResistance,
-    change_seismic_action::mutation::ChangeSeismicAction, change_variable_action_category::mutation::ChangeVariableActionCategory,
-    change_variable_action_value::mutation::ChangeVariableActionValue, insert_variable_action::mutation::InsertVariableAction, remove_variable_action::mutation::RemoveVariableAction,
-    reorder_variable_actions::mutation::ReorderVariableActions, set_snapshot,
+    change_consequence_class::mutation::ChangeConsequenceClass, change_permanent_action::mutation::ChangePermanentAction, change_resistance::mutation::ChangeResistance, change_seismic_action::mutation::ChangeSeismicAction,
+    change_variable_action_category::mutation::ChangeVariableActionCategory, change_variable_action_value::mutation::ChangeVariableActionValue, insert_variable_action::mutation::InsertVariableAction,
+    remove_variable_action::mutation::RemoveVariableAction, reorder_variable_actions::mutation::ReorderVariableActions, set_snapshot,
 };
 
 //#region 📖️SemioGrammar
@@ -87,10 +86,7 @@ fn tokenize_args(rest: &str) -> Vec<String> {
     tokens
 }
 fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
-    tokenize_args(rest)
-        .into_iter()
-        .map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}")))
-        .collect()
+    tokenize_args(rest).into_iter().map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}"))).collect()
 }
 //#endregion 🔖️Tokenizer
 
@@ -120,16 +116,10 @@ fn parse_en1990_mutation(line: &str) -> Result<En1990Mutation, String> {
         "change-resistance" => Ok(En1990Mutation::ChangeResistance(ChangeResistance { new_resistance_kn: dec_json(&arg("new-resistance-kn")?)? })),
         "change-consequence-class" => Ok(En1990Mutation::ChangeConsequenceClass(ChangeConsequenceClass { new_consequence_class: dec_json(&arg("new-consequence-class")?)? })),
         "change-seismic-action" => Ok(En1990Mutation::ChangeSeismicAction(ChangeSeismicAction { new_seismic_a_ed_kn: dec_json(&arg("new-seismic-a-ed-kn")?)? })),
-        "insert-variable-action" => {
-            Ok(En1990Mutation::InsertVariableAction(InsertVariableAction { index: dec_json(&arg("index")?)?, category: dec_json(&arg("category")?)?, value: dec_json(&arg("value")?)? }))
-        }
+        "insert-variable-action" => Ok(En1990Mutation::InsertVariableAction(InsertVariableAction { index: dec_json(&arg("index")?)?, category: dec_json(&arg("category")?)?, value: dec_json(&arg("value")?)? })),
         "remove-variable-action" => Ok(En1990Mutation::RemoveVariableAction(RemoveVariableAction { index: dec_json(&arg("index")?)? })),
-        "change-variable-action-category" => {
-            Ok(En1990Mutation::ChangeVariableActionCategory(ChangeVariableActionCategory { index: dec_json(&arg("index")?)?, new_category: dec_json(&arg("new-category")?)? }))
-        }
-        "change-variable-action-value" => {
-            Ok(En1990Mutation::ChangeVariableActionValue(ChangeVariableActionValue { index: dec_json(&arg("index")?)?, new_value: dec_json(&arg("new-value")?)? }))
-        }
+        "change-variable-action-category" => Ok(En1990Mutation::ChangeVariableActionCategory(ChangeVariableActionCategory { index: dec_json(&arg("index")?)?, new_category: dec_json(&arg("new-category")?)? })),
+        "change-variable-action-value" => Ok(En1990Mutation::ChangeVariableActionValue(ChangeVariableActionValue { index: dec_json(&arg("index")?)?, new_value: dec_json(&arg("new-value")?)? })),
         "reorder-variable-actions" => Ok(En1990Mutation::ReorderVariableActions(ReorderVariableActions { from: dec_json(&arg("from")?)?, to: dec_json(&arg("to")?)? })),
         other => Err(format!("en1990 mutation: unknown keyword {other:?}")),
     }

@@ -1,12 +1,10 @@
 //! ⚖️ ISO 16757 app — binary command protocol surface + laws (constitutional: protocol).
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::iso16757::schema::mutations::text::Iso16757Mutation;
 use protocol::OpBinary;
@@ -20,4 +18,3 @@ pub fn encode_op(mutation: &Iso16757Mutation) -> Result<Vec<u8>, protocol::Proto
 pub fn decode_op(bytes: &[u8]) -> Result<Iso16757Mutation, protocol::ProtocolError> {
     Iso16757Mutation::decode_op(bytes)
 }
-

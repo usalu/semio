@@ -31,41 +31,41 @@ use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
+use super::change_accidental_mass_t;
+use super::change_accidental_speed_km_h;
+use super::change_annex;
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<En1991Snapshot, En1991Mutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️component.rs`.
 //#region 🔖️Leaves
 use super::change_area_m2;
-use super::change_category;
-use super::change_annex;
-use super::change_self_weight_material;
-use super::change_self_weight_thickness_m;
 use super::change_assumed_gk_kn_m2;
-use super::change_fire_curve;
-use super::change_fire_resistance_min;
-use super::change_fire_member_capacity_c;
-use super::change_snow_zone;
-use super::change_snow_altitude_m;
-use super::change_en_sk_kn_m2;
-use super::change_wind_zone;
-use super::change_en_vbms;
-use super::change_delta_tk;
-use super::change_construction_activity;
-use super::change_accidental_mass_t;
-use super::change_accidental_speed_km_h;
 use super::change_bridge_lane;
-use super::change_bridge_span_m;
 use super::change_bridge_lane_width_m;
 use super::change_bridge_moment_resistance_knm;
+use super::change_bridge_span_m;
+use super::change_category;
+use super::change_cd;
+use super::change_construction_activity;
 use super::change_crane_class;
+use super::change_cs;
+use super::change_delta_tk;
+use super::change_en_sk_kn_m2;
+use super::change_en_vbms;
+use super::change_fire_curve;
+use super::change_fire_member_capacity_c;
+use super::change_fire_resistance_min;
 use super::change_hoist_class;
 use super::change_hoisting_speed_ms;
+use super::change_self_weight_material;
+use super::change_self_weight_thickness_m;
 use super::change_silo_bulk_density_kn_m3;
 use super::change_silo_height_m;
 use super::change_silo_hydraulic_radius_m;
-use super::change_silo_mu;
 use super::change_silo_k;
-use super::change_cs;
-use super::change_cd;
+use super::change_silo_mu;
+use super::change_snow_altitude_m;
+use super::change_snow_zone;
+use super::change_wind_zone;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]

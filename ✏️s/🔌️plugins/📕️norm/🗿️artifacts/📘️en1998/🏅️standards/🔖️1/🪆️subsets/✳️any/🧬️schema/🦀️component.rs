@@ -10,56 +10,106 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1998")]
 pub struct En1998Artifact {
-    #[state(artifact)] pub seismic_zone: u8,
-    #[state(artifact)] pub ground_type: String,
-    #[state(artifact)] pub importance_class: String,
-    #[state(artifact)] pub structural_system: String,
-    #[state(artifact)] pub t1_s: f64,
-    #[state(artifact)] pub mass_t: f64,
-    #[state(artifact)] pub v_rd_kn: f64,
-    #[state(artifact)] pub drift_mm: f64,
-    #[state(artifact)] pub height_m: f64,
-    #[state(artifact)] pub multiple_resisting_systems: bool,
-    #[state(artifact)] pub annex: String,
-    #[state(artifact)] pub en_a_gr: f64,
-    #[state(artifact)] pub en_ground_type: String,
-    #[state(artifact)] pub en_spectrum_type: String,
-    #[state(artifact)] pub period_ratio: f64,
-    #[state(artifact)] pub bridge_v_rd_kn: f64,
-    #[state(artifact)] pub bearing_d_ed_mm: f64,
-    #[state(artifact)] pub bearing_d_rd_mm: f64,
-    #[state(artifact)] pub retrofit_knowledge_level: String,
-    #[state(artifact)] pub retrofit_limit_state: String,
-    #[state(artifact)] pub retrofit_e_d_kn: f64,
-    #[state(artifact)] pub retrofit_r_k_kn: f64,
-    #[state(artifact)] pub retrofit_gamma_el: f64,
-    #[state(artifact)] pub silo_height_m: f64,
-    #[state(artifact)] pub silo_radius_m: f64,
-    #[state(artifact)] pub silo_n_rd_kn: f64,
-    #[state(artifact)] pub silo_v_ed_kn: f64,
-    #[state(artifact)] pub silo_v_rd_kn: f64,
-    #[state(artifact)] pub silo_q_nominal: f64,
-    #[state(artifact)] pub tank_height_m: f64,
-    #[state(artifact)] pub tank_radius_m: f64,
-    #[state(artifact)] pub tank_mass_t: f64,
-    #[state(artifact)] pub tank_v_rd_kn: f64,
-    #[state(artifact)] pub tower_m_ed_knm: f64,
-    #[state(artifact)] pub tower_m_rd_knm: f64,
-    #[state(artifact)] pub tower_is_chimney: bool,
-    #[state(artifact)] pub tower_q_nominal: f64,
-    #[state(artifact)] pub tower_mass_t: f64,
-    #[state(artifact)] pub foundation_area_m2: f64,
-    #[state(artifact)] pub foundation_p_rd_kpa: f64,
-    #[state(artifact)] pub foundation_h_ed_kn: f64,
-    #[state(artifact)] pub foundation_h_rd_kn: f64,
-    #[state(artifact)] pub k_foundation: f64,
-    #[state(artifact)] pub k_soil: f64,
-    #[state(artifact)] pub wall_height_m: f64,
-    #[state(artifact)] pub wall_phi_deg: f64,
-    #[state(artifact)] pub wall_soil_gamma_kn_m3: f64,
-    #[state(artifact)] pub wall_r: f64,
-    #[state(artifact)] pub wall_h_rd_kn: f64,
-    #[state(presence)] pub selected_check_index: Option<u32>,
+    #[state(artifact)]
+    pub seismic_zone: u8,
+    #[state(artifact)]
+    pub ground_type: String,
+    #[state(artifact)]
+    pub importance_class: String,
+    #[state(artifact)]
+    pub structural_system: String,
+    #[state(artifact)]
+    pub t1_s: f64,
+    #[state(artifact)]
+    pub mass_t: f64,
+    #[state(artifact)]
+    pub v_rd_kn: f64,
+    #[state(artifact)]
+    pub drift_mm: f64,
+    #[state(artifact)]
+    pub height_m: f64,
+    #[state(artifact)]
+    pub multiple_resisting_systems: bool,
+    #[state(artifact)]
+    pub annex: String,
+    #[state(artifact)]
+    pub en_a_gr: f64,
+    #[state(artifact)]
+    pub en_ground_type: String,
+    #[state(artifact)]
+    pub en_spectrum_type: String,
+    #[state(artifact)]
+    pub period_ratio: f64,
+    #[state(artifact)]
+    pub bridge_v_rd_kn: f64,
+    #[state(artifact)]
+    pub bearing_d_ed_mm: f64,
+    #[state(artifact)]
+    pub bearing_d_rd_mm: f64,
+    #[state(artifact)]
+    pub retrofit_knowledge_level: String,
+    #[state(artifact)]
+    pub retrofit_limit_state: String,
+    #[state(artifact)]
+    pub retrofit_e_d_kn: f64,
+    #[state(artifact)]
+    pub retrofit_r_k_kn: f64,
+    #[state(artifact)]
+    pub retrofit_gamma_el: f64,
+    #[state(artifact)]
+    pub silo_height_m: f64,
+    #[state(artifact)]
+    pub silo_radius_m: f64,
+    #[state(artifact)]
+    pub silo_n_rd_kn: f64,
+    #[state(artifact)]
+    pub silo_v_ed_kn: f64,
+    #[state(artifact)]
+    pub silo_v_rd_kn: f64,
+    #[state(artifact)]
+    pub silo_q_nominal: f64,
+    #[state(artifact)]
+    pub tank_height_m: f64,
+    #[state(artifact)]
+    pub tank_radius_m: f64,
+    #[state(artifact)]
+    pub tank_mass_t: f64,
+    #[state(artifact)]
+    pub tank_v_rd_kn: f64,
+    #[state(artifact)]
+    pub tower_m_ed_knm: f64,
+    #[state(artifact)]
+    pub tower_m_rd_knm: f64,
+    #[state(artifact)]
+    pub tower_is_chimney: bool,
+    #[state(artifact)]
+    pub tower_q_nominal: f64,
+    #[state(artifact)]
+    pub tower_mass_t: f64,
+    #[state(artifact)]
+    pub foundation_area_m2: f64,
+    #[state(artifact)]
+    pub foundation_p_rd_kpa: f64,
+    #[state(artifact)]
+    pub foundation_h_ed_kn: f64,
+    #[state(artifact)]
+    pub foundation_h_rd_kn: f64,
+    #[state(artifact)]
+    pub k_foundation: f64,
+    #[state(artifact)]
+    pub k_soil: f64,
+    #[state(artifact)]
+    pub wall_height_m: f64,
+    #[state(artifact)]
+    pub wall_phi_deg: f64,
+    #[state(artifact)]
+    pub wall_soil_gamma_kn_m3: f64,
+    #[state(artifact)]
+    pub wall_r: f64,
+    #[state(artifact)]
+    pub wall_h_rd_kn: f64,
+    #[state(presence)]
+    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -277,8 +327,8 @@ pub fn en1998_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::en1998::{En1998Diff, En1998Mutation, En1998Snapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct En1998BuilderConstruction {
@@ -290,8 +340,12 @@ pub mod derived_construction {
         type Snapshot = En1998Snapshot;
         type Mutation = En1998Mutation;
         type Diff = En1998Diff;
-        fn empty() -> Self { Self { snapshot: En1998Snapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn empty() -> Self {
+            Self { snapshot: En1998Snapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<En1998Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -308,7 +362,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -317,8 +375,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::en1998::En1998Snapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct En1998Parts {
@@ -891,7 +949,17 @@ pub mod part_6 {
 
 /// 📋️ Building seismic check generalized over DE zone-based or EN Type-1/2-spectrum annex selection.
 #[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
-pub fn check_building_seismic_with_annex(annex: &AnnexParams, importance: part_1::ImportanceClass, system: part_1::StructuralSystem, t1_s: f64, mass_t: f64, v_rd_kn: f64, drift_mm: f64, height_m: f64, multiple_resisting_systems: bool) -> CheckReport {
+pub fn check_building_seismic_with_annex(
+    annex: &AnnexParams,
+    importance: part_1::ImportanceClass,
+    system: part_1::StructuralSystem,
+    t1_s: f64,
+    mass_t: f64,
+    v_rd_kn: f64,
+    drift_mm: f64,
+    height_m: f64,
+    multiple_resisting_systems: bool,
+) -> CheckReport {
     let choice = annex.choice();
     let gamma_i = importance.gamma_i();
     let q = system.q();
@@ -1082,4 +1150,3 @@ mod compliance_helpers_tests {
     }
 }
 //#endregion 🧪️ComplianceHelpersTests
-

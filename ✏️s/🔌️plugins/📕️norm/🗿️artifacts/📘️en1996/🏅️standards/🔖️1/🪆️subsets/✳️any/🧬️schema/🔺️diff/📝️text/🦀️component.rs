@@ -7,7 +7,6 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 use crate::artifacts::en1996::schema::En1996Artifact;
 use crate::artifacts::en1996::En1996Snapshot;
 use protocol::MutationDiff;
@@ -19,28 +18,72 @@ impl En1996Diff {
             return (**replacement).clone();
         }
         let mut next = artifact.clone();
-if let Some(value) = &self.m_ed_knm { next.m_ed_knm = value.clone(); }
-        if let Some(value) = &self.n_ed_kn { next.n_ed_kn = value.clone(); }
-        if let Some(value) = &self.v_ed_kn { next.v_ed_kn = value.clone(); }
-        if let Some(value) = &self.h_ed_kn { next.h_ed_kn = value.clone(); }
-        if let Some(value) = &self.z_mm3 { next.z_mm3 = value.clone(); }
-        if let Some(value) = &self.area_mm2 { next.area_mm2 = value.clone(); }
-        if let Some(value) = &self.shear_area_mm2 { next.shear_area_mm2 = value.clone(); }
-        if let Some(value) = &self.f_k_mpa { next.f_k_mpa = value.clone(); }
-        if let Some(value) = &self.f_vk_mpa { next.f_vk_mpa = value.clone(); }
-        if let Some(value) = &self.annex { next.annex = value.clone(); }
-        if let Some(value) = &self.masonry_class { next.masonry_class = value.clone(); }
-        if let Some(value) = &self.design_situation { next.design_situation = value.clone(); }
-        if let Some(value) = &self.mu { next.mu = value.clone(); }
-        if let Some(value) = &self.wall_thickness_mm { next.wall_thickness_mm = value.clone(); }
-        if let Some(value) = &self.fire_resistance_min { next.fire_resistance_min = value.clone(); }
-        if let Some(value) = &self.unit { next.unit = value.clone(); }
-        if let Some(value) = &self.exposure { next.exposure = value.clone(); }
-        if let Some(value) = &self.mortar { next.mortar = value.clone(); }
-        if let Some(value) = &self.bed_joint_thickness_mm { next.bed_joint_thickness_mm = value.clone(); }
-        if let Some(value) = &self.storeys { next.storeys = value.clone(); }
-        if let Some(value) = &self.h_ef_mm { next.h_ef_mm = value.clone(); }
-        if let Some(value) = &self.t_ef_mm { next.t_ef_mm = value.clone(); }
+        if let Some(value) = &self.m_ed_knm {
+            next.m_ed_knm = value.clone();
+        }
+        if let Some(value) = &self.n_ed_kn {
+            next.n_ed_kn = value.clone();
+        }
+        if let Some(value) = &self.v_ed_kn {
+            next.v_ed_kn = value.clone();
+        }
+        if let Some(value) = &self.h_ed_kn {
+            next.h_ed_kn = value.clone();
+        }
+        if let Some(value) = &self.z_mm3 {
+            next.z_mm3 = value.clone();
+        }
+        if let Some(value) = &self.area_mm2 {
+            next.area_mm2 = value.clone();
+        }
+        if let Some(value) = &self.shear_area_mm2 {
+            next.shear_area_mm2 = value.clone();
+        }
+        if let Some(value) = &self.f_k_mpa {
+            next.f_k_mpa = value.clone();
+        }
+        if let Some(value) = &self.f_vk_mpa {
+            next.f_vk_mpa = value.clone();
+        }
+        if let Some(value) = &self.annex {
+            next.annex = value.clone();
+        }
+        if let Some(value) = &self.masonry_class {
+            next.masonry_class = value.clone();
+        }
+        if let Some(value) = &self.design_situation {
+            next.design_situation = value.clone();
+        }
+        if let Some(value) = &self.mu {
+            next.mu = value.clone();
+        }
+        if let Some(value) = &self.wall_thickness_mm {
+            next.wall_thickness_mm = value.clone();
+        }
+        if let Some(value) = &self.fire_resistance_min {
+            next.fire_resistance_min = value.clone();
+        }
+        if let Some(value) = &self.unit {
+            next.unit = value.clone();
+        }
+        if let Some(value) = &self.exposure {
+            next.exposure = value.clone();
+        }
+        if let Some(value) = &self.mortar {
+            next.mortar = value.clone();
+        }
+        if let Some(value) = &self.bed_joint_thickness_mm {
+            next.bed_joint_thickness_mm = value.clone();
+        }
+        if let Some(value) = &self.storeys {
+            next.storeys = value.clone();
+        }
+        if let Some(value) = &self.h_ef_mm {
+            next.h_ef_mm = value.clone();
+        }
+        if let Some(value) = &self.t_ef_mm {
+            next.t_ef_mm = value.clone();
+        }
         if let Some(value) = &self.selected_check_index {
             next.selected_check_index = *value;
         }
@@ -54,28 +97,72 @@ impl MutationDiff<En1996Snapshot> for En1996Diff {
             return replacement.to_snapshot();
         }
         let mut next = snapshot.clone();
-if let Some(value) = &self.m_ed_knm { next.m_ed_knm = value.clone(); }
-        if let Some(value) = &self.n_ed_kn { next.n_ed_kn = value.clone(); }
-        if let Some(value) = &self.v_ed_kn { next.v_ed_kn = value.clone(); }
-        if let Some(value) = &self.h_ed_kn { next.h_ed_kn = value.clone(); }
-        if let Some(value) = &self.z_mm3 { next.z_mm3 = value.clone(); }
-        if let Some(value) = &self.area_mm2 { next.area_mm2 = value.clone(); }
-        if let Some(value) = &self.shear_area_mm2 { next.shear_area_mm2 = value.clone(); }
-        if let Some(value) = &self.f_k_mpa { next.f_k_mpa = value.clone(); }
-        if let Some(value) = &self.f_vk_mpa { next.f_vk_mpa = value.clone(); }
-        if let Some(value) = &self.annex { next.annex = value.clone(); }
-        if let Some(value) = &self.masonry_class { next.masonry_class = value.clone(); }
-        if let Some(value) = &self.design_situation { next.design_situation = value.clone(); }
-        if let Some(value) = &self.mu { next.mu = value.clone(); }
-        if let Some(value) = &self.wall_thickness_mm { next.wall_thickness_mm = value.clone(); }
-        if let Some(value) = &self.fire_resistance_min { next.fire_resistance_min = value.clone(); }
-        if let Some(value) = &self.unit { next.unit = value.clone(); }
-        if let Some(value) = &self.exposure { next.exposure = value.clone(); }
-        if let Some(value) = &self.mortar { next.mortar = value.clone(); }
-        if let Some(value) = &self.bed_joint_thickness_mm { next.bed_joint_thickness_mm = value.clone(); }
-        if let Some(value) = &self.storeys { next.storeys = value.clone(); }
-        if let Some(value) = &self.h_ef_mm { next.h_ef_mm = value.clone(); }
-        if let Some(value) = &self.t_ef_mm { next.t_ef_mm = value.clone(); }
+        if let Some(value) = &self.m_ed_knm {
+            next.m_ed_knm = value.clone();
+        }
+        if let Some(value) = &self.n_ed_kn {
+            next.n_ed_kn = value.clone();
+        }
+        if let Some(value) = &self.v_ed_kn {
+            next.v_ed_kn = value.clone();
+        }
+        if let Some(value) = &self.h_ed_kn {
+            next.h_ed_kn = value.clone();
+        }
+        if let Some(value) = &self.z_mm3 {
+            next.z_mm3 = value.clone();
+        }
+        if let Some(value) = &self.area_mm2 {
+            next.area_mm2 = value.clone();
+        }
+        if let Some(value) = &self.shear_area_mm2 {
+            next.shear_area_mm2 = value.clone();
+        }
+        if let Some(value) = &self.f_k_mpa {
+            next.f_k_mpa = value.clone();
+        }
+        if let Some(value) = &self.f_vk_mpa {
+            next.f_vk_mpa = value.clone();
+        }
+        if let Some(value) = &self.annex {
+            next.annex = value.clone();
+        }
+        if let Some(value) = &self.masonry_class {
+            next.masonry_class = value.clone();
+        }
+        if let Some(value) = &self.design_situation {
+            next.design_situation = value.clone();
+        }
+        if let Some(value) = &self.mu {
+            next.mu = value.clone();
+        }
+        if let Some(value) = &self.wall_thickness_mm {
+            next.wall_thickness_mm = value.clone();
+        }
+        if let Some(value) = &self.fire_resistance_min {
+            next.fire_resistance_min = value.clone();
+        }
+        if let Some(value) = &self.unit {
+            next.unit = value.clone();
+        }
+        if let Some(value) = &self.exposure {
+            next.exposure = value.clone();
+        }
+        if let Some(value) = &self.mortar {
+            next.mortar = value.clone();
+        }
+        if let Some(value) = &self.bed_joint_thickness_mm {
+            next.bed_joint_thickness_mm = value.clone();
+        }
+        if let Some(value) = &self.storeys {
+            next.storeys = value.clone();
+        }
+        if let Some(value) = &self.h_ef_mm {
+            next.h_ef_mm = value.clone();
+        }
+        if let Some(value) = &self.t_ef_mm {
+            next.t_ef_mm = value.clone();
+        }
         next
     }
 
@@ -120,10 +207,7 @@ if let Some(value) = &self.m_ed_knm { next.m_ed_knm = value.clone(); }
 
 //#region 🔖️Helpers
 pub fn diff_set_snapshot(snapshot: &En1996Snapshot) -> En1996Diff {
-    En1996Diff {
-        artifact: Some(Box::new(En1996Artifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
+    En1996Diff { artifact: Some(Box::new(En1996Artifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔖️Helpers
 

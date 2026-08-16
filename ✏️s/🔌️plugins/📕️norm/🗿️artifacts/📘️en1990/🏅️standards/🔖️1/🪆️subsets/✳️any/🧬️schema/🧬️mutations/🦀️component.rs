@@ -21,19 +21,19 @@ use crate::artifacts::en1990::En1990Snapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
+use super::change_consequence_class;
+use super::change_permanent_action;
+use super::change_resistance;
+use super::change_seismic_action;
+use super::change_variable_action_category;
+use super::change_variable_action_value;
+use super::insert_variable_action;
+use super::remove_variable_action;
+use super::reorder_variable_actions;
 /// 🧬️ Closed semantic mutation vocabulary for the en1990 document, derived per
 /// `📓️derivation-rules.md` from `En1990Snapshot`'s flat scalar + `q_k` table shape.
 //#region 🔖️Leaves
 use super::set_snapshot;
-use super::change_permanent_action;
-use super::change_resistance;
-use super::change_consequence_class;
-use super::change_seismic_action;
-use super::insert_variable_action;
-use super::remove_variable_action;
-use super::change_variable_action_category;
-use super::change_variable_action_value;
-use super::reorder_variable_actions;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]

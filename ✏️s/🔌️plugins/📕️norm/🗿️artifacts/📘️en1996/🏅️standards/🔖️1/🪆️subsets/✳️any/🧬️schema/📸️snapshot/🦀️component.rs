@@ -1,6 +1,6 @@
 //! 🧱️ EN 1996 snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::en1996::{MasonryClass, part_2};
+use crate::artifacts::en1996::{part_2, MasonryClass};
 use crate::document::{AnnexChoice, DesignSituation};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -67,7 +67,6 @@ pub struct En1996Snapshot {
 // than this one macro call — Rust's orphan rule still needs a concrete per-type impl).
 crate::impl_norm_artifact_record!(En1996Snapshot, extension = "en1996", envelope_id = "norm.en1996");
 //#endregion 🔖️HandcraftedArtifactCodecs
-
 
 impl Default for En1996Snapshot {
     fn default() -> Self {

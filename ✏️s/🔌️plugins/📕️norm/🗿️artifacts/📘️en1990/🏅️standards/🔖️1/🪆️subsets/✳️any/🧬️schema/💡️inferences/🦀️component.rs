@@ -37,10 +37,7 @@ impl protocol::InferenceSpec<En1990Snapshot> for En1990Inference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec {
-            id: "s.norm.en1990.inference.outline",
-            reads: &["g_k", "q_k", "resistance_kn", "consequence_class", "annex", "seismic_a_ed_kn"],
-        }]
+        &[protocol::InferenceFieldSpec { id: "s.norm.en1990.inference.outline", reads: &["g_k", "q_k", "resistance_kn", "consequence_class", "annex", "seismic_a_ed_kn"] }]
     }
 }
 //#endregion 🔖️Inference
@@ -89,13 +86,13 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
+use crate::artifacts::en1990::standards::v1::subsets::any::schema::{append_combination_set, check_reliability_index, check_seismic_situation, ActionSet, NaDe, NaEn, NationalAnnex};
+use crate::artifacts::en1990::En1990QkEntry;
 /// 📋️ Full EN 1990 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1990Snapshot -> CheckReport` projection; everything it composes
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::{AnnexChoice, CheckReport, DesignSituation};
-use crate::artifacts::en1990::En1990QkEntry;
-use crate::artifacts::en1990::standards::v1::subsets::any::schema::{ActionSet, NaDe, NaEn, NationalAnnex, append_combination_set, check_reliability_index, check_seismic_situation};
 
 /// 🔁️ Convert a `En1990Snapshot`'s `q_k` entries (read through the `en1990_qk` working-scene
 /// accessor — `q_k` is a composed `s.stdio.semio.table` child slot, ticket

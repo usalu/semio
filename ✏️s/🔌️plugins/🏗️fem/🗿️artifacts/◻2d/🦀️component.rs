@@ -270,14 +270,36 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// `Fem2dPlayApp`'s CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has
 /// no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
 /// artifact-scoped function set.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.fem2d")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.fem2d.standard.v1", "standard", "1", &[], None), ("s.fem2d.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.fem2d.schema.artifact", "schema", "s.fem.fem2d", &[("schema", "s.fem.fem2d")], None), ("s.fem2d.inference.artifact", "inference", "s.fem.fem2d.inference", &[("schema", "s.fem.fem2d.inference")], None),
+        ("s.fem2d.composer.csv", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None), ("s.fem2d.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
+        ("s.fem2d.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None), ("s.fem2d.composer.stl", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None), ("s.fem2d.composer.obj", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.fem2d.grammar.document", "grammar", "fem.fem2d", &[("grammar", "fem.fem2d")], None), ("s.fem2d.grammar.op", "grammar", "fem.fem2d.op", &[("grammar", "fem.fem2d.op")], None),
+        ("s.fem2d.grammar.diff", "grammar", "fem.fem2d.diff", &[("grammar", "fem.fem2d.diff")], None), ("s.fem2d.grammar.pack", "grammar", "fem2d.pack", &[("grammar", "fem2d.pack")], None), ("s.fem2d.grammar.spr", "grammar", "fem2d.spr", &[("grammar", "fem2d.spr")], None),
+        ("s.fem2d.codec.document.v1", "codec", "fem.fem2d:fem2d", &[("codec", "fem.fem2d"), ("extension", "fem2d")], None),
+        ("s.fem2d.localization.en", "localization", "Finite element model 2D", &[], Some(("en", "Finite element model 2D"))), ("s.fem2d.localization.de", "localization", "Finite-Elemente-Modell 2D", &[], Some(("de", "Finite-Elemente-Modell 2D"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.fem2d")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims { capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?; }
+        if let Some((locale, text)) = localization { capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?; }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::fem2d::schema::fem2d_artifact_schema_descriptor())
         .inferences([crate::artifacts::fem2d::standards::v1::subsets::any::schema::inferences::fem2d_artifact_inference_descriptor()])
         .composers(crate::artifacts::fem2d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::fem2d::Fem2dPlayApp>()
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once

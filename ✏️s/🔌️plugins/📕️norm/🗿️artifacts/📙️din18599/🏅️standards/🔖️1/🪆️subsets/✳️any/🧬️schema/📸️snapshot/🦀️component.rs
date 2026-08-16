@@ -1,7 +1,7 @@
 //! 🧬️ Din18599 snapshot schema — artifact-lane fields only.
 
-use schema::ArtifactSchema;
 use crate::artifacts::din18599::{Din18599ClimateChild, MonthlyClimate, UseClass};
+use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
@@ -49,16 +49,30 @@ pub struct Din18599Snapshot {
 /// 🧪️ Real hex/bracket child-handle codec (mirrors `➗️mathematical`'s/en1990's own `enc_child`/
 /// `dec_child`) — a handle is exactly two strings (`child_id`, the target's `ArtifactRef` flattened
 /// via `to_uri()`), never the child's own content.
-fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|b| format!("{b:02x}")).collect() }
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 { return Err(format!("odd hex length: {s:?}")); }
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
-fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
-fn enc_ref(r: &store::os_io::ArtifactRef) -> String { enc_str(&r.to_uri()) }
-fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&dec_str(s)?) }
-fn enc_child(c: &Din18599ClimateChild) -> String { format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target)) }
+fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+    enc_str(&r.to_uri())
+}
+fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
+    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
+}
+fn enc_child(c: &Din18599ClimateChild) -> String {
+    format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
+}
 fn dec_child(s: &str) -> Result<Din18599ClimateChild, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
     let parts: Vec<&str> = inner.splitn(2, ',').collect();
@@ -66,10 +80,19 @@ fn dec_child(s: &str) -> Result<Din18599ClimateChild, String> {
     Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
 }
 fn enc_use_class(u: UseClass) -> &'static str {
-    match u { UseClass::Residential => "residential", UseClass::Office => "office", UseClass::School => "school" }
+    match u {
+        UseClass::Residential => "residential",
+        UseClass::Office => "office",
+        UseClass::School => "school",
+    }
 }
 fn dec_use_class(s: &str) -> Result<UseClass, String> {
-    match s { "residential" => Ok(UseClass::Residential), "office" => Ok(UseClass::Office), "school" => Ok(UseClass::School), other => Err(format!("bad use class {other:?}")) }
+    match s {
+        "residential" => Ok(UseClass::Residential),
+        "office" => Ok(UseClass::Office),
+        "school" => Ok(UseClass::School),
+        other => Err(format!("bad use class {other:?}")),
+    }
 }
 //#endregion 🔖️ChildCodecPrimitives
 
@@ -77,8 +100,19 @@ fn dec_use_class(s: &str) -> Result<UseClass, String> {
 fn print_din18599_snapshot_body(s: &Din18599Snapshot) -> String {
     format!(
         "useClass={}\nheatedAreaM2={}\noccupants={}\nhT={}\nhV={}\nclimate={}\ninternalGainsWM2={}\nsolarGainsKwh={}\nsystemLossesKwh={}\nrenewableKwh={}\nannualLimitKwh={}\nenergyCarrier={}\nreferenceQPKwh={}",
-        enc_use_class(s.use_class), s.heated_area_m2, s.occupants, s.h_t, s.h_v, enc_child(&s.climate), s.internal_gains_w_m2, s.solar_gains_kwh,
-        s.system_losses_kwh, s.renewable_kwh, s.annual_limit_kwh, enc_str(&s.energy_carrier), s.reference_q_p_kwh,
+        enc_use_class(s.use_class),
+        s.heated_area_m2,
+        s.occupants,
+        s.h_t,
+        s.h_v,
+        enc_child(&s.climate),
+        s.internal_gains_w_m2,
+        s.solar_gains_kwh,
+        s.system_losses_kwh,
+        s.renewable_kwh,
+        s.annual_limit_kwh,
+        enc_str(&s.energy_carrier),
+        s.reference_q_p_kwh,
     )
 }
 fn parse_din18599_snapshot_body(body: &str) -> Result<Din18599Snapshot, String> {
@@ -97,21 +131,38 @@ fn parse_din18599_snapshot_body(body: &str) -> Result<Din18599Snapshot, String> 
     let mut reference_q_p_kwh = None;
     for line in body.lines() {
         let line = line.trim();
-        if line.is_empty() { continue; }
-        if let Some(rest) = line.strip_prefix("useClass=") { use_class = Some(dec_use_class(rest)?); }
-        else if let Some(rest) = line.strip_prefix("heatedAreaM2=") { heated_area_m2 = Some(rest.parse::<f64>().map_err(|e| e.to_string())?); }
-        else if let Some(rest) = line.strip_prefix("occupants=") { occupants = Some(rest.parse::<u32>().map_err(|e| e.to_string())?); }
-        else if let Some(rest) = line.strip_prefix("hT=") { h_t = Some(rest.parse::<f64>().map_err(|e| e.to_string())?); }
-        else if let Some(rest) = line.strip_prefix("hV=") { h_v = Some(rest.parse::<f64>().map_err(|e| e.to_string())?); }
-        else if let Some(rest) = line.strip_prefix("climate=") { climate = Some(dec_child(rest)?); }
-        else if let Some(rest) = line.strip_prefix("internalGainsWM2=") { internal_gains_w_m2 = Some(rest.parse::<f64>().map_err(|e| e.to_string())?); }
-        else if let Some(rest) = line.strip_prefix("solarGainsKwh=") { solar_gains_kwh = Some(rest.parse::<f64>().map_err(|e| e.to_string())?); }
-        else if let Some(rest) = line.strip_prefix("systemLossesKwh=") { system_losses_kwh = Some(rest.parse::<f64>().map_err(|e| e.to_string())?); }
-        else if let Some(rest) = line.strip_prefix("renewableKwh=") { renewable_kwh = Some(rest.parse::<f64>().map_err(|e| e.to_string())?); }
-        else if let Some(rest) = line.strip_prefix("annualLimitKwh=") { annual_limit_kwh = Some(rest.parse::<f64>().map_err(|e| e.to_string())?); }
-        else if let Some(rest) = line.strip_prefix("energyCarrier=") { energy_carrier = Some(dec_str(rest)?); }
-        else if let Some(rest) = line.strip_prefix("referenceQPKwh=") { reference_q_p_kwh = Some(rest.parse::<f64>().map_err(|e| e.to_string())?); }
-        else { return Err(format!("din18599 snapshot: unknown line {line:?}")); }
+        if line.is_empty() {
+            continue;
+        }
+        if let Some(rest) = line.strip_prefix("useClass=") {
+            use_class = Some(dec_use_class(rest)?);
+        } else if let Some(rest) = line.strip_prefix("heatedAreaM2=") {
+            heated_area_m2 = Some(rest.parse::<f64>().map_err(|e| e.to_string())?);
+        } else if let Some(rest) = line.strip_prefix("occupants=") {
+            occupants = Some(rest.parse::<u32>().map_err(|e| e.to_string())?);
+        } else if let Some(rest) = line.strip_prefix("hT=") {
+            h_t = Some(rest.parse::<f64>().map_err(|e| e.to_string())?);
+        } else if let Some(rest) = line.strip_prefix("hV=") {
+            h_v = Some(rest.parse::<f64>().map_err(|e| e.to_string())?);
+        } else if let Some(rest) = line.strip_prefix("climate=") {
+            climate = Some(dec_child(rest)?);
+        } else if let Some(rest) = line.strip_prefix("internalGainsWM2=") {
+            internal_gains_w_m2 = Some(rest.parse::<f64>().map_err(|e| e.to_string())?);
+        } else if let Some(rest) = line.strip_prefix("solarGainsKwh=") {
+            solar_gains_kwh = Some(rest.parse::<f64>().map_err(|e| e.to_string())?);
+        } else if let Some(rest) = line.strip_prefix("systemLossesKwh=") {
+            system_losses_kwh = Some(rest.parse::<f64>().map_err(|e| e.to_string())?);
+        } else if let Some(rest) = line.strip_prefix("renewableKwh=") {
+            renewable_kwh = Some(rest.parse::<f64>().map_err(|e| e.to_string())?);
+        } else if let Some(rest) = line.strip_prefix("annualLimitKwh=") {
+            annual_limit_kwh = Some(rest.parse::<f64>().map_err(|e| e.to_string())?);
+        } else if let Some(rest) = line.strip_prefix("energyCarrier=") {
+            energy_carrier = Some(dec_str(rest)?);
+        } else if let Some(rest) = line.strip_prefix("referenceQPKwh=") {
+            reference_q_p_kwh = Some(rest.parse::<f64>().map_err(|e| e.to_string())?);
+        } else {
+            return Err(format!("din18599 snapshot: unknown line {line:?}"));
+        }
     }
     Ok(Din18599Snapshot {
         use_class: use_class.ok_or_else(|| "din18599 snapshot: missing useClass line".to_string())?,
@@ -140,11 +191,22 @@ fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> 
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-fn write_str_lp(out: &mut Vec<u8>, s: &str) { write_bytes_lp(out, s.as_bytes()); }
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> { String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string()) }
-fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) { write_str_lp(out, &r.to_uri()); }
-fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?) }
-fn write_child(out: &mut Vec<u8>, c: &Din18599ClimateChild) { write_str_lp(out, &c.child_id); write_ref(out, &c.target); }
+fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    write_bytes_lp(out, s.as_bytes());
+}
+fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+}
+fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
+    write_str_lp(out, &r.to_uri());
+}
+fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
+    store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
+}
+fn write_child(out: &mut Vec<u8>, c: &Din18599ClimateChild) {
+    write_str_lp(out, &c.child_id);
+    write_ref(out, &c.target);
+}
 fn read_child(reader: &mut store::ByteReader<'_>) -> Result<Din18599ClimateChild, String> {
     let child_id = read_str_lp(reader)?;
     let target = read_ref(reader)?;
@@ -173,7 +235,9 @@ fn decode_din18599_snapshot_binary(bytes: &[u8]) -> Result<Din18599Snapshot, Str
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
-    if format != PACK_BINARY_FORMAT { return Err(format!("unsupported pack format {format}")); }
+    if format != PACK_BINARY_FORMAT {
+        return Err(format!("unsupported pack format {format}"));
+    }
     fn read_f64(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
         Ok(f64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "short f64".to_string())?))
     }
@@ -206,7 +270,9 @@ fn decode_din18599_snapshot_binary(bytes: &[u8]) -> Result<Din18599Snapshot, Str
 /// keep `impl_norm_artifact_record!` unchanged.
 impl store::ArtifactDsl for Din18599Snapshot {
     const EXTENSION: &'static str = "din18599";
-    fn envelope_id() -> &'static str { "norm.din18599" }
+    fn envelope_id() -> &'static str {
+        "norm.din18599"
+    }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,

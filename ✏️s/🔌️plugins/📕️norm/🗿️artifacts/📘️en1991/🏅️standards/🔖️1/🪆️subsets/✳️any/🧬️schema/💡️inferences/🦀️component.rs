@@ -86,13 +86,13 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
+use crate::artifacts::en1990::standards::v1::subsets::any::schema::{NaDe, NaEn};
+use crate::artifacts::en1991::standards::v1::subsets::any::schema::{part_1_1, part_1_2, part_1_3, part_1_4, part_1_5, part_1_6, part_1_7, part_2, part_3, part_4};
 /// 📋️ Full EN 1991 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1991Snapshot -> CheckReport` projection; everything it composes
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, ImposedCategory, NationalAnnex, Quantity};
-use crate::artifacts::en1990::standards::v1::subsets::any::schema::{NaDe, NaEn};
-use crate::artifacts::en1991::standards::v1::subsets::any::schema::{part_1_1, part_1_2, part_1_3, part_1_4, part_1_5, part_1_6, part_1_7, part_2, part_3, part_4};
 
 /// 📋️ Aggregate action checks for a typical floor bay.
 pub fn check_floor_actions(area_m2: f64, category: ImposedCategory, wind_zone_vb: f64, snow_zone: u8, use_de_na: bool) -> CheckReport {

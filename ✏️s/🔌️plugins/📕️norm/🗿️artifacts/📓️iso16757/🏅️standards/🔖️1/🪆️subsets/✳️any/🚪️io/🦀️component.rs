@@ -5,14 +5,18 @@
 //! records), not a flat row/column table, so no honest whole-artifact CSV round-trip exists to
 //! re-register in their place. Registration flows through 🎹️composer::register (called once from
 //! ⚙️engine::register) for the native `s.iso16757` dialect only.
-pub fn import_stdio_kinds() -> &'static [&'static str] { &[] }
-pub fn export_stdio_kinds() -> &'static [&'static str] { &[] }
+pub fn import_stdio_kinds() -> &'static [&'static str] {
+    &[]
+}
+pub fn export_stdio_kinds() -> &'static [&'static str] {
+    &[]
+}
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::iso16757::Iso16757Snapshot;
     use crate::artifacts::iso16757::standards::v1::subsets::any::schema::Iso16757Analyzer;
+    use crate::artifacts::iso16757::Iso16757Snapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.iso16757", standard: StandardId("1"), subset: SubsetId("*") };
 
@@ -73,16 +77,14 @@ pub mod io {
 /// 🚪️ Composer registry — relocated verbatim from the deleted `⚙️engine`; io is exactly where
 /// composer dispatch belongs.
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::iso16757::standards::v1::subsets::any::schema::Iso16757Composer as Iso16757AnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![
-            composer_entry_of::<Iso16757AnyComposer>(),
-        ]).as_slice()
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<Iso16757AnyComposer>()]).as_slice()
     }
 }
 //#endregion 🚪️IoRegistry
@@ -109,4 +111,3 @@ mod json_serializers_tests {
     }
 }
 //#endregion 🧪️JsonSerializersTests
-

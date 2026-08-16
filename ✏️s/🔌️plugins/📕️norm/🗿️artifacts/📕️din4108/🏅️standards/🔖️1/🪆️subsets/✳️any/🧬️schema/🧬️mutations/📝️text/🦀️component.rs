@@ -10,13 +10,12 @@
 pub use crate::artifacts::din4108::schema::mutations::Din4108Mutation;
 
 use crate::artifacts::din4108::schema::mutations::{
-    change_airtightness_class::mutation::ChangeAirtightnessClass, change_airtightness_n50::mutation::ChangeAirtightnessN50, change_application_type::mutation::ChangeApplicationType,
-    change_bb2_details_conform::mutation::ChangeBb2DetailsConform, change_catalog_id::mutation::ChangeCatalogId, change_category::mutation::ChangeCategory, change_climate::mutation::ChangeClimate,
-    change_declared_application_class::mutation::ChangeDeclaredApplicationClass, change_envelope_area_m2::mutation::ChangeEnvelopeAreaM2, change_irradiance_w_m2::mutation::ChangeIrradianceWM2,
-    change_layer_lambda::mutation::ChangeLayerLambda, change_layer_thickness::mutation::ChangeLayerThickness, change_material_id::mutation::ChangeMaterialId,
-    change_moisture_mu_exterior::mutation::ChangeMoistureMuExterior, change_moisture_mu_interior::mutation::ChangeMoistureMuInterior, change_psi_times_l_sum::mutation::ChangePsiTimesLSum,
-    change_rh_int::mutation::ChangeRhInt, change_solar_absorptance::mutation::ChangeSolarAbsorptance, change_t_int_c::mutation::ChangeTIntC, insert_layer::mutation::InsertLayer,
-    remove_layer::mutation::RemoveLayer, reorder_layers::mutation::ReorderLayers,
+    change_airtightness_class::mutation::ChangeAirtightnessClass, change_airtightness_n50::mutation::ChangeAirtightnessN50, change_application_type::mutation::ChangeApplicationType, change_bb2_details_conform::mutation::ChangeBb2DetailsConform,
+    change_catalog_id::mutation::ChangeCatalogId, change_category::mutation::ChangeCategory, change_climate::mutation::ChangeClimate, change_declared_application_class::mutation::ChangeDeclaredApplicationClass,
+    change_envelope_area_m2::mutation::ChangeEnvelopeAreaM2, change_irradiance_w_m2::mutation::ChangeIrradianceWM2, change_layer_lambda::mutation::ChangeLayerLambda, change_layer_thickness::mutation::ChangeLayerThickness,
+    change_material_id::mutation::ChangeMaterialId, change_moisture_mu_exterior::mutation::ChangeMoistureMuExterior, change_moisture_mu_interior::mutation::ChangeMoistureMuInterior, change_psi_times_l_sum::mutation::ChangePsiTimesLSum,
+    change_rh_int::mutation::ChangeRhInt, change_solar_absorptance::mutation::ChangeSolarAbsorptance, change_t_int_c::mutation::ChangeTIntC, insert_layer::mutation::InsertLayer, remove_layer::mutation::RemoveLayer,
+    reorder_layers::mutation::ReorderLayers,
 };
 
 //#region 📖️SemioGrammar
@@ -93,10 +92,7 @@ fn tokenize_args(rest: &str) -> Vec<String> {
     tokens
 }
 fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
-    tokenize_args(rest)
-        .into_iter()
-        .map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}")))
-        .collect()
+    tokenize_args(rest).into_iter().map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}"))).collect()
 }
 //#endregion 🔖️Tokenizer
 
@@ -149,9 +145,7 @@ fn parse_din4108_mutation(line: &str) -> Result<Din4108Mutation, String> {
         "change-envelope-area-m2" => Ok(Din4108Mutation::ChangeEnvelopeAreaM2(ChangeEnvelopeAreaM2 { new_envelope_area_m2: dec_json(&arg("new-envelope-area-m2")?)? })),
         "change-bb2-details-conform" => Ok(Din4108Mutation::ChangeBb2DetailsConform(ChangeBb2DetailsConform { new_bb2_details_conform: dec_json(&arg("new-bb2-details-conform")?)? })),
         "change-application-type" => Ok(Din4108Mutation::ChangeApplicationType(ChangeApplicationType { new_application_type: dec_json(&arg("new-application-type")?)? })),
-        "change-declared-application-class" => {
-            Ok(Din4108Mutation::ChangeDeclaredApplicationClass(ChangeDeclaredApplicationClass { new_declared_application_class: dec_json(&arg("new-declared-application-class")?)? }))
-        }
+        "change-declared-application-class" => Ok(Din4108Mutation::ChangeDeclaredApplicationClass(ChangeDeclaredApplicationClass { new_declared_application_class: dec_json(&arg("new-declared-application-class")?)? })),
         "insert-layer" => Ok(Din4108Mutation::InsertLayer(InsertLayer { index: dec_json(&arg("index")?)?, layer: dec_json(&arg("layer")?)? })),
         "remove-layer" => Ok(Din4108Mutation::RemoveLayer(RemoveLayer { index: dec_json(&arg("index")?)? })),
         "reorder-layers" => Ok(Din4108Mutation::ReorderLayers(ReorderLayers { from: dec_json(&arg("from")?)?, to: dec_json(&arg("to")?)? })),

@@ -11,9 +11,6 @@ pub fn inverse(payload: &DeleteProductGroup, base: &Iso16757Snapshot) -> Vec<Iso
     let Some(position) = base.catalogue.product_groups.iter().position(|group| group.id == payload.id) else {
         return Vec::new();
     };
-    vec![Iso16757Mutation::CreateProductGroup(create_product_group::mutation::CreateProductGroup {
-        product_group: base.catalogue.product_groups[position].clone(),
-        index: Some(position),
-    })]
+    vec![Iso16757Mutation::CreateProductGroup(create_product_group::mutation::CreateProductGroup { product_group: base.catalogue.product_groups[position].clone(), index: Some(position) })]
 }
 //#endregion 🔖️Inverse

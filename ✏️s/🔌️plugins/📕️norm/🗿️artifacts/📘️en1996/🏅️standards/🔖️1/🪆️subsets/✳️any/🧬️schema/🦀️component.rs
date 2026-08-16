@@ -1,8 +1,8 @@
 //! 🧱️ EN 1996 artifact schema — every field with its state class.
 
-use crate::artifacts::en1996::MasonryClass;
-use crate::document::{AnnexChoice, DesignSituation, CheckReport, CheckResult, CheckStatus, Quantity, ClauseId};
 use crate::artifacts::en1996::En1996Snapshot;
+use crate::artifacts::en1996::MasonryClass;
+use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, Quantity};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -12,29 +12,52 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1996")]
 pub struct En1996Artifact {
-    #[state(artifact)] pub m_ed_knm: f64,
-    #[state(artifact)] pub n_ed_kn: f64,
-    #[state(artifact)] pub v_ed_kn: f64,
-    #[state(artifact)] pub h_ed_kn: f64,
-    #[state(artifact)] pub z_mm3: f64,
-    #[state(artifact)] pub area_mm2: f64,
-    #[state(artifact)] pub shear_area_mm2: f64,
-    #[state(artifact)] pub f_k_mpa: f64,
-    #[state(artifact)] pub f_vk_mpa: f64,
-    #[state(artifact)] pub annex: crate::document::AnnexChoice,
-    #[state(artifact)] pub masonry_class: crate::artifacts::en1996::MasonryClass,
-    #[state(artifact)] pub design_situation: crate::document::DesignSituation,
-    #[state(artifact)] pub mu: f64,
-    #[state(artifact)] pub wall_thickness_mm: f64,
-    #[state(artifact)] pub fire_resistance_min: u32,
-    #[state(artifact)] pub unit: String,
-    #[state(artifact)] pub exposure: crate::artifacts::en1996::part_2::ExposureClass,
-    #[state(artifact)] pub mortar: crate::artifacts::en1996::part_2::MortarClass,
-    #[state(artifact)] pub bed_joint_thickness_mm: f64,
-    #[state(artifact)] pub storeys: u32,
-    #[state(artifact)] pub h_ef_mm: f64,
-    #[state(artifact)] pub t_ef_mm: f64,
-    #[state(presence)] pub selected_check_index: Option<u32>,
+    #[state(artifact)]
+    pub m_ed_knm: f64,
+    #[state(artifact)]
+    pub n_ed_kn: f64,
+    #[state(artifact)]
+    pub v_ed_kn: f64,
+    #[state(artifact)]
+    pub h_ed_kn: f64,
+    #[state(artifact)]
+    pub z_mm3: f64,
+    #[state(artifact)]
+    pub area_mm2: f64,
+    #[state(artifact)]
+    pub shear_area_mm2: f64,
+    #[state(artifact)]
+    pub f_k_mpa: f64,
+    #[state(artifact)]
+    pub f_vk_mpa: f64,
+    #[state(artifact)]
+    pub annex: crate::document::AnnexChoice,
+    #[state(artifact)]
+    pub masonry_class: crate::artifacts::en1996::MasonryClass,
+    #[state(artifact)]
+    pub design_situation: crate::document::DesignSituation,
+    #[state(artifact)]
+    pub mu: f64,
+    #[state(artifact)]
+    pub wall_thickness_mm: f64,
+    #[state(artifact)]
+    pub fire_resistance_min: u32,
+    #[state(artifact)]
+    pub unit: String,
+    #[state(artifact)]
+    pub exposure: crate::artifacts::en1996::part_2::ExposureClass,
+    #[state(artifact)]
+    pub mortar: crate::artifacts::en1996::part_2::MortarClass,
+    #[state(artifact)]
+    pub bed_joint_thickness_mm: f64,
+    #[state(artifact)]
+    pub storeys: u32,
+    #[state(artifact)]
+    pub h_ef_mm: f64,
+    #[state(artifact)]
+    pub t_ef_mm: f64,
+    #[state(presence)]
+    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -171,8 +194,8 @@ pub fn en1996_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::en1996::{En1996Diff, En1996Mutation, En1996Snapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct En1996BuilderConstruction {
@@ -184,8 +207,12 @@ pub mod derived_construction {
         type Snapshot = En1996Snapshot;
         type Mutation = En1996Mutation;
         type Diff = En1996Diff;
-        fn empty() -> Self { Self { snapshot: En1996Snapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn empty() -> Self {
+            Self { snapshot: En1996Snapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<En1996Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -202,7 +229,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -211,8 +242,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::en1996::En1996Snapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct En1996Parts {
@@ -353,7 +384,13 @@ pub mod part_1_1 {
     }
 
     pub fn check_flexure(m_ed: f64, m_rd: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 1996-1-1", "§6.2", "6.2"), Quantity::new(crate::document::QuantityKind::Moment, m_ed * 1_000_000.0), Quantity::new(crate::document::QuantityKind::Moment, m_rd * 1_000_000.0), "masonry flexure ULS", annex)
+        CheckResult::from_utilization(
+            ClauseId::new("EN 1996-1-1", "§6.2", "6.2"),
+            Quantity::new(crate::document::QuantityKind::Moment, m_ed * 1_000_000.0),
+            Quantity::new(crate::document::QuantityKind::Moment, m_rd * 1_000_000.0),
+            "masonry flexure ULS",
+            annex,
+        )
     }
 
     pub fn check_compression(sigma_ed_mpa: f64, f_d_mpa: f64, annex: AnnexChoice) -> CheckResult {
@@ -585,4 +622,3 @@ mod compliance_helpers_tests {
     }
 }
 //#endregion 🧪️ComplianceHelpersTests
-

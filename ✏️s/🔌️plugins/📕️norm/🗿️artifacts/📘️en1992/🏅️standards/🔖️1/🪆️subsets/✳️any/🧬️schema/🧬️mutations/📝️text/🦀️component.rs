@@ -9,43 +9,17 @@
 
 pub use crate::artifacts::en1992::schema::mutations::En1992Mutation;
 
-use crate::artifacts::en1992::schema::mutations::{
-    change_a_c_mm2::mutation::ChangeACMm2,
-    change_a_s_mm2::mutation::ChangeASMm2,
-    change_anchor_a_s_mm2::mutation::ChangeAnchorASMm2,
-    change_anchor_c1_mm::mutation::ChangeAnchorC1Mm,
-    change_anchor_cracked::mutation::ChangeAnchorCracked,
-    change_anchor_d_mm::mutation::ChangeAnchorDMm,
-    change_anchor_f_uk_mpa::mutation::ChangeAnchorFUkMpa,
-    change_anchor_f_yk_mpa::mutation::ChangeAnchorFYkMpa,
-    change_anchor_h_ef_mm::mutation::ChangeAnchorHEfMm,
-    change_anchor_n_ed_kn::mutation::ChangeAnchorNEdKn,
-    change_anchor_v_ed_kn::mutation::ChangeAnchorVEdKn,
-    change_b_mm::mutation::ChangeBMm,
-    change_bridge_delta_sigma_s_mpa::mutation::ChangeBridgeDeltaSigmaSMpa,
-    change_bridge_sigma_c_mpa::mutation::ChangeBridgeSigmaCMpa,
-    change_d_mm::mutation::ChangeDMm,
-    change_f_ck::mutation::ChangeFCk,
-    change_f_yk::mutation::ChangeFYk,
-    change_fire_rating::mutation::ChangeFireRating,
-    change_hd_over_h::mutation::ChangeHdOverH,
-    change_liquid_e_s_mpa::mutation::ChangeLiquidESMpa,
-    change_liquid_f_ct_eff_mpa::mutation::ChangeLiquidFCtEffMpa,
-    change_liquid_rho_p_eff::mutation::ChangeLiquidRhoPEff,
-    change_liquid_s_r_max_mm::mutation::ChangeLiquidSRMaxMm,
-    change_liquid_sigma_s_mpa::mutation::ChangeLiquidSigmaSMpa,
-    change_m_ed_knm::mutation::ChangeMEdKnm,
-    change_n_ed_kn::mutation::ChangeNEdKn,
-    change_p_kn::mutation::ChangePKn,
-    change_provided_axis_distance_mm::mutation::ChangeProvidedAxisDistanceMm,
-    change_rho_l::mutation::ChangeRhoL,
-    change_span_m::mutation::ChangeSpanM,
-    change_tightness_class::mutation::ChangeTightnessClass,
-    change_udl_kn_m::mutation::ChangeUdlKnM,
-    change_use_fem::mutation::ChangeUseFem,
-    change_v_ed_kn::mutation::ChangeVEdKn,
-};
 use crate::artifacts::en1992::schema::mutations::set_snapshot::mutation::ChangeAnnex;
+use crate::artifacts::en1992::schema::mutations::{
+    change_a_c_mm2::mutation::ChangeACMm2, change_a_s_mm2::mutation::ChangeASMm2, change_anchor_a_s_mm2::mutation::ChangeAnchorASMm2, change_anchor_c1_mm::mutation::ChangeAnchorC1Mm, change_anchor_cracked::mutation::ChangeAnchorCracked,
+    change_anchor_d_mm::mutation::ChangeAnchorDMm, change_anchor_f_uk_mpa::mutation::ChangeAnchorFUkMpa, change_anchor_f_yk_mpa::mutation::ChangeAnchorFYkMpa, change_anchor_h_ef_mm::mutation::ChangeAnchorHEfMm,
+    change_anchor_n_ed_kn::mutation::ChangeAnchorNEdKn, change_anchor_v_ed_kn::mutation::ChangeAnchorVEdKn, change_b_mm::mutation::ChangeBMm, change_bridge_delta_sigma_s_mpa::mutation::ChangeBridgeDeltaSigmaSMpa,
+    change_bridge_sigma_c_mpa::mutation::ChangeBridgeSigmaCMpa, change_d_mm::mutation::ChangeDMm, change_f_ck::mutation::ChangeFCk, change_f_yk::mutation::ChangeFYk, change_fire_rating::mutation::ChangeFireRating,
+    change_hd_over_h::mutation::ChangeHdOverH, change_liquid_e_s_mpa::mutation::ChangeLiquidESMpa, change_liquid_f_ct_eff_mpa::mutation::ChangeLiquidFCtEffMpa, change_liquid_rho_p_eff::mutation::ChangeLiquidRhoPEff,
+    change_liquid_s_r_max_mm::mutation::ChangeLiquidSRMaxMm, change_liquid_sigma_s_mpa::mutation::ChangeLiquidSigmaSMpa, change_m_ed_knm::mutation::ChangeMEdKnm, change_n_ed_kn::mutation::ChangeNEdKn, change_p_kn::mutation::ChangePKn,
+    change_provided_axis_distance_mm::mutation::ChangeProvidedAxisDistanceMm, change_rho_l::mutation::ChangeRhoL, change_span_m::mutation::ChangeSpanM, change_tightness_class::mutation::ChangeTightnessClass, change_udl_kn_m::mutation::ChangeUdlKnM,
+    change_use_fem::mutation::ChangeUseFem, change_v_ed_kn::mutation::ChangeVEdKn,
+};
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
@@ -123,10 +97,7 @@ fn tokenize_args(rest: &str) -> Vec<String> {
     tokens
 }
 fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
-    tokenize_args(rest)
-        .into_iter()
-        .map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}")))
-        .collect()
+    tokenize_args(rest).into_iter().map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}"))).collect()
 }
 //#endregion 🔖️Tokenizer
 

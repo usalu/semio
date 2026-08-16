@@ -86,6 +86,8 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
+use crate::artifacts::vdi3805::standards::v1::subsets::any::io::{catalog_from_json, catalog_to_json};
+use crate::artifacts::vdi3805::standards::v1::subsets::any::schema::{clause, diagnostics_to_report, fail_check, na_check, parse_native_text, pass_check, serialize_native_text, validate_structure, ANNEX};
 /// 📋️ Full VDI 3805 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. Unlike the Eurocode artifacts, every `part_N::check` here takes the whole
@@ -95,8 +97,6 @@ mod tests {
 /// from the parent `🧬️schema`; the JSON (de)serializers come from `🚪️io`.
 use crate::artifacts::vdi3805::*;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, NormError, Quantity, QuantityKind};
-use crate::artifacts::vdi3805::standards::v1::subsets::any::schema::{clause, diagnostics_to_report, fail_check, na_check, pass_check, validate_structure, parse_native_text, serialize_native_text, ANNEX};
-use crate::artifacts::vdi3805::standards::v1::subsets::any::io::{catalog_from_json, catalog_to_json};
 
 // #region SheetParts
 macro_rules! define_vdi_part {
@@ -553,4 +553,3 @@ mod compliance_report_tests {
     }
 }
 //#endregion 🧪️ComplianceReportTests
-

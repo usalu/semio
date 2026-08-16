@@ -248,7 +248,9 @@ thread_local! {
 }
 
 pub fn stash_raster_asset(child_id: &str, image: SemioImageSnapshot) {
-    RASTER_SCRATCH.with(|cache| { cache.borrow_mut().insert(child_id.to_string(), image); });
+    RASTER_SCRATCH.with(|cache| {
+        cache.borrow_mut().insert(child_id.to_string(), image);
+    });
 }
 
 pub fn cached_raster_asset(child_id: &str) -> Option<SemioImageSnapshot> {
@@ -309,9 +311,9 @@ pub struct RasterLayerPatch {
 }
 //#endregion 🔖️Operations
 
-pub use crate::artifacts::raster::schema::snapshot::RasterSnapshot;
 pub use crate::artifacts::raster::schema::diff::RasterDiff;
 pub use crate::artifacts::raster::schema::mutations::RasterMutation;
+pub use crate::artifacts::raster::schema::snapshot::RasterSnapshot;
 
 //#region 🔖️ArtifactKind
 /// 🏷️ The `2d.raster` artifact kind — lifted out of `create_raster_app`'s `.artifact_kind(…)` call so
@@ -328,7 +330,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: RASTER_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.svg", "stdio.png"],
+        export_stdio_kinds: vec!["stdio.svg", "stdio.png"],
         import_stdio_kinds: vec!["stdio.svg", "stdio.png"],
     }
 }
@@ -348,14 +350,55 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// `io_registry::entries()` call below is now re-qualified onto `subsets::any::io::io_registry`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): the whole `⚙️engine` file this
 /// function moved out of has since been dissolved into `🧬️schema/`/`🚪️io/`/the app, per rule 5.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.raster")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.raster.standard.v1", "standard", "1", &[], None),
+        ("s.raster.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.raster.schema.artifact", "schema", "s.raster.raster", &[("schema", "s.raster.raster")], None),
+        ("s.raster.inference.artifact", "inference", "s.raster.raster.inference", &[("schema", "s.raster.raster.inference")], None),
+        ("s.raster.composer.native", "composer", "s.raster@1/*", &[("dialect", "s.raster@1/*")], None),
+        ("s.raster.composer.format-1", "composer", "s.stdio.gif@87a/*", &[("dialect", "s.stdio.gif@87a/*")], None),
+        ("s.raster.composer.format-2", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
+        ("s.raster.composer.format-3", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
+        ("s.raster.composer.format-4", "composer", "s.stdio.jpg@jfif-1.01/*", &[("dialect", "s.stdio.jpg@jfif-1.01/*")], None),
+        ("s.raster.composer.format-5", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.raster.composer.format-6", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.raster.composer.format-7", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
+        ("s.raster.composer.format-8", "composer", "s.stdio.bmp@v3/*", &[("dialect", "s.stdio.bmp@v3/*")], None),
+        ("s.raster.composer.format-9", "composer", "s.stdio.tiff@6.0/*", &[("dialect", "s.stdio.tiff@6.0/*")], None),
+        ("s.raster.grammar.1", "grammar", "raster.document", &[("grammar", "raster.document")], None),
+        ("s.raster.grammar.2", "grammar", "raster.op", &[("grammar", "raster.op")], None),
+        ("s.raster.grammar.3", "grammar", "raster.document.diff", &[("grammar", "raster.document.diff")], None),
+        ("s.raster.grammar.4", "grammar", "raster.pack", &[("grammar", "raster.pack")], None),
+        ("s.raster.grammar.5", "grammar", "raster.spr", &[("grammar", "raster.spr")], None),
+        ("s.raster.codec.document-1", "codec", "raster.document:raster", &[("codec", "raster.document"), ("extension", "raster")], None),
+        ("s.raster.localization.en", "localization", "Raster", &[], Some(("en", "Raster"))),
+        ("s.raster.localization.de", "localization", "Raster", &[], Some(("de", "Raster"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.raster")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::raster::schema::raster_artifact_schema_descriptor())
         .inferences([crate::artifacts::raster::schema::inferences::raster_artifact_inference_descriptor()])
         .composers(crate::artifacts::raster::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::raster::RasterPlayApp>()
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -435,9 +478,9 @@ mod tests {
 //#endregion 🧪️Tests
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::raster::standards::v1::subsets::any::io::io_registry as v1;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -446,10 +489,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("RasterComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("RasterComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

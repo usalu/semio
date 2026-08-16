@@ -191,14 +191,48 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// the plugin root's `register_gis_exports` fan-out. Relocated from `⚙️engine` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2): `declaration()` describes the artifact
 /// (kind, schema, io ports, ownership), which is not engine behaviour.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.gismap")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.gismap.schema.artifact", "schema", "s.gis.gismap", &[("schema", "s.gis.gismap")], None),
+        ("s.gismap.inference.artifact", "inference", "s.gis.gismap.inference", &[("schema", "s.gis.gismap.inference")], None),
+        ("s.gismap.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
+        ("s.gismap.composer.pdf", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
+        ("s.gismap.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.gismap.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.gismap.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
+        ("s.gismap.composer.dxf", "composer", "s.stdio.dxf@r12/*", &[("dialect", "s.stdio.dxf@r12/*")], None),
+        ("s.gismap.grammar.document", "grammar", "gis.gismap", &[("grammar", "gis.gismap")], None),
+        ("s.gismap.grammar.op", "grammar", "gis.gismap.op", &[("grammar", "gis.gismap.op")], None),
+        ("s.gismap.grammar.diff", "grammar", "gis.gismap.diff", &[("grammar", "gis.gismap.diff")], None),
+        ("s.gismap.grammar.pack", "grammar", "gismap.pack", &[("grammar", "gismap.pack")], None),
+        ("s.gismap.grammar.spr", "grammar", "gismap.spr", &[("grammar", "gismap.spr")], None),
+        ("s.gismap.codec.document", "codec", "gis.map:gismap", &[("codec", "gis.map"), ("extension", "gismap")], None),
+        ("s.gismap.localization.en", "localization", "GIS Map", &[], Some(("en", "GIS Map"))),
+        ("s.gismap.localization.de", "localization", "GIS Karte", &[], Some(("de", "GIS Karte"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.gismap")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::gismap::schema::gismap_artifact_schema_descriptor())
         .inferences([crate::artifacts::gismap::standards::v1::subsets::any::schema::inferences::gismap_artifact_inference_descriptor()])
         .composers(crate::artifacts::gismap::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::gis2d::Gis2dPlayApp>()
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once

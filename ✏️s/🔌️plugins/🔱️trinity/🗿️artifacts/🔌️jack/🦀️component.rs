@@ -9,9 +9,8 @@
 //! is NOT graph-shaped in the `SemioGraphSnapshot` sense (that subset is an INSTANCE graph: nodes with
 //! position/ports/properties, edges with source/target) and stays an ordinary inline field, unchanged.
 
-
-pub use crate::artifacts::jack::schema::mutations::TrinityGraphMutation;
 pub use crate::artifacts::jack::schema::diff::JackDiff;
+pub use crate::artifacts::jack::schema::mutations::TrinityGraphMutation;
 
 use graph::manifest::{manifest_by_id, GraphManifest, ManifestValidationError, TrinityManifest};
 use serde::{Deserialize, Serialize};
@@ -90,11 +89,10 @@ impl From<ManifestValidationError> for TrinityRamError {
 /// instance data now lives in this composed child's own `nodes`/`edges`, not on `JackSnapshot`.
 pub type JackContentChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot>;
 
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{
-    GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind, SemioGraphSnapshot,
-    STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,
-};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{
+    GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,
+};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
 
 /// 🏷️ `jack.node` is the honest string boundary carrying the FULL [`Node`] (id/kind/name/x/y/
@@ -333,9 +331,7 @@ impl Default for Camera {
 pub use super::snapshot::schema::JackSnapshot;
 
 impl JackSnapshot {
-
-
-pub const SCHEMA: &'static str = "trinity.graph";
+    pub const SCHEMA: &'static str = "trinity.graph";
 
     pub fn validate_schema(&self) -> Result<(), TrinityRamError> {
         if self.schema != Self::SCHEMA {
@@ -526,7 +522,6 @@ impl Graph {
         }
         Ok(())
     }
-
 }
 
 /// 🛡️ Validates trinity fixture instances against a compile-time graph manifest.
@@ -603,7 +598,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "trinity.graph".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md", "stdio.png", "stdio.svg"],
+        export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md", "stdio.png", "stdio.svg"],
         import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md", "stdio.png", "stdio.svg"],
     }
 }
@@ -679,14 +674,51 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// one exception, kept alive via the plugin root's own narrowed `.setup()`: it registers the
 /// `TrinityJackPlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration`
 /// deliberately has no field for (see that struct's own doc).
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.jack")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.jack.standard.v1", "standard", "1", &[], None),
+        ("s.jack.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.jack.schema.artifact", "schema", "s.trinity.jack", &[("schema", "s.trinity.jack")], None),
+        ("s.jack.inference.artifact", "inference", "s.trinity.jack.inference", &[("schema", "s.trinity.jack.inference")], None),
+        ("s.jack.composer.native", "composer", "s.jack@1/*", &[("dialect", "s.jack@1/*")], None),
+        ("s.jack.composer.format-1", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
+        ("s.jack.composer.format-2", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
+        ("s.jack.composer.format-3", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
+        ("s.jack.composer.format-4", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.jack.composer.format-5", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.jack.grammar.1", "grammar", "jack.document", &[("grammar", "jack.document")], None),
+        ("s.jack.grammar.2", "grammar", "jack.op", &[("grammar", "jack.op")], None),
+        ("s.jack.grammar.3", "grammar", "jack.diff", &[("grammar", "jack.diff")], None),
+        ("s.jack.grammar.4", "grammar", "jack.pack", &[("grammar", "jack.pack")], None),
+        ("s.jack.grammar.5", "grammar", "jack.spr", &[("grammar", "jack.spr")], None),
+        ("s.jack.codec.document-1", "codec", "trinity.graph:jack", &[("codec", "trinity.graph"), ("extension", "jack")], None),
+        ("s.jack.localization.en", "localization", "Jack", &[], Some(("en", "Jack"))),
+        ("s.jack.localization.de", "localization", "Buchse", &[], Some(("de", "Buchse"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.jack")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::jack::schema::jack_artifact_schema_descriptor())
         .inferences([crate::artifacts::jack::standards::v1::subsets::any::schema::inferences::jack_artifact_inference_descriptor()])
         .composers(crate::artifacts::jack::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::jack::TrinityJackPlayApp>()
-        .build()
+        .try_build()
 }
 //#endregion 🔖️Register
 
@@ -788,7 +820,8 @@ mod tests {
     fn graph_op_create_node_and_undo() {
         let fixture = mini_fixture();
         let mut store = crate::artifacts::jack::op::TrinityGraphStore::new(crate::artifacts::jack::op::create_trinity_graph_envelope("test", fixture));
-        dispatch_trinity_graph_mutations(&mut store, vec![create_node(Node { id: "new".into(), kind: "Piece".into(), name: "new-piece".into(), x: 200.0, y: 40.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] })]).expect("create");
+        dispatch_trinity_graph_mutations(&mut store, vec![create_node(Node { id: "new".into(), kind: "Piece".into(), name: "new-piece".into(), x: 200.0, y: 40.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] })])
+            .expect("create");
         assert_eq!(store.snapshot().expect("projection").nodes().len(), 3);
         store.dispatch(ArtifactCommand::Undo).expect("undo");
         assert_eq!(store.snapshot().expect("projection").nodes().len(), 2);
@@ -840,7 +873,8 @@ mod tests {
     #[test]
     fn graph_op_rejects_unknown_node_kind() {
         let fixture = mini_fixture();
-        let err = validate_trinity_graph_operation(&create_node(Node { id: "new".into(), kind: "Piece2".into(), name: "x".into(), x: 0.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] }), &fixture).expect_err("unknown kind");
+        let err = validate_trinity_graph_operation(&create_node(Node { id: "new".into(), kind: "Piece2".into(), name: "x".into(), x: 0.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] }), &fixture)
+            .expect_err("unknown kind");
         assert!(err.to_string().contains("unknown node kind"));
     }
 
@@ -961,9 +995,9 @@ mod tests {
 // #endregion 🧪️Tests
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::jack::standards::v1::subsets::any::io::io_registry as v1;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -972,10 +1006,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("JackComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("JackComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

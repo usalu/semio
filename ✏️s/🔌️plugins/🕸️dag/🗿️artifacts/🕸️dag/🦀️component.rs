@@ -14,20 +14,17 @@ use serde::{Deserialize, Serialize};
 pub const DAG_DOCUMENT_SCHEMA: &str = "dag.dag";
 
 pub use crate::artifacts::dag::snapshot::schema::{default_snapshot, DagSnapshot};
-pub use infinite_board_port_directed_dag::{
-    DagEdgePatch, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, IoPortSpec,
-};
+pub use infinite_board_port_directed_dag::{DagEdgePatch, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, IoPortSpec};
 
 //#region 🔖️ContentBridge
 /// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio.graph` document — the dag plugin's
 /// nodes/edges now live in this composed child's `nodes`/`edges` rather than inline on `DagSnapshot`.
 pub type DagContentChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot>;
 
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{
-    GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind, SemioGraphSnapshot,
-    STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,
-};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{
+    GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,
+};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
 
 /// 🏷️ `dag.node` is the honest string boundary carrying the FULL `DagNodeSpec` (every field this
@@ -41,12 +38,7 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schem
 const DAG_NODE_JSON_PROPERTY: &str = "dag.node";
 
 fn semio_node_from_dag_node(node: &DagNodeSpec) -> SemioGraphNode {
-    let ports = node
-        .inputs()
-        .iter()
-        .map(|port| SemioGraphPort { name: port.id.clone(), kind: SemioGraphPortKind::In })
-        .chain(node.outputs().iter().map(|port| SemioGraphPort { name: port.id.clone(), kind: SemioGraphPortKind::Out }))
-        .collect();
+    let ports = node.inputs().iter().map(|port| SemioGraphPort { name: port.id.clone(), kind: SemioGraphPortKind::In }).chain(node.outputs().iter().map(|port| SemioGraphPort { name: port.id.clone(), kind: SemioGraphPortKind::Out })).collect();
     SemioGraphNode {
         id: SemioGraphNodeId::new(node.id.clone()),
         kind: infinite_board_port_directed_dag::dag_node_kind_tag(&node.kind).to_string(),
@@ -83,13 +75,7 @@ fn dag_node_from_semio_node(node: &SemioGraphNode) -> DagNodeSpec {
 fn semio_edge_from_dag_edge(edge: &DagFixtureEdge) -> SemioGraphEdge {
     let (source_node, _) = split_endpoint(&edge.source);
     let (target_node, _) = split_endpoint(&edge.target);
-    SemioGraphEdge {
-        id: SemioGraphEdgeId::new(edge.id.clone()),
-        source: SemioGraphNodeId::new(source_node),
-        target: SemioGraphNodeId::new(target_node),
-        kind: "dag-edge".into(),
-        label: serde_json::to_string(edge).unwrap_or_default(),
-    }
+    SemioGraphEdge { id: SemioGraphEdgeId::new(edge.id.clone()), source: SemioGraphNodeId::new(source_node), target: SemioGraphNodeId::new(target_node), kind: "dag-edge".into(), label: serde_json::to_string(edge).unwrap_or_default() }
 }
 
 /// 🌉 Inverse of [`semio_edge_from_dag_edge`] — falls back to a bare node-id edge (no route
@@ -233,7 +219,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: DAG_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
@@ -249,14 +235,48 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// function set. Relocated from `⚙️engine` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
 /// reloc-g2): `declaration()` describes the artifact (kind, schema, io ports, ownership), which is not
 /// engine behaviour.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.dag")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.dag.standard.v1", "standard", "1", &[], None),
+        ("s.dag.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.dag.schema.artifact", "schema", "s.dag.dag", &[("schema", "s.dag.dag")], None),
+        ("s.dag.inference.artifact", "inference", "s.dag.dag.inference", &[("schema", "s.dag.dag.inference")], None),
+        ("s.dag.composer.native", "composer", "s.dag@1/*", &[("dialect", "s.dag@1/*")], None),
+        ("s.dag.composer.format-1", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
+        ("s.dag.composer.format-2", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.dag.grammar.1", "grammar", "dag.document", &[("grammar", "dag.document")], None),
+        ("s.dag.grammar.2", "grammar", "dag.op", &[("grammar", "dag.op")], None),
+        ("s.dag.grammar.3", "grammar", "dag.diff", &[("grammar", "dag.diff")], None),
+        ("s.dag.grammar.4", "grammar", "dag.pack", &[("grammar", "dag.pack")], None),
+        ("s.dag.grammar.5", "grammar", "dag.spr", &[("grammar", "dag.spr")], None),
+        ("s.dag.codec.document-1", "codec", "dag.dag:dag", &[("codec", "dag.dag"), ("extension", "dag")], None),
+        ("s.dag.localization.en", "localization", "DAG", &[], Some(("en", "DAG"))),
+        ("s.dag.localization.de", "localization", "Gerichteter azyklischer Graph", &[], Some(("de", "Gerichteter azyklischer Graph"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.dag")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::dag::schema::dag_artifact_schema_descriptor())
         .inferences([crate::artifacts::dag::standards::v1::subsets::any::schema::inferences::dag_artifact_inference_descriptor()])
         .composers(crate::artifacts::dag::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::dag::DagPlayApp>()
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -353,9 +373,9 @@ mod tests {
 //#endregion 🧪️Tests
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::dag::standards::v1::subsets::any::io::io_registry as v1;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -364,10 +384,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("DagComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("DagComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

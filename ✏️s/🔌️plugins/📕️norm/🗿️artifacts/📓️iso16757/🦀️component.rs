@@ -1,9 +1,8 @@
 //! 📦️ ISO 16757 building-services product catalogue: parts 1, 2, 4, 5 — document entities.
 
-
-pub use crate::artifacts::iso16757::schema::snapshot::Iso16757Snapshot;
-pub use crate::artifacts::iso16757::schema::mutations::Iso16757Mutation;
 pub use crate::artifacts::iso16757::schema::diff::Iso16757Diff;
+pub use crate::artifacts::iso16757::schema::mutations::Iso16757Mutation;
+pub use crate::artifacts::iso16757::schema::snapshot::Iso16757Snapshot;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
@@ -64,9 +63,7 @@ pub struct DimensionSignature {
 }
 
 impl DimensionSignature {
-
-
-pub const DIMENSIONLESS: Self = Self { length: 0, mass: 0, time: 0, temperature: 0 };
+    pub const DIMENSIONLESS: Self = Self { length: 0, mass: 0, time: 0, temperature: 0 };
     pub const LENGTH: Self = Self { length: 1, mass: 0, time: 0, temperature: 0 };
     pub const LENGTH_3: Self = Self { length: 3, mass: 0, time: 0, temperature: 0 };
 
@@ -801,7 +798,6 @@ pub mod part_5 {
 // #endregion Part5
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 
-
 // #region Session
 /// 🏷️ Canonical DSL file extension for ISO 16757 documents.
 pub const ISO16757_EXTENSION: &str = "iso16757";
@@ -989,9 +985,9 @@ mod tests {
 }
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::iso16757::standards::v1::subsets::any::io::io_registry as v1;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -1000,10 +996,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("Iso16757Composer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("Iso16757Composer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 
@@ -1018,13 +1011,40 @@ pub mod io_registry {
 /// the old side-effecting `register()`/`register_pilot_languages()`/`register_artifact_schema()`/
 /// `register_artifact_inferences()`/`register_io()`, each of which called a global registry directly
 /// from the plugin root's `.setup()` fan-out (`register_norm_exports`, deleted by this same wave).
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.iso16757")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use crate::artifacts::definition::{CapabilitySpec as C, ClaimSpec as Q, LocalizationSpec as L};
+    const S: &[Q] = &[Q { namespace: "schema", value: "s.norm.iso16757" }];
+    const I: &[Q] = &[Q { namespace: "schema", value: "s.norm.iso16757.inference" }];
+    const M: &[Q] = &[Q { namespace: "dialect", value: "s.iso16757@1/*" }];
+    const K: &[Q] = &[Q { namespace: "codec", value: "semio.norm.iso16757/v1" }, Q { namespace: "extension", value: "iso16757" }];
+    const EN: &[L] = &[L { locale: "en", text: "ISO 16757 building-services product catalogue exchange" }];
+    const DE: &[L] = &[L { locale: "de", text: "ISO 16757 Austausch von Produktdaten der technischen Gebäudeausrüstung" }];
+    const ROWS: &[C] = &[
+        C { identity: "s.iso16757.standard.v1", kind: "standard", descriptor: "v1", claims: &[], localizations: &[] },
+        C { identity: "s.iso16757.standard.v1.profile.any", kind: "profile", descriptor: "any", claims: &[], localizations: &[] },
+        C { identity: "s.iso16757.schema.artifact", kind: "schema", descriptor: "s.norm.iso16757", claims: S, localizations: &[] },
+        C { identity: "s.iso16757.inference.outline", kind: "inference", descriptor: "s.norm.iso16757.inference", claims: I, localizations: &[] },
+        C { identity: "s.iso16757.composer.any", kind: "composer", descriptor: "s.iso16757@1/*", claims: M, localizations: &[] },
+        C { identity: "s.iso16757.grammar.document", kind: "grammar", descriptor: "iso16757.document", claims: &[Q { namespace: "grammar", value: "iso16757.document" }], localizations: &[] },
+        C { identity: "s.iso16757.grammar.op", kind: "grammar", descriptor: "iso16757.op", claims: &[Q { namespace: "grammar", value: "iso16757.op" }], localizations: &[] },
+        C { identity: "s.iso16757.grammar.diff", kind: "grammar", descriptor: "iso16757.diff", claims: &[Q { namespace: "grammar", value: "iso16757.diff" }], localizations: &[] },
+        C { identity: "s.iso16757.grammar.pack", kind: "grammar", descriptor: "iso16757.pack", claims: &[Q { namespace: "grammar", value: "iso16757.pack" }], localizations: &[] },
+        C { identity: "s.iso16757.grammar.spr", kind: "grammar", descriptor: "iso16757.spr", claims: &[Q { namespace: "grammar", value: "iso16757.spr" }], localizations: &[] },
+        C { identity: "s.iso16757.codec.document.v1", kind: "codec", descriptor: "semio.norm.iso16757/v1:iso16757", claims: K, localizations: &[] },
+        C { identity: "s.iso16757.localization.en", kind: "localization", descriptor: "ISO 16757 building-services product catalogue exchange", claims: &[], localizations: EN },
+        C { identity: "s.iso16757.localization.de", kind: "localization", descriptor: "ISO 16757 Austausch von Produktdaten der technischen Gebäudeausrüstung", claims: &[], localizations: DE },
+    ];
+    crate::artifacts::definition::assemble_definition("s.iso16757", ROWS)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::iso16757::schema::iso16757_artifact_schema_descriptor())
         .inferences([crate::artifacts::iso16757::standards::v1::subsets::any::schema::inferences::iso16757_artifact_inference_descriptor()])
         .composers(crate::artifacts::iso16757::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .build()
+        .document_codec::<crate::apps::iso16757::Iso16757PlayApp>()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -1032,57 +1052,61 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
 /// `OnceLock`-backed `io_registry::entries()` convention below.
 fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
-    LANGUAGES.get_or_init(|| vec![
-        crate::dsl::LanguageSpec {
-            id: "iso16757.document",
-            extension: Some("iso16757"),
-            role: crate::dsl::LanguageRole::Document,
-            grammar: Some(crate::artifacts::en1999::dsl::COMPONENT_GRAMMAR_SEMIO),
-            grammar_path: Some(crate::artifacts::en1999::dsl::COMPONENT_GRAMMAR_PATH),
-            protocol: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-            protocol_path: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-            hooks: crate::dsl::passthrough_hooks("iso16757.document"),
-        },
-        crate::dsl::LanguageSpec {
-            id: "iso16757.op",
-            extension: None,
-            role: crate::dsl::LanguageRole::Ops,
-            grammar: Some(crate::artifacts::en1999::op::COMPONENT_GRAMMAR_SEMIO),
-            grammar_path: Some(crate::artifacts::en1999::op::COMPONENT_GRAMMAR_PATH),
-            protocol: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_SEMIO),
-            protocol_path: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_PATH),
-            hooks: crate::dsl::passthrough_hooks("iso16757.op"),
-        },
-        crate::dsl::LanguageSpec {
-            id: "iso16757.diff",
-            extension: None,
-            role: crate::dsl::LanguageRole::Diff,
-            grammar: Some(crate::artifacts::en1999::diff::COMPONENT_GRAMMAR_SEMIO),
-            grammar_path: Some(crate::artifacts::en1999::diff::COMPONENT_GRAMMAR_PATH),
-            protocol: None,
-            protocol_path: None,
-            hooks: crate::dsl::passthrough_hooks("iso16757.diff"),
-        },
-        crate::dsl::LanguageSpec {
-            id: "iso16757.pack",
-            extension: None,
-            role: crate::dsl::LanguageRole::Pack,
-            grammar: None,
-            grammar_path: None,
-            protocol: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-            protocol_path: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-            hooks: crate::dsl::passthrough_hooks("iso16757.pack"),
-        },
-        crate::dsl::LanguageSpec {
-            id: "iso16757.spr",
-            extension: None,
-            role: crate::dsl::LanguageRole::Spr,
-            grammar: None,
-            grammar_path: None,
-            protocol: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_SEMIO),
-            protocol_path: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_PATH),
-            hooks: crate::dsl::passthrough_hooks("iso16757.spr"),
-        },
-    ]).as_slice()
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                crate::dsl::LanguageSpec {
+                    id: "iso16757.document",
+                    extension: Some("iso16757"),
+                    role: crate::dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::en1999::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::en1999::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: crate::dsl::passthrough_hooks("iso16757.document"),
+                },
+                crate::dsl::LanguageSpec {
+                    id: "iso16757.op",
+                    extension: None,
+                    role: crate::dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::en1999::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::en1999::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: crate::dsl::passthrough_hooks("iso16757.op"),
+                },
+                crate::dsl::LanguageSpec {
+                    id: "iso16757.diff",
+                    extension: None,
+                    role: crate::dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::en1999::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::en1999::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: crate::dsl::passthrough_hooks("iso16757.diff"),
+                },
+                crate::dsl::LanguageSpec {
+                    id: "iso16757.pack",
+                    extension: None,
+                    role: crate::dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: crate::dsl::passthrough_hooks("iso16757.pack"),
+                },
+                crate::dsl::LanguageSpec {
+                    id: "iso16757.spr",
+                    extension: None,
+                    role: crate::dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: crate::dsl::passthrough_hooks("iso16757.spr"),
+                },
+            ]
+        })
+        .as_slice()
 }
 //#endregion 🪪️Declaration

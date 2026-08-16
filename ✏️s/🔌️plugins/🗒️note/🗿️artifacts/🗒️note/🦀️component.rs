@@ -18,14 +18,42 @@ use std::collections::{BTreeMap, HashMap};
 /// (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's artifact-scoped
 /// function set. Lives at the artifact root, not `⚙️engine` (reloc-g7 revision of that same ticket) —
 /// `declaration()` describes the artifact (kind/schema/io/ownership), it is not engine behaviour.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.note")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.note.standard.v1", "standard", "1", &[], None), ("s.note.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.note.schema.artifact", "schema", "s.note.note", &[("schema", "s.note.note")], None),
+        ("s.note.inference.artifact", "inference", "s.note.note.inference", &[("schema", "s.note.note.inference")], None),
+        ("s.note.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
+        ("s.note.composer.pdf", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
+        ("s.note.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.note.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.note.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
+        ("s.note.composer.dxf", "composer", "s.stdio.dxf@r12/*", &[("dialect", "s.stdio.dxf@r12/*")], None),
+        ("s.note.grammar.document", "grammar", "note.document", &[("grammar", "note.document")], None), ("s.note.grammar.op", "grammar", "note.op", &[("grammar", "note.op")], None),
+        ("s.note.grammar.diff", "grammar", "note.diff", &[("grammar", "note.diff")], None), ("s.note.grammar.pack", "grammar", "note.pack", &[("grammar", "note.pack")], None),
+        ("s.note.grammar.spr", "grammar", "note.spr", &[("grammar", "note.spr")], None),
+        ("s.note.codec.document.v1", "codec", "note.document:note", &[("codec", "note.document"), ("extension", "note")], None),
+        ("s.note.localization.en", "localization", "Note", &[], Some(("en", "Note"))), ("s.note.localization.de", "localization", "Notiz", &[], Some(("de", "Notiz"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.note")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims { capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?; }
+        if let Some((locale, text)) = localization { capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?; }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::note::schema::note_artifact_schema_descriptor())
         .inferences([crate::artifacts::note::schema::inferences::note_artifact_inference_descriptor()])
         .composers(crate::artifacts::note::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::note::NotePlayApp>()
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once

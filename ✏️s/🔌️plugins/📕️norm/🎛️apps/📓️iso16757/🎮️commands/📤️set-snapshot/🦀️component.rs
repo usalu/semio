@@ -8,7 +8,7 @@
 use crate::artifacts::iso16757::op::Iso16757Mutation;
 use crate::artifacts::iso16757::Iso16757Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
@@ -37,12 +37,7 @@ mod tests {
     fn handle_commits_the_payload_document_under_its_action_id() {
         let projection = Iso16757Snapshot::default();
         let config = NormConfig::default();
-        let emit = handle(
-            &ReplaceSnapshot { snapshot: Iso16757Snapshot::default() },
-            &ArtifactView::new(&projection, &HistoryView::empty()),
-            &ConfigView { snapshot: &config },
-        )
-        .expect("handle");
+        let emit = handle(&ReplaceSnapshot { snapshot: Iso16757Snapshot::default() }, &ArtifactView::new(&projection, &HistoryView::empty()), &ConfigView { snapshot: &config }).expect("handle");
         assert_eq!(emit.artifact_mutations, Iso16757Mutation::from_snapshot(&Iso16757Snapshot::default(), &Iso16757Snapshot::default()));
         assert_eq!(emit.description.as_deref(), Some("setSnapshot"));
         assert!(emit.config_mutations.is_empty());

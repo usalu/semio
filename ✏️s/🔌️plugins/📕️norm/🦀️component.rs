@@ -1,6 +1,6 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::{Plugin, PluginAssemblyError};
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) replaces the deleted `register_norm_exports`
@@ -11,24 +11,39 @@ use semio_framework_plugin::Plugin;
 /// literal, and `register_document_app` (called once per `.document_app::<…>()` below)
 /// registers it, mirroring the `🗒️note` exemplar exactly.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+    let din4108 = crate::artifacts::din4108::declaration(crate::artifacts::din4108::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let din16798 = crate::artifacts::din16798::declaration(crate::artifacts::din16798::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let din18599 = crate::artifacts::din18599::declaration(crate::artifacts::din18599::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1990 = crate::artifacts::en1990::declaration(crate::artifacts::en1990::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1991 = crate::artifacts::en1991::declaration(crate::artifacts::en1991::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1992 = crate::artifacts::en1992::declaration(crate::artifacts::en1992::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1993 = crate::artifacts::en1993::declaration(crate::artifacts::en1993::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1994 = crate::artifacts::en1994::declaration(crate::artifacts::en1994::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1995 = crate::artifacts::en1995::declaration(crate::artifacts::en1995::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1996 = crate::artifacts::en1996::declaration(crate::artifacts::en1996::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1997 = crate::artifacts::en1997::declaration(crate::artifacts::en1997::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1998 = crate::artifacts::en1998::declaration(crate::artifacts::en1998::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1999 = crate::artifacts::en1999::declaration(crate::artifacts::en1999::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let iso16757 = crate::artifacts::iso16757::declaration(crate::artifacts::iso16757::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let vdi3805 = crate::artifacts::vdi3805::declaration(crate::artifacts::vdi3805::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     Plugin::builder("norm")
         .label("Norm")
         .version("0.1.0")
-        .artifact(crate::artifacts::din4108::declaration())
-        .artifact(crate::artifacts::din16798::declaration())
-        .artifact(crate::artifacts::din18599::declaration())
-        .artifact(crate::artifacts::en1990::declaration())
-        .artifact(crate::artifacts::en1991::declaration())
-        .artifact(crate::artifacts::en1992::declaration())
-        .artifact(crate::artifacts::en1993::declaration())
-        .artifact(crate::artifacts::en1994::declaration())
-        .artifact(crate::artifacts::en1995::declaration())
-        .artifact(crate::artifacts::en1996::declaration())
-        .artifact(crate::artifacts::en1997::declaration())
-        .artifact(crate::artifacts::en1998::declaration())
-        .artifact(crate::artifacts::en1999::declaration())
-        .artifact(crate::artifacts::iso16757::declaration())
-        .artifact(crate::artifacts::vdi3805::declaration())
+        .artifact(din4108)
+        .artifact(din16798)
+        .artifact(din18599)
+        .artifact(en1990)
+        .artifact(en1991)
+        .artifact(en1992)
+        .artifact(en1993)
+        .artifact(en1994)
+        .artifact(en1995)
+        .artifact(en1996)
+        .artifact(en1997)
+        .artifact(en1998)
+        .artifact(en1999)
+        .artifact(iso16757)
+        .artifact(vdi3805)
         .document_app::<crate::apps::din4108::Din4108PlayApp>(crate::apps::din4108::create_din4108_app())
         .document_app::<crate::apps::din16798::Din16798PlayApp>(crate::apps::din16798::create_din16798_app())
         .document_app::<crate::apps::din18599::Din18599PlayApp>(crate::apps::din18599::create_din18599_app())

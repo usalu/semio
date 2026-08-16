@@ -2084,15 +2084,6 @@ pub(crate) fn puzzle5d_document_from_mesh(_mesh: &semio_framework_plugin::MeshDa
 /// stays registered here (same stdio-format-catalog gap as puzzle3d/cad — no `"s.stdio.glb"`
 /// dialect exists yet). `register_mesh_dwg_export_handler`/`register_mesh_dwg_import_handler` are
 /// outside this wave's five-function scope and stay untouched.
-pub fn register_mesh_io() {
-    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    {
-        semio_framework_os::register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::GlbExporter));
-        semio_framework_os::register_mesh_importer("5d.puzzle", crate::apps::puzzle5d::puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
-        semio_framework_os::register_mesh_dwg_export_handler("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
-        semio_framework_os::register_mesh_dwg_import_handler("5d.puzzle", crate::apps::puzzle5d::puzzle5d_document_from_mesh);
-    }
-}
 //#endregion 🚪️OsHostMeshIo
 
 //#region 🧪️Testkit

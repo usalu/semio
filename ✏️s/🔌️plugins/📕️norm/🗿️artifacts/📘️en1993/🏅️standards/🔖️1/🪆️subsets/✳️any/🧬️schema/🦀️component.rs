@@ -9,81 +9,156 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1993")]
 pub struct En1993Artifact {
-    #[state(artifact)] pub annex: crate::document::AnnexChoice,
-    #[state(artifact)] pub n_ed_kn: f64,
-    #[state(artifact)] pub m_ed_knm: f64,
-    #[state(artifact)] pub v_ed_kn: f64,
-    #[state(artifact)] pub a_mm2: f64,
-    #[state(artifact)] pub a_v_mm2: f64,
-    #[state(artifact)] pub w_pl_mm3: f64,
-    #[state(artifact)] pub f_y_mpa: f64,
-    #[state(artifact)] pub f_u_mpa: f64,
-    #[state(artifact)] pub chi: f64,
-    #[state(artifact)] pub a_net_mm2: f64,
-    #[state(artifact)] pub tension_n_ed_kn: f64,
-    #[state(artifact)] pub fire_thickness_mm: f64,
-    #[state(artifact)] pub fire_rating: String,
-    #[state(artifact)] pub fire_massivity: f64,
-    #[state(artifact)] pub fire_mu_0: f64,
-    #[state(artifact)] pub fire_design_temperature_c: f64,
-    #[state(artifact)] pub cf_b_bar_mm: f64,
-    #[state(artifact)] pub cf_t_mm: f64,
-    #[state(artifact)] pub cf_k_sigma: f64,
-    #[state(artifact)] pub cf_psi: f64,
-    #[state(artifact)] pub cf_n_ed_kn: f64,
-    #[state(artifact)] pub cf_gross_resistance_kn: f64,
-    #[state(artifact)] pub stainless_m_ed_knm: f64,
-    #[state(artifact)] pub stainless_w_pl_mm3: f64,
-    #[state(artifact)] pub stainless_f_y_mpa: f64,
-    #[state(artifact)] pub plated_lambda_p: f64,
-    #[state(artifact)] pub plated_sigma_ed_mpa: f64,
-    #[state(artifact)] pub silo_t_mm: f64,
-    #[state(artifact)] pub silo_r_mm: f64,
-    #[state(artifact)] pub shell_sigma_x_ed_mpa: f64,
-    #[state(artifact)] pub silo_k: f64,
-    #[state(artifact)] pub silo_gamma_kn_m3: f64,
-    #[state(artifact)] pub silo_depth_m: f64,
-    #[state(artifact)] pub bolt_f_ed_kn: f64,
-    #[state(artifact)] pub bolt_n_bolts: u32,
-    #[state(artifact)] pub bolt_a_s_mm2: f64,
-    #[state(artifact)] pub bolt_e1_mm: f64,
-    #[state(artifact)] pub bolt_e2_mm: f64,
-    #[state(artifact)] pub bolt_d0_mm: f64,
-    #[state(artifact)] pub bolt_d_mm: f64,
-    #[state(artifact)] pub bolt_t_mm: f64,
-    #[state(artifact)] pub bolt_f_u_mpa: f64,
-    #[state(artifact)] pub bolt_f_ub_mpa: f64,
-    #[state(artifact)] pub weld_a_mm: f64,
-    #[state(artifact)] pub weld_l_mm: f64,
-    #[state(artifact)] pub weld_f_u_mpa: f64,
-    #[state(artifact)] pub weld_steel_grade: String,
-    #[state(artifact)] pub weld_f_ed_kn: f64,
-    #[state(artifact)] pub delta_sigma_mpa: f64,
-    #[state(artifact)] pub fatigue_category: u8,
-    #[state(artifact)] pub fatigue_method: String,
-    #[state(artifact)] pub t10_steel_subgrade: String,
-    #[state(artifact)] pub t10_actual_thickness_mm: f64,
-    #[state(artifact)] pub t10_t_ed_c: f64,
-    #[state(artifact)] pub tension_component_f_uk_kn: f64,
-    #[state(artifact)] pub tension_component_f_k_kn: f64,
-    #[state(artifact)] pub tension_component_n_ed_kn: f64,
-    #[state(artifact)] pub hss_w_el_mm3: f64,
-    #[state(artifact)] pub hss_f_y_mpa: f64,
-    #[state(artifact)] pub hss_section_class: u8,
-    #[state(artifact)] pub hss_m_ed_knm: f64,
-    #[state(artifact)] pub bridge_lambda: f64,
-    #[state(artifact)] pub bridge_phi_2: f64,
-    #[state(artifact)] pub bridge_delta_sigma_p_mpa: f64,
-    #[state(artifact)] pub tower_wind_factor: f64,
-    #[state(artifact)] pub tower_n_ed_kn: f64,
-    #[state(artifact)] pub pile_sigma_mpa: f64,
-    #[state(artifact)] pub pile_k_red: f64,
-    #[state(artifact)] pub pile_n_ed_kn: f64,
-    #[state(artifact)] pub crane_f_z_ed_kn: f64,
-    #[state(artifact)] pub crane_wheel_contact_length_mm: f64,
-    #[state(artifact)] pub crane_dispersion_mm: f64,
-    #[state(artifact)] pub crane_t_w_mm: f64,
-    #[state(presence)] pub selected_check_index: Option<u32>,
+    #[state(artifact)]
+    pub annex: crate::document::AnnexChoice,
+    #[state(artifact)]
+    pub n_ed_kn: f64,
+    #[state(artifact)]
+    pub m_ed_knm: f64,
+    #[state(artifact)]
+    pub v_ed_kn: f64,
+    #[state(artifact)]
+    pub a_mm2: f64,
+    #[state(artifact)]
+    pub a_v_mm2: f64,
+    #[state(artifact)]
+    pub w_pl_mm3: f64,
+    #[state(artifact)]
+    pub f_y_mpa: f64,
+    #[state(artifact)]
+    pub f_u_mpa: f64,
+    #[state(artifact)]
+    pub chi: f64,
+    #[state(artifact)]
+    pub a_net_mm2: f64,
+    #[state(artifact)]
+    pub tension_n_ed_kn: f64,
+    #[state(artifact)]
+    pub fire_thickness_mm: f64,
+    #[state(artifact)]
+    pub fire_rating: String,
+    #[state(artifact)]
+    pub fire_massivity: f64,
+    #[state(artifact)]
+    pub fire_mu_0: f64,
+    #[state(artifact)]
+    pub fire_design_temperature_c: f64,
+    #[state(artifact)]
+    pub cf_b_bar_mm: f64,
+    #[state(artifact)]
+    pub cf_t_mm: f64,
+    #[state(artifact)]
+    pub cf_k_sigma: f64,
+    #[state(artifact)]
+    pub cf_psi: f64,
+    #[state(artifact)]
+    pub cf_n_ed_kn: f64,
+    #[state(artifact)]
+    pub cf_gross_resistance_kn: f64,
+    #[state(artifact)]
+    pub stainless_m_ed_knm: f64,
+    #[state(artifact)]
+    pub stainless_w_pl_mm3: f64,
+    #[state(artifact)]
+    pub stainless_f_y_mpa: f64,
+    #[state(artifact)]
+    pub plated_lambda_p: f64,
+    #[state(artifact)]
+    pub plated_sigma_ed_mpa: f64,
+    #[state(artifact)]
+    pub silo_t_mm: f64,
+    #[state(artifact)]
+    pub silo_r_mm: f64,
+    #[state(artifact)]
+    pub shell_sigma_x_ed_mpa: f64,
+    #[state(artifact)]
+    pub silo_k: f64,
+    #[state(artifact)]
+    pub silo_gamma_kn_m3: f64,
+    #[state(artifact)]
+    pub silo_depth_m: f64,
+    #[state(artifact)]
+    pub bolt_f_ed_kn: f64,
+    #[state(artifact)]
+    pub bolt_n_bolts: u32,
+    #[state(artifact)]
+    pub bolt_a_s_mm2: f64,
+    #[state(artifact)]
+    pub bolt_e1_mm: f64,
+    #[state(artifact)]
+    pub bolt_e2_mm: f64,
+    #[state(artifact)]
+    pub bolt_d0_mm: f64,
+    #[state(artifact)]
+    pub bolt_d_mm: f64,
+    #[state(artifact)]
+    pub bolt_t_mm: f64,
+    #[state(artifact)]
+    pub bolt_f_u_mpa: f64,
+    #[state(artifact)]
+    pub bolt_f_ub_mpa: f64,
+    #[state(artifact)]
+    pub weld_a_mm: f64,
+    #[state(artifact)]
+    pub weld_l_mm: f64,
+    #[state(artifact)]
+    pub weld_f_u_mpa: f64,
+    #[state(artifact)]
+    pub weld_steel_grade: String,
+    #[state(artifact)]
+    pub weld_f_ed_kn: f64,
+    #[state(artifact)]
+    pub delta_sigma_mpa: f64,
+    #[state(artifact)]
+    pub fatigue_category: u8,
+    #[state(artifact)]
+    pub fatigue_method: String,
+    #[state(artifact)]
+    pub t10_steel_subgrade: String,
+    #[state(artifact)]
+    pub t10_actual_thickness_mm: f64,
+    #[state(artifact)]
+    pub t10_t_ed_c: f64,
+    #[state(artifact)]
+    pub tension_component_f_uk_kn: f64,
+    #[state(artifact)]
+    pub tension_component_f_k_kn: f64,
+    #[state(artifact)]
+    pub tension_component_n_ed_kn: f64,
+    #[state(artifact)]
+    pub hss_w_el_mm3: f64,
+    #[state(artifact)]
+    pub hss_f_y_mpa: f64,
+    #[state(artifact)]
+    pub hss_section_class: u8,
+    #[state(artifact)]
+    pub hss_m_ed_knm: f64,
+    #[state(artifact)]
+    pub bridge_lambda: f64,
+    #[state(artifact)]
+    pub bridge_phi_2: f64,
+    #[state(artifact)]
+    pub bridge_delta_sigma_p_mpa: f64,
+    #[state(artifact)]
+    pub tower_wind_factor: f64,
+    #[state(artifact)]
+    pub tower_n_ed_kn: f64,
+    #[state(artifact)]
+    pub pile_sigma_mpa: f64,
+    #[state(artifact)]
+    pub pile_k_red: f64,
+    #[state(artifact)]
+    pub pile_n_ed_kn: f64,
+    #[state(artifact)]
+    pub crane_f_z_ed_kn: f64,
+    #[state(artifact)]
+    pub crane_wheel_contact_length_mm: f64,
+    #[state(artifact)]
+    pub crane_dispersion_mm: f64,
+    #[state(artifact)]
+    pub crane_t_w_mm: f64,
+    #[state(presence)]
+    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -297,8 +372,8 @@ pub fn en1993_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::en1993::{En1993Diff, En1993Mutation, En1993Snapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct En1993BuilderConstruction {
@@ -310,8 +385,12 @@ pub mod derived_construction {
         type Snapshot = En1993Snapshot;
         type Mutation = En1993Mutation;
         type Diff = En1993Diff;
-        fn empty() -> Self { Self { snapshot: En1993Snapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn empty() -> Self {
+            Self { snapshot: En1993Snapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<En1993Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -328,7 +407,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -337,8 +420,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::en1993::En1993Snapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct En1993Parts {
@@ -1354,4 +1437,3 @@ mod compliance_helpers_tests {
     }
 }
 //#endregion 🧪️ComplianceHelpersTests
-

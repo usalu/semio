@@ -1,15 +1,11 @@
 //! 🧬️ Vdi3805 snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::vdi3805::{
-    CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile,
-    ParametricGeometry, SecurityLimits,
-};
+use crate::artifacts::vdi3805::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry, SecurityLimits};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Snapshot
-
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]

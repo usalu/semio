@@ -3,16 +3,17 @@
 //! whole-document-replace macro no longer applies now that the whole-document-replace variant is
 //! gone).
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 pub use crate::artifacts::en1997::schema::mutations::En1997Mutation;
-use crate::artifacts::en1997::schema::mutations::{change_v_ed_kn, change_h_ed_kn, change_footing_area_m2, change_phi_deg, change_c_kpa, change_gamma_kn_m3, change_b_m, change_d_f_m, change_e_s_mpa, change_nu, change_design_approach, change_annex, change_settlement_limit_mm, change_n_pile_ed_kn, change_alpha_s, change_pile_d_m, change_q_s_kpa, change_pile_l_m, change_q_b_kpa, change_pile_base_area_m2, change_pile_n_profiles, change_z_investigated_m};
+use crate::artifacts::en1997::schema::mutations::{
+    change_alpha_s, change_annex, change_b_m, change_c_kpa, change_d_f_m, change_design_approach, change_e_s_mpa, change_footing_area_m2, change_gamma_kn_m3, change_h_ed_kn, change_n_pile_ed_kn, change_nu, change_phi_deg, change_pile_base_area_m2,
+    change_pile_d_m, change_pile_l_m, change_pile_n_profiles, change_q_b_kpa, change_q_s_kpa, change_settlement_limit_mm, change_v_ed_kn, change_z_investigated_m,
+};
 use crate::document::AnnexChoice;
 use protocol::OpText;
 
@@ -22,72 +23,28 @@ use protocol::OpText;
 /// and every consumer matching on it, is completely untouched.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum En1997MutationDsl {
-    ChangeVEdKn {
-        new_v_ed_kn: f64,
-    },
-    ChangeHEdKn {
-        new_h_ed_kn: f64,
-    },
-    ChangeFootingAreaM2 {
-        new_footing_area_m2: f64,
-    },
-    ChangePhiDeg {
-        new_phi_deg: f64,
-    },
-    ChangeCKpa {
-        new_c_kpa: f64,
-    },
-    ChangeGammaKnM3 {
-        new_gamma_kn_m3: f64,
-    },
-    ChangeBM {
-        new_b_m: f64,
-    },
-    ChangeDFM {
-        new_d_f_m: f64,
-    },
-    ChangeESMpa {
-        new_e_s_mpa: f64,
-    },
-    ChangeNu {
-        new_nu: f64,
-    },
-    ChangeDesignApproach {
-        new_design_approach: String,
-    },
-    ChangeAnnex {
-        new_annex: AnnexChoice,
-    },
-    ChangeSettlementLimitMm {
-        new_settlement_limit_mm: f64,
-    },
-    ChangeNPileEdKn {
-        new_n_pile_ed_kn: f64,
-    },
-    ChangeAlphaS {
-        new_alpha_s: f64,
-    },
-    ChangePileDM {
-        new_pile_d_m: f64,
-    },
-    ChangeQSKpa {
-        new_q_s_kpa: f64,
-    },
-    ChangePileLM {
-        new_pile_l_m: f64,
-    },
-    ChangeQBKpa {
-        new_q_b_kpa: f64,
-    },
-    ChangePileBaseAreaM2 {
-        new_pile_base_area_m2: f64,
-    },
-    ChangePileNProfiles {
-        new_pile_n_profiles: u32,
-    },
-    ChangeZInvestigatedM {
-        new_z_investigated_m: f64,
-    },
+    ChangeVEdKn { new_v_ed_kn: f64 },
+    ChangeHEdKn { new_h_ed_kn: f64 },
+    ChangeFootingAreaM2 { new_footing_area_m2: f64 },
+    ChangePhiDeg { new_phi_deg: f64 },
+    ChangeCKpa { new_c_kpa: f64 },
+    ChangeGammaKnM3 { new_gamma_kn_m3: f64 },
+    ChangeBM { new_b_m: f64 },
+    ChangeDFM { new_d_f_m: f64 },
+    ChangeESMpa { new_e_s_mpa: f64 },
+    ChangeNu { new_nu: f64 },
+    ChangeDesignApproach { new_design_approach: String },
+    ChangeAnnex { new_annex: AnnexChoice },
+    ChangeSettlementLimitMm { new_settlement_limit_mm: f64 },
+    ChangeNPileEdKn { new_n_pile_ed_kn: f64 },
+    ChangeAlphaS { new_alpha_s: f64 },
+    ChangePileDM { new_pile_d_m: f64 },
+    ChangeQSKpa { new_q_s_kpa: f64 },
+    ChangePileLM { new_pile_l_m: f64 },
+    ChangeQBKpa { new_q_b_kpa: f64 },
+    ChangePileBaseAreaM2 { new_pile_base_area_m2: f64 },
+    ChangePileNProfiles { new_pile_n_profiles: u32 },
+    ChangeZInvestigatedM { new_z_investigated_m: f64 },
 }
 
 //#region 🔖️HandcraftedOpCodecs
@@ -98,11 +55,7 @@ impl OpText for En1997MutationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }

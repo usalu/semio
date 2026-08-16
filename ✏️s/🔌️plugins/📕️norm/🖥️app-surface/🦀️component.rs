@@ -14,8 +14,8 @@
 
 use crate::document::{CheckReport, NormFamily, NormHost};
 use semio_framework_plugin::{
-    ui_stack_vertical, ui_text, AppIo, ArtifactKindSpec, ArtifactPresentation, ConfigView, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec,
-    MediaType, ModeDefinition, OsMediaCapability, PanelGroup, PanelTabDefinition, PanelTabKind, PortMultiplicity, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions,
+    ui_stack_vertical, ui_text, AppIo, ArtifactKindSpec, ArtifactPresentation, ArtifactView, ConfigView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType,
+    ModeDefinition, OsMediaCapability, PanelGroup, PanelTabDefinition, PanelTabKind, PortMultiplicity, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions,
 };
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -116,7 +116,7 @@ pub fn artifact_kind_spec(variant: &str, label: &str) -> ArtifactKindSpec {
         schema: format!("norm.{variant}.document"),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec![],
+        export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     }
 }
@@ -271,7 +271,6 @@ pub fn snapshot<'a, D>(doc: &'a ArtifactView<'_, D>) -> &'a D {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-
 
     use super::*;
 

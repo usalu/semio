@@ -1,7 +1,7 @@
 //! ✨️ EN 1999 artifact schema — every field with its state class.
 
-use crate::document::AnnexChoice;
 use crate::artifacts::en1999::En1999Snapshot;
+use crate::document::AnnexChoice;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -11,33 +11,60 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1999")]
 pub struct En1999Artifact {
-    #[state(artifact)] pub n_ed_kn: f64,
-    #[state(artifact)] pub m_ed_knm: f64,
-    #[state(artifact)] pub a_mm2: f64,
-    #[state(artifact)] pub w_el_mm3: f64,
-    #[state(artifact)] pub alloy: String,
-    #[state(artifact)] pub chi: f64,
-    #[state(artifact)] pub i_t_mm4: f64,
-    #[state(artifact)] pub l_cr_mm: f64,
-    #[state(artifact)] pub theta_c: f64,
-    #[state(artifact)] pub delta_sigma_ed: f64,
-    #[state(artifact)] pub delta_sigma_c: f64,
-    #[state(artifact)] pub fatigue_m: f64,
-    #[state(artifact)] pub n_cycles: f64,
-    #[state(artifact)] pub v_weld_ed_kn: f64,
-    #[state(artifact)] pub weld_throat_mm: f64,
-    #[state(artifact)] pub weld_length_mm: f64,
-    #[state(artifact)] pub beta_w: f64,
-    #[state(artifact)] pub sheet_b_mm: f64,
-    #[state(artifact)] pub sheet_t_mm: f64,
-    #[state(artifact)] pub sheet_k_sigma: f64,
-    #[state(artifact)] pub sheet_w_el_mm3: f64,
-    #[state(artifact)] pub sheet_m_ed_knm: f64,
-    #[state(artifact)] pub shell_t_mm: f64,
-    #[state(artifact)] pub shell_r_mm: f64,
-    #[state(artifact)] pub sigma_ed_shell_mpa: f64,
-    #[state(artifact)] pub annex: crate::document::AnnexChoice,
-    #[state(presence)] pub selected_check_index: Option<u32>,
+    #[state(artifact)]
+    pub n_ed_kn: f64,
+    #[state(artifact)]
+    pub m_ed_knm: f64,
+    #[state(artifact)]
+    pub a_mm2: f64,
+    #[state(artifact)]
+    pub w_el_mm3: f64,
+    #[state(artifact)]
+    pub alloy: String,
+    #[state(artifact)]
+    pub chi: f64,
+    #[state(artifact)]
+    pub i_t_mm4: f64,
+    #[state(artifact)]
+    pub l_cr_mm: f64,
+    #[state(artifact)]
+    pub theta_c: f64,
+    #[state(artifact)]
+    pub delta_sigma_ed: f64,
+    #[state(artifact)]
+    pub delta_sigma_c: f64,
+    #[state(artifact)]
+    pub fatigue_m: f64,
+    #[state(artifact)]
+    pub n_cycles: f64,
+    #[state(artifact)]
+    pub v_weld_ed_kn: f64,
+    #[state(artifact)]
+    pub weld_throat_mm: f64,
+    #[state(artifact)]
+    pub weld_length_mm: f64,
+    #[state(artifact)]
+    pub beta_w: f64,
+    #[state(artifact)]
+    pub sheet_b_mm: f64,
+    #[state(artifact)]
+    pub sheet_t_mm: f64,
+    #[state(artifact)]
+    pub sheet_k_sigma: f64,
+    #[state(artifact)]
+    pub sheet_w_el_mm3: f64,
+    #[state(artifact)]
+    pub sheet_m_ed_knm: f64,
+    #[state(artifact)]
+    pub shell_t_mm: f64,
+    #[state(artifact)]
+    pub shell_r_mm: f64,
+    #[state(artifact)]
+    pub sigma_ed_shell_mpa: f64,
+    #[state(artifact)]
+    pub annex: crate::document::AnnexChoice,
+    #[state(presence)]
+    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -186,8 +213,8 @@ pub fn en1999_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::en1999::{En1999Diff, En1999Mutation, En1999Snapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct En1999BuilderConstruction {
@@ -199,8 +226,12 @@ pub mod derived_construction {
         type Snapshot = En1999Snapshot;
         type Mutation = En1999Mutation;
         type Diff = En1999Diff;
-        fn empty() -> Self { Self { snapshot: En1999Snapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn empty() -> Self {
+            Self { snapshot: En1999Snapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<En1999Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -217,7 +248,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -226,8 +261,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::en1999::En1999Snapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct En1999Parts {
@@ -296,8 +331,8 @@ use crate::document::{CheckReport, CheckResult, ClauseId, Quantity};
 
 // #region 🔖️NaDe
 pub mod na_de {
-    use crate::document::AnnexChoice;
     pub use crate::artifacts::en1990::standards::v1::subsets::any::schema::na_de::NaDe;
+    use crate::document::AnnexChoice;
 
     pub const HAZ_ZONE_MM: f64 = 25.0;
 
@@ -468,7 +503,13 @@ pub mod part_1_2 {
     }
 
     pub fn check_fire_protection(theta_c: f64, theta_limit_c: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 1999-1-2", "§4", "4.2"), Quantity::new(crate::document::QuantityKind::Temperature, theta_c), Quantity::new(crate::document::QuantityKind::Temperature, theta_limit_c), "aluminium fire protection", annex)
+        CheckResult::from_utilization(
+            ClauseId::new("EN 1999-1-2", "§4", "4.2"),
+            Quantity::new(crate::document::QuantityKind::Temperature, theta_c),
+            Quantity::new(crate::document::QuantityKind::Temperature, theta_limit_c),
+            "aluminium fire protection",
+            annex,
+        )
     }
 }
 // #endregion 🔖️Part1_2
@@ -711,4 +752,3 @@ mod compliance_helpers_tests {
     }
 }
 //#endregion 🧪️ComplianceHelpersTests
-

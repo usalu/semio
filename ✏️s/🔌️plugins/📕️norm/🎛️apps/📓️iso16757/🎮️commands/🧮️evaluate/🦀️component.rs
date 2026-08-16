@@ -9,7 +9,7 @@
 use crate::artifacts::iso16757::op::Iso16757Mutation;
 use crate::artifacts::iso16757::Iso16757Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload

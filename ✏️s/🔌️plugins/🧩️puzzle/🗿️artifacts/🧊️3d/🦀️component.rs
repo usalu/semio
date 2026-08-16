@@ -4,10 +4,9 @@
 //! shared `Puzzle3dError`, and the `artifact_kind()` spec the play app's manifest binds. Sibling
 //! nodes: `🔺️diff`, `🔧️op`, `🗣️dsl`, `🎒️pack`, `📡️spr`, `⚙️engine`.
 
-
-pub use crate::artifacts::puzzle3d::schema::snapshot::Puzzle3dSnapshot;
-pub use crate::artifacts::puzzle3d::schema::mutations::Puzzle3dMutation;
 pub use crate::artifacts::puzzle3d::schema::diff::Puzzle3dDiff;
+pub use crate::artifacts::puzzle3d::schema::mutations::Puzzle3dMutation;
+pub use crate::artifacts::puzzle3d::schema::snapshot::Puzzle3dSnapshot;
 
 use serde::{Deserialize, Serialize};
 
@@ -23,8 +22,6 @@ pub enum Puzzle3dError {
     FillSessionUnavailable,
 }
 //#endregion ⚠️ Errors
-
-
 
 pub const PUZZLE_3D_SCHEMA: &str = "puzzle.3d";
 
@@ -361,19 +358,7 @@ fn puzzle3d_default_direction() -> [f64; 3] {
 
 impl Default for Puzzle3dCatalogVortexTemplate {
     fn default() -> Self {
-        Self {
-            id: String::new(),
-            name: String::new(),
-            label: String::new(),
-            description: String::new(),
-            icon: String::new(),
-            vortex_kind: None,
-            point: [0.0, 0.0, 0.0],
-            direction: puzzle3d_default_direction(),
-            t: None,
-            mandatory: None,
-            radius: None,
-        }
+        Self { id: String::new(), name: String::new(), label: String::new(), description: String::new(), icon: String::new(), vortex_kind: None, point: [0.0, 0.0, 0.0], direction: puzzle3d_default_direction(), t: None, mandatory: None, radius: None }
     }
 }
 
@@ -511,7 +496,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "puzzle.3d".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
+        export_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
         import_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
     }
 }
@@ -531,7 +516,7 @@ pub fn kit_catalog_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "kit.catalog".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
+        export_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
         import_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
     }
 }
@@ -546,14 +531,54 @@ pub fn kit_catalog_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// field — it belongs to the same OS media-host 14-function family flagged on puzzle2d's
 /// `declaration()` doc, a different mechanism from the nine §6 registrars this struct covers — so it
 /// stays wired through `🧩️puzzle/🦀️component.rs`'s own `.setup()`, not here.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.puzzle3d")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.puzzle3d.standard.v1", "standard", "1", &[], None),
+        ("s.puzzle3d.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.puzzle3d.schema.artifact", "schema", "s.puzzle.puzzle3d", &[("schema", "s.puzzle.puzzle3d")], None),
+        ("s.puzzle3d.inference.artifact", "inference", "s.puzzle.puzzle3d.inference", &[("schema", "s.puzzle.puzzle3d.inference")], None),
+        ("s.puzzle3d.composer.native", "composer", "s.puzzle3d@1/*", &[("dialect", "s.puzzle3d@1/*")], None),
+        ("s.puzzle3d.composer.format-1", "composer", "s.stdio.las@1.0/*", &[("dialect", "s.stdio.las@1.0/*")], None),
+        ("s.puzzle3d.composer.format-2", "composer", "s.stdio.ply@1.0/*", &[("dialect", "s.stdio.ply@1.0/*")], None),
+        ("s.puzzle3d.composer.format-3", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.puzzle3d.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.puzzle3d.composer.format-5", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
+        ("s.puzzle3d.composer.format-6", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
+        ("s.puzzle3d.composer.format-7", "composer", "s.stdio.gltf@2.0/*", &[("dialect", "s.stdio.gltf@2.0/*")], None),
+        ("s.puzzle3d.composer.format-8", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.puzzle3d.grammar.1", "grammar", "puzzle.puzzle3d", &[("grammar", "puzzle.puzzle3d")], None),
+        ("s.puzzle3d.grammar.2", "grammar", "puzzle.puzzle3d.op", &[("grammar", "puzzle.puzzle3d.op")], None),
+        ("s.puzzle3d.grammar.3", "grammar", "puzzle.puzzle3d.diff", &[("grammar", "puzzle.puzzle3d.diff")], None),
+        ("s.puzzle3d.grammar.4", "grammar", "3d.pack", &[("grammar", "3d.pack")], None),
+        ("s.puzzle3d.grammar.5", "grammar", "3d.spr", &[("grammar", "3d.spr")], None),
+        ("s.puzzle3d.codec.document-1", "codec", "puzzle.3d.fixture:puzzle3d", &[("codec", "puzzle.3d.fixture"), ("extension", "puzzle3d")], None),
+        ("s.puzzle3d.localization.en", "localization", "3D Puzzle", &[], Some(("en", "3D Puzzle"))),
+        ("s.puzzle3d.localization.de", "localization", "3D-Puzzle", &[], Some(("de", "3D-Puzzle"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.puzzle3d")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::puzzle3d::schema::puzzle3d_artifact_schema_descriptor())
         .inferences([crate::artifacts::puzzle3d::standards::v1::subsets::any::schema::inferences::puzzle3d_artifact_inference_descriptor()])
         .composers(crate::artifacts::puzzle3d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::puzzle3d::Puzzle3dPlayApp>()
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -624,8 +649,6 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 pub use crate::artifacts::puzzle3d::op::Puzzle3dPlaySnapshot;
 
-
-
 //#region 🧪️Tests
 #[cfg(test)]
 mod design_parity_schema_tests {
@@ -633,19 +656,7 @@ mod design_parity_schema_tests {
 
     #[test]
     fn attraction_exposes_eight_connection_parameters_with_zero_defaults() {
-        let attraction = Puzzle3dAttraction {
-            id: "a".into(),
-            attracting: "o1:v0".into(),
-            attracted: "o2:v0".into(),
-            gap: 0.0,
-            shift: 0.0,
-            rise: 0.0,
-            rotation: 0.0,
-            turn: 0.0,
-            tilt: 0.0,
-            x: 0.0,
-            y: 0.0,
-        };
+        let attraction = Puzzle3dAttraction { id: "a".into(), attracting: "o1:v0".into(), attracted: "o2:v0".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 };
         let json = serde_json::to_value(&attraction).expect("serialize");
         for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "x", "y"] {
             assert_eq!(json.get(key).and_then(|v| v.as_f64()), Some(0.0), "{key}");
@@ -653,7 +664,8 @@ mod design_parity_schema_tests {
         let parsed: Puzzle3dAttraction = serde_json::from_value(serde_json::json!({
             "attracting": "o1:v0",
             "attracted": "o2:v0"
-        })).expect("sparse attraction deserializes");
+        }))
+        .expect("sparse attraction deserializes");
         assert_eq!(parsed.x, 0.0);
         assert_eq!(parsed.y, 0.0);
         assert_eq!(parsed.gap, 0.0);
@@ -663,12 +675,10 @@ mod design_parity_schema_tests {
     fn object_anchor_defaults_to_fixed() {
         let object: Puzzle3dObject = serde_json::from_value(serde_json::json!({
             "id": "o1"
-        })).expect("object");
+        }))
+        .expect("object");
         assert_eq!(object.anchor, Puzzle3dObjectAnchor::Fixed);
-        assert_eq!(
-            serde_json::to_value(Puzzle3dObjectAnchor::Derived).unwrap(),
-            serde_json::json!("derived")
-        );
+        assert_eq!(serde_json::to_value(Puzzle3dObjectAnchor::Derived).unwrap(), serde_json::json!("derived"));
     }
 
     #[test]
@@ -683,15 +693,7 @@ mod design_parity_schema_tests {
             unit: "m".into(),
             is_abstract: false,
             base_kinds: vec!["Part".into()],
-            representations: vec![Puzzle3dRepresentation {
-                id: "mesh".into(),
-                name: "mesh".into(),
-                url: "/mesh/capsule.glb".into(),
-                mime: "model/gltf-binary".into(),
-                tags: vec!["default".into()],
-                lod: Some("high".into()),
-                description: "".into(),
-            }],
+            representations: vec![Puzzle3dRepresentation { id: "mesh".into(), name: "mesh".into(), url: "/mesh/capsule.glb".into(), mime: "model/gltf-binary".into(), tags: vec!["default".into()], lod: Some("high".into()), description: "".into() }],
             vortices: vec![Puzzle3dCatalogVortexTemplate {
                 id: "v0".into(),
                 name: "v0".into(),
@@ -705,19 +707,8 @@ mod design_parity_schema_tests {
                 mandatory: Some(true),
                 radius: Some(0.36),
             }],
-            attributes: vec![Puzzle3dAttribute {
-                id: "a1".into(),
-                key: "material".into(),
-                value: "concrete".into(),
-                definition: None,
-            }],
-            authors: vec![Puzzle3dAuthor {
-                id: "u1".into(),
-                name: "Ada".into(),
-                email: "ada@example.com".into(),
-                role: Some("author".into()),
-                rank: Some(1),
-            }],
+            attributes: vec![Puzzle3dAttribute { id: "a1".into(), key: "material".into(), value: "concrete".into(), definition: None }],
+            authors: vec![Puzzle3dAuthor { id: "u1".into(), name: "Ada".into(), email: "ada@example.com".into(), role: Some("author".into()), rank: Some(1) }],
         };
         let json = serde_json::to_value(&kind).expect("serialize");
         assert_eq!(json.get("abstract").and_then(|v| v.as_bool()), Some(false));
@@ -749,28 +740,23 @@ mod design_parity_schema_tests {
 
     #[test]
     fn kind_compatibility_uses_typed_specificity() {
-        let rule = Puzzle3dKindCompatibility {
-            source: "c-t".into(),
-            target: "c-b".into(),
-            bidirectional: true,
-            important: false,
-            specificity: Puzzle3dCompatSpecificity::Vortex,
-        };
+        let rule = Puzzle3dKindCompatibility { source: "c-t".into(), target: "c-b".into(), bidirectional: true, important: false, specificity: Puzzle3dCompatSpecificity::Vortex };
         let json = serde_json::to_value(&rule).expect("serialize");
         assert_eq!(json["specificity"], "vortex");
         let parsed: Puzzle3dKindCompatibility = serde_json::from_value(serde_json::json!({
             "source": "a",
             "target": "b"
-        })).expect("defaults");
+        }))
+        .expect("defaults");
         assert_eq!(parsed.specificity, Puzzle3dCompatSpecificity::Vortex);
     }
 }
 //#endregion 🧪️Tests
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::puzzle3d::standards::v1::subsets::any::io::io_registry as v1;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -779,10 +765,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("Puzzle3dComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("Puzzle3dComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

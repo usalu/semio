@@ -1,9 +1,8 @@
 //! 🔧️ VDI 3805 manufacturer product data for building services: Part 1 + sheets 2–100 — document entities.
 
-
-pub use crate::artifacts::vdi3805::schema::snapshot::Vdi3805Snapshot;
-pub use crate::artifacts::vdi3805::schema::mutations::Vdi3805Mutation;
 pub use crate::artifacts::vdi3805::schema::diff::Vdi3805Diff;
+pub use crate::artifacts::vdi3805::schema::mutations::Vdi3805Mutation;
+pub use crate::artifacts::vdi3805::schema::snapshot::Vdi3805Snapshot;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
@@ -273,9 +272,7 @@ pub struct EditionId {
 }
 
 impl EditionId {
-
-
-pub const fn new(year: u16, month: u8) -> Self {
+    pub const fn new(year: u16, month: u8) -> Self {
         Self { year, month }
     }
 
@@ -1043,7 +1040,6 @@ impl Diagnostic {
 }
 // #endregion Validate
 
-
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 // #region Session
 /// 📅️ Edition profile selection for multi-profile sheets.
@@ -1262,9 +1258,9 @@ mod tests {
 }
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::vdi3805::standards::v1::subsets::any::io::io_registry as v1;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -1273,10 +1269,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("Vdi3805Composer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("Vdi3805Composer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 
@@ -1291,13 +1284,40 @@ pub mod io_registry {
 /// the old side-effecting `register()`/`register_pilot_languages()`/`register_artifact_schema()`/
 /// `register_artifact_inferences()`/`register_io()`, each of which called a global registry directly
 /// from the plugin root's `.setup()` fan-out (`register_norm_exports`, deleted by this same wave).
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.vdi3805")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use crate::artifacts::definition::{CapabilitySpec as C, ClaimSpec as Q, LocalizationSpec as L};
+    const S: &[Q] = &[Q { namespace: "schema", value: "s.norm.vdi3805" }];
+    const I: &[Q] = &[Q { namespace: "schema", value: "s.norm.vdi3805.inference" }];
+    const M: &[Q] = &[Q { namespace: "dialect", value: "s.vdi3805@1/*" }];
+    const K: &[Q] = &[Q { namespace: "codec", value: "semio.norm.vdi3805/v1" }, Q { namespace: "extension", value: "vdi3805" }];
+    const EN: &[L] = &[L { locale: "en", text: "VDI 3805 manufacturer product data" }];
+    const DE: &[L] = &[L { locale: "de", text: "VDI 3805 Produktdaten der Technischen Gebäudeausrüstung" }];
+    const ROWS: &[C] = &[
+        C { identity: "s.vdi3805.standard.v1", kind: "standard", descriptor: "v1", claims: &[], localizations: &[] },
+        C { identity: "s.vdi3805.standard.v1.profile.any", kind: "profile", descriptor: "any", claims: &[], localizations: &[] },
+        C { identity: "s.vdi3805.schema.artifact", kind: "schema", descriptor: "s.norm.vdi3805", claims: S, localizations: &[] },
+        C { identity: "s.vdi3805.inference.outline", kind: "inference", descriptor: "s.norm.vdi3805.inference", claims: I, localizations: &[] },
+        C { identity: "s.vdi3805.composer.any", kind: "composer", descriptor: "s.vdi3805@1/*", claims: M, localizations: &[] },
+        C { identity: "s.vdi3805.grammar.document", kind: "grammar", descriptor: "vdi3805.document", claims: &[Q { namespace: "grammar", value: "vdi3805.document" }], localizations: &[] },
+        C { identity: "s.vdi3805.grammar.op", kind: "grammar", descriptor: "vdi3805.op", claims: &[Q { namespace: "grammar", value: "vdi3805.op" }], localizations: &[] },
+        C { identity: "s.vdi3805.grammar.diff", kind: "grammar", descriptor: "vdi3805.diff", claims: &[Q { namespace: "grammar", value: "vdi3805.diff" }], localizations: &[] },
+        C { identity: "s.vdi3805.grammar.pack", kind: "grammar", descriptor: "vdi3805.pack", claims: &[Q { namespace: "grammar", value: "vdi3805.pack" }], localizations: &[] },
+        C { identity: "s.vdi3805.grammar.spr", kind: "grammar", descriptor: "vdi3805.spr", claims: &[Q { namespace: "grammar", value: "vdi3805.spr" }], localizations: &[] },
+        C { identity: "s.vdi3805.codec.document.v1", kind: "codec", descriptor: "semio.norm.vdi3805/v1:vdi3805", claims: K, localizations: &[] },
+        C { identity: "s.vdi3805.localization.en", kind: "localization", descriptor: "VDI 3805 manufacturer product data", claims: &[], localizations: EN },
+        C { identity: "s.vdi3805.localization.de", kind: "localization", descriptor: "VDI 3805 Produktdaten der Technischen Gebäudeausrüstung", claims: &[], localizations: DE },
+    ];
+    crate::artifacts::definition::assemble_definition("s.vdi3805", ROWS)
+}
+
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::vdi3805::schema::vdi3805_artifact_schema_descriptor())
         .inferences([crate::artifacts::vdi3805::standards::v1::subsets::any::schema::inferences::vdi3805_artifact_inference_descriptor()])
         .composers(crate::artifacts::vdi3805::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .build()
+        .document_codec::<crate::apps::vdi3805::Vdi3805PlayApp>()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -1305,57 +1325,61 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
 /// `OnceLock`-backed `io_registry::entries()` convention below.
 fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
-    LANGUAGES.get_or_init(|| vec![
-        crate::dsl::LanguageSpec {
-            id: "vdi3805.document",
-            extension: Some("vdi3805"),
-            role: crate::dsl::LanguageRole::Document,
-            grammar: Some(crate::artifacts::vdi3805::dsl::COMPONENT_GRAMMAR_SEMIO),
-            grammar_path: Some(crate::artifacts::vdi3805::dsl::COMPONENT_GRAMMAR_PATH),
-            protocol: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-            protocol_path: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-            hooks: crate::dsl::passthrough_hooks("vdi3805.document"),
-        },
-        crate::dsl::LanguageSpec {
-            id: "vdi3805.op",
-            extension: None,
-            role: crate::dsl::LanguageRole::Ops,
-            grammar: Some(crate::artifacts::vdi3805::op::COMPONENT_GRAMMAR_SEMIO),
-            grammar_path: Some(crate::artifacts::vdi3805::op::COMPONENT_GRAMMAR_PATH),
-            protocol: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_SEMIO),
-            protocol_path: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_PATH),
-            hooks: crate::dsl::passthrough_hooks("vdi3805.op"),
-        },
-        crate::dsl::LanguageSpec {
-            id: "vdi3805.diff",
-            extension: None,
-            role: crate::dsl::LanguageRole::Diff,
-            grammar: Some(crate::artifacts::vdi3805::diff::COMPONENT_GRAMMAR_SEMIO),
-            grammar_path: Some(crate::artifacts::vdi3805::diff::COMPONENT_GRAMMAR_PATH),
-            protocol: None,
-            protocol_path: None,
-            hooks: crate::dsl::passthrough_hooks("vdi3805.diff"),
-        },
-        crate::dsl::LanguageSpec {
-            id: "vdi3805.pack",
-            extension: None,
-            role: crate::dsl::LanguageRole::Pack,
-            grammar: None,
-            grammar_path: None,
-            protocol: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-            protocol_path: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-            hooks: crate::dsl::passthrough_hooks("vdi3805.pack"),
-        },
-        crate::dsl::LanguageSpec {
-            id: "vdi3805.spr",
-            extension: None,
-            role: crate::dsl::LanguageRole::Spr,
-            grammar: None,
-            grammar_path: None,
-            protocol: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_SEMIO),
-            protocol_path: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_PATH),
-            hooks: crate::dsl::passthrough_hooks("vdi3805.spr"),
-        },
-    ]).as_slice()
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                crate::dsl::LanguageSpec {
+                    id: "vdi3805.document",
+                    extension: Some("vdi3805"),
+                    role: crate::dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::vdi3805::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::vdi3805::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: crate::dsl::passthrough_hooks("vdi3805.document"),
+                },
+                crate::dsl::LanguageSpec {
+                    id: "vdi3805.op",
+                    extension: None,
+                    role: crate::dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::vdi3805::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::vdi3805::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: crate::dsl::passthrough_hooks("vdi3805.op"),
+                },
+                crate::dsl::LanguageSpec {
+                    id: "vdi3805.diff",
+                    extension: None,
+                    role: crate::dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::vdi3805::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::vdi3805::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: crate::dsl::passthrough_hooks("vdi3805.diff"),
+                },
+                crate::dsl::LanguageSpec {
+                    id: "vdi3805.pack",
+                    extension: None,
+                    role: crate::dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: crate::dsl::passthrough_hooks("vdi3805.pack"),
+                },
+                crate::dsl::LanguageSpec {
+                    id: "vdi3805.spr",
+                    extension: None,
+                    role: crate::dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: crate::dsl::passthrough_hooks("vdi3805.spr"),
+                },
+            ]
+        })
+        .as_slice()
 }
 //#endregion 🪪️Declaration

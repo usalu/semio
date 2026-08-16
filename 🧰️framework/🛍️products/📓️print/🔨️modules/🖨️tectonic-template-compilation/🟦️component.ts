@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, statSync, watch, writeFile
 import { basename, dirname, join, relative } from "node:path";
 import { getWorkspaceRoot, runCmd, runCmdStatus, runProbe, tryRun } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { printFontSearchPaths } from "../🔤print-font-catalog/🟦️component.ts";
-import { resolvePrintPanelGlassStyle, type PrintTheme, writePrintLatexTokenStylesheet } from "../🎨️print-design-token-paints/🟦️component.ts";
+import { resolvePrintPanelGlassStyle, type PrintTheme, writePrintLatexTokenStylesheet } from "../🎨print-design-token-paints/🟦️component.ts";
 
 //#region 🖨️TectonicTemplateCompilation
 export type PrintTemplate = { readonly id: string; readonly texPath: string };

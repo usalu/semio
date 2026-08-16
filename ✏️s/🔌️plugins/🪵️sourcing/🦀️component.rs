@@ -10,7 +10,7 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("sourcing")
         .label("Sourcing")
         .version("0.1.0")
-        .artifact(crate::artifacts::curate::declaration())
+        .artifact(crate::artifacts::curate::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .document_app::<crate::apps::curate::SourcingCurateApp>(crate::apps::curate::create_sourcing_curate_app())
         .try_build()
 }

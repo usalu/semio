@@ -10,7 +10,7 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("shooting")
         .label("Shooting")
         .version("0.1.0")
-        .artifact(crate::artifacts::shooting::declaration())
+        .artifact(crate::artifacts::shooting::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .document_app::<crate::apps::shooting::ShootingPlayApp>(crate::apps::shooting::create_shooting_app())
         .try_build()
 }

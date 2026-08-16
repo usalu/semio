@@ -8,28 +8,11 @@
 pub use crate::artifacts::en1994::schema::mutations::En1994Mutation;
 
 use crate::artifacts::en1994::schema::mutations::{
-    change_annex::mutation::ChangeAnnex,
-    change_d_mm::mutation::ChangeDMm,
-    change_deck_type::mutation::ChangeDeckType,
-    change_delta_sigma_mpa::mutation::ChangeDeltaSigmaMpa,
-    change_delta_tau_stud_mpa::mutation::ChangeDeltaTauStudMpa,
-    change_e_cm_mpa::mutation::ChangeECmMpa,
-    change_eta::mutation::ChangeEta,
-    change_f_ck_mpa::mutation::ChangeFCkMpa,
-    change_f_u_mpa::mutation::ChangeFUMpa,
-    change_f_y_mpa::mutation::ChangeFYMpa,
-    change_fatigue_detail::mutation::ChangeFatigueDetail,
-    change_fire_rating::mutation::ChangeFireRating,
-    change_h_sc_mm::mutation::ChangeHScMm,
-    change_insulation_thickness_mm::mutation::ChangeInsulationThicknessMm,
-    change_m_ed_knm::mutation::ChangeMEdKnm,
-    change_m_pl_rd::mutation::ChangeMPlRd,
-    change_m_pla::mutation::ChangeMPla,
-    change_n_cycles_stud::mutation::ChangeNCyclesStud,
-    change_span_m::mutation::ChangeSpanM,
-    change_v_ed_kn::mutation::ChangeVEdKn,
-    change_v_ed_per_stud_kn::mutation::ChangeVEdPerStudKn,
-    change_v_l_rd::mutation::ChangeVLRd,
+    change_annex::mutation::ChangeAnnex, change_d_mm::mutation::ChangeDMm, change_deck_type::mutation::ChangeDeckType, change_delta_sigma_mpa::mutation::ChangeDeltaSigmaMpa, change_delta_tau_stud_mpa::mutation::ChangeDeltaTauStudMpa,
+    change_e_cm_mpa::mutation::ChangeECmMpa, change_eta::mutation::ChangeEta, change_f_ck_mpa::mutation::ChangeFCkMpa, change_f_u_mpa::mutation::ChangeFUMpa, change_f_y_mpa::mutation::ChangeFYMpa,
+    change_fatigue_detail::mutation::ChangeFatigueDetail, change_fire_rating::mutation::ChangeFireRating, change_h_sc_mm::mutation::ChangeHScMm, change_insulation_thickness_mm::mutation::ChangeInsulationThicknessMm,
+    change_m_ed_knm::mutation::ChangeMEdKnm, change_m_pl_rd::mutation::ChangeMPlRd, change_m_pla::mutation::ChangeMPla, change_n_cycles_stud::mutation::ChangeNCyclesStud, change_span_m::mutation::ChangeSpanM, change_v_ed_kn::mutation::ChangeVEdKn,
+    change_v_ed_per_stud_kn::mutation::ChangeVEdPerStudKn, change_v_l_rd::mutation::ChangeVLRd,
 };
 use crate::document::AnnexChoice;
 
@@ -110,10 +93,7 @@ fn tokenize_args(rest: &str) -> Vec<String> {
     tokens
 }
 fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
-    tokenize_args(rest)
-        .into_iter()
-        .map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}")))
-        .collect()
+    tokenize_args(rest).into_iter().map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}"))).collect()
 }
 //#endregion 🔖️Tokenizer
 

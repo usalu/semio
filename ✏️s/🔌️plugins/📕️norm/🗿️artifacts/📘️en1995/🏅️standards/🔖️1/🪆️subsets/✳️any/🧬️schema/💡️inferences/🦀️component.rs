@@ -86,12 +86,12 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
+use crate::artifacts::en1995::standards::v1::subsets::any::schema::{check_glulam_beam, k_crit, k_mod, lambda_rel_m, part_1_1, part_1_2, part_2, ServiceClass};
 /// 📋️ Full EN 1995 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1995Snapshot -> CheckReport` projection; everything it composes
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::{AnnexChoice, CheckReport, LoadDuration};
-use crate::artifacts::en1995::standards::v1::subsets::any::schema::{check_glulam_beam, k_crit, k_mod, lambda_rel_m, part_1_1, part_1_2, part_2, ServiceClass};
 
 /// 📋️ Full EN 1995 check across bending, compression, shear, connections, fire, and bridge parts.
 #[allow(clippy::too_many_arguments)]
@@ -203,4 +203,3 @@ mod compliance_report_tests {
     }
 }
 //#endregion 🧪️ComplianceReportTests
-

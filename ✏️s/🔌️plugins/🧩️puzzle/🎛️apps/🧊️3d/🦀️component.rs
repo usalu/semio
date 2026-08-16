@@ -2800,10 +2800,6 @@ pub(crate) fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshDa
 /// `register()` and demonstrator's aggregator pane already called this same function independently.
 /// The 3d mesh export/import OS-host registration is `register_mesh_io`, just below, wired through
 /// `🧩️puzzle/🦀️component.rs`'s own `.setup()`.
-pub fn register_puzzle3d_exports() {
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Puzzle3dPlayApp>(PUZZLE3D_FIXTURE_SCHEMA);
-}
-
 /// 🖼️ Registers the `"3d.puzzle"` OS-host mesh export/import bridge. Rehomed from the former
 /// `⚙️engine`'s own `register_mesh_io` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES —
 /// APA's original relocation off `apps::puzzle3d::register_puzzle3d_exports` reasoned OS-host
@@ -2826,15 +2822,6 @@ pub fn register_puzzle3d_exports() {
 /// binary-glTF has no artifact-io equivalent to migrate to yet; flagged as a genuine remainder, not
 /// silently dropped. `register_mesh_dwg_export_handler`/`register_mesh_dwg_import_handler` are a
 /// separate pair of functions, not in this wave's five-function scope, so both stay untouched.
-pub fn register_mesh_io() {
-    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    {
-        semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
-        semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
-        semio_framework_os::register_mesh_dwg_export_handler("3d.puzzle", "puzzle", puzzle3d_mesh_from_document);
-        semio_framework_os::register_mesh_dwg_import_handler("3d.puzzle", puzzle3d_document_from_mesh);
-    }
-}
 //#endregion 🔖️Manifest
 
 //#region 🧪️Testkit

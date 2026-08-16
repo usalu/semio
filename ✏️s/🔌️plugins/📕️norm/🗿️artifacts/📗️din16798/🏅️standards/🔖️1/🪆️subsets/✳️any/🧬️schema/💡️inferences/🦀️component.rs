@@ -86,12 +86,12 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
+use crate::artifacts::din16798::standards::v1::subsets::any::schema::{annex_params, part_1, part_13, part_15, part_17, part_3, part_5_1, part_5_2, part_7, part_9};
 /// 📋️ Full DIN EN 16798 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `Din16798Snapshot -> CheckReport` projection; everything it composes
 /// (`part_N`/`annex_params`) is a pure helper living in the parent `🧬️schema`.
 use crate::document::CheckReport;
-use crate::artifacts::din16798::standards::v1::subsets::any::schema::{part_1, part_3, part_5_1, part_5_2, part_7, part_9, part_13, part_15, part_17, annex_params};
 
 /// 📋️ End-to-end residential indoor environment check.
 pub fn check_residential_environment(floor_area_m2: f64, occupants: u32, ventilation_m3_h: f64, t_op_c: f64, l_aeq_db: f64) -> CheckReport {

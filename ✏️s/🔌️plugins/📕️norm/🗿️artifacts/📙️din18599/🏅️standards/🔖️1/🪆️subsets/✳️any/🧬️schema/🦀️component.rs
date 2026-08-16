@@ -1,7 +1,7 @@
 //! 🧬️ Din18599 artifact schema — every field of the artifact with its state class.
 
-use schema::ArtifactSchema;
 use crate::artifacts::din18599::{Din18599ClimateChild, MonthlyClimate, UseClass};
+use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
@@ -13,22 +13,35 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.din18599")]
 pub struct Din18599Artifact {
-    #[state(artifact)] pub use_class: crate::artifacts::din18599::UseClass,
-    #[state(artifact)] pub heated_area_m2: f64,
-    #[state(artifact)] pub occupants: u32,
-    #[state(artifact)] pub h_t: f64,
-    #[state(artifact)] pub h_v: f64,
+    #[state(artifact)]
+    pub use_class: crate::artifacts::din18599::UseClass,
+    #[state(artifact)]
+    pub heated_area_m2: f64,
+    #[state(artifact)]
+    pub occupants: u32,
+    #[state(artifact)]
+    pub h_t: f64,
+    #[state(artifact)]
+    pub h_v: f64,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.table")]
     pub climate: Din18599ClimateChild,
-    #[state(artifact)] pub internal_gains_w_m2: f64,
-    #[state(artifact)] pub solar_gains_kwh: f64,
-    #[state(artifact)] pub system_losses_kwh: f64,
-    #[state(artifact)] pub renewable_kwh: f64,
-    #[state(artifact)] pub annual_limit_kwh: f64,
-    #[state(artifact)] pub energy_carrier: String,
-    #[state(artifact)] pub reference_q_p_kwh: f64,
-    #[state(presence)] pub selected_check_index: Option<u32>,
+    #[state(artifact)]
+    pub internal_gains_w_m2: f64,
+    #[state(artifact)]
+    pub solar_gains_kwh: f64,
+    #[state(artifact)]
+    pub system_losses_kwh: f64,
+    #[state(artifact)]
+    pub renewable_kwh: f64,
+    #[state(artifact)]
+    pub annual_limit_kwh: f64,
+    #[state(artifact)]
+    pub energy_carrier: String,
+    #[state(artifact)]
+    pub reference_q_p_kwh: f64,
+    #[state(presence)]
+    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -120,8 +133,8 @@ pub fn din18599_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::din18599::{Din18599Diff, Din18599Mutation, Din18599Snapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Din18599BuilderConstruction {
@@ -133,8 +146,12 @@ pub mod derived_construction {
         type Snapshot = Din18599Snapshot;
         type Mutation = Din18599Mutation;
         type Diff = Din18599Diff;
-        fn empty() -> Self { Self { snapshot: Din18599Snapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn empty() -> Self {
+            Self { snapshot: Din18599Snapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Din18599Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -151,7 +168,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -160,8 +181,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::din18599::Din18599Snapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Din18599Parts {
@@ -221,6 +242,7 @@ semio_framework_plugin::derive_artifact_facets!(
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️ComplianceHelpers
+use crate::artifacts::din16798::standards::v1::subsets::any::schema::part_3::residential_ventilation_rate;
 /// 📐️ Pure DIN V 18599 compliance helpers (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
 /// — relocated verbatim from the deleted `⚙️engine`. `part_1` through `part_12` operate on
 /// `BalancingInputs` (a type alias for `Din18599Snapshot` defined at the artifact root — see
@@ -229,7 +251,6 @@ semio_framework_plugin::derive_artifact_facets!(
 /// law) live in `💡️inferences`. Depends on `din4108` and `din16798`'s relocated schema helpers for
 /// the reference-building envelope/ventilation calculations.
 use crate::artifacts::din18599::BalancingInputs;
-use crate::artifacts::din16798::standards::v1::subsets::any::schema::part_3::residential_ventilation_rate;
 use crate::artifacts::din4108::standards::v1::subsets::any::schema::part_2::{total_resistance, u_value_from_resistance, Layer};
 use crate::artifacts::din4108::standards::v1::subsets::any::schema::{R_SE_WALL_M2K_W, R_SI_WALL_M2K_W};
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, Quantity};
@@ -537,7 +558,13 @@ pub mod part_6 {
 
     pub fn check(inputs: &BalancingInputs) -> Result<CheckResult, NormError> {
         let value = system_losses_kwh(inputs);
-        Ok(CheckResult::from_utilization(ClauseId::new("DIN V 18599-6", "§8", "8.1"), Quantity::new(crate::document::QuantityKind::Energy, value), Quantity::new(crate::document::QuantityKind::Energy, inputs.annual_limit_kwh), "system losses", AnnexChoice::De))
+        Ok(CheckResult::from_utilization(
+            ClauseId::new("DIN V 18599-6", "§8", "8.1"),
+            Quantity::new(crate::document::QuantityKind::Energy, value),
+            Quantity::new(crate::document::QuantityKind::Energy, inputs.annual_limit_kwh),
+            "system losses",
+            AnnexChoice::De,
+        ))
     }
 }
 // #endregion 🔖️Part6
@@ -825,4 +852,3 @@ mod compliance_helpers_tests {
     }
 }
 //#endregion 🧪️ComplianceHelpersTests
-

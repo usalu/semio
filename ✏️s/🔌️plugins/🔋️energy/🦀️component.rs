@@ -11,9 +11,5 @@ use semio_framework_plugin::Plugin;
 /// `.document_codec::<A>()` to bind to. `ArtifactDeclaration::document_codec_bare::<Snapshot,
 /// Mutation>(schema)` now expresses exactly that — see `crate::artifacts::model::declaration()`.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::builder("energy")
-        .label("Energy")
-        .version("0.1.0")
-        .artifact(crate::artifacts::model::declaration())
-        .try_library()
+    Plugin::builder("energy").label("Energy").version("0.1.0").artifact(crate::artifacts::model::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?).try_library()
 }

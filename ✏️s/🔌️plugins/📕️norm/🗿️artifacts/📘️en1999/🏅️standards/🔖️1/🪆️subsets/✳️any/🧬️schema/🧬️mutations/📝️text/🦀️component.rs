@@ -3,16 +3,18 @@
 //! whole-document-replace macro no longer applies now that the whole-document-replace variant is
 //! gone).
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 pub use crate::artifacts::en1999::schema::mutations::En1999Mutation;
-use crate::artifacts::en1999::schema::mutations::{change_n_ed_kn, change_m_ed_knm, change_a_mm2, change_w_el_mm3, change_alloy, change_chi, change_i_t_mm4, change_l_cr_mm, change_theta_c, change_delta_sigma_ed, change_delta_sigma_c, change_fatigue_m, change_n_cycles, change_v_weld_ed_kn, change_weld_throat_mm, change_weld_length_mm, change_beta_w, change_sheet_b_mm, change_sheet_t_mm, change_sheet_k_sigma, change_sheet_w_el_mm3, change_sheet_m_ed_knm, change_shell_t_mm, change_shell_r_mm, change_sigma_ed_shell_mpa, change_annex};
+use crate::artifacts::en1999::schema::mutations::{
+    change_a_mm2, change_alloy, change_annex, change_beta_w, change_chi, change_delta_sigma_c, change_delta_sigma_ed, change_fatigue_m, change_i_t_mm4, change_l_cr_mm, change_m_ed_knm, change_n_cycles, change_n_ed_kn, change_sheet_b_mm,
+    change_sheet_k_sigma, change_sheet_m_ed_knm, change_sheet_t_mm, change_sheet_w_el_mm3, change_shell_r_mm, change_shell_t_mm, change_sigma_ed_shell_mpa, change_theta_c, change_v_weld_ed_kn, change_w_el_mm3, change_weld_length_mm,
+    change_weld_throat_mm,
+};
 use crate::document::AnnexChoice;
 use protocol::OpText;
 
@@ -22,84 +24,32 @@ use protocol::OpText;
 /// and every consumer matching on it, is completely untouched.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum En1999MutationDsl {
-    ChangeNEdKn {
-        new_n_ed_kn: f64,
-    },
-    ChangeMEdKnm {
-        new_m_ed_knm: f64,
-    },
-    ChangeAMm2 {
-        new_a_mm2: f64,
-    },
-    ChangeWElMm3 {
-        new_w_el_mm3: f64,
-    },
-    ChangeAlloy {
-        new_alloy: String,
-    },
-    ChangeChi {
-        new_chi: f64,
-    },
-    ChangeITMm4 {
-        new_i_t_mm4: f64,
-    },
-    ChangeLCrMm {
-        new_l_cr_mm: f64,
-    },
-    ChangeThetaC {
-        new_theta_c: f64,
-    },
-    ChangeDeltaSigmaEd {
-        new_delta_sigma_ed: f64,
-    },
-    ChangeDeltaSigmaC {
-        new_delta_sigma_c: f64,
-    },
-    ChangeFatigueM {
-        new_fatigue_m: f64,
-    },
-    ChangeNCycles {
-        new_n_cycles: f64,
-    },
-    ChangeVWeldEdKn {
-        new_v_weld_ed_kn: f64,
-    },
-    ChangeWeldThroatMm {
-        new_weld_throat_mm: f64,
-    },
-    ChangeWeldLengthMm {
-        new_weld_length_mm: f64,
-    },
-    ChangeBetaW {
-        new_beta_w: f64,
-    },
-    ChangeSheetBMm {
-        new_sheet_b_mm: f64,
-    },
-    ChangeSheetTMm {
-        new_sheet_t_mm: f64,
-    },
-    ChangeSheetKSigma {
-        new_sheet_k_sigma: f64,
-    },
-    ChangeSheetWElMm3 {
-        new_sheet_w_el_mm3: f64,
-    },
-    ChangeSheetMEdKnm {
-        new_sheet_m_ed_knm: f64,
-    },
-    ChangeShellTMm {
-        new_shell_t_mm: f64,
-    },
-    ChangeShellRMm {
-        new_shell_r_mm: f64,
-    },
-    ChangeSigmaEdShellMpa {
-        new_sigma_ed_shell_mpa: f64,
-    },
-    ChangeAnnex {
-        new_annex: AnnexChoice,
-    },
+    ChangeNEdKn { new_n_ed_kn: f64 },
+    ChangeMEdKnm { new_m_ed_knm: f64 },
+    ChangeAMm2 { new_a_mm2: f64 },
+    ChangeWElMm3 { new_w_el_mm3: f64 },
+    ChangeAlloy { new_alloy: String },
+    ChangeChi { new_chi: f64 },
+    ChangeITMm4 { new_i_t_mm4: f64 },
+    ChangeLCrMm { new_l_cr_mm: f64 },
+    ChangeThetaC { new_theta_c: f64 },
+    ChangeDeltaSigmaEd { new_delta_sigma_ed: f64 },
+    ChangeDeltaSigmaC { new_delta_sigma_c: f64 },
+    ChangeFatigueM { new_fatigue_m: f64 },
+    ChangeNCycles { new_n_cycles: f64 },
+    ChangeVWeldEdKn { new_v_weld_ed_kn: f64 },
+    ChangeWeldThroatMm { new_weld_throat_mm: f64 },
+    ChangeWeldLengthMm { new_weld_length_mm: f64 },
+    ChangeBetaW { new_beta_w: f64 },
+    ChangeSheetBMm { new_sheet_b_mm: f64 },
+    ChangeSheetTMm { new_sheet_t_mm: f64 },
+    ChangeSheetKSigma { new_sheet_k_sigma: f64 },
+    ChangeSheetWElMm3 { new_sheet_w_el_mm3: f64 },
+    ChangeSheetMEdKnm { new_sheet_m_ed_knm: f64 },
+    ChangeShellTMm { new_shell_t_mm: f64 },
+    ChangeShellRMm { new_shell_r_mm: f64 },
+    ChangeSigmaEdShellMpa { new_sigma_ed_shell_mpa: f64 },
+    ChangeAnnex { new_annex: AnnexChoice },
 }
 
 //#region 🔖️HandcraftedOpCodecs
@@ -110,11 +60,7 @@ impl OpText for En1999MutationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }

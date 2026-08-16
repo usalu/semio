@@ -10,7 +10,7 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("mathematical")
         .label("Mathematical")
         .version("0.1.0")
-        .artifact(crate::artifacts::mathematical::declaration())
+        .artifact(crate::artifacts::mathematical::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .document_app::<crate::apps::mathematical::MathematicalPlayApp>(crate::apps::mathematical::create_mathematical_app())
         .try_build()
 }

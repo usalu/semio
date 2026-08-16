@@ -26,7 +26,7 @@
 use crate::artifacts::din18599::op::Din18599Mutation;
 use crate::artifacts::din18599::Din18599Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
@@ -57,12 +57,7 @@ mod tests {
         let projection = Din18599Snapshot::default();
         let config = NormConfig::default();
         let text = crate::document::escape_op_text_field(&<Din18599Snapshot as store::ArtifactDsl>::print_dsl(&Din18599Snapshot::default()));
-        let emit = handle(
-            &ReplaceSnapshot { text },
-            &ArtifactView::new(&projection, &HistoryView::empty()),
-            &ConfigView { snapshot: &config },
-        )
-        .expect("handle");
+        let emit = handle(&ReplaceSnapshot { text }, &ArtifactView::new(&projection, &HistoryView::empty()), &ConfigView { snapshot: &config }).expect("handle");
         assert_eq!(emit.artifact_mutations, Din18599Mutation::from_snapshot(&Din18599Snapshot::default()));
         assert_eq!(emit.description.as_deref(), Some("setSnapshot"));
         assert!(emit.config_mutations.is_empty());

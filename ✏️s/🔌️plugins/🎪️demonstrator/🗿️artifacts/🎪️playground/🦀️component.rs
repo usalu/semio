@@ -18,7 +18,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: PLAYGROUND_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
+        export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
         import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
     }
 }
@@ -34,13 +34,48 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// every one of playground's §6 registrars fits this declaration with nothing left over. Lives at the
 /// artifact root, not `⚙️engine`, per that ticket's taxonomy pass — `declaration()` describes the
 /// artifact (kind/schema/io/ownership), it is not engine behaviour.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.playground")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.playground.standard.v1", "standard", "1", &[], None),
+        ("s.playground.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.playground.schema.artifact", "schema", "s.demonstrator.playground", &[("schema", "s.demonstrator.playground")], None),
+        ("s.playground.inference.artifact", "inference", "s.demonstrator.playground.inference", &[("schema", "s.demonstrator.playground.inference")], None),
+        ("s.playground.composer.native", "composer", "s.playground@1/*", &[("dialect", "s.playground@1/*")], None),
+        ("s.playground.composer.format-1", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
+        ("s.playground.composer.format-2", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
+        ("s.playground.composer.format-3", "composer", "s.stdio.xlsx@ecma-376/*", &[("dialect", "s.stdio.xlsx@ecma-376/*")], None),
+        ("s.playground.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.playground.grammar.1", "grammar", "playground.document", &[("grammar", "playground.document")], None),
+        ("s.playground.grammar.2", "grammar", "playground.op", &[("grammar", "playground.op")], None),
+        ("s.playground.grammar.3", "grammar", "playground.diff", &[("grammar", "playground.diff")], None),
+        ("s.playground.grammar.4", "grammar", "playground.pack", &[("grammar", "playground.pack")], None),
+        ("s.playground.grammar.5", "grammar", "playground.spr", &[("grammar", "playground.spr")], None),
+        ("s.playground.localization.en", "localization", "Playground", &[], Some(("en", "Playground"))),
+        ("s.playground.localization.de", "localization", "Spielplatz", &[], Some(("de", "Spielplatz"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.playground")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::playground::standards::v1::subsets::any::schema::playground_artifact_schema_descriptor())
         .inferences([crate::artifacts::playground::standards::v1::subsets::any::schema::inferences::playground_artifact_inference_descriptor()])
         .composers(crate::artifacts::playground::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once

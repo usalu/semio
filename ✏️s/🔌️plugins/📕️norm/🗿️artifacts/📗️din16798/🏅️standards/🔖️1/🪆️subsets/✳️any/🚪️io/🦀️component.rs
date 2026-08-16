@@ -5,14 +5,18 @@
 //! records), not a flat row/column table, so no honest whole-artifact CSV round-trip exists to
 //! re-register in their place. Registration flows through 🎹️composer::register (called once from
 //! ⚙️engine::register) for the native `s.din16798` dialect only.
-pub fn import_stdio_kinds() -> &'static [&'static str] { &[] }
-pub fn export_stdio_kinds() -> &'static [&'static str] { &[] }
+pub fn import_stdio_kinds() -> &'static [&'static str] {
+    &[]
+}
+pub fn export_stdio_kinds() -> &'static [&'static str] {
+    &[]
+}
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::din16798::Din16798Snapshot;
     use crate::artifacts::din16798::standards::v1::subsets::any::schema::Din16798Analyzer;
+    use crate::artifacts::din16798::Din16798Snapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.din16798", standard: StandardId("1"), subset: SubsetId("*") };
 
@@ -50,16 +54,14 @@ pub use derived_composition::*;
 /// 🚪️ Composer registry (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated
 /// verbatim from the deleted `⚙️engine`; io is exactly where composer dispatch belongs.
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::din16798::standards::v1::subsets::any::schema::Din16798Composer as Din16798AnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![
-            composer_entry_of::<Din16798AnyComposer>(),
-        ]).as_slice()
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<Din16798AnyComposer>()]).as_slice()
     }
 }
 //#endregion 🚪️IoRegistry

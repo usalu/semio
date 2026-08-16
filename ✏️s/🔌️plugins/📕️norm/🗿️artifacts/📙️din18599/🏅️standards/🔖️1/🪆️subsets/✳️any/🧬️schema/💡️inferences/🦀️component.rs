@@ -86,13 +86,13 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
+use crate::artifacts::din18599::standards::v1::subsets::any::schema::{part_1, part_10, part_11, part_12, part_2, part_3, part_4, part_5, part_6, part_7, part_8, part_9};
+use crate::artifacts::din18599::BalancingInputs;
 /// 📋️ Full DIN V 18599 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `Din18599Snapshot -> CheckReport` projection; `balance_annual`
 /// composes every `part_N::check` (pure helpers living in the parent `🧬️schema`).
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormError, Quantity};
-use crate::artifacts::din18599::standards::v1::subsets::any::schema::{part_1, part_2, part_3, part_4, part_5, part_6, part_7, part_8, part_9, part_10, part_11, part_12};
-use crate::artifacts::din18599::BalancingInputs;
 
 /// 📋️ Full annual balancing per DIN V 18599.
 pub fn balance_annual(inputs: &BalancingInputs) -> Result<CheckReport, NormError> {
@@ -116,7 +116,13 @@ pub fn balance_annual(inputs: &BalancingInputs) -> Result<CheckReport, NormError
 pub fn evaluate(document: &Din18599Snapshot) -> CheckReport {
     balance_annual(document).unwrap_or_else(|err| {
         let mut report = CheckReport::default();
-        report.push(CheckResult::from_utilization(ClauseId::new("DIN V 18599", "input", "1"), Quantity::new(crate::document::QuantityKind::Dimensionless, 2.0), Quantity::new(crate::document::QuantityKind::Dimensionless, 1.0), err.to_string(), AnnexChoice::De));
+        report.push(CheckResult::from_utilization(
+            ClauseId::new("DIN V 18599", "input", "1"),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, 2.0),
+            Quantity::new(crate::document::QuantityKind::Dimensionless, 1.0),
+            err.to_string(),
+            AnnexChoice::De,
+        ));
         report
     })
 }
@@ -126,8 +132,8 @@ pub fn evaluate(document: &Din18599Snapshot) -> CheckReport {
 #[cfg(test)]
 mod compliance_report_tests {
     use super::*;
-    use crate::document::ClimateZoneDe;
     use crate::artifacts::din18599::standards::v1::subsets::any::schema::{from_building, reference_wall_layers};
+    use crate::document::ClimateZoneDe;
 
     fn reference_100m2_inputs() -> BalancingInputs {
         from_building(&reference_wall_layers(), 100.0, 4, ClimateZoneDe::Zone2, 0.0).unwrap()
@@ -150,4 +156,3 @@ mod compliance_report_tests {
     }
 }
 //#endregion 🧪️ComplianceReportTests
-

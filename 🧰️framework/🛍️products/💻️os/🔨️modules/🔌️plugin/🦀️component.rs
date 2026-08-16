@@ -316,12 +316,14 @@ pub mod app {
             KernelMutation, MutationId, PastePlacement, Rights, SchemaId, Scope, UndoGroup, UndoPolicy,
         },
         note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition,
-        start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppDefinition, AppIo, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, ExampleDefinition, Fault, FaultCode, FaultFrom, FaultOrigin,
+        start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppIo, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, ExampleDefinition, Fault, FaultCode, FaultFrom, FaultOrigin,
         IconName, InteractionDefinition, InteractionRef, IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind,
         PluginManifest, ToolDefinition, ToolRef, TutorialDefinition, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition, WindowKinds, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID,
         NOTE_SHELL_COMMAND_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SELECT_ALL_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID,
         SET_SELECTION_MODE_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, UI_FOOTER_ELEMENT_ID, UI_NAVBAR_ELEMENT_ID,
     };
+    /// 🪪️ Declarative app manifest shared by plugin builders and surface registrations.
+    pub use semio_framework::AppDefinition;
     use serde::de::DeserializeOwned;
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
@@ -1905,7 +1907,8 @@ pub mod app {
     }
 
     impl ArtifactDefinitionError {
-        fn new(code: &'static str, message: impl Into<String>) -> Self {
+        /// 🧾️ Creates a validation error at an artifact-definition boundary.
+        pub fn new(code: &'static str, message: impl Into<String>) -> Self {
             Self { code, message: message.into() }
         }
 
@@ -4662,8 +4665,11 @@ pub mod app {
                 assert!(port.direction == MediaPortDirection::Out, "app {} media output {} must declare direction Out", self.id, port.id);
                 assert!(!matches!(port.media_type.form, MediaForm::Any), "app {} media output {} must not declare MediaForm::Any (Any is only legal on inputs, see media_types_compatible)", self.id, port.id);
             }
+            let (dialect, role) = semio_framework::parse_surface_app_id(&self.id).unwrap_or_else(|error| panic!("app id {} must be a canonical surface id: {error}", self.id));
             let mut definition = AppDefinition {
                 id: self.id,
+                role,
+                dialect,
                 label: self.label,
                 breadcrumb: self.document,
                 icon_id: self.icon_id,
@@ -6174,12 +6180,32 @@ pub mod app {
                 assert_eq!(app.snapshot().unwrap().count, 1, "rollback must leave the earlier state exactly as it was");
             }
 
+            /// 🔀️ Contract §5.8 and §5.10 are COMPLEMENTARY, and this test is where that shows: §5.10
+            /// already blocks every local mutating command while a transaction is pending, so a local
+            /// edit can never be what moves the generation out from under a prepared member. The only
+            /// remaining way for the base generation to go stale is an edit that does not come from a
+            /// command at all — a remote envelope ingested from the backbone mid-transaction — which is
+            /// precisely the race §5.8's check exists to catch. Driving this through `dispatch_typed`
+            /// instead only proves §5.10 a second time (it rejects with `transaction.instance-busy`).
             #[test]
             fn generation_mismatch_is_rejected_with_the_frozen_code() {
+                let mut sender = new_app::<TxnApp>();
+                let (near, mut far) = store::MemoryBackbone::pair("mem://txn", "mem://txn");
+                sender.attach_backbone(Box::new(near)).expect("attach");
+                sender.dispatch_typed(TxnCommand::Increment, &meta("remote")).expect("the peer edits its own copy");
+                let mut envelopes = Vec::new();
+                for message in far.receive().expect("receive") {
+                    if let store::BackboneMessage::Mutations { envelopes: operations } = message {
+                        envelopes.extend(protocol::decode_envelopes(&operations).expect("decode envelopes"));
+                    }
+                }
+                assert!(!envelopes.is_empty(), "the peer's edit must reach the channel");
+                let operations = protocol::encode_envelopes(&envelopes);
+
                 let mut app = new_app::<TxnApp>();
                 let outcome = app.transaction_prepare("txn-3", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::SetCount { value: 5 }).expect("encode")], "peer-write", Some(protocol::MutationOrigin::Owner));
                 assert!(outcome.rejection.is_none());
-                app.dispatch_typed(TxnCommand::Increment, &meta("local")).expect("an intervening local edit moves the generation");
+                app.ingest_operations(&operations).expect("a remote edit lands while the transaction is pending");
                 let error = app.transaction_commit("txn-3", &meta("local")).expect_err("commit must reject a stale generation");
                 assert_eq!(error.code.0, "transaction.generation-mismatch");
             }
@@ -11839,8 +11865,8 @@ pub mod app {
         }
 
         fn render(view: &DocumentView) -> UiNode {
-            let children = view.pages.iter().map(|page| ui_wgpu::wgpu::ui_text(Label::data(page.text.clone()))).collect();
-            ui_wgpu::wgpu::ui_stack_vertical(children)
+            let children = view.pages.iter().map(|page| ui_text(Label::data(page.text.clone()))).collect();
+            ui_stack_vertical(children)
         }
     }
     //#endregion 🔖️DocumentWindowKit
@@ -12064,6 +12090,684 @@ pub mod app {
     }
     //#endregion 🔖️WindowKitsTests
     //#endregion 🔖️WindowKits
+
+    //#region 🔖️Surfaces
+    use semio_framework::{surface_app_id, AppRole};
+
+    /// 🎭️ Authoring traits for artifact surfaces split by mutation capability (ticket
+    /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1/§2.2/§2.4). `ArtifactEditor`
+    /// and `ArtifactViewer` replace `ArtifactApp` as the trait an app AUTHOR implements; the runtime
+    /// `ArtifactApp` trait above is unchanged and is satisfied by the `EditorApp`/`ViewerApp` adapters
+    /// below through pure delegation — nothing here alters runtime dispatch.
+
+    //#region 🔖️ArtifactEditor
+    /// 👁️✏️ Authoring trait for a mutation-capable surface — a structural copy of `ArtifactApp`'s
+    /// members (contract §2.1) plus `ROLE`/`DIALECT`; `APP_ID` is intentionally absent, the runtime id
+    /// being derived from `DIALECT`+`ROLE` via `surface_app_id` (contract §7.4) instead of hand-written.
+    /// `EditorApp<E>` below is the sole `ArtifactApp` implementor for any `E: ArtifactEditor`.
+    pub trait ArtifactEditor: Default + Send + 'static {
+        /// 🎭️ Always `Editor` in practice — defaulted so implementors never restate it.
+        const ROLE: AppRole = AppRole::Editor;
+        const DIALECT: Dialect;
+        /// @emoji 📜️ Stable document schema id — prefer this over `document_schema(&self)`.
+        const DOCUMENT_SCHEMA: &'static str;
+        type Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack;
+        type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ConfigRecord + ArtifactPack;
+        type ConfigMutation: ::protocol::Mutation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        type Draft: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack;
+        type DraftMutation: ::protocol::Mutation<Self::Draft> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        type Presence: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack;
+        type PresenceMutation: ::protocol::Mutation<Self::Presence> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        type Transient: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack;
+        type TransientMutation: ::protocol::Mutation<Self::Transient> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        type Command: ::protocol::OpBinary + Send;
+
+        /// 👥️🫧️ The two EPHEMERAL lanes this command touches. Returns a plain tuple rather than
+        /// `EphemeralEmit<Self>` — that struct is bound to the RUNTIME `ArtifactApp` trait, which
+        /// `Self` here does not implement; `EditorApp<E>::ephemeral` wraps this tuple into a real
+        /// `EphemeralEmit` at the adapter boundary, where the bound is satisfied.
+        fn ephemeral(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _presence: &PresenceView<'_, Self::Presence>, _transient: &TransientView<'_, Self::Transient>) -> (Vec<Self::PresenceMutation>, Vec<Self::TransientMutation>) {
+            (Vec::new(), Vec::new())
+        }
+        fn config_schema() -> &'static str {
+            "config.empty"
+        }
+        fn initial_snapshot() -> Self::Snapshot;
+        fn initial_config() -> Self::Config {
+            Self::Config::default()
+        }
+        fn initial_draft() -> Self::Draft {
+            Self::Draft::default()
+        }
+        /// @emoji 🧩️ The pure heart of an editor — identical shape to `ArtifactApp::handle`.
+        fn handle(
+            command: &Self::Command,
+            doc: &ArtifactView<'_, Self::Snapshot>,
+            cfg: &ConfigView<'_, Self::Config>,
+            interaction: &InteractionView<'_>,
+            draft: &DraftView<'_, Self::Draft>,
+            engines: &EngineHandles,
+        ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault>;
+        fn command_id(_command: &Self::Command) -> &'static str {
+            "typed-command"
+        }
+        fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+            Err(Fault::new(
+                FaultOrigin::App,
+                FaultCode::new("app.command.unsupported"),
+                format!("action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"),
+            ))
+        }
+        fn config_spec() -> ConfigSpec {
+            ConfigSpec::empty()
+        }
+        fn clipboard_media_type() -> Option<MediaType> {
+            None
+        }
+        fn clipboard_accepts() -> Vec<MediaType> {
+            Self::clipboard_media_type().into_iter().collect()
+        }
+        fn copy_fragment(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
+            Err(ClipboardError::EmptySelection)
+        }
+        fn cut_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>) -> Vec<Self::Mutation> {
+            Vec::new()
+        }
+        fn interaction_topology(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
+            protocol::InteractionTopology::default()
+        }
+        fn paste_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
+            Ok(Vec::new())
+        }
+        fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<HostEffect> {
+            Vec::new()
+        }
+        fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
+        fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
+            HashMap::new()
+        }
+        fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+            HashMap::new()
+        }
+        fn tool_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+            HashMap::new()
+        }
+        fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+            Vec::new()
+        }
+        fn genesis() -> Vec<Self::Mutation> {
+            Vec::new()
+        }
+        fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+            None
+        }
+        fn io() -> Option<AppIo> {
+            None
+        }
+        fn media_ports() -> Vec<MediaPortSpec> {
+            Self::io().map(|io| io.all_ports()).unwrap_or_default()
+        }
+        fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
+            if port != "document:out" {
+                return Err(MediaError::NotImplemented);
+            }
+            let media_type = Self::io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+            let bytes = doc.snapshot.encode_pack();
+            Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+        }
+        fn whole_document_operation(_snapshot: Self::Snapshot) -> Option<Self::Mutation> {
+            None
+        }
+        fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, MediaError> {
+            if port != "document:in" {
+                return Err(MediaError::NotImplemented);
+            }
+            let MediaPayload::Structured { json, .. } = &media.payload else {
+                return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
+            };
+            let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            let snapshot = <Self::Snapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            match Self::whole_document_operation(snapshot) {
+                Some(operation) => Ok(Emit::mutations(vec![operation])),
+                None => Err(MediaError::NotImplemented),
+            }
+        }
+        fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
+            Self::export_media(port, doc).map(|media| MediaFingerprint::of(&media))
+        }
+    }
+    //#endregion 🔖️ArtifactEditor
+
+    //#region 🔖️ArtifactViewer
+    /// 👁️ Authoring trait for a read-only surface (contract §2.2) — the mutation-incapable twin of
+    /// `ArtifactEditor`. `Mutation` stays decode-only (the store's op log must still decode past
+    /// edits an `ArtifactEditor` made) but `handle` returns `ViewEmit`, which cannot structurally
+    /// carry an artifact or draft mutation. `ViewerApp<V>` below is the sole `ArtifactApp` implementor.
+    pub trait ArtifactViewer: Default + Send + 'static {
+        /// 🎭️ Always `Viewer` in practice — defaulted so implementors never restate it.
+        const ROLE: AppRole = AppRole::Viewer;
+        const DIALECT: Dialect;
+        const DOCUMENT_SCHEMA: &'static str;
+        type Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack;
+        /// 📜️ Decode-only — never constructed by `handle`, but the store's op log must still decode
+        /// past edits made by an `ArtifactEditor` sharing this dialect.
+        type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ConfigRecord + ArtifactPack;
+        type ConfigMutation: ::protocol::Mutation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        type Presence: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack;
+        type PresenceMutation: ::protocol::Mutation<Self::Presence> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        type Transient: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack;
+        type TransientMutation: ::protocol::Mutation<Self::Transient> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        type Command: ::protocol::OpBinary + Send;
+
+        /// 👥️🫧️ See `ArtifactEditor::ephemeral` for why this returns a tuple, not `EphemeralEmit<Self>`.
+        fn ephemeral(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _presence: &PresenceView<'_, Self::Presence>, _transient: &TransientView<'_, Self::Transient>) -> (Vec<Self::PresenceMutation>, Vec<Self::TransientMutation>) {
+            (Vec::new(), Vec::new())
+        }
+        fn config_schema() -> &'static str {
+            "config.empty"
+        }
+        fn initial_snapshot() -> Self::Snapshot;
+        fn initial_config() -> Self::Config {
+            Self::Config::default()
+        }
+        /// 👁️ The pure heart of a viewer — same shape as `ArtifactEditor::handle` minus `draft` (a
+        /// viewer never has a draft lane), returning `ViewEmit` instead of `Emit`: structurally
+        /// incapable of an artifact or draft mutation (contract §2.2).
+        fn handle(
+            command: &Self::Command,
+            doc: &ArtifactView<'_, Self::Snapshot>,
+            cfg: &ConfigView<'_, Self::Config>,
+            interaction: &InteractionView<'_>,
+            engines: &EngineHandles,
+        ) -> Result<ViewEmit<Self::ConfigMutation>, Fault>;
+        fn command_id(_command: &Self::Command) -> &'static str {
+            "typed-command"
+        }
+        fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+            Err(Fault::new(
+                FaultOrigin::App,
+                FaultCode::new("app.command.unsupported"),
+                format!("action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"),
+            ))
+        }
+        fn config_spec() -> ConfigSpec {
+            ConfigSpec::empty()
+        }
+        fn interaction_topology(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
+            protocol::InteractionTopology::default()
+        }
+        fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
+        fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
+            HashMap::new()
+        }
+        fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+            HashMap::new()
+        }
+        fn tool_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+            HashMap::new()
+        }
+        fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+            Vec::new()
+        }
+        fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+            None
+        }
+        fn io() -> Option<AppIo> {
+            None
+        }
+        fn media_ports() -> Vec<MediaPortSpec> {
+            Self::io().map(|io| io.all_ports()).unwrap_or_default()
+        }
+        fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
+            if port != "document:out" {
+                return Err(MediaError::NotImplemented);
+            }
+            let media_type = Self::io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+            let bytes = doc.snapshot.encode_pack();
+            Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+        }
+        fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
+            Self::export_media(port, doc).map(|media| MediaFingerprint::of(&media))
+        }
+    }
+    //#endregion 🔖️ArtifactViewer
+
+    //#region 🔖️ViewEmit
+    /// 👁️ What a viewer may emit — structurally cannot carry an artifact or draft mutation (contract
+    /// §2.2): the read-only guarantee is a type property, not a runtime check.
+    pub struct ViewEmit<ConfigMutation> {
+        pub config_mutations: Vec<ConfigMutation>,
+        pub effects: Vec<HostEffect>,
+        pub ui_dirty: semio_framework::kernel::UiDirtyScope,
+    }
+
+    impl<ConfigMutation> Default for ViewEmit<ConfigMutation> {
+        fn default() -> Self {
+            Self { config_mutations: Vec::new(), effects: Vec::new(), ui_dirty: semio_framework::kernel::UiDirtyScope::default() }
+        }
+    }
+
+    impl<ConfigMutation> ViewEmit<ConfigMutation> {
+        pub fn new() -> Self {
+            Self::default()
+        }
+        /// 🧮️ A config-operation emission carrying `config_mutations` and nothing else.
+        pub fn config(config_mutations: Vec<ConfigMutation>) -> Self {
+            Self { config_mutations, ..Default::default() }
+        }
+        /// 🐚️ A single host effect and no config operations.
+        pub fn effect(effect: HostEffect) -> Self {
+            Self { effects: vec![effect], ..Default::default() }
+        }
+        /// 🐢️ Narrows which rendered UI sections this emission invalidates.
+        pub fn dirty(ui_dirty: semio_framework::kernel::UiDirtyScope) -> Self {
+            Self { ui_dirty, ..Default::default() }
+        }
+    }
+    //#endregion 🔖️ViewEmit
+
+    //#region 🔖️EditorApp
+    /// 🗄️✏️ Adapter binding an `ArtifactEditor` author into the runtime `ArtifactApp` contract
+    /// (contract §2.1) — pure delegation, `E` supplies every behavior. `APP_ID` is a fixed placeholder
+    /// (see `id` field doc): the runtime trait's `APP_ID` must be a `&'static str` const, but the real
+    /// derived id (`surface_app_id`) is only knowable at runtime, so the `Viewer`/`Editor` builders
+    /// below set `AppDefinition.id` directly rather than reading this const.
+    pub struct EditorApp<E: ArtifactEditor> {
+        /// 🪪️ The real derived surface id, computed once in `Default::default()`. NOT `Self::APP_ID`
+        /// (see struct doc) — exposed via `surface_id()` for the day `VcsArtifactApp`'s internal
+        /// `A::APP_ID` usages (its document/config/draft/interaction envelope ids, ownership-check
+        /// error strings) are switched to read an instance id instead of the const; see this ticket's
+        /// `📓️w0-b-report.md` handoff.
+        id: String,
+        _editor: std::marker::PhantomData<E>,
+    }
+
+    impl<E: ArtifactEditor> Default for EditorApp<E> {
+        fn default() -> Self {
+            Self { id: surface_app_id(&E::DIALECT.into(), E::ROLE), _editor: std::marker::PhantomData }
+        }
+    }
+
+    impl<E: ArtifactEditor> EditorApp<E> {
+        /// 🪪️ The real derived surface id — see struct doc.
+        pub fn surface_id(&self) -> &str {
+            &self.id
+        }
+    }
+
+    impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
+        const APP_ID: &'static str = "surface";
+        const DOCUMENT_SCHEMA: &'static str = E::DOCUMENT_SCHEMA;
+        type Snapshot = E::Snapshot;
+        type Mutation = E::Mutation;
+        type Config = E::Config;
+        type ConfigMutation = E::ConfigMutation;
+        type Draft = E::Draft;
+        type DraftMutation = E::DraftMutation;
+        type Presence = E::Presence;
+        type PresenceMutation = E::PresenceMutation;
+        type Transient = E::Transient;
+        type TransientMutation = E::TransientMutation;
+        type Command = E::Command;
+
+        fn ephemeral(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, presence: &PresenceView<'_, Self::Presence>, transient: &TransientView<'_, Self::Transient>) -> EphemeralEmit<Self> {
+            let (presence_mutations, transient_mutations) = E::ephemeral(command, doc, cfg, presence, transient);
+            EphemeralEmit { presence: presence_mutations, transient: transient_mutations }
+        }
+        fn config_schema() -> &'static str {
+            E::config_schema()
+        }
+        fn initial_snapshot() -> Self::Snapshot {
+            E::initial_snapshot()
+        }
+        fn initial_config() -> Self::Config {
+            E::initial_config()
+        }
+        fn initial_draft() -> Self::Draft {
+            E::initial_draft()
+        }
+        fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, interaction: &InteractionView<'_>, draft: &DraftView<'_, Self::Draft>, engines: &EngineHandles) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+            E::handle(command, doc, cfg, interaction, draft, engines)
+        }
+        fn command_id(command: &Self::Command) -> &'static str {
+            E::command_id(command)
+        }
+        fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+            E::command_from_action(action, args)
+        }
+        fn config_spec() -> ConfigSpec {
+            E::config_spec()
+        }
+        fn clipboard_media_type() -> Option<MediaType> {
+            E::clipboard_media_type()
+        }
+        fn clipboard_accepts() -> Vec<MediaType> {
+            E::clipboard_accepts()
+        }
+        fn copy_fragment(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
+            E::copy_fragment(doc, cfg, interaction)
+        }
+        fn cut_operations(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, interaction: &InteractionView<'_>) -> Vec<Self::Mutation> {
+            E::cut_operations(doc, cfg, interaction)
+        }
+        fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
+            E::interaction_topology(doc, cfg)
+        }
+        fn paste_operations(doc: &ArtifactView<'_, Self::Snapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
+            E::paste_operations(doc, fragment, placement)
+        }
+        fn pending_effects(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> Vec<HostEffect> {
+            E::pending_effects(doc, cfg)
+        }
+        fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+            E::render(body_key, doc, cfg)
+        }
+        fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
+            E::window_engagements(doc, cfg)
+        }
+        fn window_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+            E::window_measures(doc, cfg)
+        }
+        fn tool_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+            E::tool_measures(doc, cfg)
+        }
+        fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+            E::context_menu(request, doc, cfg, registry)
+        }
+        fn genesis() -> Vec<Self::Mutation> {
+            E::genesis()
+        }
+        fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+            E::app_schema()
+        }
+        fn io() -> Option<AppIo> {
+            E::io()
+        }
+        fn media_ports() -> Vec<MediaPortSpec> {
+            E::media_ports()
+        }
+        fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
+            E::export_media(port, doc)
+        }
+        fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
+            E::whole_document_operation(snapshot)
+        }
+        fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, MediaError> {
+            E::import_media(port, media, doc)
+        }
+        fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
+            E::media_fingerprint(port, doc)
+        }
+    }
+    //#endregion 🔖️EditorApp
+
+    //#region 🔖️ViewerApp
+    /// 🗄️👁️ Adapter binding an `ArtifactViewer` author into the runtime `ArtifactApp` contract
+    /// (contract §2.1/§2.2). Draft-lane and clipboard/genesis/import methods are left to
+    /// `ArtifactApp`'s own defaults (empty/no-op) since `ArtifactViewer` never declares them — a
+    /// viewer never originates or imports a document. `handle` is the one real seam: it converts
+    /// `V::handle`'s `ViewEmit` into an `Emit` whose `artifact_mutations`/`draft_mutations` are always
+    /// empty BY CONSTRUCTION, built solely from `ViewEmit`'s three fields (contract §2.2) — never from
+    /// a caller-supplied mutation vector, so a hand-written runtime impl cannot smuggle one in either.
+    pub struct ViewerApp<V: ArtifactViewer> {
+        /// 🪪️ See `EditorApp::id` — same placeholder/derivation split applies here.
+        id: String,
+        _viewer: std::marker::PhantomData<V>,
+    }
+
+    impl<V: ArtifactViewer> Default for ViewerApp<V> {
+        fn default() -> Self {
+            Self { id: surface_app_id(&V::DIALECT.into(), V::ROLE), _viewer: std::marker::PhantomData }
+        }
+    }
+
+    impl<V: ArtifactViewer> ViewerApp<V> {
+        /// 🪪️ The real derived surface id — see `EditorApp::surface_id`.
+        pub fn surface_id(&self) -> &str {
+            &self.id
+        }
+    }
+
+    impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
+        const APP_ID: &'static str = "surface";
+        const DOCUMENT_SCHEMA: &'static str = V::DOCUMENT_SCHEMA;
+        type Snapshot = V::Snapshot;
+        type Mutation = V::Mutation;
+        type Config = V::Config;
+        type ConfigMutation = V::ConfigMutation;
+        type Draft = NoDraft;
+        type DraftMutation = NoDraftMutation;
+        type Presence = V::Presence;
+        type PresenceMutation = V::PresenceMutation;
+        type Transient = V::Transient;
+        type TransientMutation = V::TransientMutation;
+        type Command = V::Command;
+
+        fn ephemeral(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, presence: &PresenceView<'_, Self::Presence>, transient: &TransientView<'_, Self::Transient>) -> EphemeralEmit<Self> {
+            let (presence_mutations, transient_mutations) = V::ephemeral(command, doc, cfg, presence, transient);
+            EphemeralEmit { presence: presence_mutations, transient: transient_mutations }
+        }
+        fn config_schema() -> &'static str {
+            V::config_schema()
+        }
+        fn initial_snapshot() -> Self::Snapshot {
+            V::initial_snapshot()
+        }
+        fn initial_config() -> Self::Config {
+            V::initial_config()
+        }
+        fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, engines: &EngineHandles) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+            let view_emit = V::handle(command, doc, cfg, interaction, engines)?;
+            Ok(Emit { config_mutations: view_emit.config_mutations, effects: view_emit.effects, ui_scope: view_emit.ui_dirty, ..Default::default() })
+        }
+        fn command_id(command: &Self::Command) -> &'static str {
+            V::command_id(command)
+        }
+        fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+            V::command_from_action(action, args)
+        }
+        fn config_spec() -> ConfigSpec {
+            V::config_spec()
+        }
+        fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
+            V::interaction_topology(doc, cfg)
+        }
+        fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+            V::render(body_key, doc, cfg)
+        }
+        fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
+            V::window_engagements(doc, cfg)
+        }
+        fn window_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+            V::window_measures(doc, cfg)
+        }
+        fn tool_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+            V::tool_measures(doc, cfg)
+        }
+        fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+            V::context_menu(request, doc, cfg, registry)
+        }
+        fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+            V::app_schema()
+        }
+        fn io() -> Option<AppIo> {
+            V::io()
+        }
+        fn media_ports() -> Vec<MediaPortSpec> {
+            V::media_ports()
+        }
+        fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
+            V::export_media(port, doc)
+        }
+        fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
+            V::media_fingerprint(port, doc)
+        }
+    }
+    //#endregion 🔖️ViewerApp
+
+    //#region 🔖️SurfaceBuilders
+    /// 🎭️👁️ Marker whose `builder` seeds a `ViewerBuilder` with the surface id/role/dialect already
+    /// derived (contract §2.4) — mirrors `App::builder`'s `(id, label) -> AppBuilder` shape but never
+    /// accepts a hand-written id.
+    pub struct Viewer;
+    /// 🎭️✏️ Editor twin of `Viewer`.
+    pub struct Editor;
+
+    impl Viewer {
+        pub fn builder(dialect: Dialect) -> ViewerBuilder {
+            let dialect: ArtifactDialect = dialect.into();
+            let inner = AppBuilder::new(surface_app_id(&dialect, AppRole::Viewer), LocalizedLabel::native("Viewer", "Betrachter"));
+            ViewerBuilder { inner, dialect }
+        }
+    }
+
+    impl Editor {
+        pub fn builder(dialect: Dialect) -> EditorBuilder {
+            let dialect: ArtifactDialect = dialect.into();
+            let inner = AppBuilder::new(surface_app_id(&dialect, AppRole::Editor), LocalizedLabel::native("Editor", "Editor"));
+            EditorBuilder { inner, dialect }
+        }
+    }
+
+    /// 👁️ Fluent viewer surface builder (contract §2.4) — every `AppBuilder` method except
+    /// `.mutation(...)`, which does not exist on this type: calling it is a compile error, not a
+    /// runtime rejection.
+    pub struct ViewerBuilder {
+        inner: AppBuilder,
+        dialect: ArtifactDialect,
+    }
+
+    /// ✏️ Fluent editor surface builder (contract §2.4) — every `AppBuilder` method, `.mutation(...)`
+    /// included.
+    pub struct EditorBuilder {
+        inner: AppBuilder,
+        dialect: ArtifactDialect,
+    }
+
+    impl ViewerBuilder {
+        pub fn document<I, S>(mut self, document: I) -> Self
+        where
+            I: IntoIterator<Item = S>,
+            S: Into<String>,
+        {
+            self.inner = self.inner.document(document);
+            self
+        }
+        pub fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = impl Into<String>>) -> Self {
+            self.inner = self.inner.terminology_document(id, document);
+            self
+        }
+        pub fn build_definition(self) -> AppDefinition {
+            let mut definition = self.inner.build_definition();
+            definition.role = AppRole::Viewer;
+            definition.dialect = self.dialect;
+            definition
+        }
+    }
+
+    impl EditorBuilder {
+        pub fn document<I, S>(mut self, document: I) -> Self
+        where
+            I: IntoIterator<Item = S>,
+            S: Into<String>,
+        {
+            self.inner = self.inner.document(document);
+            self
+        }
+        pub fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = impl Into<String>>) -> Self {
+            self.inner = self.inner.terminology_document(id, document);
+            self
+        }
+        /// @emoji ✏️ Declares a document-mutating action — the one method `ViewerBuilder` doesn't have.
+        pub fn mutation(mut self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+            self.inner = self.inner.mutation(id, label);
+            self
+        }
+        pub fn build_definition(self) -> AppDefinition {
+            let mut definition = self.inner.build_definition();
+            definition.role = AppRole::Editor;
+            definition.dialect = self.dialect;
+            definition
+        }
+    }
+
+    /// 🏭️ Forwards the `AppBuilder` methods `ViewerBuilder`/`EditorBuilder` share verbatim (every
+    /// `AppBuilder` builder method except `new`/`build_definition`/`document`/`terminology_document`/
+    /// `mutation`, each handled above) — one macro invocation is the single source of truth for the
+    /// shared surface instead of two ~45-method hand-copied impls drifting apart.
+    macro_rules! surface_builder_forward {
+        ( [ $($Type:ident),+ ] ; $methods:tt ) => {
+            $(
+                surface_builder_forward!(@type $Type; $methods);
+            )+
+        };
+        ( @type $Type:ident; { $( $name:ident ( $( $arg:ident : $ty:ty ),* ) ),+ $(,)? } ) => {
+            impl $Type {
+                $(
+                    pub fn $name(mut self, $( $arg: $ty ),* ) -> Self {
+                        self.inner = self.inner.$name( $( $arg ),* );
+                        self
+                    }
+                )+
+            }
+        };
+    }
+
+    surface_builder_forward!(
+        [ViewerBuilder, EditorBuilder];
+        {
+        artifact_kind(spec: ArtifactKindSpec),
+        config(spec: ConfigSpec),
+        io(io: AppIo),
+        command_grammar(grammar: CommandGrammar),
+        media_input(spec: MediaPortSpec),
+        media_output(spec: MediaPortSpec),
+        terminology(id: impl Into<String>),
+        introduction(introduction: IntroductionDefinition),
+        tutorial(tutorial: TutorialDefinition),
+        dialog(dialog: DialogDefinition),
+        icon_id(icon_id: impl Into<IconName>),
+        mode(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>),
+        mode_commands(mode_id: impl AsRef<str>, commands: Vec<CommandDefinition>),
+        mode_command(mode_id: impl AsRef<str>, command: CommandDefinition),
+        mode_layout(mode_id: impl AsRef<str>, layout_id: impl Into<String>),
+        mode_tools(mode_id: impl AsRef<str>, tool_ids: Vec<ToolRef>),
+        default_mode_id(id: impl Into<String>),
+        window_kind(id: impl Into<String>, label: impl Into<LocalizedLabel>, body_key: impl Into<String>, surface_kind: SurfaceKind, icon_id: impl Into<IconName>),
+        window_kind_with_engagement(id: impl Into<String>, label: impl Into<LocalizedLabel>, body_key: impl Into<String>, surface_kind: SurfaceKind, engagement: WindowEngagement, icon_id: impl Into<IconName>),
+        mode_def(def: ModeDefinition),
+        window_kind_def(def: WindowKindDefinition),
+        panel_tab_def(def: PanelTabDefinition),
+        window_kind_measures(window_kind_id: impl AsRef<str>, measures: Vec<WindowMeasure>),
+        window_kind_actions(window_kind_id: impl AsRef<str>, actions: Vec<ActionDefinition>),
+        window_kind_action_refs(window_kind_id: impl AsRef<str>, action_refs: Vec<ActionRef>),
+        window_kind_utilities(window_kind_id: impl AsRef<str>, utility_ids: Vec<UtilityRef>),
+        window_kind_interactions(window_kind_id: impl AsRef<str>, interaction_ids: Vec<InteractionRef>),
+        named_layout(layout: NamedLayout),
+        default_layout(layout: WindowLayout),
+        panel_tab(id: impl Into<String>, label: impl Into<LocalizedLabel>, group: PanelGroup, body_key: impl Into<String>),
+        panel_tab_tree(tab: PanelTabSpec),
+        panel_tab_framework(tab: PanelTabSpec),
+        keybinding(keys: impl Into<String>, action: impl Into<String>),
+        view_action(id: impl Into<String>, label: impl Into<LocalizedLabel>),
+        shell_action(id: impl Into<String>, label: impl Into<LocalizedLabel>),
+        action_with(action: ActionDefinition),
+        action_args(action_id: impl AsRef<str>, args: Vec<ActionArgDef>),
+        command(command: CommandDefinition),
+        app_command(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind),
+        command_args(command_id: impl AsRef<str>, args: Vec<ActionArgDef>),
+        utility(utility: UtilityDefinition),
+        interaction(interaction: InteractionDefinition),
+        utility_simple(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>),
+        tool(tool: ToolDefinition),
+        tool_simple(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>),
+        }
+    );
+    //#endregion 🔖️SurfaceBuilders
+
+    //#endregion 🔖️Surfaces
     // #endregion app
 }
 
@@ -12917,6 +13621,111 @@ pub mod plugin_runtime {
         }
     }
 
+    //#region 🔖️OpeningCommandRelay
+    fn opening_role(role: u8) -> Result<semio_framework::AppRole, Fault> {
+        match role {
+            0 => Ok(semio_framework::AppRole::Viewer),
+            1 => Ok(semio_framework::AppRole::Editor),
+            value => Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-role"), format!("opening role {value} must be 0 (viewer) or 1 (editor)"))),
+        }
+    }
+
+    fn opening_dialect(artifact_kind: String, standard: String, subset: String) -> Result<semio_framework::ArtifactDialect, Fault> {
+        for (field, value) in [("artifact_kind", &artifact_kind), ("standard", &standard), ("subset", &subset)] {
+            if value.trim().is_empty() {
+                return Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-dialect"), format!("opening {field} must be non-empty")));
+            }
+        }
+        let dialect = semio_framework::ArtifactDialect { artifact_kind, standard, subset };
+        semio_framework::ArtifactDialect::parse_coordinate(&dialect.to_coordinate()).map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-dialect"), error))?;
+        Ok(dialect)
+    }
+
+    fn relay_opening_command(action_id: &'static str, arguments: Value) -> Result<HostEffect, Fault> {
+        Ok(HostEffect::ReplayShellCommand { action_id: action_id.into(), args: Some(to_dsl_value(&arguments).map_err(plugin_internal_fault)?) })
+    }
+
+    fn relay_open_artifact(artifact_ref: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<HostEffect, Fault> {
+        let role = opening_role(role_wire)?;
+        let (dialect, artifact_role) = semio_framework::parse_surface_app_id(&artifact_ref).map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-artifact-ref"), error))?;
+        if role != artifact_role {
+            return Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.role-mismatch"), format!("artifact ref {artifact_ref} declares {} but command declares {}", artifact_role.as_str(), role.as_str())));
+        }
+        match (plugin_id.trim().is_empty(), app_id.trim().is_empty()) {
+            (true, true) => {}
+            (false, false) => {
+                let (app_dialect, app_role) = semio_framework::parse_surface_app_id(&app_id).map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-app-ref"), error))?;
+                if app_dialect != dialect || app_role != role {
+                    return Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.app-mismatch"), format!("explicit app {app_id} does not serve {}#{}", dialect.to_coordinate(), role.as_str())));
+                }
+            }
+            _ => return Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.partial-app-ref"), "plugin_id and app_id must either both be empty or both be set")),
+        }
+        relay_opening_command("os.open-artifact", serde_json::json!({ "artifactRef": artifact_ref, "role": role_wire, "pluginId": plugin_id, "appId": app_id }))
+    }
+
+    fn relay_set_default_app(artifact_kind: String, standard: String, subset: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<HostEffect, Fault> {
+        let dialect = opening_dialect(artifact_kind.clone(), standard.clone(), subset.clone())?;
+        let role = opening_role(role_wire)?;
+        if plugin_id.trim().is_empty() {
+            return Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-app-ref"), "plugin_id must be non-empty when setting a default app"));
+        }
+        let (app_dialect, app_role) = semio_framework::parse_surface_app_id(&app_id).map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-app-ref"), error))?;
+        if app_dialect != dialect || app_role != role {
+            return Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.app-mismatch"), format!("default app {app_id} does not serve {}#{}", dialect.to_coordinate(), role.as_str())));
+        }
+        relay_opening_command("os.set-default-app", serde_json::json!({ "artifactKind": artifact_kind, "standard": standard, "subset": subset, "role": role_wire, "pluginId": plugin_id, "appId": app_id }))
+    }
+
+    fn relay_clear_default_app(artifact_kind: String, standard: String, subset: String, role_wire: u8) -> Result<HostEffect, Fault> {
+        opening_dialect(artifact_kind.clone(), standard.clone(), subset.clone())?;
+        opening_role(role_wire)?;
+        relay_opening_command("os.clear-default-app", serde_json::json!({ "artifactKind": artifact_kind, "standard": standard, "subset": subset, "role": role_wire }))
+    }
+    //#endregion 🔖️OpeningCommandRelay
+
+    //#region 🧪️OpeningCommandRelayTests
+    #[cfg(test)]
+    mod opening_command_relay_tests {
+        use super::*;
+
+        fn replay(effect: HostEffect) -> (String, Value) {
+            let HostEffect::ReplayShellCommand { action_id, args: Some(args) } = effect else { panic!("expected a shell command relay") };
+            (action_id, from_dsl_value(args).expect("relay arguments decode"))
+        }
+
+        #[test]
+        fn open_artifact_relays_an_exactly_matched_surface() {
+            let (action_id, args) = replay(relay_open_artifact("s.test.document@1/*#editor".into(), 1, "test-plugin".into(), "s.test.document@1/*#editor".into()).expect("matching surface relays"));
+            assert_eq!(action_id, "os.open-artifact");
+            assert_eq!(args, serde_json::json!({ "artifactRef": "s.test.document@1/*#editor", "role": 1, "pluginId": "test-plugin", "appId": "s.test.document@1/*#editor" }));
+        }
+
+        #[test]
+        fn default_app_commands_relay_the_validated_wire_coordinates() {
+            let (set_action_id, set_args) = replay(relay_set_default_app("s.test.document".into(), "1".into(), "*".into(), 0, "test-plugin".into(), "s.test.document@1/*#viewer".into()).expect("matching default surface relays"));
+            assert_eq!(set_action_id, "os.set-default-app");
+            assert_eq!(set_args, serde_json::json!({ "artifactKind": "s.test.document", "standard": "1", "subset": "*", "role": 0, "pluginId": "test-plugin", "appId": "s.test.document@1/*#viewer" }));
+
+            let (clear_action_id, clear_args) = replay(relay_clear_default_app("s.test.document".into(), "1".into(), "*".into(), 1).expect("valid clear relays"));
+            assert_eq!(clear_action_id, "os.clear-default-app");
+            assert_eq!(clear_args, serde_json::json!({ "artifactKind": "s.test.document", "standard": "1", "subset": "*", "role": 1 }));
+        }
+
+        #[test]
+        fn opening_relays_reject_invalid_or_inconsistent_addresses() {
+            let invalid_role = relay_open_artifact("s.test.document@1/*#viewer".into(), 7, String::new(), String::new()).expect_err("unknown role must fail");
+            assert_eq!(invalid_role.code.0, "opening.invalid-role");
+
+            let partial_app = relay_open_artifact("s.test.document@1/*#viewer".into(), 0, "test-plugin".into(), String::new()).expect_err("partial app reference must fail");
+            assert_eq!(partial_app.code.0, "opening.partial-app-ref");
+
+            let mismatched_app = relay_set_default_app("s.test.document".into(), "1".into(), "*".into(), 0, "test-plugin".into(), "s.test.other@1/*#viewer".into()).expect_err("app dialect must match default coordinate");
+            assert_eq!(mismatched_app.code.0, "opening.app-mismatch");
+        }
+    }
+    //#endregion 🧪️OpeningCommandRelayTests
+
     /// 🔀️ Frames a `TransactionProposalDraft` (contract §5.1) as `AppFrame::TransactionProposal`,
     /// wire-encoding each foreign step via `encode_wire_serialized` (contract §2's per-element
     /// `ForeignStep` encoding note) and minting a proposal id scoped to this dispatch
@@ -13397,6 +14206,27 @@ pub mod plugin_runtime {
                     }
                 }
                 protocol::AppCommand::Bye => {}
+                protocol::AppCommand::OpenArtifact { seq, artifact_ref, role, plugin_id, app_id } => match relay_open_artifact(artifact_ref, role, plugin_id, app_id) {
+                    Ok(effect) => {
+                        frames.push(protocol::AppFrame::Done { in_reply_to: seq });
+                        frames.push(protocol::AppFrame::Effects { in_reply_to: Some(seq), effects: vec![encode_wire_serialized(&effect)] });
+                    }
+                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
+                },
+                protocol::AppCommand::SetDefaultApp { seq, artifact_kind, standard, subset, role, plugin_id, app_id } => match relay_set_default_app(artifact_kind, standard, subset, role, plugin_id, app_id) {
+                    Ok(effect) => {
+                        frames.push(protocol::AppFrame::Done { in_reply_to: seq });
+                        frames.push(protocol::AppFrame::Effects { in_reply_to: Some(seq), effects: vec![encode_wire_serialized(&effect)] });
+                    }
+                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
+                },
+                protocol::AppCommand::ClearDefaultApp { seq, artifact_kind, standard, subset, role } => match relay_clear_default_app(artifact_kind, standard, subset, role) {
+                    Ok(effect) => {
+                        frames.push(protocol::AppFrame::Done { in_reply_to: seq });
+                        frames.push(protocol::AppFrame::Effects { in_reply_to: Some(seq), effects: vec![encode_wire_serialized(&effect)] });
+                    }
+                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
+                },
             }
         }
 

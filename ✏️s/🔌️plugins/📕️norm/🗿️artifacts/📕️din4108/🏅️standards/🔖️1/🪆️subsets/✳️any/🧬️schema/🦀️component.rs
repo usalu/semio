@@ -9,25 +9,44 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.din4108")]
 pub struct Din4108Artifact {
-    #[state(artifact)] pub category: String,
-    #[state(artifact)] pub layers: Vec<crate::artifacts::din4108::LayerDocument>,
-    #[state(artifact)] pub climate: crate::document::ClimateZoneDe,
-    #[state(artifact)] pub airtightness_n50: f64,
-    #[state(artifact)] pub psi_times_l_sum: f64,
-    #[state(artifact)] pub rh_int: f64,
-    #[state(artifact)] pub catalog_id: String,
-    #[state(artifact)] pub material_id: String,
-    #[state(artifact)] pub airtightness_class: String,
-    #[state(artifact)] pub t_int_c: f64,
-    #[state(artifact)] pub solar_absorptance: f64,
-    #[state(artifact)] pub irradiance_w_m2: f64,
-    #[state(artifact)] pub moisture_mu_exterior: f64,
-    #[state(artifact)] pub moisture_mu_interior: f64,
-    #[state(artifact)] pub envelope_area_m2: f64,
-    #[state(artifact)] pub bb2_details_conform: bool,
-    #[state(artifact)] pub application_type: String,
-    #[state(artifact)] pub declared_application_class: String,
-    #[state(presence)] pub selected_check_index: Option<u32>,
+    #[state(artifact)]
+    pub category: String,
+    #[state(artifact)]
+    pub layers: Vec<crate::artifacts::din4108::LayerDocument>,
+    #[state(artifact)]
+    pub climate: crate::document::ClimateZoneDe,
+    #[state(artifact)]
+    pub airtightness_n50: f64,
+    #[state(artifact)]
+    pub psi_times_l_sum: f64,
+    #[state(artifact)]
+    pub rh_int: f64,
+    #[state(artifact)]
+    pub catalog_id: String,
+    #[state(artifact)]
+    pub material_id: String,
+    #[state(artifact)]
+    pub airtightness_class: String,
+    #[state(artifact)]
+    pub t_int_c: f64,
+    #[state(artifact)]
+    pub solar_absorptance: f64,
+    #[state(artifact)]
+    pub irradiance_w_m2: f64,
+    #[state(artifact)]
+    pub moisture_mu_exterior: f64,
+    #[state(artifact)]
+    pub moisture_mu_interior: f64,
+    #[state(artifact)]
+    pub envelope_area_m2: f64,
+    #[state(artifact)]
+    pub bb2_details_conform: bool,
+    #[state(artifact)]
+    pub application_type: String,
+    #[state(artifact)]
+    pub declared_application_class: String,
+    #[state(presence)]
+    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -129,8 +148,8 @@ pub fn din4108_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor 
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::din4108::{Din4108Diff, Din4108Mutation, Din4108Snapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Din4108BuilderConstruction {
@@ -142,8 +161,12 @@ pub mod derived_construction {
         type Snapshot = Din4108Snapshot;
         type Mutation = Din4108Mutation;
         type Diff = Din4108Diff;
-        fn empty() -> Self { Self { snapshot: Din4108Snapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn empty() -> Self {
+            Self { snapshot: Din4108Snapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Din4108Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -160,7 +183,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -169,8 +196,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::din4108::Din4108Snapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Din4108Parts {

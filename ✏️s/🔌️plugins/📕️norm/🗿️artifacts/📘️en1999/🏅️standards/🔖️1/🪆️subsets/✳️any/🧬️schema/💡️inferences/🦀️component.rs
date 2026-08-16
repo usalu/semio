@@ -86,12 +86,12 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
+use crate::artifacts::en1999::standards::v1::subsets::any::schema::{check_aluminium_member, na_de, part_1_1, part_1_2, part_1_3, part_1_4, part_1_5};
 /// 📋️ Full EN 1999 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1999Snapshot -> CheckReport` projection; everything it composes
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::{AnnexChoice, CheckReport};
-use crate::artifacts::en1999::standards::v1::subsets::any::schema::{check_aluminium_member, na_de, part_1_1, part_1_2, part_1_3, part_1_4, part_1_5};
 
 /// 📋️ Full EN 1999 check spanning every remaining part: 1-1 (cross-section, buckling, bending, welds), 1-2 (fire), 1-3 (fatigue), 1-4 (cold-formed sheeting), 1-5 (shell buckling).
 #[allow(clippy::too_many_arguments)]
@@ -219,4 +219,3 @@ mod compliance_report_tests {
     }
 }
 //#endregion 🧪️ComplianceReportTests
-

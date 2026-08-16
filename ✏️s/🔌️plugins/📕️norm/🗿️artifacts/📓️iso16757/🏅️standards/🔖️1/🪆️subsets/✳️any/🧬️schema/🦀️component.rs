@@ -1,10 +1,9 @@
 //! 🧬️ Iso16757 artifact schema — every field of the artifact with its state class.
 
-
 use std::collections::BTreeMap;
 
-use schema::ArtifactSchema;
 use crate::artifacts::iso16757::CatalogueValue;
+use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
@@ -13,15 +12,24 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.iso16757")]
 pub struct Iso16757Artifact {
-    #[state(artifact)] pub catalogue: crate::artifacts::iso16757::part_1::Catalogue,
-    #[state(artifact)] pub dictionary: crate::artifacts::iso16757::part_4::Dictionary,
-    #[state(artifact)] pub geometry: crate::artifacts::iso16757::part_2::GeometryCatalogue,
-    #[state(artifact)] pub selection: crate::artifacts::iso16757::part_1::SelectionRequest,
-    #[state(artifact)] pub part_number_rule: crate::artifacts::iso16757::part_5::PartNumberRule,
-    #[state(artifact)] pub part_number_inputs: BTreeMap<String, CatalogueValue>,
-    #[state(artifact)] pub script_limits: crate::artifacts::iso16757::part_5::ScriptLimits,
-    #[state(artifact)] pub exchange_process: crate::artifacts::iso16757::part_5::ExchangeProcess,
-    #[state(presence)] pub selected_check_index: Option<u32>,
+    #[state(artifact)]
+    pub catalogue: crate::artifacts::iso16757::part_1::Catalogue,
+    #[state(artifact)]
+    pub dictionary: crate::artifacts::iso16757::part_4::Dictionary,
+    #[state(artifact)]
+    pub geometry: crate::artifacts::iso16757::part_2::GeometryCatalogue,
+    #[state(artifact)]
+    pub selection: crate::artifacts::iso16757::part_1::SelectionRequest,
+    #[state(artifact)]
+    pub part_number_rule: crate::artifacts::iso16757::part_5::PartNumberRule,
+    #[state(artifact)]
+    pub part_number_inputs: BTreeMap<String, CatalogueValue>,
+    #[state(artifact)]
+    pub script_limits: crate::artifacts::iso16757::part_5::ScriptLimits,
+    #[state(artifact)]
+    pub exchange_process: crate::artifacts::iso16757::part_5::ExchangeProcess,
+    #[state(presence)]
+    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -103,8 +111,8 @@ pub fn iso16757_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Iso16757BuilderConstruction {
@@ -116,8 +124,12 @@ pub mod derived_construction {
         type Snapshot = Iso16757Snapshot;
         type Mutation = Iso16757Mutation;
         type Diff = Iso16757Diff;
-        fn empty() -> Self { Self { snapshot: Iso16757Snapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn empty() -> Self {
+            Self { snapshot: Iso16757Snapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Iso16757Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -134,7 +146,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -143,8 +159,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::iso16757::Iso16757Snapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Iso16757Parts {
@@ -700,8 +716,8 @@ pub mod part_5 {
 #[cfg(test)]
 mod compliance_helpers_tests {
     use super::*;
-    use crate::artifacts::iso16757::Iso16757Snapshot;
     use crate::artifacts::iso16757::standards::v1::subsets::any::schema::component::part_5::ScriptRuntime;
+    use crate::artifacts::iso16757::Iso16757Snapshot;
     use std::collections::BTreeMap;
 
     #[test]
@@ -785,7 +801,8 @@ mod compliance_helpers_tests {
     #[test]
     fn select_products_filters_by_series_id() {
         let mut doc = Iso16757Snapshot::default();
-        let other_series = crate::artifacts::iso16757::part_1::ProductSeries { id: "series.other".into(), class_id: "class.valve".into(), names: doc.catalogue.product_series[0].names.clone(), shared_property_values: BTreeMap::new(), geometry_id: None };
+        let other_series =
+            crate::artifacts::iso16757::part_1::ProductSeries { id: "series.other".into(), class_id: "class.valve".into(), names: doc.catalogue.product_series[0].names.clone(), shared_property_values: BTreeMap::new(), geometry_id: None };
         let other_product = crate::artifacts::iso16757::part_1::Product {
             id: "product.other".into(),
             series_id: "series.other".into(),
@@ -811,13 +828,21 @@ mod compliance_helpers_tests {
     #[test]
     fn select_products_records_missing_property_and_constraint_failures() {
         let mut doc = Iso16757Snapshot::default();
-        doc.selection.constraints.push(crate::artifacts::iso16757::part_1::SelectionConstraint { property_id: "prop.missing".into(), operator: crate::artifacts::iso16757::part_1::ConstraintOperator::Equal, value: CatalogueValue::Decimal { value: 1.0 } });
+        doc.selection.constraints.push(crate::artifacts::iso16757::part_1::SelectionConstraint {
+            property_id: "prop.missing".into(),
+            operator: crate::artifacts::iso16757::part_1::ConstraintOperator::Equal,
+            value: CatalogueValue::Decimal { value: 1.0 },
+        });
         let selection = part_1::select_products(&doc.catalogue, &doc.selection);
         assert!(selection.matches.is_empty());
         assert!(selection.explanations.iter().any(|e| e.contains("missing property")));
 
         doc.selection.constraints.clear();
-        doc.selection.constraints.push(crate::artifacts::iso16757::part_1::SelectionConstraint { property_id: "prop.dn".into(), operator: crate::artifacts::iso16757::part_1::ConstraintOperator::Equal, value: CatalogueValue::Decimal { value: 999.0 } });
+        doc.selection.constraints.push(crate::artifacts::iso16757::part_1::SelectionConstraint {
+            property_id: "prop.dn".into(),
+            operator: crate::artifacts::iso16757::part_1::ConstraintOperator::Equal,
+            value: CatalogueValue::Decimal { value: 999.0 },
+        });
         let selection = part_1::select_products(&doc.catalogue, &doc.selection);
         assert!(selection.matches.is_empty());
         assert!(selection.explanations.iter().any(|e| e.contains("constraint failed")));
@@ -1016,7 +1041,15 @@ mod compliance_helpers_tests {
 
     #[test]
     fn validate_geometry_graph_empty_parameter_binding() {
-        let object = crate::artifacts::iso16757::part_2::GeometryObject { id: "geom.bind".into(), shape: None, symbolic: None, spaces: Vec::new(), surfaces: Vec::new(), ports: Vec::new(), parameter_bindings: BTreeMap::from([("width".into(), String::new())]) };
+        let object = crate::artifacts::iso16757::part_2::GeometryObject {
+            id: "geom.bind".into(),
+            shape: None,
+            symbolic: None,
+            spaces: Vec::new(),
+            surfaces: Vec::new(),
+            ports: Vec::new(),
+            parameter_bindings: BTreeMap::from([("width".into(), String::new())]),
+        };
         let catalogue = crate::artifacts::iso16757::part_2::GeometryCatalogue::default();
         let mut visited = HashSet::new();
         let issues = part_2::validate_geometry_graph(&object, &catalogue, &mut visited);
@@ -1029,8 +1062,20 @@ mod compliance_helpers_tests {
             reference: crate::artifacts::iso16757::DictionaryRef { id: "d".into(), version: "1".into() },
             subjects: Vec::new(),
             relationships: vec![
-                crate::artifacts::iso16757::part_4::Relationship { id: "r1".into(), kind: crate::artifacts::iso16757::part_4::RelationshipKind::IsSubtypeOf, source_id: "a".into(), target_id: "b".into(), cardinality: crate::artifacts::iso16757::Cardinality::optional() },
-                crate::artifacts::iso16757::part_4::Relationship { id: "r2".into(), kind: crate::artifacts::iso16757::part_4::RelationshipKind::IsSubtypeOf, source_id: "b".into(), target_id: "c".into(), cardinality: crate::artifacts::iso16757::Cardinality::optional() },
+                crate::artifacts::iso16757::part_4::Relationship {
+                    id: "r1".into(),
+                    kind: crate::artifacts::iso16757::part_4::RelationshipKind::IsSubtypeOf,
+                    source_id: "a".into(),
+                    target_id: "b".into(),
+                    cardinality: crate::artifacts::iso16757::Cardinality::optional(),
+                },
+                crate::artifacts::iso16757::part_4::Relationship {
+                    id: "r2".into(),
+                    kind: crate::artifacts::iso16757::part_4::RelationshipKind::IsSubtypeOf,
+                    source_id: "b".into(),
+                    target_id: "c".into(),
+                    cardinality: crate::artifacts::iso16757::Cardinality::optional(),
+                },
             ],
             properties: Vec::new(),
             controlled_lists: Vec::new(),
@@ -1053,8 +1098,20 @@ mod compliance_helpers_tests {
             reference: crate::artifacts::iso16757::DictionaryRef { id: "d".into(), version: "1".into() },
             subjects: vec![subject("a"), subject("b")],
             relationships: vec![
-                crate::artifacts::iso16757::part_4::Relationship { id: "r1".into(), kind: crate::artifacts::iso16757::part_4::RelationshipKind::IsSubtypeOf, source_id: "a".into(), target_id: "b".into(), cardinality: crate::artifacts::iso16757::Cardinality::optional() },
-                crate::artifacts::iso16757::part_4::Relationship { id: "r2".into(), kind: crate::artifacts::iso16757::part_4::RelationshipKind::IsSubtypeOf, source_id: "b".into(), target_id: "a".into(), cardinality: crate::artifacts::iso16757::Cardinality::optional() },
+                crate::artifacts::iso16757::part_4::Relationship {
+                    id: "r1".into(),
+                    kind: crate::artifacts::iso16757::part_4::RelationshipKind::IsSubtypeOf,
+                    source_id: "a".into(),
+                    target_id: "b".into(),
+                    cardinality: crate::artifacts::iso16757::Cardinality::optional(),
+                },
+                crate::artifacts::iso16757::part_4::Relationship {
+                    id: "r2".into(),
+                    kind: crate::artifacts::iso16757::part_4::RelationshipKind::IsSubtypeOf,
+                    source_id: "b".into(),
+                    target_id: "a".into(),
+                    cardinality: crate::artifacts::iso16757::Cardinality::optional(),
+                },
             ],
             properties: Vec::new(),
             controlled_lists: Vec::new(),
@@ -1165,4 +1222,3 @@ mod compliance_helpers_tests {
     }
 }
 //#endregion 🧪️ComplianceHelpersTests
-

@@ -9,29 +9,52 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1994")]
 pub struct En1994Artifact {
-    #[state(artifact)] pub annex: crate::document::AnnexChoice,
-    #[state(artifact)] pub m_ed_knm: f64,
-    #[state(artifact)] pub v_ed_kn: f64,
-    #[state(artifact)] pub m_pla: f64,
-    #[state(artifact)] pub m_pl_rd: f64,
-    #[state(artifact)] pub eta: f64,
-    #[state(artifact)] pub v_l_rd: f64,
-    #[state(artifact)] pub insulation_thickness_mm: f64,
-    #[state(artifact)] pub fire_rating: String,
-    #[state(artifact)] pub deck_type: String,
-    #[state(artifact)] pub delta_sigma_mpa: f64,
-    #[state(artifact)] pub fatigue_detail: String,
-    #[state(artifact)] pub d_mm: f64,
-    #[state(artifact)] pub h_sc_mm: f64,
-    #[state(artifact)] pub f_ck_mpa: f64,
-    #[state(artifact)] pub f_u_mpa: f64,
-    #[state(artifact)] pub e_cm_mpa: f64,
-    #[state(artifact)] pub v_ed_per_stud_kn: f64,
-    #[state(artifact)] pub span_m: f64,
-    #[state(artifact)] pub f_y_mpa: f64,
-    #[state(artifact)] pub n_cycles_stud: f64,
-    #[state(artifact)] pub delta_tau_stud_mpa: f64,
-    #[state(presence)] pub selected_check_index: Option<u32>,
+    #[state(artifact)]
+    pub annex: crate::document::AnnexChoice,
+    #[state(artifact)]
+    pub m_ed_knm: f64,
+    #[state(artifact)]
+    pub v_ed_kn: f64,
+    #[state(artifact)]
+    pub m_pla: f64,
+    #[state(artifact)]
+    pub m_pl_rd: f64,
+    #[state(artifact)]
+    pub eta: f64,
+    #[state(artifact)]
+    pub v_l_rd: f64,
+    #[state(artifact)]
+    pub insulation_thickness_mm: f64,
+    #[state(artifact)]
+    pub fire_rating: String,
+    #[state(artifact)]
+    pub deck_type: String,
+    #[state(artifact)]
+    pub delta_sigma_mpa: f64,
+    #[state(artifact)]
+    pub fatigue_detail: String,
+    #[state(artifact)]
+    pub d_mm: f64,
+    #[state(artifact)]
+    pub h_sc_mm: f64,
+    #[state(artifact)]
+    pub f_ck_mpa: f64,
+    #[state(artifact)]
+    pub f_u_mpa: f64,
+    #[state(artifact)]
+    pub e_cm_mpa: f64,
+    #[state(artifact)]
+    pub v_ed_per_stud_kn: f64,
+    #[state(artifact)]
+    pub span_m: f64,
+    #[state(artifact)]
+    pub f_y_mpa: f64,
+    #[state(artifact)]
+    pub n_cycles_stud: f64,
+    #[state(artifact)]
+    pub delta_tau_stud_mpa: f64,
+    #[state(presence)]
+    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -141,8 +164,8 @@ pub fn en1994_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::en1994::{En1994Diff, En1994Mutation, En1994Snapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct En1994BuilderConstruction {
@@ -154,8 +177,12 @@ pub mod derived_construction {
         type Snapshot = En1994Snapshot;
         type Mutation = En1994Mutation;
         type Diff = En1994Diff;
-        fn empty() -> Self { Self { snapshot: En1994Snapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn empty() -> Self {
+            Self { snapshot: En1994Snapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<En1994Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -172,7 +199,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -181,8 +212,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::en1994::En1994Snapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct En1994Parts {
@@ -536,4 +567,3 @@ mod compliance_helpers_tests {
     }
 }
 //#endregion 🧪️ComplianceHelpersTests
-

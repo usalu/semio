@@ -10,7 +10,7 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("lowpoly")
         .label("Lowpoly")
         .version("0.1.0")
-        .artifact(crate::artifacts::lowpoly::declaration())
+        .artifact(crate::artifacts::lowpoly::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .document_app::<crate::apps::lowpoly::LowpolyPlayApp>(crate::apps::lowpoly::create_lowpoly_app())
         .try_build()
 }

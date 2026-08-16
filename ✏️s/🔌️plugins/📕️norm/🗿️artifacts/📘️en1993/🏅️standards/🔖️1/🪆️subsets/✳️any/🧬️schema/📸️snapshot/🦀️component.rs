@@ -1,11 +1,10 @@
 //! 🧬️ En1993 snapshot schema — artifact-lane fields only.
 
-use schema::ArtifactSchema;
 use crate::document::AnnexChoice;
+use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
-
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]

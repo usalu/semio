@@ -2301,7 +2301,10 @@ export function faultDisplayMessage(faultBytes: readonly number[], decodePackVal
   return `${code}: ${fault.message}`;
 }
 
-const APP_CHANNEL_VERSION = 8;
+/** 📡️ TS twin of `protocol_channel::CHANNEL_VERSION`. Both constants are pinned against
+ * `🧫️fixtures/📡️channel/channel-version.json`, which owns the number — this one sat at 8 while Rust
+ * had moved to 10, so the pin exists to make a half-done bump fail a test instead of a session. */
+const APP_CHANNEL_VERSION = 10;
 
 /** 📡️ The slice of {@link PluginWasmHandle} {@link AppChannelClient} needs — deliberately narrower
  * than the full handle so a caller can hand in any `exchange`-shaped object (a real handle, a test
@@ -2872,6 +2875,15 @@ if (import.meta.vitest) {
      * committed hex string per label, not a copy per language, so a codec change that shifts these
      * bytes on either side fails here or there, never silently in both at once.
      */
+    it("pins APP_CHANNEL_VERSION against the shared cross-language channel version", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, join } = await import("node:path");
+      const here = dirname(fileURLToPath(import.meta.url));
+      const pin = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📡️channel", "channel-version.json"), "utf8")) as { channelVersion: number };
+      expect(APP_CHANNEL_VERSION).toBe(pin.channelVersion);
+    });
+
     it("matches the shared cross-language transaction fixture vectors, byte-for-byte", async () => {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");

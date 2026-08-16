@@ -15,7 +15,7 @@ use crate::artifacts::en1998::En1998Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};
 use crate::presence::{NormPresence, NormPresenceMutation};
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, LocalizedLabel, Media, MediaError, UiNode};
+use semio_framework_plugin::{App, AppIo, ArtifactApp, ArtifactView, ConfigView, DraftView, Emit, Fault, LocalizedLabel, Media, MediaError, NoDraft, NoDraftMutation, UiNode};
 use store::EngineHandles;
 
 //#region ðï¸Constants
@@ -86,7 +86,14 @@ impl ArtifactApp for En1998PlayApp {
         command.command_id()
     }
 
-    fn handle(command: &En1998Command, doc: &ArtifactView<'_, En1998Snapshot>, cfg: &ConfigView<'_, NormConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<En1998Mutation, NormConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(
+        command: &En1998Command,
+        doc: &ArtifactView<'_, En1998Snapshot>,
+        cfg: &ConfigView<'_, NormConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<En1998Mutation, NormConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 

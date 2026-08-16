@@ -120,14 +120,50 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// bare `io_registry::entries()` name: left bare it would resolve to THIS file's own `io_registry`
 /// module below, which has a different, incompatible return type (`&'static [&'static ComposerEntry]`,
 /// wrapping the owned entries) — not the `&'static [ComposerEntry]` `.composers()` expects.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.procedural3d")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.procedural3d.schema.artifact", "schema", "s.procedural.procedural3d", &[("schema", "s.procedural.procedural3d")], None),
+        ("s.procedural3d.inference.artifact", "inference", "s.procedural.procedural3d.inference", &[("schema", "s.procedural.procedural3d.inference")], None),
+        ("s.procedural3d.composer.las", "composer", "s.stdio.las@1.0/*", &[("dialect", "s.stdio.las@1.0/*")], None),
+        ("s.procedural3d.composer.ply", "composer", "s.stdio.ply@1.0/*", &[("dialect", "s.stdio.ply@1.0/*")], None),
+        ("s.procedural3d.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.procedural3d.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.procedural3d.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
+        ("s.procedural3d.composer.stl", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
+        ("s.procedural3d.composer.gltf", "composer", "s.stdio.gltf@2.0/*", &[("dialect", "s.stdio.gltf@2.0/*")], None),
+        ("s.procedural3d.composer.obj", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.procedural3d.grammar.document", "grammar", "procedural.procedural3d.document", &[("grammar", "procedural.procedural3d.document")], None),
+        ("s.procedural3d.grammar.op", "grammar", "procedural.procedural3d.op", &[("grammar", "procedural.procedural3d.op")], None),
+        ("s.procedural3d.grammar.diff", "grammar", "procedural.procedural3d.diff", &[("grammar", "procedural.procedural3d.diff")], None),
+        ("s.procedural3d.grammar.pack", "grammar", "procedural3d.pack", &[("grammar", "procedural3d.pack")], None),
+        ("s.procedural3d.grammar.spr", "grammar", "procedural3d.spr", &[("grammar", "procedural3d.spr")], None),
+        ("s.procedural3d.codec.document", "codec", "procedural.3d:procedural3d", &[("codec", "procedural.3d"), ("extension", "procedural3d")], None),
+        ("s.procedural3d.localization.en", "localization", "3D Procedural", &[], Some(("en", "3D Procedural"))),
+        ("s.procedural3d.localization.de", "localization", "3D Prozedural", &[], Some(("de", "3D Prozedural"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.procedural3d")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::procedural3d::schema::procedural3d_artifact_schema_descriptor())
         .inferences([crate::artifacts::procedural3d::standards::v1::subsets::any::schema::inferences::procedural3d_artifact_inference_descriptor()])
         .composers(crate::artifacts::procedural3d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::procedural3d::Procedural3dPlayApp>()
-        .build()
+        .try_build()
 }
 //#endregion 🔖️Declaration
 

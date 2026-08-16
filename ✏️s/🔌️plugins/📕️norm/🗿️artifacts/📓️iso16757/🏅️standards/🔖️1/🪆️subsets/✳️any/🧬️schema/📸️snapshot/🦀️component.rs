@@ -7,7 +7,6 @@ use std::collections::BTreeMap;
 
 //#region 🔖️Snapshot
 
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[dsl(id = "norm.iso16757", layout = "lines")]

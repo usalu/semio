@@ -11,7 +11,7 @@
 use crate::artifacts::en1995::op::En1995Mutation;
 use crate::artifacts::en1995::En1995Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
@@ -40,12 +40,7 @@ mod tests {
     fn handle_commits_the_payload_document_under_its_action_id() {
         let projection = En1995Snapshot::default();
         let config = NormConfig::default();
-        let emit = handle(
-            &ReplaceSnapshot { snapshot: En1995Snapshot::default() },
-            &ArtifactView::new(&projection, &HistoryView::empty()),
-            &ConfigView { snapshot: &config },
-        )
-        .expect("handle");
+        let emit = handle(&ReplaceSnapshot { snapshot: En1995Snapshot::default() }, &ArtifactView::new(&projection, &HistoryView::empty()), &ConfigView { snapshot: &config }).expect("handle");
         assert_eq!(emit.artifact_mutations, En1995Mutation::from_snapshot(&En1995Snapshot::default()));
         assert_eq!(emit.description.as_deref(), Some("setSnapshot"));
         assert!(emit.config_mutations.is_empty());

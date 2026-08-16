@@ -3,16 +3,17 @@
 //! whole-document-replace macro no longer applies now that the whole-document-replace variant is
 //! gone).
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 pub use crate::artifacts::en1995::schema::mutations::En1995Mutation;
-use crate::artifacts::en1995::schema::mutations::{set_snapshot, change_m_ed_knm, change_n_ed_kn, change_v_ed_kn, change_w_mm3, change_a_mm2, change_b_mm, change_h_mm, change_f_m_k, change_f_c_0_k, change_service_class, change_load_duration, change_m_crit_knm, change_f_ed_kn, change_a_ef_mm2, change_f_v_k, change_fire_duration_min, change_section_depth_mm, change_a_vert_m_s2, change_n_cycles_bridge};
+use crate::artifacts::en1995::schema::mutations::{
+    change_a_ef_mm2, change_a_mm2, change_a_vert_m_s2, change_b_mm, change_f_c_0_k, change_f_ed_kn, change_f_m_k, change_f_v_k, change_fire_duration_min, change_h_mm, change_load_duration, change_m_crit_knm, change_m_ed_knm, change_n_cycles_bridge,
+    change_n_ed_kn, change_section_depth_mm, change_service_class, change_v_ed_kn, change_w_mm3, set_snapshot,
+};
 use crate::document::AnnexChoice;
 
 use protocol::OpText;
@@ -23,66 +24,26 @@ use protocol::OpText;
 /// and every consumer matching on it, is completely untouched.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum En1995MutationDsl {
-    ChangeAnnex {
-        new_annex: AnnexChoice,
-    },
-    ChangeMEdKnm {
-        new_m_ed_knm: f64,
-    },
-    ChangeNEdKn {
-        new_n_ed_kn: f64,
-    },
-    ChangeVEdKn {
-        new_v_ed_kn: f64,
-    },
-    ChangeWMm3 {
-        new_w_mm3: f64,
-    },
-    ChangeAMm2 {
-        new_a_mm2: f64,
-    },
-    ChangeBMm {
-        new_b_mm: f64,
-    },
-    ChangeHMm {
-        new_h_mm: f64,
-    },
-    ChangeFMK {
-        new_f_m_k: f64,
-    },
-    ChangeFC0K {
-        new_f_c_0_k: f64,
-    },
-    ChangeServiceClass {
-        new_service_class: String,
-    },
-    ChangeLoadDuration {
-        new_load_duration: String,
-    },
-    ChangeMCritKnm {
-        new_m_crit_knm: f64,
-    },
-    ChangeFEdKn {
-        new_f_ed_kn: f64,
-    },
-    ChangeAEfMm2 {
-        new_a_ef_mm2: f64,
-    },
-    ChangeFVK {
-        new_f_v_k: f64,
-    },
-    ChangeFireDurationMin {
-        new_fire_duration_min: f64,
-    },
-    ChangeSectionDepthMm {
-        new_section_depth_mm: f64,
-    },
-    ChangeAVertMS2 {
-        new_a_vert_m_s2: f64,
-    },
-    ChangeNCyclesBridge {
-        new_n_cycles_bridge: f64,
-    },
+    ChangeAnnex { new_annex: AnnexChoice },
+    ChangeMEdKnm { new_m_ed_knm: f64 },
+    ChangeNEdKn { new_n_ed_kn: f64 },
+    ChangeVEdKn { new_v_ed_kn: f64 },
+    ChangeWMm3 { new_w_mm3: f64 },
+    ChangeAMm2 { new_a_mm2: f64 },
+    ChangeBMm { new_b_mm: f64 },
+    ChangeHMm { new_h_mm: f64 },
+    ChangeFMK { new_f_m_k: f64 },
+    ChangeFC0K { new_f_c_0_k: f64 },
+    ChangeServiceClass { new_service_class: String },
+    ChangeLoadDuration { new_load_duration: String },
+    ChangeMCritKnm { new_m_crit_knm: f64 },
+    ChangeFEdKn { new_f_ed_kn: f64 },
+    ChangeAEfMm2 { new_a_ef_mm2: f64 },
+    ChangeFVK { new_f_v_k: f64 },
+    ChangeFireDurationMin { new_fire_duration_min: f64 },
+    ChangeSectionDepthMm { new_section_depth_mm: f64 },
+    ChangeAVertMS2 { new_a_vert_m_s2: f64 },
+    ChangeNCyclesBridge { new_n_cycles_bridge: f64 },
 }
 
 //#region 🔖️HandcraftedOpCodecs
@@ -93,11 +54,7 @@ impl OpText for En1995MutationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }

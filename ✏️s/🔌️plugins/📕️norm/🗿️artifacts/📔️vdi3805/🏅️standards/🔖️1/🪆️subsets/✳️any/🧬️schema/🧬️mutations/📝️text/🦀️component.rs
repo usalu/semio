@@ -10,12 +10,11 @@
 pub use crate::artifacts::vdi3805::schema::mutations::Vdi3805Mutation;
 
 use crate::artifacts::vdi3805::schema::mutations::{
-    add_geometry_connection::mutation::AddGeometryConnection, change_correction_as_of::mutation::ChangeCorrectionAsOf, change_edition_profile::mutation::ChangeEditionProfile,
-    change_strict_mode::mutation::ChangeStrictMode, create_curve::mutation::CreateCurve, create_geometry::mutation::CreateGeometry, create_product::mutation::CreateProduct,
-    delete_curve::mutation::DeleteCurve, delete_geometry::mutation::DeleteGeometry, delete_product::mutation::DeleteProduct, remove_edition_profile::mutation::RemoveEditionProfile,
-    remove_geometry_connection::mutation::RemoveGeometryConnection, rename_product::mutation::RenameProduct, replace_curve_points::mutation::ReplaceCurvePoints,
-    replace_geometry_parameters::mutation::ReplaceGeometryParameters, replace_product_configuration::mutation::ReplaceProductConfiguration, resize_geometry::mutation::ResizeGeometry,
-    update_limits::mutation::UpdateLimits, update_manufacturer_file::mutation::UpdateManufacturerFile,
+    add_geometry_connection::mutation::AddGeometryConnection, change_correction_as_of::mutation::ChangeCorrectionAsOf, change_edition_profile::mutation::ChangeEditionProfile, change_strict_mode::mutation::ChangeStrictMode,
+    create_curve::mutation::CreateCurve, create_geometry::mutation::CreateGeometry, create_product::mutation::CreateProduct, delete_curve::mutation::DeleteCurve, delete_geometry::mutation::DeleteGeometry, delete_product::mutation::DeleteProduct,
+    remove_edition_profile::mutation::RemoveEditionProfile, remove_geometry_connection::mutation::RemoveGeometryConnection, rename_product::mutation::RenameProduct, replace_curve_points::mutation::ReplaceCurvePoints,
+    replace_geometry_parameters::mutation::ReplaceGeometryParameters, replace_product_configuration::mutation::ReplaceProductConfiguration, resize_geometry::mutation::ResizeGeometry, update_limits::mutation::UpdateLimits,
+    update_manufacturer_file::mutation::UpdateManufacturerFile,
 };
 
 //#region 📖️SemioGrammar
@@ -111,10 +110,7 @@ fn tokenize_args(rest: &str) -> Vec<String> {
     tokens
 }
 fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
-    tokenize_args(rest)
-        .into_iter()
-        .map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}")))
-        .collect()
+    tokenize_args(rest).into_iter().map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}"))).collect()
 }
 //#endregion 🔖️Tokenizer
 
@@ -374,8 +370,7 @@ impl protocol::OpBinary for Vdi3805Mutation {
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<Vdi3805Mutation> {
     use crate::artifacts::vdi3805::{
-        BoundingBox, CatalogueProduct, CharacteristicCurve, Configuration, ConnectionPoint, CurvePoint, EditionId, EditionProfileChoice, ExtensionBag, ParametricGeometry,
-        ProductIdentity, SecurityLimits, SheetId, VdiQuantityKind, VdiUnit, VdiValue,
+        BoundingBox, CatalogueProduct, CharacteristicCurve, Configuration, ConnectionPoint, CurvePoint, EditionId, EditionProfileChoice, ExtensionBag, ParametricGeometry, ProductIdentity, SecurityLimits, SheetId, VdiQuantityKind, VdiUnit, VdiValue,
     };
 
     let product = CatalogueProduct {
@@ -405,7 +400,10 @@ pub(crate) fn demo_mutation_cases() -> Vec<Vdi3805Mutation> {
         Vdi3805Mutation::CreateGeometry(CreateGeometry { geometry: geometry.clone() }),
         Vdi3805Mutation::DeleteGeometry(DeleteGeometry { id: "geom.valve.50".into() }),
         Vdi3805Mutation::ResizeGeometry(ResizeGeometry { id: "geom.valve.50".into(), new_bbox: BoundingBox::from_size(2.0, 2.0, 2.0) }),
-        Vdi3805Mutation::AddGeometryConnection(AddGeometryConnection { id: "geom.valve.50".into(), connection: ConnectionPoint { id: "mid".into(), medium: "water".into(), position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], diameter_mm: Some(25.0) } }),
+        Vdi3805Mutation::AddGeometryConnection(AddGeometryConnection {
+            id: "geom.valve.50".into(),
+            connection: ConnectionPoint { id: "mid".into(), medium: "water".into(), position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], diameter_mm: Some(25.0) },
+        }),
         Vdi3805Mutation::RemoveGeometryConnection(RemoveGeometryConnection { id: "geom.valve.50".into(), connection_id: "in".into() }),
         Vdi3805Mutation::ReplaceGeometryParameters(ReplaceGeometryParameters { id: "geom.valve.50".into(), new_parameters: std::collections::BTreeMap::from([("scale".to_string(), 2.0)]) }),
         Vdi3805Mutation::CreateCurve(CreateCurve { curve: curve.clone() }),
@@ -414,7 +412,10 @@ pub(crate) fn demo_mutation_cases() -> Vec<Vdi3805Mutation> {
         // 🧬️ `VdiValue` is only reachable through nested payload fields (e.g. `configuration.parameters`) —
         // exercised here via the create-product case above rather than a standalone variant.
         Vdi3805Mutation::CreateProduct(CreateProduct {
-            product: CatalogueProduct { configuration: Configuration { id: "cfg.dn".into(), parameters: std::collections::BTreeMap::from([("dn".to_string(), VdiValue::Integer { value: 80 })]), geometry_ref: None, function_refs: Vec::new() }, ..product },
+            product: CatalogueProduct {
+                configuration: Configuration { id: "cfg.dn".into(), parameters: std::collections::BTreeMap::from([("dn".to_string(), VdiValue::Integer { value: 80 })]), geometry_ref: None, function_refs: Vec::new() },
+                ..product
+            },
             index: None,
         }),
     ]

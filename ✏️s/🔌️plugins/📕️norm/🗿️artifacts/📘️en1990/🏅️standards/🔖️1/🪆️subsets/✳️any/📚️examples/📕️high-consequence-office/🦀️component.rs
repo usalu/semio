@@ -3,10 +3,14 @@
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "high-consequence-office";
-pub fn label() -> LocalizedLabel { LocalizedLabel::native("High Consequence Office", "High Consequence Office") }
+pub fn label() -> LocalizedLabel {
+    LocalizedLabel::native("High Consequence Office", "High Consequence Office")
+}
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️high-consequence-office.dsl.semio");
-pub fn source() -> ExampleSource { ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON) }
+pub fn source() -> ExampleSource {
+    ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
+}
 
 /// 🏗️ The canonical snapshot `PRIMARY_TEXT` was printed from (ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2, fixture regen per `📓️migration-recipe.md`
@@ -22,12 +26,5 @@ pub fn reference_snapshot() -> crate::artifacts::en1990::En1990Snapshot {
         crate::artifacts::en1990::En1990QkEntry { category: "partition-walls".into(), value: 12.0 },
         crate::artifacts::en1990::En1990QkEntry { category: "snow".into(), value: 18.0 },
     ]);
-    crate::artifacts::en1990::En1990Snapshot {
-        g_k: 250.0,
-        q_k,
-        resistance_kn: 420.0,
-        consequence_class: 3,
-        annex: crate::document::AnnexChoice::En,
-        seismic_a_ed_kn: 0.0,
-    }
+    crate::artifacts::en1990::En1990Snapshot { g_k: 250.0, q_k, resistance_kn: 420.0, consequence_class: 3, annex: crate::document::AnnexChoice::En, seismic_a_ed_kn: 0.0 }
 }

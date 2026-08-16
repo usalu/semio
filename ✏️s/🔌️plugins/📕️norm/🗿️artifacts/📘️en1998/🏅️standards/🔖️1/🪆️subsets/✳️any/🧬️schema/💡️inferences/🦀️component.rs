@@ -86,12 +86,12 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
+use crate::artifacts::en1998::standards::v1::subsets::any::schema::{check_building_seismic_with_annex, na_de, part_1, part_2, part_3, part_4, part_5, part_6, AnnexParams};
 /// 📋️ Full EN 1998 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1998Snapshot -> CheckReport` projection; everything it composes
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::{AnnexChoice, CheckReport};
-use crate::artifacts::en1998::standards::v1::subsets::any::schema::{check_building_seismic_with_annex, na_de, part_1, part_2, part_3, part_4, part_5, part_6, AnnexParams};
 
 /// 📋️ Full seismic check across EN 1998 parts 1 through 6.
 pub fn check_full_seismic(document: &En1998Snapshot) -> CheckReport {
@@ -275,4 +275,3 @@ mod compliance_report_tests {
     }
 }
 //#endregion 🧪️ComplianceReportTests
-

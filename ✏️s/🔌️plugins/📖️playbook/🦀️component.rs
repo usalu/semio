@@ -10,7 +10,7 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("playbook-play")
         .label("Playbook")
         .version("0.1.0")
-        .artifact(crate::artifacts::playbook::declaration())
+        .artifact(crate::artifacts::playbook::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .document_app::<crate::apps::playbook::PlaybookPlayApp>(crate::apps::playbook::create_playbook_play_app())
         .try_build()
 }

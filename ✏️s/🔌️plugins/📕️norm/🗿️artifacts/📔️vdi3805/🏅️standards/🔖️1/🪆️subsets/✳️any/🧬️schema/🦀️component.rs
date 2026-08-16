@@ -1,10 +1,9 @@
 //! 🧬️ Vdi3805 artifact schema — every field of the artifact with its state class.
 
-
 use std::collections::BTreeMap;
 
-use ::schema::ArtifactSchema;
 use crate::artifacts::vdi3805::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry, SecurityLimits};
+use ::schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
@@ -13,16 +12,26 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.vdi3805")]
 pub struct Vdi3805Artifact {
-    #[state(artifact)] pub manufacturer_file: ManufacturerFile,
-    #[state(artifact)] pub catalog: ManufacturerCatalog,
-    #[state(artifact)] pub edition_profile: BTreeMap<String, EditionProfileChoice>,
-    #[state(artifact)] pub correction_as_of: EditionId,
-    #[state(artifact)] pub strict_mode: bool,
-    #[state(artifact)] pub index: CatalogIndex,
-    #[state(artifact)] pub geometry: BTreeMap<String, ParametricGeometry>,
-    #[state(artifact)] pub curves: BTreeMap<String, CharacteristicCurve>,
-    #[state(artifact)] pub limits: SecurityLimits,
-    #[state(presence)] pub selected_check_index: Option<u32>,
+    #[state(artifact)]
+    pub manufacturer_file: ManufacturerFile,
+    #[state(artifact)]
+    pub catalog: ManufacturerCatalog,
+    #[state(artifact)]
+    pub edition_profile: BTreeMap<String, EditionProfileChoice>,
+    #[state(artifact)]
+    pub correction_as_of: EditionId,
+    #[state(artifact)]
+    pub strict_mode: bool,
+    #[state(artifact)]
+    pub index: CatalogIndex,
+    #[state(artifact)]
+    pub geometry: BTreeMap<String, ParametricGeometry>,
+    #[state(artifact)]
+    pub curves: BTreeMap<String, CharacteristicCurve>,
+    #[state(artifact)]
+    pub limits: SecurityLimits,
+    #[state(presence)]
+    pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -106,8 +115,8 @@ pub fn vdi3805_artifact_schema_descriptor() -> ::schema::ArtifactSchemaDescripto
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Vdi3805BuilderConstruction {
@@ -119,8 +128,12 @@ pub mod derived_construction {
         type Snapshot = Vdi3805Snapshot;
         type Mutation = Vdi3805Mutation;
         type Diff = Vdi3805Diff;
-        fn empty() -> Self { Self { snapshot: Vdi3805Snapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn empty() -> Self {
+            Self { snapshot: Vdi3805Snapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Vdi3805Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -137,7 +150,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -146,8 +163,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::vdi3805::Vdi3805Snapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Vdi3805Parts {
@@ -491,4 +508,3 @@ mod compliance_helpers_tests {
     }
 }
 //#endregion 🧪️ComplianceHelpersTests
-

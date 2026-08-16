@@ -2,17 +2,14 @@
 //! exactly one `ObjectKind`: its identity, representations (meshes at LOD/tags — the semio_compose_rs
 //! `type` app's successor), and the `VortexKind` templates placed on its rim.
 
-
-pub use crate::artifacts::block3d::schema::snapshot::Block3dSnapshot;
-pub use crate::artifacts::block3d::schema::mutations::Block3dMutation;
 pub use crate::artifacts::block3d::schema::diff::Block3dDiff;
+pub use crate::artifacts::block3d::schema::mutations::Block3dMutation;
+pub use crate::artifacts::block3d::schema::snapshot::Block3dSnapshot;
 
 use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
 use serde::{Deserialize, Serialize};
-
-
 
 pub const BLOCK_3D_SCHEMA: &str = "block.3d";
 
@@ -191,7 +188,6 @@ pub struct Block3dVortexTemplate {
     pub label: Option<String>,
 }
 
-
 //#region 🔖️WindowView
 /// 🪟 Per-window-instance view state (representation subset, layout, active utility).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -258,7 +254,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: BLOCK_3D_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
+        export_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
         import_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
     }
 }
@@ -280,9 +276,9 @@ mod tests {
 //#endregion 🧪️Tests
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::block3d::standards::v1::subsets::any::io::io_registry as v1;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -291,10 +287,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("Block3dComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("Block3dComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 
@@ -311,14 +304,51 @@ pub mod io_registry {
 /// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) — now registers via
 /// `ArtifactApp::app_schema()` returning `crate::apps::block3d::config::schema::app_schema_descriptor()`
 /// (ticket W1c), so `.setup()` is gone from `🧱️block/🦀️component.rs` entirely.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.block3d")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.block3d.standard.v1", "standard", "1", &[], None),
+        ("s.block3d.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.block3d.schema.artifact", "schema", "s.block.block3d", &[("schema", "s.block.block3d")], None),
+        ("s.block3d.inference.artifact", "inference", "s.block.block3d.inference", &[("schema", "s.block.block3d.inference")], None),
+        ("s.block3d.composer.native", "composer", "s.block3d@1/*", &[("dialect", "s.block3d@1/*")], None),
+        ("s.block3d.composer.format-1", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
+        ("s.block3d.composer.format-2", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.block3d.composer.format-3", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.block3d.composer.format-4", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
+        ("s.block3d.composer.format-5", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.block3d.grammar.1", "grammar", "block.block3d", &[("grammar", "block.block3d")], None),
+        ("s.block3d.grammar.2", "grammar", "block.block3d.op", &[("grammar", "block.block3d.op")], None),
+        ("s.block3d.grammar.3", "grammar", "block.block3d.diff", &[("grammar", "block.block3d.diff")], None),
+        ("s.block3d.grammar.4", "grammar", "3d.pack", &[("grammar", "3d.pack")], None),
+        ("s.block3d.grammar.5", "grammar", "3d.spr", &[("grammar", "3d.spr")], None),
+        ("s.block3d.codec.document-1", "codec", "block.3d:block", &[("codec", "block.3d"), ("extension", "block")], None),
+        ("s.block3d.localization.en", "localization", "3D Block", &[], Some(("en", "3D Block"))),
+        ("s.block3d.localization.de", "localization", "3D-Baustein", &[], Some(("de", "3D-Baustein"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.block3d")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::block3d::schema::block3d_artifact_schema_descriptor())
         .inferences([crate::artifacts::block3d::standards::v1::subsets::any::schema::inferences::block3d_artifact_inference_descriptor()])
         .composers(crate::artifacts::block3d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::block3d::Block3dPlayApp>()
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once

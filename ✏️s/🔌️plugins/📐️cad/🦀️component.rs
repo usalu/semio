@@ -23,7 +23,7 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .label("CAD")
         .version("0.1.0")
         .setup(register_exports)
-        .artifact(crate::artifacts::cad::declaration())
+        .artifact(crate::artifacts::cad::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .document_app::<crate::apps::cad::CadPlayApp>(crate::apps::cad::create_cad_app())
         .try_build()
 }

@@ -86,14 +86,14 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
+#[cfg(feature = "cross-fem")]
+use crate::artifacts::en1992::standards::v1::subsets::any::schema::check_rc_beam_from_fem;
+use crate::artifacts::en1992::standards::v1::subsets::any::schema::{check_full_rc_beam, part_1_2, part_2, part_3, part_4};
 /// 📋️ Full EN 1992 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1992Snapshot -> CheckReport` projection; everything it composes
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::CheckReport;
-use crate::artifacts::en1992::standards::v1::subsets::any::schema::{check_full_rc_beam, part_1_2, part_2, part_3, part_4};
-#[cfg(feature = "cross-fem")]
-use crate::artifacts::en1992::standards::v1::subsets::any::schema::check_rc_beam_from_fem;
 
 /// 📋️ `En1992Snapshot -> CheckReport` conformance law — the artifact's compliance evaluation.
 pub fn evaluate(document: &En1992Snapshot) -> CheckReport {

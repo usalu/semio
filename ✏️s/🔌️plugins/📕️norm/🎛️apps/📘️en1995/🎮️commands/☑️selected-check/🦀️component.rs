@@ -7,7 +7,7 @@
 use crate::artifacts::en1995::op::En1995Mutation;
 use crate::artifacts::en1995::En1995Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
@@ -35,12 +35,7 @@ mod tests {
     fn handle_emits_only_a_config_operation() {
         let projection = En1995Snapshot::default();
         let config = NormConfig::default();
-        let emit = handle(
-            &SetSelectedCheckIndex { index: Some(4) },
-            &ArtifactView::new(&projection, &HistoryView::empty()),
-            &ConfigView { snapshot: &config },
-        )
-        .expect("handle");
+        let emit = handle(&SetSelectedCheckIndex { index: Some(4) }, &ArtifactView::new(&projection, &HistoryView::empty()), &ConfigView { snapshot: &config }).expect("handle");
         assert!(emit.artifact_mutations.is_empty(), "a view action must never emit document operations");
         assert_eq!(emit.config_mutations, vec![NormConfigMutation::SetSelectedCheckIndex { index: Some(4) }]);
     }

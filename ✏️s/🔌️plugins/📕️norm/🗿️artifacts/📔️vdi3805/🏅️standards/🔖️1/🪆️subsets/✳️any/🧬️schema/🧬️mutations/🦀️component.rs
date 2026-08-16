@@ -41,28 +41,28 @@ pub fn extract_dn(parameters: &BTreeMap<String, VdiValue>) -> Option<u16> {
 //#endregion 🔖️IndexSync
 
 //#region 🔖️Mutations
+use super::add_geometry_connection;
+use super::change_correction_as_of;
+use super::change_edition_profile;
+use super::change_strict_mode;
+use super::create_curve;
+use super::create_geometry;
+use super::create_product;
+use super::delete_curve;
+use super::delete_geometry;
+use super::delete_product;
+use super::remove_edition_profile;
+use super::remove_geometry_connection;
+use super::rename_product;
+use super::replace_curve_points;
+use super::replace_geometry_parameters;
+use super::replace_product_configuration;
+use super::resize_geometry;
+use super::update_limits;
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️component.rs`.
 //#region 🔖️Leaves
 use super::update_manufacturer_file;
-use super::change_correction_as_of;
-use super::change_strict_mode;
-use super::update_limits;
-use super::change_edition_profile;
-use super::remove_edition_profile;
-use super::create_product;
-use super::delete_product;
-use super::rename_product;
-use super::replace_product_configuration;
-use super::create_geometry;
-use super::delete_geometry;
-use super::resize_geometry;
-use super::add_geometry_connection;
-use super::remove_geometry_connection;
-use super::replace_geometry_parameters;
-use super::create_curve;
-use super::delete_curve;
-use super::replace_curve_points;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
@@ -232,17 +232,15 @@ mod tests {
 
         let rename = Vdi3805Mutation::RenameProduct(rename_product::mutation::RenameProduct { id: "VLV-NEW".into(), new_title: crate::artifacts::vdi3805::bilingual("Umbenannt", "Renamed") });
         let after_rename = round_trip(&after_create, &rename);
-        assert_eq!(
-            crate::artifacts::vdi3805::text_in(&after_rename.catalog.products.iter().find(|p| p.identity.article_number == "VLV-NEW").unwrap().title, "en"),
-            "Renamed"
-        );
+        assert_eq!(crate::artifacts::vdi3805::text_in(&after_rename.catalog.products.iter().find(|p| p.identity.article_number == "VLV-NEW").unwrap().title, "en"), "Renamed");
         assert_eq!(after_rename.index.entries.iter().find(|e| e.product_id == "VLV-NEW").unwrap().tags, vec!["Umbenannt".to_string(), "Renamed".to_string()]);
 
         let mut new_parameters = BTreeMap::new();
         new_parameters.insert("dn".into(), VdiValue::Integer { value: 80 });
-        let replace = Vdi3805Mutation::ReplaceProductConfiguration(
-            replace_product_configuration::mutation::ReplaceProductConfiguration { id: "VLV-NEW".into(), new_configuration: crate::artifacts::vdi3805::Configuration { id: "cfg.new".into(), parameters: new_parameters, geometry_ref: None, function_refs: Vec::new() } },
-        );
+        let replace = Vdi3805Mutation::ReplaceProductConfiguration(replace_product_configuration::mutation::ReplaceProductConfiguration {
+            id: "VLV-NEW".into(),
+            new_configuration: crate::artifacts::vdi3805::Configuration { id: "cfg.new".into(), parameters: new_parameters, geometry_ref: None, function_refs: Vec::new() },
+        });
         let after_replace = round_trip(&after_create, &replace);
         assert_eq!(after_replace.index.entries.iter().find(|e| e.product_id == "VLV-NEW").unwrap().dn, Some(80));
 
@@ -262,12 +260,7 @@ mod tests {
     #[test]
     fn geometry_lifecycle_round_trips() {
         let base = Vdi3805Snapshot::default();
-        let geometry = crate::artifacts::vdi3805::ParametricGeometry {
-            id: "geom.new".into(),
-            bbox: crate::artifacts::vdi3805::BoundingBox::from_size(1.0, 1.0, 1.0),
-            connections: Vec::new(),
-            parameters: BTreeMap::new(),
-        };
+        let geometry = crate::artifacts::vdi3805::ParametricGeometry { id: "geom.new".into(), bbox: crate::artifacts::vdi3805::BoundingBox::from_size(1.0, 1.0, 1.0), connections: Vec::new(), parameters: BTreeMap::new() };
         let create = Vdi3805Mutation::CreateGeometry(create_geometry::mutation::CreateGeometry { geometry: geometry.clone() });
         let after_create = round_trip(&base, &create);
         assert!(after_create.geometry.contains_key("geom.new"));

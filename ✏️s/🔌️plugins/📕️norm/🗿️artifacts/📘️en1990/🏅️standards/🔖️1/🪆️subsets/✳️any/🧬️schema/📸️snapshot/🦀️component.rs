@@ -1,12 +1,11 @@
 //! 🧬️ En1990 snapshot schema — artifact-lane fields only.
 
-use schema::ArtifactSchema;
 use crate::artifacts::en1990::En1990QkChild;
 use crate::document::AnnexChoice;
+use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
-
 
 /// 📸️ Persisted En1990 document snapshot. Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2
 /// (`norm→C:table` on `en1990.q_k`): the inline `Vec<En1990QkEntry>` variable-action table is
@@ -43,16 +42,30 @@ pub struct En1990QkEntry {
 /// 🧪️ Real hex/bracket child-handle codec (mirrors `➗️mathematical`'s/`📐️cad`'s own `enc_child`/
 /// `dec_child`) — a handle is exactly two strings (`child_id`, the target's `ArtifactRef` flattened
 /// via `to_uri()`), never the child's own content.
-fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|b| format!("{b:02x}")).collect() }
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 { return Err(format!("odd hex length: {s:?}")); }
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
-fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
-fn enc_ref(r: &store::os_io::ArtifactRef) -> String { enc_str(&r.to_uri()) }
-fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&dec_str(s)?) }
-fn enc_child(c: &En1990QkChild) -> String { format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target)) }
+fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+    enc_str(&r.to_uri())
+}
+fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
+    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
+}
+fn enc_child(c: &En1990QkChild) -> String {
+    format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
+}
 fn dec_child(s: &str) -> Result<En1990QkChild, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
     let parts: Vec<&str> = inner.splitn(2, ',').collect();
@@ -60,19 +73,23 @@ fn dec_child(s: &str) -> Result<En1990QkChild, String> {
     Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
 }
 fn enc_annex(a: AnnexChoice) -> &'static str {
-    match a { AnnexChoice::En => "en", AnnexChoice::De => "de" }
+    match a {
+        AnnexChoice::En => "en",
+        AnnexChoice::De => "de",
+    }
 }
 fn dec_annex(s: &str) -> Result<AnnexChoice, String> {
-    match s { "en" => Ok(AnnexChoice::En), "de" => Ok(AnnexChoice::De), other => Err(format!("bad annex {other:?}")) }
+    match s {
+        "en" => Ok(AnnexChoice::En),
+        "de" => Ok(AnnexChoice::De),
+        other => Err(format!("bad annex {other:?}")),
+    }
 }
 //#endregion 🔖️ChildCodecPrimitives
 
 //#region 🔖️TextPrimitives
 fn print_en1990_snapshot_body(s: &En1990Snapshot) -> String {
-    format!(
-        "gK={}\nqK={}\nresistanceKn={}\nconsequenceClass={}\nannex={}\nseismicAEdKn={}",
-        s.g_k, enc_child(&s.q_k), s.resistance_kn, s.consequence_class, enc_annex(s.annex), s.seismic_a_ed_kn,
-    )
+    format!("gK={}\nqK={}\nresistanceKn={}\nconsequenceClass={}\nannex={}\nseismicAEdKn={}", s.g_k, enc_child(&s.q_k), s.resistance_kn, s.consequence_class, enc_annex(s.annex), s.seismic_a_ed_kn,)
 }
 fn parse_en1990_snapshot_body(body: &str) -> Result<En1990Snapshot, String> {
     let mut g_k = None;
@@ -83,14 +100,24 @@ fn parse_en1990_snapshot_body(body: &str) -> Result<En1990Snapshot, String> {
     let mut seismic_a_ed_kn = None;
     for line in body.lines() {
         let line = line.trim();
-        if line.is_empty() { continue; }
-        if let Some(rest) = line.strip_prefix("gK=") { g_k = Some(rest.parse::<f64>().map_err(|e| e.to_string())?); }
-        else if let Some(rest) = line.strip_prefix("qK=") { q_k = Some(dec_child(rest)?); }
-        else if let Some(rest) = line.strip_prefix("resistanceKn=") { resistance_kn = Some(rest.parse::<f64>().map_err(|e| e.to_string())?); }
-        else if let Some(rest) = line.strip_prefix("consequenceClass=") { consequence_class = Some(rest.parse::<u8>().map_err(|e| e.to_string())?); }
-        else if let Some(rest) = line.strip_prefix("annex=") { annex = Some(dec_annex(rest)?); }
-        else if let Some(rest) = line.strip_prefix("seismicAEdKn=") { seismic_a_ed_kn = Some(rest.parse::<f64>().map_err(|e| e.to_string())?); }
-        else { return Err(format!("en1990 snapshot: unknown line {line:?}")); }
+        if line.is_empty() {
+            continue;
+        }
+        if let Some(rest) = line.strip_prefix("gK=") {
+            g_k = Some(rest.parse::<f64>().map_err(|e| e.to_string())?);
+        } else if let Some(rest) = line.strip_prefix("qK=") {
+            q_k = Some(dec_child(rest)?);
+        } else if let Some(rest) = line.strip_prefix("resistanceKn=") {
+            resistance_kn = Some(rest.parse::<f64>().map_err(|e| e.to_string())?);
+        } else if let Some(rest) = line.strip_prefix("consequenceClass=") {
+            consequence_class = Some(rest.parse::<u8>().map_err(|e| e.to_string())?);
+        } else if let Some(rest) = line.strip_prefix("annex=") {
+            annex = Some(dec_annex(rest)?);
+        } else if let Some(rest) = line.strip_prefix("seismicAEdKn=") {
+            seismic_a_ed_kn = Some(rest.parse::<f64>().map_err(|e| e.to_string())?);
+        } else {
+            return Err(format!("en1990 snapshot: unknown line {line:?}"));
+        }
     }
     Ok(En1990Snapshot {
         g_k: g_k.ok_or_else(|| "en1990 snapshot: missing gK line".to_string())?,
@@ -112,11 +139,22 @@ fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> 
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-fn write_str_lp(out: &mut Vec<u8>, s: &str) { write_bytes_lp(out, s.as_bytes()); }
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> { String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string()) }
-fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) { write_str_lp(out, &r.to_uri()); }
-fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?) }
-fn write_child(out: &mut Vec<u8>, c: &En1990QkChild) { write_str_lp(out, &c.child_id); write_ref(out, &c.target); }
+fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    write_bytes_lp(out, s.as_bytes());
+}
+fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+}
+fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
+    write_str_lp(out, &r.to_uri());
+}
+fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
+    store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
+}
+fn write_child(out: &mut Vec<u8>, c: &En1990QkChild) {
+    write_str_lp(out, &c.child_id);
+    write_ref(out, &c.target);
+}
 fn read_child(reader: &mut store::ByteReader<'_>) -> Result<En1990QkChild, String> {
     let child_id = read_str_lp(reader)?;
     let target = read_ref(reader)?;
@@ -138,7 +176,9 @@ fn decode_en1990_snapshot_binary(bytes: &[u8]) -> Result<En1990Snapshot, String>
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
-    if format != PACK_BINARY_FORMAT { return Err(format!("unsupported pack format {format}")); }
+    if format != PACK_BINARY_FORMAT {
+        return Err(format!("unsupported pack format {format}"));
+    }
     let g_k = f64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "short gK".to_string())?);
     let q_k = read_child(&mut reader)?;
     let resistance_kn = f64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "short resistanceKn".to_string())?);
@@ -158,7 +198,9 @@ fn decode_en1990_snapshot_binary(bytes: &[u8]) -> Result<En1990Snapshot, String>
 /// keep `impl_norm_artifact_record!` unchanged.
 impl store::ArtifactDsl for En1990Snapshot {
     const EXTENSION: &'static str = "en1990";
-    fn envelope_id() -> &'static str { "norm.en1990" }
+    fn envelope_id() -> &'static str {
+        "norm.en1990"
+    }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,

@@ -3,8 +3,12 @@
 
 use crate::artifacts::en1990::En1990Snapshot;
 
-pub fn import_stdio_kinds() -> &'static [&'static str] { &["s.en1990"] }
-pub fn export_stdio_kinds() -> &'static [&'static str] { &["s.en1990"] }
+pub fn import_stdio_kinds() -> &'static [&'static str] {
+    &["s.en1990"]
+}
+pub fn export_stdio_kinds() -> &'static [&'static str] {
+    &["s.en1990"]
+}
 
 /// 📖️ Parses `.en1990` DSL bytes into a snapshot.
 pub fn en1990_from_dsl_bytes(bytes: &[u8]) -> Result<En1990Snapshot, store::TextError> {
@@ -29,10 +33,10 @@ pub fn en1990_to_pack(snapshot: &En1990Snapshot) -> Vec<u8> {
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::en1990::En1990Snapshot;
     use crate::artifacts::en1990::standards::v1::subsets::any::schema::En1990Analyzer;
+    use crate::artifacts::en1990::En1990Snapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.en1990", standard: StandardId("1"), subset: SubsetId("*") };
 
@@ -70,16 +74,14 @@ pub use derived_composition::*;
 /// 🚪️ Composer registry (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated
 /// verbatim from the deleted `⚙️engine`; io is exactly where composer dispatch belongs.
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::en1990::standards::v1::subsets::any::schema::En1990Composer as En1990AnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![
-            composer_entry_of::<En1990AnyComposer>(),
-        ]).as_slice()
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<En1990AnyComposer>()]).as_slice()
     }
 }
 //#endregion 🚪️IoRegistry
@@ -89,9 +91,7 @@ mod tests {
     use super::*;
     use crate::artifacts::en1990::standards::v1::subsets::any::schema::inferences::En1990Inference;
     use crate::artifacts::en1990::standards::v1::subsets::any::schema::mutations::change_resistance::mutation::ChangeResistance;
-    use crate::artifacts::en1990::standards::v1::subsets::any::schema::snapshot::text::{
-        EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT, parse_dsl,
-    };
+    use crate::artifacts::en1990::standards::v1::subsets::any::schema::snapshot::text::{parse_dsl, EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT};
     use crate::artifacts::en1990::{En1990Mutation, En1990Snapshot};
     use protocol::Inference;
     use semio_framework_plugin::{Dialect, StandardId, SubsetId};
@@ -149,9 +149,7 @@ mod tests {
         }
 
         fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
-            vec![En1990Mutation::ChangeResistance(ChangeResistance {
-                new_resistance_kn: snapshot.resistance_kn + 10.0,
-            })]
+            vec![En1990Mutation::ChangeResistance(ChangeResistance { new_resistance_kn: snapshot.resistance_kn + 10.0 })]
         }
 
         fn validate_payload(_bytes: &[u8]) -> Result<(), Vec<String>> {
@@ -165,11 +163,7 @@ mod tests {
 
     #[test]
     fn high_consequence_office_subset_roundtrip() {
-        let asset = ExampleAsset {
-            bytes: EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT.as_bytes(),
-            text: Some(EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT),
-            provenance: "high-consequence-office.dsl.semio (EN 1990 CC3 office example)",
-        };
+        let asset = ExampleAsset { bytes: EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT.as_bytes(), text: Some(EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT), provenance: "high-consequence-office.dsl.semio (EN 1990 CC3 office example)" };
         test_support::assert_subset_roundtrip::<En1990AnyRoundtrip>(&asset, None);
     }
 }

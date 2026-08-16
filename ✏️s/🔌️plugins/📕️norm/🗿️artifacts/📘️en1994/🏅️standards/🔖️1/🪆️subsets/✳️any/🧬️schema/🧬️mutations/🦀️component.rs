@@ -27,27 +27,27 @@ use serde::{Deserialize, Serialize};
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️component.rs`.
 //#region 🔖️Leaves
 use super::change_annex;
-use super::change_m_ed_knm;
-use super::change_v_ed_kn;
-use super::change_m_pla;
-use super::change_m_pl_rd;
-use super::change_eta;
-use super::change_v_l_rd;
-use super::change_insulation_thickness_mm;
-use super::change_fire_rating;
+use super::change_d_mm;
 use super::change_deck_type;
 use super::change_delta_sigma_mpa;
-use super::change_fatigue_detail;
-use super::change_d_mm;
-use super::change_h_sc_mm;
+use super::change_delta_tau_stud_mpa;
+use super::change_e_cm_mpa;
+use super::change_eta;
 use super::change_f_ck_mpa;
 use super::change_f_u_mpa;
-use super::change_e_cm_mpa;
-use super::change_v_ed_per_stud_kn;
-use super::change_span_m;
 use super::change_f_y_mpa;
+use super::change_fatigue_detail;
+use super::change_fire_rating;
+use super::change_h_sc_mm;
+use super::change_insulation_thickness_mm;
+use super::change_m_ed_knm;
+use super::change_m_pl_rd;
+use super::change_m_pla;
 use super::change_n_cycles_stud;
-use super::change_delta_tau_stud_mpa;
+use super::change_span_m;
+use super::change_v_ed_kn;
+use super::change_v_ed_per_stud_kn;
+use super::change_v_l_rd;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
@@ -135,28 +135,28 @@ mod tests {
     /// `📝️text/🦀️component.rs`'s `OpText`/`OpBinary` round-trip law.
     pub(crate) fn demo_mutation_cases() -> Vec<En1994Mutation> {
         vec![
-        En1994Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: AnnexChoice::En }),
-        En1994Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 123.5_f64 }),
-        En1994Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 123.5_f64 }),
-        En1994Mutation::ChangeMPla(change_m_pla::mutation::ChangeMPla { new_m_pla: 123.5_f64 }),
-        En1994Mutation::ChangeMPlRd(change_m_pl_rd::mutation::ChangeMPlRd { new_m_pl_rd: 123.5_f64 }),
-        En1994Mutation::ChangeEta(change_eta::mutation::ChangeEta { new_eta: 123.5_f64 }),
-        En1994Mutation::ChangeVLRd(change_v_l_rd::mutation::ChangeVLRd { new_v_l_rd: 123.5_f64 }),
-        En1994Mutation::ChangeInsulationThicknessMm(change_insulation_thickness_mm::mutation::ChangeInsulationThicknessMm { new_insulation_thickness_mm: 123.5_f64 }),
-        En1994Mutation::ChangeFireRating(change_fire_rating::mutation::ChangeFireRating { new_fire_rating: "fire_rating-demo".to_string() }),
-        En1994Mutation::ChangeDeckType(change_deck_type::mutation::ChangeDeckType { new_deck_type: "deck_type-demo".to_string() }),
-        En1994Mutation::ChangeDeltaSigmaMpa(change_delta_sigma_mpa::mutation::ChangeDeltaSigmaMpa { new_delta_sigma_mpa: 123.5_f64 }),
-        En1994Mutation::ChangeFatigueDetail(change_fatigue_detail::mutation::ChangeFatigueDetail { new_fatigue_detail: "fatigue_detail-demo".to_string() }),
-        En1994Mutation::ChangeDMm(change_d_mm::mutation::ChangeDMm { new_d_mm: 123.5_f64 }),
-        En1994Mutation::ChangeHScMm(change_h_sc_mm::mutation::ChangeHScMm { new_h_sc_mm: 123.5_f64 }),
-        En1994Mutation::ChangeFCkMpa(change_f_ck_mpa::mutation::ChangeFCkMpa { new_f_ck_mpa: 123.5_f64 }),
-        En1994Mutation::ChangeFUMpa(change_f_u_mpa::mutation::ChangeFUMpa { new_f_u_mpa: 123.5_f64 }),
-        En1994Mutation::ChangeECmMpa(change_e_cm_mpa::mutation::ChangeECmMpa { new_e_cm_mpa: 123.5_f64 }),
-        En1994Mutation::ChangeVEdPerStudKn(change_v_ed_per_stud_kn::mutation::ChangeVEdPerStudKn { new_v_ed_per_stud_kn: 123.5_f64 }),
-        En1994Mutation::ChangeSpanM(change_span_m::mutation::ChangeSpanM { new_span_m: 123.5_f64 }),
-        En1994Mutation::ChangeFYMpa(change_f_y_mpa::mutation::ChangeFYMpa { new_f_y_mpa: 123.5_f64 }),
-        En1994Mutation::ChangeNCyclesStud(change_n_cycles_stud::mutation::ChangeNCyclesStud { new_n_cycles_stud: 123.5_f64 }),
-        En1994Mutation::ChangeDeltaTauStudMpa(change_delta_tau_stud_mpa::mutation::ChangeDeltaTauStudMpa { new_delta_tau_stud_mpa: 123.5_f64 }),
+            En1994Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: AnnexChoice::En }),
+            En1994Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 123.5_f64 }),
+            En1994Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 123.5_f64 }),
+            En1994Mutation::ChangeMPla(change_m_pla::mutation::ChangeMPla { new_m_pla: 123.5_f64 }),
+            En1994Mutation::ChangeMPlRd(change_m_pl_rd::mutation::ChangeMPlRd { new_m_pl_rd: 123.5_f64 }),
+            En1994Mutation::ChangeEta(change_eta::mutation::ChangeEta { new_eta: 123.5_f64 }),
+            En1994Mutation::ChangeVLRd(change_v_l_rd::mutation::ChangeVLRd { new_v_l_rd: 123.5_f64 }),
+            En1994Mutation::ChangeInsulationThicknessMm(change_insulation_thickness_mm::mutation::ChangeInsulationThicknessMm { new_insulation_thickness_mm: 123.5_f64 }),
+            En1994Mutation::ChangeFireRating(change_fire_rating::mutation::ChangeFireRating { new_fire_rating: "fire_rating-demo".to_string() }),
+            En1994Mutation::ChangeDeckType(change_deck_type::mutation::ChangeDeckType { new_deck_type: "deck_type-demo".to_string() }),
+            En1994Mutation::ChangeDeltaSigmaMpa(change_delta_sigma_mpa::mutation::ChangeDeltaSigmaMpa { new_delta_sigma_mpa: 123.5_f64 }),
+            En1994Mutation::ChangeFatigueDetail(change_fatigue_detail::mutation::ChangeFatigueDetail { new_fatigue_detail: "fatigue_detail-demo".to_string() }),
+            En1994Mutation::ChangeDMm(change_d_mm::mutation::ChangeDMm { new_d_mm: 123.5_f64 }),
+            En1994Mutation::ChangeHScMm(change_h_sc_mm::mutation::ChangeHScMm { new_h_sc_mm: 123.5_f64 }),
+            En1994Mutation::ChangeFCkMpa(change_f_ck_mpa::mutation::ChangeFCkMpa { new_f_ck_mpa: 123.5_f64 }),
+            En1994Mutation::ChangeFUMpa(change_f_u_mpa::mutation::ChangeFUMpa { new_f_u_mpa: 123.5_f64 }),
+            En1994Mutation::ChangeECmMpa(change_e_cm_mpa::mutation::ChangeECmMpa { new_e_cm_mpa: 123.5_f64 }),
+            En1994Mutation::ChangeVEdPerStudKn(change_v_ed_per_stud_kn::mutation::ChangeVEdPerStudKn { new_v_ed_per_stud_kn: 123.5_f64 }),
+            En1994Mutation::ChangeSpanM(change_span_m::mutation::ChangeSpanM { new_span_m: 123.5_f64 }),
+            En1994Mutation::ChangeFYMpa(change_f_y_mpa::mutation::ChangeFYMpa { new_f_y_mpa: 123.5_f64 }),
+            En1994Mutation::ChangeNCyclesStud(change_n_cycles_stud::mutation::ChangeNCyclesStud { new_n_cycles_stud: 123.5_f64 }),
+            En1994Mutation::ChangeDeltaTauStudMpa(change_delta_tau_stud_mpa::mutation::ChangeDeltaTauStudMpa { new_delta_tau_stud_mpa: 123.5_f64 }),
         ]
     }
 

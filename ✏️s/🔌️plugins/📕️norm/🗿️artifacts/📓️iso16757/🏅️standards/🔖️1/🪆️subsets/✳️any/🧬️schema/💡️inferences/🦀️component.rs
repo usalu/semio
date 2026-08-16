@@ -86,13 +86,13 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
+use crate::artifacts::iso16757::standards::v1::subsets::any::schema::{part_1, part_2, part_4, part_5};
 /// 📋️ Full ISO 16757 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `Iso16757Snapshot -> CheckReport` projection; everything it
 /// composes is a pure helper living in the parent `🧬️schema`.
 use crate::artifacts::iso16757::CatalogueValue;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity, QuantityKind};
-use crate::artifacts::iso16757::standards::v1::subsets::any::schema::{part_1, part_2, part_4, part_5};
 use std::collections::{HashMap, HashSet};
 
 fn clause(part: &str, section: &str) -> ClauseId {
@@ -229,4 +229,3 @@ mod compliance_report_tests {
     }
 }
 //#endregion 🧪️ComplianceReportTests
-

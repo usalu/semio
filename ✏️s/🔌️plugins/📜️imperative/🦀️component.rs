@@ -10,7 +10,7 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("imperative")
         .label("Imperative")
         .version("0.1.0")
-        .artifact(crate::artifacts::imperative::declaration())
+        .artifact(crate::artifacts::imperative::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .document_app::<crate::apps::imperative::ImperativePlayApp>(crate::apps::imperative::create_imperative_app())
         .try_build()
 }

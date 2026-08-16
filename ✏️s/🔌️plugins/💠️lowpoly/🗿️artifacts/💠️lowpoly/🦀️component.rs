@@ -146,10 +146,6 @@ impl Identified<String> for LowpolyObject {
 /// paint layers). Non-persistent fields live on [`schema::LowpolyArtifact`](crate::artifacts::lowpoly::schema::LowpolyArtifact).
 pub use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
 
-
-
-
-
 pub use crate::artifacts::lowpoly::snapshot::schema::snapshot_from_mesh_json;
 
 /// @emoji 🎯️ Ephemeral component selection — never part of the document, threaded into the compute
@@ -246,10 +242,18 @@ pub fn apply_paint_layers_delta(object: &mut LowpolyObject, delta: &crate::artif
         let i = entry.index as usize;
         if let Some(layer) = object.paint_layers.get_mut(i) {
             let p = &entry.patch;
-            if let Some(value) = &p.name { layer.name = value.clone(); }
-            if let Some(value) = p.visible { layer.visible = value; }
-            if let Some(value) = p.opacity { layer.opacity = value; }
-            if let Some(value) = &p.blend_mode { layer.blend_mode = value.clone(); }
+            if let Some(value) = &p.name {
+                layer.name = value.clone();
+            }
+            if let Some(value) = p.visible {
+                layer.visible = value;
+            }
+            if let Some(value) = p.opacity {
+                layer.opacity = value;
+            }
+            if let Some(value) = &p.blend_mode {
+                layer.blend_mode = value.clone();
+            }
         }
     }
     for stroke in &delta.strokes {
@@ -282,7 +286,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "lowpoly.fixture".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
+        export_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
         import_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
     }
 }
@@ -312,14 +316,54 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has no field for
 /// (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's artifact-scoped
 /// function set.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.lowpoly")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.lowpoly.standard.v1", "standard", "1", &[], None),
+        ("s.lowpoly.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.lowpoly.schema.artifact", "schema", "s.lowpoly.lowpoly", &[("schema", "s.lowpoly.lowpoly")], None),
+        ("s.lowpoly.inference.artifact", "inference", "s.lowpoly.lowpoly.inference", &[("schema", "s.lowpoly.lowpoly.inference")], None),
+        ("s.lowpoly.composer.native", "composer", "s.lowpoly@1/*", &[("dialect", "s.lowpoly@1/*")], None),
+        ("s.lowpoly.composer.format-1", "composer", "s.stdio.las@1.0/*", &[("dialect", "s.stdio.las@1.0/*")], None),
+        ("s.lowpoly.composer.format-2", "composer", "s.stdio.ply@1.0/*", &[("dialect", "s.stdio.ply@1.0/*")], None),
+        ("s.lowpoly.composer.format-3", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.lowpoly.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.lowpoly.composer.format-5", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
+        ("s.lowpoly.composer.format-6", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
+        ("s.lowpoly.composer.format-7", "composer", "s.stdio.gltf@2.0/*", &[("dialect", "s.stdio.gltf@2.0/*")], None),
+        ("s.lowpoly.composer.format-8", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.lowpoly.grammar.1", "grammar", "lowpoly.document", &[("grammar", "lowpoly.document")], None),
+        ("s.lowpoly.grammar.2", "grammar", "lowpoly.op", &[("grammar", "lowpoly.op")], None),
+        ("s.lowpoly.grammar.3", "grammar", "lowpoly.diff", &[("grammar", "lowpoly.diff")], None),
+        ("s.lowpoly.grammar.4", "grammar", "lowpoly.pack", &[("grammar", "lowpoly.pack")], None),
+        ("s.lowpoly.grammar.5", "grammar", "lowpoly.spr", &[("grammar", "lowpoly.spr")], None),
+        ("s.lowpoly.codec.document-1", "codec", "lowpoly.document:lowpoly", &[("codec", "lowpoly.document"), ("extension", "lowpoly")], None),
+        ("s.lowpoly.localization.en", "localization", "Lowpoly", &[], Some(("en", "Lowpoly"))),
+        ("s.lowpoly.localization.de", "localization", "Niedrigpolygon", &[], Some(("de", "Niedrigpolygon"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.lowpoly")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::lowpoly::schema::lowpoly_artifact_schema_descriptor())
         .inferences([crate::artifacts::lowpoly::standards::v1::subsets::any::schema::inferences::lowpoly_artifact_inference_descriptor()])
         .composers(crate::artifacts::lowpoly::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::lowpoly::LowpolyPlayApp>()
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -434,31 +478,33 @@ mod tests {
     }
 }
 
-    #[test]
-    fn artifact_schema_descriptor_leaves_parse_and_field_states_match_snapshot_json() {
-        use schema::{parse_state_class_kebab, ArtifactSchemaFields};
-        let descriptor = crate::artifacts::lowpoly::schema::lowpoly_artifact_schema_descriptor();
-        assert_eq!(descriptor.id, "s.lowpoly.lowpoly");
-        let schema: serde_json::Value = serde_json::from_str(descriptor.snapshot.json_schema).expect("snapshot json");
-        assert_eq!(schema["title"], "LowpolySnapshot");
-        let properties = schema["properties"].as_object().expect("properties");
-        let mut json_states: Vec<(String, _)> = properties.iter().map(|(name, prop)| {
+#[test]
+fn artifact_schema_descriptor_leaves_parse_and_field_states_match_snapshot_json() {
+    use schema::{parse_state_class_kebab, ArtifactSchemaFields};
+    let descriptor = crate::artifacts::lowpoly::schema::lowpoly_artifact_schema_descriptor();
+    assert_eq!(descriptor.id, "s.lowpoly.lowpoly");
+    let schema: serde_json::Value = serde_json::from_str(descriptor.snapshot.json_schema).expect("snapshot json");
+    assert_eq!(schema["title"], "LowpolySnapshot");
+    let properties = schema["properties"].as_object().expect("properties");
+    let mut json_states: Vec<(String, _)> = properties
+        .iter()
+        .map(|(name, prop)| {
             let raw = prop["x-semio-state"].as_str().expect("state");
             (name.clone(), parse_state_class_kebab(raw).expect("parse"))
-        }).collect();
-        json_states.sort_by(|a, b| a.0.cmp(&b.0));
-        let mut derived: Vec<(String, _)> = crate::artifacts::lowpoly::snapshot::schema::LowpolySnapshot::field_states()
-            .iter().map(|(n, c)| ((*n).to_string(), *c)).collect();
-        derived.sort_by(|a, b| a.0.cmp(&b.0));
-        assert_eq!(derived, json_states);
-        assert_eq!(crate::artifacts::lowpoly::schema::LowpolyArtifact::artifact_schema_id(), "s.lowpoly.lowpoly");
-    }
+        })
+        .collect();
+    json_states.sort_by(|a, b| a.0.cmp(&b.0));
+    let mut derived: Vec<(String, _)> = crate::artifacts::lowpoly::snapshot::schema::LowpolySnapshot::field_states().iter().map(|(n, c)| ((*n).to_string(), *c)).collect();
+    derived.sort_by(|a, b| a.0.cmp(&b.0));
+    assert_eq!(derived, json_states);
+    assert_eq!(crate::artifacts::lowpoly::schema::LowpolyArtifact::artifact_schema_id(), "s.lowpoly.lowpoly");
+}
 //#endregion 🧪️Tests
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::lowpoly::standards::v1::subsets::any::io::io_registry as v1;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -467,10 +513,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("LowpolyComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("LowpolyComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

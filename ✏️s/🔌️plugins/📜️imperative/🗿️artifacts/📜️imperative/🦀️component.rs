@@ -283,15 +283,36 @@ pub fn diff_replace_flow(path: &Path) -> ImperativeDiff {
 /// artifact must not depend on its app, so both stayed artifact-side rather than moving to the app),
 /// reached below by their full qualified path. `bootstrap_imperative_runtime` stays `pub` (widened from
 /// its former `pub(crate)`) since the app engine module now reaches it by the same long qualified path.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.imperative.standard.v1", "standard", "1", &[], None), ("s.imperative.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.imperative.schema.artifact", "schema", "s.imperative.imperative", &[("schema", "s.imperative.imperative")], None), ("s.imperative.inference.artifact", "inference", "s.imperative.imperative.inference", &[("schema", "s.imperative.imperative.inference")], None),
+        ("s.imperative.composer.csv", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None), ("s.imperative.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None), ("s.imperative.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.imperative.grammar.document", "grammar", "imperative.document", &[("grammar", "imperative.document")], None), ("s.imperative.grammar.op", "grammar", "imperative.imperative.op", &[("grammar", "imperative.imperative.op")], None),
+        ("s.imperative.grammar.diff", "grammar", "imperative.imperative.diff", &[("grammar", "imperative.imperative.diff")], None), ("s.imperative.grammar.pack", "grammar", "imperative.pack", &[("grammar", "imperative.pack")], None), ("s.imperative.grammar.spr", "grammar", "imperative.spr", &[("grammar", "imperative.spr")], None),
+        ("s.imperative.codec.document.v1", "codec", "imperative.document/v1:imperative", &[("codec", "imperative.document/v1"), ("extension", "imperative")], None),
+        ("s.imperative.localization.en", "localization", "Imperative", &[], Some(("en", "Imperative"))), ("s.imperative.localization.de", "localization", "Imperativ", &[], Some(("de", "Imperativ"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.imperative")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims { capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?; }
+        if let Some((locale, text)) = localization { capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?; }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     crate::artifacts::imperative::standards::v1::subsets::any::io::bootstrap_imperative_runtime();
-    semio_framework_plugin::ArtifactDeclaration::builder("s.imperative")
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::imperative::schema::imperative_artifact_schema_descriptor())
         .inferences([crate::artifacts::imperative::standards::v1::subsets::any::schema::inferences::imperative_artifact_inference_descriptor()])
         .composers(crate::artifacts::imperative::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::imperative::ImperativePlayApp>()
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once

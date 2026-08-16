@@ -18,32 +18,32 @@ use crate::artifacts::en1999::En1999Snapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
-use super::change_n_ed_kn;
-use super::change_m_ed_knm;
 use super::change_a_mm2;
-use super::change_w_el_mm3;
 use super::change_alloy;
+use super::change_annex;
+use super::change_beta_w;
 use super::change_chi;
+use super::change_delta_sigma_c;
+use super::change_delta_sigma_ed;
+use super::change_fatigue_m;
 use super::change_i_t_mm4;
 use super::change_l_cr_mm;
-use super::change_theta_c;
-use super::change_delta_sigma_ed;
-use super::change_delta_sigma_c;
-use super::change_fatigue_m;
+use super::change_m_ed_knm;
 use super::change_n_cycles;
-use super::change_v_weld_ed_kn;
-use super::change_weld_throat_mm;
-use super::change_weld_length_mm;
-use super::change_beta_w;
+use super::change_n_ed_kn;
 use super::change_sheet_b_mm;
-use super::change_sheet_t_mm;
 use super::change_sheet_k_sigma;
-use super::change_sheet_w_el_mm3;
 use super::change_sheet_m_ed_knm;
-use super::change_shell_t_mm;
+use super::change_sheet_t_mm;
+use super::change_sheet_w_el_mm3;
 use super::change_shell_r_mm;
+use super::change_shell_t_mm;
 use super::change_sigma_ed_shell_mpa;
-use super::change_annex;
+use super::change_theta_c;
+use super::change_v_weld_ed_kn;
+use super::change_w_el_mm3;
+use super::change_weld_length_mm;
+use super::change_weld_throat_mm;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -121,44 +121,43 @@ impl En1999Mutation {
 }
 //#endregion 🔖️FromSnapshot
 
-
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::SemanticMutation;
     use protocol::Mutation;
+    use protocol::SemanticMutation;
 
     /// ⚖️ One value per `En1999Mutation` variant — the closed set the semantics/round-trip
     /// tests iterate.
     fn every_mutation() -> Vec<En1999Mutation> {
         vec![
-        En1999Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: 95.0 }),
-        En1999Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 5.0 }),
-        En1999Mutation::ChangeAMm2(change_a_mm2::mutation::ChangeAMm2 { new_a_mm2: 1300.0 }),
-        En1999Mutation::ChangeWElMm3(change_w_el_mm3::mutation::ChangeWElMm3 { new_w_el_mm3: 26_000.0 }),
-        En1999Mutation::ChangeAlloy(change_alloy::mutation::ChangeAlloy { new_alloy: "aw6082t6".to_string() }),
-        En1999Mutation::ChangeChi(change_chi::mutation::ChangeChi { new_chi: 0.8 }),
-        En1999Mutation::ChangeITMm4(change_i_t_mm4::mutation::ChangeITMm4 { new_i_t_mm4: 5400.0 }),
-        En1999Mutation::ChangeLCrMm(change_l_cr_mm::mutation::ChangeLCrMm { new_l_cr_mm: 3200.0 }),
-        En1999Mutation::ChangeThetaC(change_theta_c::mutation::ChangeThetaC { new_theta_c: 180.0 }),
-        En1999Mutation::ChangeDeltaSigmaEd(change_delta_sigma_ed::mutation::ChangeDeltaSigmaEd { new_delta_sigma_ed: 50.0 }),
-        En1999Mutation::ChangeDeltaSigmaC(change_delta_sigma_c::mutation::ChangeDeltaSigmaC { new_delta_sigma_c: 80.0 }),
-        En1999Mutation::ChangeFatigueM(change_fatigue_m::mutation::ChangeFatigueM { new_fatigue_m: 5.0 }),
-        En1999Mutation::ChangeNCycles(change_n_cycles::mutation::ChangeNCycles { new_n_cycles: 600_000.0 }),
-        En1999Mutation::ChangeVWeldEdKn(change_v_weld_ed_kn::mutation::ChangeVWeldEdKn { new_v_weld_ed_kn: 28.0 }),
-        En1999Mutation::ChangeWeldThroatMm(change_weld_throat_mm::mutation::ChangeWeldThroatMm { new_weld_throat_mm: 5.0 }),
-        En1999Mutation::ChangeWeldLengthMm(change_weld_length_mm::mutation::ChangeWeldLengthMm { new_weld_length_mm: 140.0 }),
-        En1999Mutation::ChangeBetaW(change_beta_w::mutation::ChangeBetaW { new_beta_w: 0.7 }),
-        En1999Mutation::ChangeSheetBMm(change_sheet_b_mm::mutation::ChangeSheetBMm { new_sheet_b_mm: 220.0 }),
-        En1999Mutation::ChangeSheetTMm(change_sheet_t_mm::mutation::ChangeSheetTMm { new_sheet_t_mm: 2.5 }),
-        En1999Mutation::ChangeSheetKSigma(change_sheet_k_sigma::mutation::ChangeSheetKSigma { new_sheet_k_sigma: 4.2 }),
-        En1999Mutation::ChangeSheetWElMm3(change_sheet_w_el_mm3::mutation::ChangeSheetWElMm3 { new_sheet_w_el_mm3: 8500.0 }),
-        En1999Mutation::ChangeSheetMEdKnm(change_sheet_m_ed_knm::mutation::ChangeSheetMEdKnm { new_sheet_m_ed_knm: 0.6 }),
-        En1999Mutation::ChangeShellTMm(change_shell_t_mm::mutation::ChangeShellTMm { new_shell_t_mm: 4.5 }),
-        En1999Mutation::ChangeShellRMm(change_shell_r_mm::mutation::ChangeShellRMm { new_shell_r_mm: 520.0 }),
-        En1999Mutation::ChangeSigmaEdShellMpa(change_sigma_ed_shell_mpa::mutation::ChangeSigmaEdShellMpa { new_sigma_ed_shell_mpa: 160.0 }),
-        En1999Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
+            En1999Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: 95.0 }),
+            En1999Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 5.0 }),
+            En1999Mutation::ChangeAMm2(change_a_mm2::mutation::ChangeAMm2 { new_a_mm2: 1300.0 }),
+            En1999Mutation::ChangeWElMm3(change_w_el_mm3::mutation::ChangeWElMm3 { new_w_el_mm3: 26_000.0 }),
+            En1999Mutation::ChangeAlloy(change_alloy::mutation::ChangeAlloy { new_alloy: "aw6082t6".to_string() }),
+            En1999Mutation::ChangeChi(change_chi::mutation::ChangeChi { new_chi: 0.8 }),
+            En1999Mutation::ChangeITMm4(change_i_t_mm4::mutation::ChangeITMm4 { new_i_t_mm4: 5400.0 }),
+            En1999Mutation::ChangeLCrMm(change_l_cr_mm::mutation::ChangeLCrMm { new_l_cr_mm: 3200.0 }),
+            En1999Mutation::ChangeThetaC(change_theta_c::mutation::ChangeThetaC { new_theta_c: 180.0 }),
+            En1999Mutation::ChangeDeltaSigmaEd(change_delta_sigma_ed::mutation::ChangeDeltaSigmaEd { new_delta_sigma_ed: 50.0 }),
+            En1999Mutation::ChangeDeltaSigmaC(change_delta_sigma_c::mutation::ChangeDeltaSigmaC { new_delta_sigma_c: 80.0 }),
+            En1999Mutation::ChangeFatigueM(change_fatigue_m::mutation::ChangeFatigueM { new_fatigue_m: 5.0 }),
+            En1999Mutation::ChangeNCycles(change_n_cycles::mutation::ChangeNCycles { new_n_cycles: 600_000.0 }),
+            En1999Mutation::ChangeVWeldEdKn(change_v_weld_ed_kn::mutation::ChangeVWeldEdKn { new_v_weld_ed_kn: 28.0 }),
+            En1999Mutation::ChangeWeldThroatMm(change_weld_throat_mm::mutation::ChangeWeldThroatMm { new_weld_throat_mm: 5.0 }),
+            En1999Mutation::ChangeWeldLengthMm(change_weld_length_mm::mutation::ChangeWeldLengthMm { new_weld_length_mm: 140.0 }),
+            En1999Mutation::ChangeBetaW(change_beta_w::mutation::ChangeBetaW { new_beta_w: 0.7 }),
+            En1999Mutation::ChangeSheetBMm(change_sheet_b_mm::mutation::ChangeSheetBMm { new_sheet_b_mm: 220.0 }),
+            En1999Mutation::ChangeSheetTMm(change_sheet_t_mm::mutation::ChangeSheetTMm { new_sheet_t_mm: 2.5 }),
+            En1999Mutation::ChangeSheetKSigma(change_sheet_k_sigma::mutation::ChangeSheetKSigma { new_sheet_k_sigma: 4.2 }),
+            En1999Mutation::ChangeSheetWElMm3(change_sheet_w_el_mm3::mutation::ChangeSheetWElMm3 { new_sheet_w_el_mm3: 8500.0 }),
+            En1999Mutation::ChangeSheetMEdKnm(change_sheet_m_ed_knm::mutation::ChangeSheetMEdKnm { new_sheet_m_ed_knm: 0.6 }),
+            En1999Mutation::ChangeShellTMm(change_shell_t_mm::mutation::ChangeShellTMm { new_shell_t_mm: 4.5 }),
+            En1999Mutation::ChangeShellRMm(change_shell_r_mm::mutation::ChangeShellRMm { new_shell_r_mm: 520.0 }),
+            En1999Mutation::ChangeSigmaEdShellMpa(change_sigma_ed_shell_mpa::mutation::ChangeSigmaEdShellMpa { new_sigma_ed_shell_mpa: 160.0 }),
+            En1999Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
         ]
     }
 

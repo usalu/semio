@@ -10,7 +10,7 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("raster")
         .label("Raster")
         .version("0.1.0")
-        .artifact(crate::artifacts::raster::declaration())
+        .artifact(crate::artifacts::raster::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .document_app::<crate::apps::raster::RasterPlayApp>(crate::apps::raster::create_raster_app())
         .try_build()
 }

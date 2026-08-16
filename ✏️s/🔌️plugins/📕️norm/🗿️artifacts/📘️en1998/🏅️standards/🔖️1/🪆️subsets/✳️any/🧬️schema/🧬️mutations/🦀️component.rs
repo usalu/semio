@@ -18,55 +18,55 @@ use crate::artifacts::en1998::En1998Snapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
-use super::change_seismic_zone;
-use super::change_ground_type;
-use super::change_importance_class;
-use super::change_structural_system;
-use super::change_t1_s;
-use super::change_mass_t;
-use super::change_v_rd_kn;
-use super::change_drift_mm;
-use super::change_height_m;
-use super::change_multiple_resisting_systems;
 use super::change_annex;
+use super::change_bearing_d_ed_mm;
+use super::change_bearing_d_rd_mm;
+use super::change_bridge_v_rd_kn;
+use super::change_drift_mm;
 use super::change_en_a_gr;
 use super::change_en_ground_type;
 use super::change_en_spectrum_type;
-use super::change_period_ratio;
-use super::change_bridge_v_rd_kn;
-use super::change_bearing_d_ed_mm;
-use super::change_bearing_d_rd_mm;
-use super::change_retrofit_knowledge_level;
-use super::change_retrofit_limit_state;
-use super::change_retrofit_e_d_kn;
-use super::change_retrofit_r_k_kn;
-use super::change_retrofit_gamma_el;
-use super::change_silo_height_m;
-use super::change_silo_radius_m;
-use super::change_silo_n_rd_kn;
-use super::change_silo_v_ed_kn;
-use super::change_silo_v_rd_kn;
-use super::change_silo_q_nominal;
-use super::change_tank_height_m;
-use super::change_tank_radius_m;
-use super::change_tank_mass_t;
-use super::change_tank_v_rd_kn;
-use super::change_tower_m_ed_knm;
-use super::change_tower_m_rd_knm;
-use super::change_tower_is_chimney;
-use super::change_tower_q_nominal;
-use super::change_tower_mass_t;
 use super::change_foundation_area_m2;
-use super::change_foundation_p_rd_kpa;
 use super::change_foundation_h_ed_kn;
 use super::change_foundation_h_rd_kn;
+use super::change_foundation_p_rd_kpa;
+use super::change_ground_type;
+use super::change_height_m;
+use super::change_importance_class;
 use super::change_k_foundation;
 use super::change_k_soil;
+use super::change_mass_t;
+use super::change_multiple_resisting_systems;
+use super::change_period_ratio;
+use super::change_retrofit_e_d_kn;
+use super::change_retrofit_gamma_el;
+use super::change_retrofit_knowledge_level;
+use super::change_retrofit_limit_state;
+use super::change_retrofit_r_k_kn;
+use super::change_seismic_zone;
+use super::change_silo_height_m;
+use super::change_silo_n_rd_kn;
+use super::change_silo_q_nominal;
+use super::change_silo_radius_m;
+use super::change_silo_v_ed_kn;
+use super::change_silo_v_rd_kn;
+use super::change_structural_system;
+use super::change_t1_s;
+use super::change_tank_height_m;
+use super::change_tank_mass_t;
+use super::change_tank_radius_m;
+use super::change_tank_v_rd_kn;
+use super::change_tower_is_chimney;
+use super::change_tower_m_ed_knm;
+use super::change_tower_m_rd_knm;
+use super::change_tower_mass_t;
+use super::change_tower_q_nominal;
+use super::change_v_rd_kn;
+use super::change_wall_h_rd_kn;
 use super::change_wall_height_m;
 use super::change_wall_phi_deg;
-use super::change_wall_soil_gamma_kn_m3;
 use super::change_wall_r;
-use super::change_wall_h_rd_kn;
+use super::change_wall_soil_gamma_kn_m3;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -190,67 +190,66 @@ impl En1998Mutation {
 }
 //#endregion 🔖️FromSnapshot
 
-
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::SemanticMutation;
     use protocol::Mutation;
+    use protocol::SemanticMutation;
 
     /// ⚖️ One value per `En1998Mutation` variant — the closed set the semantics/round-trip
     /// tests iterate.
     fn every_mutation() -> Vec<En1998Mutation> {
         vec![
-        En1998Mutation::ChangeSeismicZone(change_seismic_zone::mutation::ChangeSeismicZone { new_seismic_zone: 3 }),
-        En1998Mutation::ChangeGroundType(change_ground_type::mutation::ChangeGroundType { new_ground_type: "c".to_string() }),
-        En1998Mutation::ChangeImportanceClass(change_importance_class::mutation::ChangeImportanceClass { new_importance_class: "cc3".to_string() }),
-        En1998Mutation::ChangeStructuralSystem(change_structural_system::mutation::ChangeStructuralSystem { new_structural_system: "wall_dcm".to_string() }),
-        En1998Mutation::ChangeT1S(change_t1_s::mutation::ChangeT1S { new_t1_s: 0.35 }),
-        En1998Mutation::ChangeMassT(change_mass_t::mutation::ChangeMassT { new_mass_t: 550.0 }),
-        En1998Mutation::ChangeVRdKn(change_v_rd_kn::mutation::ChangeVRdKn { new_v_rd_kn: 850.0 }),
-        En1998Mutation::ChangeDriftMm(change_drift_mm::mutation::ChangeDriftMm { new_drift_mm: 22.0 }),
-        En1998Mutation::ChangeHeightM(change_height_m::mutation::ChangeHeightM { new_height_m: 14.0 }),
-        En1998Mutation::ChangeMultipleResistingSystems(change_multiple_resisting_systems::mutation::ChangeMultipleResistingSystems { new_multiple_resisting_systems: false }),
-        En1998Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: "en".to_string() }),
-        En1998Mutation::ChangeEnAGr(change_en_a_gr::mutation::ChangeEnAGr { new_en_a_gr: 0.2 }),
-        En1998Mutation::ChangeEnGroundType(change_en_ground_type::mutation::ChangeEnGroundType { new_en_ground_type: "c".to_string() }),
-        En1998Mutation::ChangeEnSpectrumType(change_en_spectrum_type::mutation::ChangeEnSpectrumType { new_en_spectrum_type: "type2".to_string() }),
-        En1998Mutation::ChangePeriodRatio(change_period_ratio::mutation::ChangePeriodRatio { new_period_ratio: 1.8 }),
-        En1998Mutation::ChangeBridgeVRdKn(change_bridge_v_rd_kn::mutation::ChangeBridgeVRdKn { new_bridge_v_rd_kn: 650.0 }),
-        En1998Mutation::ChangeBearingDEdMm(change_bearing_d_ed_mm::mutation::ChangeBearingDEdMm { new_bearing_d_ed_mm: 130.0 }),
-        En1998Mutation::ChangeBearingDRdMm(change_bearing_d_rd_mm::mutation::ChangeBearingDRdMm { new_bearing_d_rd_mm: 260.0 }),
-        En1998Mutation::ChangeRetrofitKnowledgeLevel(change_retrofit_knowledge_level::mutation::ChangeRetrofitKnowledgeLevel { new_retrofit_knowledge_level: "kl3".to_string() }),
-        En1998Mutation::ChangeRetrofitLimitState(change_retrofit_limit_state::mutation::ChangeRetrofitLimitState { new_retrofit_limit_state: "near_collapse".to_string() }),
-        En1998Mutation::ChangeRetrofitEDKn(change_retrofit_e_d_kn::mutation::ChangeRetrofitEDKn { new_retrofit_e_d_kn: 270.0 }),
-        En1998Mutation::ChangeRetrofitRKKn(change_retrofit_r_k_kn::mutation::ChangeRetrofitRKKn { new_retrofit_r_k_kn: 420.0 }),
-        En1998Mutation::ChangeRetrofitGammaEl(change_retrofit_gamma_el::mutation::ChangeRetrofitGammaEl { new_retrofit_gamma_el: 1.15 }),
-        En1998Mutation::ChangeSiloHeightM(change_silo_height_m::mutation::ChangeSiloHeightM { new_silo_height_m: 11.0 }),
-        En1998Mutation::ChangeSiloRadiusM(change_silo_radius_m::mutation::ChangeSiloRadiusM { new_silo_radius_m: 5.5 }),
-        En1998Mutation::ChangeSiloNRdKn(change_silo_n_rd_kn::mutation::ChangeSiloNRdKn { new_silo_n_rd_kn: 520.0 }),
-        En1998Mutation::ChangeSiloVEdKn(change_silo_v_ed_kn::mutation::ChangeSiloVEdKn { new_silo_v_ed_kn: 190.0 }),
-        En1998Mutation::ChangeSiloVRdKn(change_silo_v_rd_kn::mutation::ChangeSiloVRdKn { new_silo_v_rd_kn: 320.0 }),
-        En1998Mutation::ChangeSiloQNominal(change_silo_q_nominal::mutation::ChangeSiloQNominal { new_silo_q_nominal: 2.2 }),
-        En1998Mutation::ChangeTankHeightM(change_tank_height_m::mutation::ChangeTankHeightM { new_tank_height_m: 9.0 }),
-        En1998Mutation::ChangeTankRadiusM(change_tank_radius_m::mutation::ChangeTankRadiusM { new_tank_radius_m: 4.5 }),
-        En1998Mutation::ChangeTankMassT(change_tank_mass_t::mutation::ChangeTankMassT { new_tank_mass_t: 320.0 }),
-        En1998Mutation::ChangeTankVRdKn(change_tank_v_rd_kn::mutation::ChangeTankVRdKn { new_tank_v_rd_kn: 420.0 }),
-        En1998Mutation::ChangeTowerMEdKnm(change_tower_m_ed_knm::mutation::ChangeTowerMEdKnm { new_tower_m_ed_knm: 1300.0 }),
-        En1998Mutation::ChangeTowerMRdKnm(change_tower_m_rd_knm::mutation::ChangeTowerMRdKnm { new_tower_m_rd_knm: 2600.0 }),
-        En1998Mutation::ChangeTowerIsChimney(change_tower_is_chimney::mutation::ChangeTowerIsChimney { new_tower_is_chimney: false }),
-        En1998Mutation::ChangeTowerQNominal(change_tower_q_nominal::mutation::ChangeTowerQNominal { new_tower_q_nominal: 2.8 }),
-        En1998Mutation::ChangeTowerMassT(change_tower_mass_t::mutation::ChangeTowerMassT { new_tower_mass_t: 85.0 }),
-        En1998Mutation::ChangeFoundationAreaM2(change_foundation_area_m2::mutation::ChangeFoundationAreaM2 { new_foundation_area_m2: 110.0 }),
-        En1998Mutation::ChangeFoundationPRdKpa(change_foundation_p_rd_kpa::mutation::ChangeFoundationPRdKpa { new_foundation_p_rd_kpa: 520.0 }),
-        En1998Mutation::ChangeFoundationHEdKn(change_foundation_h_ed_kn::mutation::ChangeFoundationHEdKn { new_foundation_h_ed_kn: 160.0 }),
-        En1998Mutation::ChangeFoundationHRdKn(change_foundation_h_rd_kn::mutation::ChangeFoundationHRdKn { new_foundation_h_rd_kn: 420.0 }),
-        En1998Mutation::ChangeKFoundation(change_k_foundation::mutation::ChangeKFoundation { new_k_foundation: 520_000.0 }),
-        En1998Mutation::ChangeKSoil(change_k_soil::mutation::ChangeKSoil { new_k_soil: 210_000.0 }),
-        En1998Mutation::ChangeWallHeightM(change_wall_height_m::mutation::ChangeWallHeightM { new_wall_height_m: 4.5 }),
-        En1998Mutation::ChangeWallPhiDeg(change_wall_phi_deg::mutation::ChangeWallPhiDeg { new_wall_phi_deg: 32.0 }),
-        En1998Mutation::ChangeWallSoilGammaKnM3(change_wall_soil_gamma_kn_m3::mutation::ChangeWallSoilGammaKnM3 { new_wall_soil_gamma_kn_m3: 19.0 }),
-        En1998Mutation::ChangeWallR(change_wall_r::mutation::ChangeWallR { new_wall_r: 1.4 }),
-        En1998Mutation::ChangeWallHRdKn(change_wall_h_rd_kn::mutation::ChangeWallHRdKn { new_wall_h_rd_kn: 160.0 }),
+            En1998Mutation::ChangeSeismicZone(change_seismic_zone::mutation::ChangeSeismicZone { new_seismic_zone: 3 }),
+            En1998Mutation::ChangeGroundType(change_ground_type::mutation::ChangeGroundType { new_ground_type: "c".to_string() }),
+            En1998Mutation::ChangeImportanceClass(change_importance_class::mutation::ChangeImportanceClass { new_importance_class: "cc3".to_string() }),
+            En1998Mutation::ChangeStructuralSystem(change_structural_system::mutation::ChangeStructuralSystem { new_structural_system: "wall_dcm".to_string() }),
+            En1998Mutation::ChangeT1S(change_t1_s::mutation::ChangeT1S { new_t1_s: 0.35 }),
+            En1998Mutation::ChangeMassT(change_mass_t::mutation::ChangeMassT { new_mass_t: 550.0 }),
+            En1998Mutation::ChangeVRdKn(change_v_rd_kn::mutation::ChangeVRdKn { new_v_rd_kn: 850.0 }),
+            En1998Mutation::ChangeDriftMm(change_drift_mm::mutation::ChangeDriftMm { new_drift_mm: 22.0 }),
+            En1998Mutation::ChangeHeightM(change_height_m::mutation::ChangeHeightM { new_height_m: 14.0 }),
+            En1998Mutation::ChangeMultipleResistingSystems(change_multiple_resisting_systems::mutation::ChangeMultipleResistingSystems { new_multiple_resisting_systems: false }),
+            En1998Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: "en".to_string() }),
+            En1998Mutation::ChangeEnAGr(change_en_a_gr::mutation::ChangeEnAGr { new_en_a_gr: 0.2 }),
+            En1998Mutation::ChangeEnGroundType(change_en_ground_type::mutation::ChangeEnGroundType { new_en_ground_type: "c".to_string() }),
+            En1998Mutation::ChangeEnSpectrumType(change_en_spectrum_type::mutation::ChangeEnSpectrumType { new_en_spectrum_type: "type2".to_string() }),
+            En1998Mutation::ChangePeriodRatio(change_period_ratio::mutation::ChangePeriodRatio { new_period_ratio: 1.8 }),
+            En1998Mutation::ChangeBridgeVRdKn(change_bridge_v_rd_kn::mutation::ChangeBridgeVRdKn { new_bridge_v_rd_kn: 650.0 }),
+            En1998Mutation::ChangeBearingDEdMm(change_bearing_d_ed_mm::mutation::ChangeBearingDEdMm { new_bearing_d_ed_mm: 130.0 }),
+            En1998Mutation::ChangeBearingDRdMm(change_bearing_d_rd_mm::mutation::ChangeBearingDRdMm { new_bearing_d_rd_mm: 260.0 }),
+            En1998Mutation::ChangeRetrofitKnowledgeLevel(change_retrofit_knowledge_level::mutation::ChangeRetrofitKnowledgeLevel { new_retrofit_knowledge_level: "kl3".to_string() }),
+            En1998Mutation::ChangeRetrofitLimitState(change_retrofit_limit_state::mutation::ChangeRetrofitLimitState { new_retrofit_limit_state: "near_collapse".to_string() }),
+            En1998Mutation::ChangeRetrofitEDKn(change_retrofit_e_d_kn::mutation::ChangeRetrofitEDKn { new_retrofit_e_d_kn: 270.0 }),
+            En1998Mutation::ChangeRetrofitRKKn(change_retrofit_r_k_kn::mutation::ChangeRetrofitRKKn { new_retrofit_r_k_kn: 420.0 }),
+            En1998Mutation::ChangeRetrofitGammaEl(change_retrofit_gamma_el::mutation::ChangeRetrofitGammaEl { new_retrofit_gamma_el: 1.15 }),
+            En1998Mutation::ChangeSiloHeightM(change_silo_height_m::mutation::ChangeSiloHeightM { new_silo_height_m: 11.0 }),
+            En1998Mutation::ChangeSiloRadiusM(change_silo_radius_m::mutation::ChangeSiloRadiusM { new_silo_radius_m: 5.5 }),
+            En1998Mutation::ChangeSiloNRdKn(change_silo_n_rd_kn::mutation::ChangeSiloNRdKn { new_silo_n_rd_kn: 520.0 }),
+            En1998Mutation::ChangeSiloVEdKn(change_silo_v_ed_kn::mutation::ChangeSiloVEdKn { new_silo_v_ed_kn: 190.0 }),
+            En1998Mutation::ChangeSiloVRdKn(change_silo_v_rd_kn::mutation::ChangeSiloVRdKn { new_silo_v_rd_kn: 320.0 }),
+            En1998Mutation::ChangeSiloQNominal(change_silo_q_nominal::mutation::ChangeSiloQNominal { new_silo_q_nominal: 2.2 }),
+            En1998Mutation::ChangeTankHeightM(change_tank_height_m::mutation::ChangeTankHeightM { new_tank_height_m: 9.0 }),
+            En1998Mutation::ChangeTankRadiusM(change_tank_radius_m::mutation::ChangeTankRadiusM { new_tank_radius_m: 4.5 }),
+            En1998Mutation::ChangeTankMassT(change_tank_mass_t::mutation::ChangeTankMassT { new_tank_mass_t: 320.0 }),
+            En1998Mutation::ChangeTankVRdKn(change_tank_v_rd_kn::mutation::ChangeTankVRdKn { new_tank_v_rd_kn: 420.0 }),
+            En1998Mutation::ChangeTowerMEdKnm(change_tower_m_ed_knm::mutation::ChangeTowerMEdKnm { new_tower_m_ed_knm: 1300.0 }),
+            En1998Mutation::ChangeTowerMRdKnm(change_tower_m_rd_knm::mutation::ChangeTowerMRdKnm { new_tower_m_rd_knm: 2600.0 }),
+            En1998Mutation::ChangeTowerIsChimney(change_tower_is_chimney::mutation::ChangeTowerIsChimney { new_tower_is_chimney: false }),
+            En1998Mutation::ChangeTowerQNominal(change_tower_q_nominal::mutation::ChangeTowerQNominal { new_tower_q_nominal: 2.8 }),
+            En1998Mutation::ChangeTowerMassT(change_tower_mass_t::mutation::ChangeTowerMassT { new_tower_mass_t: 85.0 }),
+            En1998Mutation::ChangeFoundationAreaM2(change_foundation_area_m2::mutation::ChangeFoundationAreaM2 { new_foundation_area_m2: 110.0 }),
+            En1998Mutation::ChangeFoundationPRdKpa(change_foundation_p_rd_kpa::mutation::ChangeFoundationPRdKpa { new_foundation_p_rd_kpa: 520.0 }),
+            En1998Mutation::ChangeFoundationHEdKn(change_foundation_h_ed_kn::mutation::ChangeFoundationHEdKn { new_foundation_h_ed_kn: 160.0 }),
+            En1998Mutation::ChangeFoundationHRdKn(change_foundation_h_rd_kn::mutation::ChangeFoundationHRdKn { new_foundation_h_rd_kn: 420.0 }),
+            En1998Mutation::ChangeKFoundation(change_k_foundation::mutation::ChangeKFoundation { new_k_foundation: 520_000.0 }),
+            En1998Mutation::ChangeKSoil(change_k_soil::mutation::ChangeKSoil { new_k_soil: 210_000.0 }),
+            En1998Mutation::ChangeWallHeightM(change_wall_height_m::mutation::ChangeWallHeightM { new_wall_height_m: 4.5 }),
+            En1998Mutation::ChangeWallPhiDeg(change_wall_phi_deg::mutation::ChangeWallPhiDeg { new_wall_phi_deg: 32.0 }),
+            En1998Mutation::ChangeWallSoilGammaKnM3(change_wall_soil_gamma_kn_m3::mutation::ChangeWallSoilGammaKnM3 { new_wall_soil_gamma_kn_m3: 19.0 }),
+            En1998Mutation::ChangeWallR(change_wall_r::mutation::ChangeWallR { new_wall_r: 1.4 }),
+            En1998Mutation::ChangeWallHRdKn(change_wall_h_rd_kn::mutation::ChangeWallHRdKn { new_wall_h_rd_kn: 160.0 }),
         ]
     }
 

@@ -10,7 +10,7 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("forms")
         .label("Forms")
         .version("0.1.0")
-        .artifact(crate::artifacts::forms::declaration())
+        .artifact(crate::artifacts::forms::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .document_app::<crate::apps::forms::FormsPlayApp>(crate::apps::forms::create_forms_app())
         .try_build()
 }

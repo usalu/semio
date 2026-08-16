@@ -9,7 +9,7 @@
 use crate::artifacts::en1995::op::En1995Mutation;
 use crate::artifacts::en1995::En1995Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload

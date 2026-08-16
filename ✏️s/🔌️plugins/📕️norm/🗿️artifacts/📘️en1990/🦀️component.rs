@@ -3,10 +3,10 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 
+pub use crate::artifacts::en1990::schema::diff::En1990Diff;
+pub use crate::artifacts::en1990::schema::mutations::En1990Mutation;
 pub use crate::artifacts::en1990::schema::snapshot::En1990QkEntry;
 pub use crate::artifacts::en1990::schema::snapshot::En1990Snapshot;
-pub use crate::artifacts::en1990::schema::mutations::En1990Mutation;
-pub use crate::artifacts::en1990::schema::diff::En1990Diff;
 
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 
@@ -38,10 +38,7 @@ pub fn en1990_qk_table_from_entries(entries: &[En1990QkEntry]) -> semio_s_plugin
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
-        columns: vec![
-            SemioTableColumn { name: "category".into(), kind: SemioTableCellKind::Str },
-            SemioTableColumn { name: "value".into(), kind: SemioTableCellKind::Float },
-        ],
+        columns: vec![SemioTableColumn { name: "category".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "value".into(), kind: SemioTableCellKind::Float }],
         rows: entries.iter().map(|entry| SemioTableRow { cells: vec![SemioValue::Str { value: entry.category.clone() }, SemioValue::Float { lexeme: format!("{}", entry.value) }] }).collect(),
     }
 }
@@ -98,10 +95,7 @@ fn en1990_qk_scene_id(entries: &[En1990QkEntry]) -> String {
 }
 
 fn en1990_qk_target() -> store::os_io::ArtifactRef {
-    store::os_io::ArtifactRef {
-        artifact_id: "en1990-qk".into(),
-        dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() },
-    }
+    store::os_io::ArtifactRef { artifact_id: "en1990-qk".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
 }
 
 /// 🏗️ Mints the composed-child handle for a `q_k` entry list AND seeds the scratch cache in one
@@ -133,9 +127,9 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::en1990::standards::v1::subsets::any::io::io_registry as v1;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -144,10 +138,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("En1990Composer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("En1990Composer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 
@@ -163,17 +154,29 @@ pub mod io_registry {
 /// `register_artifact_inferences()`/`register_io()`, each of which called a global registry directly
 /// from the plugin root's `.setup()` fan-out (`register_norm_exports`, deleted by this same wave).
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    crate::artifacts::definition::schema_owned_definition(
-        "s.en1990",
-        crate::artifacts::en1990::schema::en1990_artifact_schema_descriptor().id,
-        crate::artifacts::en1990::standards::v1::subsets::any::schema::inferences::en1990_artifact_inference_descriptor().id,
-        crate::artifacts::en1990::standards::v1::subsets::any::io::io_registry::entries(),
-        pilot_languages(),
-        crate::apps::en1990::DOCUMENT_SCHEMA,
-        <En1990Snapshot as store::ArtifactDsl>::EXTENSION,
-        "EN 1990 basis of structural design",
-        "EN 1990 Grundlagen der Tragwerksplanung",
-    )
+    use crate::artifacts::definition::{CapabilitySpec, ClaimSpec, LocalizationSpec};
+    const SCHEMA: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm.en1990" }];
+    const INFERENCE: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm.en1990.inference" }];
+    const COMPOSER: &[ClaimSpec] = &[ClaimSpec { namespace: "dialect", value: "s.en1990@1/*" }];
+    const CODEC: &[ClaimSpec] = &[ClaimSpec { namespace: "codec", value: "semio.norm.en1990/v1" }, ClaimSpec { namespace: "extension", value: "en1990" }];
+    const EN: &[LocalizationSpec] = &[LocalizationSpec { locale: "en", text: "EN 1990 basis of structural design" }];
+    const DE: &[LocalizationSpec] = &[LocalizationSpec { locale: "de", text: "EN 1990 Grundlagen der Tragwerksplanung" }];
+    const CAPABILITIES: &[CapabilitySpec] = &[
+        CapabilitySpec { identity: "s.en1990.standard.v1", kind: "standard", descriptor: "v1", claims: &[], localizations: &[] },
+        CapabilitySpec { identity: "s.en1990.standard.v1.profile.any", kind: "profile", descriptor: "any", claims: &[], localizations: &[] },
+        CapabilitySpec { identity: "s.en1990.schema.artifact", kind: "schema", descriptor: "s.norm.en1990", claims: SCHEMA, localizations: &[] },
+        CapabilitySpec { identity: "s.en1990.inference.outline", kind: "inference", descriptor: "s.norm.en1990.inference", claims: INFERENCE, localizations: &[] },
+        CapabilitySpec { identity: "s.en1990.composer.any", kind: "composer", descriptor: "s.en1990@1/*", claims: COMPOSER, localizations: &[] },
+        CapabilitySpec { identity: "s.en1990.grammar.document", kind: "grammar", descriptor: "en1990.document", claims: &[ClaimSpec { namespace: "grammar", value: "en1990.document" }], localizations: &[] },
+        CapabilitySpec { identity: "s.en1990.grammar.op", kind: "grammar", descriptor: "en1990.op", claims: &[ClaimSpec { namespace: "grammar", value: "en1990.op" }], localizations: &[] },
+        CapabilitySpec { identity: "s.en1990.grammar.diff", kind: "grammar", descriptor: "en1990.diff", claims: &[ClaimSpec { namespace: "grammar", value: "en1990.diff" }], localizations: &[] },
+        CapabilitySpec { identity: "s.en1990.grammar.pack", kind: "grammar", descriptor: "en1990.pack", claims: &[ClaimSpec { namespace: "grammar", value: "en1990.pack" }], localizations: &[] },
+        CapabilitySpec { identity: "s.en1990.grammar.spr", kind: "grammar", descriptor: "en1990.spr", claims: &[ClaimSpec { namespace: "grammar", value: "en1990.spr" }], localizations: &[] },
+        CapabilitySpec { identity: "s.en1990.codec.document.v1", kind: "codec", descriptor: "semio.norm.en1990/v1:en1990", claims: CODEC, localizations: &[] },
+        CapabilitySpec { identity: "s.en1990.localization.en", kind: "localization", descriptor: "EN 1990 basis of structural design", claims: &[], localizations: EN },
+        CapabilitySpec { identity: "s.en1990.localization.de", kind: "localization", descriptor: "EN 1990 Grundlagen der Tragwerksplanung", claims: &[], localizations: DE },
+    ];
+    crate::artifacts::definition::assemble_definition("s.en1990", CAPABILITIES)
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
@@ -191,57 +194,61 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// `OnceLock`-backed `io_registry::entries()` convention below.
 fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
-    LANGUAGES.get_or_init(|| vec![
-        dsl::LanguageSpec {
-            id: "en1990.document",
-            extension: Some("en1990"),
-            role: dsl::LanguageRole::Document,
-            grammar: Some(crate::artifacts::en1990::dsl::COMPONENT_GRAMMAR_SEMIO),
-            grammar_path: Some(crate::artifacts::en1990::dsl::COMPONENT_GRAMMAR_PATH),
-            protocol: Some(crate::artifacts::en1990::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-            protocol_path: Some(crate::artifacts::en1990::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-            hooks: dsl::passthrough_hooks("en1990.document"),
-        },
-        dsl::LanguageSpec {
-            id: "en1990.op",
-            extension: None,
-            role: dsl::LanguageRole::Ops,
-            grammar: Some(crate::artifacts::en1990::op::COMPONENT_GRAMMAR_SEMIO),
-            grammar_path: Some(crate::artifacts::en1990::op::COMPONENT_GRAMMAR_PATH),
-            protocol: Some(crate::artifacts::en1990::spr::COMPONENT_PROTOCOL_SEMIO),
-            protocol_path: Some(crate::artifacts::en1990::spr::COMPONENT_PROTOCOL_PATH),
-            hooks: dsl::passthrough_hooks("en1990.op"),
-        },
-        dsl::LanguageSpec {
-            id: "en1990.diff",
-            extension: None,
-            role: dsl::LanguageRole::Diff,
-            grammar: Some(crate::artifacts::en1990::diff::COMPONENT_GRAMMAR_SEMIO),
-            grammar_path: Some(crate::artifacts::en1990::diff::COMPONENT_GRAMMAR_PATH),
-            protocol: None,
-            protocol_path: None,
-            hooks: dsl::passthrough_hooks("en1990.diff"),
-        },
-        dsl::LanguageSpec {
-            id: "en1990.pack",
-            extension: None,
-            role: dsl::LanguageRole::Pack,
-            grammar: None,
-            grammar_path: None,
-            protocol: Some(crate::artifacts::en1990::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-            protocol_path: Some(crate::artifacts::en1990::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-            hooks: dsl::passthrough_hooks("en1990.pack"),
-        },
-        dsl::LanguageSpec {
-            id: "en1990.spr",
-            extension: None,
-            role: dsl::LanguageRole::Spr,
-            grammar: None,
-            grammar_path: None,
-            protocol: Some(crate::artifacts::en1990::spr::COMPONENT_PROTOCOL_SEMIO),
-            protocol_path: Some(crate::artifacts::en1990::spr::COMPONENT_PROTOCOL_PATH),
-            hooks: dsl::passthrough_hooks("en1990.spr"),
-        },
-    ]).as_slice()
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "en1990.document",
+                    extension: Some("en1990"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::en1990::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::en1990::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::en1990::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::en1990::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("en1990.document"),
+                },
+                dsl::LanguageSpec {
+                    id: "en1990.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::en1990::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::en1990::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::en1990::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::en1990::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("en1990.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "en1990.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::en1990::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::en1990::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("en1990.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "en1990.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::en1990::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::en1990::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("en1990.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "en1990.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::en1990::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::en1990::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("en1990.spr"),
+                },
+            ]
+        })
+        .as_slice()
 }
 //#endregion 🪪️Declaration

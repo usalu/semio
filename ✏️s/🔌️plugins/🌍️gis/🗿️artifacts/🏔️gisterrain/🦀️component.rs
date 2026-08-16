@@ -113,14 +113,50 @@ pub fn gis_terrain_mesh_from_snapshot(document: &GisTerrainSnapshot) -> SemioMes
 /// the plugin root's `register_gis_exports` fan-out. Relocated from `⚙️engine` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2): `declaration()` describes the artifact
 /// (kind, schema, io ports, ownership), which is not engine behaviour.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.gisterrain")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.gisterrain.schema.artifact", "schema", "s.gis.gisterrain", &[("schema", "s.gis.gisterrain")], None),
+        ("s.gisterrain.inference.artifact", "inference", "s.gis.gisterrain.inference", &[("schema", "s.gis.gisterrain.inference")], None),
+        ("s.gisterrain.composer.las", "composer", "s.stdio.las@1.0/*", &[("dialect", "s.stdio.las@1.0/*")], None),
+        ("s.gisterrain.composer.ply", "composer", "s.stdio.ply@1.0/*", &[("dialect", "s.stdio.ply@1.0/*")], None),
+        ("s.gisterrain.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.gisterrain.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.gisterrain.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
+        ("s.gisterrain.composer.stl", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
+        ("s.gisterrain.composer.gltf", "composer", "s.stdio.gltf@2.0/*", &[("dialect", "s.stdio.gltf@2.0/*")], None),
+        ("s.gisterrain.composer.obj", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.gisterrain.grammar.document", "grammar", "gis.gisterrain", &[("grammar", "gis.gisterrain")], None),
+        ("s.gisterrain.grammar.op", "grammar", "gis.gisterrain.op", &[("grammar", "gis.gisterrain.op")], None),
+        ("s.gisterrain.grammar.diff", "grammar", "gis.gisterrain.diff", &[("grammar", "gis.gisterrain.diff")], None),
+        ("s.gisterrain.grammar.pack", "grammar", "gisterrain.pack", &[("grammar", "gisterrain.pack")], None),
+        ("s.gisterrain.grammar.spr", "grammar", "gisterrain.spr", &[("grammar", "gisterrain.spr")], None),
+        ("s.gisterrain.codec.document", "codec", "gis.terrain:gisterrain", &[("codec", "gis.terrain"), ("extension", "gisterrain")], None),
+        ("s.gisterrain.localization.en", "localization", "GIS Terrain", &[], Some(("en", "GIS Terrain"))),
+        ("s.gisterrain.localization.de", "localization", "GIS Gelände", &[], Some(("de", "GIS Gelände"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.gisterrain")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::gisterrain::schema::gisterrain_artifact_schema_descriptor())
         .inferences([crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::gisterrain_artifact_inference_descriptor()])
         .composers(crate::artifacts::gisterrain::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::gis3d::Gis3dPlayApp>()
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once

@@ -1,9 +1,8 @@
 //! ⚡️ DIN V 18599 app — document entities (constitutional: general).
 
-
-pub use crate::artifacts::din18599::schema::snapshot::Din18599Snapshot;
-pub use crate::artifacts::din18599::schema::mutations::Din18599Mutation;
 pub use crate::artifacts::din18599::schema::diff::Din18599Diff;
+pub use crate::artifacts::din18599::schema::mutations::Din18599Mutation;
+pub use crate::artifacts::din18599::schema::snapshot::Din18599Snapshot;
 
 use crate::document::ClimateZoneDe;
 use serde::{Deserialize, Serialize};
@@ -66,10 +65,7 @@ pub fn din18599_climate_table_from_data(climate: &MonthlyClimate) -> semio_s_plu
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
-        columns: vec![
-            SemioTableColumn { name: "thetaEC".into(), kind: SemioTableCellKind::Float },
-            SemioTableColumn { name: "gHWM2".into(), kind: SemioTableCellKind::Float },
-        ],
+        columns: vec![SemioTableColumn { name: "thetaEC".into(), kind: SemioTableCellKind::Float }, SemioTableColumn { name: "gHWM2".into(), kind: SemioTableCellKind::Float }],
         rows: climate.theta_e_c.iter().zip(climate.g_h_w_m2.iter()).map(|(theta, g)| SemioTableRow { cells: vec![SemioValue::Float { lexeme: format!("{theta}") }, SemioValue::Float { lexeme: format!("{g}") }] }).collect(),
     }
 }
@@ -124,10 +120,7 @@ fn din18599_climate_scene_id(climate: &MonthlyClimate) -> String {
 }
 
 fn din18599_climate_target() -> store::os_io::ArtifactRef {
-    store::os_io::ArtifactRef {
-        artifact_id: "din18599-climate".into(),
-        dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() },
-    }
+    store::os_io::ArtifactRef { artifact_id: "din18599-climate".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
 }
 
 /// 🏗️ Mints the composed-child handle for a `MonthlyClimate` value AND seeds the scratch cache in
@@ -147,9 +140,7 @@ pub fn din18599_climate_child_from_data(climate: &MonthlyClimate) -> Din18599Cli
 /// instead of the old `.climate` field. All-zero (never a panic) on a cache miss, per this
 /// region's own doc comment.
 pub fn din18599_climate(snapshot: &crate::artifacts::din18599::Din18599Snapshot) -> MonthlyClimate {
-    DIN18599_CLIMATE_SCRATCH
-        .with(|cache| cache.borrow().get(&snapshot.climate.child_id).cloned())
-        .unwrap_or(MonthlyClimate { theta_e_c: [0.0; 12], g_h_w_m2: [0.0; 12] })
+    DIN18599_CLIMATE_SCRATCH.with(|cache| cache.borrow().get(&snapshot.climate.child_id).cloned()).unwrap_or(MonthlyClimate { theta_e_c: [0.0; 12], g_h_w_m2: [0.0; 12] })
 }
 //#endregion 🔖️WorkingScene
 //#endregion 🔖️Composition
@@ -184,9 +175,9 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::din18599::standards::v1::subsets::any::io::io_registry as v1;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -195,10 +186,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("Din18599Composer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("Din18599Composer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 
@@ -214,17 +202,29 @@ pub mod io_registry {
 /// `register_artifact_inferences()`/`register_io()`, each of which called a global registry directly
 /// from the plugin root's `.setup()` fan-out (`register_norm_exports`, deleted by this same wave).
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    crate::artifacts::definition::schema_owned_definition(
-        "s.din18599",
-        crate::artifacts::din18599::schema::din18599_artifact_schema_descriptor().id,
-        crate::artifacts::din18599::standards::v1::subsets::any::schema::inferences::din18599_artifact_inference_descriptor().id,
-        crate::artifacts::din18599::standards::v1::subsets::any::io::io_registry::entries(),
-        pilot_languages(),
-        crate::apps::din18599::DOCUMENT_SCHEMA,
-        <Din18599Snapshot as store::ArtifactDsl>::EXTENSION,
-        "DIN V 18599 energy performance of buildings",
-        "DIN V 18599 Energetische Bewertung von Gebäuden",
-    )
+    use crate::artifacts::definition::{CapabilitySpec, ClaimSpec, LocalizationSpec};
+    const SCHEMA: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm.din18599" }];
+    const INFERENCE: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm.din18599.inference" }];
+    const COMPOSER: &[ClaimSpec] = &[ClaimSpec { namespace: "dialect", value: "s.din18599@1/*" }];
+    const CODEC: &[ClaimSpec] = &[ClaimSpec { namespace: "codec", value: "semio.norm.din18599/v1" }, ClaimSpec { namespace: "extension", value: "din18599" }];
+    const EN: &[LocalizationSpec] = &[LocalizationSpec { locale: "en", text: "DIN V 18599 energy performance of buildings" }];
+    const DE: &[LocalizationSpec] = &[LocalizationSpec { locale: "de", text: "DIN V 18599 Energetische Bewertung von Gebäuden" }];
+    const CAPABILITIES: &[CapabilitySpec] = &[
+        CapabilitySpec { identity: "s.din18599.standard.v1", kind: "standard", descriptor: "v1", claims: &[], localizations: &[] },
+        CapabilitySpec { identity: "s.din18599.standard.v1.profile.any", kind: "profile", descriptor: "any", claims: &[], localizations: &[] },
+        CapabilitySpec { identity: "s.din18599.schema.artifact", kind: "schema", descriptor: "s.norm.din18599", claims: SCHEMA, localizations: &[] },
+        CapabilitySpec { identity: "s.din18599.inference.outline", kind: "inference", descriptor: "s.norm.din18599.inference", claims: INFERENCE, localizations: &[] },
+        CapabilitySpec { identity: "s.din18599.composer.any", kind: "composer", descriptor: "s.din18599@1/*", claims: COMPOSER, localizations: &[] },
+        CapabilitySpec { identity: "s.din18599.grammar.document", kind: "grammar", descriptor: "din18599.document", claims: &[ClaimSpec { namespace: "grammar", value: "din18599.document" }], localizations: &[] },
+        CapabilitySpec { identity: "s.din18599.grammar.op", kind: "grammar", descriptor: "din18599.op", claims: &[ClaimSpec { namespace: "grammar", value: "din18599.op" }], localizations: &[] },
+        CapabilitySpec { identity: "s.din18599.grammar.diff", kind: "grammar", descriptor: "din18599.diff", claims: &[ClaimSpec { namespace: "grammar", value: "din18599.diff" }], localizations: &[] },
+        CapabilitySpec { identity: "s.din18599.grammar.pack", kind: "grammar", descriptor: "din18599.pack", claims: &[ClaimSpec { namespace: "grammar", value: "din18599.pack" }], localizations: &[] },
+        CapabilitySpec { identity: "s.din18599.grammar.spr", kind: "grammar", descriptor: "din18599.spr", claims: &[ClaimSpec { namespace: "grammar", value: "din18599.spr" }], localizations: &[] },
+        CapabilitySpec { identity: "s.din18599.codec.document.v1", kind: "codec", descriptor: "semio.norm.din18599/v1:din18599", claims: CODEC, localizations: &[] },
+        CapabilitySpec { identity: "s.din18599.localization.en", kind: "localization", descriptor: "DIN V 18599 energy performance of buildings", claims: &[], localizations: EN },
+        CapabilitySpec { identity: "s.din18599.localization.de", kind: "localization", descriptor: "DIN V 18599 Energetische Bewertung von Gebäuden", claims: &[], localizations: DE },
+    ];
+    crate::artifacts::definition::assemble_definition("s.din18599", CAPABILITIES)
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
@@ -242,57 +242,61 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// `OnceLock`-backed `io_registry::entries()` convention below.
 fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
-    LANGUAGES.get_or_init(|| vec![
-        dsl::LanguageSpec {
-            id: "din18599.document",
-            extension: Some("din18599"),
-            role: dsl::LanguageRole::Document,
-            grammar: Some(crate::artifacts::din18599::dsl::COMPONENT_GRAMMAR_SEMIO),
-            grammar_path: Some(crate::artifacts::din18599::dsl::COMPONENT_GRAMMAR_PATH),
-            protocol: Some(crate::artifacts::din18599::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-            protocol_path: Some(crate::artifacts::din18599::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-            hooks: dsl::passthrough_hooks("din18599.document"),
-        },
-        dsl::LanguageSpec {
-            id: "din18599.op",
-            extension: None,
-            role: dsl::LanguageRole::Ops,
-            grammar: Some(crate::artifacts::din18599::op::COMPONENT_GRAMMAR_SEMIO),
-            grammar_path: Some(crate::artifacts::din18599::op::COMPONENT_GRAMMAR_PATH),
-            protocol: Some(crate::artifacts::din18599::spr::COMPONENT_PROTOCOL_SEMIO),
-            protocol_path: Some(crate::artifacts::din18599::spr::COMPONENT_PROTOCOL_PATH),
-            hooks: dsl::passthrough_hooks("din18599.op"),
-        },
-        dsl::LanguageSpec {
-            id: "din18599.diff",
-            extension: None,
-            role: dsl::LanguageRole::Diff,
-            grammar: Some(crate::artifacts::din18599::diff::COMPONENT_GRAMMAR_SEMIO),
-            grammar_path: Some(crate::artifacts::din18599::diff::COMPONENT_GRAMMAR_PATH),
-            protocol: None,
-            protocol_path: None,
-            hooks: dsl::passthrough_hooks("din18599.diff"),
-        },
-        dsl::LanguageSpec {
-            id: "din18599.pack",
-            extension: None,
-            role: dsl::LanguageRole::Pack,
-            grammar: None,
-            grammar_path: None,
-            protocol: Some(crate::artifacts::din18599::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-            protocol_path: Some(crate::artifacts::din18599::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-            hooks: dsl::passthrough_hooks("din18599.pack"),
-        },
-        dsl::LanguageSpec {
-            id: "din18599.spr",
-            extension: None,
-            role: dsl::LanguageRole::Spr,
-            grammar: None,
-            grammar_path: None,
-            protocol: Some(crate::artifacts::din18599::spr::COMPONENT_PROTOCOL_SEMIO),
-            protocol_path: Some(crate::artifacts::din18599::spr::COMPONENT_PROTOCOL_PATH),
-            hooks: dsl::passthrough_hooks("din18599.spr"),
-        },
-    ]).as_slice()
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "din18599.document",
+                    extension: Some("din18599"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::din18599::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::din18599::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::din18599::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::din18599::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("din18599.document"),
+                },
+                dsl::LanguageSpec {
+                    id: "din18599.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::din18599::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::din18599::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::din18599::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::din18599::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("din18599.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "din18599.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::din18599::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::din18599::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("din18599.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "din18599.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::din18599::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::din18599::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("din18599.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "din18599.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::din18599::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::din18599::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("din18599.spr"),
+                },
+            ]
+        })
+        .as_slice()
 }
 //#endregion 🪪️Declaration

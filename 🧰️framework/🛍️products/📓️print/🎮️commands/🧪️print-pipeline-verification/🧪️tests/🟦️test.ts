@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getWorkspaceRoot } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { provisionPrintFonts } from "../../../🔨️modules/🔤print-font-catalog/🟦️component.ts";
-import { loadPrintDesignTokens, renderPrintLatexTokenStylesheet, resolvePrintPanelGlassStyle } from "../../../🔨️modules/🎨️print-design-token-paints/🟦️component.ts";
+import { loadPrintDesignTokens, renderPrintLatexTokenStylesheet, resolvePrintPanelGlassStyle } from "../../../🔨️modules/🎨print-design-token-paints/🟦️component.ts";
 import { buildRegisteredPrintTemplates, deriveDarkPrintTexSource, printTemplatePdfNames, registeredPrintTemplates, resolveRegisteredPrintTemplates } from "../../../🔨️modules/🖨️tectonic-template-compilation/🟦️component.ts";
 
 //#region 🧪️PrintPipelineTests

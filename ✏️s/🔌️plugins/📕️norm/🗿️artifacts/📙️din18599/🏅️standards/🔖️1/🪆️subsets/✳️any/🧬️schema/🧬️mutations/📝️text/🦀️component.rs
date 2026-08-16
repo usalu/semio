@@ -3,16 +3,17 @@
 //! whole-document-replace macro no longer applies now that the whole-document-replace variant is
 //! gone).
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 pub use crate::artifacts::din18599::schema::mutations::Din18599Mutation;
-use crate::artifacts::din18599::schema::mutations::{change_use_class, change_heated_area_m2, change_occupants, change_h_t, change_h_v, change_internal_gains_w_m2, change_solar_gains_kwh, change_system_losses_kwh, change_renewable_kwh, change_annual_limit_kwh, change_energy_carrier, change_reference_q_p_kwh, update_climate};
+use crate::artifacts::din18599::schema::mutations::{
+    change_annual_limit_kwh, change_energy_carrier, change_h_t, change_h_v, change_heated_area_m2, change_internal_gains_w_m2, change_occupants, change_reference_q_p_kwh, change_renewable_kwh, change_solar_gains_kwh, change_system_losses_kwh,
+    change_use_class, update_climate,
+};
 use crate::artifacts::din18599::{MonthlyClimate, UseClass};
 use protocol::OpText;
 
@@ -72,11 +73,7 @@ impl OpText for Din18599MutationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -171,10 +168,9 @@ mod tests {
 
     #[test]
     fn op_text_round_trips_update_climate() {
-        store::os_store::test_support::assert_op_line_round_trip(&Din18599Mutation::UpdateClimate(update_climate::mutation::UpdateClimate { new_climate: MonthlyClimate {
-            theta_e_c: [-12.0, -9.0, -2.0, 6.0, 15.0, 22.0, 25.0, 24.0, 18.0, 9.0, -1.0, -8.0],
-            g_h_w_m2: [25.0, 55.0, 95.0, 135.0, 175.0, 195.0, 205.0, 185.0, 135.0, 85.0, 35.0, 18.0],
-        } }));
+        store::os_store::test_support::assert_op_line_round_trip(&Din18599Mutation::UpdateClimate(update_climate::mutation::UpdateClimate {
+            new_climate: MonthlyClimate { theta_e_c: [-12.0, -9.0, -2.0, 6.0, 15.0, 22.0, 25.0, 24.0, 18.0, 9.0, -1.0, -8.0], g_h_w_m2: [25.0, 55.0, 95.0, 135.0, 175.0, 195.0, 205.0, 185.0, 135.0, 85.0, 35.0, 18.0] },
+        }));
     }
 
     /// ⚖️ Every variant, not just the hand-picked ones above — full-coverage `OpText` round trip over
@@ -200,10 +196,9 @@ mod tests {
             Din18599Mutation::ChangeAnnualLimitKwh(change_annual_limit_kwh::mutation::ChangeAnnualLimitKwh { new_annual_limit_kwh: 8000.0 }),
             Din18599Mutation::ChangeEnergyCarrier(change_energy_carrier::mutation::ChangeEnergyCarrier { new_energy_carrier: "district_heat".to_string() }),
             Din18599Mutation::ChangeReferenceQPKwh(change_reference_q_p_kwh::mutation::ChangeReferenceQPKwh { new_reference_q_p_kwh: 10500.0 }),
-            Din18599Mutation::UpdateClimate(update_climate::mutation::UpdateClimate { new_climate: crate::artifacts::din18599::MonthlyClimate {
-                theta_e_c: [-12.0, -9.0, -2.0, 6.0, 15.0, 22.0, 25.0, 24.0, 18.0, 9.0, -1.0, -8.0],
-                g_h_w_m2: [25.0, 55.0, 95.0, 135.0, 175.0, 195.0, 205.0, 185.0, 135.0, 85.0, 35.0, 18.0],
-            } }),
+            Din18599Mutation::UpdateClimate(update_climate::mutation::UpdateClimate {
+                new_climate: crate::artifacts::din18599::MonthlyClimate { theta_e_c: [-12.0, -9.0, -2.0, 6.0, 15.0, 22.0, 25.0, 24.0, 18.0, 9.0, -1.0, -8.0], g_h_w_m2: [25.0, 55.0, 95.0, 135.0, 175.0, 195.0, 205.0, 185.0, 135.0, 85.0, 35.0, 18.0] },
+            }),
         ]
     }
 }

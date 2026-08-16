@@ -557,7 +557,8 @@
     "🎮️commands"
   ],
   "osChildDirs": [
-    "🎮️commands"
+    "🎮️commands",
+    "🎚️config"
   ],
   "osRequiredChildDirs": [
     "🎮️commands"

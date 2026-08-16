@@ -1,0 +1,49 @@
+{
+  "$id": "https://semio.tech/schema/os/config/opening.json",
+  "title": "OpeningPreferences",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["defaults"],
+  "properties": {
+    "defaults": {
+      "type": "array",
+      "x-semio-state": "config",
+      "items": { "$ref": "#/$defs/DefaultApp" }
+    }
+  },
+  "$defs": {
+    "DefaultApp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dialect", "role", "app"],
+      "properties": {
+        "dialect": { "$ref": "#/$defs/ArtifactDialect" },
+        "role": { "$ref": "#/$defs/AppRole" },
+        "app": { "$ref": "#/$defs/AppRef" }
+      }
+    },
+    "ArtifactDialect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactKind", "standard", "subset"],
+      "properties": {
+        "artifactKind": { "type": "string" },
+        "standard": { "type": "string" },
+        "subset": { "type": "string" }
+      }
+    },
+    "AppRole": {
+      "type": "string",
+      "enum": ["viewer", "editor"]
+    },
+    "AppRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pluginId", "appId"],
+      "properties": {
+        "pluginId": { "type": "string" },
+        "appId": { "type": "string" }
+      }
+    }
+  }
+}

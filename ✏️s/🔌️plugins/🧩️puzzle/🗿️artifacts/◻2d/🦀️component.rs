@@ -7,14 +7,11 @@
 //! and `🚪️io` (this file's own `declaration()` and `io_registry` shim below), and its genuinely
 //! stateful `BoardHost` facade moved to `🎛️apps/◻2d/⚙️engine`.
 
-
-pub use crate::artifacts::puzzle2d::schema::snapshot::Puzzle2dSnapshot;
-pub use crate::artifacts::puzzle2d::schema::mutations::Puzzle2dMutation;
 pub use crate::artifacts::puzzle2d::schema::diff::Puzzle2dDiff;
+pub use crate::artifacts::puzzle2d::schema::mutations::Puzzle2dMutation;
+pub use crate::artifacts::puzzle2d::schema::snapshot::Puzzle2dSnapshot;
 
 use serde::{Deserialize, Serialize};
-
-
 
 pub const PUZZLE_2D_SCHEMA: &str = "puzzle.2d.fixture";
 
@@ -60,17 +57,7 @@ pub struct Puzzle2dHandle {
 
 impl Default for Puzzle2dHandle {
     fn default() -> Self {
-        Self {
-            id: String::new(),
-            handle_kind: None,
-            angle: 0.0,
-            radius: None,
-            color: None,
-            icon_kind: None,
-            scale: None,
-            visible: None,
-            locked: None,
-        }
+        Self { id: String::new(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }
     }
 }
 
@@ -182,24 +169,7 @@ pub struct Puzzle2dEdge {
 
 impl Default for Puzzle2dEdge {
     fn default() -> Self {
-        Self {
-            id: String::new(),
-            source: String::new(),
-            target: String::new(),
-            edge_kind: None,
-            gap: 0.0,
-            shift: 0.0,
-            rise: 0.0,
-            rotation: 0.0,
-            turn: 0.0,
-            tilt: 0.0,
-            x: 0.0,
-            y: 0.0,
-            source_tip: None,
-            target_tip: None,
-            visible: None,
-            locked: None,
-        }
+        Self { id: String::new(), source: String::new(), target: String::new(), edge_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0, source_tip: None, target_tip: None, visible: None, locked: None }
     }
 }
 
@@ -292,18 +262,7 @@ pub struct Puzzle2dHandleTemplate {
 
 impl Default for Puzzle2dHandleTemplate {
     fn default() -> Self {
-        Self {
-            id: String::new(),
-            name: String::new(),
-            label: String::new(),
-            description: String::new(),
-            icon: String::new(),
-            handle_kind: None,
-            angle: 0.0,
-            t: None,
-            mandatory: None,
-            radius: None,
-        }
+        Self { id: String::new(), name: String::new(), label: String::new(), description: String::new(), icon: String::new(), handle_kind: None, angle: 0.0, t: None, mandatory: None, radius: None }
     }
 }
 
@@ -431,7 +390,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "puzzle.2d".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"],
+        export_stdio_kinds: vec!["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"],
         import_stdio_kinds: vec!["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"],
     }
 }
@@ -454,14 +413,52 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// (`register_2d_export_handlers`/`register_mesh_exporter`/…) from the nine §6 registrars
 /// `ArtifactDeclaration` covers, keyed by a legacy OS-kind string this declaration's own `kind` isn't
 /// — see `🧩️puzzle/🦀️component.rs`'s `plugin()` doc for the full judgement.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.puzzle2d")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.puzzle2d.standard.v1", "standard", "1", &[], None),
+        ("s.puzzle2d.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.puzzle2d.schema.artifact", "schema", "s.puzzle.puzzle2d", &[("schema", "s.puzzle.puzzle2d")], None),
+        ("s.puzzle2d.inference.artifact", "inference", "s.puzzle.puzzle2d.inference", &[("schema", "s.puzzle.puzzle2d.inference")], None),
+        ("s.puzzle2d.composer.native", "composer", "s.puzzle2d@1/*", &[("dialect", "s.puzzle2d@1/*")], None),
+        ("s.puzzle2d.composer.format-1", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
+        ("s.puzzle2d.composer.format-2", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
+        ("s.puzzle2d.composer.format-3", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.puzzle2d.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.puzzle2d.composer.format-5", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
+        ("s.puzzle2d.composer.format-6", "composer", "s.stdio.dxf@r12/*", &[("dialect", "s.stdio.dxf@r12/*")], None),
+        ("s.puzzle2d.grammar.1", "grammar", "puzzle.puzzle2d", &[("grammar", "puzzle.puzzle2d")], None),
+        ("s.puzzle2d.grammar.2", "grammar", "puzzle.puzzle2d.op", &[("grammar", "puzzle.puzzle2d.op")], None),
+        ("s.puzzle2d.grammar.3", "grammar", "puzzle.puzzle2d.diff", &[("grammar", "puzzle.puzzle2d.diff")], None),
+        ("s.puzzle2d.grammar.4", "grammar", "2d.pack", &[("grammar", "2d.pack")], None),
+        ("s.puzzle2d.grammar.5", "grammar", "2d.spr", &[("grammar", "2d.spr")], None),
+        ("s.puzzle2d.codec.document-1", "codec", "puzzle.2d.fixture:puzzle2d", &[("codec", "puzzle.2d.fixture"), ("extension", "puzzle2d")], None),
+        ("s.puzzle2d.localization.en", "localization", "2D Puzzle", &[], Some(("en", "2D Puzzle"))),
+        ("s.puzzle2d.localization.de", "localization", "2D-Puzzle", &[], Some(("de", "2D-Puzzle"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.puzzle2d")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::puzzle2d::schema::puzzle2d_artifact_schema_descriptor())
         .inferences([crate::artifacts::puzzle2d::standards::v1::subsets::any::schema::inferences::puzzle2d_artifact_inference_descriptor()])
         .composers(crate::artifacts::puzzle2d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::puzzle2d::Puzzle2dPlayApp>()
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -555,20 +552,7 @@ mod tests {
 
     #[test]
     fn puzzle2d_edge_serde_roundtrips_connection_params() {
-        let edge = Puzzle2dEdge {
-            id: "e1".into(),
-            source: "a".into(),
-            target: "b".into(),
-            gap: 1.0,
-            shift: 2.0,
-            rise: 3.0,
-            rotation: 10.0,
-            turn: 20.0,
-            tilt: 30.0,
-            x: 4.0,
-            y: 5.0,
-            ..Default::default()
-        };
+        let edge = Puzzle2dEdge { id: "e1".into(), source: "a".into(), target: "b".into(), gap: 1.0, shift: 2.0, rise: 3.0, rotation: 10.0, turn: 20.0, tilt: 30.0, x: 4.0, y: 5.0, ..Default::default() };
         let json = serde_json::to_string(&edge).expect("serialize");
         let back: Puzzle2dEdge = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(back, edge);
@@ -578,13 +562,7 @@ mod tests {
 
     #[test]
     fn puzzle2d_kind_compatibility_includes_important() {
-        let row = Puzzle2dKindCompatibility {
-            source: "a".into(),
-            target: "b".into(),
-            bidirectional: true,
-            important: true,
-            specificity: Puzzle2dCompatSpecificity::Handle,
-        };
+        let row = Puzzle2dKindCompatibility { source: "a".into(), target: "b".into(), bidirectional: true, important: true, specificity: Puzzle2dCompatSpecificity::Handle };
         let json = serde_json::to_value(&row).expect("serialize");
         assert_eq!(json["important"], true);
         assert_eq!(json["bidirectional"], true);
@@ -604,15 +582,7 @@ mod tests {
                 unit: "m".into(),
                 is_abstract: false,
                 base_kinds: vec!["base".into()],
-                representations: vec![Puzzle2dRepresentation {
-                    id: "r1".into(),
-                    name: "mesh".into(),
-                    url: "u".into(),
-                    mime: "model/gltf-binary".into(),
-                    tags: vec!["lod0".into()],
-                    lod: Some("0".into()),
-                    description: "rep".into(),
-                }],
+                representations: vec![Puzzle2dRepresentation { id: "r1".into(), name: "mesh".into(), url: "u".into(), mime: "model/gltf-binary".into(), tags: vec!["lod0".into()], lod: Some("0".into()), description: "rep".into() }],
                 handles: vec![Puzzle2dHandleTemplate {
                     id: "h0".into(),
                     name: "bottom".into(),
@@ -625,19 +595,8 @@ mod tests {
                     mandatory: Some(true),
                     radius: Some(3.0),
                 }],
-                attributes: vec![Puzzle2dAttribute {
-                    id: "a1".into(),
-                    key: "k".into(),
-                    value: "v".into(),
-                    definition: None,
-                }],
-                authors: vec![Puzzle2dAuthor {
-                    id: "u1".into(),
-                    name: "Ada".into(),
-                    email: "a@b.c".into(),
-                    role: Some("author".into()),
-                    rank: Some(1),
-                }],
+                attributes: vec![Puzzle2dAttribute { id: "a1".into(), key: "k".into(), value: "v".into(), definition: None }],
+                authors: vec![Puzzle2dAuthor { id: "u1".into(), name: "Ada".into(), email: "a@b.c".into(), role: Some("author".into()), rank: Some(1) }],
             }],
             handles: vec![Puzzle2dCatalogHandleKind {
                 id: "core.rect.bottom".into(),
@@ -650,23 +609,8 @@ mod tests {
                 color: "#112233".into(),
                 default_wire_kind: "link.w".into(),
             }],
-            edges: vec![Puzzle2dCatalogEdgeKind {
-                id: "link.e".into(),
-                name: "Link".into(),
-                label: "Link".into(),
-                description: "".into(),
-                icon: "".into(),
-                color: "#000".into(),
-            }],
-            wires: vec![Puzzle2dCatalogWireKind {
-                id: "link.w".into(),
-                name: "W".into(),
-                label: "W".into(),
-                description: "".into(),
-                icon: "".into(),
-                color: "#111".into(),
-                default_edge_kind: "link.e".into(),
-            }],
+            edges: vec![Puzzle2dCatalogEdgeKind { id: "link.e".into(), name: "Link".into(), label: "Link".into(), description: "".into(), icon: "".into(), color: "#000".into() }],
+            wires: vec![Puzzle2dCatalogWireKind { id: "link.w".into(), name: "W".into(), label: "W".into(), description: "".into(), icon: "".into(), color: "#111".into(), default_edge_kind: "link.e".into() }],
         };
         let json = serde_json::to_value(&catalogs).expect("serialize");
         assert_eq!(json["nodes"][0]["abstract"], false);
@@ -677,9 +621,9 @@ mod tests {
 //#endregion 🧪️Tests
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::puzzle2d::standards::v1::subsets::any::io::io_registry as v1;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -688,10 +632,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("Puzzle2dComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("Puzzle2dComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

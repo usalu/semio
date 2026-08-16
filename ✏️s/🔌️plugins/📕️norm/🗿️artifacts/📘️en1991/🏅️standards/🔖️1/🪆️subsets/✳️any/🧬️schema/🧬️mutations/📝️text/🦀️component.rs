@@ -7,7 +7,14 @@
 pub use crate::artifacts::en1991::schema::mutations::En1991Mutation;
 
 use crate::artifacts::en1991::schema::mutations::{
-    change_area_m2::mutation::ChangeAreaM2, change_category::mutation::ChangeCategory, change_annex::mutation::ChangeAnnex, change_self_weight_material::mutation::ChangeSelfWeightMaterial, change_self_weight_thickness_m::mutation::ChangeSelfWeightThicknessM, change_assumed_gk_kn_m2::mutation::ChangeAssumedGKKnM2, change_fire_curve::mutation::ChangeFireCurve, change_fire_resistance_min::mutation::ChangeFireResistanceMin, change_fire_member_capacity_c::mutation::ChangeFireMemberCapacityC, change_snow_zone::mutation::ChangeSnowZone, change_snow_altitude_m::mutation::ChangeSnowAltitudeM, change_en_sk_kn_m2::mutation::ChangeEnSKKnM2, change_wind_zone::mutation::ChangeWindZone, change_en_vbms::mutation::ChangeEnVBMS, change_delta_tk::mutation::ChangeDeltaTK, change_construction_activity::mutation::ChangeConstructionActivity, change_accidental_mass_t::mutation::ChangeAccidentalMassT, change_accidental_speed_km_h::mutation::ChangeAccidentalSpeedKmH, change_bridge_lane::mutation::ChangeBridgeLane, change_bridge_span_m::mutation::ChangeBridgeSpanM, change_bridge_lane_width_m::mutation::ChangeBridgeLaneWidthM, change_bridge_moment_resistance_knm::mutation::ChangeBridgeMomentResistanceKnm, change_crane_class::mutation::ChangeCraneClass, change_hoist_class::mutation::ChangeHoistClass, change_hoisting_speed_ms::mutation::ChangeHoistingSpeedMS, change_silo_bulk_density_kn_m3::mutation::ChangeSiloBulkDensityKnM3, change_silo_height_m::mutation::ChangeSiloHeightM, change_silo_hydraulic_radius_m::mutation::ChangeSiloHydraulicRadiusM, change_silo_mu::mutation::ChangeSiloMu, change_silo_k::mutation::ChangeSiloK, change_cs::mutation::ChangeCS, change_cd::mutation::ChangeCD
+    change_accidental_mass_t::mutation::ChangeAccidentalMassT, change_accidental_speed_km_h::mutation::ChangeAccidentalSpeedKmH, change_annex::mutation::ChangeAnnex, change_area_m2::mutation::ChangeAreaM2,
+    change_assumed_gk_kn_m2::mutation::ChangeAssumedGKKnM2, change_bridge_lane::mutation::ChangeBridgeLane, change_bridge_lane_width_m::mutation::ChangeBridgeLaneWidthM, change_bridge_moment_resistance_knm::mutation::ChangeBridgeMomentResistanceKnm,
+    change_bridge_span_m::mutation::ChangeBridgeSpanM, change_category::mutation::ChangeCategory, change_cd::mutation::ChangeCD, change_construction_activity::mutation::ChangeConstructionActivity, change_crane_class::mutation::ChangeCraneClass,
+    change_cs::mutation::ChangeCS, change_delta_tk::mutation::ChangeDeltaTK, change_en_sk_kn_m2::mutation::ChangeEnSKKnM2, change_en_vbms::mutation::ChangeEnVBMS, change_fire_curve::mutation::ChangeFireCurve,
+    change_fire_member_capacity_c::mutation::ChangeFireMemberCapacityC, change_fire_resistance_min::mutation::ChangeFireResistanceMin, change_hoist_class::mutation::ChangeHoistClass, change_hoisting_speed_ms::mutation::ChangeHoistingSpeedMS,
+    change_self_weight_material::mutation::ChangeSelfWeightMaterial, change_self_weight_thickness_m::mutation::ChangeSelfWeightThicknessM, change_silo_bulk_density_kn_m3::mutation::ChangeSiloBulkDensityKnM3,
+    change_silo_height_m::mutation::ChangeSiloHeightM, change_silo_hydraulic_radius_m::mutation::ChangeSiloHydraulicRadiusM, change_silo_k::mutation::ChangeSiloK, change_silo_mu::mutation::ChangeSiloMu,
+    change_snow_altitude_m::mutation::ChangeSnowAltitudeM, change_snow_zone::mutation::ChangeSnowZone, change_wind_zone::mutation::ChangeWindZone,
 };
 
 //#region 📖️SemioGrammar
@@ -82,10 +89,7 @@ fn tokenize_args(rest: &str) -> Vec<String> {
     tokens
 }
 fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
-    tokenize_args(rest)
-        .into_iter()
-        .map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}")))
-        .collect()
+    tokenize_args(rest).into_iter().map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}"))).collect()
 }
 //#endregion 🔖️Tokenizer
 
@@ -136,7 +140,9 @@ fn parse_en1991_mutation(line: &str) -> Result<En1991Mutation, String> {
         "change-category" => Ok(En1991Mutation::ChangeCategory(ChangeCategory { new_category: dec_json(&arg("new-category")?)? })),
         "change-annex" => Ok(En1991Mutation::ChangeAnnex(ChangeAnnex { new_annex: dec_json(&arg("new-annex")?)? })),
         "change-self-weight-material" => Ok(En1991Mutation::ChangeSelfWeightMaterial(ChangeSelfWeightMaterial { new_self_weight_material: dec_str(&arg("new-self-weight-material")?)? })),
-        "change-self-weight-thickness-m" => Ok(En1991Mutation::ChangeSelfWeightThicknessM(ChangeSelfWeightThicknessM { new_self_weight_thickness_m: arg("new-self-weight-thickness-m")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? })),
+        "change-self-weight-thickness-m" => {
+            Ok(En1991Mutation::ChangeSelfWeightThicknessM(ChangeSelfWeightThicknessM { new_self_weight_thickness_m: arg("new-self-weight-thickness-m")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? }))
+        }
         "change-assumed-gk-kn-m2" => Ok(En1991Mutation::ChangeAssumedGKKnM2(ChangeAssumedGKKnM2 { new_assumed_g_k_kn_m2: arg("new-assumed-g-k-kn-m2")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? })),
         "change-fire-curve" => Ok(En1991Mutation::ChangeFireCurve(ChangeFireCurve { new_fire_curve: dec_json(&arg("new-fire-curve")?)? })),
         "change-fire-resistance-min" => Ok(En1991Mutation::ChangeFireResistanceMin(ChangeFireResistanceMin { new_fire_resistance_min: arg("new-fire-resistance-min")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? })),
@@ -153,13 +159,17 @@ fn parse_en1991_mutation(line: &str) -> Result<En1991Mutation, String> {
         "change-bridge-lane" => Ok(En1991Mutation::ChangeBridgeLane(ChangeBridgeLane { new_bridge_lane: arg("new-bridge-lane")?.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })),
         "change-bridge-span-m" => Ok(En1991Mutation::ChangeBridgeSpanM(ChangeBridgeSpanM { new_bridge_span_m: arg("new-bridge-span-m")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? })),
         "change-bridge-lane-width-m" => Ok(En1991Mutation::ChangeBridgeLaneWidthM(ChangeBridgeLaneWidthM { new_bridge_lane_width_m: arg("new-bridge-lane-width-m")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? })),
-        "change-bridge-moment-resistance-knm" => Ok(En1991Mutation::ChangeBridgeMomentResistanceKnm(ChangeBridgeMomentResistanceKnm { new_bridge_moment_resistance_knm: arg("new-bridge-moment-resistance-knm")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? })),
+        "change-bridge-moment-resistance-knm" => {
+            Ok(En1991Mutation::ChangeBridgeMomentResistanceKnm(ChangeBridgeMomentResistanceKnm { new_bridge_moment_resistance_knm: arg("new-bridge-moment-resistance-knm")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? }))
+        }
         "change-crane-class" => Ok(En1991Mutation::ChangeCraneClass(ChangeCraneClass { new_crane_class: dec_str(&arg("new-crane-class")?)? })),
         "change-hoist-class" => Ok(En1991Mutation::ChangeHoistClass(ChangeHoistClass { new_hoist_class: dec_str(&arg("new-hoist-class")?)? })),
         "change-hoisting-speed-ms" => Ok(En1991Mutation::ChangeHoistingSpeedMS(ChangeHoistingSpeedMS { new_hoisting_speed_m_s: arg("new-hoisting-speed-m-s")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? })),
         "change-silo-bulk-density-kn-m3" => Ok(En1991Mutation::ChangeSiloBulkDensityKnM3(ChangeSiloBulkDensityKnM3 { new_silo_bulk_density_kn_m3: arg("new-silo-bulk-density-kn-m3")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? })),
         "change-silo-height-m" => Ok(En1991Mutation::ChangeSiloHeightM(ChangeSiloHeightM { new_silo_height_m: arg("new-silo-height-m")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? })),
-        "change-silo-hydraulic-radius-m" => Ok(En1991Mutation::ChangeSiloHydraulicRadiusM(ChangeSiloHydraulicRadiusM { new_silo_hydraulic_radius_m: arg("new-silo-hydraulic-radius-m")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? })),
+        "change-silo-hydraulic-radius-m" => {
+            Ok(En1991Mutation::ChangeSiloHydraulicRadiusM(ChangeSiloHydraulicRadiusM { new_silo_hydraulic_radius_m: arg("new-silo-hydraulic-radius-m")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? }))
+        }
         "change-silo-mu" => Ok(En1991Mutation::ChangeSiloMu(ChangeSiloMu { new_silo_mu: arg("new-silo-mu")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? })),
         "change-silo-k" => Ok(En1991Mutation::ChangeSiloK(ChangeSiloK { new_silo_k: arg("new-silo-k")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? })),
         "change-cs" => Ok(En1991Mutation::ChangeCS(ChangeCS { new_c_s: arg("new-c-s")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? })),
@@ -298,7 +308,9 @@ impl protocol::OpBinary for En1991Mutation {
             18 => Ok(En1991Mutation::ChangeBridgeLane(ChangeBridgeLane { new_bridge_lane: reader.read_u8().map_err(|e| malformed("new_bridge_lane", reader.position(), e.to_string()))? })),
             19 => Ok(En1991Mutation::ChangeBridgeSpanM(ChangeBridgeSpanM { new_bridge_span_m: reader.read_f64_le().map_err(|e| malformed("new_bridge_span_m", reader.position(), e.to_string()))? })),
             20 => Ok(En1991Mutation::ChangeBridgeLaneWidthM(ChangeBridgeLaneWidthM { new_bridge_lane_width_m: reader.read_f64_le().map_err(|e| malformed("new_bridge_lane_width_m", reader.position(), e.to_string()))? })),
-            21 => Ok(En1991Mutation::ChangeBridgeMomentResistanceKnm(ChangeBridgeMomentResistanceKnm { new_bridge_moment_resistance_knm: reader.read_f64_le().map_err(|e| malformed("new_bridge_moment_resistance_knm", reader.position(), e.to_string()))? })),
+            21 => Ok(En1991Mutation::ChangeBridgeMomentResistanceKnm(ChangeBridgeMomentResistanceKnm {
+                new_bridge_moment_resistance_knm: reader.read_f64_le().map_err(|e| malformed("new_bridge_moment_resistance_knm", reader.position(), e.to_string()))?,
+            })),
             22 => Ok(En1991Mutation::ChangeCraneClass(ChangeCraneClass { new_crane_class: read_str_bin(&mut reader).map_err(|e| malformed("new_crane_class", reader.position(), e))? })),
             23 => Ok(En1991Mutation::ChangeHoistClass(ChangeHoistClass { new_hoist_class: read_str_bin(&mut reader).map_err(|e| malformed("new_hoist_class", reader.position(), e))? })),
             24 => Ok(En1991Mutation::ChangeHoistingSpeedMS(ChangeHoistingSpeedMS { new_hoisting_speed_m_s: reader.read_f64_le().map_err(|e| malformed("new_hoisting_speed_m_s", reader.position(), e.to_string()))? })),

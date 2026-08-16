@@ -10,7 +10,7 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("dag")
         .label("DAG")
         .version("0.1.0")
-        .artifact(crate::artifacts::dag::declaration())
+        .artifact(crate::artifacts::dag::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .document_app::<crate::apps::dag::DagPlayApp>(crate::apps::dag::create_dag_app())
         .try_build()
 }

@@ -1,0 +1,25 @@
+enum AppRole {
+  VIEWER
+  EDITOR
+}
+
+type ArtifactDialect {
+  artifactKind: String!
+  standard: String!
+  subset: String!
+}
+
+type AppRef {
+  pluginId: String!
+  appId: String!
+}
+
+type DefaultApp {
+  dialect: ArtifactDialect!
+  role: AppRole!
+  app: AppRef!
+}
+
+type OpeningPreferences {
+  defaults: [DefaultApp!]! @state(class: CONFIG)
+}

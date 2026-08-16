@@ -1430,12 +1430,6 @@ pub(crate) fn puzzle2d_document_json_from_dwg(_drawing: &semio_s_plugin_stdio::a
 /// by its own test below) always returns an EMPTY board regardless of input (Tier C, no polygonal
 /// outlines supported), while the artifact-level DWG deserializer does real entity parsing.
 /// `register_2d_export_handlers` is a separate function, not in this wave's five-function scope.
-pub fn register_media_io() {
-    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    {
-        semio_framework_os::register_2d_export_handlers("2d.puzzle", "puzzle2d", crate::apps::puzzle2d::puzzle2d_document_json_to_svg);
-    }
-}
 //#endregion 🔖️Register
 
 //#region 🧪️Testkit

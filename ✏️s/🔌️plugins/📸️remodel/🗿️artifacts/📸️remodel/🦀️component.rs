@@ -11,7 +11,7 @@
 
 use base64::Engine as _;
 use semio_framework::MeshData;
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, };
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use serde::{Deserialize, Serialize};
@@ -32,7 +32,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "remodel.scene".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
+        export_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
         import_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
     }
 }
@@ -49,14 +49,54 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g3): `⚙️engine` was removed from the taxonomy
 /// and `declaration()` describes the artifact, not engine behaviour, so its home is the artifact
 /// root alongside `artifact_kind()`.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.remodel")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.remodel.standard.v1", "standard", "1", &[], None),
+        ("s.remodel.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.remodel.schema.artifact", "schema", "s.remodel.remodel", &[("schema", "s.remodel.remodel")], None),
+        ("s.remodel.inference.artifact", "inference", "s.remodel.remodel.inference", &[("schema", "s.remodel.remodel.inference")], None),
+        ("s.remodel.composer.native", "composer", "s.remodel@1/*", &[("dialect", "s.remodel@1/*")], None),
+        ("s.remodel.composer.format-1", "composer", "s.stdio.las@1.0/*", &[("dialect", "s.stdio.las@1.0/*")], None),
+        ("s.remodel.composer.format-2", "composer", "s.stdio.ply@1.0/*", &[("dialect", "s.stdio.ply@1.0/*")], None),
+        ("s.remodel.composer.format-3", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.remodel.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.remodel.composer.format-5", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
+        ("s.remodel.composer.format-6", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
+        ("s.remodel.composer.format-7", "composer", "s.stdio.gltf@2.0/*", &[("dialect", "s.stdio.gltf@2.0/*")], None),
+        ("s.remodel.composer.format-8", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.remodel.grammar.1", "grammar", "remodel.document", &[("grammar", "remodel.document")], None),
+        ("s.remodel.grammar.2", "grammar", "remodel.op", &[("grammar", "remodel.op")], None),
+        ("s.remodel.grammar.3", "grammar", "remodel.diff", &[("grammar", "remodel.diff")], None),
+        ("s.remodel.grammar.4", "grammar", "remodel.pack", &[("grammar", "remodel.pack")], None),
+        ("s.remodel.grammar.5", "grammar", "remodel.spr", &[("grammar", "remodel.spr")], None),
+        ("s.remodel.codec.document-1", "codec", "remodel.scene:remodel", &[("codec", "remodel.scene"), ("extension", "remodel")], None),
+        ("s.remodel.localization.en", "localization", "Remodel", &[], Some(("en", "Remodel"))),
+        ("s.remodel.localization.de", "localization", "Umbau", &[], Some(("de", "Umbau"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.remodel")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::remodel::schema::remodel_artifact_schema_descriptor())
         .inferences([crate::artifacts::remodel::standards::v1::subsets::any::schema::inferences::remodel_artifact_inference_descriptor()])
         .composers(crate::artifacts::remodel::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::remodel::RemodelPlayApp>()
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -218,7 +258,9 @@ thread_local! {
 }
 
 pub fn stash_remodel_asset(child_id: &str, asset: ImageAsset) {
-    REMODEL_ASSET_SCRATCH.with(|cache| { cache.borrow_mut().insert(child_id.to_string(), asset); });
+    REMODEL_ASSET_SCRATCH.with(|cache| {
+        cache.borrow_mut().insert(child_id.to_string(), asset);
+    });
 }
 
 pub fn cached_remodel_asset(child_id: &str) -> Option<ImageAsset> {
@@ -275,7 +317,9 @@ thread_local! {
 }
 
 pub fn stash_remodel_mesh(child_id: &str, mesh: MeshData) {
-    REMODEL_MESH_SCRATCH.with(|cache| { cache.borrow_mut().insert(child_id.to_string(), mesh); });
+    REMODEL_MESH_SCRATCH.with(|cache| {
+        cache.borrow_mut().insert(child_id.to_string(), mesh);
+    });
 }
 
 pub fn cached_remodel_mesh(child_id: &str) -> Option<MeshData> {
@@ -1232,9 +1276,9 @@ mod tests {
 //#endregion 🧪️Tests
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::remodel::standards::v1::subsets::any::io::io_registry as v1;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -1243,10 +1287,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("RemodelComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("RemodelComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

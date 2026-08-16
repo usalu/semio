@@ -6,7 +6,7 @@
 
 use dsl::DslRecord;
 use protocol::{Identified, Patchable};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, };
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::shooting::schema::mutations::ShootingMutation;
@@ -31,7 +31,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "shooting.scene".into(),
         export_formats: vec![],
         import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.bmp", "stdio.dwg", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.tiff"],
+        export_stdio_kinds: vec!["stdio.bmp", "stdio.dwg", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.tiff"],
         import_stdio_kinds: vec!["stdio.bmp", "stdio.dwg", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.tiff"],
     }
 }
@@ -118,14 +118,55 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// file. Left bare it would now resolve to THIS file's own `io_registry` module below, which has a
 /// different, incompatible return type (`&'static [&'static ComposerEntry]`, wrapping the real registry's
 /// owned entries) — not the `&'static [ComposerEntry]` `.composers()` expects.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.shooting")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.shooting.standard.v1", "standard", "1", &[], None),
+        ("s.shooting.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.shooting.schema.artifact", "schema", "s.shooting.shooting", &[("schema", "s.shooting.shooting")], None),
+        ("s.shooting.inference.artifact", "inference", "s.shooting.shooting.inference", &[("schema", "s.shooting.shooting.inference")], None),
+        ("s.shooting.composer.native", "composer", "s.shooting@1/*", &[("dialect", "s.shooting@1/*")], None),
+        ("s.shooting.composer.format-1", "composer", "s.stdio.gif@87a/*", &[("dialect", "s.stdio.gif@87a/*")], None),
+        ("s.shooting.composer.format-2", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
+        ("s.shooting.composer.format-3", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
+        ("s.shooting.composer.format-4", "composer", "s.stdio.jpg@jfif-1.01/*", &[("dialect", "s.stdio.jpg@jfif-1.01/*")], None),
+        ("s.shooting.composer.format-5", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.shooting.composer.format-6", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.shooting.composer.format-7", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
+        ("s.shooting.composer.format-8", "composer", "s.stdio.bmp@v3/*", &[("dialect", "s.stdio.bmp@v3/*")], None),
+        ("s.shooting.composer.format-9", "composer", "s.stdio.tiff@6.0/*", &[("dialect", "s.stdio.tiff@6.0/*")], None),
+        ("s.shooting.grammar.1", "grammar", "shooting.document", &[("grammar", "shooting.document")], None),
+        ("s.shooting.grammar.2", "grammar", "shooting.op", &[("grammar", "shooting.op")], None),
+        ("s.shooting.grammar.3", "grammar", "shooting.diff", &[("grammar", "shooting.diff")], None),
+        ("s.shooting.grammar.4", "grammar", "shooting.pack", &[("grammar", "shooting.pack")], None),
+        ("s.shooting.grammar.5", "grammar", "shooting.spr", &[("grammar", "shooting.spr")], None),
+        ("s.shooting.codec.document-1", "codec", "shooting.shooting:shooting", &[("codec", "shooting.shooting"), ("extension", "shooting")], None),
+        ("s.shooting.localization.en", "localization", "Shooting", &[], Some(("en", "Shooting"))),
+        ("s.shooting.localization.de", "localization", "Aufnahme", &[], Some(("de", "Aufnahme"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.shooting")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::shooting::standards::v1::subsets::any::schema::shooting_artifact_schema_descriptor())
         .inferences([crate::artifacts::shooting::standards::v1::subsets::any::schema::inferences::shooting_artifact_inference_descriptor()])
         .composers(crate::artifacts::shooting::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::shooting::ShootingPlayApp>()
-        .build()
+        .try_build()
 }
 //#endregion 🔖️Declaration
 
@@ -369,9 +410,7 @@ pub fn shooting_resolve_shot_camera(snapshot: &ShootingSnapshot, shot: &Shooting
 /// reason to decline, per the recipe's own allowance ("unless you find a concrete technical reason
 /// they can't — document precisely if so, don't generalize from one blocked field to the whole
 /// plugin").
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{
-    SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA,
-};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 
 pub type ShootingEmblemChild = store::ArtifactChild<SemioImageSnapshot>;
 
@@ -439,8 +478,12 @@ pub fn shooting_base64_decode(data: &str) -> Option<Vec<u8>> {
         let n = vals.len();
         let combined = vals.iter().fold(0u32, |acc, &v| (acc << 6) | v as u32) << ((4 - n) * 6);
         out.push((combined >> 16) as u8);
-        if n > 2 { out.push((combined >> 8) as u8); }
-        if n > 3 { out.push(combined as u8); }
+        if n > 2 {
+            out.push((combined >> 8) as u8);
+        }
+        if n > 3 {
+            out.push(combined as u8);
+        }
     }
     Some(out)
 }
@@ -653,8 +696,6 @@ pub struct ShootingScenePatch {
 }
 //#endregion 🔖️CollectionSupport
 
-
-
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -679,9 +720,9 @@ mod tests {
 //#endregion 🧪️Tests
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
     use crate::artifacts::shooting::standards::v1::subsets::any::io::io_registry as v1;
+    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -690,10 +731,7 @@ pub mod io_registry {
     }
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries()
-            .iter()
-            .find(|e| e.writes == target)
-            .ok_or_else(|| ComposeError { message: format!("ShootingComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("ShootingComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         (entry.compose)(sources)
     }
 

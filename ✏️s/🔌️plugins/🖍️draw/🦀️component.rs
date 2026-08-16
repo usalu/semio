@@ -10,7 +10,7 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("draw")
         .label("Draw")
         .version("0.1.0")
-        .artifact(crate::artifacts::draw::declaration())
+        .artifact(crate::artifacts::draw::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .document_app::<crate::apps::draw::DrawPlayApp>(crate::apps::draw::create_draw_app())
         .try_build()
 }

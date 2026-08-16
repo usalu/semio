@@ -9,7 +9,7 @@
 use crate::artifacts::vdi3805::op::Vdi3805Mutation;
 use crate::artifacts::vdi3805::Vdi3805Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload

@@ -474,14 +474,35 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// from this file's own `.setup()`: it registers the `MathematicalPlayApp` CONFIG/PRESENCE schema, an
 /// app-scope concern `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) —
 /// `register_app_schema_descriptor` is not in the §6 artifact-scoped set.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.mathematical")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.mathematical.standard.v1", "standard", "1", &[], None), ("s.mathematical.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.mathematical.schema.artifact", "schema", "s.mathematical.mathematical", &[("schema", "s.mathematical.mathematical")], None), ("s.mathematical.inference.artifact", "inference", "s.mathematical.mathematical.inference", &[("schema", "s.mathematical.mathematical.inference")], None),
+        ("s.mathematical.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None), ("s.mathematical.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.mathematical.grammar.document", "grammar", "mathematical.document", &[("grammar", "mathematical.document")], None), ("s.mathematical.grammar.op", "grammar", "mathematical.op", &[("grammar", "mathematical.op")], None),
+        ("s.mathematical.grammar.diff", "grammar", "mathematical.diff", &[("grammar", "mathematical.diff")], None), ("s.mathematical.grammar.pack", "grammar", "mathematical.pack", &[("grammar", "mathematical.pack")], None), ("s.mathematical.grammar.spr", "grammar", "mathematical.spr", &[("grammar", "mathematical.spr")], None),
+        ("s.mathematical.codec.document.v1", "codec", "semio.mathematical/v1:mathematical", &[("codec", "semio.mathematical/v1"), ("extension", "mathematical")], None),
+        ("s.mathematical.localization.en", "localization", "Mathematical", &[], Some(("en", "Mathematical"))), ("s.mathematical.localization.de", "localization", "Mathematik", &[], Some(("de", "Mathematik"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.mathematical")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims { capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?; }
+        if let Some((locale, text)) = localization { capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?; }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::mathematical::schema::mathematical_artifact_schema_descriptor())
         .inferences([crate::artifacts::mathematical::standards::v1::subsets::any::schema::inferences::mathematical_artifact_inference_descriptor()])
         .composers(crate::artifacts::mathematical::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::mathematical::MathematicalPlayApp>()
-        .build()
+        .try_build()
 }
 //#endregion 🔖️Declaration
 

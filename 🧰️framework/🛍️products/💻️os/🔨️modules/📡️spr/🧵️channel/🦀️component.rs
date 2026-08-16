@@ -685,7 +685,6 @@ pub fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate::os_spr::Pro
             let standard = crate::os_spr::read_str(bytes, &mut pos)?;
             let subset = crate::os_spr::read_str(bytes, &mut pos)?;
             let role = *bytes.get(pos).ok_or_else(|| malformed("channel app-command ClearDefaultApp.role", pos as u64, "truncated"))?;
-            pos += 1;
             AppCommand::ClearDefaultApp { seq, artifact_kind, standard, subset, role }
         }
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
@@ -1353,7 +1352,11 @@ mod tests {
     /// @emoji 🧾️ Named `AppCommand` fixture corpus, one entry per variant.
     fn channel_command_fixture_corpus() -> Vec<(&'static str, AppCommand)> {
         vec![
-            ("Hello", AppCommand::Hello { channel_version: CHANNEL_VERSION, app_id: "app".to_string(), actor: "actor".to_string(), config: vec![1, 2] }),
+            // 📌️ A LITERAL version, never `CHANNEL_VERSION`: this corpus pins the CODEC's bytes, and a
+            // frame carrying the live constant rewrites its own golden on every wire bump — which is
+            // exactly how two unrelated tickets each broke this test. The constant has its own pin in
+            // `channel_version_matches_the_shared_cross_language_pin`.
+            ("Hello", AppCommand::Hello { channel_version: 1, app_id: "app".to_string(), actor: "actor".to_string(), config: vec![1, 2] }),
             ("ConfigCommand", AppCommand::ConfigCommand { seq: 1, command: vec![9] }),
             ("Command", AppCommand::Command { seq: 1, command: vec![1], view_state: vec![] }),
             ("CommandText", AppCommand::CommandText { seq: 1, line: "go".to_string() }),
@@ -1416,7 +1419,8 @@ mod tests {
     /// @emoji 🧾️ Named `AppFrame` fixture corpus, one entry per variant.
     fn channel_frame_fixture_corpus() -> Vec<(&'static str, AppFrame)> {
         vec![
-            ("Welcome", AppFrame::Welcome { channel_version: CHANNEL_VERSION, instance: 1, manifest: vec![1] }),
+            // 📌️ Literal version — see the sibling note on `AppCommand::Hello`'s corpus entry.
+            ("Welcome", AppFrame::Welcome { channel_version: 1, instance: 1, manifest: vec![1] }),
             ("Done", AppFrame::Done { in_reply_to: 1 }),
             ("Invocation", AppFrame::Invocation { in_reply_to: 1, output: vec![1], diagnostics: vec![], ui_scope: vec![], history_patch: vec![] }),
             ("UiSection", AppFrame::UiSection { in_reply_to: Some(1), kind: 1, key: "k".to_string(), hash: 1, body: None }),
@@ -1462,7 +1466,7 @@ mod tests {
     /// this test, forcing a deliberate update of both this table and the TS-side twin (WP-0B).
     fn channel_command_fixture_hex(label: &str) -> &'static str {
         match label {
-            "Hello" => "000903617070056163746f72020102",
+            "Hello" => "000103617070056163746f72020102",
             "ConfigCommand" => "01010109",
             "Command" => "0201010100",
             "CommandText" => "030102676f",
@@ -1502,7 +1506,7 @@ mod tests {
     /// `channel_command_fixture_hex`'s docstring for provenance/drift-guard rationale.
     fn channel_frame_fixture_hex(label: &str) -> &'static str {
         match label {
-            "Welcome" => "0009010101",
+            "Welcome" => "0001010101",
             "Done" => "0101",
             "Invocation" => "02010101000000",
             "UiSection" => "03010101016b0100",
@@ -1547,6 +1551,18 @@ mod tests {
             let decoded = decode_app_frame(&encode_app_frame(&value)).unwrap();
             assert_eq!(decoded, value, "{label} must round-trip");
         }
+    }
+
+    /// @emoji 📡️ The wire version is owned by `🧫️fixtures/📡️channel/channel-version.json`, not by
+    /// either language's constant, so a bump that updates only one host fails here instead of at
+    /// runtime — the drift this guard was added for was a live `APP_CHANNEL_VERSION = 8` in
+    /// TypeScript against `CHANNEL_VERSION = 10` in Rust. The TS twin asserts the same file.
+    #[test]
+    fn channel_version_matches_the_shared_cross_language_pin() {
+        let json = include_str!("../../../🧫️fixtures/📡️channel/channel-version.json");
+        let pin: serde_json::Value = serde_json::from_str(json).expect("channel-version.json must parse");
+        let pinned = pin.get("channelVersion").and_then(serde_json::Value::as_u64).expect("channel-version.json must carry channelVersion");
+        assert_eq!(u64::from(CHANNEL_VERSION), pinned, "CHANNEL_VERSION and the shared cross-language pin disagree — bump both, plus APP_CHANNEL_VERSION in 🟦️component.ts");
     }
 
     /// @emoji 🔗️ Cross-language drift guard for the M2 transaction variants (tags 22-26/19-22): the

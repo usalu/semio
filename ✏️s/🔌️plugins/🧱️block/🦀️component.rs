@@ -4,8 +4,8 @@
 //! only the identity/metadata/compatibility/representation/camera shapes common to every dimension live
 //! here, reached as `crate::*` from every `🗿️artifacts/<a>` node.
 
-use serde::{Deserialize, Serialize};
 use semio_framework_plugin::Plugin;
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Identity
 /// 🪪️ The single kind definition a block document edits — name/label/variant/description/icon/unit
@@ -147,9 +147,9 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("block")
         .label("Block")
         .version("0.1.0")
-        .artifact(crate::artifacts::block2d::declaration())
-        .artifact(crate::artifacts::block3d::declaration())
-        .artifact(crate::artifacts::block5d::declaration())
+        .artifact(crate::artifacts::block2d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::block3d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::block5d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .document_app::<crate::apps::block2d::Block2dPlayApp>(crate::apps::block2d::create_block2d_app())
         .document_app::<crate::apps::block3d::Block3dPlayApp>(crate::apps::block3d::create_block3d_app())
         .document_app::<crate::apps::block5d::Block5dPlayApp>(crate::apps::block5d::create_block5d_app())

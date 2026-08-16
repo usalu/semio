@@ -37,6 +37,12 @@
         "id": "framework.repo.command.playground-catalog-query",
         "kind": "command",
         "responsibility": "Lists generated playground registrations as canonical JSON or tabular terminal text."
+      },
+      {
+        "directory": "📜️root-script-delegation",
+        "id": "framework.repo.command.root-script-delegation",
+        "kind": "command",
+        "responsibility": "Delegates an otherwise unhandled Semio CLI invocation to the root script, preserving the parsed verb and positional segments."
       }
     ]
   }

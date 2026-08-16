@@ -765,15 +765,27 @@ macro_rules! impl_norm_artifact_record {
         impl $crate::document::NormArtifactRecord for $Snapshot {
             const EXTENSION: &'static str = $extension;
             const ENVELOPE_ID: &'static str = $envelope_id;
-            fn dsl_spec() -> dsl::RecordSpec { Self::__dsl_spec() }
-            fn dsl_to_record(&self) -> dsl::RecordValue { self.__dsl_to_record() }
-            fn dsl_from_record(record: &dsl::RecordValue) -> Result<Self, store::TextError> { Self::__dsl_from_record(record) }
+            fn dsl_spec() -> dsl::RecordSpec {
+                Self::__dsl_spec()
+            }
+            fn dsl_to_record(&self) -> dsl::RecordValue {
+                self.__dsl_to_record()
+            }
+            fn dsl_from_record(record: &dsl::RecordValue) -> Result<Self, store::TextError> {
+                Self::__dsl_from_record(record)
+            }
         }
         impl store::ArtifactDsl for $Snapshot {
             const EXTENSION: &'static str = $extension;
-            fn envelope_id() -> &'static str { $envelope_id }
-            fn parse_dsl(text: &str) -> Result<Self, store::TextError> { $crate::document::norm_parse_dsl(text) }
-            fn print_dsl(&self) -> String { $crate::document::norm_print_dsl(self) }
+            fn envelope_id() -> &'static str {
+                $envelope_id
+            }
+            fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+                $crate::document::norm_parse_dsl(text)
+            }
+            fn print_dsl(&self) -> String {
+                $crate::document::norm_print_dsl(self)
+            }
         }
         impl store::ArtifactPack for $Snapshot {
             fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
@@ -822,15 +834,14 @@ mod tests {
         value: f64,
     }
 
-//#region 🔖️ArtifactCodec
-// 🧬️ Was a fifth hand-written copy of the same ArtifactDsl/ArtifactPack envelope glue the real
-// fifteen norm families duplicated in their own `HandcraftedArtifactCodecs` regions (W5a,
-// 26/08/11/SEMIO-ARTIFACT-…) — now exercises `impl_norm_artifact_record!` instead, so this test
-// fixture doubles as this module's own round-trip proof for the shared codec (see the
-// `demo_document_*`/`document_text_round_trips_for_a_norm_family_document` tests below).
-impl_norm_artifact_record!(DemoDocument, extension = "demo-norm", envelope_id = "norm.demo");
-//#endregion 🔖️ArtifactCodec
-
+    //#region 🔖️ArtifactCodec
+    // 🧬️ Was a fifth hand-written copy of the same ArtifactDsl/ArtifactPack envelope glue the real
+    // fifteen norm families duplicated in their own `HandcraftedArtifactCodecs` regions (W5a,
+    // 26/08/11/SEMIO-ARTIFACT-…) — now exercises `impl_norm_artifact_record!` instead, so this test
+    // fixture doubles as this module's own round-trip proof for the shared codec (see the
+    // `demo_document_*`/`document_text_round_trips_for_a_norm_family_document` tests below).
+    impl_norm_artifact_record!(DemoDocument, extension = "demo-norm", envelope_id = "norm.demo");
+    //#endregion 🔖️ArtifactCodec
 
     struct DemoFamily;
 

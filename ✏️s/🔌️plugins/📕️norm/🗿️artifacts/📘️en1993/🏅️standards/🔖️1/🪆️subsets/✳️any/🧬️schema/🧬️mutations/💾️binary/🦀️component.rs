@@ -3,26 +3,14 @@
 //! same uniform per-field JSON strategy as the text codec, so every one of the 74 fields' 5 Rust
 //! types (`f64`/`u32`/`u8`/`String`/`AnnexChoice`) shares one write/read helper pair.
 
-use crate::artifacts::en1993::schema::mutations::{
-    change_annex::mutation::ChangeAnnex,
-    update_member_properties::mutation::UpdateMemberProperties,
-    update_fire_inputs::mutation::UpdateFireInputs,
-    update_cold_formed_inputs::mutation::UpdateColdFormedInputs,
-    update_stainless_inputs::mutation::UpdateStainlessInputs,
-    update_plated_inputs::mutation::UpdatePlatedInputs,
-    update_silo_shell_inputs::mutation::UpdateSiloShellInputs,
-    update_bolt_inputs::mutation::UpdateBoltInputs,
-    update_weld_inputs::mutation::UpdateWeldInputs,
-    update_fatigue_inputs::mutation::UpdateFatigueInputs,
-    update_through_thickness_inputs::mutation::UpdateThroughThicknessInputs,
-    update_tension_component_inputs::mutation::UpdateTensionComponentInputs,
-    update_hss_inputs::mutation::UpdateHssInputs,
-    update_bridge_inputs::mutation::UpdateBridgeInputs,
-    update_tower_inputs::mutation::UpdateTowerInputs,
-    update_pile_inputs::mutation::UpdatePileInputs,
-    update_crane_inputs::mutation::UpdateCraneInputs,
-};
 pub use crate::artifacts::en1993::schema::mutations::En1993Mutation;
+use crate::artifacts::en1993::schema::mutations::{
+    change_annex::mutation::ChangeAnnex, update_bolt_inputs::mutation::UpdateBoltInputs, update_bridge_inputs::mutation::UpdateBridgeInputs, update_cold_formed_inputs::mutation::UpdateColdFormedInputs,
+    update_crane_inputs::mutation::UpdateCraneInputs, update_fatigue_inputs::mutation::UpdateFatigueInputs, update_fire_inputs::mutation::UpdateFireInputs, update_hss_inputs::mutation::UpdateHssInputs,
+    update_member_properties::mutation::UpdateMemberProperties, update_pile_inputs::mutation::UpdatePileInputs, update_plated_inputs::mutation::UpdatePlatedInputs, update_silo_shell_inputs::mutation::UpdateSiloShellInputs,
+    update_stainless_inputs::mutation::UpdateStainlessInputs, update_tension_component_inputs::mutation::UpdateTensionComponentInputs, update_through_thickness_inputs::mutation::UpdateThroughThicknessInputs,
+    update_tower_inputs::mutation::UpdateTowerInputs, update_weld_inputs::mutation::UpdateWeldInputs,
+};
 
 //#region 📡️SemioProtocol
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");

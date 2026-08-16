@@ -11,7 +11,7 @@
 use crate::artifacts::din16798::op::Din16798Mutation;
 use crate::artifacts::din16798::Din16798Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
@@ -40,12 +40,7 @@ mod tests {
     fn handle_commits_the_payload_document_under_its_action_id() {
         let projection = Din16798Snapshot::default();
         let config = NormConfig::default();
-        let emit = handle(
-            &ReplaceSnapshot { snapshot: Din16798Snapshot::default() },
-            &ArtifactView::new(&projection, &HistoryView::empty()),
-            &ConfigView { snapshot: &config },
-        )
-        .expect("handle");
+        let emit = handle(&ReplaceSnapshot { snapshot: Din16798Snapshot::default() }, &ArtifactView::new(&projection, &HistoryView::empty()), &ConfigView { snapshot: &config }).expect("handle");
         assert_eq!(emit.artifact_mutations, Din16798Mutation::from_snapshot(&Din16798Snapshot::default()));
         assert_eq!(emit.description.as_deref(), Some("setSnapshot"));
         assert!(emit.config_mutations.is_empty());

@@ -21,28 +21,28 @@ use crate::artifacts::en1996::En1996Snapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
-use super::change_m_ed_knm;
-use super::change_n_ed_kn;
-use super::change_v_ed_kn;
-use super::change_h_ed_kn;
-use super::change_z_mm3;
+use super::change_annex;
 use super::change_area_mm2;
-use super::change_shear_area_mm2;
+use super::change_bed_joint_thickness_mm;
+use super::change_design_situation;
+use super::change_exposure;
 use super::change_f_k_mpa;
 use super::change_f_vk_mpa;
-use super::change_annex;
-use super::change_masonry_class;
-use super::change_design_situation;
-use super::change_mu;
-use super::change_wall_thickness_mm;
 use super::change_fire_resistance_min;
-use super::change_unit;
-use super::change_exposure;
-use super::change_mortar;
-use super::change_bed_joint_thickness_mm;
-use super::change_storeys;
+use super::change_h_ed_kn;
 use super::change_h_ef_mm;
+use super::change_m_ed_knm;
+use super::change_masonry_class;
+use super::change_mortar;
+use super::change_mu;
+use super::change_n_ed_kn;
+use super::change_shear_area_mm2;
+use super::change_storeys;
 use super::change_t_ef_mm;
+use super::change_unit;
+use super::change_v_ed_kn;
+use super::change_wall_thickness_mm;
+use super::change_z_mm3;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -112,40 +112,39 @@ impl En1996Mutation {
 }
 //#endregion 🔖️FromSnapshot
 
-
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::SemanticMutation;
     use protocol::Mutation;
+    use protocol::SemanticMutation;
 
     /// ⚖️ One value per `En1996Mutation` variant — the closed set the semantics/round-trip
     /// tests iterate, mirroring `din16798`'s own `every_mutation()` fixture.
     fn every_mutation() -> Vec<En1996Mutation> {
         vec![
-        En1996Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 12.5 }),
-        En1996Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: 250.0 }),
-        En1996Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 42.0 }),
-        En1996Mutation::ChangeHEdKn(change_h_ed_kn::mutation::ChangeHEdKn { new_h_ed_kn: 28.0 }),
-        En1996Mutation::ChangeZMm3(change_z_mm3::mutation::ChangeZMm3 { new_z_mm3: 9_500_000.0 }),
-        En1996Mutation::ChangeAreaMm2(change_area_mm2::mutation::ChangeAreaMm2 { new_area_mm2: 540_000.0 }),
-        En1996Mutation::ChangeShearAreaMm2(change_shear_area_mm2::mutation::ChangeShearAreaMm2 { new_shear_area_mm2: 320_000.0 }),
-        En1996Mutation::ChangeFKMpa(change_f_k_mpa::mutation::ChangeFKMpa { new_f_k_mpa: 6.5 }),
-        En1996Mutation::ChangeFVkMpa(change_f_vk_mpa::mutation::ChangeFVkMpa { new_f_vk_mpa: 0.18 }),
-        En1996Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
-        En1996Mutation::ChangeMasonryClass(change_masonry_class::mutation::ChangeMasonryClass { new_masonry_class: crate::artifacts::en1996::MasonryClass::Class4 }),
-        En1996Mutation::ChangeDesignSituation(change_design_situation::mutation::ChangeDesignSituation { new_design_situation: crate::document::DesignSituation::Seismic }),
-        En1996Mutation::ChangeMu(change_mu::mutation::ChangeMu { new_mu: 0.35 }),
-        En1996Mutation::ChangeWallThicknessMm(change_wall_thickness_mm::mutation::ChangeWallThicknessMm { new_wall_thickness_mm: 300.0 }),
-        En1996Mutation::ChangeFireResistanceMin(change_fire_resistance_min::mutation::ChangeFireResistanceMin { new_fire_resistance_min: 90 }),
-        En1996Mutation::ChangeUnit(change_unit::mutation::ChangeUnit { new_unit: "calcium_silicate".to_string() }),
-        En1996Mutation::ChangeExposure(change_exposure::mutation::ChangeExposure { new_exposure: crate::artifacts::en1996::part_2::ExposureClass::Mx3 }),
-        En1996Mutation::ChangeMortar(change_mortar::mutation::ChangeMortar { new_mortar: crate::artifacts::en1996::part_2::MortarClass::M10 }),
-        En1996Mutation::ChangeBedJointThicknessMm(change_bed_joint_thickness_mm::mutation::ChangeBedJointThicknessMm { new_bed_joint_thickness_mm: 15.0 }),
-        En1996Mutation::ChangeStoreys(change_storeys::mutation::ChangeStoreys { new_storeys: 4 }),
-        En1996Mutation::ChangeHEfMm(change_h_ef_mm::mutation::ChangeHEfMm { new_h_ef_mm: 2800.0 }),
-        En1996Mutation::ChangeTEfMm(change_t_ef_mm::mutation::ChangeTEfMm { new_t_ef_mm: 200.0 }),
+            En1996Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 12.5 }),
+            En1996Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: 250.0 }),
+            En1996Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 42.0 }),
+            En1996Mutation::ChangeHEdKn(change_h_ed_kn::mutation::ChangeHEdKn { new_h_ed_kn: 28.0 }),
+            En1996Mutation::ChangeZMm3(change_z_mm3::mutation::ChangeZMm3 { new_z_mm3: 9_500_000.0 }),
+            En1996Mutation::ChangeAreaMm2(change_area_mm2::mutation::ChangeAreaMm2 { new_area_mm2: 540_000.0 }),
+            En1996Mutation::ChangeShearAreaMm2(change_shear_area_mm2::mutation::ChangeShearAreaMm2 { new_shear_area_mm2: 320_000.0 }),
+            En1996Mutation::ChangeFKMpa(change_f_k_mpa::mutation::ChangeFKMpa { new_f_k_mpa: 6.5 }),
+            En1996Mutation::ChangeFVkMpa(change_f_vk_mpa::mutation::ChangeFVkMpa { new_f_vk_mpa: 0.18 }),
+            En1996Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
+            En1996Mutation::ChangeMasonryClass(change_masonry_class::mutation::ChangeMasonryClass { new_masonry_class: crate::artifacts::en1996::MasonryClass::Class4 }),
+            En1996Mutation::ChangeDesignSituation(change_design_situation::mutation::ChangeDesignSituation { new_design_situation: crate::document::DesignSituation::Seismic }),
+            En1996Mutation::ChangeMu(change_mu::mutation::ChangeMu { new_mu: 0.35 }),
+            En1996Mutation::ChangeWallThicknessMm(change_wall_thickness_mm::mutation::ChangeWallThicknessMm { new_wall_thickness_mm: 300.0 }),
+            En1996Mutation::ChangeFireResistanceMin(change_fire_resistance_min::mutation::ChangeFireResistanceMin { new_fire_resistance_min: 90 }),
+            En1996Mutation::ChangeUnit(change_unit::mutation::ChangeUnit { new_unit: "calcium_silicate".to_string() }),
+            En1996Mutation::ChangeExposure(change_exposure::mutation::ChangeExposure { new_exposure: crate::artifacts::en1996::part_2::ExposureClass::Mx3 }),
+            En1996Mutation::ChangeMortar(change_mortar::mutation::ChangeMortar { new_mortar: crate::artifacts::en1996::part_2::MortarClass::M10 }),
+            En1996Mutation::ChangeBedJointThicknessMm(change_bed_joint_thickness_mm::mutation::ChangeBedJointThicknessMm { new_bed_joint_thickness_mm: 15.0 }),
+            En1996Mutation::ChangeStoreys(change_storeys::mutation::ChangeStoreys { new_storeys: 4 }),
+            En1996Mutation::ChangeHEfMm(change_h_ef_mm::mutation::ChangeHEfMm { new_h_ef_mm: 2800.0 }),
+            En1996Mutation::ChangeTEfMm(change_t_ef_mm::mutation::ChangeTEfMm { new_t_ef_mm: 200.0 }),
         ]
     }
 

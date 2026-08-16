@@ -274,14 +274,37 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc). Relocated from
 /// `⚙️engine` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2): `declaration()` describes
 /// the artifact (kind, schema, io ports, ownership), which is not engine behaviour.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.curate")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.curate.standard.v1", "standard", "1", &[], None), ("s.curate.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.curate.schema.artifact", "schema", "s.sourcing.curate", &[("schema", "s.sourcing.curate")], None), ("s.curate.inference.artifact", "inference", "s.sourcing.curate.inference", &[("schema", "s.sourcing.curate.inference")], None),
+        ("s.curate.composer.zip", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None), ("s.curate.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.curate.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None), ("s.curate.composer.stl", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
+        ("s.curate.composer.obj", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.curate.grammar.document", "grammar", "sourcing.curate", &[("grammar", "sourcing.curate")], None), ("s.curate.grammar.op", "grammar", "sourcing.curate.op", &[("grammar", "sourcing.curate.op")], None),
+        ("s.curate.grammar.diff", "grammar", "sourcing.curate.diff", &[("grammar", "sourcing.curate.diff")], None), ("s.curate.grammar.pack", "grammar", "curate.pack", &[("grammar", "curate.pack")], None), ("s.curate.grammar.spr", "grammar", "curate.spr", &[("grammar", "curate.spr")], None),
+        ("s.curate.codec.document.v1", "codec", "sourcing.curate/v1:curate", &[("codec", "sourcing.curate/v1"), ("extension", "curate")], None),
+        ("s.curate.localization.en", "localization", "Sourcing", &[], Some(("en", "Sourcing"))), ("s.curate.localization.de", "localization", "Beschaffung", &[], Some(("de", "Beschaffung"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.curate")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims { capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?; }
+        if let Some((locale, text)) = localization { capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?; }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::curate::schema::curate_artifact_schema_descriptor())
         .inferences([crate::artifacts::curate::standards::v1::subsets::any::schema::inferences::curate_artifact_inference_descriptor()])
         .composers(crate::artifacts::curate::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::curate::SourcingCurateApp>()
-        .build()
+        .try_build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once

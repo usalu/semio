@@ -433,14 +433,38 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// `CadPlayApp`'s own config/presence schema, an app-scope concern `ArtifactDeclaration` deliberately
 /// has no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
 /// artifact-scoped function set.
-pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    semio_framework_plugin::ArtifactDeclaration::builder("s.cad")
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+        ("s.cad.standard.v1", "standard", "1", &[], None), ("s.cad.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.cad.schema.artifact", "schema", "s.cad.cad", &[("schema", "s.cad.cad")], None), ("s.cad.inference.artifact", "inference", "s.cad.cad.inference", &[("schema", "s.cad.cad.inference")], None),
+        ("s.cad.composer.ifc", "composer", "s.stdio.ifc@4/*", &[("dialect", "s.stdio.ifc@4/*")], None), ("s.cad.composer.step", "composer", "s.stdio.step@ap214/*", &[("dialect", "s.stdio.step@ap214/*")], None),
+        ("s.cad.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None), ("s.cad.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.cad.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None), ("s.cad.composer.stl", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
+        ("s.cad.composer.gltf", "composer", "s.stdio.gltf@2.0/*", &[("dialect", "s.stdio.gltf@2.0/*")], None), ("s.cad.composer.obj", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.cad.grammar.document", "grammar", "cad.document", &[("grammar", "cad.document")], None), ("s.cad.grammar.op", "grammar", "cad.op", &[("grammar", "cad.op")], None),
+        ("s.cad.grammar.diff", "grammar", "cad.diff", &[("grammar", "cad.diff")], None), ("s.cad.grammar.pack", "grammar", "cad.pack", &[("grammar", "cad.pack")], None), ("s.cad.grammar.spr", "grammar", "cad.spr", &[("grammar", "cad.spr")], None),
+        ("s.cad.codec.document.v1", "codec", "cad.document:cad", &[("codec", "cad.document"), ("extension", "cad")], None),
+        ("s.cad.localization.en", "localization", "CAD", &[], Some(("en", "CAD"))), ("s.cad.localization.de", "localization", "CAD-Modellierung", &[], Some(("de", "CAD-Modellierung"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.cad")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims { capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?; }
+        if let Some((locale, text)) = localization { capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?; }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::cad::schema::cad_artifact_schema_descriptor())
         .inferences([crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_artifact_inference_descriptor()])
         .composers(crate::artifacts::cad::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::cad::CadPlayApp>()
-        .build()
+        .try_build()
 }
 //#endregion 🔖️ArtifactKind
 

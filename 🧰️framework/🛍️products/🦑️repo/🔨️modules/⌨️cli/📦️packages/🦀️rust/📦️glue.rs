@@ -21,6 +21,9 @@ pub mod cli_usage_presentation;
 #[path = "../../../../🎮️commands/📇️playground-catalog-query/🦀️component.rs"]
 pub mod playground_catalog_query;
 
+#[path = "../../../../🎮️commands/📜️root-script-delegation/🦀️component.rs"]
+pub mod root_script_delegation;
+
 // #region 🔖️Args
 pub mod args {
     use std::collections::HashMap;
@@ -1294,12 +1297,7 @@ pub fn run(argv: Vec<String>) -> i32 {
         "dev" => playground_development_session::run(&root, &parsed),
         "catalog" => playground_catalog_query::run(&root, &parsed),
         "plugin" if parsed.segments.first().map(String::as_str) == Some("registry") => plugin_registry::run(&root, parsed.segments.get(1).map(String::as_str).unwrap_or("generate")),
-        _ => {
-            let mut forward = vec!["./📜️script.ts".to_string(), parsed.verb.clone()];
-            forward.extend(parsed.segments.clone());
-            let forward_refs: Vec<&str> = forward.iter().map(String::as_str).collect();
-            proc::spawn_inherit("bun", &forward_refs, &root, &[])
-        }
+        _ => root_script_delegation::run(&root, &parsed),
     }
 }
 

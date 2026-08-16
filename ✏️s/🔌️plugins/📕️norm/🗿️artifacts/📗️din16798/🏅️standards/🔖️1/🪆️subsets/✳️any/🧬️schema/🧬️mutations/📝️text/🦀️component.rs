@@ -3,17 +3,21 @@
 //! whole-document-replace macro, `impl_norm_set_snapshot_ops!`, no longer applies now that the
 //! whole-document-replace variant is gone).
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 pub use crate::artifacts::din16798::schema::mutations::Din16798Mutation;
 use crate::artifacts::din16798::schema::mutations::{
-    change_air_speed_m_s, change_bedrooms, change_cellar_area_m2, change_cellar_ventilation_m3_h, change_chiller_type, change_co2_ppm, change_comfort_category, change_cooling_delta_t_h, change_cooling_gains_kwh, change_cooling_reference_kwh, change_cooling_utilization_factor, change_data_center_supply_c, change_df_percent, change_dhw_delivery_c, change_duct_class, change_duct_leakage_m3_s_m2, change_duct_test_pressure_pa, change_dwelling_ventilation_m3_h, change_eer_actual, change_fan_energy_reference_kwh, change_fan_q_v_m3_s, change_fan_t_run_h, change_floor_area_m2, change_generation_reference_kwh, change_h_st_w_k, change_h_tr_w_k, change_h_ve_w_k, change_heat_recovery_eta, change_heat_recovery_eta_min, change_hr_cp_j_kgk, change_hr_delta_t_c, change_hr_m_dot_kg_s, change_hr_savings_reference_kwh, change_hr_t_h, change_humidification_provided_kg_h, change_humidification_required_kg_h, change_ida_class, change_infiltration_allowance_m3_h, change_l_aeq_db, change_n50_h_inv, change_night_setback_k, change_occupancy, change_occupants, change_persons, change_q_c_kwh, change_residential_ventilation_m3_h, change_rh_percent, change_sfp_required_class, change_sfp_w_m3_s, change_storage_allowance_kwh, change_storage_t_h, change_system_type, change_t_op_c, change_theta_amb_c, change_theta_e_c, change_theta_rm_c, change_theta_set_c, change_theta_st_c, change_ventilation_m3_h, change_volume_m3, change_years_since_inspection, change_annex,
+    change_air_speed_m_s, change_annex, change_bedrooms, change_cellar_area_m2, change_cellar_ventilation_m3_h, change_chiller_type, change_co2_ppm, change_comfort_category, change_cooling_delta_t_h, change_cooling_gains_kwh,
+    change_cooling_reference_kwh, change_cooling_utilization_factor, change_data_center_supply_c, change_df_percent, change_dhw_delivery_c, change_duct_class, change_duct_leakage_m3_s_m2, change_duct_test_pressure_pa,
+    change_dwelling_ventilation_m3_h, change_eer_actual, change_fan_energy_reference_kwh, change_fan_q_v_m3_s, change_fan_t_run_h, change_floor_area_m2, change_generation_reference_kwh, change_h_st_w_k, change_h_tr_w_k, change_h_ve_w_k,
+    change_heat_recovery_eta, change_heat_recovery_eta_min, change_hr_cp_j_kgk, change_hr_delta_t_c, change_hr_m_dot_kg_s, change_hr_savings_reference_kwh, change_hr_t_h, change_humidification_provided_kg_h, change_humidification_required_kg_h,
+    change_ida_class, change_infiltration_allowance_m3_h, change_l_aeq_db, change_n50_h_inv, change_night_setback_k, change_occupancy, change_occupants, change_persons, change_q_c_kwh, change_residential_ventilation_m3_h, change_rh_percent,
+    change_sfp_required_class, change_sfp_w_m3_s, change_storage_allowance_kwh, change_storage_t_h, change_system_type, change_t_op_c, change_theta_amb_c, change_theta_e_c, change_theta_rm_c, change_theta_set_c, change_theta_st_c,
+    change_ventilation_m3_h, change_volume_m3, change_years_since_inspection,
 };
 use crate::document::AnnexChoice;
 use protocol::OpText;
@@ -24,192 +28,68 @@ use protocol::OpText;
 /// and every consumer matching on it, is completely untouched.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum Din16798MutationDsl {
-    ChangeAnnex {
-        new_annex: AnnexChoice,
-    },
-    ChangeOccupancy {
-        new_occupancy: String,
-    },
-    ChangeComfortCategory {
-        new_comfort_category: String,
-    },
-    ChangeTOpC {
-        new_t_op_c: f64,
-    },
-    ChangeRhPercent {
-        new_rh_percent: f64,
-    },
-    ChangeAirSpeedMS {
-        new_air_speed_m_s: f64,
-    },
-    ChangeThetaRmC {
-        new_theta_rm_c: f64,
-    },
-    ChangeCo2Ppm {
-        new_co2_ppm: f64,
-    },
-    ChangeDfPercent {
-        new_df_percent: f64,
-    },
-    ChangeLAeqDb {
-        new_l_aeq_db: f64,
-    },
-    ChangePersons {
-        new_persons: u32,
-    },
-    ChangeIdaClass {
-        new_ida_class: String,
-    },
-    ChangeVentilationM3H {
-        new_ventilation_m3_h: f64,
-    },
-    ChangeFloorAreaM2 {
-        new_floor_area_m2: f64,
-    },
-    ChangeBedrooms {
-        new_bedrooms: u32,
-    },
-    ChangeDwellingVentilationM3H {
-        new_dwelling_ventilation_m3_h: f64,
-    },
-    ChangeOccupants {
-        new_occupants: u32,
-    },
-    ChangeResidentialVentilationM3H {
-        new_residential_ventilation_m3_h: f64,
-    },
-    ChangeSfpWM3S {
-        new_sfp_w_m3_s: f64,
-    },
-    ChangeSfpRequiredClass {
-        new_sfp_required_class: u8,
-    },
-    ChangeHeatRecoveryEta {
-        new_heat_recovery_eta: f64,
-    },
-    ChangeHeatRecoveryEtaMin {
-        new_heat_recovery_eta_min: f64,
-    },
-    ChangeSystemType {
-        new_system_type: String,
-    },
-    ChangeYearsSinceInspection {
-        new_years_since_inspection: u32,
-    },
-    ChangeHumidificationRequiredKgH {
-        new_humidification_required_kg_h: f64,
-    },
-    ChangeHumidificationProvidedKgH {
-        new_humidification_provided_kg_h: f64,
-    },
-    ChangeFanQVM3S {
-        new_fan_q_v_m3_s: f64,
-    },
-    ChangeFanTRunH {
-        new_fan_t_run_h: f64,
-    },
-    ChangeFanEnergyReferenceKwh {
-        new_fan_energy_reference_kwh: f64,
-    },
-    ChangeNightSetbackK {
-        new_night_setback_k: f64,
-    },
-    ChangeHrMDotKgS {
-        new_hr_m_dot_kg_s: f64,
-    },
-    ChangeHrCpJKgk {
-        new_hr_cp_j_kgk: f64,
-    },
-    ChangeHrDeltaTC {
-        new_hr_delta_t_c: f64,
-    },
-    ChangeHrTH {
-        new_hr_t_h: f64,
-    },
-    ChangeHrSavingsReferenceKwh {
-        new_hr_savings_reference_kwh: f64,
-    },
-    ChangeN50HInv {
-        new_n50_h_inv: f64,
-    },
-    ChangeVolumeM3 {
-        new_volume_m3: f64,
-    },
-    ChangeInfiltrationAllowanceM3H {
-        new_infiltration_allowance_m3_h: f64,
-    },
-    ChangeCellarAreaM2 {
-        new_cellar_area_m2: f64,
-    },
-    ChangeCellarVentilationM3H {
-        new_cellar_ventilation_m3_h: f64,
-    },
-    ChangeHTrWK {
-        new_h_tr_w_k: f64,
-    },
-    ChangeHVeWK {
-        new_h_ve_w_k: f64,
-    },
-    ChangeThetaEC {
-        new_theta_e_c: f64,
-    },
-    ChangeThetaSetC {
-        new_theta_set_c: f64,
-    },
-    ChangeCoolingDeltaTH {
-        new_cooling_delta_t_h: f64,
-    },
-    ChangeCoolingGainsKwh {
-        new_cooling_gains_kwh: f64,
-    },
-    ChangeCoolingUtilizationFactor {
-        new_cooling_utilization_factor: f64,
-    },
-    ChangeCoolingReferenceKwh {
-        new_cooling_reference_kwh: f64,
-    },
-    ChangeChillerType {
-        new_chiller_type: String,
-    },
-    ChangeEerActual {
-        new_eer_actual: f64,
-    },
-    ChangeQCKwh {
-        new_q_c_kwh: f64,
-    },
-    ChangeGenerationReferenceKwh {
-        new_generation_reference_kwh: f64,
-    },
-    ChangeDataCenterSupplyC {
-        new_data_center_supply_c: f64,
-    },
-    ChangeHStWK {
-        new_h_st_w_k: f64,
-    },
-    ChangeThetaStC {
-        new_theta_st_c: f64,
-    },
-    ChangeThetaAmbC {
-        new_theta_amb_c: f64,
-    },
-    ChangeStorageTH {
-        new_storage_t_h: f64,
-    },
-    ChangeStorageAllowanceKwh {
-        new_storage_allowance_kwh: f64,
-    },
-    ChangeDhwDeliveryC {
-        new_dhw_delivery_c: f64,
-    },
-    ChangeDuctClass {
-        new_duct_class: String,
-    },
-    ChangeDuctTestPressurePa {
-        new_duct_test_pressure_pa: f64,
-    },
-    ChangeDuctLeakageM3SM2 {
-        new_duct_leakage_m3_s_m2: f64,
-    },
+    ChangeAnnex { new_annex: AnnexChoice },
+    ChangeOccupancy { new_occupancy: String },
+    ChangeComfortCategory { new_comfort_category: String },
+    ChangeTOpC { new_t_op_c: f64 },
+    ChangeRhPercent { new_rh_percent: f64 },
+    ChangeAirSpeedMS { new_air_speed_m_s: f64 },
+    ChangeThetaRmC { new_theta_rm_c: f64 },
+    ChangeCo2Ppm { new_co2_ppm: f64 },
+    ChangeDfPercent { new_df_percent: f64 },
+    ChangeLAeqDb { new_l_aeq_db: f64 },
+    ChangePersons { new_persons: u32 },
+    ChangeIdaClass { new_ida_class: String },
+    ChangeVentilationM3H { new_ventilation_m3_h: f64 },
+    ChangeFloorAreaM2 { new_floor_area_m2: f64 },
+    ChangeBedrooms { new_bedrooms: u32 },
+    ChangeDwellingVentilationM3H { new_dwelling_ventilation_m3_h: f64 },
+    ChangeOccupants { new_occupants: u32 },
+    ChangeResidentialVentilationM3H { new_residential_ventilation_m3_h: f64 },
+    ChangeSfpWM3S { new_sfp_w_m3_s: f64 },
+    ChangeSfpRequiredClass { new_sfp_required_class: u8 },
+    ChangeHeatRecoveryEta { new_heat_recovery_eta: f64 },
+    ChangeHeatRecoveryEtaMin { new_heat_recovery_eta_min: f64 },
+    ChangeSystemType { new_system_type: String },
+    ChangeYearsSinceInspection { new_years_since_inspection: u32 },
+    ChangeHumidificationRequiredKgH { new_humidification_required_kg_h: f64 },
+    ChangeHumidificationProvidedKgH { new_humidification_provided_kg_h: f64 },
+    ChangeFanQVM3S { new_fan_q_v_m3_s: f64 },
+    ChangeFanTRunH { new_fan_t_run_h: f64 },
+    ChangeFanEnergyReferenceKwh { new_fan_energy_reference_kwh: f64 },
+    ChangeNightSetbackK { new_night_setback_k: f64 },
+    ChangeHrMDotKgS { new_hr_m_dot_kg_s: f64 },
+    ChangeHrCpJKgk { new_hr_cp_j_kgk: f64 },
+    ChangeHrDeltaTC { new_hr_delta_t_c: f64 },
+    ChangeHrTH { new_hr_t_h: f64 },
+    ChangeHrSavingsReferenceKwh { new_hr_savings_reference_kwh: f64 },
+    ChangeN50HInv { new_n50_h_inv: f64 },
+    ChangeVolumeM3 { new_volume_m3: f64 },
+    ChangeInfiltrationAllowanceM3H { new_infiltration_allowance_m3_h: f64 },
+    ChangeCellarAreaM2 { new_cellar_area_m2: f64 },
+    ChangeCellarVentilationM3H { new_cellar_ventilation_m3_h: f64 },
+    ChangeHTrWK { new_h_tr_w_k: f64 },
+    ChangeHVeWK { new_h_ve_w_k: f64 },
+    ChangeThetaEC { new_theta_e_c: f64 },
+    ChangeThetaSetC { new_theta_set_c: f64 },
+    ChangeCoolingDeltaTH { new_cooling_delta_t_h: f64 },
+    ChangeCoolingGainsKwh { new_cooling_gains_kwh: f64 },
+    ChangeCoolingUtilizationFactor { new_cooling_utilization_factor: f64 },
+    ChangeCoolingReferenceKwh { new_cooling_reference_kwh: f64 },
+    ChangeChillerType { new_chiller_type: String },
+    ChangeEerActual { new_eer_actual: f64 },
+    ChangeQCKwh { new_q_c_kwh: f64 },
+    ChangeGenerationReferenceKwh { new_generation_reference_kwh: f64 },
+    ChangeDataCenterSupplyC { new_data_center_supply_c: f64 },
+    ChangeHStWK { new_h_st_w_k: f64 },
+    ChangeThetaStC { new_theta_st_c: f64 },
+    ChangeThetaAmbC { new_theta_amb_c: f64 },
+    ChangeStorageTH { new_storage_t_h: f64 },
+    ChangeStorageAllowanceKwh { new_storage_allowance_kwh: f64 },
+    ChangeDhwDeliveryC { new_dhw_delivery_c: f64 },
+    ChangeDuctClass { new_duct_class: String },
+    ChangeDuctTestPressurePa { new_duct_test_pressure_pa: f64 },
+    ChangeDuctLeakageM3SM2 { new_duct_leakage_m3_s_m2: f64 },
 }
 
 //#region 🔖️HandcraftedOpCodecs
@@ -220,11 +100,7 @@ impl OpText for Din16798MutationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -334,15 +210,21 @@ fn din16798_mutation_from_dsl(mutation: Din16798MutationDsl) -> Din16798Mutation
         Din16798MutationDsl::ChangeBedrooms { new_bedrooms } => Din16798Mutation::ChangeBedrooms(change_bedrooms::mutation::ChangeBedrooms { new_bedrooms }),
         Din16798MutationDsl::ChangeDwellingVentilationM3H { new_dwelling_ventilation_m3_h } => Din16798Mutation::ChangeDwellingVentilationM3H(change_dwelling_ventilation_m3_h::mutation::ChangeDwellingVentilationM3H { new_dwelling_ventilation_m3_h }),
         Din16798MutationDsl::ChangeOccupants { new_occupants } => Din16798Mutation::ChangeOccupants(change_occupants::mutation::ChangeOccupants { new_occupants }),
-        Din16798MutationDsl::ChangeResidentialVentilationM3H { new_residential_ventilation_m3_h } => Din16798Mutation::ChangeResidentialVentilationM3H(change_residential_ventilation_m3_h::mutation::ChangeResidentialVentilationM3H { new_residential_ventilation_m3_h }),
+        Din16798MutationDsl::ChangeResidentialVentilationM3H { new_residential_ventilation_m3_h } => {
+            Din16798Mutation::ChangeResidentialVentilationM3H(change_residential_ventilation_m3_h::mutation::ChangeResidentialVentilationM3H { new_residential_ventilation_m3_h })
+        }
         Din16798MutationDsl::ChangeSfpWM3S { new_sfp_w_m3_s } => Din16798Mutation::ChangeSfpWM3S(change_sfp_w_m3_s::mutation::ChangeSfpWM3S { new_sfp_w_m3_s }),
         Din16798MutationDsl::ChangeSfpRequiredClass { new_sfp_required_class } => Din16798Mutation::ChangeSfpRequiredClass(change_sfp_required_class::mutation::ChangeSfpRequiredClass { new_sfp_required_class }),
         Din16798MutationDsl::ChangeHeatRecoveryEta { new_heat_recovery_eta } => Din16798Mutation::ChangeHeatRecoveryEta(change_heat_recovery_eta::mutation::ChangeHeatRecoveryEta { new_heat_recovery_eta }),
         Din16798MutationDsl::ChangeHeatRecoveryEtaMin { new_heat_recovery_eta_min } => Din16798Mutation::ChangeHeatRecoveryEtaMin(change_heat_recovery_eta_min::mutation::ChangeHeatRecoveryEtaMin { new_heat_recovery_eta_min }),
         Din16798MutationDsl::ChangeSystemType { new_system_type } => Din16798Mutation::ChangeSystemType(change_system_type::mutation::ChangeSystemType { new_system_type }),
         Din16798MutationDsl::ChangeYearsSinceInspection { new_years_since_inspection } => Din16798Mutation::ChangeYearsSinceInspection(change_years_since_inspection::mutation::ChangeYearsSinceInspection { new_years_since_inspection }),
-        Din16798MutationDsl::ChangeHumidificationRequiredKgH { new_humidification_required_kg_h } => Din16798Mutation::ChangeHumidificationRequiredKgH(change_humidification_required_kg_h::mutation::ChangeHumidificationRequiredKgH { new_humidification_required_kg_h }),
-        Din16798MutationDsl::ChangeHumidificationProvidedKgH { new_humidification_provided_kg_h } => Din16798Mutation::ChangeHumidificationProvidedKgH(change_humidification_provided_kg_h::mutation::ChangeHumidificationProvidedKgH { new_humidification_provided_kg_h }),
+        Din16798MutationDsl::ChangeHumidificationRequiredKgH { new_humidification_required_kg_h } => {
+            Din16798Mutation::ChangeHumidificationRequiredKgH(change_humidification_required_kg_h::mutation::ChangeHumidificationRequiredKgH { new_humidification_required_kg_h })
+        }
+        Din16798MutationDsl::ChangeHumidificationProvidedKgH { new_humidification_provided_kg_h } => {
+            Din16798Mutation::ChangeHumidificationProvidedKgH(change_humidification_provided_kg_h::mutation::ChangeHumidificationProvidedKgH { new_humidification_provided_kg_h })
+        }
         Din16798MutationDsl::ChangeFanQVM3S { new_fan_q_v_m3_s } => Din16798Mutation::ChangeFanQVM3S(change_fan_q_v_m3_s::mutation::ChangeFanQVM3S { new_fan_q_v_m3_s }),
         Din16798MutationDsl::ChangeFanTRunH { new_fan_t_run_h } => Din16798Mutation::ChangeFanTRunH(change_fan_t_run_h::mutation::ChangeFanTRunH { new_fan_t_run_h }),
         Din16798MutationDsl::ChangeFanEnergyReferenceKwh { new_fan_energy_reference_kwh } => Din16798Mutation::ChangeFanEnergyReferenceKwh(change_fan_energy_reference_kwh::mutation::ChangeFanEnergyReferenceKwh { new_fan_energy_reference_kwh }),
@@ -354,7 +236,9 @@ fn din16798_mutation_from_dsl(mutation: Din16798MutationDsl) -> Din16798Mutation
         Din16798MutationDsl::ChangeHrSavingsReferenceKwh { new_hr_savings_reference_kwh } => Din16798Mutation::ChangeHrSavingsReferenceKwh(change_hr_savings_reference_kwh::mutation::ChangeHrSavingsReferenceKwh { new_hr_savings_reference_kwh }),
         Din16798MutationDsl::ChangeN50HInv { new_n50_h_inv } => Din16798Mutation::ChangeN50HInv(change_n50_h_inv::mutation::ChangeN50HInv { new_n50_h_inv }),
         Din16798MutationDsl::ChangeVolumeM3 { new_volume_m3 } => Din16798Mutation::ChangeVolumeM3(change_volume_m3::mutation::ChangeVolumeM3 { new_volume_m3 }),
-        Din16798MutationDsl::ChangeInfiltrationAllowanceM3H { new_infiltration_allowance_m3_h } => Din16798Mutation::ChangeInfiltrationAllowanceM3H(change_infiltration_allowance_m3_h::mutation::ChangeInfiltrationAllowanceM3H { new_infiltration_allowance_m3_h }),
+        Din16798MutationDsl::ChangeInfiltrationAllowanceM3H { new_infiltration_allowance_m3_h } => {
+            Din16798Mutation::ChangeInfiltrationAllowanceM3H(change_infiltration_allowance_m3_h::mutation::ChangeInfiltrationAllowanceM3H { new_infiltration_allowance_m3_h })
+        }
         Din16798MutationDsl::ChangeCellarAreaM2 { new_cellar_area_m2 } => Din16798Mutation::ChangeCellarAreaM2(change_cellar_area_m2::mutation::ChangeCellarAreaM2 { new_cellar_area_m2 }),
         Din16798MutationDsl::ChangeCellarVentilationM3H { new_cellar_ventilation_m3_h } => Din16798Mutation::ChangeCellarVentilationM3H(change_cellar_ventilation_m3_h::mutation::ChangeCellarVentilationM3H { new_cellar_ventilation_m3_h }),
         Din16798MutationDsl::ChangeHTrWK { new_h_tr_w_k } => Din16798Mutation::ChangeHTrWK(change_h_tr_w_k::mutation::ChangeHTrWK { new_h_tr_w_k }),
@@ -363,7 +247,9 @@ fn din16798_mutation_from_dsl(mutation: Din16798MutationDsl) -> Din16798Mutation
         Din16798MutationDsl::ChangeThetaSetC { new_theta_set_c } => Din16798Mutation::ChangeThetaSetC(change_theta_set_c::mutation::ChangeThetaSetC { new_theta_set_c }),
         Din16798MutationDsl::ChangeCoolingDeltaTH { new_cooling_delta_t_h } => Din16798Mutation::ChangeCoolingDeltaTH(change_cooling_delta_t_h::mutation::ChangeCoolingDeltaTH { new_cooling_delta_t_h }),
         Din16798MutationDsl::ChangeCoolingGainsKwh { new_cooling_gains_kwh } => Din16798Mutation::ChangeCoolingGainsKwh(change_cooling_gains_kwh::mutation::ChangeCoolingGainsKwh { new_cooling_gains_kwh }),
-        Din16798MutationDsl::ChangeCoolingUtilizationFactor { new_cooling_utilization_factor } => Din16798Mutation::ChangeCoolingUtilizationFactor(change_cooling_utilization_factor::mutation::ChangeCoolingUtilizationFactor { new_cooling_utilization_factor }),
+        Din16798MutationDsl::ChangeCoolingUtilizationFactor { new_cooling_utilization_factor } => {
+            Din16798Mutation::ChangeCoolingUtilizationFactor(change_cooling_utilization_factor::mutation::ChangeCoolingUtilizationFactor { new_cooling_utilization_factor })
+        }
         Din16798MutationDsl::ChangeCoolingReferenceKwh { new_cooling_reference_kwh } => Din16798Mutation::ChangeCoolingReferenceKwh(change_cooling_reference_kwh::mutation::ChangeCoolingReferenceKwh { new_cooling_reference_kwh }),
         Din16798MutationDsl::ChangeChillerType { new_chiller_type } => Din16798Mutation::ChangeChillerType(change_chiller_type::mutation::ChangeChillerType { new_chiller_type }),
         Din16798MutationDsl::ChangeEerActual { new_eer_actual } => Din16798Mutation::ChangeEerActual(change_eer_actual::mutation::ChangeEerActual { new_eer_actual }),

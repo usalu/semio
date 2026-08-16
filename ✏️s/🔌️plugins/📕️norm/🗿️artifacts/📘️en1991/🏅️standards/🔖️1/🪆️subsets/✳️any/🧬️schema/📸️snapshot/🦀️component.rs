@@ -1,7 +1,7 @@
 //! 🧬️ En1991 snapshot schema — artifact-lane fields only.
 
-use schema::ArtifactSchema;
 use crate::document::{AnnexChoice, ImposedCategory};
+use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot

@@ -37,20 +37,11 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("puzzle")
         .label("Puzzle")
         .version("0.1.0")
-        .setup(setup)
-        .artifact(crate::artifacts::puzzle2d::declaration())
-        .artifact(crate::artifacts::puzzle3d::declaration())
-        .artifact(crate::artifacts::puzzle5d::declaration())
+        .artifact(crate::artifacts::puzzle2d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::puzzle3d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::puzzle5d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .document_app::<crate::apps::puzzle2d::Puzzle2dPlayApp>(crate::apps::puzzle2d::create_puzzle2d_app())
         .document_app::<crate::apps::puzzle3d::Puzzle3dPlayApp>(crate::apps::puzzle3d::create_puzzle3d_app())
         .document_app::<crate::apps::puzzle5d::Puzzle5dPlayApp>(crate::apps::puzzle5d::create_puzzle5d_app())
         .try_build()
-}
-
-/// 🔧️ The OS media-host export/import bridges — see `plugin()`'s own doc for why these, and only
-/// these, still need a plugin-root callback.
-fn setup() {
-    crate::apps::puzzle2d::register_media_io();
-    crate::apps::puzzle3d::register_mesh_io();
-    crate::apps::puzzle5d::register_mesh_io();
 }
