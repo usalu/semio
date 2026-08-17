@@ -290,7 +290,7 @@ pub fn build_welcome(state: &ArtifactSyncState, plan: &BootstrapPlan, session_id
 /// crate reads `Hello.frontier` rather than decoding `Hello.resume_token`), and lowers it to a
 /// `WelcomeResponse`.
 pub fn handle_hello(
-    storage: &dyn db_storage::DbStorage,
+    storage: &dyn DbStorage,
     document: ArtifactId,
     hello_frontier: Option<&protocol::RuntimeFrontierSummary>,
     session_id: String,

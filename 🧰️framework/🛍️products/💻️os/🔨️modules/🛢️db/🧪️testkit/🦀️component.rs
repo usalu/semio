@@ -393,23 +393,23 @@ impl SnapshotStorage for FaultStorage {
 }
 
 impl PayloadStorage for FaultStorage {
-    fn put(&self, bytes: &[u8]) -> Result<pack::ContentHash, DbError> {
+    fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
         self.inner.payload().put(bytes)
     }
 
-    fn get(&self, hash: &pack::ContentHash) -> Result<Vec<u8>, DbError> {
+    fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
         self.inner.payload().get(hash)
     }
 
-    fn contains(&self, hash: &pack::ContentHash) -> Result<bool, DbError> {
+    fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
         self.inner.payload().contains(hash)
     }
 
-    fn delete(&self, hash: &pack::ContentHash) -> Result<(), DbError> {
+    fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
         self.inner.payload().delete(hash)
     }
 
-    fn len(&self, hash: &pack::ContentHash) -> Result<u64, DbError> {
+    fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
         self.inner.payload().len(hash)
     }
 }
@@ -636,8 +636,8 @@ pub fn assert_replay_deterministic(seed: u64, op_count: usize) {
 
     let root = temp_dir("replay");
     let frontier_first_run = {
-        let database = db_engine::Database::open_at(&root, Profile::Test).expect("testkit: open_at for replay law");
-        let handle = database.create_document(db_engine::ArtifactSpec::new(document.clone())).expect("testkit: create_document for replay law");
+        let database = Database::open_at(&root, Profile::Test).expect("testkit: open_at for replay law");
+        let handle = database.create_document(ArtifactSpec::new(document.clone())).expect("testkit: create_document for replay law");
         for envelope in &ops {
             db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).expect("submit future resolved").expect("submit succeeded");
         }
@@ -648,7 +648,7 @@ pub fn assert_replay_deterministic(seed: u64, op_count: usize) {
     };
 
     let frontier_after_reopen = {
-        let database = db_engine::Database::open_at(&root, Profile::Test).expect("testkit: reopen for replay law");
+        let database = Database::open_at(&root, Profile::Test).expect("testkit: reopen for replay law");
         let handle = database.document(&document).expect("testkit: document must survive reopen");
         handle.frontier().expect("frontier after reopen")
     };
@@ -659,8 +659,8 @@ pub fn assert_replay_deterministic(seed: u64, op_count: usize) {
 
     let root_independent = temp_dir("replay-independent");
     let frontier_independent = {
-        let database = db_engine::Database::open_at(&root_independent, Profile::Test).expect("testkit: open independent replica");
-        let handle = database.create_document(db_engine::ArtifactSpec::new(document)).expect("testkit: create independent replica document");
+        let database = Database::open_at(&root_independent, Profile::Test).expect("testkit: open independent replica");
+        let handle = database.create_document(ArtifactSpec::new(document)).expect("testkit: create independent replica document");
         for envelope in &ops_regenerated {
             db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).expect("submit future resolved").expect("submit succeeded");
         }

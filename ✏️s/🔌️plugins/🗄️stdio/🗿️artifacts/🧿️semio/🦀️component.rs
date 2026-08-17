@@ -189,7 +189,7 @@ pub mod io_registry {
     }
 
     pub fn register() {
-        register_composer_entries(v1::entries());
+        let _ = register_composer_entries(v1::entries());
     }
 }
 //#endregion 🚪️DerivedIoRegistry

@@ -615,7 +615,7 @@ impl HealthRegistry {
 #[derive(Clone, Debug)]
 pub struct DivergenceReport {
     pub seq: u64,
-    pub digests: Vec<(String, pack::ContentHash)>,
+    pub digests: Vec<(String, ContentHash)>,
 }
 
 /// @emoji 🧬️ Runtime cross-check that two (or more) independently-produced state-hash streams
@@ -625,7 +625,7 @@ pub struct DivergenceReport {
 /// this one may not depend on; this is the always-on runtime version.
 pub struct DeterminismVerifier {
     expected_labels: Vec<String>,
-    pending: Mutex<HashMap<u64, HashMap<String, pack::ContentHash>>>,
+    pending: Mutex<HashMap<u64, HashMap<String, ContentHash>>>,
     max_pending: usize,
 }
 
@@ -642,7 +642,7 @@ impl DeterminismVerifier {
     /// agree — either way `seq` is pruned afterward, so a completed sequence never grows the
     /// pending set. Errs with `LimitExceeded` if `seq` is new and the pending window is already
     /// full (protects against an expected label that never reports).
-    pub fn record(&self, seq: u64, label: &str, digest: pack::ContentHash) -> Result<Option<DivergenceReport>, DbError> {
+    pub fn record(&self, seq: u64, label: &str, digest: ContentHash) -> Result<Option<DivergenceReport>, DbError> {
         let mut pending = lock(&self.pending);
         if !pending.contains_key(&seq) && pending.len() >= self.max_pending {
             return Err(DbError::LimitExceeded("determinism verifier pending-sequence window exceeded"));
@@ -654,7 +654,7 @@ impl DeterminismVerifier {
             return Ok(None);
         }
 
-        let mut digests: Vec<(String, pack::ContentHash)> = self.expected_labels.iter().map(|l| (l.clone(), entry[l])).collect();
+        let mut digests: Vec<(String, ContentHash)> = self.expected_labels.iter().map(|l| (l.clone(), entry[l])).collect();
         let all_match = digests.windows(2).all(|w| w[0].1 == w[1].1);
         pending.remove(&seq);
 

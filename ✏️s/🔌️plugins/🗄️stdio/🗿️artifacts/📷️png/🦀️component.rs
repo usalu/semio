@@ -151,7 +151,7 @@ pub fn register() {
     for lang in pilot_languages() {
         dsl::register_language(lang.clone());
     }
-    store::register_document_codec(store::ArtifactCodec::of::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA));
+    let _ = store::register_document_codec(store::ArtifactCodec::of::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA));
 }
 //#endregion 🔖️ImperativeRegister
 
@@ -173,7 +173,7 @@ pub mod io_registry {
     }
 
     pub fn register() {
-        register_composer_entries(v1_2::entries());
+        let _ = register_composer_entries(v1_2::entries());
     }
 }
 //#endregion 🚪️DerivedIoRegistry

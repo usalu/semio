@@ -160,7 +160,7 @@ pub mod io_registry {
     }
 
     pub fn register() {
-        register_composer_entries(v_commonmark::entries());
+        let _ = register_composer_entries(v_commonmark::entries());
     }
 }
 //#endregion 🚪️DerivedIoRegistry

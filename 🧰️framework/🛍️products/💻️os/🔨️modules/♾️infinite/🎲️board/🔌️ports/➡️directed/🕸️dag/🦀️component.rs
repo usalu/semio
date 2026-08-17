@@ -3124,7 +3124,7 @@ impl DagHost {
         self.computing_stale.clear();
         self.node_eval_status.clear();
         self.unresolved_input_ports.clear();
-        let Ok(value) = serde_json::from_str::<serde_json::Value>(json) else {
+        let Ok(value) = serde_json::from_str::<Value>(json) else {
             return;
         };
         let Some(map) = value.as_object() else {

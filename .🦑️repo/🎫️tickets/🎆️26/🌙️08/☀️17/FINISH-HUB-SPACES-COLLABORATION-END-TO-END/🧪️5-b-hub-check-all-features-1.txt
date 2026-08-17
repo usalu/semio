@@ -1,0 +1,972 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on build directory
+    Checking either v1.15.0
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+    Checking sqlx-core v0.8.6
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:350:11
+    |
+350 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `typegen`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:356:11
+    |
+356 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `typegen`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:710:16
+    |
+710 |     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+710 -     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+710 +     V: Clone + Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:710:47
+    |
+710 |     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+710 -     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+710 +     V: Clone + crate::os_vcs::Identified<K> + Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:777:16
+    |
+777 |     V: Clone + crate::os_vcs::Patchable<Patch>,
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+777 -     V: Clone + crate::os_vcs::Patchable<Patch>,
+777 +     V: Clone + Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:170:27
+    |
+170 |     MutationApply(#[from] crate::os_spr::MutationApplyError),
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+170 -     MutationApply(#[from] crate::os_spr::MutationApplyError),
+170 +     MutationApply(#[from] MutationApplyError),
+    |
+
+    Checking sqlx-postgres v0.8.6
+warning: unused variable: `len`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21
+    |
+585 |                 let len = end_j - i;
+    |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1221:9
+     |
+1221 |     let mut triple = |input: &mut ByteReader<'_>| -> Result<(String, String, String), ProtocolError> { Ok((read_id_field(input, di...
+     |         ----^^^^^^
+     |         |
+     |         help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4506:19
+     |
+4317 | / impl<P, Mutation> ArtifactStore<P, Mutation>
+4318 | | where
+4319 | |     P: Clone + Serialize + DeserializeOwned + ArtifactPack,
+4320 | |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
+     | |___________________________________________________________________________________________- method in this implementation
+...
+4506 |       pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) -> Result<(), ...
+     |                     ^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+    Checking sqlx v0.8.6
+warning: `semio-framework-os-kernel` (lib) generated 9 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+    Checking semio-framework-os-kernel-db v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust)
+warning: `read_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:254:25
+    |
+254 |     let seg_len = pack::read_varint_u64(&prefix[..read], &mut pos)?;
+    |                         ^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `read_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `read_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+    = note: `-W ambiguous-glob-imports` implied by `-W future-incompatible`
+    = help: to override `-W future-incompatible` add `#[allow(ambiguous_glob_imports)]`
+
+warning: `WriteOptions` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:297:25
+    |
+297 |     let options = pack::WriteOptions { required_flags, optional_flags: 0, codec: pack::CodecId(0) };
+    |                         ^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `WriteOptions` could refer to the struct defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `WriteOptions` could also refer to the struct defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:418:91
+    |
+418 |         let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), pack::VerificationLevel::Standard)?;
+    |                                                                                           ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:419:70
+    |
+419 |         return Ok(file.read_chunk(pack::ChunkId(index as u32), pack::VerificationLevel::Standard)?);
+    |                                                                      ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:595:79
+    |
+595 |     pub fn verify(&self, document: &ArtifactId, generation: u64, level: pack::VerificationLevel) -> Result<(), DbError> {
+    |                                                                               ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:418:59
+    |
+418 |         match manager.verify(&document, generation, pack::VerificationLevel::Full) {
+    |                                                           ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:439:56
+    |
+439 |             manager.verify(document, generation, pack::VerificationLevel::Full)?;
+    |                                                        ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `write_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:437:23
+    |
+437 |                 pack::write_varint_u64(&mut out, author.0.len() as u64);
+    |                       ^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `write_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `write_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `write_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:441:23
+    |
+441 |                 pack::write_varint_u64(&mut out, ts.actor);
+    |                       ^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `write_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `write_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `write_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:442:23
+    |
+442 |                 pack::write_varint_u64(&mut out, ts.physical_ms);
+    |                       ^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `write_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `write_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `write_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:443:23
+    |
+443 |                 pack::write_varint_u64(&mut out, ts.logical);
+    |                       ^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `write_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `write_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `read_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:456:33
+    |
+456 |                 let len = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))? as usize;
+    |                                 ^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `read_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `read_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `read_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:465:35
+    |
+465 |                 let actor = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+    |                                   ^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `read_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `read_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `read_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:466:41
+    |
+466 |                 let physical_ms = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+    |                                         ^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `read_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `read_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `read_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:467:37
+    |
+467 |                 let logical = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+    |                                     ^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `read_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `read_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: unused imports: `DbCapabilities`, `DbConfig`, `DurabilityClass`, `Frontier`, and `Profile`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:31:71
+   |
+31 |     CatalogEntry, CatalogView, CommandReceipt, Consistency, Database, DbCapabilities, DbConfig, DbHealth, DbStorage, ArtifactHandle, ArtifactSpec, DurabilityClass, Frontier, H...
+   |                                                                       ^^^^^^^^^^^^^^  ^^^^^^^^                                                     ^^^^^^^^^^^^^^^  ^^^^^^^^
+32 |     Profile, Query, QueryStream, SecurityAuthzHook, SnapshotFuture, SnapshotKind, SnapshotReceipt, SubmitFuture,
+   |     ^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::db_ids::DbError`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:43:9
+   |
+43 | pub use crate::db_ids::DbError;
+   |         ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ActorId`
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../💾️durability/🦀️component.rs:3:21
+  |
+3 | use crate::db_ids::{ActorId, DbError, ArtifactId};
+  |                     ^^^^^^^
+
+warning: unused import: `pack::ContentHash`
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../💾️durability/🦀️component.rs:4:5
+  |
+4 | use pack::ContentHash;
+  |     ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::db_ids::DbError`
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🎚️policy/🦀️component.rs:4:5
+  |
+4 | use crate::db_ids::DbError;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `pack::ContentHash`
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🕸️version-graph/🦀️component.rs:4:5
+  |
+4 | use pack::ContentHash;
+  |     ^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:618:31
+    |
+618 |     pub digests: Vec<(String, pack::ContentHash)>,
+    |                               ^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+618 -     pub digests: Vec<(String, pack::ContentHash)>,
+618 +     pub digests: Vec<(String, ContentHash)>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:628:49
+    |
+628 |     pending: Mutex<HashMap<u64, HashMap<String, pack::ContentHash>>>,
+    |                                                 ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+628 -     pending: Mutex<HashMap<u64, HashMap<String, pack::ContentHash>>>,
+628 +     pending: Mutex<HashMap<u64, HashMap<String, ContentHash>>>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:645:57
+    |
+645 |     pub fn record(&self, seq: u64, label: &str, digest: pack::ContentHash) -> Result<Option<DivergenceReport>, DbError> {
+    |                                                         ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+645 -     pub fn record(&self, seq: u64, label: &str, digest: pack::ContentHash) -> Result<Option<DivergenceReport>, DbError> {
+645 +     pub fn record(&self, seq: u64, label: &str, digest: ContentHash) -> Result<Option<DivergenceReport>, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:657:39
+    |
+657 |         let mut digests: Vec<(String, pack::ContentHash)> = self.expected_labels.iter().map(|l| (l.clone(), entry[l])).collect();
+    |                                       ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+657 -         let mut digests: Vec<(String, pack::ContentHash)> = self.expected_labels.iter().map(|l| (l.clone(), entry[l])).collect();
+657 +         let mut digests: Vec<(String, ContentHash)> = self.expected_labels.iter().map(|l| (l.clone(), entry[l])).collect();
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:396:43
+    |
+396 |     fn put(&self, bytes: &[u8]) -> Result<pack::ContentHash, DbError> {
+    |                                           ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+396 -     fn put(&self, bytes: &[u8]) -> Result<pack::ContentHash, DbError> {
+396 +     fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:400:26
+    |
+400 |     fn get(&self, hash: &pack::ContentHash) -> Result<Vec<u8>, DbError> {
+    |                          ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+400 -     fn get(&self, hash: &pack::ContentHash) -> Result<Vec<u8>, DbError> {
+400 +     fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:404:31
+    |
+404 |     fn contains(&self, hash: &pack::ContentHash) -> Result<bool, DbError> {
+    |                               ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+404 -     fn contains(&self, hash: &pack::ContentHash) -> Result<bool, DbError> {
+404 +     fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:408:29
+    |
+408 |     fn delete(&self, hash: &pack::ContentHash) -> Result<(), DbError> {
+    |                             ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+408 -     fn delete(&self, hash: &pack::ContentHash) -> Result<(), DbError> {
+408 +     fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:412:26
+    |
+412 |     fn len(&self, hash: &pack::ContentHash) -> Result<u64, DbError> {
+    |                          ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+412 -     fn len(&self, hash: &pack::ContentHash) -> Result<u64, DbError> {
+412 +     fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:639:24
+    |
+639 |         let database = db_engine::Database::open_at(&root, Profile::Test).expect("testkit: open_at for replay law");
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+639 -         let database = db_engine::Database::open_at(&root, Profile::Test).expect("testkit: open_at for replay law");
+639 +         let database = Database::open_at(&root, Profile::Test).expect("testkit: open_at for replay law");
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:640:47
+    |
+640 | ...   let handle = database.create_document(db_engine::ArtifactSpec::new(document.clone())).expect("testkit: create_document for re...
+    |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+640 -         let handle = database.create_document(db_engine::ArtifactSpec::new(document.clone())).expect("testkit: create_document for replay law");
+640 +         let handle = database.create_document(ArtifactSpec::new(document.clone())).expect("testkit: create_document for replay law");
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:651:24
+    |
+651 |         let database = db_engine::Database::open_at(&root, Profile::Test).expect("testkit: reopen for replay law");
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+651 -         let database = db_engine::Database::open_at(&root, Profile::Test).expect("testkit: reopen for replay law");
+651 +         let database = Database::open_at(&root, Profile::Test).expect("testkit: reopen for replay law");
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:662:24
+    |
+662 |         let database = db_engine::Database::open_at(&root_independent, Profile::Test).expect("testkit: open independent replica");
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+662 -         let database = db_engine::Database::open_at(&root_independent, Profile::Test).expect("testkit: open independent replica");
+662 +         let database = Database::open_at(&root_independent, Profile::Test).expect("testkit: open independent replica");
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:663:47
+    |
+663 | ...   let handle = database.create_document(db_engine::ArtifactSpec::new(document)).expect("testkit: create independent replica doc...
+    |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+663 -         let handle = database.create_document(db_engine::ArtifactSpec::new(document)).expect("testkit: create independent replica document");
+663 +         let handle = database.create_document(ArtifactSpec::new(document)).expect("testkit: create independent replica document");
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:126:12
+    |
+126 |     CasRef(pack::ContentHash),
+    |            ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+126 -     CasRef(pack::ContentHash),
+126 +     CasRef(ContentHash),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:281:63
+    |
+281 |                 1 => WalRecord::Payload(WalPayloadRef::CasRef(pack::ContentHash(reader.read_array32()?))),
+    |                                                               ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+281 -                 1 => WalRecord::Payload(WalPayloadRef::CasRef(pack::ContentHash(reader.read_array32()?))),
+281 +                 1 => WalRecord::Payload(WalPayloadRef::CasRef(ContentHash(reader.read_array32()?))),
+    |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:80:32
+   |
+80 |     pub base_pack_hash: Option<pack::ContentHash>,
+   |                                ^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+80 -     pub base_pack_hash: Option<pack::ContentHash>,
+80 +     pub base_pack_hash: Option<ContentHash>,
+   |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:81:20
+   |
+81 |     pub roots: Vec<pack::ContentHash>,
+   |                    ^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+81 -     pub roots: Vec<pack::ContentHash>,
+81 +     pub roots: Vec<ContentHash>,
+   |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:84:24
+   |
+84 |     pub new_pages: Vec<pack::ContentHash>,
+   |                        ^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+84 -     pub new_pages: Vec<pack::ContentHash>,
+84 +     pub new_pages: Vec<ContentHash>,
+   |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:152:23
+    |
+152 |             1 => Some(pack::ContentHash(r.read_array32()?)),
+    |                       ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+152 -             1 => Some(pack::ContentHash(r.read_array32()?)),
+152 +             1 => Some(ContentHash(r.read_array32()?)),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:192:56
+    |
+192 | fn write_hash_list(w: &mut pack::ByteWriter, hashes: &[pack::ContentHash]) {
+    |                                                        ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+192 - fn write_hash_list(w: &mut pack::ByteWriter, hashes: &[pack::ContentHash]) {
+192 + fn write_hash_list(w: &mut pack::ByteWriter, hashes: &[ContentHash]) {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:199:63
+    |
+199 | fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<pack::ContentHash>, DbError> {
+    |                                                               ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+199 - fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<pack::ContentHash>, DbError> {
+199 + fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<ContentHash>, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:204:18
+    |
+204 |         out.push(pack::ContentHash(r.read_array32()?));
+    |                  ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+204 -         out.push(pack::ContentHash(r.read_array32()?));
+204 +         out.push(ContentHash(r.read_array32()?));
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:415:68
+    |
+415 | pub fn read_page(combined: &[u8], handle: &GenerationHandle, hash: pack::ContentHash) -> Result<Vec<u8>, DbError> {
+    |                                                                    ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+415 - pub fn read_page(combined: &[u8], handle: &GenerationHandle, hash: pack::ContentHash) -> Result<Vec<u8>, DbError> {
+415 + pub fn read_page(combined: &[u8], handle: &GenerationHandle, hash: ContentHash) -> Result<Vec<u8>, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:451:32
+    |
+451 |     pub base_pack_hash: Option<pack::ContentHash>,
+    |                                ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+451 -     pub base_pack_hash: Option<pack::ContentHash>,
+451 +     pub base_pack_hash: Option<ContentHash>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:452:20
+    |
+452 |     pub roots: Vec<pack::ContentHash>,
+    |                    ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+452 -     pub roots: Vec<pack::ContentHash>,
+452 +     pub roots: Vec<ContentHash>,
+    |
+
+warning: unused import: `crate::db_durability::Frontier`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗜️compact/🦀️component.rs:34:5
+   |
+34 | use crate::db_durability::Frontier;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗜️compact/🦀️component.rs:358:28
+    |
+358 |     storage: &'storage dyn db_storage::DbStorage,
+    |                            ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+358 -     storage: &'storage dyn db_storage::DbStorage,
+358 +     storage: &'storage dyn DbStorage,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗜️compact/🦀️component.rs:362:39
+    |
+362 |     pub fn new(storage: &'storage dyn db_storage::DbStorage) -> Compactor<'storage> {
+    |                                       ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+362 -     pub fn new(storage: &'storage dyn db_storage::DbStorage) -> Compactor<'storage> {
+362 +     pub fn new(storage: &'storage dyn DbStorage) -> Compactor<'storage> {
+    |
+
+warning: unused import: `crate::db_durability::Frontier`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚔️conflict/🦀️component.rs:28:5
+   |
+28 | use crate::db_durability::Frontier;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🌐️cluster/🦀️component.rs:200:40
+    |
+200 | pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_storage::DbStorage, document: ArtifactId, policy: d...
+    |                                        ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+200 - pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_storage::DbStorage, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
+200 + pub fn replicate_document(leader: &dyn DbStorage, follower: &dyn db_storage::DbStorage, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🌐️cluster/🦀️component.rs:200:78
+    |
+200 | pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_storage::DbStorage, document: ArtifactId, policy: d...
+    |                                                                              ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+200 - pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_storage::DbStorage, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
+200 + pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn DbStorage, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔄️sync/🦀️component.rs:293:19
+    |
+293 |     storage: &dyn db_storage::DbStorage,
+    |                   ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+293 -     storage: &dyn db_storage::DbStorage,
+293 +     storage: &dyn DbStorage,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:307:28
+    |
+307 |     pub state_hash: Option<pack::ContentHash>,
+    |                            ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+307 -     pub state_hash: Option<pack::ContentHash>,
+307 +     pub state_hash: Option<ContentHash>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:356:31
+    |
+356 |     fn content_hash(&self) -> pack::ContentHash {
+    |                               ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+356 -     fn content_hash(&self) -> pack::ContentHash {
+356 +     fn content_hash(&self) -> ContentHash {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:468:22
+    |
+468 |     storage: Arc<dyn db_storage::DbStorage>,
+    |                      ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+468 -     storage: Arc<dyn db_storage::DbStorage>,
+468 +     storage: Arc<dyn DbStorage>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:490:68
+    |
+490 |     pub fn create(document: protocol::ArtifactId, storage: Arc<dyn db_storage::DbStorage>, config: ArtifactEngineConfig, now_ms: u6...
+    |                                                                    ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+490 -     pub fn create(document: protocol::ArtifactId, storage: Arc<dyn db_storage::DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<ArtifactEngine, DbError> {
+490 +     pub fn create(document: protocol::ArtifactId, storage: Arc<dyn DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<ArtifactEngine, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:502:67
+    |
+502 |     pub fn open(document: protocol::ArtifactId, storage: &Arc<dyn db_storage::DbStorage>, config: ArtifactEngineConfig, now_ms: u64...
+    |                                                                   ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+502 -     pub fn open(document: protocol::ArtifactId, storage: &Arc<dyn db_storage::DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<(ArtifactEngine, MaterializeReport), DbError> {
+502 +     pub fn open(document: protocol::ArtifactId, storage: &Arc<dyn DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<(ArtifactEngine, MaterializeReport), DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:570:96
+    |
+570 |     fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<dyn db_storage::DbStorage>, wal: db_wal:...
+    |                                                                                                ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+570 -     fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<dyn db_storage::DbStorage>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig) -> ArtifactEngine {
+570 +     fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<dyn DbStorage>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig) -> ArtifactEngine {
+    |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:98:30
+   |
+98 | fn to_engine_frontier(core: &crate::db_durability::Frontier, document: protocol::ArtifactId) -> Frontier {
+   |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+98 - fn to_engine_frontier(core: &crate::db_durability::Frontier, document: protocol::ArtifactId) -> Frontier {
+98 + fn to_engine_frontier(core: &db_durability::Frontier, document: protocol::ArtifactId) -> Frontier {
+   |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:111:28
+    |
+111 |     pub state_hash: Option<pack::ContentHash>,
+    |                            ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+111 -     pub state_hash: Option<pack::ContentHash>,
+111 +     pub state_hash: Option<ContentHash>,
+    |
+
+warning: `semio-framework-os-kernel-db` (lib) generated 62 warnings (run `cargo fix --lib -p semio-framework-os-kernel-db` to apply 47 suggestions)
+    Checking semio-hub v0.1.0 (/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 2m 15s
+warning: the following packages contain code that will be rejected by a future version of Rust: semio-framework-os-kernel-db v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 20`
+EXIT:0

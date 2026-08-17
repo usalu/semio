@@ -71,7 +71,7 @@ pub mod derived_composition {
     /// The `ComposerEntry` itself is registered separately via this standard's own
     /// `composer::entries()` aggregation.
     pub fn register() {
-        register_subset_validator(validator_entry());
+        let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
 

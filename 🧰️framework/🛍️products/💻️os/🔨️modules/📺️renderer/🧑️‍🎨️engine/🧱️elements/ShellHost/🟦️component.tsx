@@ -989,7 +989,16 @@ function FrameworkOsShellInner({
   const hostCatalogueTabId = hostApp?.panelTabs[0] ? panelTabKindId(hostApp.panelTabs[0].kind) : undefined;
   useEffect(() => {
     if (!session) return;
-    const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+    // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-A — reads `loadedPluginsRef`
+    // (kept in sync every render, line ~1124), NOT the `loadedPlugins` array itself: this effect only
+    // needs to look up `session.pluginId`'s already-loaded handle, never to refire because some
+    // UNRELATED plugin finished loading in the background. Depending on `loadedPlugins` directly made
+    // this effect refire on every one of the ~50+ sequential catalogue plugin loads during boot,
+    // dispatching a fresh `readHistory` exchange call each time for the SAME session/instance — a real
+    // contributor to the `readHistory: missing HistorySnapshot frame` / `plugin instance busy` storm
+    // observed live in `🧪️5-a-collab-e2e-run1.txt` (lines 29478-29708, correlating almost 1:1 with
+    // `plugin worker + <name>` catalogue-load lines in the same window).
+    const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
     if (!plugin) return;
     let cancelled = false;
     void plugin.readHistory(session.instanceId).then((snapshot) => {
@@ -998,7 +1007,7 @@ function FrameworkOsShellInner({
     return () => {
       cancelled = true;
     };
-  }, [applyHistoryPatch, loadedPlugins, session]);
+  }, [applyHistoryPatch, session]);
   const { windowUiByWindowId, windowEngagementsByWindowId, windowMeasuresByWindowId, toolMeasuresByToolId, panelUiByKey, appLabelsOverlay } = shellState.windowUi;
   const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
   const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId, activeToolId } = shellState.actionPane;
@@ -1045,6 +1054,18 @@ function FrameworkOsShellInner({
   const openSpaceIdRef = useRef<string | null>(null);
   const openInstanceIdRef = useRef<string | null>(null);
   const sessionRef = useRef<ActiveSession | null>(null);
+  /** 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-A — diagnostic + defensive
+   * reentrancy guard for `applyShellUri`. Observed live (`🧪️5-a-collab-e2e-run1.txt`/`run3.txt`):
+   * `[DEBUG] shell uri apply failed Error: Maximum call stack size exceeded`, immediately followed by a
+   * `plugin instance busy` storm on the SAME session's `attachBackbone`/`refreshUi` — i.e. something
+   * re-enters `applyShellUri` synchronously before an earlier in-flight call returns, deep enough to
+   * overflow the JS stack, leaving the plugin's guest-side `InstanceGuard` stuck (a reentrant exchange
+   * call never completes its `Drop`). Still present after lane 4-I's `spaceIndexAlreadyOpen` idempotency
+   * fix, so this is a DIFFERENT reentrant path than the one that fix closed. Not yet root-caused to a
+   * single call site — the guard below turns the crash into a bounded, logged no-op and captures a full
+   * stack the next time this fires, instead of shipping another blind guess.
+   */
+  const applyShellUriDepthRef = useRef(0);
   const uiDevice: ElementsSurfaceDevice = mobile ? "mobile" : uiLayout;
   const uiTheme: UiTheme = useMemo(() => {
     if (uiThemeDraft) return uiThemeDraft;
@@ -2886,82 +2907,94 @@ function FrameworkOsShellInner({
 
   const applyShellUri = useCallback(
     async (uri: string, preservedViewState?: ViewModel) => {
-      const currentSession = sessionRef.current;
-      if (!hostConfig || !currentSession || loadedPlugins.length === 0) return;
-      const path = uri.split("?")[0] ?? "/";
-      // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §5 — `/spaces/{id}/studio`
-      // (optionally `/instances/{id}`) opens the workflow studio (`hostConfig.hostAppId`, the
-      // pre-existing behaviour every bare `/spaces/{id}` used to trigger). `parseShellRoute` (owned by
-      // `ShellHelpers/🟦️component.tsx`, outside this lane's lease) has no concept of a `/studio`
-      // segment, so it's matched locally here first — `parseShellRoute` itself is never edited, and
-      // its own existing route classification (and tests) stay exactly as they were.
-      const studioMatch = /^\/spaces\/([^/]+)\/studio(?:\/instances\/([^/]+))?$/.exec(path);
-      const route = studioMatch ? ({ kind: "space" as const, spaceId: studioMatch[1]!, instanceId: studioMatch[2] } as const) : parseShellRoute(path);
-      const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId)?.handle;
-      if (!sPlugin) return;
-      if (route.kind === "landing") {
-        openSpaceIdRef.current = null;
-        openInstanceIdRef.current = null;
-        if (currentSession.app.id !== hostConfig.landingAppId) await switchToManagedApp(hostConfig.landingAppId, preservedViewState);
+      // 🩹️ See `applyShellUriDepthRef`'s own doc comment: turns an unbounded reentrant call chain into
+      // a bounded, logged no-op instead of a JS stack overflow, and captures a real stack for the next
+      // diagnosis pass.
+      if (applyShellUriDepthRef.current > 0) {
+        console.error(`[DEBUG] applyShellUri: reentrant call blocked at depth ${applyShellUriDepthRef.current}, uri=${uri}`, new Error("applyShellUri reentrancy").stack);
         return;
       }
-      if (route.kind === "notFound") {
-        openSpaceIdRef.current = null;
-        openInstanceIdRef.current = null;
-        return;
-      }
-      const { spaceId, instanceId } = route;
-      // 📇️ §5 — a bare `/spaces/{id}` (no `/studio`, no `/instances/{id}` deep link) now opens the
-      // `s.space` artifact-index app (kind `s.space`, dialect `s.space.space@1/*`, §C4) instead of the
-      // studio, resolved by dialect/surface id off the SAME "s" plugin's own manifest so this activates
-      // the moment lane 2-B registers a real app for that dialect — no further change needed here.
-      if (!studioMatch && !instanceId) {
-        const hostPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId);
-        const spaceApp = findDialectApp(hostPlugin, SPACE_INDEX_DIALECT, "editor") ?? findDialectApp(hostPlugin, SPACE_INDEX_DIALECT, "viewer");
-        if (!spaceApp) {
-          console.warn("[os-shell] applyShellUri: no app registered for dialect", dialectCoordinate(SPACE_INDEX_DIALECT), "— s.space (lane 2-B) not loaded yet");
+      applyShellUriDepthRef.current += 1;
+      try {
+        const currentSession = sessionRef.current;
+        if (!hostConfig || !currentSession || loadedPlugins.length === 0) return;
+        const path = uri.split("?")[0] ?? "/";
+        // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §5 — `/spaces/{id}/studio`
+        // (optionally `/instances/{id}`) opens the workflow studio (`hostConfig.hostAppId`, the
+        // pre-existing behaviour every bare `/spaces/{id}` used to trigger). `parseShellRoute` (owned by
+        // `ShellHelpers/🟦️component.tsx`, outside this lane's lease) has no concept of a `/studio`
+        // segment, so it's matched locally here first — `parseShellRoute` itself is never edited, and
+        // its own existing route classification (and tests) stay exactly as they were.
+        const studioMatch = /^\/spaces\/([^/]+)\/studio(?:\/instances\/([^/]+))?$/.exec(path);
+        const route = studioMatch ? ({ kind: "space" as const, spaceId: studioMatch[1]!, instanceId: studioMatch[2] } as const) : parseShellRoute(path);
+        const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId)?.handle;
+        if (!sPlugin) return;
+        if (route.kind === "landing") {
+          openSpaceIdRef.current = null;
+          openInstanceIdRef.current = null;
+          if (currentSession.app.id !== hostConfig.landingAppId) await switchToManagedApp(hostConfig.landingAppId, preservedViewState);
           return;
         }
-        // 🔁️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 4-I — idempotency
-        // guard mirroring `studioChanged` below: without it, ANY re-render that mints a new
-        // `applyShellUri` identity (e.g. `switchToManagedApp` depending on `session`, which
-        // `openDocumentRef.current` below itself updates) re-fires this whole branch for the SAME
-        // already-open space, tearing the document's sync session down and reopening it in a tight
-        // loop — observed live as dozens of WS open/close cycles plus a `Maximum call stack size
-        // exceeded` inside the 30s STEP 2 budget (`🧪️4-i-collab-e2e-run3.txt`), never previously
-        // exercised because no earlier lane's fixes let a hard navigation to `/spaces/{id}` reach here.
-        const spaceIndexAlreadyOpen = openSpaceIdRef.current === spaceId && currentSession.app.id === spaceApp.id;
+        if (route.kind === "notFound") {
+          openSpaceIdRef.current = null;
+          openInstanceIdRef.current = null;
+          return;
+        }
+        const { spaceId, instanceId } = route;
+        // 📇️ §5 — a bare `/spaces/{id}` (no `/studio`, no `/instances/{id}` deep link) now opens the
+        // `s.space` artifact-index app (kind `s.space`, dialect `s.space.space@1/*`, §C4) instead of the
+        // studio, resolved by dialect/surface id off the SAME "s" plugin's own manifest so this activates
+        // the moment lane 2-B registers a real app for that dialect — no further change needed here.
+        if (!studioMatch && !instanceId) {
+          const hostPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId);
+          const spaceApp = findDialectApp(hostPlugin, SPACE_INDEX_DIALECT, "editor") ?? findDialectApp(hostPlugin, SPACE_INDEX_DIALECT, "viewer");
+          if (!spaceApp) {
+            console.warn("[os-shell] applyShellUri: no app registered for dialect", dialectCoordinate(SPACE_INDEX_DIALECT), "— s.space (lane 2-B) not loaded yet");
+            return;
+          }
+          // 🔁️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 4-I — idempotency
+          // guard mirroring `studioChanged` below: without it, ANY re-render that mints a new
+          // `applyShellUri` identity (e.g. `switchToManagedApp` depending on `session`, which
+          // `openDocumentRef.current` below itself updates) re-fires this whole branch for the SAME
+          // already-open space, tearing the document's sync session down and reopening it in a tight
+          // loop — observed live as dozens of WS open/close cycles plus a `Maximum call stack size
+          // exceeded` inside the 30s STEP 2 budget (`🧪️4-i-collab-e2e-run3.txt`), never previously
+          // exercised because no earlier lane's fixes let a hard navigation to `/spaces/{id}` reach here.
+          const spaceIndexAlreadyOpen = openSpaceIdRef.current === spaceId && currentSession.app.id === spaceApp.id;
+          openSpaceIdRef.current = spaceId;
+          openInstanceIdRef.current = null;
+          if (spaceIndexAlreadyOpen) return;
+          const spaceSession = currentSession.app.id === spaceApp.id ? currentSession : await switchToManagedApp(spaceApp.id, preservedViewState);
+          if (!spaceSession) return;
+          await openDocumentRef.current({ documentId: S_SPACE_INDEX_DOCUMENT_ID, schema: S_SPACE_INDEX_DOCUMENT_SCHEMA });
+          return;
+        }
+        // 🧭️ Pin the route studio id before the async app switch so the boot example effect cannot
+        // race-navigate to `/spaces/demo` while `switchToManagedApp` is still awaiting.
+        const studioChanged = openSpaceIdRef.current !== spaceId;
         openSpaceIdRef.current = spaceId;
-        openInstanceIdRef.current = null;
-        if (spaceIndexAlreadyOpen) return;
-        const spaceSession = currentSession.app.id === spaceApp.id ? currentSession : await switchToManagedApp(spaceApp.id, preservedViewState);
-        if (!spaceSession) return;
-        await openDocumentRef.current({ documentId: S_SPACE_INDEX_DOCUMENT_ID, schema: S_SPACE_INDEX_DOCUMENT_SCHEMA });
-        return;
-      }
-      // 🧭️ Pin the route studio id before the async app switch so the boot example effect cannot
-      // race-navigate to `/spaces/demo` while `switchToManagedApp` is still awaiting.
-      const studioChanged = openSpaceIdRef.current !== spaceId;
-      openSpaceIdRef.current = spaceId;
-      const studioSession = currentSession.app.id === hostConfig.hostAppId ? currentSession : await switchToManagedApp(hostConfig.hostAppId, preservedViewState);
-      if (!studioSession) return;
-      const studioControllerId = studioSession.app.controllerId;
-      if (studioChanged) {
-        openInstanceIdRef.current = null;
-        console.log("[DEBUG] applyShellUri openSpace", spaceId);
-        const openResponse = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "openSpace", args: { spaceId } }), studioSession.viewState);
-        await applyHostEffects(openResponse.requestedEffects ?? [], studioSession, resolveUiDirtyScope(openResponse.uiScope));
-      }
-      if (openInstanceIdRef.current === (instanceId ?? null)) return;
-      openInstanceIdRef.current = instanceId ?? null;
-      if (instanceId) {
-        const response = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "openInstance", args: { instanceId } }), studioSession.viewState);
-        await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope));
-      } else {
-        const response = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "closeFocusedInstance" }), studioSession.viewState);
-        const currentPanel = parsePanelState(studioSession.viewState) ?? buildSpacePanelState([], []);
-        updateSpacePanel(buildSpacePanelState(currentPanel.programs, currentPanel.spawnedApps, currentPanel.activePanelTab, undefined));
-        await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope));
+        const studioSession = currentSession.app.id === hostConfig.hostAppId ? currentSession : await switchToManagedApp(hostConfig.hostAppId, preservedViewState);
+        if (!studioSession) return;
+        const studioControllerId = studioSession.app.controllerId;
+        if (studioChanged) {
+          openInstanceIdRef.current = null;
+          console.log("[DEBUG] applyShellUri openSpace", spaceId);
+          const openResponse = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "openSpace", args: { spaceId } }), studioSession.viewState);
+          await applyHostEffects(openResponse.requestedEffects ?? [], studioSession, resolveUiDirtyScope(openResponse.uiScope));
+        }
+        if (openInstanceIdRef.current === (instanceId ?? null)) return;
+        openInstanceIdRef.current = instanceId ?? null;
+        if (instanceId) {
+          const response = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "openInstance", args: { instanceId } }), studioSession.viewState);
+          await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope));
+        } else {
+          const response = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "closeFocusedInstance" }), studioSession.viewState);
+          const currentPanel = parsePanelState(studioSession.viewState) ?? buildSpacePanelState([], []);
+          updateSpacePanel(buildSpacePanelState(currentPanel.programs, currentPanel.spawnedApps, currentPanel.activePanelTab, undefined));
+          await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope));
+        }
+      } finally {
+        applyShellUriDepthRef.current -= 1;
       }
     },
     [applyHostEffects, loadedPlugins, refreshUi, hostConfig, switchToManagedApp, updateSpacePanel],

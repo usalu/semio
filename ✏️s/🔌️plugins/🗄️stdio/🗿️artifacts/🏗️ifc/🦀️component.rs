@@ -83,8 +83,8 @@ pub mod io_registry {
     }
 
     pub fn register() {
-        register_composer_entries(v4::entries());
-        register_composer_entries(v2x3::entries());
+        let _ = register_composer_entries(v4::entries());
+        let _ = register_composer_entries(v2x3::entries());
     }
 }
 //#endregion 🚪️DerivedIoRegistry

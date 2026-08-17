@@ -37,8 +37,9 @@
 //! Neo4j's own lock semantics is `db_cluster`'s ownership-lease concern, not this crate's.
 
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
-use crate::db_ids::{check_len, DbError, ArtifactId, DurabilityClass, EpochFence};
-use db_storage::{CatalogStorage, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+use crate::db_ids::{check_len, DbError, ArtifactId};
+use crate::db_durability::{DurabilityClass, EpochFence};
+use crate::db_storage::{CatalogStorage, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
 use neo4rs::{query, Graph, Query, Txn};
 use pack::{ByteRange, ContentHash};
 

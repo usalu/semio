@@ -2724,7 +2724,7 @@ pub mod widget {
 
     impl TerminalState {
         /// 🆕 Blank terminal pane of `size` with `scrollback_cap` (0 → VT default).
-        pub fn new(size: crate::tui::geometry::Size, scrollback_cap: usize) -> Self {
+        pub fn new(size: Size, scrollback_cap: usize) -> Self {
             Self {
                 screen: crate::tui::vt::VtScreen::new(size, scrollback_cap),
                 scrollback_offset: 0,
@@ -2745,7 +2745,7 @@ pub mod widget {
         }
 
         /// ↔️ Resizes the underlying VT screen.
-        pub fn resize(&mut self, size: crate::tui::geometry::Size) {
+        pub fn resize(&mut self, size: Size) {
             self.screen.resize(size);
         }
 

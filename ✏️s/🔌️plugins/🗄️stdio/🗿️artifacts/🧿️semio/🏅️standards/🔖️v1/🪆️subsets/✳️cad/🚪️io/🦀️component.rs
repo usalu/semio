@@ -133,11 +133,11 @@ pub mod derived_composition {
     /// semio↔format io bridges. Called from this artifact's standard-level `engine::register()`.
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::cad::schema::semio_cad_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioCadSnapshot, crate::artifacts::semio::standards::v1::subsets::cad::schema::mutations::SemioCadMutation>(
+        let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioCadSnapshot, crate::artifacts::semio::standards::v1::subsets::cad::schema::mutations::SemioCadMutation>(
             crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA,
         ));
-        register_subset_validator(validator_entry());
-        register_composer_entries(io_entries());
+        let _ = register_subset_validator(validator_entry());
+        let _ = register_composer_entries(io_entries());
         register_artifact_inferences();
     }
 

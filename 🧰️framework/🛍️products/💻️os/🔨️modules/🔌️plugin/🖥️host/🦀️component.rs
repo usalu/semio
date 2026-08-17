@@ -106,7 +106,7 @@ impl SessionLanePack {
                 self.ops = ops_text;
                 self.pending_binary_ops.clear();
             }
-            Err(error) => {
+            Err(_error) => {
                 self.pending_binary_ops = ops;
             }
         }

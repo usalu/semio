@@ -544,8 +544,8 @@ fn next_timestamp(seed: u64, counter: &mut u64) -> crate::os_spr::HybridLogicalT
 /// channel and event stream, drains status on {@link SyncSession::tick}, and delegates store IO.
 pub struct SyncSession<P, Mutation>
 where
-    P: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack,
-    Mutation: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText,
+    P: Clone + Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack,
+    Mutation: Clone + Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText,
 {
     pub store: ArtifactStore<P, Mutation>,
     cmd_tx: Option<mpsc::UnboundedSender<ArtifactActorMsg>>,
@@ -555,8 +555,8 @@ where
 
 impl<P, Mutation> SyncSession<P, Mutation>
 where
-    P: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack,
-    Mutation: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText,
+    P: Clone + Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack,
+    Mutation: Clone + Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText,
 {
     pub fn new(store: ArtifactStore<P, Mutation>) -> Self {
         Self { store, cmd_tx: None, events: None, status: ArtifactSyncStatus::default() }
@@ -616,7 +616,7 @@ where
 
     /// @emoji 🕸️ Feeds a remote envelope through the store's causal DAG, materializing it (and any
     /// now-unblocked dependents) into the edit timeline. Kept for direct/test injection.
-    pub fn receive(&mut self, envelope: crate::os_spr::MutationEnvelope) -> Result<(), SyncError> {
+    pub fn receive(&mut self, envelope: MutationEnvelope) -> Result<(), SyncError> {
         self.store.dispatch(crate::os_store::ArtifactCommand::IngestRemote { envelope }).map(|_| ()).map_err(|error| SyncError::Vcs(error.to_string()))
     }
 
@@ -853,7 +853,7 @@ mod native_actor {
                         .map_err(|error| error.to_string())?
                         .ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot persist synchronized pack mirrors"))?;
                     let mirror = (codec.print_mirror)(pack, spr).map_err(|error| error.to_string())?;
-                    let pack_files = crate::os_store::ArtifactPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+                    let pack_files = ArtifactPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
                     storage.write_pack(document_id, extension, &pack_files, &mirror.dsl).map_err(|error| error.to_string())
                 }
             }
@@ -1338,7 +1338,7 @@ mod native_actor {
             }
             let batch_id = self.next_batch_id;
             self.next_batch_id = self.next_batch_id.wrapping_add(1);
-            let wire_envelopes: Vec<crate::os_spr::MutationEnvelope> = envelopes.iter().map(|envelope| crate::os_spr::MutationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+            let wire_envelopes: Vec<MutationEnvelope> = envelopes.iter().map(|envelope| MutationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
             self.pending_batches.insert(batch_id, envelopes.to_vec());
             self.send_client_frame(ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command).await;
             self.emit_status_if_changed();
@@ -1405,7 +1405,7 @@ mod native_actor {
     /// @emoji 🔀️ A binding path with a file extension addresses one document's text blob directly
     /// (`Text`, generalizing the deleted single-file `FileJsonStorage` beyond `.json`); an extensionless
     /// directory path is the canonical multi-document sqlite store (`Sqlite`).
-    fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+    fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
         match path.extension().and_then(|ext| ext.to_str()) {
             Some(extension) => {
                 let folder = path.parent().map(|parent| parent.to_path_buf()).unwrap_or_else(|| PathBuf::from("."));
@@ -2315,7 +2315,7 @@ mod tests {
     fn ensure_demo_codec_registered() {
         static ONCE: std::sync::Once = std::sync::Once::new();
         ONCE.call_once(|| {
-            register_document_codec(ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1")).expect("register demo codec");
+            let _ = register_document_codec(ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1")).expect("register demo codec");
         });
     }
 

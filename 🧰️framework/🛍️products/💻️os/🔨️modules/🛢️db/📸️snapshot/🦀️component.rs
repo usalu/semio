@@ -77,11 +77,11 @@ pub struct SnapshotDescriptor {
     pub chain_hash: [u8; 32],
     pub protocol_version: u32,
     pub vcs_head: Option<String>,
-    pub base_pack_hash: Option<pack::ContentHash>,
-    pub roots: Vec<pack::ContentHash>,
+    pub base_pack_hash: Option<ContentHash>,
+    pub roots: Vec<ContentHash>,
     /// @emoji 🧱️ Page hashes with a `KIND_CHUNK` in *this* blob, in the exact order they were
     /// written — index `i` here is `pack::ChunkId(i)` in this generation's own chunk table.
-    pub new_pages: Vec<pack::ContentHash>,
+    pub new_pages: Vec<ContentHash>,
     pub created_at_ms: u64,
 }
 
@@ -149,7 +149,7 @@ impl SnapshotDescriptor {
         };
         let base_pack_hash = match r.read_u8()? {
             0 => None,
-            1 => Some(pack::ContentHash(r.read_array32()?)),
+            1 => Some(ContentHash(r.read_array32()?)),
             other => return Err(DbError::Corrupt(format!("bad option tag {other}"))),
         };
         let roots = read_hash_list(&mut r)?;
@@ -189,19 +189,19 @@ fn read_option_u64(r: &mut pack::ByteReader<'_>) -> Result<Option<u64>, DbError>
     }
 }
 
-fn write_hash_list(w: &mut pack::ByteWriter, hashes: &[pack::ContentHash]) {
+fn write_hash_list(w: &mut pack::ByteWriter, hashes: &[ContentHash]) {
     w.write_varint_u64(hashes.len() as u64);
     for hash in hashes {
         w.write_bytes(&hash.0);
     }
 }
 
-fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<pack::ContentHash>, DbError> {
+fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<ContentHash>, DbError> {
     let count = r.read_varint_u64()?;
     check_len(count, MAX_HASH_LIST_LEN, "snapshot descriptor hash list")?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(pack::ContentHash(r.read_array32()?));
+        out.push(ContentHash(r.read_array32()?));
     }
     Ok(out)
 }
@@ -412,7 +412,7 @@ pub fn open_ancestor(combined: &[u8], footer_offset: u64) -> Result<GenerationHa
 /// @emoji 📄️ Reads one page's raw bytes by content hash, starting at `handle` and walking to
 /// ancestors (via `open_ancestor`) until a generation whose `new_pages` lists it is found.
 /// Errors `NotFound` once the chain is exhausted without a match.
-pub fn read_page(combined: &[u8], handle: &GenerationHandle, hash: pack::ContentHash) -> Result<Vec<u8>, DbError> {
+pub fn read_page(combined: &[u8], handle: &GenerationHandle, hash: ContentHash) -> Result<Vec<u8>, DbError> {
     if let Some(index) = handle.descriptor.new_pages.iter().position(|candidate| *candidate == hash) {
         let sub = SubSource { inner: combined, base: handle.base, len: handle.len };
         let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), pack::VerificationLevel::Standard)?;
@@ -448,8 +448,8 @@ pub struct SnapshotBody {
     pub chain_hash: [u8; 32],
     pub protocol_version: u32,
     pub vcs_head: Option<String>,
-    pub base_pack_hash: Option<pack::ContentHash>,
-    pub roots: Vec<pack::ContentHash>,
+    pub base_pack_hash: Option<ContentHash>,
+    pub roots: Vec<ContentHash>,
     pub created_at_ms: u64,
 }
 

@@ -57,7 +57,7 @@ pub mod io_registry {
 
     /// 📌️ Registers every entry into the OS-wide typed io registry. Called once from `🔌️plugin/🔧️setup`.
     pub fn register() {
-        register_composer_entries(v_raw::entries());
+        let _ = register_composer_entries(v_raw::entries());
     }
 
     //#region 🧪️Tests

@@ -582,7 +582,7 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
         }
         if c == '-' {
             if let Some((end_j, fused_text)) = lex_fused_edge_arrow(&chars, i) {
-                let len = end_j - i;
+                let _len = end_j - i;
                 for k in i..end_j {
                     byte_offset += chars[k].len_utf8() as u32;
                     column += 1;

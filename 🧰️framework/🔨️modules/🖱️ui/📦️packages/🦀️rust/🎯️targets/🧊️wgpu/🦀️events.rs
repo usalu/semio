@@ -14,7 +14,6 @@ use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{SurfaceKind, UiNode, UiTreeItemNode, UiTreeSectionNode};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::tree::{EditState, Node, NodeFlags, NodeKey, UiTree};
-use crate::wgpu::IconName;
 
 //#region 🔖️UiEvent
 /// 🖱️ Mouse button identity for `UiEvent::{PointerDown,PointerUp}`.
@@ -786,7 +785,7 @@ impl EventRouter {
     /// `unhover_action` dispatch this used to fire is deleted — a `Tree`'s hover now flows through its
     /// `UiTreeNode.interaction_domain` binding (`interactionHover`) instead of an ad hoc per-item action.
     fn update_hover(&mut self, tree: &mut UiTree, target: Option<NodeId>) -> Vec<UiCommand> {
-        let mut commands = Vec::new();
+        let commands = Vec::new();
         if self.hovered == target {
             return commands;
         }

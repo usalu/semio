@@ -304,7 +304,7 @@ pub struct CommandReceipt {
     pub frontier: Frontier,
     pub durability: DurabilityClass,
     pub conflicts: Vec<ConflictRecord>,
-    pub state_hash: Option<pack::ContentHash>,
+    pub state_hash: Option<ContentHash>,
     /// @emoji 📨️ Every `protocol::MutationMessage` the outcome step graded this batch's
     /// `db_conflict::ConflictRecord`s into (contract §C9) — present even on an accepted-but-degraded
     /// commit (`options.policy` let a `Warning`-or-below worst level through), empty on a clean one.
@@ -353,7 +353,7 @@ impl DocumentState {
         self.values.get(&path.to_string()).cloned()
     }
 
-    fn content_hash(&self) -> pack::ContentHash {
+    fn content_hash(&self) -> ContentHash {
         self.values.content_hash()
     }
 
@@ -465,7 +465,7 @@ impl Default for ArtifactEngineConfig {
 pub struct ArtifactEngine {
     document: ArtifactId,
     protocol_document: protocol::ArtifactId,
-    storage: Arc<dyn db_storage::DbStorage>,
+    storage: Arc<dyn DbStorage>,
     wal: db_wal::ArtifactWal,
     state: DocumentState,
     vcs_head: Option<String>,
@@ -487,7 +487,7 @@ const MAX_RECENT_TOUCHES: usize = 256;
 impl ArtifactEngine {
     /// @emoji 🌱️ Creates a brand-new document: a genesis WAL (segment 0) and an empty state.
     /// Errors `AlreadyExists` if `document` already has WAL segments in `storage`.
-    pub fn create(document: protocol::ArtifactId, storage: Arc<dyn db_storage::DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<ArtifactEngine, DbError> {
+    pub fn create(document: protocol::ArtifactId, storage: Arc<dyn DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<ArtifactEngine, DbError> {
         let core_id = to_core_document_id(&document);
         let wal = db_wal::ArtifactWal::create(storage.wal(), core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms)?;
         Ok(ArtifactEngine::assemble(document, core_id, storage, wal, None, config))
@@ -499,7 +499,7 @@ impl ArtifactEngine {
     /// (per `db_wal::ArtifactWal::open`), then replays only the `WAL_COMMAND` records committed
     /// AFTER the snapshot's own `head_seq` (a full-from-genesis replay when there is no snapshot
     /// yet).
-    pub fn open(document: protocol::ArtifactId, storage: &Arc<dyn db_storage::DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<(ArtifactEngine, MaterializeReport), DbError> {
+    pub fn open(document: protocol::ArtifactId, storage: &Arc<dyn DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<(ArtifactEngine, MaterializeReport), DbError> {
         let core_id = to_core_document_id(&document);
         let mut report = MaterializeReport::default();
 
@@ -567,7 +567,7 @@ impl ArtifactEngine {
         Ok((engine, report))
     }
 
-    fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<dyn db_storage::DbStorage>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig) -> ArtifactEngine {
+    fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<dyn DbStorage>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig) -> ArtifactEngine {
         let preview_budgets = db_preview::PreviewBudgets { default_ttl_ms: config.preview_ttl_ms, max_ttl_ms: config.preview_ttl_ms, ..db_preview::PreviewBudgets::default() };
         ArtifactEngine {
             document: core_id.clone(),

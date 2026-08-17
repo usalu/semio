@@ -20,9 +20,9 @@ impl Procedural2dSnapshotVcs {
         let store = match envelope_json {
             Some(json) => {
                 let envelope: Procedural2dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-                Procedural2dStore::new(envelope)
+                Procedural2dStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
             }
-            None => Procedural2dStore::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", empty_procedural2d_snapshot(), None))};
+            None => Procedural2dStore::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", empty_procedural2d_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?};
         Ok(Self { store: RefCell::new(store) })
     }
 

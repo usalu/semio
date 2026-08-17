@@ -707,7 +707,7 @@ impl<K, V, Patch> NamedTripleDiff<K, V, Patch> {
 pub fn named_apply<K, V, Patch>(items: &mut Vec<V>, diff: &NamedTripleDiff<K, V, Patch>) -> Result<(), MutationApplyError>
 where
     K: PartialEq,
-    V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    V: Clone + Identified<K> + Patchable<Patch>,
 {
     for (index, id) in diff.removed.iter().enumerate() {
         if !items.iter().any(|item| item.id() == id) {
@@ -774,7 +774,7 @@ impl<V, Patch> IndexedTripleDiff<V, Patch> {
 /// index is exact; out-of-range and duplicate indices reject atomically instead of clamping.
 pub fn indexed_apply<V, Patch>(items: &mut Vec<V>, diff: &IndexedTripleDiff<V, Patch>) -> Result<(), MutationApplyError>
 where
-    V: Clone + crate::os_vcs::Patchable<Patch>,
+    V: Clone + Patchable<Patch>,
 {
     for (position, (index, _)) in diff.modified.iter().enumerate() {
         if *index >= items.len() {

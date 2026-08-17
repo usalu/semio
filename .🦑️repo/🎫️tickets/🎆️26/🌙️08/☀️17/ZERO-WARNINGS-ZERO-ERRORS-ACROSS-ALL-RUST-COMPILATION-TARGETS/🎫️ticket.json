@@ -1,0 +1,13 @@
+{
+  "title": "Zero Warnings Zero Errors Across All Rust Compilation Targets",
+  "emoji": "🧹️",
+  "status": "open",
+  "description": "Fix and refactor all Rust code across the entire workspace (every app, os, plugin, framework crate, product) so that compiling every single compilation target yields 0 warnings and 0 errors. This includes native builds and any wasm32 targets that plugins compile to. Categories observed from a prior compiler run: unused `must_use` Result/return values from register_* calls (fix with `let _ = ...`), dead code (never-used functions/methods/fields/variants — greenfield repo, delete rather than suppress unless genuinely reachable via a non-obvious path), unused imports, unnecessary path qualifications, unused extern crate declarations, elided/hidden lifetime parameters, unused doc comments on macro invocations, and stray feature-gate attributes. Must not add `#[allow(...)]` suppressions as a shortcut — fix the underlying cause per CLAUDE.md's no-pragmatism/no-legacy-support/clean-long-term-solution rules. Must not introduce migration shims or compatibility layers.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2563"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": [
+    "⚪9a870417780140eaa901c5c45de47f67"
+  ]
+}

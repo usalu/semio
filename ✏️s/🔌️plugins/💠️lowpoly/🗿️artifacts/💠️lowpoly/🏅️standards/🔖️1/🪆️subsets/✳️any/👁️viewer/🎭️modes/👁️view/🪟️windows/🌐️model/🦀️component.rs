@@ -9,7 +9,7 @@
 //! parity with the editor's CURRENT behavior for that gap, not a regression.
 
 use crate::artifacts::lowpoly::LowpolySnapshot;
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, WindowKindDefinition};
+use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, UiNode, WindowKindDefinition};
 // 🚧️ SDK GAP: `MeshWindowKit`/`MeshView`/`WindowKit` (contract §2.6) are declared inside
 // `semio_framework_plugin`'s `app` module but are not in the curated crate-root `pub use app::{ … };`
 // re-export list (W0-F's Gap-1 fix added the surface traits/adapters, not the window kits) — only

@@ -491,7 +491,7 @@ pub mod ipc {
 pub mod daemon {
     use crate::ipc::{self, ClientMsg, ServerMsg};
     use std::collections::HashMap;
-    use std::io::{Read, Write};
+    use std::io::Write;
     use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::{Arc, Mutex};

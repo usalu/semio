@@ -3,7 +3,7 @@
 
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
-    use crate::artifacts::fem2d::op::{Fem2dEnvelope, Fem2dStore};
+    use crate::artifacts::fem2d::mutations::{Fem2dEnvelope, Fem2dStore};
     use std::cell::RefCell;
     use store::create_document_envelope;
     use wasm_bindgen::prelude::*;
@@ -57,7 +57,7 @@ mod wasm_bridge {
 // #region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    /// 🧪️ The store type aliases live in `crate::artifacts::fem2d::op` (`Fem2dEnvelope`/`Fem2dStore`) and
+    /// 🧪️ The store type aliases live in `crate::artifacts::fem2d::mutations` (`Fem2dEnvelope`/`Fem2dStore`) and
     /// are exercised by that node's own tests plus `crate::artifacts::fem2d::spr`'s
     /// `fem2d_document_text_round_trips_through_the_store` — the `wasm_bridge` module above only builds
     /// under `target_arch = "wasm32"`, so this file's non-wasm32 half has nothing native-testable of its

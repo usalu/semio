@@ -1,0 +1,8 @@
+{
+  "title": "Preserve Seeded Dialog Context Arguments",
+  "emoji": "🔌️",
+  "status": "closed",
+  "description": "Fix EditorApp\u003cE\u003e/ViewerApp\u003cE\u003e APP_ID='surface' placeholder blocking button clicks across the entire application. VcsArtifactApp and related invocation checks compare app ID against instance surface ID instead of the static 'surface' placeholder.",
+  "summary": "Investigated the shared dialog-submission path. The checked-out implementation already preserves seeded, non-form context arguments: effectiveActionArgs(defs, staged, seed) initializes from seed and resolves staged/default values only for declared fields; UIDialog supplies seedArgs. The Rust contract twin documents and implements the same rule. All other TypeScript callers omit seed, so none depend on filtering seeded keys. Focused validation passed: bun x nx run @semio-tech/framework:test -- --run glue.ts (2 files, 158 tests). No product files changed because the requested fix and regression coverage already exist.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"
+}

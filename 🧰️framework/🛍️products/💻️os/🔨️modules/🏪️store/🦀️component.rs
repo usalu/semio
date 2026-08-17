@@ -645,7 +645,7 @@ where
     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + Sync + 'static,
 {
-    register_child_store_factory(kind, Arc::new(TypedChildStoreFactory::<P, Mutation>::new(schema)))
+    let _ = register_child_store_factory(kind, Arc::new(TypedChildStoreFactory::<P, Mutation>::new(schema)))
 }
 
 //#region 🔖️CompositionDsl
@@ -9759,7 +9759,7 @@ mod tests {
 
         preflight_document_codecs(std::slice::from_ref(&codec)).expect("preflight accepts an unclaimed full descriptor without publishing it");
         assert!(document_codec("test.document-codec-roundtrip/v1").expect("registry availability").is_none(), "preflight must not publish a codec");
-        register_document_codec(codec).expect("first document codec registration");
+        let _ = register_document_codec(codec).expect("first document codec registration");
         assert!(document_codec("test.document-codec-roundtrip/v1").expect("registry availability").is_some(), "registered codec is discoverable by schema string");
         assert!(document_codec("no-such-schema").expect("registry availability").is_none());
     }
@@ -9770,8 +9770,8 @@ mod tests {
         let second = ArtifactCodec { pack_schema_hash: [7u8; 32], ..first.clone() };
         assert_ne!(first.pack_schema_hash, second.pack_schema_hash, "fixture precondition: the two codecs must be distinguishable");
 
-        register_document_codec(first.clone()).expect("first registration");
-        register_document_codec(first.clone()).expect("an identical descriptor and executable is idempotent");
+        let _ = register_document_codec(first.clone()).expect("first registration");
+        let _ = register_document_codec(first.clone()).expect("an identical descriptor and executable is idempotent");
         let conflict = match register_document_codec(second).expect_err("a schema collision must reject rather than replace") {
             DocumentCodecRegistryError::Conflict(conflict) => conflict,
             DocumentCodecRegistryError::Unavailable => panic!("document codec registry unavailable"),
@@ -11918,7 +11918,7 @@ mod tests {
     /// minted child id and the identical `invocation_id`.
     #[test]
     fn dispatch_group_mints_genesis_child_ids_deterministically_across_replicas() {
-        register_child_store_factory(crate::os_io::ArtifactKindId::parse("s.stdio.demochild").expect("valid kind"), Arc::new(DemoChildFactory)).expect("register child factory");
+        let _ = register_child_store_factory(crate::os_io::ArtifactKindId::parse("s.stdio.demochild").expect("valid kind"), Arc::new(DemoChildFactory)).expect("register child factory");
 
         let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-genesis-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let genesis_dialect = crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() };

@@ -91,7 +91,7 @@ impl Ui {
         self.window_mut(window_id).tree.apply_tree(ui_node);
     }
 
-    pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+    pub fn set_window_kind_icons(&mut self, icons: HashMap<String, IconName>) {
         self.shell.set_window_kind_icons(icons);
     }
 

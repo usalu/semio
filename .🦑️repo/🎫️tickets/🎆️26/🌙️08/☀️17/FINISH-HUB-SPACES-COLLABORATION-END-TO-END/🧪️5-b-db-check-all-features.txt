@@ -1,0 +1,10 @@
+111 +     pub state_hash: Option<ContentHash>,
+    |
+
+warning: `semio-framework-os-kernel-db` (lib) generated 62 warnings (run `cargo fix --lib -p semio-framework-os-kernel-db` to apply 47 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 41.71s
+warning: the following packages contain code that will be rejected by a future version of Rust: semio-framework-os-kernel-db v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 20`
+EXIT:0
+
+[exited with code 0]

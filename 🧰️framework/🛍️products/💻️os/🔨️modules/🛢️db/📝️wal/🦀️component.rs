@@ -123,7 +123,7 @@ fn decode_frontier(reader: &mut pack::ByteReader<'_>) -> Result<Frontier, DbErro
 #[derive(Clone, Debug, PartialEq)]
 pub enum WalPayloadRef {
     Inline(Vec<u8>),
-    CasRef(pack::ContentHash),
+    CasRef(ContentHash),
 }
 
 /// @emoji 📜️ One decoded WAL record — the typed shape every `WAL_*` kind decodes to/encodes from.
@@ -278,7 +278,7 @@ impl WalRecord {
             WAL_COMMAND => WalRecord::Command(payload.to_vec()),
             WAL_PAYLOAD => match reader.read_u8()? {
                 0 => WalRecord::Payload(WalPayloadRef::Inline(read_field_bytes(&mut reader)?)),
-                1 => WalRecord::Payload(WalPayloadRef::CasRef(pack::ContentHash(reader.read_array32()?))),
+                1 => WalRecord::Payload(WalPayloadRef::CasRef(ContentHash(reader.read_array32()?))),
                 other => return Err(DbError::Corrupt(format!("unknown wal payload tag {other}"))),
             },
             WAL_DIFF => WalRecord::Diff(payload.to_vec()),

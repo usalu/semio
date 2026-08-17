@@ -83,11 +83,11 @@ pub mod derived_composition {
     /// from this artifact's standard-level `engine::register()`.
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::graph::schema::semio_graph_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioGraphSnapshot, crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation>(
+        let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioGraphSnapshot, crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation>(
             crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,
         ));
-        register_subset_validator(validator_entry());
-        register_composer_entries(io_entries());
+        let _ = register_subset_validator(validator_entry());
+        let _ = register_composer_entries(io_entries());
         register_artifact_inferences();
     }
 

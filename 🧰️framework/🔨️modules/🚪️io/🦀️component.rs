@@ -4,7 +4,7 @@
 //! `🔺️mesh` (not `os`) so plugins and the OS product share one definition without an
 //! inverted dependency — same reasoning as mesh's now-retired legacy format enum.
 
-use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+use dsl::Diagnostic;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::RwLock;
@@ -2061,7 +2061,7 @@ mod tests {
     /// doc comment describes, registered and resolved through the real `IO_REGISTRY`.
     #[test]
     fn io_compose_via_chains_two_registered_hops() {
-        register_composer_entries(&ENTRIES).expect("register two-hop test entries");
+        let _ = register_composer_entries(&ENTRIES).expect("register two-hop test entries");
         let hub_key = IoKey::from_owner_counterpart(HOP1_INTO, HOP1_FROM, IoDirection::Import);
         let target_key = IoKey::from_owner_counterpart(HOP2_INTO, HOP1_INTO, IoDirection::Import);
         let sources = [ErasedComposeSource { dialect: HOP1_FROM, payload: IoPayload::Text("seed".to_string()) }];
@@ -2090,7 +2090,7 @@ mod tests {
 
     #[test]
     fn io_registry_rejects_a_conflicting_key_without_replacing_the_first_entry() {
-        register_composer_entries(std::slice::from_ref(&CONFLICT_FIRST)).expect("first owner registers");
+        let _ = register_composer_entries(std::slice::from_ref(&CONFLICT_FIRST)).expect("first owner registers");
         assert!(matches!(preflight_composer_entry_refs(&[&CONFLICT_SECOND]), Err(IoRegistryRegistrationError::Conflict(_))), "preflight must expose the same conflict before any later assembly mutation");
         let conflict = match register_composer_entries(std::slice::from_ref(&CONFLICT_SECOND)).expect_err("a second owner for the same IO key must fail") {
             IoRegistryRegistrationError::Conflict(conflict) => conflict,

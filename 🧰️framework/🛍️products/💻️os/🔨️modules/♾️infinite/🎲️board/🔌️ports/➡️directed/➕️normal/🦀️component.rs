@@ -465,12 +465,12 @@ pub mod board_host {
             self.content_scene_generation
         }
 
-        fn viewport(&self) -> crate::infinite::canvas::camera::Viewport {
-            crate::infinite::canvas::camera::Viewport { width: self.width, height: self.height, dpr: self.dpr }
+        fn viewport(&self) -> infinite::canvas::camera::Viewport {
+            infinite::canvas::camera::Viewport { width: self.width, height: self.height, dpr: self.dpr }
         }
 
         fn camera_content_affine(&self) -> Affine {
-            crate::infinite::canvas::camera::camera_content_affine(&self.camera, &self.viewport())
+            infinite::canvas::camera::camera_content_affine(&self.camera, &self.viewport())
         }
     }
 
@@ -640,7 +640,7 @@ pub mod board_host {
         }
 
         fn set_camera_internal(&mut self, x: f64, y: f64, zoom: f64, emit_event: bool) {
-            let zoom = crate::infinite::canvas::camera::clamp_zoom(zoom);
+            let zoom = infinite::canvas::camera::clamp_zoom(zoom);
             if (self.camera.x - x).abs() < 1e-9 && (self.camera.y - y).abs() < 1e-9 && (self.camera.zoom - zoom).abs() < 1e-9 {
                 return;
             }
@@ -2902,11 +2902,11 @@ pub mod board_host {
         }
 
         pub fn world_to_screen(&self, p: Point) -> Point {
-            crate::infinite::canvas::camera::world_to_screen(&self.camera, &self.viewport(), p)
+            infinite::canvas::camera::world_to_screen(&self.camera, &self.viewport(), p)
         }
 
         pub fn screen_to_world(&self, p: Point) -> Point {
-            crate::infinite::canvas::camera::screen_to_world(&self.camera, &self.viewport(), p)
+            infinite::canvas::camera::screen_to_world(&self.camera, &self.viewport(), p)
         }
 
         fn node_kind_scale(&self, node_kind: &str) -> f64 {
@@ -4183,7 +4183,7 @@ pub mod board_host {
             let origin = self.world_to_screen(Point::new(0.0, 0.0));
             let x_off = ((origin.x % step) + step) % step;
             let y_off = ((origin.y % step) + step) % step;
-            let mut p = crate::infinite::canvas::BezPath::new();
+            let mut p = infinite::canvas::BezPath::new();
             let mut x = x_off;
             while x <= w {
                 p.move_to(Point::new(x, 0.0));
@@ -4703,7 +4703,7 @@ pub mod board_host {
             }
             if let Some(ref pts) = self.selection_screen_preview {
                 if pts.len() >= 2 {
-                    let mut path = crate::infinite::canvas::BezPath::new();
+                    let mut path = infinite::canvas::BezPath::new();
                     path.move_to(pts[0]);
                     for p in pts.iter().skip(1) {
                         path.line_to(*p);
@@ -4806,7 +4806,7 @@ pub mod board_host {
 
         pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
             let viewport = self.viewport();
-            crate::infinite::canvas::camera::wheel_screen(&mut self.camera, &viewport, sx, sy, delta_y);
+            infinite::canvas::camera::wheel_screen(&mut self.camera, &viewport, sx, sy, delta_y);
             self.set_camera_silent(self.camera.x, self.camera.y, self.camera.zoom);
         }
 
@@ -5680,7 +5680,7 @@ pub mod board_host {
         }
     }
 
-    impl crate::infinite::canvas::canvas_content::CanvasContent for BoardHost {
+    impl infinite::canvas::canvas_content::CanvasContent for BoardHost {
         fn build_scene(&self) -> Scene {
             self.build_vector_scene()
         }

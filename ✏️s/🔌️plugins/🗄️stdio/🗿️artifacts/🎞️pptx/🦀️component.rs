@@ -166,7 +166,7 @@ pub mod io_registry {
     }
 
     pub fn register() {
-        register_composer_entries(v_ecma_376::entries());
+        let _ = register_composer_entries(v_ecma_376::entries());
     }
 }
 //#endregion 🚪️DerivedIoRegistry

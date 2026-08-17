@@ -3,7 +3,7 @@
 
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
-    use crate::artifacts::fem3d::op::{Fem3dEnvelope, Fem3dStore};
+    use crate::artifacts::fem3d::mutations::{Fem3dEnvelope, Fem3dStore};
     use std::cell::RefCell;
     use store::create_document_envelope;
     use wasm_bindgen::prelude::*;

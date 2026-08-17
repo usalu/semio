@@ -25,9 +25,11 @@ vcs = []
 tokio = []
 cluster = []
 otel = []
-sqlite = []
-postgres = []
-neo4j = []
+# 🔌️ Each backend feature pulls in its own driver dep — mirrors `🌎️hub/📦️packages/🦀️rust/Cargo.toml`'s
+# same-named features one level up, which forward into these.
+sqlite = ["dep:rusqlite"]
+postgres = ["dep:sqlx", "dep:tokio"]
+neo4j = ["dep:neo4rs", "dep:base64", "dep:tokio"]
 
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
@@ -35,5 +37,14 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"
 blake3 = "1"
+base64 = { version = "0.22", optional = true }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-rusqlite = { version = "0.38.0", features = ["bundled"] }
+rusqlite = { version = "0.38.0", features = ["bundled"], optional = true }
+# 🔌️ Same `sqlx-core`/`sqlx-postgres` major version `🌎️hub/📦️packages/🦀️rust/Cargo.toml` pins for its
+# own directory backend, so the workspace resolves one `sqlx` line, not two.
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "tls-rustls", "postgres"], optional = true }
+neo4rs = { version = "0.8", optional = true }
+# 🔌️ `PostgresStorage`/`Neo4jStorage` each own a dedicated background runtime to bridge this
+# crate's synchronous `db_storage` trait onto their async-only drivers (see each backend's own
+# `block_on` doc). Distinct from the crate's pre-existing, currently-unused `tokio` feature flag.
+tokio = { workspace = true, features = ["rt-multi-thread"], optional = true }

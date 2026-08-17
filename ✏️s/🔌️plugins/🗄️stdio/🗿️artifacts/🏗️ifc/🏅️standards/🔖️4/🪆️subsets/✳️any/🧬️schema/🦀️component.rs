@@ -269,7 +269,7 @@ pub fn register() {
     register_artifact_schema();
     register_artifact_inferences();
     register_pilot_languages();
-    store::register_document_codec(store::ArtifactCodec::of::<IfcSnapshot, IfcMutation>(STDIO_IFC_DOCUMENT_SCHEMA));
+    let _ = store::register_document_codec(store::ArtifactCodec::of::<IfcSnapshot, IfcMutation>(STDIO_IFC_DOCUMENT_SCHEMA));
 }
 
 /// 📌️ P2-FG1: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per the recipe's

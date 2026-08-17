@@ -1,7 +1,7 @@
 //! 🔺️ `replace-points` — sparse diff construction.
 
 use super::mutation::ReplacePoints;
-use crate::artifacts::mathematical::{mathematical_children_from_state, mathematical_graph, MathematicalDiff, MathematicalGeometry, MathematicalSnapshot};
+use crate::artifacts::mathematical::{mathematical_children_from_state, mathematical_geometry, mathematical_graph, MathematicalDiff, MathematicalGeometry, MathematicalSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReplacePoints, base: &MathematicalSnapshot) -> protocol::MutationOutcome<MathematicalDiff> {

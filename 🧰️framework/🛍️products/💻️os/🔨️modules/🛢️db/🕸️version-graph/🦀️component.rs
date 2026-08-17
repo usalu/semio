@@ -1,7 +1,6 @@
 //! 🕸️ Version graph seam and Emit observability.
 
 use crate::db_ids::{ActorId, DbError, ArtifactId};
-use pack::ContentHash;
 
 //#region 🔖️VersionGraph
 /// @emoji 📝️ One committed, content-addressed change to record in the version graph — the

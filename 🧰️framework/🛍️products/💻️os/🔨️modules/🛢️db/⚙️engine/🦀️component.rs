@@ -95,7 +95,7 @@ impl Frontier {
     }
 }
 
-fn to_engine_frontier(core: &crate::db_durability::Frontier, document: protocol::ArtifactId) -> Frontier {
+fn to_engine_frontier(core: &db_durability::Frontier, document: protocol::ArtifactId) -> Frontier {
     Frontier { document, head_seq: core.head_seq, commit_seq: core.commit_seq, chain_hash: core.chain_hash, epoch: core.epoch }
 }
 //#endregion 🔖️Frontier
@@ -108,7 +108,7 @@ pub struct CommandReceipt {
     pub frontier: Frontier,
     pub durability: DurabilityClass,
     pub conflicts: Vec<db_artifact::ConflictRecord>,
-    pub state_hash: Option<pack::ContentHash>,
+    pub state_hash: Option<ContentHash>,
     pub messages: Vec<protocol::MutationMessage>,
 }
 

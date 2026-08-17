@@ -86,7 +86,7 @@ pub mod derived_composition {
     /// (`crate::artifacts::pdf::standards::v1_7::subsets::any::io::io_registry::entries()`),
     /// matching how `✳️any`'s own entry is registered.
     pub fn register() {
-        register_subset_validator(validator_entry());
+        let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
 

@@ -204,7 +204,7 @@ async fn post_graphql(State(state): State<Arc<AppState>>, body: String) -> impl 
     let schema = gql::build_schema_for(rt);
     let resp = schema.execute(req).await;
     match serde_json::to_value(resp) {
-        Ok(v) => axum::Json(v).into_response(),
+        Ok(v) => Json(v).into_response(),
         Err(e) => graphql_error(StatusCode::INTERNAL_SERVER_ERROR, e),
     }
 }
@@ -257,7 +257,7 @@ async fn serve(listener: TcpListener, app: Router) {
             "graphiql": format!("http://127.0.0.1:{}/graphiql", actual_port),
         });
         println!("{}", ready);
-        let _ = std::io::stdout().lock().flush();
+        let _ = io::stdout().lock().flush();
     }
     let base = format!("http://127.0.0.1:{}", actual_port);
     tracing::info!(target: "semio_compose_gql", "┌️ post /install, post /graphql, get /graphiql, get /healthz, post /server/shutdown");
@@ -328,7 +328,7 @@ mod tests {
         }
         let r = client.post(format!("{base}/graphql")).json(&body).send().await?;
         let t = r.text().await?;
-        let v: Value = serde_json::from_str(&t).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, format!("{e}, body: {t}")))?;
+        let v: Value = serde_json::from_str(&t).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("{e}, body: {t}")))?;
         Ok(v)
     }
 
@@ -352,12 +352,12 @@ mod tests {
         assert!(!html.contains("catch(() => response.text())"));
 
         let response = client.post(format!("{base}/graphql")).json(&json!({ "query": "{ __typename }" })).send().await?;
-        assert_eq!(response.status(), reqwest::StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::OK);
         let body: Value = response.json().await?;
         assert_eq!(body.pointer("/data/__typename"), Some(&json!("Query")));
 
         let response = client.post(format!("{base}/graphql")).json(&json!({ "query": "mutation { session { start } }" })).send().await?;
-        assert_eq!(response.status(), reqwest::StatusCode::SERVICE_UNAVAILABLE);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
         let body: Value = response.json().await?;
         let message = body.pointer("/errors/0/message").and_then(|value| value.as_str()).ok_or("missing no-kit GraphQL error message")?;
         assert!(message.contains("no kit: send POST /install"));
@@ -521,7 +521,7 @@ mod tests {
 }"#;
         let body = json!({ "query": Q_PREVIEW, "operationName": "WipKit" });
         let r = client.post(format!("{base}/graphql")).json(&body).send().await?;
-        assert_eq!(r.status(), reqwest::StatusCode::OK);
+        assert_eq!(r.status(), StatusCode::OK);
         let v: Value = r.json().await?;
         assert!(v.get("errors").is_none(), "preview wip query errors: {v:?}");
         let wip = "/data/session/stores/edges/0/node/wip";

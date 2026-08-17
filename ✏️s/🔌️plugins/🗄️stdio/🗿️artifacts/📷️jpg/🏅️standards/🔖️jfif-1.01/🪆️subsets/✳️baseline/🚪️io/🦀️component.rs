@@ -82,7 +82,7 @@ pub mod derived_composition {
     /// (`crate::artifacts::jpg::standards::v_jfif_1_01::engine::io_registry::entries()`), matching how `✳️any`'s
     /// own entry is registered.
     pub fn register() {
-        register_subset_validator(validator_entry());
+        let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
 

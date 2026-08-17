@@ -197,7 +197,7 @@ pub enum ReplicationOutcome {
 /// follower-WAL-consumption primitive), or copying the raw snapshot bytes for the `Snapshot` case
 /// (this crate's snapshot-replication primitive; see `ReplicationOutcome::SnapshotTransferred`'s
 /// doc for why that case stops short of full materialization).
-pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_storage::DbStorage, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
+pub fn replicate_document(leader: &dyn DbStorage, follower: &dyn DbStorage, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
     let follower_state = db_sync::replay_sync_state(follower.wal(), document.clone())?;
     let leader_state = db_sync::replay_sync_state(leader.wal(), document.clone())?;
     if follower_state.frontier.head_seq >= leader_state.frontier.head_seq {

@@ -31,7 +31,6 @@
 //! documents, but never for the SAME document at the same time).
 
 use crate::*;
-use crate::db_durability::Frontier;
 use crate::db_ids::{check_len, DbError, ArtifactId};
 
 //#region 🔖️Budget
@@ -355,11 +354,11 @@ pub struct CompactionReport {
 /// together over one `db_storage::DbStorage` backend — "online compaction with manifest CAS +
 /// fencing" (see module doc's design-choice note on the fencing mechanism).
 pub struct Compactor<'storage> {
-    storage: &'storage dyn db_storage::DbStorage,
+    storage: &'storage dyn DbStorage,
 }
 
 impl<'storage> Compactor<'storage> {
-    pub fn new(storage: &'storage dyn db_storage::DbStorage) -> Compactor<'storage> {
+    pub fn new(storage: &'storage dyn DbStorage) -> Compactor<'storage> {
         Compactor { storage }
     }
 

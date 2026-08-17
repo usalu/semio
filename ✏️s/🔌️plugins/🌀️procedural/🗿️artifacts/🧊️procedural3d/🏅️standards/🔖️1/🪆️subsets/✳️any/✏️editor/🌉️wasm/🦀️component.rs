@@ -20,9 +20,9 @@ impl Procedural3dSnapshotVcs {
         let store = match envelope_json {
             Some(json) => {
                 let envelope: Procedural3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-                Procedural3dStore::new(envelope)
+                Procedural3dStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
             }
-            None => Procedural3dStore::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_snapshot(), None))};
+            None => Procedural3dStore::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?};
         Ok(Self { store: RefCell::new(store) })
     }
 

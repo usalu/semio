@@ -82,7 +82,7 @@ fn migrate_87a_to_89a_pack(pack_bytes: &[u8]) -> Result<Vec<u8>, String> {
 /// yet called from any real init path (no dispatch/hub/WIT wiring exists this pass — see this
 /// module's own doc comment); exercised directly by this module's own test below.
 pub fn register() {
-    store::register_dialect_migration(store::DialectMigration {
+    let _ = store::register_dialect_migration(store::DialectMigration {
         from: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.gif".into(), standard: "87a".into(), subset: "*".into() },
         to: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.gif".into(), standard: "89a".into(), subset: "*".into() },
         lossless: true,

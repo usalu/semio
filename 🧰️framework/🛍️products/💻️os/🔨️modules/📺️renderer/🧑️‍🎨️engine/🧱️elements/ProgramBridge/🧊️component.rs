@@ -140,11 +140,20 @@ mod wasm_program_exchange {
         let mut requested_effects = Vec::new();
         let mut events = Vec::new();
         let mut saw_invocation = false;
+        // 🧾️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END §C5 — `history_patch` used to
+        // be silently discarded here (the native wgpu shell tracked no history/uncommitted-edit
+        // projection at all, see `📓️w3-a-report.md`'s "reduced, honestly-scoped" section); now decoded
+        // and threaded onto `InvocationResult` so `Shell/🧊️component.rs`'s check-in tracking has a real
+        // signal to fold, exactly like every other wire payload this module already decodes.
+        let mut history_patch: Option<semio_framework::kernel::HistoryPatch> = None;
         for frame in frames {
             match frame {
-                AppFrame::Invocation { in_reply_to, output: out_bytes, diagnostics: diag_bytes, .. } if *in_reply_to == seq => {
+                AppFrame::Invocation { in_reply_to, output: out_bytes, diagnostics: diag_bytes, history_patch: history_patch_bytes, .. } if *in_reply_to == seq => {
                     output = decode_wire::<DslValue>(out_bytes)?;
                     diagnostics = decode_wire(diag_bytes).unwrap_or_default();
+                    if !history_patch_bytes.is_empty() {
+                        history_patch = decode_wire::<semio_framework::kernel::HistoryPatch>(history_patch_bytes).ok();
+                    }
                     saw_invocation = true;
                 }
                 AppFrame::Effects { in_reply_to: Some(reply), effects } if *reply == seq => {
@@ -173,8 +182,24 @@ mod wasm_program_exchange {
             requested_effects,
             events,
             ui_scope: semio_framework::kernel::UiDirtyScope::default(),
-            history_patch: None,
+            history_patch,
         })
+    }
+
+    /// 🧾️ ticket §C5 — the native twin of the React shell's `plugin.readHistory(instanceId)`: sends a
+    /// real `AppCommand::ReadHistory` and decodes the `AppFrame::HistorySnapshot` reply, used once per
+    /// session/document mount to seed a full projection (`replace=true` on the caller's fold) rather
+    /// than waiting for the next incremental `Invocation.history_patch`.
+    pub fn read_history(runtime: &WasmPluginRuntime, instance_id: u32) -> Result<semio_framework::kernel::HistoryPatch, String> {
+        let seq = next_seq();
+        let frames = exchange(runtime, instance_id, vec![AppCommand::ReadHistory { seq }])?;
+        frames
+            .into_iter()
+            .find_map(|frame| match frame {
+                AppFrame::HistorySnapshot { in_reply_to, history_patch } if in_reply_to == seq => decode_wire::<semio_framework::kernel::HistoryPatch>(&history_patch).ok(),
+                _ => None,
+            })
+            .ok_or_else(|| format!("plugin sent no HistorySnapshot for seq {seq}"))
     }
 
     pub fn handle_action(runtime: &WasmPluginRuntime, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<InvocationResult, String> {
@@ -475,6 +500,17 @@ impl ProgramBridgeEntry {
             _ => Err("apply_mutations unavailable".into()),
         }
     }
+
+    /// 🧾️ ticket §C5 — full history snapshot for an instance, native-only (mirrors every other
+    /// backbone/control call on this type; see `wasm_program_exchange::read_history`'s own doc).
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn read_history(&self, instance_id: u32) -> Result<semio_framework::kernel::HistoryPatch, String> {
+        match &self.backend {
+            ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::read_history(runtime, instance_id),
+            #[cfg(target_arch = "wasm32")]
+            _ => Err("read_history unavailable".into()),
+        }
+    }
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -638,7 +674,8 @@ pub fn filter_plugins(entries: Vec<ProgramBridgeEntry>, _plugin_filter: &str) ->
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) -> Result<Vec<ProgramBridgeEntry>, String> {
-    let plugin_ids: Vec<String> = if is_space_mode(plugin_filter) {
+    let space_mode = is_space_mode(plugin_filter);
+    let plugin_ids: Vec<String> = if space_mode {
         std::fs::read_dir(modules_root).map_err(|error| error.to_string())?.filter_map(|entry| entry.ok()).filter(|entry| entry.path().is_dir()).filter_map(|entry| entry.file_name().to_str().map(str::to_string)).collect()
     } else {
         vec![resolve_registry_plugin_id(plugin_filter).to_string()]
@@ -653,8 +690,21 @@ pub fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) ->
         let Some(path) = wasm_path else {
             continue;
         };
-        let runtime = Arc::new(WasmPluginRuntime::load(&path).map_err(|error| error.to_string())?);
-        entries.push(ProgramBridgeEntry::from_wasm(plugin_id, runtime)?);
+        // 🧾️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END — discovered live: one stale
+        // (pre-compose, never-adapted) `.core.wasm` artifact anywhere under a space-mode `modules_root`
+        // (~54+ plugin directories — the "13 of 33 plugin crates still fail to build for wasm" attributed
+        // in `📓️w4-e-report.md`) used to fail the WHOLE batch via `?`, with no indication of which
+        // directory was at fault (the path was dropped from the error entirely). A single-plugin
+        // (non-space-mode) load still hard-fails outright — there's no other plugin to fall back to —
+        // but space mode now skips a broken plugin with a loud warning and keeps loading the rest,
+        // exactly like the real `run_native`/`--smoke` boot path needs: 53 good plugins must not be
+        // held hostage by one bad one.
+        let loaded = WasmPluginRuntime::load(&path).map_err(|error| format!("{}: {error}", path.display())).and_then(|runtime| ProgramBridgeEntry::from_wasm(plugin_id.clone(), Arc::new(runtime)));
+        match loaded {
+            Ok(entry) => entries.push(entry),
+            Err(error) if space_mode => eprintln!("[DEBUG] load_wasm_plugins: skipping {plugin_id}: {error}"),
+            Err(error) => return Err(error),
+        }
     }
     if entries.is_empty() {
         return Err(format!("[DEBUG] no wasm programs found under {}", modules_root.display()));

@@ -7,8 +7,7 @@
 
 use crate::artifacts::draw::schema::{flatten_draw_document_to_scene_nodes, resolve_draw_artboard};
 use crate::artifacts::draw::{DrawArtboard, DrawCamera, DrawSnapshot, PathSegment};
-use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, UiNode, WindowKindDefinition, WindowOptions};
-use ui_wgpu::wgpu::SurfaceKind;
+use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 use serde_json::{json, Value};
 
 //#region 🔖️Constants

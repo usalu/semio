@@ -352,6 +352,104 @@ fn find_dialect_app<'a>(program: &'a ProgramBridgeEntry, dialect: &semio_framewo
 
 //#endregion 🔖️IdentityPure
 
+//#region 🔖️CheckInPure
+/// 📌️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END §C5 — auto check-in policy
+/// constants, byte-identical to the React shell's `AUTO_CHECKIN_IDLE_MS`/`AUTO_CHECKIN_EDIT_THRESHOLD`
+/// (`ShellHelpers/🟦️component.tsx`).
+#[cfg(not(target_arch = "wasm32"))]
+const AUTO_CHECKIN_IDLE_MS: i64 = 20_000;
+#[cfg(not(target_arch = "wasm32"))]
+const AUTO_CHECKIN_EDIT_THRESHOLD: u32 = 200;
+
+/// 🧾️ ticket §C5 — folds one `HistoryPatch` into the running per-session entry map, the wgpu twin of
+/// the React shell's `applyHistoryPatch` reducer (`ShellHost/🟦️component.tsx`): `replace=true` (a
+/// fresh `ReadHistory` snapshot on session/document mount) clears the map first; otherwise a patch no
+/// newer than the tracked cursor is a stale/duplicate reply and is ignored outright. Returns whether
+/// the fold actually changed anything, so callers only re-derive the uncommitted count when it could
+/// have moved.
+#[cfg(not(target_arch = "wasm32"))]
+fn fold_history_patch(entries: &mut BTreeMap<u64, semio_framework::kernel::HistoryEntry>, cursor: &mut u64, patch: &semio_framework::kernel::HistoryPatch, replace: bool) -> bool {
+    if !replace && patch.cursor <= *cursor {
+        return false;
+    }
+    if replace {
+        entries.clear();
+    }
+    for entry in &patch.upserts {
+        entries.insert(entry.seq, entry.clone());
+    }
+    *cursor = patch.cursor;
+    true
+}
+
+/// 🧾️ ticket §C5 — uncommitted-since-last-checkpoint count: the SAME "since the last Change" fold the
+/// React shell's `uncommittedEditCount` (`ShellHost/🟦️component.tsx`) uses — every applied
+/// mutation-kind entry counts, reset to 0 the moment a `commitCheckpoint` history-kind entry is seen,
+/// walked oldest-first (`BTreeMap` keyed by `seq` iterates in order already).
+#[cfg(not(target_arch = "wasm32"))]
+fn uncommitted_edit_count(entries: &BTreeMap<u64, semio_framework::kernel::HistoryEntry>) -> u32 {
+    let mut pending = 0u32;
+    for entry in entries.values() {
+        if entry.kind == "history" && entry.action_id == "commitCheckpoint" {
+            pending = 0;
+            continue;
+        }
+        if entry.kind == "mutation" && entry.applied {
+            pending += 1;
+        }
+    }
+    pending
+}
+
+/// 👁️✏️ ticket §C5 item 5 — "viewers never checkpoint", the wgpu twin of the React shell's
+/// `canCheckIn` (`ShellHelpers/🟦️component.tsx`): the one predicate gating both the `#s-checkin`
+/// affordance's presence and the auto check-in poll's arming.
+#[cfg(not(target_arch = "wasm32"))]
+fn can_check_in(role: semio_framework::manifest::AppRole) -> bool {
+    role == semio_framework::manifest::AppRole::Editor
+}
+
+/// 📌️ ticket §C5 item 2 — pure decision for the per-frame auto check-in poll. This shell has no timer
+/// wheel (see `render_sync_status_and_checkin`'s doc note on `HostEffect::DispatchAction`'s `delay_ms`
+/// collapsing to "next tick"), so `AutoCheckinScheduler`'s `setTimeout`-based debounce
+/// (`ShellHelpers/🟦️component.tsx`) is reproduced as a poll instead: fires once uncommitted edits
+/// reach `threshold` (never waiting out the idle window once crossed), or once `idle_ms` have elapsed
+/// since the last uncommitted-count change — and never again while `pending` is already set (mirrors
+/// `AutoCheckinScheduler::notify`'s own storm guard: a fire that's already pending never re-fires
+/// until the caller observes the count return to 0 and clears `pending`).
+#[cfg(not(target_arch = "wasm32"))]
+fn auto_checkin_should_fire(uncommitted_count: u32, pending: bool, last_edit_at_ms: Option<i64>, now_ms: i64, idle_ms: i64, threshold: u32) -> bool {
+    if uncommitted_count == 0 || pending {
+        return false;
+    }
+    if uncommitted_count >= threshold {
+        return true;
+    }
+    match last_edit_at_ms {
+        Some(last) => now_ms.saturating_sub(last) >= idle_ms,
+        None => false,
+    }
+}
+
+/// 📌️ ticket §C5 item 4 — the pure gate `checkpoint_before_detach` evaluates: checkpoint-on-close
+/// only when the session can check in at all (item 5's viewer guard), a document is actually attached
+/// (nothing to check in otherwise), and there really is something uncommitted.
+#[cfg(not(target_arch = "wasm32"))]
+fn should_checkpoint_before_detach(role: semio_framework::manifest::AppRole, has_attached_document: bool, uncommitted_count: u32) -> bool {
+    can_check_in(role) && has_attached_document && uncommitted_count > 0
+}
+
+/// 📌️ ticket §C5 item 6 — the pure decision `observe_invocation_history` uses to fire `TouchArtifact`:
+/// a checkpoint id change only counts when THIS shell itself dispatched the checkpoint that produced
+/// it (`checkpoint_dispatched`) — a checkpoint id present from the very first snapshot (nothing
+/// "landed", the session just mounted with a pre-existing one) or one made by a REMOTE peer must never
+/// trigger a redundant `TouchArtifact` of our own.
+#[cfg(not(target_arch = "wasm32"))]
+fn checkpoint_landed(previous_checkpoint_id: Option<&str>, next_checkpoint_id: Option<&str>, checkpoint_dispatched: bool) -> bool {
+    checkpoint_dispatched && next_checkpoint_id.is_some() && next_checkpoint_id != previous_checkpoint_id
+}
+//#endregion 🔖️CheckInPure
+
 //#region 🧪️IdentityDirectoryPresenceTests
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod identity_directory_presence_tests {
@@ -470,6 +568,87 @@ mod identity_directory_presence_tests {
         // being degraded is the more urgent fact, mirroring the React twin's own priority order.
         assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 9, remote: RemoteState::Backoff { retry_in_ms: 500 } })), "Remote: backoff");
     }
+
+    //#region 🧪️CheckInTests
+    fn mutation_entry(seq: u64, applied: bool) -> semio_framework::kernel::HistoryEntry {
+        semio_framework::kernel::HistoryEntry { seq, action_id: "apply".into(), label: "Apply".into(), kind: "mutation".into(), applied, ..Default::default() }
+    }
+
+    fn checkpoint_entry(seq: u64) -> semio_framework::kernel::HistoryEntry {
+        semio_framework::kernel::HistoryEntry { seq, action_id: "commitCheckpoint".into(), label: "Checkpoint".into(), kind: "history".into(), applied: true, ..Default::default() }
+    }
+
+    /// 🧪️ Verify item: "the fold merges upserts and resets the uncommitted count on a checkpoint".
+    #[test]
+    fn fold_history_patch_merges_upserts_and_uncommitted_count_resets_on_checkpoint() {
+        let mut entries = BTreeMap::new();
+        let mut cursor = 0u64;
+        let patch1 = semio_framework::kernel::HistoryPatch { cursor: 2, upserts: vec![mutation_entry(1, true), mutation_entry(2, true)], ..Default::default() };
+        assert!(fold_history_patch(&mut entries, &mut cursor, &patch1, false));
+        assert_eq!(uncommitted_edit_count(&entries), 2);
+        // 🎯️ A stale/duplicate reply (cursor no newer than tracked) changes nothing.
+        assert!(!fold_history_patch(&mut entries, &mut cursor, &patch1, false));
+        let patch2 = semio_framework::kernel::HistoryPatch { cursor: 3, upserts: vec![checkpoint_entry(3)], current_checkpoint_id: Some("chk-1".into()), ..Default::default() };
+        assert!(fold_history_patch(&mut entries, &mut cursor, &patch2, false));
+        assert_eq!(uncommitted_edit_count(&entries), 0, "a commitCheckpoint history entry resets the count");
+        // 🎯️ A fresh `ReadHistory` snapshot (`replace=true`) discards whatever was tracked before.
+        let snapshot = semio_framework::kernel::HistoryPatch { cursor: 1, upserts: vec![mutation_entry(1, true)], ..Default::default() };
+        assert!(fold_history_patch(&mut entries, &mut cursor, &snapshot, true));
+        assert_eq!(entries.len(), 1);
+        assert_eq!(uncommitted_edit_count(&entries), 1);
+    }
+
+    /// 🧪️ Verify item: "viewer guard" — `can_check_in` and its two downstream gates.
+    #[test]
+    fn viewers_never_check_in() {
+        assert!(can_check_in(semio_framework::manifest::AppRole::Editor));
+        assert!(!can_check_in(semio_framework::manifest::AppRole::Viewer));
+        assert!(should_checkpoint_before_detach(semio_framework::manifest::AppRole::Editor, true, 3));
+        assert!(!should_checkpoint_before_detach(semio_framework::manifest::AppRole::Viewer, true, 3), "a viewer with pending edits and an attached document still never checkpoints");
+    }
+
+    /// 🧪️ Verify item: "checkpoint-on-close" — the pure gate `checkpoint_before_detach` evaluates.
+    #[test]
+    fn checkpoint_before_detach_fires_only_with_an_attached_document_and_pending_edits() {
+        assert!(should_checkpoint_before_detach(semio_framework::manifest::AppRole::Editor, true, 1));
+        assert!(!should_checkpoint_before_detach(semio_framework::manifest::AppRole::Editor, false, 1), "nothing attached, nothing to check in");
+        assert!(!should_checkpoint_before_detach(semio_framework::manifest::AppRole::Editor, true, 0), "nothing uncommitted, nothing to check in");
+    }
+
+    /// 🧪️ Verify item: "auto-fires once per idle period" and "volume trigger".
+    #[test]
+    fn auto_checkin_fires_on_idle_or_volume_and_never_twice_while_pending() {
+        // 🎯️ No uncommitted edits: never fires, regardless of elapsed time.
+        assert!(!auto_checkin_should_fire(0, false, Some(0), 100_000, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD));
+        // 🎯️ Volume trigger — fires immediately once the threshold is reached, without waiting out
+        // the idle window (the edit just landed this instant: `now_ms == last_edit_at_ms`).
+        assert!(auto_checkin_should_fire(AUTO_CHECKIN_EDIT_THRESHOLD, false, Some(1_000), 1_000, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD));
+        // 🎯️ Below threshold, not yet idle long enough: does not fire.
+        assert!(!auto_checkin_should_fire(5, false, Some(1_000), 1_000 + AUTO_CHECKIN_IDLE_MS - 1, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD));
+        // 🎯️ Below threshold, idle window elapsed: fires exactly once per idle period.
+        assert!(auto_checkin_should_fire(5, false, Some(1_000), 1_000 + AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD));
+        // 🎯️ The storm guard: already pending (a checkpoint for this idle period is in flight) never
+        // fires again, even past the threshold, until the caller observes count return to 0.
+        assert!(!auto_checkin_should_fire(AUTO_CHECKIN_EDIT_THRESHOLD, true, Some(1_000), 1_000 + AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD));
+    }
+
+    /// 🧪️ Verify item: "TouchArtifact follows a checkpoint" — the pure decision
+    /// `observe_invocation_history` uses to fire it.
+    #[test]
+    fn touch_artifact_follows_only_a_checkpoint_this_shell_itself_dispatched() {
+        // 🎯️ We asked for a checkpoint, and a NEW checkpoint id landed — fire.
+        assert!(checkpoint_landed(None, Some("chk-1"), true));
+        assert!(checkpoint_landed(Some("chk-1"), Some("chk-2"), true));
+        // 🎯️ We asked for a checkpoint, but nothing changed (same id, e.g. a no-op reply) — no fire.
+        assert!(!checkpoint_landed(Some("chk-1"), Some("chk-1"), true));
+        // 🎯️ A checkpoint id changed, but THIS shell never dispatched one (a remote peer's checkpoint,
+        // or the session mounting with a pre-existing id) — must never fire our own TouchArtifact.
+        assert!(!checkpoint_landed(None, Some("chk-1"), false));
+        assert!(!checkpoint_landed(Some("chk-1"), Some("chk-2"), false));
+        // 🎯️ No checkpoint id at all yet — nothing landed.
+        assert!(!checkpoint_landed(None, None, true));
+    }
+    //#endregion 🧪️CheckInTests
 }
 //#endregion 🧪️IdentityDirectoryPresenceTests
 
@@ -863,6 +1042,43 @@ pub struct ShellState {
     #[cfg(not(target_arch = "wasm32"))]
     pub presence_surface: Option<String>,
     //#endregion 🔖️Identity
+    //#region 🔖️CheckIn
+    /// 🧾️ ticket §C5 — this session's live history projection (`history_cursor`/`history_entries`
+    /// mirror the React shell's `historyProjection` reducer), fed by `ReadHistory`
+    /// (session/document mount, `replace=true`) and `AppFrame::Invocation.history_patch` (every
+    /// dispatch response, `replace=false`) — see `fold_history_patch`/`observe_invocation_history`.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub history_cursor: u64,
+    #[cfg(not(target_arch = "wasm32"))]
+    pub history_entries: BTreeMap<u64, semio_framework::kernel::HistoryEntry>,
+    /// 🧾️ The most recent checkpoint id `HistoryPatch.currentCheckpointId` reported — compared against
+    /// its previous value to detect "a checkpoint landed" (§C5 item 6, `TouchArtifact`).
+    #[cfg(not(target_arch = "wasm32"))]
+    pub history_current_checkpoint_id: Option<String>,
+    /// 📌️ Ms-since-epoch of the last uncommitted-count CHANGE (any direction — mirrors
+    /// `AutoCheckinScheduler::notify` resetting its idle timer on every call, not just increases);
+    /// `None` whenever nothing is uncommitted.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub last_uncommitted_edit_at_ms: Option<i64>,
+    /// 📌️ The auto check-in poll's own `pending` latch (`AutoCheckinScheduler`'s twin): set the
+    /// instant an auto checkpoint is dispatched, cleared the moment `uncommitted_edit_count` returns
+    /// to 0 (a landed checkpoint) — the storm guard `auto_checkin_should_fire` reads.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub auto_checkin_pending: bool,
+    /// 📌️ §C5 item 6 — set right before ANY checkpoint (auto/explicit/close) THIS shell itself asked
+    /// for; cleared once the resulting `history_current_checkpoint_id` change is observed and
+    /// `TouchArtifact` fires — distinguishes "a checkpoint we asked for landed" from "the session just
+    /// mounted with a pre-existing checkpoint" (mirrors React's `checkpointDispatchedRef`).
+    #[cfg(not(target_arch = "wasm32"))]
+    pub checkpoint_dispatched: bool,
+    /// 📌️ ticket §C5 item 3 — explicit check-in's own message-prompt dialog: `None` when closed,
+    /// `Some(draft)` while open. This hand-painted footer chrome has no generic text-input widget (the
+    /// `Interpreter` pipeline's `UiEvent::TextInput` is deliberately bypassed here, same as
+    /// `render_presence_bar`'s own design note) — mirrors the pre-existing `sync_card_kind`/
+    /// `sync_card_draft` shell-owned keyboard-routed draft-field idiom instead of inventing a new one.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub checkin_dialog_draft: Option<String>,
+    //#endregion 🔖️CheckIn
     pub window_engagements: HashMap<String, WindowEngagement>,
     pub window_measures: HashMap<String, Vec<WindowMeasure>>,
     pub utility_collection_expanded: HashMap<String, bool>,
@@ -1158,6 +1374,20 @@ impl ShellState {
             presence_peers: Vec::new(),
             #[cfg(not(target_arch = "wasm32"))]
             presence_surface: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            history_cursor: 0,
+            #[cfg(not(target_arch = "wasm32"))]
+            history_entries: BTreeMap::new(),
+            #[cfg(not(target_arch = "wasm32"))]
+            history_current_checkpoint_id: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            last_uncommitted_edit_at_ms: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            auto_checkin_pending: false,
+            #[cfg(not(target_arch = "wasm32"))]
+            checkpoint_dispatched: false,
+            #[cfg(not(target_arch = "wasm32"))]
+            checkin_dialog_draft: None,
             window_engagements: HashMap::new(),
             window_measures: HashMap::new(),
             utility_collection_expanded: HashMap::new(),
@@ -2031,6 +2261,9 @@ impl ShellState {
         // drain, folded into this same every-frame pump (glue.rs's frame loop already calls this
         // method once per tick; adding a second call site outside this lane's lease was avoidable).
         let directory_changed = self.pump_directory_events().await;
+        // 📌️ ticket §C5 item 2 — the auto check-in poll, folded into the same every-frame pump for the
+        // identical reason (no timer wheel exists in this shell; see `auto_checkin_should_fire`'s doc).
+        self.poll_auto_checkin().await;
         let (instance_id, plugin_id, events) = {
             let Some(channel) = self.sync_channel.as_mut() else {
                 return directory_changed;
@@ -2184,6 +2417,257 @@ impl ShellState {
     }
     //#endregion 🔖️NativeBackboneSync
 
+    //#region 🔖️CheckIn
+    /// 🧾️ ticket §C5 — resets the local history projection and re-seeds it from a full
+    /// `ProgramBridgeEntry::read_history` snapshot (`replace=true`), called right after a document
+    /// attaches (`open_document`/`attach_sync_backbone`'s native branch) so a just-opened document's
+    /// own uncommitted-edit count starts from its OWN history, never a leftover projection from
+    /// whatever was open before. Best-effort: a read failure just leaves the projection empty (the
+    /// same posture every other native exchange call in this file already takes on error — logged, not
+    /// propagated, since a stale/absent history must never block opening a document).
+    #[cfg(not(target_arch = "wasm32"))]
+    fn refresh_history_snapshot(&mut self) {
+        self.history_cursor = 0;
+        self.history_entries.clear();
+        self.history_current_checkpoint_id = None;
+        self.last_uncommitted_edit_at_ms = None;
+        self.auto_checkin_pending = false;
+        self.checkpoint_dispatched = false;
+        let Some(session) = self.session.as_ref() else { return };
+        let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) else { return };
+        match plugin.read_history(session.instance_id) {
+            Ok(patch) => {
+                fold_history_patch(&mut self.history_entries, &mut self.history_cursor, &patch, true);
+                self.history_current_checkpoint_id = patch.current_checkpoint_id;
+            }
+            Err(error) => eprintln!("[DEBUG] wgpu shell read_history failed: {error}"),
+        }
+    }
+
+    /// 🧾️ ticket §C5 — folds an `InvocationResult.history_patch` (present on every `handleAction`/
+    /// `handleCommand` response, per `ProgramBridge/🧊️component.rs`'s `AppFrame::Invocation` decode)
+    /// into the running projection, updates the idle clock, and — the instant a checkpoint THIS shell
+    /// itself asked for (`checkpoint_dispatched`) is observed to have actually landed — fires
+    /// `TouchArtifact` on the space index (§C5 item 6). Called from both `dispatch_action` and
+    /// `dispatch_command` right after their own `program.handle_action`/`handle_command` call.
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn observe_invocation_history(&mut self, history_patch: Option<&semio_framework::kernel::HistoryPatch>) {
+        let Some(patch) = history_patch else { return };
+        if !fold_history_patch(&mut self.history_entries, &mut self.history_cursor, patch, false) {
+            return;
+        }
+        let count = uncommitted_edit_count(&self.history_entries);
+        if count == 0 {
+            self.last_uncommitted_edit_at_ms = None;
+            self.auto_checkin_pending = false;
+        } else {
+            self.last_uncommitted_edit_at_ms = Some(chrome_now_ms() as i64);
+        }
+        let landed = checkpoint_landed(self.history_current_checkpoint_id.as_deref(), patch.current_checkpoint_id.as_deref(), self.checkpoint_dispatched);
+        if patch.current_checkpoint_id.is_some() {
+            self.history_current_checkpoint_id = patch.current_checkpoint_id.clone();
+        }
+        if !landed {
+            return;
+        }
+        self.checkpoint_dispatched = false;
+        let Some(space_id) = self.open_space_id.clone() else { return };
+        let Some(document_id) = self.sync_channel.as_ref().map(|channel| channel.document_id.clone()) else { return };
+        if document_id != S_SPACE_INDEX_DOCUMENT_ID {
+            self.touch_space_index_artifact(&space_id, &document_id).await;
+        }
+    }
+
+    /// 📌️ ticket §C5 item 2 — the per-frame auto check-in poll, called from `pump_sync_events` (see
+    /// that method's own doc: "folded into the same every-frame pump"). Viewer sessions never arm
+    /// (`can_check_in`, item 5's guard) — the SAME predicate the `#s-checkin` affordance itself checks.
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn poll_auto_checkin(&mut self) {
+        let Some(session) = self.session.as_ref() else { return };
+        if !can_check_in(session.app.role) {
+            return;
+        }
+        let count = uncommitted_edit_count(&self.history_entries);
+        if count == 0 {
+            self.auto_checkin_pending = false;
+            self.last_uncommitted_edit_at_ms = None;
+            return;
+        }
+        let now_ms = chrome_now_ms() as i64;
+        if auto_checkin_should_fire(count, self.auto_checkin_pending, self.last_uncommitted_edit_at_ms, now_ms, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD) {
+            self.auto_checkin_pending = true;
+            self.dispatch_checkpoint("auto").await;
+        }
+    }
+
+    /// 📌️ ticket §C5 items 2/3/4 — fires `commitCheckpoint` through the same action funnel the
+    /// History panel's own "Checkpoint" button uses (`history_command` in `🔌️plugin/🦀️component.rs`),
+    /// with `authors` riding along (`history_command` still hardcodes `authors: Vec::new()` today per
+    /// `📓️w3-a-report.md`'s own `sharedFileRequest` — sent anyway so this is ready the moment that
+    /// lands). Viewer-guarded (item 5) so a stray call from `checkpoint_before_detach`/`poll_auto_checkin`
+    /// can never reach a viewer session even if their own callers' guards were ever relaxed.
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn dispatch_checkpoint(&mut self, message: &str) {
+        let Some(session) = self.session.clone() else { return };
+        if !can_check_in(session.app.role) {
+            return;
+        }
+        self.checkpoint_dispatched = true;
+        let authors: Vec<serde_json::Value> = self.identity.as_ref().map(|identity| vec![serde_json::json!({ "id": identity.user_id, "name": identity.display_name })]).unwrap_or_default();
+        let action = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "commitCheckpoint".into(), args: crate::action_args_json!({ "message": message, "authors": authors }) };
+        // 🧱️ `Box::pin` breaks a real call-graph cycle (`dispatch_action` → `handle_sync_action` →
+        // `attach_sync_backbone` → `checkpoint_before_detach` → here → `dispatch_action` again) that
+        // `rustc` rightly refuses to size without it (E0733) — the cycle is never actually walked at
+        // runtime for a `commitCheckpoint` action (its `controller_id` is the session's own app, never
+        // `"framework.sync"`), but the async-fn state machine's size is inferred statically regardless
+        // of which branch executes.
+        if let Err(error) = Box::pin(self.dispatch_action(action)).await {
+            eprintln!("[DEBUG] wgpu shell check-in checkpoint dispatch failed: {error}");
+            self.checkpoint_dispatched = false;
+        }
+    }
+
+    /// 📌️ ticket §C5 item 4 — checkpoint-on-close: called right before EVERY
+    /// `detach_sync_backbone_internal()` call site (this shell keeps exactly one document mounted at a
+    /// time, so attaching a different backbone IS closing whatever was open — same posture the React
+    /// shell's own report documents). Best-effort (mirrors React's "fire-and-forget, not gated on the
+    /// success-detection effect" note) — `dispatch_checkpoint`/`observe_invocation_history` still run
+    /// the normal detection+`TouchArtifact` path; this call site just doesn't await or fail the caller
+    /// on their outcome, since a failed close-time checkpoint must never block navigating away.
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn checkpoint_before_detach(&mut self) {
+        let Some(session) = self.session.as_ref() else { return };
+        let count = uncommitted_edit_count(&self.history_entries);
+        if !should_checkpoint_before_detach(session.app.role, self.sync_channel.is_some(), count) {
+            return;
+        }
+        self.dispatch_checkpoint("auto").await;
+    }
+
+    /// 📌️ ticket §C5 item 6 — `TouchArtifact` on the space's `index` document after a successful
+    /// checkpoint, mirroring the React shell's `touchSpaceIndexArtifact`. Reuses the CURRENTLY visible
+    /// session outright when it already IS this exact space's own index document (avoiding a second
+    /// `document_host` actor under the shared, non-space-scoped `"index"` key entirely); otherwise
+    /// spawns a FRESH, non-visible `s.space` editor instance + backbone attach for the duration of the
+    /// one `touchArtifact` dispatch, then tears both down immediately. Unlike the React shell's cached
+    /// background instance (`spaceIndexInstanceRef`), this does not cache across calls: `document_host`
+    /// keys its actor registry by the bare document id, not `(spaceId, documentId)`, so a PERSISTENT
+    /// background actor under `"index"` risks silently being replaced by a later legitimate
+    /// `open_document`/`attach_sync_backbone` call for a DIFFERENT space's index (or vice versa) with
+    /// no way for either side to detect the swap — spinning up fresh each time trades a little
+    /// efficiency for provable correctness under that shared-key constraint.
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn touch_space_index_artifact(&mut self, space_id: &str, artifact_id: &str) {
+        let now_ms = chrome_now_ms();
+        let actor = self.identity.as_ref().map(|identity| identity.user_id.clone()).unwrap_or_else(|| self.shell_session_id.clone());
+        let arguments: BTreeMap<String, serde_json::Value> = BTreeMap::from([("id".to_string(), serde_json::json!(artifact_id)), ("nowMs".to_string(), serde_json::json!(now_ms)), ("actor".to_string(), serde_json::json!(actor))]);
+        // 🐚️ Reuse the live session outright when it's already this exact space's own index document.
+        // Calls `program.handle_command` DIRECTLY rather than `self.dispatch_command` (which would
+        // recurse back into `observe_invocation_history` → `touch_space_index_artifact` — `rustc`
+        // rightly refuses that as unbounded async recursion without `Box::pin`; a direct low-level
+        // call is also the more honest shape here, since `touchArtifact` requests no `HostEffect`s for
+        // `dispatch_command`'s own effect loop to process).
+        if self.sync_channel.as_ref().map(|channel| channel.document_id.as_str()) == Some(S_SPACE_INDEX_DOCUMENT_ID) && self.open_space_id.as_deref() == Some(space_id) {
+            let Some(session) = self.session.clone() else { return };
+            let Some(program) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() else { return };
+            let Some(app) = find_dialect_app(&program, &space_index_dialect(), semio_framework::manifest::AppRole::Editor).cloned() else { return };
+            let invocation = semio_framework::manifest::CommandInvocation {
+                address: semio_framework::manifest::CommandAddress { owner: semio_framework::manifest::CommandOwnerAddress::App { plugin_id: session.plugin_id.clone(), app_id: app.id.clone() }, command_id: "touchArtifact".into() },
+                arguments,
+            };
+            match serde_json::to_string(&invocation) {
+                Ok(command_json) => {
+                    if let Err(error) = program.handle_command(session.instance_id, &command_json, &session.view_state).await {
+                        eprintln!("[DEBUG] wgpu shell touchArtifact (live session) failed: {error}");
+                    }
+                }
+                Err(error) => eprintln!("[DEBUG] wgpu shell touchArtifact (live session) encode failed: {error}"),
+            }
+            return;
+        }
+        // 🐚️ `document_host` keys its actor registry by the bare document id ("index", not
+        // space-scoped) — opening a background actor under that key while the MAIN slot is ALSO
+        // showing "index" for a DIFFERENT space would silently sever that live session's own backbone
+        // (`ArtifactHost::open`'s own "idempotent per id" contract). Skip rather than risk it.
+        if self.sync_channel.as_ref().map(|channel| channel.document_id.as_str()) == Some(S_SPACE_INDEX_DOCUMENT_ID) {
+            eprintln!("[DEBUG] wgpu shell touchArtifact skipped: main session already holds the shared \"index\" actor for a different space");
+            return;
+        }
+        let Some(program) = self.plugins.iter().find(|entry| find_dialect_app(entry, &space_index_dialect(), semio_framework::manifest::AppRole::Editor).is_some()).cloned() else { return };
+        let Some(app) = find_dialect_app(&program, &space_index_dialect(), semio_framework::manifest::AppRole::Editor).cloned() else { return };
+        let instance_id = match program.create_app(&app.id).await {
+            Ok(id) => id,
+            Err(error) => {
+                eprintln!("[DEBUG] wgpu shell touchArtifact background instance failed: {error}");
+                return;
+            }
+        };
+        let Some(runtime) = program.wasm_runtime() else {
+            program.destroy_app(instance_id);
+            return;
+        };
+        let data_dir = self.identity_env.as_ref().and_then(|env| env.data_dir.as_deref());
+        let surface = semio_framework::manifest::surface_app_id(&app.dialect, semio_framework::manifest::AppRole::Editor);
+        let bindings = default_persistence_bindings(self.identity.as_ref(), Some(space_id), data_dir, Some(surface.as_str()));
+        let actor_uri = format!("actor://{S_SPACE_INDEX_DOCUMENT_ID}");
+        let channels = self.document_host.open(ArtifactActorConfig { document_id: S_SPACE_INDEX_DOCUMENT_ID.to_string(), schema: S_SPACE_INDEX_DOCUMENT_SCHEMA.to_string(), bindings, watch_external: true, actor: actor.clone() });
+        if let Err(error) = runtime.register_host_backbone(&actor_uri, Box::new(channels.channel_backbone)) {
+            eprintln!("[DEBUG] wgpu shell touchArtifact register_host_backbone failed: {error}");
+            self.document_host.close(S_SPACE_INDEX_DOCUMENT_ID);
+            program.destroy_app(instance_id);
+            return;
+        }
+        if let Err(error) = program.attach_backbone(instance_id, &actor_uri) {
+            eprintln!("[DEBUG] wgpu shell touchArtifact attach_backbone failed: {error}");
+            self.document_host.close(S_SPACE_INDEX_DOCUMENT_ID);
+            program.destroy_app(instance_id);
+            return;
+        }
+        let _ = channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
+        let invocation = semio_framework::manifest::CommandInvocation {
+            address: semio_framework::manifest::CommandAddress { owner: semio_framework::manifest::CommandOwnerAddress::App { plugin_id: program.plugin_id.clone(), app_id: app.id.clone() }, command_id: "touchArtifact".into() },
+            arguments,
+        };
+        match serde_json::to_string(&invocation) {
+            Ok(command_json) => {
+                let view_state = ViewModel { locale: self.active_locale(), terminology: self.active_terminology(), ..Default::default() };
+                if let Err(error) = program.handle_command(instance_id, &command_json, &view_state).await {
+                    eprintln!("[DEBUG] wgpu shell touchArtifact dispatch failed: {error}");
+                }
+            }
+            Err(error) => eprintln!("[DEBUG] wgpu shell touchArtifact encode failed: {error}"),
+        }
+        self.document_host.close(S_SPACE_INDEX_DOCUMENT_ID);
+        program.destroy_app(instance_id);
+    }
+
+    /// 📌️ ticket §C5 item 3 — explicit check-in's message-prompt dialog funnel (`#s-checkin`'s own
+    /// dedicated controller, routed alongside `"framework.sync"` in `dispatch_action`): `open` shows
+    /// the dialog, `cancel` closes it without dispatching, `submit` dispatches with the typed message
+    /// (falling back to `"check-in"` for an empty/whitespace-only draft, matching the React shell's own
+    /// `submitCheckin`).
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn handle_checkin_action(&mut self, action: ActionDescriptor) -> Result<(), String> {
+        match action.action.as_str() {
+            "open" => {
+                self.checkin_dialog_draft = Some(String::new());
+                Ok(())
+            }
+            "cancel" => {
+                self.checkin_dialog_draft = None;
+                Ok(())
+            }
+            "submit" => {
+                let message = action.args.as_ref().and_then(|args| args.get("message")).and_then(DslValue::as_str).map(str::trim).filter(|value| !value.is_empty()).unwrap_or("check-in").to_string();
+                self.checkin_dialog_draft = None;
+                self.dispatch_checkpoint(&message).await;
+                Ok(())
+            }
+            _ => Ok(()),
+        }
+    }
+    //#endregion 🔖️CheckIn
+
     /// @emoji 🔗️ Opens the shell's active app document on a `framework/sync` `ArtifactHost` actor and
     /// wires the sandboxed plugin store to it, following `framework/product/os/core/rs`'s
     /// `host_runtime` canonical sequence (open → subscribe → register host channel → program
@@ -2197,6 +2681,10 @@ impl ShellState {
             let document_id = self.sync_document_id().unwrap_or_else(|| "document".into());
             let schema = session.app.breadcrumb.join(".");
             let bindings = Self::parse_persistence_binding(&uri)?;
+            // 📌️ ticket §C5 item 4 — checkpoint-on-close: this shell keeps exactly one session/document
+            // mounted at a time, so "attach a different backbone" IS "close" for whatever was open —
+            // same posture the React shell's own report documents ("switch away IS close here").
+            self.checkpoint_before_detach().await;
             self.detach_sync_backbone_internal();
             // 🔗️ The manual `remote://` sync-card override never carries a surface (§C6's
             // auto-binding is what threads one through — see `open_document` below), so the presence
@@ -2215,6 +2703,7 @@ impl ShellState {
             self.sync_backbone_uri = Some(uri);
             self.sync_card_kind = None;
             eprintln!("[DEBUG] wgpu shell attached backbone {}", self.sync_backbone_uri.as_deref().unwrap_or_default());
+            self.refresh_history_snapshot();
             self.refresh_ui().await?;
             Ok(())
         }
@@ -2239,6 +2728,9 @@ impl ShellState {
         let session = self.session.clone().ok_or("session missing")?;
         let plugin = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().ok_or("plugin missing")?;
         let runtime = plugin.wasm_runtime().ok_or("native plugin runtime missing")?;
+        // 📌️ ticket §C5 item 4 — checkpoint-on-close, same "switch away IS close" posture as
+        // `attach_sync_backbone` above (this shell keeps exactly one document mounted at a time).
+        self.checkpoint_before_detach().await;
         self.detach_sync_backbone_internal();
         self.presence_surface = surface;
         let actor_uri = format!("actor://{document_id}");
@@ -2253,6 +2745,7 @@ impl ShellState {
         self.sync_channel = Some(ShellSyncChannel { document_id, actor_uri, instance_id: session.instance_id, plugin_id: session.plugin_id.clone(), cmd_tx, events, connected_at_ms: chrome_now_ms() as i64 });
         self.sync_status = Some(ArtifactSyncStatus::default());
         self.sync_card_kind = None;
+        self.refresh_history_snapshot();
         self.refresh_ui().await
     }
 
@@ -2303,6 +2796,10 @@ impl ShellState {
                 self.attach_sync_backbone(uri).await
             }
             "detach" => {
+                // 📌️ ticket §C5 item 4 — the one EXPLICIT close (a user-initiated "Detach"), same
+                // checkpoint-before-detach guard as the two switch-triggered closes above.
+                #[cfg(not(target_arch = "wasm32"))]
+                self.checkpoint_before_detach().await;
                 #[cfg(not(target_arch = "wasm32"))]
                 self.detach_sync_backbone_internal();
                 self.sync_backbone_uri = None;
@@ -2395,6 +2892,13 @@ impl ShellState {
         if action.controller_id == "framework.sync" {
             return self.handle_sync_action(action).await;
         }
+        // 📌️ ticket §C5 item 3 — explicit check-in's own dedicated controller (`#s-checkin`'s
+        // open/cancel/submit dialog funnel), same shell-owned-chrome treatment as `framework.sync`
+        // above.
+        #[cfg(not(target_arch = "wasm32"))]
+        if action.controller_id == "framework.checkin" {
+            return self.handle_checkin_action(action).await;
+        }
         // 🧰️ Intercept the framework `setActiveUtility` View action to update the host-owned active-utility
         // map before forwarding to the plugin (which reacts by clearing its live-preview scratch). The
         // authoritative state is the shell map + the `ViewModel.active_utility_id` it injects on render.
@@ -2448,6 +2952,10 @@ impl ShellState {
         };
         let action_json = serde_json::to_string(&invocation).map_err(|err| err.to_string())?;
         let result = program.handle_action(session.instance_id, &action_json, &session.view_state).await?;
+        // 🧾️ ticket §C5 — fold this dispatch's own `history_patch` into the check-in projection (idle
+        // clock, checkpoint-landed detection + `TouchArtifact`) before anything else touches `self`.
+        #[cfg(not(target_arch = "wasm32"))]
+        self.observe_invocation_history(result.history_patch.as_ref()).await;
         // 🎓️ Advance-by-doing: this action was actually performed (the plugin call above succeeded), so
         // a tour step whose `advance` targets it moves on now — see `chrome_tour_note_action_performed`.
         self.chrome_tour_note_action_performed(&action.action);
@@ -2533,6 +3041,11 @@ impl ShellState {
         let program = self.plugins.iter().find(|entry| entry.plugin_id == *owner_plugin_id).ok_or("command program missing")?;
         let command_json = serde_json::to_string(&invocation).map_err(|error| error.to_string())?;
         let result = program.handle_command(session.instance_id, &command_json, &session.view_state).await?;
+        // 🧾️ ticket §C5 — same fold `dispatch_action` performs; a command-boundary edit (e.g. a
+        // plugin-owned command dispatched from the command palette) is just as real an uncommitted
+        // edit as an action-boundary one.
+        #[cfg(not(target_arch = "wasm32"))]
+        self.observe_invocation_history(result.history_patch.as_ref()).await;
         for effect in &result.requested_effects {
             match effect {
                 semio_framework::kernel::HostEffect::SetActiveUtility { window_id, utility_id } => self.apply_set_active_utility(window_id, utility_id),
@@ -4590,6 +5103,36 @@ impl ShellState {
                 _ => {}
             }
         }
+        // 📌️ ticket §C5 item 3 — same shell-owned keyboard-routed draft-field idiom as
+        // `sync_card_kind` above, for the check-in message-prompt card.
+        #[cfg(not(target_arch = "wasm32"))]
+        if self.checkin_dialog_draft.is_some() {
+            match action {
+                ui_wgpu::wgpu::KeyAction::Escape => {
+                    self.checkin_dialog_draft = None;
+                    return;
+                }
+                ui_wgpu::wgpu::KeyAction::Enter => {
+                    let message = self.checkin_dialog_draft.clone().unwrap_or_default();
+                    self.checkin_dialog_draft = None;
+                    self.deferred_actions.push(ActionDescriptor { controller_id: "framework.checkin".into(), action: "submit".into(), args: crate::action_args_json!({ "message": message }) });
+                    return;
+                }
+                ui_wgpu::wgpu::KeyAction::Char(key) => {
+                    if let Some(draft) = self.checkin_dialog_draft.as_mut() {
+                        draft.push_str(&key);
+                    }
+                    return;
+                }
+                ui_wgpu::wgpu::KeyAction::Backspace => {
+                    if let Some(draft) = self.checkin_dialog_draft.as_mut() {
+                        draft.pop();
+                    }
+                    return;
+                }
+                _ => {}
+            }
+        }
         if palette_open {
             match action {
                 ui_wgpu::wgpu::KeyAction::Escape => {
@@ -5291,20 +5834,12 @@ fn render_presence_bar(draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconA
 /// are SHELL-owned chrome, not a plugin-declared `UtilityNode`/`active_utilities` entry). `#s-checkin`
 /// is simply absent for a viewer session — contract §C5 "viewers never checkpoint" — never rendered
 /// disabled, mirroring `render_footer_utility_nodes`'s own undo/redo precedent one region up in the
-/// React twin. **Known gap vs the React shell** (documented in `📓️w3-a-report.md`): this dispatches a
-/// FIXED `"check-in"` message rather than opening a text-entry dialog — this footer's immediate-mode
-/// chrome has no text-input primitive today (confirmed: no `UiEvent::TextInput`-consuming widget
-/// anywhere in this file's footer/chrome code, only the generic plugin-surface `Interpreter` pipeline
-/// has one, which this hand-painted footer deliberately bypasses, same as `render_presence_bar`'s own
-/// design note). Auto check-in / checkpoint-on-close / `TouchArtifact` are NOT ported to this shell
-/// this wave either — the native wgpu shell tracks no history/uncommitted-edit projection at all
-/// today (verified: zero `HistoryPatch`/`read_history` call sites anywhere in this file), so there is
-/// no uncommitted-edit count to trigger an idle timer from without first building that tracking from
-/// scratch inside `dispatch_action`/`dispatch_command`'s shared match loops — real, unmitigated risk
-/// to take on blind while `semio-s-plugin-puzzle` keeps this whole crate from compiling (see the
-/// report's blocker section); left as an explicit follow-up instead.
+/// React twin. `uncommitted_count` mirrors React's own `(${count})` suffix on the button label; the
+/// button itself now opens the `#s-checkin-*` message-prompt card (`render_overlay`'s own doc note)
+/// through `framework.checkin`'s `open` action rather than dispatching a fixed-message checkpoint
+/// straight away.
 #[cfg(not(target_arch = "wasm32"))]
-fn render_sync_status_and_checkin(draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, status: Option<&ArtifactSyncStatus>, session: Option<&ActiveSession>, mut x: f32, btn_y: f32, btn_h: f32) -> f32 {
+fn render_sync_status_and_checkin(draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, status: Option<&ArtifactSyncStatus>, session: Option<&ActiveSession>, uncommitted_count: u32, mut x: f32, btn_y: f32, btn_h: f32) -> f32 {
     let pill_label = ShellState::sync_pill_text(status);
     let pill = ChromeGroupItem { control_id: "s-sync-status", icon_id: None, label: Some(pill_label.as_str()), active: false, disabled: false, kind: HitKind::Button };
     let pill_w = measure_chrome_group_item(atlas, theme, &pill);
@@ -5313,12 +5848,13 @@ fn render_sync_status_and_checkin(draw: &mut DrawList, atlas: &mut FontAtlas, ic
     input.register_hit(HitTarget { rect: pill_rect, event: None, control_id: Some("s-sync-status".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
     x += pill_w + theme.gap_standard * 0.5;
     if let Some(session) = session {
-        if session.app.role != semio_framework::manifest::AppRole::Viewer {
-            let checkin = ChromeGroupItem { control_id: "s-checkin", icon_id: None, label: Some("Check In"), active: false, disabled: false, kind: HitKind::Button };
+        if can_check_in(session.app.role) {
+            let label = if uncommitted_count > 0 { format!("Check In ({uncommitted_count})") } else { "Check In".to_string() };
+            let checkin = ChromeGroupItem { control_id: "s-checkin", icon_id: None, label: Some(label.as_str()), active: false, disabled: false, kind: HitKind::Button };
             let checkin_w = measure_chrome_group_item(atlas, theme, &checkin);
             let checkin_rect = Rect::new(x, btn_y, checkin_w, btn_h);
             render_chrome_group(draw, atlas, icons, input, theme, checkin_rect, &[checkin], true);
-            let event = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "commitCheckpoint".into(), args: crate::action_args_json!({ "message": "check-in" }) };
+            let event = ActionDescriptor { controller_id: "framework.checkin".into(), action: "open".into(), args: None };
             input.register_hit(HitTarget { rect: checkin_rect, event: Some(event), control_id: Some("s-checkin".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
             x += checkin_w + theme.gap_standard * 0.5;
         }
@@ -8673,7 +9209,8 @@ impl ShellState {
             if !first_section {
                 utility_x = render_footer_section_divider(draw, theme, utility_x, btn_y, btn_h);
             }
-            utility_x = render_sync_status_and_checkin(draw, atlas, icons, input, theme, self.sync_status.as_ref(), self.session.as_ref(), utility_x, btn_y, btn_h);
+            let uncommitted_count = uncommitted_edit_count(&self.history_entries);
+            utility_x = render_sync_status_and_checkin(draw, atlas, icons, input, theme, self.sync_status.as_ref(), self.session.as_ref(), uncommitted_count, utility_x, btn_y, btn_h);
         }
         let _ = utility_x;
         // 👥️ ticket §5 — the live presence roster, right-aligned in the footer, scoped to the
@@ -9046,6 +9583,51 @@ impl ShellState {
                     });
                 }
             }
+        }
+        // 📌️ ticket §C5 item 3 — explicit check-in's message-prompt card, the SAME hand-painted
+        // overlay-card idiom the `sync_card_kind` block above already establishes (this footer's
+        // immediate-mode chrome has no generic text-input widget — `checkin_dialog_draft`'s own field
+        // doc explains why a shell-owned keyboard-routed draft field is used instead). Real typed
+        // messages now reach `commitCheckpoint`, closing the "fixed message" gap
+        // `📓️w3-a-report.md` documented.
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(draft) = &self.checkin_dialog_draft {
+            let card_w = 320.0;
+            let card_h = 104.0;
+            let card_x = (width - card_w) * 0.5;
+            let card_y = height - theme.footer_height - card_h - theme.gap_standard;
+            overlay.push_solid([card_x, card_y, card_w, card_h], theme.panel);
+            overlay.push_solid([card_x, card_y, card_w, theme.stroke_hairline], theme.border_normal);
+            chrome_text(overlay, atlas, input, theme, "Check-in message", card_x + theme.padding_standard, card_y + theme.padding_standard, theme.font_size_small, theme.text);
+            let input_y = card_y + 36.0;
+            let input_h = theme.control_height;
+            overlay.push_solid([card_x + theme.padding_standard, input_y, card_w - theme.padding_standard * 2.0, input_h], theme.input_bg);
+            chrome_text(
+                overlay,
+                atlas,
+                input,
+                theme,
+                if draft.is_empty() { "check-in" } else { draft.as_str() },
+                card_x + theme.padding_standard + 8.0,
+                input_y + (input_h + theme.font_size_small) * 0.5 - 1.0,
+                theme.font_size_small,
+                theme.text,
+            );
+            let commit_rect = Rect::new(card_x + theme.padding_standard, card_y + card_h - theme.control_height - theme.padding_standard, 72.0, theme.control_height);
+            overlay.push_solid([commit_rect.x, commit_rect.y, commit_rect.w, commit_rect.h], theme.accent);
+            chrome_text(overlay, atlas, input, theme, "Commit", commit_rect.x + 12.0, commit_rect.y + (commit_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.active_foreground);
+            input.register_hit(HitTarget {
+                rect: commit_rect,
+                event: Some(ActionDescriptor { controller_id: "framework.checkin".into(), action: "submit".into(), args: crate::action_args_json!({ "message": draft }) }),
+                control_id: Some("s-checkin-commit".into()),
+                kind: HitKind::Button,
+                drag_axis: None,
+                drag_data: None,
+            });
+            let cancel_rect = Rect::new(commit_rect.x + commit_rect.w + theme.gap_standard, commit_rect.y, 72.0, theme.control_height);
+            overlay.push_solid([cancel_rect.x, cancel_rect.y, cancel_rect.w, cancel_rect.h], theme.button);
+            chrome_text(overlay, atlas, input, theme, "Cancel", cancel_rect.x + 12.0, cancel_rect.y + (cancel_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
+            input.register_hit(HitTarget { rect: cancel_rect, event: Some(ActionDescriptor { controller_id: "framework.checkin".into(), action: "cancel".into(), args: None }), control_id: Some("s-checkin-cancel".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
         }
         // render_palette removed
         if let Some(menu) = &self.context_menu {

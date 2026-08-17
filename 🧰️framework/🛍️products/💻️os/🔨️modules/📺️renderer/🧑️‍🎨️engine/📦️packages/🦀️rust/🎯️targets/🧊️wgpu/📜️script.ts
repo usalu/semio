@@ -187,9 +187,13 @@ class NativeRunScript extends BundleScript {
     }
     const catalog = loadFrameworkOsPlaygroundCatalog();
     const appArgs = resolveNativeAppArgs(catalog, filterPlugin);
+    // 🧪️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END — `--smoke` passes straight
+    // through to `semio-wgpu-native` (boots headless, dumps the widget tree as JSON, exits) instead of
+    // opening a real window; an honest way to drive/observe this shell in an environment that cannot.
+    const smokeArgs = segments.includes("--smoke") ? ["--smoke"] : [];
     const cargoArgs = ["run"];
     if (ship) cargoArgs.push("--release");
-    cargoArgs.push("-p", crateName, "--bin", "semio-wgpu-native", "--features", "native-bin", "--", "--plugin", filterPlugin, ...appArgs);
+    cargoArgs.push("-p", crateName, "--bin", "semio-wgpu-native", "--features", "native-bin", "--", "--plugin", filterPlugin, ...appArgs, ...smokeArgs);
     if (runCmdStatus("cargo", cargoArgs, { cwd: repoRoot, env: nativeEnv, ...daemonBudgetOpts() }) !== 0) {
       throw new Error("native wgpu renderer run failed");
     }

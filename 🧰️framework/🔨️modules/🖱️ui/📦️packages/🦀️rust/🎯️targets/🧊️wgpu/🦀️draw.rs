@@ -2,7 +2,7 @@
 //! 🖌️ Draw list and GPU pipeline for UI quads, vector geometry, and 3D scene passes.
 
 use crate::wgpu::shaders::{BLUR_DOWNSAMPLE_SHADER, GLASS_SHADER, SCENE_BLIT_SHADER, UI_SHADER, VECTOR_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER};
-use crate::wgpu::theme::{GlassStyle, Level, Rgba, Theme};
+use crate::wgpu::theme::{GlassStyle, Rgba, Theme};
 use bytemuck::{Pod, Zeroable};
 use super::kernel_3d_scene::ScenePass3d;
 use wgpu::util::DeviceExt;

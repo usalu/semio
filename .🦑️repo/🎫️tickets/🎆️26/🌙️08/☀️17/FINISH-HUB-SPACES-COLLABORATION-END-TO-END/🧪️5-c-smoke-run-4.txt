@@ -1,0 +1,2 @@
+[DEBUG] smoke: load_wasm_plugins failed: wasmtime: failed to parse WebAssembly module
+SMOKE_EXIT:1

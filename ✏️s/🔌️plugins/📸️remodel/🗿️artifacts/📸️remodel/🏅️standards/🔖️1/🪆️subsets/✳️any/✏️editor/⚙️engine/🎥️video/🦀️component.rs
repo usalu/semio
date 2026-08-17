@@ -2935,7 +2935,7 @@ fn visual_sample_entry_box(fourcc: &[u8; 4], width: u32, height: u32) -> Vec<u8>
 pub fn write_mp4_mjpeg(frames: &[Vec<u8>], fps: f64) -> Vec<u8> {
     let (width, height) = frames.first().and_then(|f| remodel_image::decode_jpeg(f).ok()).map_or((0, 0), |img| (img.width, img.height));
     let delta = if fps > 0.0 { (1000.0 / fps).round() as u32 } else { 1000 }.max(1);
-    let samples = frames.iter().map(|data| Mp4Sample { data: data.clone(), duration: delta, cts_offset: 0, sync: true }).collect();
+    let samples: Vec<_> = frames.iter().map(|data| Mp4Sample { data: data.clone(), duration: delta, cts_offset: 0, sync: true }).collect();
     let track = Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec::default(), width, height, metadata: Default::default(), chunk_sample_counts: vec![samples.len() as u32], samples };
     let snapshot = Mp4Snapshot {
         schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
@@ -2959,7 +2959,7 @@ fn sps_nal_dimensions(sps_nal: &[u8]) -> (u32, u32) {
 pub fn write_mp4_avc(nal_samples: &[Vec<u8>], sps_nal: &[u8], pps_nal: &[u8], fps: f64) -> Vec<u8> {
     let (width, height) = sps_nal_dimensions(sps_nal);
     let delta = if fps > 0.0 { (1000.0 / fps).round() as u32 } else { 1000 }.max(1);
-    let samples = nal_samples.iter().map(|data| Mp4Sample { data: data.clone(), duration: delta, cts_offset: 0, sync: true }).collect();
+    let samples: Vec<_> = nal_samples.iter().map(|data| Mp4Sample { data: data.clone(), duration: delta, cts_offset: 0, sync: true }).collect();
     let track = Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec { sps: vec![sps_nal.to_vec()], pps: vec![pps_nal.to_vec()], nal_length_size: 4, extension: None }, width, height, metadata: Default::default(), chunk_sample_counts: vec![samples.len() as u32], samples };
     let snapshot = Mp4Snapshot {
         schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),

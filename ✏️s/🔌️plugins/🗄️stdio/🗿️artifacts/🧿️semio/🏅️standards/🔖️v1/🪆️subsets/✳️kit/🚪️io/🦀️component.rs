@@ -108,11 +108,11 @@ pub mod derived_composition {
     //#region 🔖️Register
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::kit::schema::semio_kit_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioKitSnapshot, crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation>(
+        let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioKitSnapshot, crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation>(
             crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::STDIO_SEMIOKIT_DOCUMENT_SCHEMA,
         ));
-        register_subset_validator(validator_entry());
-        register_composer_entries(io_entries());
+        let _ = register_subset_validator(validator_entry());
+        let _ = register_composer_entries(io_entries());
         register_artifact_inferences();
     }
 

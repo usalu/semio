@@ -172,7 +172,7 @@ pub mod io_registry {
     }
 
     pub fn register() {
-        register_composer_entries(v_jfif_1_01::entries());
+        let _ = register_composer_entries(v_jfif_1_01::entries());
     }
 }
 //#endregion 🚪️DerivedIoRegistry

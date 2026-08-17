@@ -54,7 +54,7 @@ pub mod io_registry {
     }
 
     pub fn register() {
-        register_composer_entries(v_utf_8::entries());
+        let _ = register_composer_entries(v_utf_8::entries());
     }
 }
 //#endregion 🚪️DerivedIoRegistry

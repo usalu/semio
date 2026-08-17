@@ -1194,6 +1194,66 @@ pub fn run_native(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) 
     let _ = event_loop.run_app(&mut app);
 }
 
+/// 🧪️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END — headless smoke mode: boots
+/// `ShellState` against a live hub (`S_HUB_URL`/`S_USER`/`S_DATA_DIR`) with NO GPU/window at all —
+/// `GpuContext`/`winit`/`AppRuntime` are the only GPU-coupled pieces in this crate and this mode never
+/// touches any of them, since `ShellState` itself is renderer-agnostic (chrome painting is a separate
+/// concern layered on top by `AppRuntime::frame`). Boots, waits (bounded) for identity to mint/restore
+/// and the initial directory fold to land, then dumps the Home window's widget tree + a small identity/
+/// session summary as JSON to stdout and returns an exit code. An honest, explicit substitute for
+/// driving a real window when this environment cannot open one (lane 3-D's brief proposed exactly this
+/// shape). Returns `0` on a clean boot+dump, `1` on any hard failure along the way.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) -> i32 {
+    pollster::block_on(async {
+        let loaded = match load_wasm_plugins(plugin_filter, &plugin_modules_root) {
+            Ok(entries) => entries,
+            Err(error) => {
+                eprintln!("[DEBUG] smoke: load_wasm_plugins failed: {error}");
+                return 1;
+            }
+        };
+        let entries = filter_plugins(loaded, plugin_filter);
+        let mut shell = ShellState::new(entries, plugin_filter.to_string());
+        if let Err(error) = shell.boot().await {
+            eprintln!("[DEBUG] smoke: shell.boot() failed: {error}");
+            return 1;
+        }
+        // 🪪️ Identity mint/restore runs on a background OS thread (contract §C3: never blocks
+        // `boot()` itself) — poll the same every-frame pump the real render loop uses (drains the
+        // identity bootstrap channel + the directory stream + folds any pending events) for up to 5s
+        // so a real hub round trip has time to land before the dump.
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        while std::time::Instant::now() < deadline {
+            shell.pump_sync_events().await;
+            if shell.identity.is_some() || shell.identity_env.is_none() {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        let _ = shell.refresh_ui().await;
+        let identity_summary = shell.identity.as_ref().map(|identity| serde_json::json!({ "userId": identity.user_id, "email": identity.email, "hubBaseUrl": identity.hub_base_url }));
+        let report = serde_json::json!({
+            "booted": true,
+            "identity": identity_summary,
+            "identityOffline": shell.identity_offline,
+            "openSpaceId": shell.open_space_id,
+            "session": shell.session.as_ref().map(|session| serde_json::json!({ "pluginId": session.plugin_id, "appId": session.app.id, "role": format!("{:?}", session.app.role) })),
+            "windowUi": &shell.window_ui,
+        });
+        match serde_json::to_string_pretty(&report) {
+            Ok(json) => {
+                println!("{json}");
+                0
+            }
+            Err(error) => {
+                eprintln!("[DEBUG] smoke: report encode failed: {error}");
+                1
+            }
+        }
+    })
+}
+
 /// 🐚️ Multi-mount: takes an already-created, already-placed canvas from the caller instead of looking
 /// up a hardcoded `#root`/`#semio-wgpu-canvas` and taking it over via `set_inner_html("")` — that
 /// single-mount assumption meant a second boot call would wipe the first mount's canvas and collide on

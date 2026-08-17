@@ -5,6 +5,7 @@
 //! that edit and emits no mutations by construction (`ViewEmit`). Uses the frozen `ImageWindowKit`
 //! (contract §2.6) as raster's right base — this artifact IS a pixel image.
 
+use base64::Engine;
 use crate::artifacts::raster::RasterSnapshot;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit, WindowKit};
 use semio_framework_plugin::UiNode;
@@ -39,7 +40,7 @@ pub fn render(document: &RasterSnapshot) -> UiNode {
 
 /// 🧭️ `pub(super)` — the sibling `🧭️navigator` window reuses this exact composited view-model (same
 /// real pixels, not different content) rather than re-deriving it.
-pub(super) fn composited_image_view(document: &RasterSnapshot) -> ImageView {
+pub fn composited_image_view(document: &RasterSnapshot) -> ImageView {
     composite_document_to_png(document).unwrap_or_else(|| ImageView { width: 1, height: 1, mime: "image/png".into(), base64: RASTER_VIEW_FALLBACK_PNG_BASE64.into() })
 }
 

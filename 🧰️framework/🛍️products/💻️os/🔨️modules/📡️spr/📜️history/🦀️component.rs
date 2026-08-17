@@ -1218,7 +1218,7 @@ pub fn decode_composition<'d>(payload: &[u8], dict: &'d DictReader) -> Result<Hi
         return Err(malformed_fmt("composition", format));
     }
     let presence = input.read_u8()?;
-    let mut triple = |input: &mut ByteReader<'_>| -> Result<(String, String, String), ProtocolError> { Ok((read_id_field(input, dict, miss)?, read_id_field(input, dict, miss)?, read_id_field(input, dict, miss)?)) };
+    let triple = |input: &mut ByteReader<'_>| -> Result<(String, String, String), ProtocolError> { Ok((read_id_field(input, dict, miss)?, read_id_field(input, dict, miss)?, read_id_field(input, dict, miss)?)) };
     let owner = if presence & 1 != 0 { Some(triple(&mut input)?) } else { None };
     let dialect = if presence & 2 != 0 { Some(triple(&mut input)?) } else { None };
     let group_count = input.read_varint_u64()?;

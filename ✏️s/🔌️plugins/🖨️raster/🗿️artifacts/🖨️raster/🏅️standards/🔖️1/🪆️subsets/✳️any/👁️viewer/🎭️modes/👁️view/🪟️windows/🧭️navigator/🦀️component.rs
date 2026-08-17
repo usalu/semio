@@ -7,6 +7,7 @@
 //! is reserved for the Composite window — reusing it verbatim here would collide on id/body_key).
 
 use crate::artifacts::raster::RasterSnapshot;
+use crate::viewer::raster::modes::view::windows::composite;
 use semio_framework_plugin::app::{ImageWindowKit, WindowKit};
 use semio_framework_plugin::{LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
@@ -44,7 +45,7 @@ pub fn definition() -> WindowKindDefinition {
 /// view of the same content, not different content; the host renderer handles the scale-down
 /// presentation, not this pure snapshot read.
 pub fn render(document: &RasterSnapshot) -> UiNode {
-    ImageWindowKit::render(&super::composite::composited_image_view(document))
+    ImageWindowKit::render(&composite::composited_image_view(document))
 }
 //#endregion 🔖️Render
 

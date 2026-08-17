@@ -78,7 +78,7 @@ pub fn register() {
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    store::register_document_codec(store::ArtifactCodec::of::<crate::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot, crate::artifacts::binary::standards::v_raw::subsets::any::schema::mutations::BinaryMutation>(
+    let _ = store::register_document_codec(store::ArtifactCodec::of::<crate::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot, crate::artifacts::binary::standards::v_raw::subsets::any::schema::mutations::BinaryMutation>(
         crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA,
     ));
 }

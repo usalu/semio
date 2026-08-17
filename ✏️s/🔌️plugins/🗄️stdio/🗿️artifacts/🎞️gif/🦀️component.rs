@@ -70,8 +70,8 @@ pub mod io_registry {
     }
 
     pub fn register() {
-        register_composer_entries(v87a::entries());
-        register_composer_entries(v89a::entries());
+        let _ = register_composer_entries(v87a::entries());
+        let _ = register_composer_entries(v89a::entries());
     }
 }
 //#endregion 🚪️DerivedIoRegistry

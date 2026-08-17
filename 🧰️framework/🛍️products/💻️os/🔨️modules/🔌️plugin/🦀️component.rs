@@ -6837,6 +6837,30 @@ pub mod app {
                 assert_eq!(app.app_id(), real_id, "PluginApp::app_id must report the real canonical id, not the APP_ID placeholder");
             }
 
+            /// 🪪️ Verifies `EditorApp` initializes its document, config, draft, and interaction
+            /// envelopes with the real canonical surface app id, not the `APP_ID` placeholder.
+            #[test]
+            fn editor_app_envelopes_carry_the_real_canonical_surface_app_id() {
+                let app = new_app::<EditorApp<SurfaceEditorFixture>>();
+                let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Editor);
+                assert_eq!(app.store.envelope().id, real_id);
+                assert_eq!(app.config_store.envelope().id, format!("{real_id}-config"));
+                assert_eq!(app.draft_store.envelope().id, format!("{real_id}-draft"));
+                assert_eq!(app.interaction_store.envelope().id, format!("{real_id}-interaction"));
+            }
+
+            /// 🪪️ Verifies `ViewerApp` initializes its document, config, draft, and interaction
+            /// envelopes with the real canonical surface app id, not the `APP_ID` placeholder.
+            #[test]
+            fn viewer_app_envelopes_carry_the_real_canonical_surface_app_id() {
+                let app = new_viewer::<SurfaceViewerFixture>();
+                let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Viewer);
+                assert_eq!(app.store.envelope().id, real_id);
+                assert_eq!(app.config_store.envelope().id, format!("{real_id}-config"));
+                assert_eq!(app.draft_store.envelope().id, format!("{real_id}-draft"));
+                assert_eq!(app.interaction_store.envelope().id, format!("{real_id}-interaction"));
+            }
+
             /// 👁️🔒 Contract §2.3 clause 1/2 — WITH TEETH: dispatches the eight frozen mutating verbs
             /// through the full `VcsArtifactApp<ViewerApp<V>>` runtime path (`handle_action` for the
             /// seven string actions, `import_media` for the eighth) and asserts every one comes back
@@ -9978,10 +10002,10 @@ pub mod app {
     pub struct VcsArtifactApp<A: ArtifactApp> {
         app: A,
         pub(crate) store: ArtifactStore<A::Snapshot, A::Mutation>,
-        config_store: ConfigStore<A::Config, A::ConfigMutation>,
+        pub(crate) config_store: ConfigStore<A::Config, A::ConfigMutation>,
         /// @emoji 📝️ Volatile draft lane — never checkpoints; prune via `ArtifactCommand::PruneDrafts`.
         /// Moves to host `ArtifactSession` when CHANNEL_VERSION 5 exchange lands.
-        draft_store: store::DraftStore<A::Draft, A::DraftMutation>,
+        pub(crate) draft_store: store::DraftStore<A::Draft, A::DraftMutation>,
         /// @emoji 👥️ Ephemeral SHARED lane — a last-writer-wins peer roster, not an event log. Holds
         /// this actor's own presence plus whatever peers last broadcast; never persisted, never
         /// checkpointed, never undoable.
@@ -10122,12 +10146,13 @@ pub mod app {
         /// @emoji 🧬️ Constructs a wrapper carrying the app's {@link AppActionRegistry} so `handle_action`
         /// enforces default materialization, required-arg validation, and kind discipline.
         pub fn with_registry(app: A, registry: AppActionRegistry) -> Self {
-            let envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, A::APP_ID, A::initial_snapshot(), None);
-            let config_id = format!("{}-config", A::APP_ID);
+            let app_id = app.instance_id();
+            let envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, app_id, A::initial_snapshot(), None);
+            let config_id = format!("{}-config", app_id);
             let config_envelope = create_config_envelope::<A::Config, A::ConfigMutation>(A::config_schema(), &config_id, A::initial_config(), None);
-            let draft_id = format!("{}-draft", A::APP_ID);
+            let draft_id = format!("{}-draft", app_id);
             let draft_envelope = create_document_envelope::<A::Draft, A::DraftMutation>("draft.empty", &draft_id, A::initial_draft(), None);
-            let interaction_id = format!("{}-interaction", A::APP_ID);
+            let interaction_id = format!("{}-interaction", app_id);
             let interaction_envelope = create_document_envelope::<protocol::InteractionState, InteractionConfigMutation>("framework.interaction", &interaction_id, protocol::InteractionState::default(), None);
             let mut store = ArtifactStore::new(envelope).expect("failed to create document store");
             let config_store = ConfigStore::new(config_envelope).expect("failed to create config store");
@@ -13272,10 +13297,9 @@ pub mod app {
     /// below set `AppDefinition.id` directly rather than reading this const.
     pub struct EditorApp<E: ArtifactEditor> {
         /// 🪪️ The real derived surface id, computed once in `Default::default()`. NOT `Self::APP_ID`
-        /// (see struct doc) — exposed via `surface_id()` for the day `VcsArtifactApp`'s internal
-        /// `A::APP_ID` usages (its document/config/draft/interaction envelope ids, ownership-check
-        /// error strings) are switched to read an instance id instead of the const; see this ticket's
-        /// `📓️w0-b-report.md` handoff.
+        /// (see struct doc) — exposed via `surface_id()` and `instance_id()` for `VcsArtifactApp`'s
+        /// internal usages (its document/config/draft/interaction envelope ids, ownership-check
+        /// error strings).
         id: String,
         _editor: std::marker::PhantomData<E>,
     }
@@ -13883,7 +13907,22 @@ pub mod plugin_runtime {
     /// Ensures the embedding plugin crate's bundle installer ran before any WIT export is served.
     pub fn ensure_plugin_initialized() {
         PLUGIN_INIT_ONCE.call_once(|| {
-            #[cfg(target_arch = "wasm32")]
+            // 🩹️ `console_error_panic_hook` calls into `web-sys`'s wasm-bindgen `console.error` import,
+            // which only exists for a classic wasm-bindgen `wasm32-unknown-unknown` browser build — the
+            // component-model `wasm32-wasip2` target (every real plugin build, per `target_env = "p2"`
+            // below) has no such import wired by jco's transpilation. Installing this hook there means
+            // the FIRST real panic anywhere in the plugin re-panics INSIDE the hook itself
+            // ("cannot call wasm-bindgen imported functions on non-wasm targets", observed live —
+            // ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 4-I, continued in
+            // 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-A), which traps the wasm
+            // instance harder than a plain panic would and can leave `InstanceGuard` permanently
+            // poisoned (`plugin instance busy` forever after, since `clearInstanceGuard`'s own export
+            // call can no longer reach a dead instance either). Excluding `target_env = "p2"` restores
+            // this hook for a genuine wasm-bindgen browser build (if one is ever compiled from this
+            // crate) while leaving every real wasip2 plugin build to its default `panic = "abort"`
+            // trap — no console-log niceties lost there today since nothing wired jco's own panic
+            // reporting to this hook's target anyway.
+            #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
             console_error_panic_hook::set_once();
             #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
             crate::host_port::register_host_backbone_channel();
@@ -14261,7 +14300,7 @@ pub mod plugin_runtime {
     /// `FolderEndpoint` (and any other schema-string-keyed caller) can print/parse that kind without
     /// depending on its concrete `Snapshot`/`Mutation` types.
     pub fn register_document_codec_for_app<A: ArtifactApp>(schema: impl Into<String>) -> Result<(), store::DocumentCodecRegistryError> {
-        store::register_document_codec(store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema))
+        let _ = store::register_document_codec(store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema))
     }
 
     /// @emoji 🔗️ Attaches a backbone channel by URI. The URI is resolved to a `store::PortBackbone`

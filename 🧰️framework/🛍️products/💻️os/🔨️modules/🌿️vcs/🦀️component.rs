@@ -167,7 +167,7 @@ pub enum VcsError {
     #[error("empty apply command")]
     EmptyApply,
     #[error("mutation diff rejected: {0}")]
-    MutationApply(#[from] crate::os_spr::MutationApplyError),
+    MutationApply(#[from] MutationApplyError),
     #[error("nothing to undo")]
     NothingToUndo,
     #[error("cannot undo edit authored by another actor: {0}")]

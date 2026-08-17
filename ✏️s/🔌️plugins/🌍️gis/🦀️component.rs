@@ -12,8 +12,8 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("gis")
         .label("GIS")
         .version("0.1.0")
-        .artifact(crate::artifacts::gismap::declaration())
-        .artifact(crate::artifacts::gisterrain::declaration())
+        .artifact(crate::artifacts::gismap::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::gisterrain::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .host_media_handler(HostMediaHandlerDeclaration::two_d_svg_export(
             "s.gis.host-media.two-d-svg",
             crate::artifacts::gismap::artifact_kind(),

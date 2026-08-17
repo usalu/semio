@@ -1252,7 +1252,7 @@ fn placeholder_scale3(v: [f32; 3], s: f32) -> [f32; 3] {
     [v[0] * s, v[1] * s, v[2] * s]
 }
 
-fn placeholder_midpoint(verts: &mut Vec<[f32; 3]>, cache: &mut std::collections::HashMap<(u32, u32), u32>, a: u32, b: u32) -> u32 {
+fn placeholder_midpoint(verts: &mut Vec<[f32; 3]>, cache: &mut HashMap<(u32, u32), u32>, a: u32, b: u32) -> u32 {
     let key = if a < b { (a, b) } else { (b, a) };
     if let Some(index) = cache.get(&key) {
         return *index;
@@ -1288,7 +1288,7 @@ fn placeholder_ico_sphere(radius: f32, subdivisions: u32) -> WorldMeshBuffers {
     ];
     for _ in 0..subdivisions {
         let mut next = Vec::new();
-        let mut midpoint_cache = std::collections::HashMap::new();
+        let mut midpoint_cache = HashMap::new();
         for face in &faces {
             let a = placeholder_midpoint(&mut verts, &mut midpoint_cache, face[0], face[1]);
             let b = placeholder_midpoint(&mut verts, &mut midpoint_cache, face[1], face[2]);
@@ -2135,11 +2135,11 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
 
 fn apply_runtime_draw_flags(state: &mut World3dState) {
     let granularity = state.granularity.clone();
-    let component_ids: std::collections::HashSet<String> = state.component_ids.iter().cloned().collect();
+    let component_ids: HashSet<String> = state.component_ids.iter().cloned().collect();
     let local_hover_id = state.local_hover_id.clone();
     let hovered_component_object_id = state.hovered_component_object_id.clone();
-    let selected_ids: std::collections::HashSet<String> = state.selected_ids.iter().cloned().collect();
-    let mut object_index_map = std::collections::HashMap::new();
+    let selected_ids: HashSet<String> = state.selected_ids.iter().cloned().collect();
+    let mut object_index_map = HashMap::new();
     let mut index = 0u32;
     for draw in &state.draws {
         for instance in &draw.instances {
@@ -3242,7 +3242,7 @@ fn pick_component_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
                         if screen_dist > PICK_EDGE_SCREEN_PX {
                             continue;
                         }
-                        let ray_dist = ui_wgpu::wgpu::ray_segment_distance(origin, dir, a, b).unwrap_or(f32::INFINITY);
+                        let ray_dist = ray_segment_distance(origin, dir, a, b).unwrap_or(f32::INFINITY);
                         let depth = a.add(b).scale(0.5).sub(origin).dot(dir);
                         let better = match &best {
                             None => true,

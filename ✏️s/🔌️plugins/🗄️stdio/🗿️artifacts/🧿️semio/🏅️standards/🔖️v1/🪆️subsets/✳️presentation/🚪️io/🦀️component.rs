@@ -117,11 +117,11 @@ pub mod derived_composition {
     /// presentation<->pptx io bridge row. Called from this artifact's standard-level `engine::register()`.
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::presentation::schema::semio_presentation_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioPresentationSnapshot, crate::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::SemioPresentationMutation>(
+        let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioPresentationSnapshot, crate::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::SemioPresentationMutation>(
             crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA,
         ));
-        register_subset_validator(validator_entry());
-        register_composer_entries(io_entries());
+        let _ = register_subset_validator(validator_entry());
+        let _ = register_composer_entries(io_entries());
         register_artifact_inferences();
     }
 

@@ -158,7 +158,7 @@ pub mod io_registry {
     }
 
     pub fn register() {
-        register_composer_entries(v_rfc8259::entries());
+        let _ = register_composer_entries(v_rfc8259::entries());
     }
 }
 //#endregion 🚪️DerivedIoRegistry

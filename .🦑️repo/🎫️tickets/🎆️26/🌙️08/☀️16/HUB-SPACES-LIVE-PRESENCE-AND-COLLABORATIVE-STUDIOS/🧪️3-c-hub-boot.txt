@@ -153,6 +153,8 @@ computing gzip size...
 
 Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 
+    Blocking waiting for file lock on build directory
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
 warning: unexpected `cfg` condition value: `js`
    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:350:11
     |
@@ -256,6 +258,7 @@ warning: method `set_envelope` is never used
      = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
 
 warning: `semio-framework-os-kernel` (lib) generated 9 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+   Compiling semio-framework-os-kernel-db v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust)
 warning: `read_varint_u64` is ambiguous
    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:254:25
     |
@@ -1109,8 +1112,9 @@ help: remove the unnecessary path segments
 111 +     pub state_hash: Option<ContentHash>,
     |
 
+   Compiling semio-hub v0.1.0 (/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust)
 warning: `semio-framework-os-kernel-db` (lib) generated 62 warnings (run `cargo fix --lib -p semio-framework-os-kernel-db` to apply 47 suggestions)
-    Finished `dev` profile [unoptimized] target(s) in 0.46s
+    Finished `dev` profile [unoptimized] target(s) in 3m 04s
 warning: the following packages contain code that will be rejected by a future version of Rust: semio-framework-os-kernel-db v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust)
 note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 20`
      Running `/Users/ueli/Documents/semio/target/debug/os-hub`

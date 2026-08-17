@@ -86,7 +86,7 @@ pub mod derived_composition {
     /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::svg::standards::v1_1::engine::io_registry::entries()`).
     pub fn register() {
-        register_subset_validator(validator_entry());
+        let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
 

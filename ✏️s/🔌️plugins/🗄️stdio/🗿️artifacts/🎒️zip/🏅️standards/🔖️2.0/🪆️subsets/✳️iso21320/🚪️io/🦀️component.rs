@@ -99,7 +99,7 @@ pub mod derived_composition {
     /// (`crate::artifacts::zip::standards::v2_0::subsets::any::io::io_registry::entries()`), matching
     /// how `✳️any`'s own entry is registered.
     pub fn register() {
-        register_subset_validator(validator_entry());
+        let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
 

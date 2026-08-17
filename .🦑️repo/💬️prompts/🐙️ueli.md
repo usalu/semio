@@ -408,7 +408,6 @@ e.g. puzzle 3d fill is an interaction.
 stochastic-extend is a mutation that takes a number, a distribution, a seed and then adds the number of objects to the aggregation depending on the distribution.
 The fill interaction has a count slider, a seed stepper, a distribution tree. 
 When the slider is increased, then the stochastic-extend mutation is called with the new count, the same distribution and the same seed. When the slider is decreased, then the number for stochastic-extend is decreased. The special part is that when the slider is increased again, then a new stochastic-extend is started with for the remaining new objects. This achieves the experience that when the slider is decreased and ramped up again, then the new objects are always
-- 
 
 ---
 
@@ -419,11 +418,7 @@ Operations are a new level in between edits and mutations (An edit has operation
 An operation takes an artifact and parameters as an input and returns mutations for that artifact. 
 Nodes in a workflow are no longer apps but operations.
 Operations have a config with parameters
-Operations are state machines (depending on some parameters others )
-- 
-
-
- and introduce a new abstraction:
+Operations are state machines (depending on some parameters others
 
 ```
 <artifact>
@@ -2308,6 +2303,13 @@ This MUST NOT happen.
 ## ui
 
 ###
+
+---
+
+ui: On all action icons, drag handles, etc where there is no label, when hovering over them they should show a tooltip. The tooltip should show the hotkey if there is one.
+e.g. drag handle:
+Click and hold left click to drag `<name>` 
+e.g. Click and hold left click to drag Perspective Window
 
 ---
 

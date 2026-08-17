@@ -862,12 +862,28 @@ async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonl
 /** @emoji 🎪️ Exported so a multi-variant host (e.g. the mit-bestand demonstrator, which needs every one
  * of its six panes' plugin crates built into the SAME shared `🔌️plugin-modules/` dir rather than one
  * variant's own isolated dev/build) can call this directly per variant instead of shelling out to this
- * script's own CLI once per variant. */
+ * script's own CLI once per variant.
+ *
+ * @emoji 🧯️ Best-effort, same as `buildPluginsStreaming` below: one crate's compiler error no longer
+ * aborts the whole catalog (`buildPlugin` used to `throw` mid-loop, so `plugin s` never got past the
+ * first broken crate) — every target is attempted, failures are collected, and a summary line is
+ * printed at the end naming exactly which crates produced a `.wasm` and which did not. */
 export async function buildPlugins(filterPlugin?: string): Promise<void> {
   ensureAppleDeveloperDir();
   const targets = await preparePluginBuildTargets(filterPlugin);
+  const failed: string[] = [];
   for (const target of targets) {
-    await buildPlugin(target);
+    try {
+      await buildPlugin(target);
+    } catch (error) {
+      failed.push(target.pluginId);
+      console.error(`[DEBUG] plugin build failed, continuing with remaining targets: ${target.pluginId}`, error);
+    }
+  }
+  const builtCount = targets.length - failed.length;
+  console.log(`[DEBUG] plugin catalog build summary: ${builtCount}/${targets.length} crate(s) produced .wasm`);
+  if (failed.length > 0) {
+    console.log(`[DEBUG] plugin catalog build failures (${failed.length}): ${failed.join(", ")}`);
   }
 }
 

@@ -3,13 +3,7 @@
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_os_kernel as pack;
-extern crate semio_framework_os_kernel as spr;
 
-extern crate self as infinite_world;
-extern crate self as infinite_canvas;
-extern crate self as infinite_board;
 extern crate self as infinite;
 
 //#region 🔖️KernelModuleAliases
@@ -33,7 +27,6 @@ pub use component::*;
 
 #[path = "../../🌍️world/🦀️component.rs"]
 pub mod world;
-pub use world::*;
 
 #[path = "../../🖼️canvas/🦀️component.rs"]
 pub mod canvas;

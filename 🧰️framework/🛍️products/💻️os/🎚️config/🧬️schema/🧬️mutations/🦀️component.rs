@@ -10,7 +10,7 @@
 // SAME depth `📌️set-default-app`/`🧹clear-default-app`'s `use super::super::OpeningConfigMutation;`
 // already require two supers to reach), this file's own module sits ONE level inside `🧬️mutations`,
 // so `DefaultApp`/`OpeningPreferences` (declared at the schema level) need `super::super`, not `super`.
-use super::super::{DefaultApp, OpeningPreferences};
+use super::super::OpeningPreferences;
 use protocol::{Mutation, MutationDiff, MutationKind, MutationOutcome};
 use serde::{Deserialize, Serialize};
 

@@ -258,7 +258,7 @@ impl SequenceSession {
 
     #[wasm_bindgen(js_name = lodScaleJson)]
     pub fn lod_scale_json(&self) -> String {
-        infinite_board_port_directed_dag::dag_lod_scale_json()
+        infinite_board_port_directed_dag::board::ports::directed_dag::dag_lod_scale_json()
     }
 
     #[wasm_bindgen(js_name = setAutomaticLod)]

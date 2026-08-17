@@ -323,7 +323,7 @@ pub fn register() {
     ::schema::register_artifact_schema_descriptor(ifc2x3_artifact_schema_descriptor());
     register_artifact_inferences();
     register_pilot_languages();
-    store::register_document_codec(store::ArtifactCodec::of::<Ifc2x3Snapshot, crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::Ifc2x3Mutation>(
+    let _ = store::register_document_codec(store::ArtifactCodec::of::<Ifc2x3Snapshot, crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::Ifc2x3Mutation>(
         crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA,
     ));
     // 🛡️ D5's generic validate-on-build hook: registers each real subset's `SubsetValidator` so

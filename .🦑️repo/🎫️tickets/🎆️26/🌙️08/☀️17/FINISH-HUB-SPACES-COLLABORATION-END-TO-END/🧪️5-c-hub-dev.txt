@@ -1,0 +1,1184 @@
+$ bun ./📜️script.ts nx run os-hub:dev
+
+ NX   Running target dev for project os-hub and 1 task it depends on:
+
+
+
+> nx run os-hub-admin:build  [local cache]
+
+
+> nx run os-hub:dev
+
+> bun ./📜️script.ts dev
+
+
+[2m> [22m[2mnx run[22m os-hub-admin:build  [2m[local cache][22m
+
+> bun ./📜️script.ts build
+
+[36mvite v7.3.6 [32mbuilding client environment for production...[36m[39m
+transforming...
+Found 1 warning while optimizing generated CSS:
+
+[2m│       transition: background-color 120ms ease;[22m
+[2m│     }[22m
+[2m│[22m     *::-webkit-scrollbar:hover::-webkit-scrollbar-thumb {
+[2m┆[22m                                                        [33m[2m^--[22m Invalid state[39m
+[2m┆[22m
+[2m│       background-color: var(--scrollbar-thumb);[22m
+[2m│     }[22m
+
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+
+/asset/🔤️fonts/🔤️anta/🔤️latin.woff2 referenced in /asset/🔤️fonts/🔤️anta/🔤️latin.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/🔤️anta/🔤️latin-ext.woff2 referenced in /asset/🔤️fonts/🔤️anta/🔤️latin-ext.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/🔤️anta/🔤️math.woff2 referenced in /asset/🔤️fonts/🔤️anta/🔤️math.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/🔤️anta/🔤️symbols.woff2 referenced in /asset/🔤️fonts/🔤️anta/🔤️symbols.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/🔤️kelly-slab/🔤️latin.woff2 referenced in /asset/🔤️fonts/🔤️kelly-slab/🔤️latin.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/🔤️kelly-slab/🔤️latin-ext.woff2 referenced in /asset/🔤️fonts/🔤️kelly-slab/🔤️latin-ext.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/🔤️kelly-slab/🔤️cyrillic.woff2 referenced in /asset/🔤️fonts/🔤️kelly-slab/🔤️cyrillic.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/🔤️share-tech-mono/🔤️latin.woff2 referenced in /asset/🔤️fonts/🔤️share-tech-mono/🔤️latin.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️emoji-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️emoji-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️0-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️0-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️1-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️1-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️2-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️2-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️3-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️3-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️4-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️4-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️5-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️5-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️6-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️6-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️7-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️7-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️8-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️8-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️9-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️9-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️10-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️10-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️11-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️11-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_dark.svg referenced in /asset/👆️cursor/🔣️cursor_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_pointer_dark_inkscape.svg referenced in /asset/👆️cursor/🔣️cursor_pointer_dark_inkscape.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_grab_dark.svg referenced in /asset/👆️cursor/🔣️cursor_grab_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_grabbing.svg referenced in /asset/👆️cursor/🔣️cursor_grabbing.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_ew-resize_dark.svg referenced in /asset/👆️cursor/🔣️cursor_ew-resize_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_ns-resize_dark.svg referenced in /asset/👆️cursor/🔣️cursor_ns-resize_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_nesw-resize_dark.svg referenced in /asset/👆️cursor/🔣️cursor_nesw-resize_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_nwse-resize_dark.svg referenced in /asset/👆️cursor/🔣️cursor_nwse-resize_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_move_dark.svg referenced in /asset/👆️cursor/🔣️cursor_move_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_crosshair_dark.svg referenced in /asset/👆️cursor/🔣️cursor_crosshair_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_selectable_dark.svg referenced in /asset/👆️cursor/🔣️cursor_selectable_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_foldable_dark.svg referenced in /asset/👆️cursor/🔣️cursor_foldable_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_not-allowed_dark.svg referenced in /asset/👆️cursor/🔣️cursor_not-allowed_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+[32m✓[39m 2649 modules transformed.
+rendering chunks...
+[33m[plugin vite:reporter] 
+(!) /Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts is dynamically imported by /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts but also statically imported by /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🔨️modules/⌨️control-keybinding-context/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌈️Surface/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️UIDialog/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🚗️UiDriver/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, dynamic import will not move module into another chunk.
+[39m
+computing gzip size...
+[2m📤️dist/[22m[32m🌐️index.html                               [39m[1m[2m    0.82 kB[22m[1m[22m[2m │ gzip:   0.45 kB[22m
+[2m📤️dist/[22m[2massets/[22m[32mpdf.worker.min-iDqQPrd3.mjs          [39m[1m[2m1,232.30 kB[22m[1m[22m
+[2m📤️dist/[22m[2massets/[22m[35m🌐️index-CIwPbQyp.css                [39m[1m[2m  213.43 kB[22m[1m[22m[2m │ gzip:  31.85 kB[22m
+[2m📤️dist/[22m[2massets/[22m[36m__vite-browser-external-DauzbRu6.js  [39m[1m[2m    0.34 kB[22m[1m[22m[2m │ gzip:   0.24 kB[22m
+[2m📤️dist/[22m[2massets/[22m[36mreact.esm-oiCweJ02.js                [39m[1m[2m    7.16 kB[22m[1m[22m[2m │ gzip:   2.96 kB[22m
+[2m📤️dist/[22m[2massets/[22m[36mindex-NQ7lUUAI.js                    [39m[1m[2m   61.35 kB[22m[1m[22m[2m │ gzip:  18.70 kB[22m
+[2m📤️dist/[22m[2massets/[22m[36mdom.esm-jsHsi4Mv.js                  [39m[1m[2m  186.65 kB[22m[1m[22m[2m │ gzip:  39.70 kB[22m
+[2m📤️dist/[22m[2massets/[22m[36mindex-DLtQAXGb.js                    [39m[1m[2m  192.38 kB[22m[1m[22m[2m │ gzip:  60.29 kB[22m
+[2m📤️dist/[22m[2massets/[22m[36m🌐️index-gvl_NrYC.js                 [39m[1m[33m2,608.23 kB[39m[22m[2m │ gzip: 609.62 kB[22m
+[33m
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[32m✓ built in 5.20s[39m
+
+
+
+[0m[7m[1m[32m NX [39m[22m[27m[0m  [32mSuccessfully ran target [1mbuild[22m for project os-hub-admin[39m
+
+[2mNx read the output from the cache instead of running the command for 1 out of 1 tasks.[22m
+
+    Blocking waiting for file lock on build directory
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:350:11
+    |
+350 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `typegen`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:356:11
+    |
+356 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `typegen`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:710:16
+    |
+710 |     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+710 -     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+710 +     V: Clone + Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:710:47
+    |
+710 |     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+710 -     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+710 +     V: Clone + crate::os_vcs::Identified<K> + Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:777:16
+    |
+777 |     V: Clone + crate::os_vcs::Patchable<Patch>,
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+777 -     V: Clone + crate::os_vcs::Patchable<Patch>,
+777 +     V: Clone + Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:170:27
+    |
+170 |     MutationApply(#[from] crate::os_spr::MutationApplyError),
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+170 -     MutationApply(#[from] crate::os_spr::MutationApplyError),
+170 +     MutationApply(#[from] MutationApplyError),
+    |
+
+warning: unused variable: `len`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21
+    |
+585 |                 let len = end_j - i;
+    |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1221:9
+     |
+1221 |     let mut triple = |input: &mut ByteReader<'_>| -> Result<(String, String, String), ProtocolError> { Ok((read_id_field(input, di...
+     |         ----^^^^^^
+     |         |
+     |         help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4506:19
+     |
+4317 | / impl<P, Mutation> ArtifactStore<P, Mutation>
+4318 | | where
+4319 | |     P: Clone + Serialize + DeserializeOwned + ArtifactPack,
+4320 | |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
+     | |___________________________________________________________________________________________- method in this implementation
+...
+4506 |       pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) -> Result<(), ...
+     |                     ^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 9 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+   Compiling semio-framework-os-kernel-db v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust)
+warning: `read_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:254:25
+    |
+254 |     let seg_len = pack::read_varint_u64(&prefix[..read], &mut pos)?;
+    |                         ^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `read_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `read_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+    = note: `-W ambiguous-glob-imports` implied by `-W future-incompatible`
+    = help: to override `-W future-incompatible` add `#[allow(ambiguous_glob_imports)]`
+
+warning: `WriteOptions` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:297:25
+    |
+297 |     let options = pack::WriteOptions { required_flags, optional_flags: 0, codec: pack::CodecId(0) };
+    |                         ^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `WriteOptions` could refer to the struct defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `WriteOptions` could also refer to the struct defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:418:91
+    |
+418 |         let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), pack::VerificationLevel::Standard)?;
+    |                                                                                           ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:419:70
+    |
+419 |         return Ok(file.read_chunk(pack::ChunkId(index as u32), pack::VerificationLevel::Standard)?);
+    |                                                                      ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:595:79
+    |
+595 |     pub fn verify(&self, document: &ArtifactId, generation: u64, level: pack::VerificationLevel) -> Result<(), DbError> {
+    |                                                                               ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:418:59
+    |
+418 |         match manager.verify(&document, generation, pack::VerificationLevel::Full) {
+    |                                                           ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:439:56
+    |
+439 |             manager.verify(document, generation, pack::VerificationLevel::Full)?;
+    |                                                        ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `write_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:437:23
+    |
+437 |                 pack::write_varint_u64(&mut out, author.0.len() as u64);
+    |                       ^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `write_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `write_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `write_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:441:23
+    |
+441 |                 pack::write_varint_u64(&mut out, ts.actor);
+    |                       ^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `write_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `write_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `write_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:442:23
+    |
+442 |                 pack::write_varint_u64(&mut out, ts.physical_ms);
+    |                       ^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `write_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `write_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `write_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:443:23
+    |
+443 |                 pack::write_varint_u64(&mut out, ts.logical);
+    |                       ^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `write_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `write_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `read_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:456:33
+    |
+456 |                 let len = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))? as usize;
+    |                                 ^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `read_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `read_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `read_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:465:35
+    |
+465 |                 let actor = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+    |                                   ^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `read_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `read_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `read_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:466:41
+    |
+466 |                 let physical_ms = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+    |                                         ^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `read_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `read_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `read_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:467:37
+    |
+467 |                 let logical = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+    |                                     ^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `read_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `read_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: unused imports: `DbCapabilities`, `DbConfig`, `DurabilityClass`, `Frontier`, and `Profile`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:31:71
+   |
+31 |     CatalogEntry, CatalogView, CommandReceipt, Consistency, Database, DbCapabilities, DbConfig, DbHealth, DbStorage, ArtifactHandle, ArtifactSpec, DurabilityClass, Frontier, H...
+   |                                                                       ^^^^^^^^^^^^^^  ^^^^^^^^                                                     ^^^^^^^^^^^^^^^  ^^^^^^^^
+32 |     Profile, Query, QueryStream, SecurityAuthzHook, SnapshotFuture, SnapshotKind, SnapshotReceipt, SubmitFuture,
+   |     ^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::db_ids::DbError`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:43:9
+   |
+43 | pub use crate::db_ids::DbError;
+   |         ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ActorId`
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../💾️durability/🦀️component.rs:3:21
+  |
+3 | use crate::db_ids::{ActorId, DbError, ArtifactId};
+  |                     ^^^^^^^
+
+warning: unused import: `pack::ContentHash`
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../💾️durability/🦀️component.rs:4:5
+  |
+4 | use pack::ContentHash;
+  |     ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::db_ids::DbError`
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🎚️policy/🦀️component.rs:4:5
+  |
+4 | use crate::db_ids::DbError;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `pack::ContentHash`
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🕸️version-graph/🦀️component.rs:4:5
+  |
+4 | use pack::ContentHash;
+  |     ^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:618:31
+    |
+618 |     pub digests: Vec<(String, pack::ContentHash)>,
+    |                               ^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+618 -     pub digests: Vec<(String, pack::ContentHash)>,
+618 +     pub digests: Vec<(String, ContentHash)>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:628:49
+    |
+628 |     pending: Mutex<HashMap<u64, HashMap<String, pack::ContentHash>>>,
+    |                                                 ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+628 -     pending: Mutex<HashMap<u64, HashMap<String, pack::ContentHash>>>,
+628 +     pending: Mutex<HashMap<u64, HashMap<String, ContentHash>>>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:645:57
+    |
+645 |     pub fn record(&self, seq: u64, label: &str, digest: pack::ContentHash) -> Result<Option<DivergenceReport>, DbError> {
+    |                                                         ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+645 -     pub fn record(&self, seq: u64, label: &str, digest: pack::ContentHash) -> Result<Option<DivergenceReport>, DbError> {
+645 +     pub fn record(&self, seq: u64, label: &str, digest: ContentHash) -> Result<Option<DivergenceReport>, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:657:39
+    |
+657 |         let mut digests: Vec<(String, pack::ContentHash)> = self.expected_labels.iter().map(|l| (l.clone(), entry[l])).collect();
+    |                                       ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+657 -         let mut digests: Vec<(String, pack::ContentHash)> = self.expected_labels.iter().map(|l| (l.clone(), entry[l])).collect();
+657 +         let mut digests: Vec<(String, ContentHash)> = self.expected_labels.iter().map(|l| (l.clone(), entry[l])).collect();
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:396:43
+    |
+396 |     fn put(&self, bytes: &[u8]) -> Result<pack::ContentHash, DbError> {
+    |                                           ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+396 -     fn put(&self, bytes: &[u8]) -> Result<pack::ContentHash, DbError> {
+396 +     fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:400:26
+    |
+400 |     fn get(&self, hash: &pack::ContentHash) -> Result<Vec<u8>, DbError> {
+    |                          ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+400 -     fn get(&self, hash: &pack::ContentHash) -> Result<Vec<u8>, DbError> {
+400 +     fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:404:31
+    |
+404 |     fn contains(&self, hash: &pack::ContentHash) -> Result<bool, DbError> {
+    |                               ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+404 -     fn contains(&self, hash: &pack::ContentHash) -> Result<bool, DbError> {
+404 +     fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:408:29
+    |
+408 |     fn delete(&self, hash: &pack::ContentHash) -> Result<(), DbError> {
+    |                             ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+408 -     fn delete(&self, hash: &pack::ContentHash) -> Result<(), DbError> {
+408 +     fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:412:26
+    |
+412 |     fn len(&self, hash: &pack::ContentHash) -> Result<u64, DbError> {
+    |                          ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+412 -     fn len(&self, hash: &pack::ContentHash) -> Result<u64, DbError> {
+412 +     fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:639:24
+    |
+639 |         let database = db_engine::Database::open_at(&root, Profile::Test).expect("testkit: open_at for replay law");
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+639 -         let database = db_engine::Database::open_at(&root, Profile::Test).expect("testkit: open_at for replay law");
+639 +         let database = Database::open_at(&root, Profile::Test).expect("testkit: open_at for replay law");
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:640:47
+    |
+640 | ...   let handle = database.create_document(db_engine::ArtifactSpec::new(document.clone())).expect("testkit: create_document for re...
+    |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+640 -         let handle = database.create_document(db_engine::ArtifactSpec::new(document.clone())).expect("testkit: create_document for replay law");
+640 +         let handle = database.create_document(ArtifactSpec::new(document.clone())).expect("testkit: create_document for replay law");
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:651:24
+    |
+651 |         let database = db_engine::Database::open_at(&root, Profile::Test).expect("testkit: reopen for replay law");
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+651 -         let database = db_engine::Database::open_at(&root, Profile::Test).expect("testkit: reopen for replay law");
+651 +         let database = Database::open_at(&root, Profile::Test).expect("testkit: reopen for replay law");
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:662:24
+    |
+662 |         let database = db_engine::Database::open_at(&root_independent, Profile::Test).expect("testkit: open independent replica");
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+662 -         let database = db_engine::Database::open_at(&root_independent, Profile::Test).expect("testkit: open independent replica");
+662 +         let database = Database::open_at(&root_independent, Profile::Test).expect("testkit: open independent replica");
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:663:47
+    |
+663 | ...   let handle = database.create_document(db_engine::ArtifactSpec::new(document)).expect("testkit: create independent replica doc...
+    |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+663 -         let handle = database.create_document(db_engine::ArtifactSpec::new(document)).expect("testkit: create independent replica document");
+663 +         let handle = database.create_document(ArtifactSpec::new(document)).expect("testkit: create independent replica document");
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:126:12
+    |
+126 |     CasRef(pack::ContentHash),
+    |            ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+126 -     CasRef(pack::ContentHash),
+126 +     CasRef(ContentHash),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:281:63
+    |
+281 |                 1 => WalRecord::Payload(WalPayloadRef::CasRef(pack::ContentHash(reader.read_array32()?))),
+    |                                                               ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+281 -                 1 => WalRecord::Payload(WalPayloadRef::CasRef(pack::ContentHash(reader.read_array32()?))),
+281 +                 1 => WalRecord::Payload(WalPayloadRef::CasRef(ContentHash(reader.read_array32()?))),
+    |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:80:32
+   |
+80 |     pub base_pack_hash: Option<pack::ContentHash>,
+   |                                ^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+80 -     pub base_pack_hash: Option<pack::ContentHash>,
+80 +     pub base_pack_hash: Option<ContentHash>,
+   |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:81:20
+   |
+81 |     pub roots: Vec<pack::ContentHash>,
+   |                    ^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+81 -     pub roots: Vec<pack::ContentHash>,
+81 +     pub roots: Vec<ContentHash>,
+   |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:84:24
+   |
+84 |     pub new_pages: Vec<pack::ContentHash>,
+   |                        ^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+84 -     pub new_pages: Vec<pack::ContentHash>,
+84 +     pub new_pages: Vec<ContentHash>,
+   |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:152:23
+    |
+152 |             1 => Some(pack::ContentHash(r.read_array32()?)),
+    |                       ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+152 -             1 => Some(pack::ContentHash(r.read_array32()?)),
+152 +             1 => Some(ContentHash(r.read_array32()?)),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:192:56
+    |
+192 | fn write_hash_list(w: &mut pack::ByteWriter, hashes: &[pack::ContentHash]) {
+    |                                                        ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+192 - fn write_hash_list(w: &mut pack::ByteWriter, hashes: &[pack::ContentHash]) {
+192 + fn write_hash_list(w: &mut pack::ByteWriter, hashes: &[ContentHash]) {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:199:63
+    |
+199 | fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<pack::ContentHash>, DbError> {
+    |                                                               ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+199 - fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<pack::ContentHash>, DbError> {
+199 + fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<ContentHash>, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:204:18
+    |
+204 |         out.push(pack::ContentHash(r.read_array32()?));
+    |                  ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+204 -         out.push(pack::ContentHash(r.read_array32()?));
+204 +         out.push(ContentHash(r.read_array32()?));
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:415:68
+    |
+415 | pub fn read_page(combined: &[u8], handle: &GenerationHandle, hash: pack::ContentHash) -> Result<Vec<u8>, DbError> {
+    |                                                                    ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+415 - pub fn read_page(combined: &[u8], handle: &GenerationHandle, hash: pack::ContentHash) -> Result<Vec<u8>, DbError> {
+415 + pub fn read_page(combined: &[u8], handle: &GenerationHandle, hash: ContentHash) -> Result<Vec<u8>, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:451:32
+    |
+451 |     pub base_pack_hash: Option<pack::ContentHash>,
+    |                                ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+451 -     pub base_pack_hash: Option<pack::ContentHash>,
+451 +     pub base_pack_hash: Option<ContentHash>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:452:20
+    |
+452 |     pub roots: Vec<pack::ContentHash>,
+    |                    ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+452 -     pub roots: Vec<pack::ContentHash>,
+452 +     pub roots: Vec<ContentHash>,
+    |
+
+warning: unused import: `crate::db_durability::Frontier`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗜️compact/🦀️component.rs:34:5
+   |
+34 | use crate::db_durability::Frontier;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗜️compact/🦀️component.rs:358:28
+    |
+358 |     storage: &'storage dyn db_storage::DbStorage,
+    |                            ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+358 -     storage: &'storage dyn db_storage::DbStorage,
+358 +     storage: &'storage dyn DbStorage,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗜️compact/🦀️component.rs:362:39
+    |
+362 |     pub fn new(storage: &'storage dyn db_storage::DbStorage) -> Compactor<'storage> {
+    |                                       ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+362 -     pub fn new(storage: &'storage dyn db_storage::DbStorage) -> Compactor<'storage> {
+362 +     pub fn new(storage: &'storage dyn DbStorage) -> Compactor<'storage> {
+    |
+
+warning: unused import: `crate::db_durability::Frontier`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚔️conflict/🦀️component.rs:28:5
+   |
+28 | use crate::db_durability::Frontier;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🌐️cluster/🦀️component.rs:200:40
+    |
+200 | pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_storage::DbStorage, document: ArtifactId, policy: d...
+    |                                        ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+200 - pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_storage::DbStorage, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
+200 + pub fn replicate_document(leader: &dyn DbStorage, follower: &dyn db_storage::DbStorage, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🌐️cluster/🦀️component.rs:200:78
+    |
+200 | pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_storage::DbStorage, document: ArtifactId, policy: d...
+    |                                                                              ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+200 - pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_storage::DbStorage, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
+200 + pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn DbStorage, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔄️sync/🦀️component.rs:293:19
+    |
+293 |     storage: &dyn db_storage::DbStorage,
+    |                   ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+293 -     storage: &dyn db_storage::DbStorage,
+293 +     storage: &dyn DbStorage,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:307:28
+    |
+307 |     pub state_hash: Option<pack::ContentHash>,
+    |                            ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+307 -     pub state_hash: Option<pack::ContentHash>,
+307 +     pub state_hash: Option<ContentHash>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:356:31
+    |
+356 |     fn content_hash(&self) -> pack::ContentHash {
+    |                               ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+356 -     fn content_hash(&self) -> pack::ContentHash {
+356 +     fn content_hash(&self) -> ContentHash {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:468:22
+    |
+468 |     storage: Arc<dyn db_storage::DbStorage>,
+    |                      ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+468 -     storage: Arc<dyn db_storage::DbStorage>,
+468 +     storage: Arc<dyn DbStorage>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:490:68
+    |
+490 |     pub fn create(document: protocol::ArtifactId, storage: Arc<dyn db_storage::DbStorage>, config: ArtifactEngineConfig, now_ms: u6...
+    |                                                                    ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+490 -     pub fn create(document: protocol::ArtifactId, storage: Arc<dyn db_storage::DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<ArtifactEngine, DbError> {
+490 +     pub fn create(document: protocol::ArtifactId, storage: Arc<dyn DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<ArtifactEngine, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:502:67
+    |
+502 |     pub fn open(document: protocol::ArtifactId, storage: &Arc<dyn db_storage::DbStorage>, config: ArtifactEngineConfig, now_ms: u64...
+    |                                                                   ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+502 -     pub fn open(document: protocol::ArtifactId, storage: &Arc<dyn db_storage::DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<(ArtifactEngine, MaterializeReport), DbError> {
+502 +     pub fn open(document: protocol::ArtifactId, storage: &Arc<dyn DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<(ArtifactEngine, MaterializeReport), DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:570:96
+    |
+570 |     fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<dyn db_storage::DbStorage>, wal: db_wal:...
+    |                                                                                                ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+570 -     fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<dyn db_storage::DbStorage>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig) -> ArtifactEngine {
+570 +     fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<dyn DbStorage>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig) -> ArtifactEngine {
+    |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:98:30
+   |
+98 | fn to_engine_frontier(core: &crate::db_durability::Frontier, document: protocol::ArtifactId) -> Frontier {
+   |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+98 - fn to_engine_frontier(core: &crate::db_durability::Frontier, document: protocol::ArtifactId) -> Frontier {
+98 + fn to_engine_frontier(core: &db_durability::Frontier, document: protocol::ArtifactId) -> Frontier {
+   |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:111:28
+    |
+111 |     pub state_hash: Option<pack::ContentHash>,
+    |                            ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+111 -     pub state_hash: Option<pack::ContentHash>,
+111 +     pub state_hash: Option<ContentHash>,
+    |
+
+   Compiling semio-hub v0.1.0 (/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust)
+warning: `semio-framework-os-kernel-db` (lib) generated 62 warnings (run `cargo fix --lib -p semio-framework-os-kernel-db` to apply 47 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 4m 11s
+warning: the following packages contain code that will be rejected by a future version of Rust: semio-framework-os-kernel-db v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 20`
+     Running `/Users/ueli/Documents/semio/target/debug/os-hub`
+[0m[31m[budget] cargo run --manifest-path Cargo.toml exceeded 1200000ms — killed. Likely shared cargo target-dir lock contention from another concurrent session — investigate before retrying.[0m
+[0m[1m1378 |[0m       [0m[35mif[0m (resolved) {
+[0m[1m1379 |[0m         formattedArgs[[0m[33m0[0m] = resolved[0m[2m;[0m
+[0m[1m1380 |[0m       }
+[0m[1m1381 |[0m     }
+[0m[1m1382 |[0m   }
+[0m[1m1383 |[0m   [0m[35mconst[0m result = spawnSync(cmd, formattedArgs, {
+                        [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1mspawnSync cargo ETIMEDOUT[0m
+      path[0m[2m:[0m [0m[32m"cargo"[0m[0m[2m,[0m
+   syscall[0m[2m:[0m [0m[32m"spawnSync cargo"[0m[0m[2m,[0m
+     errno[0m[2m:[0m [0m[33m-60[0m[0m[2m,[0m
+ spawnargs[0m[2m:[0m [ [0m[32m"run"[0m[0m[0m[2m,[0m [0m[32m"--manifest-path"[0m[0m[0m[2m,[0m [0m[32m"Cargo.toml"[0m[0m ][0m[2m,[0m
+      code[0m[2m:[0m [32m"ETIMEDOUT"[0m
+
+[0m      [2mat [0m[0m[1m[3mspawnSync[0m[2m ([0m[0m[36mnode:child_process[0m[2m:[0m[33m254[0m[2m:[33m20[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunCmdInternal[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m1383[0m[2m:[33m18[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunCmd[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m1406[0m[2m:[33m18[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunCargo[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m2286[0m[2m:[33m3[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/[0m[36m📜️script.ts[0m[2m:[0m[33m44[0m[2m:[33m5[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m846[0m[2m:[33m71[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunBundleScriptMain[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m876[0m[2m:[33m16[0m[2m)[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+Warning: command "bun ./📜️script.ts dev" exited with non-zero status code
+
+
+ NX   Running target dev for project os-hub and 1 task it depends on failed
+
+Failed tasks:
+
+- os-hub:dev
+
+Hint: run the command with --verbose for more details.
+
+1402 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1403 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1404 |  */
+1405 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1406 |   const status = runCmdInternal(cmd, args, opts);
+1407 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run os-hub:dev exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1407:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:607:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:846:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:881:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:14463:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1

@@ -476,7 +476,7 @@ pub mod types {
         }
 
         fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
-            crate::infinite::canvas::theme::merge_color_field(next, v, key);
+            infinite::canvas::theme::merge_color_field(next, v, key);
         }
 
         /// @emoji 🎨️ Replaces this palette from the React host UI theme JSON payload.
@@ -558,7 +558,7 @@ pub mod types {
     /// 🖼️ Shared SVG/raster icon decode cache for board and DAG hosts.
     pub struct IconPaintCache {
         cache: RefCell<HashMap<String, CachedIconPaint>>,
-        pub themed_icon_lookup: crate::infinite::canvas::icon_codec::ThemedSvgLookup,
+        pub themed_icon_lookup: infinite::canvas::icon_codec::ThemedSvgLookup,
     }
 
     impl Default for IconPaintCache {
@@ -599,11 +599,11 @@ pub mod types {
         }
 
         pub fn get_or_build(&self, encoded: &str, fg: Color, bg: Color, preserve_original_style: bool) -> Option<(f64, f64, f64, f64, CachedIconBody)> {
-            let resolved = crate::infinite::canvas::icon_codec::board_resolve_icon_kind(encoded, self.themed_icon_lookup);
+            let resolved = infinite::canvas::icon_codec::board_resolve_icon_kind(encoded, self.themed_icon_lookup);
             let key = match &resolved {
-                crate::infinite::canvas::icon_codec::BoardResolvedIcon::None => return None,
-                crate::infinite::canvas::icon_codec::BoardResolvedIcon::SvgThemed(s) | crate::infinite::canvas::icon_codec::BoardResolvedIcon::SvgPlain(s) => Self::icon_vector_cache_key(if preserve_original_style { "p" } else { "t" }, s.as_str(), fg, bg),
-                crate::infinite::canvas::icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => Self::icon_raster_cache_key(rgba, *w, *h),
+                infinite::canvas::icon_codec::BoardResolvedIcon::None => return None,
+                infinite::canvas::icon_codec::BoardResolvedIcon::SvgThemed(s) | infinite::canvas::icon_codec::BoardResolvedIcon::SvgPlain(s) => Self::icon_vector_cache_key(if preserve_original_style { "p" } else { "t" }, s.as_str(), fg, bg),
+                infinite::canvas::icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => Self::icon_raster_cache_key(rgba, *w, *h),
             };
             {
                 let g = self.cache.borrow();
@@ -612,8 +612,8 @@ pub mod types {
                 }
             }
             let (bx, by, bw, bh, body) = match resolved {
-                crate::infinite::canvas::icon_codec::BoardResolvedIcon::None => return None,
-                crate::infinite::canvas::icon_codec::BoardResolvedIcon::SvgThemed(s) => {
+                infinite::canvas::icon_codec::BoardResolvedIcon::None => return None,
+                infinite::canvas::icon_codec::BoardResolvedIcon::SvgThemed(s) => {
                     let doc = SvgDocument::parse_icons(s.trim()).ok()?;
                     let (bx, by, bw, bh) = doc.content_bounds();
                     if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
@@ -627,7 +627,7 @@ pub mod types {
                     }
                     (bx, by, bw, bh, CachedIconBody::Vector(s))
                 }
-                crate::infinite::canvas::icon_codec::BoardResolvedIcon::SvgPlain(s) => {
+                infinite::canvas::icon_codec::BoardResolvedIcon::SvgPlain(s) => {
                     let doc = SvgDocument::parse_icons(s.trim()).ok()?;
                     let (bx, by, bw, bh) = doc.content_bounds();
                     if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
@@ -641,7 +641,7 @@ pub mod types {
                     }
                     (bx, by, bw, bh, CachedIconBody::Vector(s))
                 }
-                crate::infinite::canvas::icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => {
+                infinite::canvas::icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => {
                     let bx = 0.0_f64;
                     let by = 0.0_f64;
                     let bw = f64::from(w);
@@ -777,7 +777,7 @@ pub mod force_graph {
     pub fn apply_force_graph_layout_to_fixture_v1_value(fixture: &mut Value, opts: &ForceGraphLayoutOptions) -> Result<(), String> {
         let nodes = fixture.as_object().and_then(|root| root.get("nodes")).and_then(|v| v.as_array()).cloned().unwrap_or_default();
         let handle_to_node = build_handle_to_node(&nodes);
-        crate::infinite::board::normal::undirected::apply_force_graph_layout_to_fixture_v1_value_resolved(fixture, opts, |endpoint, id_to_index| {
+        infinite::board::normal::undirected::apply_force_graph_layout_to_fixture_v1_value_resolved(fixture, opts, |endpoint, id_to_index| {
             let node_id = handle_to_node.get(endpoint).cloned().unwrap_or_else(|| endpoint.to_string());
             id_to_index.contains_key(&node_id).then_some(node_id)
         })

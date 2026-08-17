@@ -146,7 +146,7 @@ pub mod io_registry {
     }
 
     pub fn register() {
-        register_composer_entries(v_ascii::entries());
+        let _ = register_composer_entries(v_ascii::entries());
     }
 }
 //#endregion 🚪️DerivedIoRegistry

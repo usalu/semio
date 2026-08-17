@@ -1,7 +1,6 @@
 //! 🎚️ Mailbox priority, capabilities, and open profiles.
 
 use crate::*;
-use crate::db_ids::DbError;
 use crate::db_durability::DurabilityClass;
 
 //#region 🔖️Priority

@@ -1,0 +1,2 @@
+[DEBUG] smoke: load_wasm_plugins failed: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/imperative-extension-effect/semio_s_plugin_imperative_effect_component.core.wasm: wasmtime: failed to parse WebAssembly module
+SMOKE_EXIT:1

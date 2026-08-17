@@ -1,0 +1,13 @@
+{
+  "title": "Finish Hub Spaces Collaboration End to End",
+  "emoji": "🏁️",
+  "status": "open",
+  "description": "Finish the work started in 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS (whose folder was subsequently renamed by another session into 26/08/16/PRESERVE-SEEDED-DIALOG-CONTEXT-ARGUMENTS — all 30+ lane reports and the final summary are still in there and are the history for this work). Remaining: drive the browser collab e2e from 2/8 to all 8 steps, starting from the plugin-instance-busy / missing HistorySnapshot retry storm in PluginRuntime; fix the 🛢️db crate's empty sqlite/postgres/neo4j feature wiring so the postgres and neo4j directory backends actually compile and --all-features works again; port auto check-in, checkpoint-on-close and TouchArtifact to the wgpu shell and actually observe it running; and clear the remaining plugin crates that fail to build for wasm so dev s boots the full catalogue.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2562"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪e741ee7606e54b809cd8de77d1c05e92"
+  ]
+}

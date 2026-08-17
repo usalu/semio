@@ -191,8 +191,8 @@ pub mod io_registry {
     }
 
     pub fn register() {
-        register_composer_entries(v_ac1018::entries());
-        register_composer_entries(v_ac1024::entries());
+        let _ = register_composer_entries(v_ac1018::entries());
+        let _ = register_composer_entries(v_ac1024::entries());
     }
 }
 //#endregion 🚪️DerivedIoRegistry

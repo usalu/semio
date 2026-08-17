@@ -80,7 +80,7 @@ pub mod derived_composition {
     /// separately by the standard-level composer aggregator
     /// (`crate::artifacts::xlsx::standards::v_ecma_376::engine::io_registry::entries()`).
     pub fn register() {
-        register_subset_validator(validator_entry());
+        let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
 
